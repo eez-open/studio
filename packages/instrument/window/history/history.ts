@@ -1,4 +1,11 @@
-import { observable, computed, runInAction, action, reaction } from "mobx";
+import {
+    observable,
+    computed,
+    runInAction,
+    action,
+    reaction,
+    makeObservable
+} from "mobx";
 
 import { formatTransferSpeed, formatDate } from "eez-studio-shared/util";
 import { db } from "eez-studio-shared/db-path";
@@ -32,7 +39,7 @@ import {
     updateHistoryItemClass
 } from "instrument/window/history/item-factory";
 import {
-    HistoryView,
+    HistoryViewComponent,
     moveToTopOfHistory,
     moveToBottomOfHistory,
     showHistoryItem
@@ -68,7 +75,7 @@ export interface INavigationStore {
     navigateToHistory(): void;
     navigateToDeletedHistoryItems(): void;
     navigateToSessionsList(): void;
-    mainHistoryView: HistoryView | undefined;
+    mainHistoryView: HistoryViewComponent | undefined;
     selectedListId: string | undefined;
     changeSelectedListId(listId: string | undefined): Promise<void>;
 }
@@ -158,18 +165,32 @@ export interface IAppStore {
 ////////////////////////////////////////////////////////////////////////////////
 
 class HistoryCalendar {
-    @observable minDate: Date;
-    @observable maxDate: Date;
+    minDate: Date;
+    maxDate: Date;
 
     // "YYYY-MM-DD" -> number of items at date
-    @observable counters = new Map<string, number>();
-    @observable showFirstHistoryItemAsSelectedDay: boolean = false;
+    counters = new Map<string, number>();
+    showFirstHistoryItemAsSelectedDay: boolean = false;
 
-    @observable lastSelectedDay: Date;
+    lastSelectedDay: Date;
 
-    constructor(public history: History) {}
+    constructor(public history: History) {
+        makeObservable(this, {
+            minDate: observable,
+            maxDate: observable,
+            counters: observable,
+            showFirstHistoryItemAsSelectedDay: observable,
+            lastSelectedDay: observable,
+            load: action,
+            update: action,
+            selectedDay: computed,
+            showRecent: action,
+            selectDay: action,
+            incrementCounter: action,
+            decrementCounter: action
+        });
+    }
 
-    @action
     async load() {
         this.minDate = new Date();
         this.maxDate = new Date();
@@ -216,7 +237,6 @@ class HistoryCalendar {
         return this.counters.get(formatDate(day, "YYYY-MM-DD")) || 0;
     }
 
-    @action
     async update(selectedDay?: Date) {
         if (selectedDay) {
             this.lastSelectedDay = selectedDay;
@@ -283,7 +303,6 @@ class HistoryCalendar {
         }
     }
 
-    @computed
     get selectedDay() {
         if (this.history.selection.items.length > 0) {
             return this.history.selection.items[0].date;
@@ -335,13 +354,11 @@ class HistoryCalendar {
         );
     }
 
-    @action
     async showRecent() {
         this.history.search.selectSearchResult(undefined);
         await this.update();
     }
 
-    @action
     selectDay(day: Date) {
         if (day > this.maxDate) {
             this.maxDate = day;
@@ -351,13 +368,11 @@ class HistoryCalendar {
         this.update(day);
     }
 
-    @action
     incrementCounter(day: Date) {
         const key = formatDate(day, "YYYY-MM-DD");
         this.counters.set(key, (this.counters.get(key) || 0) + 1);
     }
 
-    @action
     decrementCounter(day: Date) {
         const key = formatDate(day, "YYYY-MM-DD");
         this.counters.set(key, (this.counters.get(key) || 0) - 1);
@@ -367,28 +382,41 @@ class HistoryCalendar {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class SearchResult {
-    constructor(public logEntry: IActivityLogEntry) {}
+    constructor(public logEntry: IActivityLogEntry) {
+        makeObservable(this, {
+            selected: observable
+        });
+    }
 
-    @observable selected = false;
+    selected = false;
 }
 
 class HistorySearch {
-    @observable searchActive: boolean = false;
-    @observable searchResults: SearchResult[] = [];
-    @observable searchInProgress: boolean = false;
+    searchActive: boolean = false;
+    searchResults: SearchResult[] = [];
+    searchInProgress: boolean = false;
     searchText: string;
     searchLastLogDate: any;
     searchLoopTimeout: any;
-    @observable selectedSearchResult: SearchResult | undefined;
+    selectedSearchResult: SearchResult | undefined;
     startSearchTimeout: any;
 
-    constructor(public history: History) {}
+    constructor(public history: History) {
+        makeObservable<HistorySearch, "doSearch">(this, {
+            searchActive: observable,
+            searchResults: observable,
+            searchInProgress: observable,
+            selectedSearchResult: observable,
+            search: action,
+            doSearch: action,
+            selectSearchResult: action
+        });
+    }
 
     update() {
         this.search("");
     }
 
-    @action
     search(searchText: string) {
         this.stopSearch();
 
@@ -402,7 +430,6 @@ class HistorySearch {
         }, CONF_START_SEARCH_TIMEOUT);
     }
 
-    @action
     private doSearch(searchText: string) {
         this.clearSearch();
 
@@ -505,7 +532,6 @@ class HistorySearch {
         this.selectSearchResult(undefined);
     }
 
-    @action
     async selectSearchResult(searchResult: SearchResult | undefined) {
         if (this.selectedSearchResult) {
             this.selectedSearchResult.selected = false;
@@ -598,12 +624,21 @@ class HistoryNavigator {
     firstHistoryItemTime: number;
     lastHistoryItemTime: number;
 
-    @observable hasOlder = false;
-    @observable hasNewer = false;
+    hasOlder = false;
+    hasNewer = false;
 
-    constructor(public history: History) {}
+    constructor(public history: History) {
+        makeObservable(this, {
+            hasOlder: observable,
+            hasNewer: observable,
+            update: action,
+            firstHistoryItem: computed,
+            lastHistoryItem: computed,
+            loadOlder: action.bound,
+            loadNewer: action.bound
+        });
+    }
 
-    @action
     update() {
         if (this.firstHistoryItem) {
             this.firstHistoryItemTime = this.firstHistoryItem.date.getTime();
@@ -648,21 +683,18 @@ class HistoryNavigator {
         }
     }
 
-    @computed
     get firstHistoryItem() {
         return this.history.items.length > 0
             ? this.history.items[0]
             : undefined;
     }
 
-    @computed
     get lastHistoryItem() {
         return this.history.items.length > 0
             ? this.history.items[this.history.items.length - 1]
             : undefined;
     }
 
-    @action.bound
     async loadOlder() {
         if (this.hasOlder) {
             const rows = await dbQuery(
@@ -706,7 +738,6 @@ class HistoryNavigator {
         }
     }
 
-    @action.bound
     async loadNewer() {
         if (this.hasNewer) {
             const rows = await dbQuery(
@@ -750,11 +781,17 @@ class HistoryNavigator {
 ////////////////////////////////////////////////////////////////////////////////
 
 class HistorySelection {
-    @observable _items: IHistoryItem[] = [];
+    _items: IHistoryItem[] = [];
 
-    constructor(public history: History) {}
+    constructor(public history: History) {
+        makeObservable(this, {
+            _items: observable,
+            canDelete: computed,
+            items: computed,
+            selectItems: action
+        });
+    }
 
-    @computed
     get canDelete() {
         if (this.items.length === 0) {
             return false;
@@ -769,14 +806,12 @@ class HistorySelection {
         return true;
     }
 
-    @computed
     get items() {
         return this.history.appStore.selectHistoryItemsSpecification
             ? []
             : this._items;
     }
 
-    @action
     selectItems(historyItems: IHistoryItem[]) {
         this._items.forEach(historyItem => (historyItem.selected = false));
         this._items = historyItems;
@@ -799,7 +834,7 @@ export class History {
 
     loaded = false;
 
-    @observable items: IHistoryItem[] = [];
+    items: IHistoryItem[] = [];
 
     calendar = new HistoryCalendar(this);
     search = new HistorySearch(this);
@@ -820,6 +855,20 @@ export class History {
         public appStore: IAppStore,
         private optionsArg?: Partial<IHistoryOptions>
     ) {
+        makeObservable(this, {
+            items: observable,
+            freeSomeHistoryItemsFromTopIfTooMany: action,
+            freeSomeHistoryItemsFromBottomIfTooMany: action,
+            displayRows: action,
+            onCreateActivityLogEntry: action,
+            onUpdateActivityLogEntry: action,
+            onDeleteActivityLogEntry: action,
+            deleteSelectedHistoryItems: action.bound,
+            itemInTheCenterOfTheView: observable,
+            setItemInTheCenterOfTheView: action,
+            sendFileStatus: computed
+        });
+
         this.options = Object.assign(
             {
                 isDeletedItemsHistory: false,
@@ -1039,14 +1088,12 @@ export class History {
         return undefined;
     }
 
-    @action
     freeSomeHistoryItemsFromTopIfTooMany() {
         while (this.items.length > CONF_MAX_NUM_OF_LOADED_ITEMS) {
             this.items.splice(0, 1);
         }
     }
 
-    @action
     freeSomeHistoryItemsFromBottomIfTooMany() {
         while (this.items.length > CONF_MAX_NUM_OF_LOADED_ITEMS) {
             this.items.splice(this.items.length - 1, 1);
@@ -1142,14 +1189,12 @@ export class History {
         return rowsToHistoryItems(this.options.store, rows);
     }
 
-    @action
     displayRows(rows: any[]) {
         this.items = this.rowsToHistoryItems(rows);
         this.itemInTheCenterOfTheView = undefined;
         this.navigator.update();
     }
 
-    @action
     async onCreateActivityLogEntry(
         activityLogEntry: IActivityLogEntry,
         op: StoreOperation,
@@ -1216,7 +1261,6 @@ export class History {
         }
     }
 
-    @action
     onUpdateActivityLogEntry(
         activityLogEntry: IActivityLogEntry,
         op: StoreOperation,
@@ -1248,7 +1292,6 @@ export class History {
         }
     }
 
-    @action
     onDeleteActivityLogEntry(
         activityLogEntry: IActivityLogEntry,
         op: StoreOperation,
@@ -1263,7 +1306,6 @@ export class History {
         this.removeActivityLogEntry(activityLogEntry);
     }
 
-    @action.bound
     deleteSelectedHistoryItems() {
         if (this.selection.items.length > 0) {
             beginTransaction("Delete history items");
@@ -1341,9 +1383,8 @@ export class History {
         return [];
     }
 
-    @observable itemInTheCenterOfTheView: IHistoryItem | undefined;
+    itemInTheCenterOfTheView: IHistoryItem | undefined;
 
-    @action
     setItemInTheCenterOfTheView(id: string) {
         const foundItem = this.findHistoryItemById(id);
         if (foundItem) {
@@ -1389,7 +1430,6 @@ export class History {
         }
     }
 
-    @computed
     get sendFileStatus() {
         if (this.items.length > 0) {
             const lastItem = this.items[this.items.length - 1];
@@ -1417,7 +1457,7 @@ export class History {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DeletedItemsHistory extends History {
-    @observable deletedCount: number = 0;
+    deletedCount: number = 0;
 
     constructor(
         public appStore: IAppStore,
@@ -1430,6 +1470,13 @@ export class DeletedItemsHistory extends History {
             })
         );
 
+        makeObservable(this, {
+            deletedCount: observable,
+            refreshDeletedCount: action.bound,
+            restoreSelectedHistoryItems: action.bound,
+            emptyTrash: action.bound
+        });
+
         scheduleTask(
             "Get deleted history items count",
             Priority.Lowest,
@@ -1437,7 +1484,6 @@ export class DeletedItemsHistory extends History {
         );
     }
 
-    @action.bound
     async refreshDeletedCount() {
         const result = db
             .prepare(
@@ -1463,7 +1509,6 @@ export class DeletedItemsHistory extends History {
         return "AND deleted";
     }
 
-    @action
     async onCreateActivityLogEntry(
         activityLogEntry: IActivityLogEntry,
         op: StoreOperation,
@@ -1475,7 +1520,6 @@ export class DeletedItemsHistory extends History {
         }
     }
 
-    @action
     onDeleteActivityLogEntry(
         activityLogEntry: IActivityLogEntry,
         op: StoreOperation,
@@ -1494,7 +1538,6 @@ export class DeletedItemsHistory extends History {
         }
     }
 
-    @action.bound
     restoreSelectedHistoryItems() {
         if (this.selection.items.length > 0) {
             beginTransaction("Restore history items");
@@ -1518,7 +1561,6 @@ export class DeletedItemsHistory extends History {
         }
     }
 
-    @action.bound
     deleteSelectedHistoryItems() {
         if (this.selection.items.length > 0) {
             confirm(
@@ -1552,7 +1594,6 @@ export class DeletedItemsHistory extends History {
         }
     }
 
-    @action.bound
     emptyTrash() {
         confirm(
             "Are you sure?",

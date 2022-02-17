@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, reaction, action } from "mobx";
+import { observable, computed, reaction, action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
 import { Rect } from "eez-studio-shared/geometry";
@@ -154,797 +154,811 @@ const PWRSC = "#0f0";
 const ANIMATION_OPEN_CLOSE_DURATION = 500;
 const ANIMATION_SUSTAIN_DURATION = 1000;
 
-@observer
-export class ResizingProperty extends React.Component<PropertyProps> {
-    constructor(props: any) {
-        super(props);
+export const ResizingProperty = observer(
+    class ResizingProperty extends React.Component<PropertyProps> {
+        constructor(props: any) {
+            super(props);
 
-        this.animateReactionDisposer = this.animateReaction(props);
-    }
+            makeObservable(this, {
+                resizing: computed,
+                pinToEdge: computed,
+                fixSize: computed,
+                isFixWidth: computed,
+                isFixHeight: computed,
+                isPinToLeftAllowed: computed,
+                isPinToRightAllowed: computed,
+                isPinToTopAllowed: computed,
+                isPinToBottomAllowed: computed,
+                isFixWidthAllowed: computed,
+                isFixHeightAllowed: computed,
+                isPinToLeft: computed,
+                isPinToRight: computed,
+                isPinToTop: computed,
+                isPinToBottom: computed,
+                isFixAllAllowed: computed,
+                widgetRect: observable,
+                containerRect: observable,
+                animationFrame: action.bound
+            });
 
-    updateAnimateReaction() {
-        this.animateReactionDisposer();
-        this.animateReactionDisposer = this.animateReaction(this.props);
-    }
-
-    componentDidUpdate() {
-        this.updateAnimateReaction();
-    }
-
-    componentDidMount() {
-        this.updateAnimateReaction();
-    }
-
-    componentWillUnmount() {
-        this.animateReactionDisposer();
-    }
-
-    @computed
-    get resizing() {
-        return getProperty(
-            this.props.objects[0],
-            this.props.propertyInfo.name
-        ) as IResizing;
-    }
-
-    @computed
-    get pinToEdge() {
-        return (this.resizing && this.resizing.pinToEdge) || 0;
-    }
-
-    @computed
-    get fixSize() {
-        return (this.resizing && this.resizing.fixSize) || 0;
-    }
-
-    @computed
-    get isFixWidth() {
-        return (this.fixSize & FIX_WIDTH) !== 0;
-    }
-
-    @computed
-    get isFixHeight() {
-        return (this.fixSize & FIX_HEIGHT) !== 0;
-    }
-
-    @computed
-    get isPinToLeftAllowed() {
-        return !(this.isPinToRight && this.isFixWidth);
-    }
-
-    @computed
-    get isPinToRightAllowed() {
-        return !(this.isPinToLeft && this.isFixWidth);
-    }
-
-    @computed
-    get isPinToTopAllowed() {
-        return !(this.isPinToBottom && this.isFixHeight);
-    }
-
-    @computed
-    get isPinToBottomAllowed() {
-        return !(this.isPinToTop && this.isFixHeight);
-    }
-
-    @computed
-    get isFixWidthAllowed() {
-        return !(this.isPinToLeft && this.isPinToRight);
-    }
-
-    @computed
-    get isFixHeightAllowed() {
-        return !(this.isPinToTop && this.isPinToBottom);
-    }
-
-    @computed
-    get isPinToLeft() {
-        return (this.pinToEdge & PIN_TO_LEFT) !== 0;
-    }
-
-    @computed
-    get isPinToRight() {
-        return (this.pinToEdge & PIN_TO_RIGHT) !== 0;
-    }
-
-    @computed
-    get isPinToTop() {
-        return (this.pinToEdge & PIN_TO_TOP) !== 0;
-    }
-
-    @computed
-    get isPinToBottom() {
-        return (this.pinToEdge & PIN_TO_BOTTOM) !== 0;
-    }
-
-    togglePinToLeft = () => {
-        if (!this.isPinToLeftAllowed) {
-            return;
+            this.animateReactionDisposer = this.animateReaction(props);
         }
-        this.props.updateObject({
-            resizing: {
-                pinToEdge: this.isPinToLeft
-                    ? this.pinToEdge & ~PIN_TO_LEFT
-                    : this.pinToEdge | PIN_TO_LEFT,
-                fixSize: this.fixSize
-            }
-        });
-    };
 
-    togglePinToRight = () => {
-        if (!this.isPinToRightAllowed) {
-            return;
+        updateAnimateReaction() {
+            this.animateReactionDisposer();
+            this.animateReactionDisposer = this.animateReaction(this.props);
         }
-        this.props.updateObject({
-            resizing: {
-                pinToEdge: this.isPinToRight
-                    ? this.pinToEdge & ~PIN_TO_RIGHT
-                    : this.pinToEdge | PIN_TO_RIGHT,
-                fixSize: this.fixSize
-            }
-        });
-    };
 
-    togglePinToTop = () => {
-        if (!this.isPinToTopAllowed) {
-            return;
+        componentDidUpdate() {
+            this.updateAnimateReaction();
         }
-        this.props.updateObject({
-            resizing: {
-                pinToEdge: this.isPinToTop
-                    ? this.pinToEdge & ~PIN_TO_TOP
-                    : this.pinToEdge | PIN_TO_TOP,
-                fixSize: this.fixSize
-            }
-        });
-    };
 
-    togglePinToBottom = () => {
-        if (!this.isPinToBottomAllowed) {
-            return;
+        componentDidMount() {
+            this.updateAnimateReaction();
         }
-        this.props.updateObject({
-            resizing: {
-                pinToEdge: this.isPinToBottom
-                    ? this.pinToEdge & ~PIN_TO_BOTTOM
-                    : this.pinToEdge | PIN_TO_BOTTOM,
-                fixSize: this.fixSize
-            }
-        });
-    };
 
-    togglePinToAll = () => {
-        const isPinToAll =
-            this.isPinToLeft &&
-            this.isPinToRight &&
-            this.isPinToTop &&
-            this.isPinToBottom;
-        this.props.updateObject({
-            resizing: {
-                pinToEdge: isPinToAll
-                    ? 0
-                    : PIN_TO_LEFT | PIN_TO_RIGHT | PIN_TO_TOP | PIN_TO_BOTTOM,
-                fixSize: isPinToAll ? this.fixSize : 0
-            }
-        });
-    };
-
-    toggleFixWidth = () => {
-        if (!this.isFixWidthAllowed) {
-            return;
+        componentWillUnmount() {
+            this.animateReactionDisposer();
         }
-        this.props.updateObject({
-            resizing: {
-                pinToEdge: this.pinToEdge,
-                fixSize: this.isFixWidth
-                    ? this.fixSize & ~FIX_WIDTH
-                    : this.fixSize | FIX_WIDTH
-            }
-        });
-    };
 
-    toggleFixHeight = () => {
-        if (!this.isFixHeightAllowed) {
-            return;
+        get resizing() {
+            return getProperty(
+                this.props.objects[0],
+                this.props.propertyInfo.name
+            ) as IResizing;
         }
-        this.props.updateObject({
-            resizing: {
-                pinToEdge: this.pinToEdge,
-                fixSize: this.isFixHeight
-                    ? this.fixSize & ~FIX_HEIGHT
-                    : this.fixSize | FIX_HEIGHT
-            }
-        });
-    };
 
-    @computed
-    get isFixAllAllowed() {
-        return this.isFixWidthAllowed && this.isFixHeightAllowed;
-    }
-
-    toggleFixAll = () => {
-        if (!this.isFixAllAllowed) {
-            return;
+        get pinToEdge() {
+            return (this.resizing && this.resizing.pinToEdge) || 0;
         }
-        this.props.updateObject({
-            resizing: {
-                pinToEdge: this.pinToEdge,
-                fixSize:
-                    this.isFixWidth && this.isFixHeight
+
+        get fixSize() {
+            return (this.resizing && this.resizing.fixSize) || 0;
+        }
+
+        get isFixWidth() {
+            return (this.fixSize & FIX_WIDTH) !== 0;
+        }
+
+        get isFixHeight() {
+            return (this.fixSize & FIX_HEIGHT) !== 0;
+        }
+
+        get isPinToLeftAllowed() {
+            return !(this.isPinToRight && this.isFixWidth);
+        }
+
+        get isPinToRightAllowed() {
+            return !(this.isPinToLeft && this.isFixWidth);
+        }
+
+        get isPinToTopAllowed() {
+            return !(this.isPinToBottom && this.isFixHeight);
+        }
+
+        get isPinToBottomAllowed() {
+            return !(this.isPinToTop && this.isFixHeight);
+        }
+
+        get isFixWidthAllowed() {
+            return !(this.isPinToLeft && this.isPinToRight);
+        }
+
+        get isFixHeightAllowed() {
+            return !(this.isPinToTop && this.isPinToBottom);
+        }
+
+        get isPinToLeft() {
+            return (this.pinToEdge & PIN_TO_LEFT) !== 0;
+        }
+
+        get isPinToRight() {
+            return (this.pinToEdge & PIN_TO_RIGHT) !== 0;
+        }
+
+        get isPinToTop() {
+            return (this.pinToEdge & PIN_TO_TOP) !== 0;
+        }
+
+        get isPinToBottom() {
+            return (this.pinToEdge & PIN_TO_BOTTOM) !== 0;
+        }
+
+        togglePinToLeft = () => {
+            if (!this.isPinToLeftAllowed) {
+                return;
+            }
+            this.props.updateObject({
+                resizing: {
+                    pinToEdge: this.isPinToLeft
+                        ? this.pinToEdge & ~PIN_TO_LEFT
+                        : this.pinToEdge | PIN_TO_LEFT,
+                    fixSize: this.fixSize
+                }
+            });
+        };
+
+        togglePinToRight = () => {
+            if (!this.isPinToRightAllowed) {
+                return;
+            }
+            this.props.updateObject({
+                resizing: {
+                    pinToEdge: this.isPinToRight
+                        ? this.pinToEdge & ~PIN_TO_RIGHT
+                        : this.pinToEdge | PIN_TO_RIGHT,
+                    fixSize: this.fixSize
+                }
+            });
+        };
+
+        togglePinToTop = () => {
+            if (!this.isPinToTopAllowed) {
+                return;
+            }
+            this.props.updateObject({
+                resizing: {
+                    pinToEdge: this.isPinToTop
+                        ? this.pinToEdge & ~PIN_TO_TOP
+                        : this.pinToEdge | PIN_TO_TOP,
+                    fixSize: this.fixSize
+                }
+            });
+        };
+
+        togglePinToBottom = () => {
+            if (!this.isPinToBottomAllowed) {
+                return;
+            }
+            this.props.updateObject({
+                resizing: {
+                    pinToEdge: this.isPinToBottom
+                        ? this.pinToEdge & ~PIN_TO_BOTTOM
+                        : this.pinToEdge | PIN_TO_BOTTOM,
+                    fixSize: this.fixSize
+                }
+            });
+        };
+
+        togglePinToAll = () => {
+            const isPinToAll =
+                this.isPinToLeft &&
+                this.isPinToRight &&
+                this.isPinToTop &&
+                this.isPinToBottom;
+            this.props.updateObject({
+                resizing: {
+                    pinToEdge: isPinToAll
                         ? 0
-                        : FIX_WIDTH | FIX_HEIGHT
+                        : PIN_TO_LEFT |
+                          PIN_TO_RIGHT |
+                          PIN_TO_TOP |
+                          PIN_TO_BOTTOM,
+                    fixSize: isPinToAll ? this.fixSize : 0
+                }
+            });
+        };
+
+        toggleFixWidth = () => {
+            if (!this.isFixWidthAllowed) {
+                return;
             }
-        });
-    };
+            this.props.updateObject({
+                resizing: {
+                    pinToEdge: this.pinToEdge,
+                    fixSize: this.isFixWidth
+                        ? this.fixSize & ~FIX_WIDTH
+                        : this.fixSize | FIX_WIDTH
+                }
+            });
+        };
 
-    // make sure animation is shown if properties are changed
-    animateReactionDisposer: any;
+        toggleFixHeight = () => {
+            if (!this.isFixHeightAllowed) {
+                return;
+            }
+            this.props.updateObject({
+                resizing: {
+                    pinToEdge: this.pinToEdge,
+                    fixSize: this.isFixHeight
+                        ? this.fixSize & ~FIX_HEIGHT
+                        : this.fixSize | FIX_HEIGHT
+                }
+            });
+        };
 
-    originalContainerRect: Rect = {
-        left: 5,
-        top: 5,
-        width: 20,
-        height: 20
-    };
+        get isFixAllAllowed() {
+            return this.isFixWidthAllowed && this.isFixHeightAllowed;
+        }
 
-    originalWidgetRect: Rect = {
-        left: 6,
-        top: 6,
-        width: 8,
-        height: 8
-    };
+        toggleFixAll = () => {
+            if (!this.isFixAllAllowed) {
+                return;
+            }
+            this.props.updateObject({
+                resizing: {
+                    pinToEdge: this.pinToEdge,
+                    fixSize:
+                        this.isFixWidth && this.isFixHeight
+                            ? 0
+                            : FIX_WIDTH | FIX_HEIGHT
+                }
+            });
+        };
 
-    @observable
-    widgetRect: Rect = this.originalWidgetRect;
+        // make sure animation is shown if properties are changed
+        animateReactionDisposer: any;
 
-    @observable
-    containerRect: Rect = this.originalContainerRect;
+        originalContainerRect: Rect = {
+            left: 5,
+            top: 5,
+            width: 20,
+            height: 20
+        };
 
-    animationFrameHandle: any;
-    finalWidgetRect: Rect;
-    finalContainerRect: Rect;
-    animationStart: number;
+        originalWidgetRect: Rect = {
+            left: 6,
+            top: 6,
+            width: 8,
+            height: 8
+        };
 
-    animateReaction(props: any) {
-        return reaction(
-            () => {
-                const resizing =
-                    props.object &&
-                    (getProperty(
-                        props.object,
-                        props.propertyInfo.name
-                    ) as IResizing);
-                return {
-                    pinToEdge: (resizing && resizing.pinToEdge) || 0,
-                    fixSize: (resizing && resizing.fixSize) || 0
-                };
-            },
-            () => this.startAnimation(true)
-        );
-    }
+        widgetRect: Rect = this.originalWidgetRect;
 
-    @action.bound
-    animationFrame() {
-        this.animationFrameHandle = undefined;
+        containerRect: Rect = this.originalContainerRect;
 
-        let t =
-            (new Date().getTime() - this.animationStart) /
-            ANIMATION_OPEN_CLOSE_DURATION;
+        animationFrameHandle: any;
+        finalWidgetRect: Rect;
+        finalContainerRect: Rect;
+        animationStart: number;
 
-        let done = false;
+        animateReaction(props: any) {
+            return reaction(
+                () => {
+                    const resizing =
+                        props.object &&
+                        (getProperty(
+                            props.object,
+                            props.propertyInfo.name
+                        ) as IResizing);
+                    return {
+                        pinToEdge: (resizing && resizing.pinToEdge) || 0,
+                        fixSize: (resizing && resizing.fixSize) || 0
+                    };
+                },
+                () => this.startAnimation(true)
+            );
+        }
 
-        const x = ANIMATION_SUSTAIN_DURATION / ANIMATION_OPEN_CLOSE_DURATION;
+        animationFrame() {
+            this.animationFrameHandle = undefined;
 
-        if (t > 1 && t <= x + 1) {
-            t = 1;
-        } else if (t > x + 1) {
-            t = x + 2 - t;
-            if (t <= 0) {
-                t = 0;
-                done = true;
+            let t =
+                (new Date().getTime() - this.animationStart) /
+                ANIMATION_OPEN_CLOSE_DURATION;
+
+            let done = false;
+
+            const x =
+                ANIMATION_SUSTAIN_DURATION / ANIMATION_OPEN_CLOSE_DURATION;
+
+            if (t > 1 && t <= x + 1) {
+                t = 1;
+            } else if (t > x + 1) {
+                t = x + 2 - t;
+                if (t <= 0) {
+                    t = 0;
+                    done = true;
+                }
+            }
+
+            this.widgetRect = {
+                left:
+                    this.originalWidgetRect.left +
+                    t *
+                        (this.finalWidgetRect.left -
+                            this.originalWidgetRect.left),
+                top:
+                    this.originalWidgetRect.top +
+                    t *
+                        (this.finalWidgetRect.top -
+                            this.originalWidgetRect.top),
+                width:
+                    this.originalWidgetRect.width +
+                    t *
+                        (this.finalWidgetRect.width -
+                            this.originalWidgetRect.width),
+                height:
+                    this.originalWidgetRect.height +
+                    t *
+                        (this.finalWidgetRect.height -
+                            this.originalWidgetRect.height)
+            };
+
+            this.containerRect = {
+                left:
+                    this.originalContainerRect.left +
+                    t *
+                        (this.finalContainerRect.left -
+                            this.originalContainerRect.left),
+                top:
+                    this.originalContainerRect.top +
+                    t *
+                        (this.finalContainerRect.top -
+                            this.originalContainerRect.top),
+                width:
+                    this.originalContainerRect.width +
+                    t *
+                        (this.finalContainerRect.width -
+                            this.originalContainerRect.width),
+                height:
+                    this.originalContainerRect.height +
+                    t *
+                        (this.finalContainerRect.height -
+                            this.originalContainerRect.height)
+            };
+
+            if (!done) {
+                this.animationFrameHandle = requestAnimationFrame(
+                    this.animationFrame
+                );
             }
         }
 
-        this.widgetRect = {
-            left:
-                this.originalWidgetRect.left +
-                t * (this.finalWidgetRect.left - this.originalWidgetRect.left),
-            top:
-                this.originalWidgetRect.top +
-                t * (this.finalWidgetRect.top - this.originalWidgetRect.top),
-            width:
-                this.originalWidgetRect.width +
-                t *
-                    (this.finalWidgetRect.width -
-                        this.originalWidgetRect.width),
-            height:
-                this.originalWidgetRect.height +
-                t *
-                    (this.finalWidgetRect.height -
-                        this.originalWidgetRect.height)
-        };
+        startAnimation = (interrupt: boolean) => {
+            if (this.animationFrameHandle) {
+                if (!interrupt) {
+                    return;
+                }
 
-        this.containerRect = {
-            left:
-                this.originalContainerRect.left +
-                t *
-                    (this.finalContainerRect.left -
-                        this.originalContainerRect.left),
-            top:
-                this.originalContainerRect.top +
-                t *
-                    (this.finalContainerRect.top -
-                        this.originalContainerRect.top),
-            width:
-                this.originalContainerRect.width +
-                t *
-                    (this.finalContainerRect.width -
-                        this.originalContainerRect.width),
-            height:
-                this.originalContainerRect.height +
-                t *
-                    (this.finalContainerRect.height -
-                        this.originalContainerRect.height)
-        };
+                cancelAnimationFrame(this.animationFrameHandle);
+                this.animationFrameHandle = undefined;
+            }
 
-        if (!done) {
+            this.finalContainerRect = {
+                left: this.originalContainerRect.left,
+                top: this.originalContainerRect.top,
+                width: W - 2 * this.originalContainerRect.left,
+                height: H - 2 * this.originalContainerRect.top
+            };
+
+            this.finalWidgetRect = resizeWidget(
+                this.originalWidgetRect,
+                this.originalContainerRect,
+                this.finalContainerRect,
+                this.resizing
+            );
+
+            this.animationStart = new Date().getTime();
+
             this.animationFrameHandle = requestAnimationFrame(
                 this.animationFrame
             );
-        }
-    }
-
-    startAnimation = (interrupt: boolean) => {
-        if (this.animationFrameHandle) {
-            if (!interrupt) {
-                return;
-            }
-
-            cancelAnimationFrame(this.animationFrameHandle);
-            this.animationFrameHandle = undefined;
-        }
-
-        this.finalContainerRect = {
-            left: this.originalContainerRect.left,
-            top: this.originalContainerRect.top,
-            width: W - 2 * this.originalContainerRect.left,
-            height: H - 2 * this.originalContainerRect.top
         };
 
-        this.finalWidgetRect = resizeWidget(
-            this.originalWidgetRect,
-            this.originalContainerRect,
-            this.finalContainerRect,
-            this.resizing
-        );
-
-        this.animationStart = new Date().getTime();
-
-        this.animationFrameHandle = requestAnimationFrame(this.animationFrame);
-    };
-
-    render() {
-        const pinToLeft = (
-            <g onClick={this.togglePinToLeft}>
-                <rect
-                    x={X1 + G3}
-                    y={Y1 + H / 2 - WL1 / 2}
-                    width={HL1}
-                    height={WL1}
-                    fill={RFC}
-                />
-                <line
-                    x1={X1 + G3}
-                    y1={Y1 + H / 2 - WL1 / 2}
-                    x2={X1 + G3}
-                    y2={Y1 + H / 2 + WL1 / 2}
-                    stroke={
-                        this.isPinToLeftAllowed
-                            ? this.isPinToLeft
-                                ? LCA
-                                : LCE
-                            : LCD
-                    }
-                />
-                <line
-                    x1={X1 + G3}
-                    y1={Y1 + H / 2}
-                    x2={X1 + G3 + HL1}
-                    y2={Y1 + H / 2}
-                    stroke={
-                        this.isPinToLeftAllowed
-                            ? this.isPinToLeft
-                                ? LCA
-                                : LCE
-                            : LCD
-                    }
-                />
-            </g>
-        );
-
-        const pinToRight = (
-            <g onClick={this.togglePinToRight}>
-                <rect
-                    x={X1 + W - G3 - HL1}
-                    y={Y1 + H / 2 - WL1 / 2}
-                    width={HL1}
-                    height={WL1}
-                    fill={RFC}
-                />
-                <line
-                    x1={X1 + W - G3}
-                    y1={Y1 + H / 2 - WL1 / 2}
-                    x2={X1 + W - G3}
-                    y2={Y1 + H / 2 + WL1 / 2}
-                    stroke={
-                        this.isPinToRightAllowed
-                            ? this.isPinToRight
-                                ? LCA
-                                : LCE
-                            : LCD
-                    }
-                />
-                <line
-                    x1={X1 + W - G3 - HL1}
-                    y1={Y1 + H / 2}
-                    x2={X1 + W - G3}
-                    y2={Y1 + H / 2}
-                    stroke={
-                        this.isPinToRightAllowed
-                            ? this.isPinToRight
-                                ? LCA
-                                : LCE
-                            : LCD
-                    }
-                />
-            </g>
-        );
-
-        const pinToTop = (
-            <g onClick={this.togglePinToTop}>
-                <rect
-                    x={X1 + W / 2 - WL1 / 2}
-                    y={Y1 + G3}
-                    width={WL1}
-                    height={HL1}
-                    fill={RFC}
-                />
-                <line
-                    x1={X1 + W / 2 - WL1 / 2}
-                    y1={Y1 + G3}
-                    x2={X1 + W / 2 + WL1 / 2}
-                    y2={Y1 + G3}
-                    stroke={
-                        this.isPinToTopAllowed
-                            ? this.isPinToTop
-                                ? LCA
-                                : LCE
-                            : LCD
-                    }
-                />
-                <line
-                    x1={X1 + W / 2}
-                    y1={Y1 + G3}
-                    x2={X1 + W / 2}
-                    y2={Y1 + G3 + HL1}
-                    stroke={
-                        this.isPinToTopAllowed
-                            ? this.isPinToTop
-                                ? LCA
-                                : LCE
-                            : LCD
-                    }
-                />
-            </g>
-        );
-
-        const pinToBottom = (
-            <g onClick={this.togglePinToBottom}>
-                <rect
-                    x={X1 + W / 2 - WL1 / 2}
-                    y={Y1 + H - G3 - HL1}
-                    width={WL1}
-                    height={HL1}
-                    fill={RFC}
-                />
-                <line
-                    x1={X1 + W / 2 - WL1 / 2}
-                    y1={Y1 + H - G3}
-                    x2={X1 + W / 2 + WL1 / 2}
-                    y2={Y1 + H - G3}
-                    stroke={
-                        this.isPinToBottomAllowed
-                            ? this.isPinToBottom
-                                ? LCA
-                                : LCE
-                            : LCD
-                    }
-                />
-                <line
-                    x1={X1 + W / 2}
-                    y1={Y1 + H - G3}
-                    x2={X1 + W / 2}
-                    y2={Y1 + H - G3 - HL1}
-                    stroke={
-                        this.isPinToBottomAllowed
-                            ? this.isPinToBottom
-                                ? LCA
-                                : LCE
-                            : LCD
-                    }
-                />
-            </g>
-        );
-
-        const pinToEdge = (
-            <g>
-                <rect
-                    x={X1}
-                    y={Y1}
-                    width={W}
-                    height={H}
-                    fill={RFC}
-                    stroke={RSC}
-                />
-                <text
-                    x={X1 + W / 2}
-                    y={H + G1 + LH}
-                    fontSize="80%"
-                    style={{ textAnchor: "middle" }}
-                >
-                    Pin to edge
-                </text>
-                {pinToLeft}
-                {pinToRight}
-                {pinToTop}
-                {pinToBottom}
-                <rect
-                    x={X1 + W / 2 - HL1 / 2}
-                    y={Y1 + H / 2 - HL1 / 2}
-                    width={HL1}
-                    height={HL1}
-                    fill={RFC}
-                    stroke={LCE}
-                    onClick={this.togglePinToAll}
-                />
-            </g>
-        );
-
-        ////////////////////////////////////////////////////////////////////////////////
-
-        const fixWidth = (
-            <g>
-                <g onClick={this.toggleFixWidth}>
+        render() {
+            const pinToLeft = (
+                <g onClick={this.togglePinToLeft}>
                     <rect
-                        x={X2 + G3}
-                        y={Y1 + H / 2 - WL2 / 2}
-                        width={HL2}
-                        height={WL2}
+                        x={X1 + G3}
+                        y={Y1 + H / 2 - WL1 / 2}
+                        width={HL1}
+                        height={WL1}
                         fill={RFC}
                     />
                     <line
-                        x1={X2 + G3}
-                        y1={Y1 + H / 2 - WL2 / 2}
-                        x2={X2 + G3}
-                        y2={Y1 + H / 2 + WL2 / 2}
+                        x1={X1 + G3}
+                        y1={Y1 + H / 2 - WL1 / 2}
+                        x2={X1 + G3}
+                        y2={Y1 + H / 2 + WL1 / 2}
                         stroke={
-                            this.isFixWidthAllowed
-                                ? this.isFixWidth
+                            this.isPinToLeftAllowed
+                                ? this.isPinToLeft
                                     ? LCA
                                     : LCE
                                 : LCD
                         }
                     />
                     <line
-                        x1={X2 + G3}
+                        x1={X1 + G3}
                         y1={Y1 + H / 2}
-                        x2={X2 + G3 + HL2}
+                        x2={X1 + G3 + HL1}
                         y2={Y1 + H / 2}
                         stroke={
-                            this.isFixWidthAllowed
-                                ? this.isFixWidth
+                            this.isPinToLeftAllowed
+                                ? this.isPinToLeft
                                     ? LCA
                                     : LCE
                                 : LCD
                         }
                     />
                 </g>
-                <g onClick={this.toggleFixWidth}>
+            );
+
+            const pinToRight = (
+                <g onClick={this.togglePinToRight}>
                     <rect
-                        x={X2 + W - G3 - HL2}
-                        y={Y1 + H / 2 - WL2 / 2}
-                        width={HL2}
-                        height={WL2}
+                        x={X1 + W - G3 - HL1}
+                        y={Y1 + H / 2 - WL1 / 2}
+                        width={HL1}
+                        height={WL1}
                         fill={RFC}
                     />
                     <line
-                        x1={X2 + W - G3}
-                        y1={Y1 + H / 2 - WL2 / 2}
-                        x2={X2 + W - G3}
-                        y2={Y1 + H / 2 + WL2 / 2}
+                        x1={X1 + W - G3}
+                        y1={Y1 + H / 2 - WL1 / 2}
+                        x2={X1 + W - G3}
+                        y2={Y1 + H / 2 + WL1 / 2}
                         stroke={
-                            this.isFixWidthAllowed
-                                ? this.isFixWidth
+                            this.isPinToRightAllowed
+                                ? this.isPinToRight
                                     ? LCA
                                     : LCE
                                 : LCD
                         }
                     />
                     <line
-                        x1={X2 + W - G3 - HL2}
+                        x1={X1 + W - G3 - HL1}
                         y1={Y1 + H / 2}
-                        x2={X2 + W - G3}
+                        x2={X1 + W - G3}
                         y2={Y1 + H / 2}
                         stroke={
-                            this.isFixWidthAllowed
-                                ? this.isFixWidth
+                            this.isPinToRightAllowed
+                                ? this.isPinToRight
                                     ? LCA
                                     : LCE
                                 : LCD
                         }
                     />
                 </g>
-            </g>
-        );
+            );
 
-        const fixHeight = (
-            <g>
-                <g onClick={this.toggleFixHeight}>
+            const pinToTop = (
+                <g onClick={this.togglePinToTop}>
                     <rect
-                        x={X2 + W / 2 - WL2 / 2}
+                        x={X1 + W / 2 - WL1 / 2}
                         y={Y1 + G3}
-                        width={WL2}
-                        height={HL2}
+                        width={WL1}
+                        height={HL1}
                         fill={RFC}
                     />
                     <line
-                        x1={X2 + W / 2 - WL2 / 2}
+                        x1={X1 + W / 2 - WL1 / 2}
                         y1={Y1 + G3}
-                        x2={X2 + W / 2 + WL2 / 2}
+                        x2={X1 + W / 2 + WL1 / 2}
                         y2={Y1 + G3}
                         stroke={
-                            this.isFixHeightAllowed
-                                ? this.isFixHeight
+                            this.isPinToTopAllowed
+                                ? this.isPinToTop
                                     ? LCA
                                     : LCE
                                 : LCD
                         }
                     />
                     <line
-                        x1={X2 + W / 2}
+                        x1={X1 + W / 2}
                         y1={Y1 + G3}
-                        x2={X2 + W / 2}
-                        y2={Y1 + G3 + HL2}
+                        x2={X1 + W / 2}
+                        y2={Y1 + G3 + HL1}
                         stroke={
-                            this.isFixHeightAllowed
-                                ? this.isFixHeight
+                            this.isPinToTopAllowed
+                                ? this.isPinToTop
                                     ? LCA
                                     : LCE
                                 : LCD
                         }
                     />
                 </g>
-                <g onClick={this.toggleFixHeight}>
+            );
+
+            const pinToBottom = (
+                <g onClick={this.togglePinToBottom}>
                     <rect
-                        x={X2 + W / 2 - WL2 / 2}
-                        y={Y1 + H - G3 - HL2}
-                        width={WL2}
-                        height={HL2}
+                        x={X1 + W / 2 - WL1 / 2}
+                        y={Y1 + H - G3 - HL1}
+                        width={WL1}
+                        height={HL1}
                         fill={RFC}
                     />
                     <line
-                        x1={X2 + W / 2 - WL2 / 2}
+                        x1={X1 + W / 2 - WL1 / 2}
                         y1={Y1 + H - G3}
-                        x2={X2 + W / 2 + WL2 / 2}
+                        x2={X1 + W / 2 + WL1 / 2}
                         y2={Y1 + H - G3}
                         stroke={
-                            this.isFixHeightAllowed
-                                ? this.isFixHeight
+                            this.isPinToBottomAllowed
+                                ? this.isPinToBottom
                                     ? LCA
                                     : LCE
                                 : LCD
                         }
                     />
                     <line
-                        x1={X2 + W / 2}
+                        x1={X1 + W / 2}
                         y1={Y1 + H - G3}
-                        x2={X2 + W / 2}
-                        y2={Y1 + H - G3 - HL2}
+                        x2={X1 + W / 2}
+                        y2={Y1 + H - G3 - HL1}
                         stroke={
-                            this.isFixHeightAllowed
-                                ? this.isFixHeight
+                            this.isPinToBottomAllowed
+                                ? this.isPinToBottom
                                     ? LCA
                                     : LCE
                                 : LCD
                         }
                     />
                 </g>
-            </g>
-        );
+            );
 
-        const fixSize = (
-            <g>
-                <rect
-                    x={X2}
-                    y={Y1}
-                    width={W}
-                    height={H}
-                    fill={RFC}
-                    stroke={RSC}
-                />
-                <text
-                    x={X2 + W / 2}
-                    y={H + G1 + LH}
-                    fontSize="80%"
-                    style={{ textAnchor: "middle" }}
+            const pinToEdge = (
+                <g>
+                    <rect
+                        x={X1}
+                        y={Y1}
+                        width={W}
+                        height={H}
+                        fill={RFC}
+                        stroke={RSC}
+                    />
+                    <text
+                        x={X1 + W / 2}
+                        y={H + G1 + LH}
+                        fontSize="80%"
+                        style={{ textAnchor: "middle" }}
+                    >
+                        Pin to edge
+                    </text>
+                    {pinToLeft}
+                    {pinToRight}
+                    {pinToTop}
+                    {pinToBottom}
+                    <rect
+                        x={X1 + W / 2 - HL1 / 2}
+                        y={Y1 + H / 2 - HL1 / 2}
+                        width={HL1}
+                        height={HL1}
+                        fill={RFC}
+                        stroke={LCE}
+                        onClick={this.togglePinToAll}
+                    />
+                </g>
+            );
+
+            ////////////////////////////////////////////////////////////////////////////////
+
+            const fixWidth = (
+                <g>
+                    <g onClick={this.toggleFixWidth}>
+                        <rect
+                            x={X2 + G3}
+                            y={Y1 + H / 2 - WL2 / 2}
+                            width={HL2}
+                            height={WL2}
+                            fill={RFC}
+                        />
+                        <line
+                            x1={X2 + G3}
+                            y1={Y1 + H / 2 - WL2 / 2}
+                            x2={X2 + G3}
+                            y2={Y1 + H / 2 + WL2 / 2}
+                            stroke={
+                                this.isFixWidthAllowed
+                                    ? this.isFixWidth
+                                        ? LCA
+                                        : LCE
+                                    : LCD
+                            }
+                        />
+                        <line
+                            x1={X2 + G3}
+                            y1={Y1 + H / 2}
+                            x2={X2 + G3 + HL2}
+                            y2={Y1 + H / 2}
+                            stroke={
+                                this.isFixWidthAllowed
+                                    ? this.isFixWidth
+                                        ? LCA
+                                        : LCE
+                                    : LCD
+                            }
+                        />
+                    </g>
+                    <g onClick={this.toggleFixWidth}>
+                        <rect
+                            x={X2 + W - G3 - HL2}
+                            y={Y1 + H / 2 - WL2 / 2}
+                            width={HL2}
+                            height={WL2}
+                            fill={RFC}
+                        />
+                        <line
+                            x1={X2 + W - G3}
+                            y1={Y1 + H / 2 - WL2 / 2}
+                            x2={X2 + W - G3}
+                            y2={Y1 + H / 2 + WL2 / 2}
+                            stroke={
+                                this.isFixWidthAllowed
+                                    ? this.isFixWidth
+                                        ? LCA
+                                        : LCE
+                                    : LCD
+                            }
+                        />
+                        <line
+                            x1={X2 + W - G3 - HL2}
+                            y1={Y1 + H / 2}
+                            x2={X2 + W - G3}
+                            y2={Y1 + H / 2}
+                            stroke={
+                                this.isFixWidthAllowed
+                                    ? this.isFixWidth
+                                        ? LCA
+                                        : LCE
+                                    : LCD
+                            }
+                        />
+                    </g>
+                </g>
+            );
+
+            const fixHeight = (
+                <g>
+                    <g onClick={this.toggleFixHeight}>
+                        <rect
+                            x={X2 + W / 2 - WL2 / 2}
+                            y={Y1 + G3}
+                            width={WL2}
+                            height={HL2}
+                            fill={RFC}
+                        />
+                        <line
+                            x1={X2 + W / 2 - WL2 / 2}
+                            y1={Y1 + G3}
+                            x2={X2 + W / 2 + WL2 / 2}
+                            y2={Y1 + G3}
+                            stroke={
+                                this.isFixHeightAllowed
+                                    ? this.isFixHeight
+                                        ? LCA
+                                        : LCE
+                                    : LCD
+                            }
+                        />
+                        <line
+                            x1={X2 + W / 2}
+                            y1={Y1 + G3}
+                            x2={X2 + W / 2}
+                            y2={Y1 + G3 + HL2}
+                            stroke={
+                                this.isFixHeightAllowed
+                                    ? this.isFixHeight
+                                        ? LCA
+                                        : LCE
+                                    : LCD
+                            }
+                        />
+                    </g>
+                    <g onClick={this.toggleFixHeight}>
+                        <rect
+                            x={X2 + W / 2 - WL2 / 2}
+                            y={Y1 + H - G3 - HL2}
+                            width={WL2}
+                            height={HL2}
+                            fill={RFC}
+                        />
+                        <line
+                            x1={X2 + W / 2 - WL2 / 2}
+                            y1={Y1 + H - G3}
+                            x2={X2 + W / 2 + WL2 / 2}
+                            y2={Y1 + H - G3}
+                            stroke={
+                                this.isFixHeightAllowed
+                                    ? this.isFixHeight
+                                        ? LCA
+                                        : LCE
+                                    : LCD
+                            }
+                        />
+                        <line
+                            x1={X2 + W / 2}
+                            y1={Y1 + H - G3}
+                            x2={X2 + W / 2}
+                            y2={Y1 + H - G3 - HL2}
+                            stroke={
+                                this.isFixHeightAllowed
+                                    ? this.isFixHeight
+                                        ? LCA
+                                        : LCE
+                                    : LCD
+                            }
+                        />
+                    </g>
+                </g>
+            );
+
+            const fixSize = (
+                <g>
+                    <rect
+                        x={X2}
+                        y={Y1}
+                        width={W}
+                        height={H}
+                        fill={RFC}
+                        stroke={RSC}
+                    />
+                    <text
+                        x={X2 + W / 2}
+                        y={H + G1 + LH}
+                        fontSize="80%"
+                        style={{ textAnchor: "middle" }}
+                    >
+                        Fix size
+                    </text>
+                    {fixWidth}
+                    {fixHeight}
+                    <rect
+                        x={X2 + W / 2 - HL1 / 2}
+                        y={Y1 + H / 2 - HL1 / 2}
+                        width={HL1}
+                        height={HL1}
+                        fill={RFC}
+                        stroke={this.isFixAllAllowed ? LCE : LCD}
+                        onClick={this.toggleFixAll}
+                    />
+                </g>
+            );
+
+            ////////////////////////////////////////////////////////////////////////////////
+
+            const preview = (
+                <g onMouseEnter={() => this.startAnimation(false)}>
+                    <rect
+                        x={X3}
+                        y={Y1}
+                        width={W}
+                        height={H}
+                        fill={PRFC}
+                        stroke={PRSC}
+                    />
+                    <text
+                        x={X3 + W / 2}
+                        y={H + G1 + LH}
+                        fontSize="80%"
+                        style={{ textAnchor: "middle" }}
+                    >
+                        Preview
+                    </text>
+                    <rect
+                        x={X3 + this.containerRect.left}
+                        y={Y1 + this.containerRect.top}
+                        width={this.containerRect.width}
+                        height={this.containerRect.height}
+                        fill={PCRFC}
+                        stroke={PCRSC}
+                    />
+                    <rect
+                        x={X3 + this.containerRect.left + this.widgetRect.left}
+                        y={Y1 + this.containerRect.top + this.widgetRect.top}
+                        width={this.widgetRect.width}
+                        height={this.widgetRect.height}
+                        fill={PWRFC}
+                        stroke={PWRSC}
+                    />
+                </g>
+            );
+
+            ////////////////////////////////////////////////////////////////////////////////
+
+            return (
+                <svg
+                    style={{ margin: "10 10 5 10" }}
+                    width={X3 + W + X1}
+                    height={Y1 + H + G1 + TH}
                 >
-                    Fix size
-                </text>
-                {fixWidth}
-                {fixHeight}
-                <rect
-                    x={X2 + W / 2 - HL1 / 2}
-                    y={Y1 + H / 2 - HL1 / 2}
-                    width={HL1}
-                    height={HL1}
-                    fill={RFC}
-                    stroke={this.isFixAllAllowed ? LCE : LCD}
-                    onClick={this.toggleFixAll}
-                />
-            </g>
-        );
-
-        ////////////////////////////////////////////////////////////////////////////////
-
-        const preview = (
-            <g onMouseEnter={() => this.startAnimation(false)}>
-                <rect
-                    x={X3}
-                    y={Y1}
-                    width={W}
-                    height={H}
-                    fill={PRFC}
-                    stroke={PRSC}
-                />
-                <text
-                    x={X3 + W / 2}
-                    y={H + G1 + LH}
-                    fontSize="80%"
-                    style={{ textAnchor: "middle" }}
-                >
-                    Preview
-                </text>
-                <rect
-                    x={X3 + this.containerRect.left}
-                    y={Y1 + this.containerRect.top}
-                    width={this.containerRect.width}
-                    height={this.containerRect.height}
-                    fill={PCRFC}
-                    stroke={PCRSC}
-                />
-                <rect
-                    x={X3 + this.containerRect.left + this.widgetRect.left}
-                    y={Y1 + this.containerRect.top + this.widgetRect.top}
-                    width={this.widgetRect.width}
-                    height={this.widgetRect.height}
-                    fill={PWRFC}
-                    stroke={PWRSC}
-                />
-            </g>
-        );
-
-        ////////////////////////////////////////////////////////////////////////////////
-
-        return (
-            <svg
-                style={{ margin: "10 10 5 10" }}
-                width={X3 + W + X1}
-                height={Y1 + H + G1 + TH}
-            >
-                {pinToEdge}
-                {fixSize}
-                {preview}
-            </svg>
-        );
+                    {pinToEdge}
+                    {fixSize}
+                    {preview}
+                </svg>
+            );
+        }
     }
-}
+);

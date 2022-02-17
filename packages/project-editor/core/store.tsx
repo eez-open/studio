@@ -1,6 +1,16 @@
-import * as fs from "fs";
+import { ipcRenderer } from "electron";
+import {
+    dialog,
+    Menu,
+    MenuItem,
+    getCurrentWindow,
+    clipboard
+} from "@electron/remote";
+import path from "path";
+import fs from "fs";
 import React from "react";
-import * as mobx from "mobx";
+import { makeObservable } from "mobx";
+import mobx from "mobx";
 import {
     observable,
     extendObservable,
@@ -21,7 +31,7 @@ import {
     _uniqWith,
     _find
 } from "eez-studio-shared/algorithm";
-import { confirmSave } from "eez-studio-shared/util";
+import { confirmSave } from "eez-studio-shared/util-renderer";
 import { humanize } from "eez-studio-shared/string";
 import { guid } from "eez-studio-shared/guid";
 
@@ -77,8 +87,6 @@ import type { IObjectVariableValue } from "project-editor/features/variable/valu
 import { IVariable } from "project-editor/flow/flow-interfaces";
 import { IEditor, IEditorState } from "project-editor/project/EditorComponent";
 
-const { Menu, MenuItem } = EEZStudio.remote || {};
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface IPanel {
@@ -91,7 +99,7 @@ export interface IPanel {
 }
 
 class NavigationStore {
-    @observable selectedPanel: IPanel | undefined;
+    selectedPanel: IPanel | undefined;
 
     selectedRootObject = observable.box<IEezObject>();
 
@@ -113,7 +121,13 @@ class NavigationStore {
 
     editable = true;
 
-    constructor(public DocumentStore: DocumentStoreClass) {}
+    constructor(public DocumentStore: DocumentStoreClass) {
+        makeObservable(this, {
+            selectedPanel: observable,
+            setSelectedPanel: action,
+            showObjects: action
+        });
+    }
 
     loadState(state: any) {
         let selectedRootObject;
@@ -325,12 +339,10 @@ class NavigationStore {
         };
     }
 
-    @action
     setSelectedPanel(selectedPanel: IPanel | undefined) {
         this.selectedPanel = selectedPanel;
     }
 
-    @action
     showObjects(
         objects: IEezObject[],
         openEditor: boolean,
@@ -371,20 +383,26 @@ class NavigationStore {
 
 export class Editor implements IEditor {
     tabId: string;
-    @observable object: IEezObject;
-    @observable subObject: IEezObject | undefined;
-    @observable state: IEditorState | undefined;
+    object: IEezObject;
+    subObject: IEezObject | undefined;
+    state: IEditorState | undefined;
 
     loading = false;
 
-    constructor(public DocumentStore: DocumentStoreClass) {}
+    constructor(public DocumentStore: DocumentStoreClass) {
+        makeObservable(this, {
+            object: observable,
+            subObject: observable,
+            state: observable,
+            title: computed,
+            makeActive: action
+        });
+    }
 
-    @computed
     get title() {
         return objectToString(this.object);
     }
 
-    @action
     makeActive() {
         this.DocumentStore.editorsStore.activateEditor(this);
         if (this.DocumentStore.runtime) {
@@ -399,12 +417,20 @@ export class Editor implements IEditor {
 class EditorsStore {
     tabIdToEditorMap = new Map<string, Editor>();
 
-    @observable editors: Editor[] = [];
-    @observable activeEditor: Editor | undefined = undefined;
+    editors: Editor[] = [];
+    activeEditor: Editor | undefined = undefined;
 
     dispose1: mobx.IReactionDisposer;
 
     constructor(public DocumentStore: DocumentStoreClass) {
+        makeObservable(this, {
+            editors: observable,
+            activeEditor: observable,
+            activateEditor: action,
+            openEditor: action,
+            closeEditor: action
+        });
+
         // close editor if editor object doesn't exists anymore
         this.dispose1 = autorun(() => {
             this.editors.slice().forEach(editor => {
@@ -516,7 +542,6 @@ class EditorsStore {
         });
     }
 
-    @action
     activateEditor(editor: Editor) {
         this.tabsModel.doAction(FlexLayout.Actions.selectTab(editor.tabId));
 
@@ -530,7 +555,6 @@ class EditorsStore {
         }, 0);
     }
 
-    @action
     openEditor(object: IEezObject, subObject?: IEezObject) {
         let editorFound: Editor | undefined;
 
@@ -579,7 +603,6 @@ class EditorsStore {
         return editor;
     }
 
-    @action
     closeEditor(editor: Editor) {
         let index = this.editors.indexOf(editor);
         if (index != -1) {
@@ -705,17 +728,29 @@ export class LayoutModels {
         set: (model: FlexLayout.Model) => void;
     }[];
 
-    @observable root: FlexLayout.Model;
-    @observable variables: FlexLayout.Model;
-    @observable bitmaps: FlexLayout.Model;
-    @observable fonts: FlexLayout.Model;
-    @observable pages: FlexLayout.Model;
-    @observable scpi: FlexLayout.Model;
-    @observable styles: FlexLayout.Model;
-    @observable themes: FlexLayout.Model;
-    @observable debugger: FlexLayout.Model;
+    root: FlexLayout.Model;
+    variables: FlexLayout.Model;
+    bitmaps: FlexLayout.Model;
+    fonts: FlexLayout.Model;
+    pages: FlexLayout.Model;
+    scpi: FlexLayout.Model;
+    styles: FlexLayout.Model;
+    themes: FlexLayout.Model;
+    debugger: FlexLayout.Model;
 
     constructor(public DocumentStore: DocumentStoreClass) {
+        makeObservable(this, {
+            root: observable,
+            variables: observable,
+            bitmaps: observable,
+            fonts: observable,
+            pages: observable,
+            scpi: observable,
+            styles: observable,
+            themes: observable,
+            debugger: observable
+        });
+
         this.models = [
             {
                 name: "root",
@@ -1293,21 +1328,44 @@ export class LayoutModels {
 ////////////////////////////////////////////////////////////////////////////////
 
 class UIStateStore {
-    @observable selectedBuildConfiguration: string;
-    @observable features: any;
-    @observable savedState: any;
-    @observable searchPattern: string;
-    @observable searchMatchCase: boolean;
-    @observable searchMatchWholeWord: boolean;
-    @observable activeOutputSection = Section.CHECKS;
-    @observable pageEditorFrontFace: boolean = false;
-    @observable pageRuntimeFrontFace: boolean = true;
-    @observable showCommandPalette: boolean = false;
-    @observable showComponentDescriptions: boolean = true;
+    selectedBuildConfiguration: string;
+    features: any;
+    savedState: any;
+    searchPattern: string;
+    searchMatchCase: boolean;
+    searchMatchWholeWord: boolean;
+    activeOutputSection = Section.CHECKS;
+    pageEditorFrontFace: boolean = false;
+    pageRuntimeFrontFace: boolean = true;
+    showCommandPalette: boolean = false;
+    showComponentDescriptions: boolean = true;
 
     objectUIStates = new Map<string, any>();
 
-    constructor(public DocumentStore: DocumentStoreClass) {}
+    constructor(public DocumentStore: DocumentStoreClass) {
+        makeObservable(this, {
+            selectedBuildConfiguration: observable,
+            features: observable,
+            savedState: observable,
+            searchPattern: observable,
+            searchMatchCase: observable,
+            searchMatchWholeWord: observable,
+            activeOutputSection: observable,
+            pageEditorFrontFace: observable,
+            pageRuntimeFrontFace: observable,
+            showCommandPalette: observable,
+            showComponentDescriptions: observable,
+            getFeatureParam: action,
+            setSelectedBuildConfiguration: action,
+            breakpoints: observable,
+            selectedBreakpoint: observable,
+            addBreakpoint: action,
+            removeBreakpoint: action,
+            enableBreakpoint: action,
+            disableBreakpoint: action,
+            watchExpressions: observable
+        });
+    }
 
     unmount() {}
 
@@ -1453,7 +1511,6 @@ class UIStateStore {
         }
     }
 
-    @action
     getFeatureParam<T>(
         extensionName: string,
         paramName: string,
@@ -1476,7 +1533,6 @@ class UIStateStore {
         return paramValue as T;
     }
 
-    @action
     setSelectedBuildConfiguration(selectedBuildConfiguration: string) {
         this.selectedBuildConfiguration = selectedBuildConfiguration;
     }
@@ -1499,10 +1555,8 @@ class UIStateStore {
     ////////////////////////////////////////
     // BREAKPOINTS
 
-    @observable breakpoints = new Map<Component, boolean>();
-    @observable selectedBreakpoint = observable.box<Component | undefined>(
-        undefined
-    );
+    breakpoints = new Map<Component, boolean>();
+    selectedBreakpoint = observable.box<Component | undefined>(undefined);
 
     isBreakpointAddedForComponent(component: Component) {
         return this.breakpoints.has(component);
@@ -1512,7 +1566,6 @@ class UIStateStore {
         return this.breakpoints.get(component) == true;
     }
 
-    @action
     addBreakpoint(component: Component) {
         this.breakpoints.set(component, true);
         if (this.DocumentStore.runtime) {
@@ -1520,7 +1573,6 @@ class UIStateStore {
         }
     }
 
-    @action
     removeBreakpoint(component: Component) {
         this.breakpoints.delete(component);
         if (this.DocumentStore.runtime) {
@@ -1528,7 +1580,6 @@ class UIStateStore {
         }
     }
 
-    @action
     enableBreakpoint(component: Component) {
         this.breakpoints.set(component, true);
         if (this.DocumentStore.runtime) {
@@ -1536,7 +1587,6 @@ class UIStateStore {
         }
     }
 
-    @action
     disableBreakpoint(component: Component) {
         this.breakpoints.set(component, false);
         if (this.DocumentStore.runtime) {
@@ -1547,16 +1597,20 @@ class UIStateStore {
     ////////////////////////////////////////
     // WATCH EXPRESSIONS
 
-    @observable watchExpressions: string[] = [];
+    watchExpressions: string[] = [];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class RuntimeSettings {
-    @observable settings: any = {};
+    settings: any = {};
     modified = false;
 
-    constructor(public DocumentStore: DocumentStoreClass) {}
+    constructor(public DocumentStore: DocumentStoreClass) {
+        makeObservable(this, {
+            settings: observable
+        });
+    }
 
     getVariableValue(variable: IVariable) {
         const persistentVariables: any =
@@ -1687,22 +1741,36 @@ interface IUndoItem {
 }
 
 export class UndoManager {
-    @observable undoStack: IUndoItem[] = [];
-    @observable redoStack: IUndoItem[] = [];
-    @observable commands: ICommand[] = [];
+    undoStack: IUndoItem[] = [];
+    redoStack: IUndoItem[] = [];
+    commands: ICommand[] = [];
 
     private selectionBeforeFirstCommand: any;
     public combineCommands: boolean = false;
 
-    constructor(public DocumentStore: DocumentStoreClass) {}
+    constructor(public DocumentStore: DocumentStoreClass) {
+        makeObservable(this, {
+            undoStack: observable,
+            redoStack: observable,
+            commands: observable,
+            clear: action,
+            pushToUndoStack: action,
+            setCombineCommands: action,
+            executeCommand: action,
+            canUndo: computed,
+            undoDescription: computed,
+            undo: action,
+            canRedo: computed,
+            redoDescription: computed,
+            redo: action
+        });
+    }
 
-    @action
     clear() {
         this.undoStack = [];
         this.redoStack = [];
     }
 
-    @action
     pushToUndoStack() {
         if (this.commands.length > 0) {
             // TODO set selectionAfter to current selection
@@ -1721,13 +1789,11 @@ export class UndoManager {
         }
     }
 
-    @action
     setCombineCommands(value: boolean) {
         this.pushToUndoStack();
         this.combineCommands = value;
     }
 
-    @action
     executeCommand(command: ICommand) {
         if (this.commands.length == 0) {
             // TODO set this.selectionBeforeFirstCommand to current selection
@@ -1750,12 +1816,10 @@ export class UndoManager {
         return commands[commands.length - 1].description;
     }
 
-    @computed
     get canUndo() {
         return this.undoStack.length > 0 || this.commands.length > 0;
     }
 
-    @computed
     get undoDescription() {
         let commands;
         if (this.commands.length > 0) {
@@ -1769,7 +1833,6 @@ export class UndoManager {
         return undefined;
     }
 
-    @action
     undo() {
         this.pushToUndoStack();
 
@@ -1787,12 +1850,10 @@ export class UndoManager {
         }
     }
 
-    @computed
     get canRedo() {
         return this.redoStack.length > 0;
     }
 
-    @computed
     get redoDescription() {
         let commands;
         if (this.redoStack.length > 0) {
@@ -1804,7 +1865,6 @@ export class UndoManager {
         return undefined;
     }
 
-    @action
     redo() {
         let redoItem = this.redoStack.pop();
         if (redoItem) {
@@ -1909,13 +1969,17 @@ export enum Section {
 
 export class Message implements IMessage {
     id: string = guid();
-    @observable selected: boolean = false;
+    selected: boolean = false;
 
     constructor(
         public type: MessageType,
         public text: string,
         public object?: IEezObject
-    ) {}
+    ) {
+        makeObservable(this, {
+            selected: observable
+        });
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1986,10 +2050,10 @@ export function propertyInvalidValueMessage(
 export class OutputSection implements IPanel {
     permanent: boolean = true;
 
-    @observable loading = false;
+    loading = false;
 
-    @observable messages: Message[] = [];
-    @observable selectedMessage: Message | undefined;
+    messages: Message[] = [];
+    selectedMessage: Message | undefined;
 
     constructor(
         public DocumentStore: DocumentStoreClass,
@@ -1997,13 +2061,25 @@ export class OutputSection implements IPanel {
         public name: string,
         public scrollToBottom: boolean,
         public tabId: string
-    ) {}
+    ) {
+        makeObservable(this, {
+            loading: observable,
+            messages: observable,
+            selectedMessage: observable,
+            active: computed,
+            title: computed,
+            numErrors: computed,
+            numWarnings: computed,
+            clear: action,
+            selectedObject: computed,
+            selectMessage: action
+        });
+    }
 
-    @computed get active() {
+    get active() {
         return this.DocumentStore.uiStateStore.activeOutputSection === this.id;
     }
 
-    @computed
     get title(): string | React.ReactNode {
         if (this.id == Section.CHECKS) {
             return (
@@ -2047,7 +2123,6 @@ export class OutputSection implements IPanel {
         return this.name;
     }
 
-    @computed
     get numErrors() {
         let n = 0;
         for (let i = 0; i < this.messages.length; i++) {
@@ -2058,7 +2133,6 @@ export class OutputSection implements IPanel {
         return n;
     }
 
-    @computed
     get numWarnings() {
         let n = 0;
         for (let i = 0; i < this.messages.length; i++) {
@@ -2069,13 +2143,11 @@ export class OutputSection implements IPanel {
         return n;
     }
 
-    @action
     clear() {
         this.messages = [];
         this.selectedMessage = undefined;
     }
 
-    @computed
     get selectedObject(): IEezObject | undefined {
         return this.selectedMessage &&
             this.messages.indexOf(this.selectedMessage) !== -1
@@ -2099,7 +2171,6 @@ export class OutputSection implements IPanel {
         // TODO
     }
 
-    @action
     selectMessage(message: Message) {
         if (this.selectedMessage !== message) {
             if (this.selectedMessage) {
@@ -2124,6 +2195,13 @@ export class OutputSections {
     sections: OutputSection[] = [];
 
     constructor(public DocumentStore: DocumentStoreClass) {
+        makeObservable(this, {
+            setLoading: action,
+            clear: action,
+            write: action,
+            setMessages: action
+        });
+
         this.sections[Section.CHECKS] = new OutputSection(
             DocumentStore,
             Section.CHECKS,
@@ -2151,12 +2229,10 @@ export class OutputSections {
         return this.sections[sectionType];
     }
 
-    @action
     setLoading(sectionType: Section, loading: boolean) {
         this.sections[sectionType].loading = loading;
     }
 
-    @action
     clear(sectionType: Section) {
         const section = this.sections[sectionType];
         section.clear();
@@ -2175,7 +2251,6 @@ export class OutputSections {
         );
     }
 
-    @action
     write(
         sectionType: Section,
         type: MessageType,
@@ -2187,7 +2262,6 @@ export class OutputSections {
         this.updateTitle(section);
     }
 
-    @action
     setMessages(sectionType: Section, messages: IMessage[]) {
         let section = this.sections[sectionType];
         section.messages = messages as Message[];
@@ -2206,13 +2280,13 @@ export class DocumentStoreClass {
     runtimeSettings = new RuntimeSettings(this);
     outputSectionsStore = new OutputSections(this);
 
-    @observable runtime: RuntimeBase | undefined;
+    runtime: RuntimeBase | undefined;
 
-    @observable private _project: Project | undefined;
-    @observable modified: boolean = false;
+    private _project: Project | undefined;
+    modified: boolean = false;
 
-    @observable filePath: string | undefined;
-    @observable backgroundCheckEnabled = true;
+    filePath: string | undefined;
+    backgroundCheckEnabled = true;
 
     dataContext: DataContext;
 
@@ -2221,8 +2295,8 @@ export class DocumentStoreClass {
     objects = new Map<string, IEezObject>();
     lastChildId = 0;
 
-    @observable externalProjects = new Map<string, Project>();
-    @observable mapExternalProjectToAbsolutePath = new Map<Project, string>();
+    externalProjects = new Map<string, Project>();
+    mapExternalProjectToAbsolutePath = new Map<Project, string>();
     externalProjectsLoading = new Map<string, boolean>();
 
     dispose1: mobx.IReactionDisposer;
@@ -2238,6 +2312,24 @@ export class DocumentStoreClass {
     }
 
     constructor() {
+        makeObservable<DocumentStoreClass, "_project">(this, {
+            runtime: observable,
+            _project: observable,
+            modified: observable,
+            filePath: observable,
+            backgroundCheckEnabled: observable,
+            externalProjects: observable,
+            mapExternalProjectToAbsolutePath: observable,
+            selectedBuildConfiguration: computed,
+            masterProjectEnabled: computed,
+            masterProject: computed,
+            isModified: computed,
+            setModified: action,
+            setProject: action,
+            setEditorMode: action,
+            onSetEditorMode: action
+        });
+
         this.currentSearch = new ProjectEditor.documentSearch.CurrentSearch(
             this
         );
@@ -2378,8 +2470,6 @@ export class DocumentStoreClass {
     }
 
     get title() {
-        const path = EEZStudio.remote.require("path");
-
         if (this.filePath) {
             if (this.filePath.endsWith(".eez-project")) {
                 return path.basename(this.filePath, ".eez-project");
@@ -2410,7 +2500,7 @@ export class DocumentStoreClass {
             document.title = title;
         }
 
-        EEZStudio.electron.ipcRenderer.send("windowSetState", {
+        ipcRenderer.send("windowSetState", {
             modified: this.modified,
             projectFilePath: this.filePath,
             undo:
@@ -2427,12 +2517,14 @@ export class DocumentStoreClass {
     }
 
     updateMruFilePath() {
-        EEZStudio.electron.ipcRenderer.send("setMruFilePath", this.filePath);
+        ipcRenderer.send("setMruFilePath", this.filePath);
     }
 
     getFilePathRelativeToProjectPath(absoluteFilePath: string) {
-        const path = EEZStudio.remote.require("path");
-        return path.relative(path.dirname(this.filePath), absoluteFilePath);
+        return path.relative(
+            path.dirname(this.filePath || ""),
+            absoluteFilePath
+        );
     }
 
     getProjectFilePath(project: Project) {
@@ -2447,7 +2539,6 @@ export class DocumentStoreClass {
         if (!relativeFilePath) {
             relativeFilePath = "";
         }
-        const path = EEZStudio.remote.require("path");
         const filePath = this.getProjectFilePath(project ?? this.project);
         return filePath
             ? path.resolve(
@@ -2458,9 +2549,8 @@ export class DocumentStoreClass {
     }
 
     getFolderPathRelativeToProjectPath(absoluteFolderPath: string) {
-        const path = EEZStudio.remote.require("path");
         let folder = path.relative(
-            path.dirname(this.filePath),
+            path.dirname(this.filePath || ""),
             absoluteFolderPath
         );
         if (folder == "") {
@@ -2470,11 +2560,9 @@ export class DocumentStoreClass {
     }
 
     getAbsoluteProjectFolderPath() {
-        const path = EEZStudio.remote.require("path");
-        return path.dirname(this.filePath);
+        return path.dirname(this.filePath || "");
     }
 
-    @computed
     get selectedBuildConfiguration() {
         let configuration =
             this.project &&
@@ -2501,18 +2589,15 @@ export class DocumentStoreClass {
     async saveToFile(saveAs: boolean) {
         if (this.project) {
             if (!this.filePath || saveAs) {
-                const result = await EEZStudio.remote.dialog.showSaveDialog(
-                    EEZStudio.remote.getCurrentWindow(),
-                    {
-                        filters: [
-                            {
-                                name: "EEZ Project",
-                                extensions: ["eez-project"]
-                            },
-                            { name: "All Files", extensions: ["*"] }
-                        ]
-                    }
-                );
+                const result = await dialog.showSaveDialog(getCurrentWindow(), {
+                    filters: [
+                        {
+                            name: "EEZ Project",
+                            extensions: ["eez-project"]
+                        },
+                        { name: "All Files", extensions: ["*"] }
+                    ]
+                });
                 let filePath = result.filePath;
                 if (filePath) {
                     if (!filePath.toLowerCase().endsWith(".eez-project")) {
@@ -2658,12 +2743,10 @@ export class DocumentStoreClass {
         }
     }
 
-    @computed
     get masterProjectEnabled() {
         return !!this.project.settings.general.masterProject;
     }
 
-    @computed
     get masterProject() {
         return this.project.masterProject;
     }
@@ -2713,17 +2796,14 @@ export class DocumentStoreClass {
         return this.objects.get(objectID);
     }
 
-    @computed
     get isModified() {
         return this.modified;
     }
 
-    @action
     setModified(modified_: boolean) {
         this.modified = modified_;
     }
 
-    @action
     async setProject(project: Project, projectFilePath: string | undefined) {
         this._project = project;
         this.filePath = projectFilePath;
@@ -2920,7 +3000,6 @@ export class DocumentStoreClass {
         runtime.startRuntime(isDebuggerActive);
     }
 
-    @action
     setEditorMode() {
         if (this.runtime) {
             this.runtime.stopRuntime(false);
@@ -2937,7 +3016,6 @@ export class DocumentStoreClass {
         }
     }
 
-    @action
     onSetEditorMode = () => {
         this.setEditorMode();
         this.layoutModels.selectTab(
@@ -3546,13 +3624,13 @@ export function checkClipboard(
 }
 
 export function copyToClipboard(text: string) {
-    EEZStudio.remote.clipboard.write({
+    clipboard.write({
         text
     });
 }
 
 export function pasteFromClipboard(): string | undefined {
-    return EEZStudio.remote.clipboard.readText();
+    return clipboard.readText();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4220,6 +4298,12 @@ class UpdateCommand implements ICommand {
         private values: any,
         lastCommand?: UpdateCommand
     ) {
+        makeObservable(this, {
+            execute: action,
+            undo: action,
+            description: computed
+        });
+
         if (lastCommand) {
             values = Object.assign(lastCommand.newValues, values);
             this.oldValues = lastCommand.oldValues;
@@ -4240,17 +4324,14 @@ class UpdateCommand implements ICommand {
         }
     }
 
-    @action
     execute() {
         Object.assign(this.object, this.newValues);
     }
 
-    @action
     undo() {
         Object.assign(this.object, this.oldValues);
     }
 
-    @computed
     get description() {
         return (
             `Changed (${_map(this.values, (value, name) => humanize(name)).join(

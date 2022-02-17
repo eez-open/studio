@@ -1,3 +1,5 @@
+import type * as ElectronModule from "electron";
+import type * as ElectronRemoteModule from "@electron/remote";
 import { isRenderer } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
 import { toJS } from "mobx";
@@ -35,16 +37,18 @@ export let service: <I, O>(
 };
 
 if (isRenderer()) {
-    if (EEZStudio.windowType === "shared/service") {
+    const { ipcRenderer } = require("electron") as typeof ElectronModule;
+
+    if (window.location.pathname.endsWith("service.html")) {
         // this is service process (renderer)
 
         // waiting for the new task
-        EEZStudio.electron.ipcRenderer.on(
+        ipcRenderer.on(
             NEW_TASK_CHANNEL,
             (event: Electron.Event, task: ITask) => {
                 function send(taskResult: ITaskResult) {
                     // send result back to calling process
-                    EEZStudio.electron.ipcRenderer.sendTo(
+                    ipcRenderer.sendTo(
                         task.windowId,
                         TASK_DONE_CHANNEL + task.taskId,
                         taskResult
@@ -82,14 +86,13 @@ if (isRenderer()) {
         ) => {
             let serviceWindow: Electron.BrowserWindow | undefined;
 
+            const { BrowserWindow, getCurrentWindow } =
+                require("@electron/remote") as typeof ElectronRemoteModule;
+
             if (!executeInsideMainProcess) {
-                serviceWindow =
-                    EEZStudio.remote.BrowserWindow.getAllWindows().find(
-                        window =>
-                            window.webContents
-                                .getURL()
-                                .endsWith("shared/service.html")
-                    );
+                serviceWindow = BrowserWindow.getAllWindows().find(window =>
+                    window.webContents.getURL().endsWith("shared/service.html")
+                );
             }
 
             if (executeInsideMainProcess || serviceWindow) {
@@ -97,7 +100,7 @@ if (isRenderer()) {
                     return new Promise<O>((resolve, reject) => {
                         const taskId = guid();
 
-                        EEZStudio.electron.ipcRenderer.once(
+                        ipcRenderer.once(
                             TASK_DONE_CHANNEL + taskId,
                             (
                                 event: Electron.Event,
@@ -113,7 +116,7 @@ if (isRenderer()) {
                         );
 
                         const task: ITask = {
-                            windowId: EEZStudio.remote.getCurrentWindow().id,
+                            windowId: getCurrentWindow().id,
                             taskId,
                             serviceName,
                             inputParams: toJS(inputParams)
@@ -121,10 +124,7 @@ if (isRenderer()) {
 
                         if (executeInsideMainProcess) {
                             // send task to main process
-                            EEZStudio.electron.ipcRenderer.send(
-                                NEW_TASK_CHANNEL,
-                                task
-                            );
+                            ipcRenderer.send(NEW_TASK_CHANNEL, task);
                         } else {
                             // send task to service process
                             serviceWindow!.webContents.send(
@@ -153,12 +153,12 @@ if (isRenderer()) {
             webviewTag: true,
             nodeIntegrationInWorker: true,
             plugins: true,
-            contextIsolation: false,
-            enableRemoteModule: true
+            contextIsolation: false
         },
         show: false
     };
     let browserWindow = new BrowserWindow(windowContructorParams);
+    require("@electron/remote/main").enable(browserWindow.webContents);
     browserWindow.loadURL(
         `file://${sourceRootDir()}/eez-studio-shared/service.html`
     );

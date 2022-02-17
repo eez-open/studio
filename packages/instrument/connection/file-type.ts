@@ -74,11 +74,11 @@ export function convertBmpToPng(data: string) {
                 webviewTag: true,
                 nodeIntegrationInWorker: true,
                 plugins: true,
-                contextIsolation: false,
-                enableRemoteModule: true
+                contextIsolation: false
             },
             show: false
         });
+        require("@electron/remote/main").enable(browserWindow.webContents);
 
         browserWindow.webContents.once("dom-ready", () => {
             browserWindow.webContents.send("convertBmpToPng", data);

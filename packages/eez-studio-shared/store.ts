@@ -1,3 +1,4 @@
+import type * as ElectronModule from "electron";
 import { observable, computed, action, toJS } from "mobx";
 
 import { db } from "eez-studio-shared/db-path";
@@ -546,7 +547,9 @@ export function createStore({
 
     function createObject(object: any, options?: IStoreOperationOptions) {
         if (isRenderer()) {
-            return EEZStudio.electron.ipcRenderer.sendSync(
+            const { ipcRenderer } =
+                require("electron") as typeof ElectronModule;
+            return ipcRenderer.sendSync(
                 "shared/store/create-object/" + storeName,
                 {
                     object: toJS(observable(object)),
@@ -560,13 +563,12 @@ export function createStore({
 
     function updateObject(object: any, options?: IStoreOperationOptions) {
         if (isRenderer()) {
-            EEZStudio.electron.ipcRenderer.sendSync(
-                "shared/store/update-object/" + storeName,
-                {
-                    object: toJS(object),
-                    options
-                }
-            );
+            const { ipcRenderer } =
+                require("electron") as typeof ElectronModule;
+            ipcRenderer.sendSync("shared/store/update-object/" + storeName, {
+                object: toJS(object),
+                options
+            });
         } else {
             return execUpdateObject(object, options);
         }
@@ -574,16 +576,15 @@ export function createStore({
 
     function deleteObject(object: any, options?: IStoreOperationOptions) {
         if (isRenderer()) {
-            EEZStudio.electron.ipcRenderer.sendSync(
-                "shared/store/delete-object/" + storeName,
-                {
-                    object: {
-                        id: object.id,
-                        oid: object.oid
-                    },
-                    options
-                }
-            );
+            const { ipcRenderer } =
+                require("electron") as typeof ElectronModule;
+            ipcRenderer.sendSync("shared/store/delete-object/" + storeName, {
+                object: {
+                    id: object.id,
+                    oid: object.oid
+                },
+                options
+            });
         } else {
             return execDeleteObject(object, options);
         }
@@ -591,16 +592,15 @@ export function createStore({
 
     function undeleteObject(object: any, options?: IStoreOperationOptions) {
         if (isRenderer()) {
-            EEZStudio.electron.ipcRenderer.sendSync(
-                "shared/store/undelete-object/" + storeName,
-                {
-                    object: {
-                        id: object.id,
-                        oid: object.oid
-                    },
-                    options
-                }
-            );
+            const { ipcRenderer } =
+                require("electron") as typeof ElectronModule;
+            ipcRenderer.sendSync("shared/store/undelete-object/" + storeName, {
+                object: {
+                    id: object.id,
+                    oid: object.oid
+                },
+                options
+            });
         } else {
             return execUndeleteObject(object, options);
         }
@@ -1087,10 +1087,8 @@ if (!isRenderer()) {
 
 export function beginTransaction(label: string) {
     if (isRenderer()) {
-        return EEZStudio.electron.ipcRenderer.sendSync(
-            "shared/store/begin-transaction",
-            label
-        );
+        const { ipcRenderer } = require("electron") as typeof ElectronModule;
+        return ipcRenderer.sendSync("shared/store/begin-transaction", label);
     } else {
         return undoManager.execBeginTransaction(label);
     }
@@ -1098,9 +1096,8 @@ export function beginTransaction(label: string) {
 
 export function commitTransaction() {
     if (isRenderer()) {
-        return EEZStudio.electron.ipcRenderer.sendSync(
-            "shared/store/commit-transaction"
-        );
+        const { ipcRenderer } = require("electron") as typeof ElectronModule;
+        ipcRenderer.sendSync("shared/store/commit-transaction");
     } else {
         return undoManager.execCommitTransaction();
     }
@@ -1108,7 +1105,8 @@ export function commitTransaction() {
 
 export function undo() {
     if (isRenderer()) {
-        return EEZStudio.electron.ipcRenderer.sendSync("shared/store/undo");
+        const { ipcRenderer } = require("electron") as typeof ElectronModule;
+        ipcRenderer.sendSync("shared/store/undo");
     } else {
         return undoManager.undo();
     }
@@ -1116,7 +1114,8 @@ export function undo() {
 
 export function redo() {
     if (isRenderer()) {
-        return EEZStudio.electron.ipcRenderer.sendSync("shared/store/redo");
+        const { ipcRenderer } = require("electron") as typeof ElectronModule;
+        ipcRenderer.sendSync("shared/store/redo");
     } else {
         return undoManager.redo();
     }

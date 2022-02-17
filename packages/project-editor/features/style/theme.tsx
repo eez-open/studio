@@ -1,5 +1,6 @@
+import { MenuItem } from "@electron/remote";
 import React from "react";
-import { observable, computed, action } from "mobx";
+import { observable, computed, action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 
@@ -31,8 +32,6 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Project } from "project-editor/project/project";
 import { getName, NamingConvention } from "project-editor/project/build";
 
-const { MenuItem } = EEZStudio.remote || {};
-
 ////////////////////////////////////////////////////////////////////////////////
 
 function getProjectWithThemes(DocumentStore: DocumentStoreClass) {
@@ -58,223 +57,247 @@ function getProjectWithThemes(DocumentStore: DocumentStoreClass) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class ColorItem extends React.Component<{
-    itemId: string;
-}> {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
+const ColorItem = observer(
+    class ColorItem extends React.Component<{
+        itemId: string;
+    }> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
 
-    @computed
-    get colorObject() {
-        return this.context.getObjectFromObjectId(this.props.itemId) as Color;
-    }
+        constructor(props: { itemId: string }) {
+            super(props);
 
-    @computed
-    get colorIndex() {
-        return (getParent(this.colorObject) as Color[]).indexOf(
-            this.colorObject
-        );
-    }
-
-    @computed
-    get selectedTheme() {
-        const project = getProjectWithThemes(this.context);
-
-        let selectedTheme =
-            this.context.navigationStore.selectedThemeObject.get() as Theme;
-
-        if (!selectedTheme) {
-            selectedTheme = project.themes[0];
+            makeObservable(this, {
+                colorObject: computed,
+                colorIndex: computed,
+                selectedTheme: computed,
+                themeColor: computed,
+                changedThemeColor: observable
+            });
         }
 
-        return selectedTheme!;
-    }
-
-    @computed
-    get themeColor() {
-        return this.selectedTheme.colors[this.colorIndex];
-    }
-
-    @observable changedThemeColor: string | undefined;
-
-    onChangeTimeout: any;
-
-    onChange = action((event: React.ChangeEvent<HTMLInputElement>) => {
-        this.changedThemeColor = event.target.value;
-        if (this.onChangeTimeout) {
-            clearTimeout(this.onChangeTimeout);
+        get colorObject() {
+            return this.context.getObjectFromObjectId(
+                this.props.itemId
+            ) as Color;
         }
-        this.onChangeTimeout = setTimeout(
-            action(() => {
-                const colors = this.selectedTheme.colors.slice();
-                colors[this.colorIndex] = this.changedThemeColor!;
-                this.changedThemeColor = undefined;
-                this.context.updateObject(this.selectedTheme, {
-                    colors
-                });
-            }),
-            100
-        );
-    });
 
-    render() {
-        return (
-            <div className="tree-row-label EezStudio_ColorItem">
-                <input
-                    type="color"
-                    value={
-                        this.changedThemeColor !== undefined
-                            ? this.changedThemeColor
-                            : this.themeColor
-                    }
-                    onChange={this.onChange}
-                    tabIndex={0}
-                />
-                <span title={this.colorObject.name}>
-                    {this.colorObject.name}
-                </span>
-            </div>
-        );
+        get colorIndex() {
+            return (getParent(this.colorObject) as Color[]).indexOf(
+                this.colorObject
+            );
+        }
+
+        get selectedTheme() {
+            const project = getProjectWithThemes(this.context);
+
+            let selectedTheme =
+                this.context.navigationStore.selectedThemeObject.get() as Theme;
+
+            if (!selectedTheme) {
+                selectedTheme = project.themes[0];
+            }
+
+            return selectedTheme!;
+        }
+
+        get themeColor() {
+            return this.selectedTheme.colors[this.colorIndex];
+        }
+
+        changedThemeColor: string | undefined;
+
+        onChangeTimeout: any;
+
+        onChange = action((event: React.ChangeEvent<HTMLInputElement>) => {
+            this.changedThemeColor = event.target.value;
+            if (this.onChangeTimeout) {
+                clearTimeout(this.onChangeTimeout);
+            }
+            this.onChangeTimeout = setTimeout(
+                action(() => {
+                    const colors = this.selectedTheme.colors.slice();
+                    colors[this.colorIndex] = this.changedThemeColor!;
+                    this.changedThemeColor = undefined;
+                    this.context.updateObject(this.selectedTheme, {
+                        colors
+                    });
+                }),
+                100
+            );
+        });
+
+        render() {
+            return (
+                <div className="tree-row-label EezStudio_ColorItem">
+                    <input
+                        type="color"
+                        value={
+                            this.changedThemeColor !== undefined
+                                ? this.changedThemeColor
+                                : this.themeColor
+                        }
+                        onChange={this.onChange}
+                        tabIndex={0}
+                    />
+                    <span title={this.colorObject.name}>
+                        {this.colorObject.name}
+                    </span>
+                </div>
+            );
+        }
     }
-}
+);
 
 function renderColorItem(itemId: string) {
     return <ColorItem itemId={itemId} />;
 }
 
-@observer
-export class ThemesSideView extends React.Component {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
+export const ThemesSideView = observer(
+    class ThemesSideView extends React.Component {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
 
-    onEditThemeName = (itemId: string) => {
-        const theme = this.context.getObjectFromObjectId(itemId) as Theme;
+        onEditThemeName = (itemId: string) => {
+            const theme = this.context.getObjectFromObjectId(itemId) as Theme;
 
-        showGenericDialog({
-            dialogDefinition: {
-                fields: [
-                    {
-                        name: "name",
-                        type: "string",
-                        validators: [
-                            validators.required,
-                            validators.unique(theme, getParent(theme))
-                        ]
-                    }
-                ]
-            },
-            values: theme
-        })
-            .then(result => {
-                let newValue = result.values.name.trim();
-                if (newValue != theme.name) {
-                    this.context.undoManager.setCombineCommands(true);
-                    replaceObjectReference(theme, newValue);
-                    this.context.updateObject(theme, {
-                        name: newValue
-                    });
-                    this.context.undoManager.setCombineCommands(false);
-                }
+            showGenericDialog({
+                dialogDefinition: {
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [
+                                validators.required,
+                                validators.unique(theme, getParent(theme))
+                            ]
+                        }
+                    ]
+                },
+                values: theme
             })
-            .catch(error => {
-                if (error !== undefined) {
-                    console.error(error);
-                }
-            });
-    };
-
-    onEditColorName = (itemId: string) => {
-        const color = this.context.getObjectFromObjectId(itemId) as Color;
-
-        showGenericDialog({
-            dialogDefinition: {
-                fields: [
-                    {
-                        name: "name",
-                        type: "string",
-                        validators: [
-                            validators.required,
-                            validators.unique(color, getParent(color))
-                        ]
+                .then(result => {
+                    let newValue = result.values.name.trim();
+                    if (newValue != theme.name) {
+                        this.context.undoManager.setCombineCommands(true);
+                        replaceObjectReference(theme, newValue);
+                        this.context.updateObject(theme, {
+                            name: newValue
+                        });
+                        this.context.undoManager.setCombineCommands(false);
                     }
-                ]
-            },
-            values: color
-        })
-            .then(result => {
-                let newValue = result.values.name.trim();
-                if (newValue != color.name) {
-                    this.context.undoManager.setCombineCommands(true);
-                    replaceObjectReference(color, newValue);
-                    this.context.updateObject(color, {
-                        name: newValue
-                    });
-                    this.context.undoManager.setCombineCommands(false);
-                }
-            })
-            .catch(error => {
-                if (error !== undefined) {
-                    console.error(error);
-                }
-            });
-    };
+                })
+                .catch(error => {
+                    if (error !== undefined) {
+                        console.error(error);
+                    }
+                });
+        };
 
-    @computed get project() {
-        if (this.context.masterProjectEnabled && !this.context.masterProject) {
+        onEditColorName = (itemId: string) => {
+            const color = this.context.getObjectFromObjectId(itemId) as Color;
+
+            showGenericDialog({
+                dialogDefinition: {
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [
+                                validators.required,
+                                validators.unique(color, getParent(color))
+                            ]
+                        }
+                    ]
+                },
+                values: color
+            })
+                .then(result => {
+                    let newValue = result.values.name.trim();
+                    if (newValue != color.name) {
+                        this.context.undoManager.setCombineCommands(true);
+                        replaceObjectReference(color, newValue);
+                        this.context.updateObject(color, {
+                            name: newValue
+                        });
+                        this.context.undoManager.setCombineCommands(false);
+                    }
+                })
+                .catch(error => {
+                    if (error !== undefined) {
+                        console.error(error);
+                    }
+                });
+        };
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                project: computed
+            });
+        }
+
+        get project() {
+            if (
+                this.context.masterProjectEnabled &&
+                !this.context.masterProject
+            ) {
+                return null;
+            }
+
+            return getProjectWithThemes(this.context);
+        }
+
+        factory = (node: FlexLayout.TabNode) => {
+            var component = node.getComponent();
+
+            if (component === "themes") {
+                return this.project ? (
+                    <ListNavigation
+                        id="themes"
+                        navigationObject={this.project.themes}
+                        selectedObject={
+                            this.context.navigationStore.selectedThemeObject
+                        }
+                        onEditItem={this.onEditThemeName}
+                        searchInput={false}
+                        editable={!this.context.masterProject}
+                    />
+                ) : null;
+            }
+
+            if (component === "colors") {
+                return this.project ? (
+                    <ListNavigation
+                        id="theme-colors"
+                        navigationObject={this.project.colors}
+                        selectedObject={
+                            this.context.navigationStore
+                                .selectedThemeColorObject
+                        }
+                        onEditItem={this.onEditColorName}
+                        renderItem={renderColorItem}
+                        editable={!this.context.masterProject}
+                    />
+                ) : null;
+            }
+
             return null;
-        }
+        };
 
-        return getProjectWithThemes(this.context);
-    }
-
-    factory = (node: FlexLayout.TabNode) => {
-        var component = node.getComponent();
-
-        if (component === "themes") {
-            return this.project ? (
-                <ListNavigation
-                    id="themes"
-                    navigationObject={this.project.themes}
-                    selectedObject={
-                        this.context.navigationStore.selectedThemeObject
-                    }
-                    onEditItem={this.onEditThemeName}
-                    searchInput={false}
-                    editable={!this.context.masterProject}
+        render() {
+            return (
+                <FlexLayout.Layout
+                    model={this.context.layoutModels.themes}
+                    factory={this.factory}
+                    realtimeResize={true}
+                    font={LayoutModels.FONT_SUB}
                 />
-            ) : null;
+            );
         }
-
-        if (component === "colors") {
-            return this.project ? (
-                <ListNavigation
-                    id="theme-colors"
-                    navigationObject={this.project.colors}
-                    selectedObject={
-                        this.context.navigationStore.selectedThemeColorObject
-                    }
-                    onEditItem={this.onEditColorName}
-                    renderItem={renderColorItem}
-                    editable={!this.context.masterProject}
-                />
-            ) : null;
-        }
-
-        return null;
-    };
-
-    render() {
-        return (
-            <FlexLayout.Layout
-                model={this.context.layoutModels.themes}
-                factory={this.factory}
-                realtimeResize={true}
-                font={LayoutModels.FONT_SUB}
-            />
-        );
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -284,8 +307,8 @@ export class IColor {
 }
 
 export class Color extends EezObject implements IColor {
-    @observable id: string;
-    @observable name: string;
+    id: string;
+    name: string;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -402,6 +425,15 @@ export class Color extends EezObject implements IColor {
             menuItems.unshift(...additionalMenuItems);
         }
     };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            id: observable,
+            name: observable
+        });
+    }
 }
 
 registerClass("Color", Color);
@@ -409,8 +441,8 @@ registerClass("Color", Color);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Theme extends EezObject {
-    @observable id: string;
-    @observable name: string;
+    id: string;
+    name: string;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -457,7 +489,17 @@ export class Theme extends EezObject {
         }
     };
 
-    @computed get colors() {
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            id: observable,
+            name: observable,
+            colors: computed
+        });
+    }
+
+    get colors() {
         const project = ProjectEditor.getProject(this);
         return project.colors.map(color =>
             project.getThemeColor(this.id, color.id)

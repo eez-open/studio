@@ -1,3 +1,5 @@
+import { ipcRenderer } from "electron";
+
 import { isRenderer } from "eez-studio-shared/util-electron";
 
 export const LOCALES = {
@@ -141,11 +143,11 @@ export let setLocale: (value: string) => void;
 
 if (isRenderer()) {
     getLocale = function () {
-        return EEZStudio.electron.ipcRenderer.sendSync("getLocale");
+        return ipcRenderer.sendSync("getLocale");
     };
 
     setLocale = function (value: string) {
-        EEZStudio.electron.ipcRenderer.send("setLocale", value);
+        ipcRenderer.send("setLocale", value);
     };
 } else {
     ({ getLocale, setLocale } = require("main/settings") as any);
@@ -165,11 +167,11 @@ export let setDateFormat: (value: string) => void;
 
 if (isRenderer()) {
     getDateFormat = function () {
-        return EEZStudio.electron.ipcRenderer.sendSync("getDateFormat");
+        return ipcRenderer.sendSync("getDateFormat");
     };
 
     setDateFormat = function (value: string) {
-        EEZStudio.electron.ipcRenderer.send("setDateFormat", value);
+        ipcRenderer.send("setDateFormat", value);
     };
 } else {
     ({ getDateFormat, setDateFormat } = require("main/settings") as any);
@@ -184,11 +186,11 @@ export let setTimeFormat: (value: string) => void;
 
 if (isRenderer()) {
     getTimeFormat = function () {
-        return EEZStudio.electron.ipcRenderer.sendSync("getTimeFormat");
+        return ipcRenderer.sendSync("getTimeFormat");
     };
 
     setTimeFormat = function (value: string) {
-        EEZStudio.electron.ipcRenderer.send("setTimeFormat", value);
+        ipcRenderer.send("setTimeFormat", value);
     };
 } else {
     ({ getTimeFormat, setTimeFormat } = require("main/settings") as any);

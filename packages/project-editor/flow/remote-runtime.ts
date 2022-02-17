@@ -1,3 +1,4 @@
+import path from "path";
 import type { Socket } from "net";
 
 import { showSelectInstrumentDialog } from "project-editor/flow/components/actions/instrument";
@@ -7,7 +8,7 @@ import type { InstrumentObject } from "instrument/instrument-object";
 import type { ConnectionParameters } from "instrument/connection/interface";
 
 import { AssetsMap } from "project-editor/features/page/build/assets";
-import { action, observable, runInAction } from "mobx";
+import { action, observable, runInAction, makeObservable } from "mobx";
 import { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { Component, Widget } from "project-editor/flow/component";
 import { IFlowContext, LogItemType } from "project-editor/flow/flow-interfaces";
@@ -174,8 +175,6 @@ export class RemoteRuntime extends RuntimeBase {
         try {
             this.startDebugger();
 
-            const path = EEZStudio.remote.require("path");
-
             const destinationFolderPath =
                 this.DocumentStore.getAbsoluteFilePath(
                     this.DocumentStore.project.settings.build
@@ -183,7 +182,7 @@ export class RemoteRuntime extends RuntimeBase {
                 );
 
             const destinationFileName = `${path.basename(
-                this.DocumentStore.filePath,
+                this.DocumentStore.filePath || "",
                 ".eez-project"
             )}.app`;
 
@@ -1476,9 +1475,12 @@ class ObjectMemberValue implements DebuggerValue {
         private object: any,
         private propertyName: string | number,
         public type: string
-    ) {}
+    ) {
+        makeObservable(this, {
+            set: action
+        });
+    }
 
-    @action
     set(value: any) {
         this.object[this.propertyName] = value;
     }

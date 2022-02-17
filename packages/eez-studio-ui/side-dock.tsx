@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, action } from "mobx";
+import { observable, action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -10,8 +10,7 @@ import {
     Body
 } from "eez-studio-ui/header-with-body";
 
-@observer
-export class DockablePanels extends React.Component<{
+export class DockablePanelsComponent extends React.Component<{
     defaultLayoutConfig: any;
     registerComponents: (factory: any) => void;
     layoutId?: string;
@@ -141,8 +140,9 @@ export class DockablePanels extends React.Component<{
     }
 }
 
-@observer
-export class SideDock extends React.Component<{
+export const DockablePanels = observer(DockablePanelsComponent);
+
+export class SideDockComponent extends React.Component<{
     persistId: string;
     layoutId: string;
     defaultLayoutConfig: any;
@@ -152,12 +152,17 @@ export class SideDock extends React.Component<{
 }> {
     static defaultProps = { width: 240 };
 
-    @observable isOpen: boolean;
+    isOpen: boolean;
 
-    dockablePanels: DockablePanels | null = null;
+    dockablePanels: DockablePanelsComponent | null = null;
 
     constructor(props: any) {
         super(props);
+
+        makeObservable(this, {
+            isOpen: observable,
+            toggleIsOpen: action.bound
+        });
 
         this.isOpen =
             localStorage.getItem(this.props.persistId + "/is-open") === "0"
@@ -165,7 +170,6 @@ export class SideDock extends React.Component<{
                 : true;
     }
 
-    @action.bound
     toggleIsOpen() {
         this.isOpen = !this.isOpen;
         localStorage.setItem(
@@ -249,3 +253,5 @@ export class SideDock extends React.Component<{
         }
     }
 }
+
+export const SideDock = observer(SideDockComponent);

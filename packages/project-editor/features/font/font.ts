@@ -1,4 +1,6 @@
-import { observable, computed } from "mobx";
+import { clipboard, nativeImage } from "@electron/remote";
+import path from "path";
+import { observable, computed, makeObservable } from "mobx";
 
 import { formatNumber } from "eez-studio-shared/util";
 import { Rect } from "eez-studio-shared/geometry";
@@ -57,9 +59,9 @@ function formatEncoding(encoding: number) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class GlyphSource extends EezObject {
-    @observable filePath?: string;
-    @observable size?: number;
-    @observable encoding?: number;
+    filePath?: string;
+    size?: number;
+    encoding?: number;
 
     static classInfo: ClassInfo = {
         label: (glyphSource: GlyphSource) => {
@@ -92,6 +94,16 @@ export class GlyphSource extends EezObject {
         ]
     };
 
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            filePath: observable,
+            size: observable,
+            encoding: observable
+        });
+    }
+
     toString() {
         return getLabel(this);
     }
@@ -111,14 +123,14 @@ const GLYPH_EDITOR_PADDING_RIGHT = 200;
 const GLYPH_EDITOR_PADDING_BOTTOM = 100;
 
 export class Glyph extends EezObject {
-    @observable encoding: number;
-    @observable x: number;
-    @observable y: number;
-    @observable width: number;
-    @observable height: number;
-    @observable dx: number;
-    @observable glyphBitmap?: IGlyphBitmap;
-    @observable source?: GlyphSource;
+    encoding: number;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    dx: number;
+    glyphBitmap?: IGlyphBitmap;
+    source?: GlyphSource;
 
     static classInfo: ClassInfo = {
         label: (glyph: Glyph) => {
@@ -192,7 +204,26 @@ export class Glyph extends EezObject {
         }
     };
 
-    @computed
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            encoding: observable,
+            x: observable,
+            y: observable,
+            width: observable,
+            height: observable,
+            dx: observable,
+            glyphBitmap: observable,
+            source: observable,
+            pixelArray: computed,
+            imageSize: computed,
+            font: computed,
+            editorImage: computed,
+            topLeftOffset: computed
+        });
+    }
+
     get pixelArray(): number[] | undefined {
         if (!this.glyphBitmap) {
             return undefined;
@@ -215,7 +246,6 @@ export class Glyph extends EezObject {
         ).pixelArray;
     }
 
-    @computed
     get imageSize() {
         return {
             width: this.font.maxDx || 0,
@@ -223,7 +253,6 @@ export class Glyph extends EezObject {
         };
     }
 
-    @computed
     get font() {
         return getParent(getParent(this)) as Font;
     }
@@ -232,7 +261,6 @@ export class Glyph extends EezObject {
         return getPixel(this.glyphBitmap, x, y, this.font.bpp);
     }
 
-    @computed
     get editorImage(): string {
         if (!this.glyphBitmap) {
             return "";
@@ -689,7 +717,6 @@ export class Glyph extends EezObject {
         return canvas.toDataURL();
     }
 
-    @computed
     get topLeftOffset() {
         let font = this.font;
 
@@ -763,8 +790,8 @@ export class Glyph extends EezObject {
                 }
             }
 
-            EEZStudio.remote.clipboard.writeImage(
-                EEZStudio.remote.nativeImage.createFromBuffer(buffer, {
+            clipboard.writeImage(
+                (nativeImage as any).createFromBuffer(buffer, {
                     width: this.glyphBitmap.width,
                     height: this.glyphBitmap.height
                 })
@@ -773,7 +800,7 @@ export class Glyph extends EezObject {
     }
 
     pasteFromClipboard() {
-        const image = EEZStudio.remote.clipboard.readImage();
+        const image = clipboard.readImage();
         if (image) {
             const buffer = image.getBitmap();
 
@@ -806,8 +833,8 @@ registerClass("Glyph", Glyph);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class FontSource extends EezObject {
-    @observable filePath: string;
-    @observable size?: number;
+    filePath: string;
+    size?: number;
 
     static classInfo: ClassInfo = {
         getClass: (jsObject: any) => {
@@ -833,6 +860,15 @@ export class FontSource extends EezObject {
             }
         ]
     };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            filePath: observable,
+            size: observable
+        });
+    }
 }
 
 registerClass("FontSource", FontSource);
@@ -840,17 +876,17 @@ registerClass("FontSource", FontSource);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Font extends EezObject {
-    @observable id: number | undefined;
-    @observable name: string;
-    @observable description?: string;
-    @observable source?: FontSource;
-    @observable bpp: number;
-    @observable height: number;
-    @observable ascent: number;
-    @observable descent: number;
-    @observable glyphs: Glyph[];
-    @observable screenOrientation: string;
-    @observable alwaysBuild: boolean;
+    id: number | undefined;
+    name: string;
+    description?: string;
+    source?: FontSource;
+    bpp: number;
+    height: number;
+    ascent: number;
+    descent: number;
+    glyphs: Glyph[];
+    screenOrientation: string;
+    alwaysBuild: boolean;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -928,7 +964,6 @@ export class Font extends EezObject {
             }
 
             function isNonBdfFont(obj: IEezObject) {
-                const path = EEZStudio.remote.require("path");
                 return (
                     isFont(obj) &&
                     path.extname(getProperty(obj, "filePath")) != ".bdf"
@@ -1070,14 +1105,32 @@ export class Font extends EezObject {
         icon: "font_download"
     };
 
-    @computed
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            id: observable,
+            name: observable,
+            description: observable,
+            source: observable,
+            bpp: observable,
+            height: observable,
+            ascent: observable,
+            descent: observable,
+            glyphs: observable,
+            screenOrientation: observable,
+            alwaysBuild: observable,
+            glyphsMap: computed,
+            maxDx: computed
+        });
+    }
+
     get glyphsMap() {
         const map = new Map<number, Glyph>();
         this.glyphs.forEach(glyph => map.set(glyph.encoding, glyph));
         return map;
     }
 
-    @computed
     get maxDx() {
         return Math.max(...this.glyphs.map(glyph => glyph.dx)) || 0;
     }

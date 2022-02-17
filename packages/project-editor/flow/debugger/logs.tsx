@@ -1,4 +1,4 @@
-import { observable, action } from "mobx";
+import { observable, action, makeObservable } from "mobx";
 
 import { guid } from "eez-studio-shared/guid";
 
@@ -182,10 +182,19 @@ export class NoStartActionComponentLogItem extends LogItem {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class RuntimeLogs {
-    @observable logs: LogItem[] = [];
-    @observable selectedLogItem: LogItem | undefined;
+    logs: LogItem[] = [];
+    selectedLogItem: LogItem | undefined;
 
-    @action
+    constructor() {
+        makeObservable(this, {
+            logs: observable,
+            selectedLogItem: observable,
+            addLogItem: action,
+            clear: action.bound,
+            loadDebugInfo: action
+        });
+    }
+
     addLogItem(logItem: LogItem) {
         this.logs.push(logItem);
         if (this.logs.length > MAX_LOGS_ITEMS) {
@@ -202,7 +211,6 @@ export class RuntimeLogs {
         }
     }
 
-    @action.bound
     clear() {
         this.logs = [];
     }
@@ -223,7 +231,7 @@ export class RuntimeLogs {
         }));
     }
 
-    @action loadDebugInfo(runtime: RuntimeBase, debugInfo: any) {
+    loadDebugInfo(runtime: RuntimeBase, debugInfo: any) {
         this.logs = debugInfo.map((logItemDebugInfo: any) => {
             const logItem = new LogItem(
                 logItemDebugInfo.type,

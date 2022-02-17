@@ -1,7 +1,16 @@
+import fs from "fs";
 import bootstrap from "bootstrap";
 import React from "react";
 import ReactDOM from "react-dom";
-import { observable, computed, action, autorun, Lambda, toJS } from "mobx";
+import {
+    observable,
+    computed,
+    action,
+    autorun,
+    Lambda,
+    toJS,
+    makeObservable
+} from "mobx";
 import { observer } from "mobx-react";
 
 import {
@@ -641,7 +650,6 @@ class FindChanges {
                 this.DocumentStore.project.settings.general.scpiDocFolder
             );
 
-            const fs = EEZStudio.remote.require("fs");
             fs.exists(scpiHelpFolderPath, (exists: boolean) => {
                 if (!exists) {
                     reject(
@@ -956,215 +964,226 @@ const SECTIONS: Section[] = [
     "newEnums"
 ];
 
-@observer
-export class ImportScpiDocDialog extends React.Component<{
-    onHidden: () => void;
-}> {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
+export const ImportScpiDocDialog = observer(
+    class ImportScpiDocDialog extends React.Component<{
+        onHidden: () => void;
+    }> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
 
-    constructor(props: any) {
-        super(props);
-    }
+        constructor(props: any) {
+            super(props);
 
-    dialog: HTMLDivElement;
-    modal: bootstrap.Modal;
-    addedSelectAllCheckbox: HTMLInputElement;
-    deletedSelectAllCheckbox: HTMLInputElement;
-    movedSelectAllCheckbox: HTMLInputElement;
-    updatedSelectAllCheckbox: HTMLInputElement;
-    newEnumsSelectAllCheckbox: HTMLInputElement;
-
-    @observable changes: Changes;
-    @observable selectedChanges: Changes = {
-        subsystems: [],
-        added: [],
-        deleted: [],
-        moved: [],
-        updated: [],
-        newEnums: []
-    };
-    @observable error: any;
-    @observable activeTab: Section;
-    selectAllCheckboxDisposers: {
-        added?: Lambda;
-        deleted?: Lambda;
-        moved?: Lambda;
-        updated?: Lambda;
-        newEnums?: Lambda;
-    } = {};
-
-    @computed
-    get hasChanges() {
-        return (
-            this.changes.added.length > 0 ||
-            this.changes.deleted.length > 0 ||
-            this.changes.moved.length > 0 ||
-            this.changes.updated.length > 0 ||
-            this.changes.newEnums.length > 0
-        );
-    }
-
-    @computed
-    get hasSelectedChanges() {
-        return (
-            this.selectedChanges.added.length > 0 ||
-            this.selectedChanges.deleted.length > 0 ||
-            this.selectedChanges.moved.length > 0 ||
-            this.selectedChanges.updated.length > 0 ||
-            this.selectedChanges.newEnums.length > 0
-        );
-    }
-
-    componentDidMount() {
-        $(this.dialog).on("hidden.bs.modal", () => {
-            this.props.onHidden();
-        });
-
-        this.modal = new bootstrap.Modal(this.dialog);
-        this.modal.show();
-
-        const scpi = this.context.project.scpi;
-
-        const findChanges = new FindChanges(this.context, scpi.enums);
-
-        findChanges
-            .getChanges()
-            .then(
-                action((changes: Changes) => {
-                    this.changes = changes;
-
-                    if (changes.added.length > 0) {
-                        this.activeTab = "added";
-                    } else if (changes.deleted.length > 0) {
-                        this.activeTab = "deleted";
-                    } else if (changes.moved.length > 0) {
-                        this.activeTab = "moved";
-                    } else if (changes.updated.length > 0) {
-                        this.activeTab = "updated";
-                    } else if (changes.newEnums.length > 0) {
-                        this.activeTab = "newEnums";
-                    }
-                })
-            )
-            .catch(
-                action((err: any) => {
-                    this.error = err;
-                })
-            );
-
-        this.handleSelectAllCheckboxes();
-    }
-
-    componentDidUpdate() {
-        this.handleSelectAllCheckboxes();
-    }
-
-    componentWillUnmount() {
-        SECTIONS.forEach(section => {
-            let disposer = this.selectAllCheckboxDisposers[section];
-            if (disposer) {
-                disposer();
-            }
-        });
-    }
-
-    onOkCalled = false;
-
-    @action
-    onOk(event: any) {
-        event.preventDefault();
-
-        if (this.onOkCalled) {
-            return;
+            makeObservable(this, {
+                changes: observable,
+                selectedChanges: observable,
+                error: observable,
+                activeTab: observable,
+                hasChanges: computed,
+                hasSelectedChanges: computed,
+                onOk: action,
+                handleTabClick: action,
+                handleSelectCommand: action
+            });
         }
 
-        this.onOkCalled = true;
+        dialog: HTMLDivElement;
+        modal: bootstrap.Modal;
+        addedSelectAllCheckbox: HTMLInputElement;
+        deletedSelectAllCheckbox: HTMLInputElement;
+        movedSelectAllCheckbox: HTMLInputElement;
+        updatedSelectAllCheckbox: HTMLInputElement;
+        newEnumsSelectAllCheckbox: HTMLInputElement;
 
-        this.context.backgroundCheckEnabled = false;
-
-        this.modal.hide();
-
-        this.context.undoManager.setCombineCommands(true);
-
-        const scpi = this.context.project.scpi;
-
-        let existingSubsystems = scpi.subsystems;
-
-        let getOrAddSubsystem = (subsystem: Subsystem) => {
-            let existingSubsystem = existingSubsystems.find(
-                existingSubsystem => existingSubsystem.name === subsystem.name
-            );
-            if (existingSubsystem) {
-                return existingSubsystem;
-            }
-
-            return this.context.addObject(existingSubsystems, {
-                name: subsystem.name,
-                helpLink: subsystem.helpLink,
-                commands: []
-            });
+        changes: Changes;
+        selectedChanges: Changes = {
+            subsystems: [],
+            added: [],
+            deleted: [],
+            moved: [],
+            updated: [],
+            newEnums: []
         };
+        error: any;
+        activeTab: Section;
+        selectAllCheckboxDisposers: {
+            added?: Lambda;
+            deleted?: Lambda;
+            moved?: Lambda;
+            updated?: Lambda;
+            newEnums?: Lambda;
+        } = {};
 
-        this.changes.subsystems.forEach(subsystem =>
-            getOrAddSubsystem(subsystem)
-        );
-
-        this.selectedChanges.added.forEach(commandDefinition => {
-            let subsystem = getOrAddSubsystem(commandDefinition.subsystem);
-
-            this.context.addObject(
-                getProperty(subsystem, "commands"),
-                commandDefinition.command
+        get hasChanges() {
+            return (
+                this.changes.added.length > 0 ||
+                this.changes.deleted.length > 0 ||
+                this.changes.moved.length > 0 ||
+                this.changes.updated.length > 0 ||
+                this.changes.newEnums.length > 0
             );
-        });
+        }
 
-        this.selectedChanges.deleted.forEach(commandDefinition => {
-            let result = findCommandInScpiSubsystems(
-                existingSubsystems,
-                commandDefinition.command.name
+        get hasSelectedChanges() {
+            return (
+                this.selectedChanges.added.length > 0 ||
+                this.selectedChanges.deleted.length > 0 ||
+                this.selectedChanges.moved.length > 0 ||
+                this.selectedChanges.updated.length > 0 ||
+                this.selectedChanges.newEnums.length > 0
             );
-            if (result) {
-                this.context.deleteObject(result.command as ScpiCommand);
-            }
-        });
+        }
 
-        this.selectedChanges.moved.forEach(commandDefinition => {
-            let result = findCommandInScpiSubsystems(
-                existingSubsystems,
-                commandDefinition.command.name
-            );
-            if (result) {
-                let command = result.command as ScpiCommand;
-                this.context.deleteObject(command);
+        componentDidMount() {
+            $(this.dialog).on("hidden.bs.modal", () => {
+                this.props.onHidden();
+            });
 
-                command.helpLink = commandDefinition.command.helpLink;
+            this.modal = new bootstrap.Modal(this.dialog);
+            this.modal.show();
 
-                let subsystem = getOrAddSubsystem(
-                    commandDefinition.toSubsystem
+            const scpi = this.context.project.scpi;
+
+            const findChanges = new FindChanges(this.context, scpi.enums);
+
+            findChanges
+                .getChanges()
+                .then(
+                    action((changes: Changes) => {
+                        this.changes = changes;
+
+                        if (changes.added.length > 0) {
+                            this.activeTab = "added";
+                        } else if (changes.deleted.length > 0) {
+                            this.activeTab = "deleted";
+                        } else if (changes.moved.length > 0) {
+                            this.activeTab = "moved";
+                        } else if (changes.updated.length > 0) {
+                            this.activeTab = "updated";
+                        } else if (changes.newEnums.length > 0) {
+                            this.activeTab = "newEnums";
+                        }
+                    })
+                )
+                .catch(
+                    action((err: any) => {
+                        this.error = err;
+                    })
                 );
+
+            this.handleSelectAllCheckboxes();
+        }
+
+        componentDidUpdate() {
+            this.handleSelectAllCheckboxes();
+        }
+
+        componentWillUnmount() {
+            SECTIONS.forEach(section => {
+                let disposer = this.selectAllCheckboxDisposers[section];
+                if (disposer) {
+                    disposer();
+                }
+            });
+        }
+
+        onOkCalled = false;
+
+        onOk(event: any) {
+            event.preventDefault();
+
+            if (this.onOkCalled) {
+                return;
+            }
+
+            this.onOkCalled = true;
+
+            this.context.backgroundCheckEnabled = false;
+
+            this.modal.hide();
+
+            this.context.undoManager.setCombineCommands(true);
+
+            const scpi = this.context.project.scpi;
+
+            let existingSubsystems = scpi.subsystems;
+
+            let getOrAddSubsystem = (subsystem: Subsystem) => {
+                let existingSubsystem = existingSubsystems.find(
+                    existingSubsystem =>
+                        existingSubsystem.name === subsystem.name
+                );
+                if (existingSubsystem) {
+                    return existingSubsystem;
+                }
+
+                return this.context.addObject(existingSubsystems, {
+                    name: subsystem.name,
+                    helpLink: subsystem.helpLink,
+                    commands: []
+                });
+            };
+
+            this.changes.subsystems.forEach(subsystem =>
+                getOrAddSubsystem(subsystem)
+            );
+
+            this.selectedChanges.added.forEach(commandDefinition => {
+                let subsystem = getOrAddSubsystem(commandDefinition.subsystem);
 
                 this.context.addObject(
                     getProperty(subsystem, "commands"),
-                    command
+                    commandDefinition.command
                 );
-            }
-        });
+            });
 
-        this.selectedChanges.newEnums.forEach(newEnum => {
-            this.context.addObject(scpi.enums, newEnum as any);
-        });
+            this.selectedChanges.deleted.forEach(commandDefinition => {
+                let result = findCommandInScpiSubsystems(
+                    existingSubsystems,
+                    commandDefinition.command.name
+                );
+                if (result) {
+                    this.context.deleteObject(result.command as ScpiCommand);
+                }
+            });
 
-        this.selectedChanges.updated.forEach(commandDefinition => {
-            let result = findCommandInScpiSubsystems(
-                existingSubsystems,
-                commandDefinition.command.name
-            );
-            if (result) {
-                this.context.updateObject(result.command, {
-                    helpLink: commandDefinition.command.helpLink,
-                    parameters: toJS(commandDefinition.command.parameters).map(
-                        parameter => {
+            this.selectedChanges.moved.forEach(commandDefinition => {
+                let result = findCommandInScpiSubsystems(
+                    existingSubsystems,
+                    commandDefinition.command.name
+                );
+                if (result) {
+                    let command = result.command as ScpiCommand;
+                    this.context.deleteObject(command);
+
+                    command.helpLink = commandDefinition.command.helpLink;
+
+                    let subsystem = getOrAddSubsystem(
+                        commandDefinition.toSubsystem
+                    );
+
+                    this.context.addObject(
+                        getProperty(subsystem, "commands"),
+                        command
+                    );
+                }
+            });
+
+            this.selectedChanges.newEnums.forEach(newEnum => {
+                this.context.addObject(scpi.enums, newEnum as any);
+            });
+
+            this.selectedChanges.updated.forEach(commandDefinition => {
+                let result = findCommandInScpiSubsystems(
+                    existingSubsystems,
+                    commandDefinition.command.name
+                );
+                if (result) {
+                    this.context.updateObject(result.command, {
+                        helpLink: commandDefinition.command.helpLink,
+                        parameters: toJS(
+                            commandDefinition.command.parameters
+                        ).map(parameter => {
                             return {
                                 name: parameter.name,
                                 type: parameter.type.map(type => {
@@ -1186,377 +1205,108 @@ export class ImportScpiDocDialog extends React.Component<{
                                 isOptional: parameter.isOptional,
                                 description: parameter.description
                             };
-                        }
-                    )
-                });
-            }
-        });
-
-        this.context.undoManager.setCombineCommands(false);
-
-        this.context.backgroundCheckEnabled = true;
-    }
-
-    onCancel() {
-        this.modal.hide();
-    }
-
-    @action
-    handleTabClick(activeTab: Section, event: any) {
-        event.preventDefault();
-        this.activeTab = activeTab;
-    }
-
-    handleSelectAllCheckboxes() {
-        SECTIONS.forEach(section => {
-            if (this.selectAllCheckboxDisposers[section]) {
-                return;
-            }
-
-            let checkbox: HTMLInputElement;
-
-            if (section === "added") {
-                checkbox = this.addedSelectAllCheckbox;
-            } else if (section === "deleted") {
-                checkbox = this.deletedSelectAllCheckbox;
-            } else if (section === "moved") {
-                checkbox = this.movedSelectAllCheckbox;
-            } else if (section === "updated") {
-                checkbox = this.updatedSelectAllCheckbox;
-            } else {
-                checkbox = this.newEnumsSelectAllCheckbox;
-            }
-
-            if (!checkbox) {
-                return;
-            }
-
-            this.selectAllCheckboxDisposers[section] = autorun(() => {
-                if (this.selectedChanges[section].length == 0) {
-                    checkbox.indeterminate = false;
-                    checkbox.checked = false;
-                } else if (
-                    this.selectedChanges[section].length ==
-                    this.changes[section].length
-                ) {
-                    checkbox.indeterminate = false;
-                    checkbox.checked = true;
-                } else {
-                    checkbox.indeterminate = true;
-                    checkbox.checked = false;
+                        })
+                    });
                 }
             });
 
-            checkbox.addEventListener(
-                "click",
-                action((event: any) => {
-                    if (this.selectedChanges[section].length == 0) {
-                        (this.selectedChanges as any)[section] =
-                            this.changes[section].slice();
-                    } else {
-                        this.selectedChanges[section] = [];
-                    }
-                })
-            );
-        });
-    }
+            this.context.undoManager.setCombineCommands(false);
 
-    isChangeSelected(
-        section: Section,
-        changeDefinition: CommandDefinition | IEnum
-    ) {
-        let commandDefinitions: any = this.selectedChanges[section];
-        return commandDefinitions.indexOf(changeDefinition) !== -1;
-    }
-
-    @action
-    handleSelectCommand(
-        section: Section,
-        commandDefinition: CommandDefinition,
-        event: any
-    ) {
-        let commandDefinitions: any = this.selectedChanges[section];
-        if (event.target.checked) {
-            commandDefinitions.push(commandDefinition);
-        } else {
-            let i = commandDefinitions.indexOf(commandDefinition);
-            commandDefinitions.splice(i, 1);
+            this.context.backgroundCheckEnabled = true;
         }
-    }
 
-    render() {
-        let content;
+        onCancel() {
+            this.modal.hide();
+        }
 
-        let buttons;
+        handleTabClick(activeTab: Section, event: any) {
+            event.preventDefault();
+            this.activeTab = activeTab;
+        }
 
-        if (this.error) {
-            content = <div className="error">{this.error}</div>;
+        handleSelectAllCheckboxes() {
+            SECTIONS.forEach(section => {
+                if (this.selectAllCheckboxDisposers[section]) {
+                    return;
+                }
 
-            buttons = [
-                <button
-                    key="close"
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={this.onCancel.bind(this)}
-                >
-                    Close
-                </button>
-            ];
-        } else if (this.changes) {
-            if (this.hasChanges) {
-                let tabs = SECTIONS.filter(
-                    section => this.changes[section].length > 0
-                ).map(section => (
-                    <li role="presentation" key={section} className="nav-item">
-                        <a
-                            href="#"
-                            onClick={this.handleTabClick.bind(this, section)}
-                            className={
-                                "nav-link" +
-                                (this.activeTab === section ? " active" : "")
-                            }
-                        >
-                            {humanize(section).toUpperCase()}
-                            <span
-                                className={
-                                    "ml-2 badge badge-pills" +
-                                    (this.activeTab === section
-                                        ? " badge-light"
-                                        : " badge-dark")
-                                }
-                            >
-                                {this.changes[section].length}
-                            </span>
-                        </a>
-                    </li>
-                ));
+                let checkbox: HTMLInputElement;
 
-                let tables = SECTIONS.map(section => {
-                    if (this.changes[section].length === 0) {
-                        return;
+                if (section === "added") {
+                    checkbox = this.addedSelectAllCheckbox;
+                } else if (section === "deleted") {
+                    checkbox = this.deletedSelectAllCheckbox;
+                } else if (section === "moved") {
+                    checkbox = this.movedSelectAllCheckbox;
+                } else if (section === "updated") {
+                    checkbox = this.updatedSelectAllCheckbox;
+                } else {
+                    checkbox = this.newEnumsSelectAllCheckbox;
+                }
+
+                if (!checkbox) {
+                    return;
+                }
+
+                this.selectAllCheckboxDisposers[section] = autorun(() => {
+                    if (this.selectedChanges[section].length == 0) {
+                        checkbox.indeterminate = false;
+                        checkbox.checked = false;
+                    } else if (
+                        this.selectedChanges[section].length ==
+                        this.changes[section].length
+                    ) {
+                        checkbox.indeterminate = false;
+                        checkbox.checked = true;
+                    } else {
+                        checkbox.indeterminate = true;
+                        checkbox.checked = false;
                     }
-
-                    let thead;
-                    if (section === "added") {
-                        thead = (
-                            <tr>
-                                <th className="col-8">
-                                    <input
-                                        ref={ref =>
-                                            (this.addedSelectAllCheckbox = ref!)
-                                        }
-                                        type="checkbox"
-                                    />{" "}
-                                    Command
-                                </th>
-                                <th className="col-4">To</th>
-                            </tr>
-                        );
-                    } else if (section === "deleted") {
-                        thead = (
-                            <tr>
-                                <th className="col-8">
-                                    <input
-                                        ref={ref =>
-                                            (this.deletedSelectAllCheckbox =
-                                                ref!)
-                                        }
-                                        type="checkbox"
-                                    />{" "}
-                                    Command
-                                </th>
-                                <th className="col-4">From</th>
-                            </tr>
-                        );
-                    } else if (section === "moved") {
-                        thead = (
-                            <tr>
-                                <th className="col-6">
-                                    <input
-                                        ref={ref =>
-                                            (this.movedSelectAllCheckbox = ref!)
-                                        }
-                                        type="checkbox"
-                                    />{" "}
-                                    Command
-                                </th>
-                                <th className="col-3">From</th>
-                                <th className="col-3">To</th>
-                            </tr>
-                        );
-                    } else if (section === "updated") {
-                        thead = (
-                            <tr>
-                                <th className="col-8">
-                                    <input
-                                        ref={ref =>
-                                            (this.updatedSelectAllCheckbox =
-                                                ref!)
-                                        }
-                                        type="checkbox"
-                                    />{" "}
-                                    Command
-                                </th>
-                                <th className="col-4">In</th>
-                            </tr>
-                        );
-                    } else if (section === "newEnums") {
-                        thead = (
-                            <tr>
-                                <th className="col-4">
-                                    <input
-                                        ref={ref =>
-                                            (this.newEnumsSelectAllCheckbox =
-                                                ref!)
-                                        }
-                                        type="checkbox"
-                                    />{" "}
-                                    Enum
-                                </th>
-                                <th className="col-8">Members</th>
-                            </tr>
-                        );
-                    }
-
-                    let tbody = (this.changes[section] as any).map(
-                        (
-                            commandOrNewEnumDefinition:
-                                | CommandDefinition
-                                | IEnum
-                        ) => {
-                            let checkbox = (
-                                <input
-                                    type="checkbox"
-                                    checked={this.isChangeSelected(
-                                        section,
-                                        commandOrNewEnumDefinition
-                                    )}
-                                    onChange={this.handleSelectCommand.bind(
-                                        this,
-                                        section,
-                                        commandOrNewEnumDefinition
-                                    )}
-                                />
-                            );
-
-                            if (section === "newEnums") {
-                                const newEnum =
-                                    commandOrNewEnumDefinition as IEnum;
-
-                                return (
-                                    <tr key={newEnum.name}>
-                                        <td className="col-4">
-                                            {checkbox} {newEnum.name}
-                                        </td>
-                                        <td className="col-8">
-                                            {newEnum.members
-                                                .map(member => member.name)
-                                                .join("|")}
-                                        </td>
-                                    </tr>
-                                );
-                            } else {
-                                const commandDefinition =
-                                    commandOrNewEnumDefinition as CommandDefinition;
-
-                                if (
-                                    section === "added" ||
-                                    section === "deleted" ||
-                                    section === "updated"
-                                ) {
-                                    return (
-                                        <tr
-                                            key={commandDefinition.command.name}
-                                        >
-                                            <td className="col-8">
-                                                {checkbox}{" "}
-                                                {commandDefinition.command.name}
-                                            </td>
-                                            <td className="col-4">
-                                                {
-                                                    commandDefinition.subsystem
-                                                        .name
-                                                }
-                                            </td>
-                                        </tr>
-                                    );
-                                } else {
-                                    // section === "moved"
-                                    return (
-                                        <tr
-                                            key={commandDefinition.command.name}
-                                        >
-                                            <td className="col-6">
-                                                {checkbox}{" "}
-                                                {commandDefinition.command.name}
-                                            </td>
-                                            <td className="col-3">
-                                                {
-                                                    commandDefinition.subsystem
-                                                        .name
-                                                }
-                                            </td>
-                                            <td className="col-3">
-                                                {
-                                                    (
-                                                        commandDefinition as MovedCommandDefinition
-                                                    ).toSubsystem.name
-                                                }
-                                            </td>
-                                        </tr>
-                                    );
-                                }
-                            }
-                        }
-                    );
-
-                    return (
-                        <table
-                            key={section}
-                            style={{
-                                display:
-                                    this.activeTab === section
-                                        ? "block"
-                                        : "none"
-                            }}
-                        >
-                            <thead>{thead}</thead>
-                            <tbody>{tbody}</tbody>
-                        </table>
-                    );
                 });
 
-                content = (
-                    <form
-                        className="form-horizontal"
-                        onSubmit={this.onOk.bind(this)}
-                    >
-                        <ul className="nav nav-pills">{tabs}</ul>
-                        <div className="EezStudio_TablesDiv">{tables}</div>
-                    </form>
+                checkbox.addEventListener(
+                    "click",
+                    action((event: any) => {
+                        if (this.selectedChanges[section].length == 0) {
+                            (this.selectedChanges as any)[section] =
+                                this.changes[section].slice();
+                        } else {
+                            this.selectedChanges[section] = [];
+                        }
+                    })
                 );
+            });
+        }
 
-                buttons = [
-                    <button
-                        key="ok"
-                        type="button"
-                        className="btn btn-default"
-                        onClick={this.onCancel.bind(this)}
-                    >
-                        Cancel
-                    </button>,
-                    <button
-                        key="cancel"
-                        type="button"
-                        className="btn btn-primary"
-                        onClick={this.onOk.bind(this)}
-                        disabled={!this.hasSelectedChanges}
-                    >
-                        OK
-                    </button>
-                ];
+        isChangeSelected(
+            section: Section,
+            changeDefinition: CommandDefinition | IEnum
+        ) {
+            let commandDefinitions: any = this.selectedChanges[section];
+            return commandDefinitions.indexOf(changeDefinition) !== -1;
+        }
+
+        handleSelectCommand(
+            section: Section,
+            commandDefinition: CommandDefinition,
+            event: any
+        ) {
+            let commandDefinitions: any = this.selectedChanges[section];
+            if (event.target.checked) {
+                commandDefinitions.push(commandDefinition);
             } else {
-                content = <h4 style={{ textAlign: "center" }}>No changes!</h4>;
+                let i = commandDefinitions.indexOf(commandDefinition);
+                commandDefinitions.splice(i, 1);
+            }
+        }
+
+        render() {
+            let content;
+
+            let buttons;
+
+            if (this.error) {
+                content = <div className="error">{this.error}</div>;
 
                 buttons = [
                     <button
@@ -1568,44 +1318,336 @@ export class ImportScpiDocDialog extends React.Component<{
                         Close
                     </button>
                 ];
+            } else if (this.changes) {
+                if (this.hasChanges) {
+                    let tabs = SECTIONS.filter(
+                        section => this.changes[section].length > 0
+                    ).map(section => (
+                        <li
+                            role="presentation"
+                            key={section}
+                            className="nav-item"
+                        >
+                            <a
+                                href="#"
+                                onClick={this.handleTabClick.bind(
+                                    this,
+                                    section
+                                )}
+                                className={
+                                    "nav-link" +
+                                    (this.activeTab === section
+                                        ? " active"
+                                        : "")
+                                }
+                            >
+                                {humanize(section).toUpperCase()}
+                                <span
+                                    className={
+                                        "ml-2 badge badge-pills" +
+                                        (this.activeTab === section
+                                            ? " badge-light"
+                                            : " badge-dark")
+                                    }
+                                >
+                                    {this.changes[section].length}
+                                </span>
+                            </a>
+                        </li>
+                    ));
+
+                    let tables = SECTIONS.map(section => {
+                        if (this.changes[section].length === 0) {
+                            return;
+                        }
+
+                        let thead;
+                        if (section === "added") {
+                            thead = (
+                                <tr>
+                                    <th className="col-8">
+                                        <input
+                                            ref={ref =>
+                                                (this.addedSelectAllCheckbox =
+                                                    ref!)
+                                            }
+                                            type="checkbox"
+                                        />{" "}
+                                        Command
+                                    </th>
+                                    <th className="col-4">To</th>
+                                </tr>
+                            );
+                        } else if (section === "deleted") {
+                            thead = (
+                                <tr>
+                                    <th className="col-8">
+                                        <input
+                                            ref={ref =>
+                                                (this.deletedSelectAllCheckbox =
+                                                    ref!)
+                                            }
+                                            type="checkbox"
+                                        />{" "}
+                                        Command
+                                    </th>
+                                    <th className="col-4">From</th>
+                                </tr>
+                            );
+                        } else if (section === "moved") {
+                            thead = (
+                                <tr>
+                                    <th className="col-6">
+                                        <input
+                                            ref={ref =>
+                                                (this.movedSelectAllCheckbox =
+                                                    ref!)
+                                            }
+                                            type="checkbox"
+                                        />{" "}
+                                        Command
+                                    </th>
+                                    <th className="col-3">From</th>
+                                    <th className="col-3">To</th>
+                                </tr>
+                            );
+                        } else if (section === "updated") {
+                            thead = (
+                                <tr>
+                                    <th className="col-8">
+                                        <input
+                                            ref={ref =>
+                                                (this.updatedSelectAllCheckbox =
+                                                    ref!)
+                                            }
+                                            type="checkbox"
+                                        />{" "}
+                                        Command
+                                    </th>
+                                    <th className="col-4">In</th>
+                                </tr>
+                            );
+                        } else if (section === "newEnums") {
+                            thead = (
+                                <tr>
+                                    <th className="col-4">
+                                        <input
+                                            ref={ref =>
+                                                (this.newEnumsSelectAllCheckbox =
+                                                    ref!)
+                                            }
+                                            type="checkbox"
+                                        />{" "}
+                                        Enum
+                                    </th>
+                                    <th className="col-8">Members</th>
+                                </tr>
+                            );
+                        }
+
+                        let tbody = (this.changes[section] as any).map(
+                            (
+                                commandOrNewEnumDefinition:
+                                    | CommandDefinition
+                                    | IEnum
+                            ) => {
+                                let checkbox = (
+                                    <input
+                                        type="checkbox"
+                                        checked={this.isChangeSelected(
+                                            section,
+                                            commandOrNewEnumDefinition
+                                        )}
+                                        onChange={this.handleSelectCommand.bind(
+                                            this,
+                                            section,
+                                            commandOrNewEnumDefinition
+                                        )}
+                                    />
+                                );
+
+                                if (section === "newEnums") {
+                                    const newEnum =
+                                        commandOrNewEnumDefinition as IEnum;
+
+                                    return (
+                                        <tr key={newEnum.name}>
+                                            <td className="col-4">
+                                                {checkbox} {newEnum.name}
+                                            </td>
+                                            <td className="col-8">
+                                                {newEnum.members
+                                                    .map(member => member.name)
+                                                    .join("|")}
+                                            </td>
+                                        </tr>
+                                    );
+                                } else {
+                                    const commandDefinition =
+                                        commandOrNewEnumDefinition as CommandDefinition;
+
+                                    if (
+                                        section === "added" ||
+                                        section === "deleted" ||
+                                        section === "updated"
+                                    ) {
+                                        return (
+                                            <tr
+                                                key={
+                                                    commandDefinition.command
+                                                        .name
+                                                }
+                                            >
+                                                <td className="col-8">
+                                                    {checkbox}{" "}
+                                                    {
+                                                        commandDefinition
+                                                            .command.name
+                                                    }
+                                                </td>
+                                                <td className="col-4">
+                                                    {
+                                                        commandDefinition
+                                                            .subsystem.name
+                                                    }
+                                                </td>
+                                            </tr>
+                                        );
+                                    } else {
+                                        // section === "moved"
+                                        return (
+                                            <tr
+                                                key={
+                                                    commandDefinition.command
+                                                        .name
+                                                }
+                                            >
+                                                <td className="col-6">
+                                                    {checkbox}{" "}
+                                                    {
+                                                        commandDefinition
+                                                            .command.name
+                                                    }
+                                                </td>
+                                                <td className="col-3">
+                                                    {
+                                                        commandDefinition
+                                                            .subsystem.name
+                                                    }
+                                                </td>
+                                                <td className="col-3">
+                                                    {
+                                                        (
+                                                            commandDefinition as MovedCommandDefinition
+                                                        ).toSubsystem.name
+                                                    }
+                                                </td>
+                                            </tr>
+                                        );
+                                    }
+                                }
+                            }
+                        );
+
+                        return (
+                            <table
+                                key={section}
+                                style={{
+                                    display:
+                                        this.activeTab === section
+                                            ? "block"
+                                            : "none"
+                                }}
+                            >
+                                <thead>{thead}</thead>
+                                <tbody>{tbody}</tbody>
+                            </table>
+                        );
+                    });
+
+                    content = (
+                        <form
+                            className="form-horizontal"
+                            onSubmit={this.onOk.bind(this)}
+                        >
+                            <ul className="nav nav-pills">{tabs}</ul>
+                            <div className="EezStudio_TablesDiv">{tables}</div>
+                        </form>
+                    );
+
+                    buttons = [
+                        <button
+                            key="ok"
+                            type="button"
+                            className="btn btn-default"
+                            onClick={this.onCancel.bind(this)}
+                        >
+                            Cancel
+                        </button>,
+                        <button
+                            key="cancel"
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={this.onOk.bind(this)}
+                            disabled={!this.hasSelectedChanges}
+                        >
+                            OK
+                        </button>
+                    ];
+                } else {
+                    content = (
+                        <h4 style={{ textAlign: "center" }}>No changes!</h4>
+                    );
+
+                    buttons = [
+                        <button
+                            key="close"
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={this.onCancel.bind(this)}
+                        >
+                            Close
+                        </button>
+                    ];
+                }
+            } else {
+                content = <Loader />;
             }
-        } else {
-            content = <Loader />;
-        }
 
-        let footer;
-        if (buttons && buttons.length > 0) {
-            footer = <div className="modal-footer">{buttons}</div>;
-        }
+            let footer;
+            if (buttons && buttons.length > 0) {
+                footer = <div className="modal-footer">{buttons}</div>;
+            }
 
-        return (
-            <div
-                ref={(ref: any) => (this.dialog = ref!)}
-                className={"modal fade EezStudio_ImportScpiDocDialogDiv"}
-                tabIndex={-1}
-                role="dialog"
-            >
-                <div className="modal-lg modal-dialog" role="document">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h5 className="modal-title" id="myModalLabel">
-                                Detected SCPI Command Changes
-                            </h5>
-                            <button
-                                type="button"
-                                className="btn-close float-right"
-                                onClick={this.onCancel.bind(this)}
-                                aria-label="Close"
-                            ></button>
+            return (
+                <div
+                    ref={(ref: any) => (this.dialog = ref!)}
+                    className={"modal fade EezStudio_ImportScpiDocDialogDiv"}
+                    tabIndex={-1}
+                    role="dialog"
+                >
+                    <div className="modal-lg modal-dialog" role="document">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title" id="myModalLabel">
+                                    Detected SCPI Command Changes
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="btn-close float-right"
+                                    onClick={this.onCancel.bind(this)}
+                                    aria-label="Close"
+                                ></button>
+                            </div>
+                            <div className="modal-body">{content}</div>
+                            {footer}
                         </div>
-                        <div className="modal-body">{content}</div>
-                        {footer}
                     </div>
                 </div>
-            </div>
-        );
+            );
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -1,4 +1,5 @@
 import React from "react";
+import { dialog } from "@electron/remote";
 
 import { Icon } from "eez-studio-ui/icon";
 import { FieldComponent } from "eez-studio-ui/generic-dialog";
@@ -15,7 +16,7 @@ export class RelativeFileInput extends FieldComponent {
     }
 
     async onSelect() {
-        const result = await EEZStudio.remote.dialog.showOpenDialog({
+        const result = await dialog.showOpenDialog({
             properties: ["openFile"],
             filters: this.props.fieldProperties.options.filters
         });

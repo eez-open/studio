@@ -1,5 +1,14 @@
+import { ipcRenderer } from "electron";
+import { dialog, getCurrentWindow } from "@electron/remote";
 import React from "react";
-import { observable, computed, action, runInAction, toJS } from "mobx";
+import {
+    observable,
+    computed,
+    action,
+    runInAction,
+    toJS,
+    makeObservable
+} from "mobx";
 import { observer } from "mobx-react";
 import moment from "moment";
 import classNames from "classnames";
@@ -49,11 +58,11 @@ export const COMPACT_DATABASE_MESSAGE =
 ////////////////////////////////////////////////////////////////////////////////
 
 const getIsDarkTheme = function () {
-    return EEZStudio.electron.ipcRenderer.sendSync("getIsDarkTheme");
+    return ipcRenderer.sendSync("getIsDarkTheme");
 };
 
 const setIsDarkTheme = function (value: boolean) {
-    EEZStudio.electron.ipcRenderer.send("setIsDarkTheme", value);
+    ipcRenderer.send("setIsDarkTheme", value);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -62,37 +71,34 @@ interface IMruItem {
     filePath: string;
 }
 const getMRU: () => IMruItem[] = function () {
-    return EEZStudio.electron.ipcRenderer.sendSync("getMRU");
+    return ipcRenderer.sendSync("getMRU");
 };
 
 const setMRU = function (value: IMruItem[]) {
-    EEZStudio.electron.ipcRenderer.send("setMRU", toJS(value));
+    ipcRenderer.send("setMRU", toJS(value));
 };
 
-EEZStudio.electron.ipcRenderer.on(
-    "mru-changed",
-    async (sender: any, mru: IMruItem[]) => {
-        function isMruChanged(mru1: IMruItem[], mru2: IMruItem[]) {
-            if (!!mru1 != !!mru) {
-                return true;
-            }
-
-            if (mru1.length != mru2.length) {
-                return true;
-            }
-            for (let i = 0; i < mru1.length; i++) {
-                if (mru1[i].filePath != mru2[i].filePath) {
-                    return true;
-                }
-            }
-            return false;
+ipcRenderer.on("mru-changed", async (sender: any, mru: IMruItem[]) => {
+    function isMruChanged(mru1: IMruItem[], mru2: IMruItem[]) {
+        if (!!mru1 != !!mru) {
+            return true;
         }
 
-        if (isMruChanged(mru, settingsController.mru)) {
-            runInAction(() => (settingsController.mru = mru));
+        if (mru1.length != mru2.length) {
+            return true;
         }
+        for (let i = 0; i < mru1.length; i++) {
+            if (mru1[i].filePath != mru2[i].filePath) {
+                return true;
+            }
+        }
+        return false;
     }
-);
+
+    if (isMruChanged(mru, settingsController.mru)) {
+        runInAction(() => (settingsController.mru = mru));
+    }
+});
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -102,17 +108,38 @@ class SettingsController {
     activeDateFormat = getDateFormat();
     activeTimeFormat = getTimeFormat();
 
-    @observable databasePath: string = getDbPath();
-    @observable locale: string = getLocale();
-    @observable dateFormat: string = getDateFormat();
-    @observable timeFormat: string = getTimeFormat();
-    @observable databaseSize: number;
-    @observable timeOfLastDatabaseCompactOperation: Date;
-    @observable _isCompactDatabaseAdvisable: boolean;
-    @observable isDarkTheme: boolean = getIsDarkTheme();
-    @observable mru: IMruItem[] = getMRU();
+    databasePath: string = getDbPath();
+    locale: string = getLocale();
+    dateFormat: string = getDateFormat();
+    timeFormat: string = getTimeFormat();
+    databaseSize: number;
+    timeOfLastDatabaseCompactOperation: Date;
+    _isCompactDatabaseAdvisable: boolean;
+    isDarkTheme: boolean = getIsDarkTheme();
+    mru: IMruItem[] = getMRU();
 
     constructor() {
+        makeObservable(this, {
+            databasePath: observable,
+            locale: observable,
+            dateFormat: observable,
+            timeFormat: observable,
+            databaseSize: observable,
+            timeOfLastDatabaseCompactOperation: observable,
+            _isCompactDatabaseAdvisable: observable,
+            isDarkTheme: observable,
+            mru: observable,
+            updateTimeOfLastDatabaseCompact: action.bound,
+            isCompactDatabaseAdvisable: computed,
+            restartRequired: computed,
+            onDatabasePathChange: action.bound,
+            onLocaleChange: action.bound,
+            onDateFormatChanged: action.bound,
+            onTimeFormatChanged: action.bound,
+            switchTheme: action.bound,
+            removeItemFromMRU: action
+        });
+
         var fs = require("fs");
 
         this.databaseSize = fs.statSync(this.activeDatabasePath).size;
@@ -124,7 +151,6 @@ class SettingsController {
         this.onThemeSwitched();
     }
 
-    @action.bound
     updateTimeOfLastDatabaseCompact() {
         let timeOfLastDatabaseCompactOperationStr = localStorage.getItem(
             TIME_OF_LAST_DATABASE_COMPACT_OPERATION_ITEM_NAME
@@ -148,7 +174,6 @@ class SettingsController {
             CONF_DATABASE_COMPACT_ADVISE_PERIOD;
     }
 
-    @computed
     get isCompactDatabaseAdvisable() {
         return (
             this.databasePath === this.activeDatabasePath &&
@@ -156,7 +181,6 @@ class SettingsController {
         );
     }
 
-    @computed
     get restartRequired() {
         return (
             this.databasePath !== this.activeDatabasePath ||
@@ -166,31 +190,26 @@ class SettingsController {
         );
     }
 
-    @action.bound
     onDatabasePathChange(databasePath: string) {
         this.databasePath = databasePath;
         setDbPath(this.databasePath);
     }
 
-    @action.bound
     onLocaleChange(value: string) {
         this.locale = value;
         setLocale(value);
     }
 
-    @action.bound
     onDateFormatChanged(value: string) {
         this.dateFormat = value;
         setDateFormat(value);
     }
 
-    @action.bound
     onTimeFormatChanged(value: string) {
         this.timeFormat = value;
         setTimeFormat(value);
     }
 
-    @action.bound
     switchTheme(value: boolean) {
         this.isDarkTheme = value;
         setIsDarkTheme(value);
@@ -249,7 +268,6 @@ class SettingsController {
         }, 200);
     }
 
-    @action
     removeItemFromMRU(mruItem: IMruItem) {
         const i = this.mru.indexOf(mruItem);
         if (i != -1) {
@@ -259,10 +277,7 @@ class SettingsController {
     }
 
     createNewDatabase = async () => {
-        const result = await EEZStudio.remote.dialog.showSaveDialog(
-            EEZStudio.remote.getCurrentWindow(),
-            {}
-        );
+        const result = await dialog.showSaveDialog(getCurrentWindow(), {});
         const filePath = result.filePath;
         if (filePath) {
             try {
@@ -292,258 +307,276 @@ export const settingsController = new SettingsController();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class CompactDatabaseDialog extends React.Component<{}, {}> {
-    @observable sizeBefore: number;
-    @observable sizeAfter: number | undefined;
-    @observable sizeReduced: number | undefined;
+const CompactDatabaseDialog = observer(
+    class CompactDatabaseDialog extends React.Component<{}, {}> {
+        sizeBefore: number;
+        sizeAfter: number | undefined;
+        sizeReduced: number | undefined;
 
-    constructor(props: any) {
-        super(props);
+        constructor(props: any) {
+            super(props);
 
-        var fs = require("fs");
-        this.sizeBefore = fs.statSync(
-            settingsController.activeDatabasePath
-        ).size;
-    }
-
-    async componentDidMount() {
-        try {
-            await dbVacuum();
-
-            localStorage.setItem(
-                TIME_OF_LAST_DATABASE_COMPACT_OPERATION_ITEM_NAME,
-                new Date().getTime().toString()
-            );
-            settingsController.updateTimeOfLastDatabaseCompact();
-
-            runInAction(() => {
-                var fs = require("fs");
-                this.sizeAfter = fs.statSync(
-                    settingsController.activeDatabasePath
-                ).size;
-
-                settingsController.databaseSize = this.sizeAfter!;
-
-                this.sizeReduced =
-                    (100 * (this.sizeBefore - this.sizeAfter!)) /
-                    this.sizeBefore;
-                if (this.sizeReduced < 1) {
-                    this.sizeReduced = Math.round(100 * this.sizeReduced) / 100;
-                } else if (this.sizeReduced < 10) {
-                    this.sizeReduced = Math.round(10 * this.sizeReduced) / 10;
-                } else {
-                    this.sizeReduced = Math.round(this.sizeReduced);
-                }
+            makeObservable(this, {
+                sizeBefore: observable,
+                sizeAfter: observable,
+                sizeReduced: observable
             });
-        } catch (err) {
-            notification.error(err);
-        }
-    }
 
-    render() {
-        return (
-            <Dialog
-                open={true}
-                title="Compacting Database"
-                size="small"
-                cancelButtonText="Close"
-                cancelDisabled={this.sizeAfter === undefined}
-            >
-                <table className="EezStudio_CompactDatabaseDialogTable">
-                    <tbody>
-                        <tr>
-                            <td>Size before</td>
-                            <td>{formatBytes(this.sizeBefore)}</td>
-                        </tr>
-                        <tr>
-                            <td>Size after</td>
-                            <td>
-                                {this.sizeAfter !== undefined ? (
-                                    formatBytes(this.sizeAfter)
-                                ) : (
-                                    <Loader style={{ margin: 0 }} />
-                                )}
-                            </td>
-                        </tr>
-                        {this.sizeReduced !== undefined && (
+            var fs = require("fs");
+            this.sizeBefore = fs.statSync(
+                settingsController.activeDatabasePath
+            ).size;
+        }
+
+        async componentDidMount() {
+            try {
+                await dbVacuum();
+
+                localStorage.setItem(
+                    TIME_OF_LAST_DATABASE_COMPACT_OPERATION_ITEM_NAME,
+                    new Date().getTime().toString()
+                );
+                settingsController.updateTimeOfLastDatabaseCompact();
+
+                runInAction(() => {
+                    var fs = require("fs");
+                    this.sizeAfter = fs.statSync(
+                        settingsController.activeDatabasePath
+                    ).size;
+
+                    settingsController.databaseSize = this.sizeAfter!;
+
+                    this.sizeReduced =
+                        (100 * (this.sizeBefore - this.sizeAfter!)) /
+                        this.sizeBefore;
+                    if (this.sizeReduced < 1) {
+                        this.sizeReduced =
+                            Math.round(100 * this.sizeReduced) / 100;
+                    } else if (this.sizeReduced < 10) {
+                        this.sizeReduced =
+                            Math.round(10 * this.sizeReduced) / 10;
+                    } else {
+                        this.sizeReduced = Math.round(this.sizeReduced);
+                    }
+                });
+            } catch (err) {
+                notification.error(err);
+            }
+        }
+
+        render() {
+            return (
+                <Dialog
+                    open={true}
+                    title="Compacting Database"
+                    size="small"
+                    cancelButtonText="Close"
+                    cancelDisabled={this.sizeAfter === undefined}
+                >
+                    <table className="EezStudio_CompactDatabaseDialogTable">
+                        <tbody>
                             <tr>
-                                <td>Size reduced by </td>
+                                <td>Size before</td>
+                                <td>{formatBytes(this.sizeBefore)}</td>
+                            </tr>
+                            <tr>
+                                <td>Size after</td>
                                 <td>
-                                    {formatBytes(
-                                        this.sizeBefore - this.sizeAfter!
-                                    )}{" "}
-                                    or {this.sizeReduced}%
+                                    {this.sizeAfter !== undefined ? (
+                                        formatBytes(this.sizeAfter)
+                                    ) : (
+                                        <Loader style={{ margin: 0 }} />
+                                    )}
                                 </td>
                             </tr>
-                        )}
-                    </tbody>
-                </table>
-            </Dialog>
-        );
+                            {this.sizeReduced !== undefined && (
+                                <tr>
+                                    <td>Size reduced by </td>
+                                    <td>
+                                        {formatBytes(
+                                            this.sizeBefore - this.sizeAfter!
+                                        )}{" "}
+                                        or {this.sizeReduced}%
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </Dialog>
+            );
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class Settings extends React.Component {
-    render() {
-        const databaseCompactDivClassName = classNames(
-            "EezStudio_DatabaseCompactDiv",
-            {
-                databaseCompactIsAdvisable:
-                    settingsController.isCompactDatabaseAdvisable
-            }
-        );
+export const Settings = observer(
+    class Settings extends React.Component {
+        render() {
+            const databaseCompactDivClassName = classNames(
+                "EezStudio_DatabaseCompactDiv",
+                {
+                    databaseCompactIsAdvisable:
+                        settingsController.isCompactDatabaseAdvisable
+                }
+            );
 
-        return (
-            <div>
-                <div className="EezStudio_HomeSettingsBody">
-                    <PropertyList>
-                        <FileInputProperty
-                            name="Database location"
-                            value={settingsController.databasePath}
-                            onChange={settingsController.onDatabasePathChange}
-                        />
-                        <tr>
-                            <td />
-                            <td>
-                                <div className="btn-toolbar">
-                                    <div className="btn-group me-2">
-                                        <button
-                                            type="button"
-                                            className="btn btn-secondary btn-sm"
-                                            onClick={
-                                                settingsController.createNewDatabase
-                                            }
-                                        >
-                                            Create New Database
-                                        </button>
-                                    </div>
-                                    <div className="btn-group me-2">
-                                        <button
-                                            type="button"
-                                            className="btn btn-secondary btn-sm"
-                                            onClick={
-                                                settingsController.showDatabasePathInFolder
-                                            }
-                                        >
-                                            Show in Folder
-                                        </button>
-                                    </div>
-                                </div>
-                                {settingsController.databasePath ===
-                                    settingsController.activeDatabasePath && (
-                                    <div
-                                        className={databaseCompactDivClassName}
-                                    >
-                                        <div>
-                                            Database size is{" "}
-                                            {formatBytes(
-                                                settingsController.databaseSize
-                                            )}
-                                            .
-                                        </div>
-                                        <div>
-                                            Database compacted{" "}
-                                            {moment(
-                                                settingsController.timeOfLastDatabaseCompactOperation
-                                            ).fromNow()}
-                                            .
-                                        </div>
-                                        {settingsController.isCompactDatabaseAdvisable && (
-                                            <div>
-                                                {COMPACT_DATABASE_MESSAGE}
-                                            </div>
-                                        )}
+            return (
+                <div>
+                    <div className="EezStudio_HomeSettingsBody">
+                        <PropertyList>
+                            <FileInputProperty
+                                name="Database location"
+                                value={settingsController.databasePath}
+                                onChange={
+                                    settingsController.onDatabasePathChange
+                                }
+                            />
+                            <tr>
+                                <td />
+                                <td>
+                                    <div className="btn-toolbar">
                                         <div className="btn-group me-2">
                                             <button
                                                 type="button"
                                                 className="btn btn-secondary btn-sm"
                                                 onClick={
-                                                    settingsController.compactDatabase
+                                                    settingsController.createNewDatabase
                                                 }
                                             >
-                                                Compact Database
+                                                Create New Database
+                                            </button>
+                                        </div>
+                                        <div className="btn-group me-2">
+                                            <button
+                                                type="button"
+                                                className="btn btn-secondary btn-sm"
+                                                onClick={
+                                                    settingsController.showDatabasePathInFolder
+                                                }
+                                            >
+                                                Show in Folder
                                             </button>
                                         </div>
                                     </div>
-                                )}
-                            </td>
-                        </tr>
-                        <SelectProperty
-                            name="Locale"
-                            value={settingsController.locale}
-                            onChange={settingsController.onLocaleChange}
-                        >
-                            {Object.keys(LOCALES)
-                                .slice()
-                                .sort((a, b) =>
-                                    stringCompare(
-                                        (LOCALES as any)[a],
-                                        (LOCALES as any)[b]
+                                    {settingsController.databasePath ===
+                                        settingsController.activeDatabasePath && (
+                                        <div
+                                            className={
+                                                databaseCompactDivClassName
+                                            }
+                                        >
+                                            <div>
+                                                Database size is{" "}
+                                                {formatBytes(
+                                                    settingsController.databaseSize
+                                                )}
+                                                .
+                                            </div>
+                                            <div>
+                                                Database compacted{" "}
+                                                {moment(
+                                                    settingsController.timeOfLastDatabaseCompactOperation
+                                                ).fromNow()}
+                                                .
+                                            </div>
+                                            {settingsController.isCompactDatabaseAdvisable && (
+                                                <div>
+                                                    {COMPACT_DATABASE_MESSAGE}
+                                                </div>
+                                            )}
+                                            <div className="btn-group me-2">
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-secondary btn-sm"
+                                                    onClick={
+                                                        settingsController.compactDatabase
+                                                    }
+                                                >
+                                                    Compact Database
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </td>
+                            </tr>
+                            <SelectProperty
+                                name="Locale"
+                                value={settingsController.locale}
+                                onChange={settingsController.onLocaleChange}
+                            >
+                                {Object.keys(LOCALES)
+                                    .slice()
+                                    .sort((a, b) =>
+                                        stringCompare(
+                                            (LOCALES as any)[a],
+                                            (LOCALES as any)[b]
+                                        )
                                     )
-                                )
-                                .map(locale => (
-                                    <option key={locale} value={locale}>
-                                        {(LOCALES as any)[locale]}
+                                    .map(locale => (
+                                        <option key={locale} value={locale}>
+                                            {(LOCALES as any)[locale]}
+                                        </option>
+                                    ))}
+                            </SelectProperty>
+                            <SelectProperty
+                                name="Date format"
+                                value={settingsController.dateFormat}
+                                onChange={
+                                    settingsController.onDateFormatChanged
+                                }
+                            >
+                                {DATE_FORMATS.map(dateFormat => (
+                                    <option
+                                        key={dateFormat.format}
+                                        value={dateFormat.format}
+                                    >
+                                        {moment(new Date())
+                                            .locale(settingsController.locale)
+                                            .format(dateFormat.format)}
                                     </option>
                                 ))}
-                        </SelectProperty>
-                        <SelectProperty
-                            name="Date format"
-                            value={settingsController.dateFormat}
-                            onChange={settingsController.onDateFormatChanged}
-                        >
-                            {DATE_FORMATS.map(dateFormat => (
-                                <option
-                                    key={dateFormat.format}
-                                    value={dateFormat.format}
-                                >
-                                    {moment(new Date())
-                                        .locale(settingsController.locale)
-                                        .format(dateFormat.format)}
-                                </option>
-                            ))}
-                        </SelectProperty>
-                        <SelectProperty
-                            name="Time format"
-                            value={settingsController.timeFormat}
-                            onChange={settingsController.onTimeFormatChanged}
-                        >
-                            {TIME_FORMATS.map(timeFormat => (
-                                <option
-                                    key={timeFormat.format}
-                                    value={timeFormat.format}
-                                >
-                                    {moment(new Date())
-                                        .locale(settingsController.locale)
-                                        .format(timeFormat.format)}
-                                </option>
-                            ))}
-                        </SelectProperty>
-                        <BooleanProperty
-                            name={`Dark theme`}
-                            value={settingsController.isDarkTheme}
-                            onChange={settingsController.switchTheme}
-                        />
-                    </PropertyList>
-                </div>
-
-                {settingsController.restartRequired && (
-                    <Header className="EezStudio_HomeSettingsBar EezStudio_PanelHeader">
-                        <div className="btn-group me-2">
-                            <button
-                                className="btn btn-primary EezStudio_PulseTransition"
-                                onClick={settingsController.restart}
+                            </SelectProperty>
+                            <SelectProperty
+                                name="Time format"
+                                value={settingsController.timeFormat}
+                                onChange={
+                                    settingsController.onTimeFormatChanged
+                                }
                             >
-                                Restart
-                            </button>
-                        </div>
-                    </Header>
-                )}
-            </div>
-        );
+                                {TIME_FORMATS.map(timeFormat => (
+                                    <option
+                                        key={timeFormat.format}
+                                        value={timeFormat.format}
+                                    >
+                                        {moment(new Date())
+                                            .locale(settingsController.locale)
+                                            .format(timeFormat.format)}
+                                    </option>
+                                ))}
+                            </SelectProperty>
+                            <BooleanProperty
+                                name={`Dark theme`}
+                                value={settingsController.isDarkTheme}
+                                onChange={settingsController.switchTheme}
+                            />
+                        </PropertyList>
+                    </div>
+
+                    {settingsController.restartRequired && (
+                        <Header className="EezStudio_HomeSettingsBar EezStudio_PanelHeader">
+                            <div className="btn-group me-2">
+                                <button
+                                    className="btn btn-primary EezStudio_PulseTransition"
+                                    onClick={settingsController.restart}
+                                >
+                                    Restart
+                                </button>
+                            </div>
+                        </Header>
+                    )}
+                </div>
+            );
+        }
     }
-}
+);

@@ -1,4 +1,4 @@
-import { computed } from "mobx";
+import { computed, makeObservable } from "mobx";
 import { Point, Rect } from "eez-studio-shared/geometry";
 import type { IDocument } from "project-editor/flow/flow-interfaces";
 import type { EditorFlowContext } from "project-editor/flow/editor/context";
@@ -19,22 +19,30 @@ export class FlowDocument implements IDocument {
     constructor(
         public flow: ITreeObjectAdapter,
         private flowContext: EditorFlowContext
-    ) {}
+    ) {
+        makeObservable(this, {
+            connectionLines: computed,
+            selectedConnectionLines: computed,
+            selectedAndHoveredConnectionLines: computed,
+            nonSelectedConnectionLines: computed,
+            DocumentStore: computed
+        });
+    }
 
-    @computed get connectionLines(): ITreeObjectAdapter[] {
+    get connectionLines(): ITreeObjectAdapter[] {
         return (this.flow.children as ITreeObjectAdapter[]).filter(
             editorObject =>
                 editorObject.object instanceof ProjectEditor.ConnectionLineClass
         );
     }
 
-    @computed get selectedConnectionLines() {
+    get selectedConnectionLines() {
         return this.connectionLines.filter(connectionLine =>
             this.flowContext.viewState.isObjectIdSelected(connectionLine.id)
         );
     }
 
-    @computed get selectedAndHoveredConnectionLines() {
+    get selectedAndHoveredConnectionLines() {
         const selectedAndHoveredConnectionLines = this.connectionLines.filter(
             connectionLine =>
                 this.flowContext.viewState.isObjectIdSelected(
@@ -53,7 +61,7 @@ export class FlowDocument implements IDocument {
             : this.selectedConnectionLines;
     }
 
-    @computed get nonSelectedConnectionLines() {
+    get nonSelectedConnectionLines() {
         return this.connectionLines.filter(
             connectionLine =>
                 !this.flowContext.viewState.isObjectIdSelected(
@@ -177,7 +185,7 @@ export class FlowDocument implements IDocument {
         this.DocumentStore.undoManager.setCombineCommands(false);
     };
 
-    @computed get DocumentStore() {
+    get DocumentStore() {
         return getDocumentStore(this.flow.object);
     }
 

@@ -1,4 +1,4 @@
-import { observable } from "mobx";
+import { observable, makeObservable } from "mobx";
 
 import type {
     IViewOptions,
@@ -10,12 +10,18 @@ import type {
 
 export class ViewOptions implements IViewOptions {
     constructor(props?: any) {
+        makeObservable(this, {
+            axesLines: observable,
+            showAxisLabels: observable,
+            showZoomButtons: observable
+        });
+
         if (props) {
             Object.assign(this, props);
         }
     }
 
-    @observable axesLines: IViewOptionsAxesLines = {
+    axesLines: IViewOptionsAxesLines = {
         type: "dynamic",
         steps: {
             x: [],
@@ -33,8 +39,8 @@ export class ViewOptions implements IViewOptions {
         defaultZoomMode: "default"
     };
 
-    @observable showAxisLabels: boolean = true;
-    @observable showZoomButtons: boolean = true;
+    showAxisLabels: boolean = true;
+    showZoomButtons: boolean = true;
 
     setAxesLinesType(type: IViewOptionsAxesLinesType) {
         this.axesLines.type = type;

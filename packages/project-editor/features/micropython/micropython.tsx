@@ -1,6 +1,6 @@
+import path from "path";
 import React from "react";
-import { observable } from "mobx";
-import { observer } from "mobx-react";
+import { observable, makeObservable } from "mobx";
 
 import {
     registerClass,
@@ -38,7 +38,6 @@ const ICON = (
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
 export class MicroPythonEditor extends EditorComponent {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
@@ -62,7 +61,7 @@ export class MicroPythonEditor extends EditorComponent {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class MicroPython extends EezObject {
-    @observable code: string;
+    code: string;
 
     static classInfo = {
         properties: [
@@ -75,6 +74,14 @@ export class MicroPython extends EezObject {
         navigationComponentId: "micropython",
         icon: ICON
     };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            code: observable
+        });
+    }
 
     async runScript() {
         const DocumentStore = ProjectEditor.getProject(this)._DocumentStore;
@@ -141,20 +148,18 @@ export class MicroPython extends EezObject {
         }
 
         try {
-            const path = EEZStudio.remote.require("path");
-
             const destinationFolderPath = DocumentStore.getAbsoluteFilePath(
                 DocumentStore.project.settings.build.destinationFolder || "."
             );
 
             const resDestinationFileName = `${path.basename(
-                DocumentStore.filePath,
+                DocumentStore.filePath || "",
                 ".eez-project"
             )}.res`;
             const resSourceFilePath = `${destinationFolderPath}/${resDestinationFileName}`;
 
             const pyDestinationFileName = `${path.basename(
-                DocumentStore.filePath,
+                DocumentStore.filePath || "",
                 ".eez-project"
             )}.py`;
             const pySourceFilePath = `${destinationFolderPath}/${pyDestinationFileName}`;

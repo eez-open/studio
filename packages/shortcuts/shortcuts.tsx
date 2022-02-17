@@ -1,5 +1,11 @@
 import React from "react";
-import { observable, computed, action, IObservableValue } from "mobx";
+import {
+    observable,
+    computed,
+    action,
+    IObservableValue,
+    makeObservable
+} from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -48,122 +54,127 @@ export function selectShortcutById(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class ShortcutsToolbarButtons extends React.Component<
-    {
-        shortcutsStore: IShortcutsStore;
-        groupsStore?: IGroupsStore;
-        shortcutsOrGroups?: IObservableValue<boolean>;
-    },
-    {}
-> {
-    constructor(props: any) {
-        super(props);
+export const ShortcutsToolbarButtons = observer(
+    class ShortcutsToolbarButtons extends React.Component<
+        {
+            shortcutsStore: IShortcutsStore;
+            groupsStore?: IGroupsStore;
+            shortcutsOrGroups?: IObservableValue<boolean>;
+        },
+        {}
+    > {
+        constructor(props: any) {
+            super(props);
 
-        this.addShortcut = this.addShortcut.bind(this);
-        this.showGroups = this.showGroups.bind(this);
-    }
+            makeObservable(this, {
+                showGroups: action
+            });
 
-    addShortcut() {
-        showShortcutDialog(
-            this.props.shortcutsStore,
-            this.props.groupsStore,
-            {
-                name: "",
-                action: {
-                    type: "scpi-commands",
-                    data: ""
+            this.addShortcut = this.addShortcut.bind(this);
+            this.showGroups = this.showGroups.bind(this);
+        }
+
+        addShortcut() {
+            showShortcutDialog(
+                this.props.shortcutsStore,
+                this.props.groupsStore,
+                {
+                    name: "",
+                    action: {
+                        type: "scpi-commands",
+                        data: ""
+                    },
+                    keybinding: "",
+                    groupName: "",
+                    showInToolbar: true,
+                    toolbarButtonPosition: 1,
+                    toolbarButtonColor: DEFAULT_TOOLBAR_BUTTON_COLOR,
+                    requiresConfirmation: false,
+                    selected: false
                 },
-                keybinding: "",
-                groupName: "",
-                showInToolbar: true,
-                toolbarButtonPosition: 1,
-                toolbarButtonColor: DEFAULT_TOOLBAR_BUTTON_COLOR,
-                requiresConfirmation: false,
-                selected: false
-            },
-            shortcut => {
-                let id = this.props.shortcutsStore.addShortcut!(shortcut);
+                shortcut => {
+                    let id = this.props.shortcutsStore.addShortcut!(shortcut);
 
-                selectShortcutById(this.props.shortcutsStore, id);
+                    selectShortcutById(this.props.shortcutsStore, id);
 
-                setTimeout(() => {
-                    let element = document.querySelector(`.shortcut-${id}`);
-                    if (element) {
-                        element.scrollIntoView();
-                    }
-                }, 10);
+                    setTimeout(() => {
+                        let element = document.querySelector(`.shortcut-${id}`);
+                        if (element) {
+                            element.scrollIntoView();
+                        }
+                    }, 10);
+                }
+            );
+        }
+
+        showGroups() {
+            this.props.shortcutsOrGroups!.set(false);
+        }
+
+        render() {
+            let buttons = [];
+
+            if (this.props.shortcutsStore.addShortcut) {
+                buttons.push(
+                    <ButtonAction
+                        key="addShortcut"
+                        text="Add Shortcut"
+                        title="Add shortcut"
+                        onClick={this.addShortcut}
+                        className="btn-primary"
+                    />
+                );
             }
-        );
-    }
 
-    @action
-    showGroups() {
-        this.props.shortcutsOrGroups!.set(false);
-    }
+            if (this.props.shortcutsOrGroups) {
+                buttons.push(
+                    <ButtonAction
+                        key="groups"
+                        text="Show Groups"
+                        title="Show groups"
+                        onClick={this.showGroups}
+                        className="btn-secondary"
+                    />
+                );
+            }
 
-    render() {
-        let buttons = [];
-
-        if (this.props.shortcutsStore.addShortcut) {
-            buttons.push(
-                <ButtonAction
-                    key="addShortcut"
-                    text="Add Shortcut"
-                    title="Add shortcut"
-                    onClick={this.addShortcut}
-                    className="btn-primary"
-                />
-            );
+            return buttons;
         }
-
-        if (this.props.shortcutsOrGroups) {
-            buttons.push(
-                <ButtonAction
-                    key="groups"
-                    text="Show Groups"
-                    title="Show groups"
-                    onClick={this.showGroups}
-                    className="btn-secondary"
-                />
-            );
-        }
-
-        return buttons;
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class Keybinding extends React.Component<{ keybinding: string }, {}> {
-    render() {
-        return this.props.keybinding
-            .split("+")
-            .map(part => (
-                <div key={part} className="EezStudio_Keybinding_Part">
-                    {part}
-                </div>
-            ))
-            .reduce(
-                (
-                    result: JSX.Element[],
-                    element: JSX.Element,
-                    index: number,
-                    array: JSX.Element[]
-                ) => {
-                    result.push(element);
+const Keybinding = observer(
+    class Keybinding extends React.Component<{ keybinding: string }, {}> {
+        render() {
+            return this.props.keybinding
+                .split("+")
+                .map(part => (
+                    <div key={part} className="EezStudio_Keybinding_Part">
+                        {part}
+                    </div>
+                ))
+                .reduce(
+                    (
+                        result: JSX.Element[],
+                        element: JSX.Element,
+                        index: number,
+                        array: JSX.Element[]
+                    ) => {
+                        result.push(element);
 
-                    if (index < array.length - 1) {
-                        result.push(<span key={"plus" + index}> + </span>);
-                    }
+                        if (index < array.length - 1) {
+                            result.push(<span key={"plus" + index}> + </span>);
+                        }
 
-                    return result;
-                },
-                []
-            );
+                        return result;
+                    },
+                    []
+                );
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -174,9 +185,23 @@ class ShortcutRow implements IRow {
             groupsStore?: IGroupsStore;
             shortcut: IShortcut | IShortcut[];
         }
-    ) {}
+    ) {
+        makeObservable(this, {
+            shortcut: computed,
+            colorComponent: computed,
+            group: computed,
+            groupComponent: computed,
+            keybindingComponent: computed,
+            action: computed,
+            confirmationComponent: computed,
+            toolbar: computed,
+            toolbarComponent: computed,
+            isExtensionShortcut: computed,
+            actions: computed,
+            className: computed
+        });
+    }
 
-    @computed
     get shortcut() {
         if (Array.isArray(this.props.shortcut)) {
             return this.props.shortcut[0];
@@ -199,7 +224,6 @@ class ShortcutRow implements IRow {
             : "transparent";
     }
 
-    @computed
     get colorComponent() {
         return (
             <div
@@ -250,7 +274,6 @@ class ShortcutRow implements IRow {
         return groupName;
     }
 
-    @computed
     get group() {
         if (Array.isArray(this.props.shortcut)) {
             return this.props.shortcut
@@ -264,7 +287,6 @@ class ShortcutRow implements IRow {
         }
     }
 
-    @computed
     get groupComponent() {
         if (Array.isArray(this.props.shortcut)) {
             return this.props.shortcut
@@ -285,12 +307,10 @@ class ShortcutRow implements IRow {
         return this.shortcut.keybinding || "";
     }
 
-    @computed
     get keybindingComponent() {
         return <Keybinding keybinding={this.shortcut.keybinding} />;
     }
 
-    @computed
     get action() {
         return this.shortcut.action.type === "scpi-commands"
             ? "SCPI"
@@ -303,19 +323,16 @@ class ShortcutRow implements IRow {
         return this.shortcut.requiresConfirmation ? 1 : 0;
     }
 
-    @computed
     get confirmationComponent() {
         return (
             this.shortcut.requiresConfirmation && <Icon icon="material:check" />
         );
     }
 
-    @computed
     get toolbar() {
         return this.shortcut.showInToolbar ? 1 : 0;
     }
 
-    @computed
     get toolbarComponent() {
         return this.shortcut.showInToolbar && <Icon icon="material:check" />;
     }
@@ -324,7 +341,6 @@ class ShortcutRow implements IRow {
         return this.shortcut.toolbarButtonPosition;
     }
 
-    @computed
     get isExtensionShortcut() {
         if (Array.isArray(this.props.shortcut)) {
             return true;
@@ -338,7 +354,6 @@ class ShortcutRow implements IRow {
         }
     }
 
-    @computed
     get actions() {
         return (
             this.props.shortcutsStore.addShortcut && (
@@ -381,7 +396,6 @@ class ShortcutRow implements IRow {
         );
     }
 
-    @computed
     get className() {
         return classNames(`shortcut-${this.id}`, {
             selected: this.props.shortcutsStore.addShortcut && this.selected
@@ -408,134 +422,145 @@ class ShortcutRow implements IRow {
     };
 }
 
-@observer
-export class Shortcuts extends React.Component<
-    {
-        shortcutsStore: IShortcutsStore;
-        groupsStore?: IGroupsStore;
-    },
-    {}
-> {
-    @computed
-    get columns() {
-        let result: IColumn[] = [];
+export const Shortcuts = observer(
+    class Shortcuts extends React.Component<
+        {
+            shortcutsStore: IShortcutsStore;
+            groupsStore?: IGroupsStore;
+        },
+        {}
+    > {
+        constructor(props: {
+            shortcutsStore: IShortcutsStore;
+            groupsStore?: IGroupsStore;
+        }) {
+            super(props);
 
-        result.push({
-            name: "color",
-            title: "",
-            sortEnabled: true
-        });
-        result.push({
-            name: "name",
-            title: "Name",
-            sortEnabled: true
-        });
+            makeObservable(this, {
+                columns: computed,
+                rows: computed
+            });
+        }
 
-        if (this.props.groupsStore) {
+        get columns() {
+            let result: IColumn[] = [];
+
             result.push({
-                name: "group",
-                title: "Group / Extension",
+                name: "color",
+                title: "",
                 sortEnabled: true
             });
-        }
-
-        result.push({
-            name: "keybinding",
-            title: "Keybinding",
-            sortEnabled: true
-        });
-        result.push({
-            name: "action",
-            title: "Action",
-            sortEnabled: true
-        });
-        result.push({
-            name: "confirmation",
-            title: "Confirmation",
-            sortEnabled: true
-        });
-        result.push({
-            name: "toolbar",
-            title: "Toolbar",
-            sortEnabled: true
-        });
-        result.push({
-            name: "toolbarPosition",
-            title: "Toolbar position",
-            sortEnabled: true
-        });
-
-        if (this.props.shortcutsStore.addShortcut) {
             result.push({
-                name: "actions",
-                title: "",
-                sortEnabled: false
+                name: "name",
+                title: "Name",
+                sortEnabled: true
             });
-        }
 
-        return result;
-    }
-
-    @computed
-    get rows() {
-        let result: (IShortcut | IShortcut[])[] = [];
-
-        const sorted = Array.from(
-            this.props.shortcutsStore.shortcuts.values()
-        ).sort((s1, s2) => {
-            let name1 = s1.name.toLocaleLowerCase();
-            let name2 = s2.name.toLocaleLowerCase();
-            return name1 < name2 ? -1 : name1 > name2 ? 1 : 0;
-        });
-
-        if (this.props.groupsStore) {
-            // combine duplicate shortcuts
-            for (let i = 0; i < sorted.length; i++) {
-                let j;
-                for (j = i; j + 1 < sorted.length; j++) {
-                    if (
-                        !isSameShortcutFromDifferentExtension(
-                            sorted[i],
-                            sorted[j + 1]
-                        )
-                    ) {
-                        break;
-                    }
-                }
-                if (j > i) {
-                    let shortcuts: IShortcut[] = [];
-                    for (let k = i; k <= j; k++) {
-                        shortcuts.push(sorted[k]);
-                    }
-                    result.push(shortcuts);
-                    i = j;
-                } else {
-                    result.push(sorted[i]);
-                }
+            if (this.props.groupsStore) {
+                result.push({
+                    name: "group",
+                    title: "Group / Extension",
+                    sortEnabled: true
+                });
             }
-        } else {
-            result = sorted;
+
+            result.push({
+                name: "keybinding",
+                title: "Keybinding",
+                sortEnabled: true
+            });
+            result.push({
+                name: "action",
+                title: "Action",
+                sortEnabled: true
+            });
+            result.push({
+                name: "confirmation",
+                title: "Confirmation",
+                sortEnabled: true
+            });
+            result.push({
+                name: "toolbar",
+                title: "Toolbar",
+                sortEnabled: true
+            });
+            result.push({
+                name: "toolbarPosition",
+                title: "Toolbar position",
+                sortEnabled: true
+            });
+
+            if (this.props.shortcutsStore.addShortcut) {
+                result.push({
+                    name: "actions",
+                    title: "",
+                    sortEnabled: false
+                });
+            }
+
+            return result;
         }
 
-        return result.map(
-            shortcut =>
-                new ShortcutRow({
-                    shortcutsStore: this.props.shortcutsStore,
-                    groupsStore: this.props.groupsStore,
-                    shortcut
-                })
-        );
-    }
+        get rows() {
+            let result: (IShortcut | IShortcut[])[] = [];
 
-    render() {
-        return (
-            <Table
-                className="EezStudio_ShortcutsTable"
-                persistId="shortcuts/shortcuts"
-                columns={this.columns}
-                rows={this.rows}
-                defaultSortColumn="name"
-            />
-        );
+            const sorted = Array.from(
+                this.props.shortcutsStore.shortcuts.values()
+            ).sort((s1, s2) => {
+                let name1 = s1.name.toLocaleLowerCase();
+                let name2 = s2.name.toLocaleLowerCase();
+                return name1 < name2 ? -1 : name1 > name2 ? 1 : 0;
+            });
+
+            if (this.props.groupsStore) {
+                // combine duplicate shortcuts
+                for (let i = 0; i < sorted.length; i++) {
+                    let j;
+                    for (j = i; j + 1 < sorted.length; j++) {
+                        if (
+                            !isSameShortcutFromDifferentExtension(
+                                sorted[i],
+                                sorted[j + 1]
+                            )
+                        ) {
+                            break;
+                        }
+                    }
+                    if (j > i) {
+                        let shortcuts: IShortcut[] = [];
+                        for (let k = i; k <= j; k++) {
+                            shortcuts.push(sorted[k]);
+                        }
+                        result.push(shortcuts);
+                        i = j;
+                    } else {
+                        result.push(sorted[i]);
+                    }
+                }
+            } else {
+                result = sorted;
+            }
+
+            return result.map(
+                shortcut =>
+                    new ShortcutRow({
+                        shortcutsStore: this.props.shortcutsStore,
+                        groupsStore: this.props.groupsStore,
+                        shortcut
+                    })
+            );
+        }
+
+        render() {
+            return (
+                <Table
+                    className="EezStudio_ShortcutsTable"
+                    persistId="shortcuts/shortcuts"
+                    columns={this.columns}
+                    rows={this.rows}
+                    defaultSortColumn="name"
+                />
+            );
+        }
     }
-}
+);

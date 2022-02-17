@@ -1,5 +1,5 @@
 import React from "react";
-import { action, computed, observable } from "mobx";
+import { action, computed, observable, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import {
     IWaveformRenderJobSpecification,
@@ -18,122 +18,133 @@ interface WaveformLineViewProperties {
     label?: string;
 }
 
-@observer
-export class WaveformLineView extends React.Component<WaveformLineViewProperties> {
-    @observable waveformLineController = this.props.waveformLineController;
+export const WaveformLineView = observer(
+    class WaveformLineView extends React.Component<WaveformLineViewProperties> {
+        waveformLineController = this.props.waveformLineController;
 
-    nextJob: IWaveformRenderJobSpecification | undefined;
-    canvas: HTMLCanvasElement | undefined;
-    @observable chartImage: string | undefined;
-    continuation: any;
-    requestAnimationFrameId: any;
+        nextJob: IWaveformRenderJobSpecification | undefined;
+        canvas: HTMLCanvasElement | undefined;
+        chartImage: string | undefined;
+        continuation: any;
+        requestAnimationFrameId: any;
 
-    @computed
-    get waveformRenderJobSpecification():
-        | IWaveformRenderJobSpecification
-        | undefined {
-        const yAxisController = this.waveformLineController.yAxisController;
-        const chartsController = yAxisController.chartsController;
-        const xAxisController = chartsController.xAxisController;
-        const waveform = this.waveformLineController.waveform;
+        constructor(props: WaveformLineViewProperties) {
+            super(props);
 
-        if (chartsController.chartWidth < 1 || !waveform.length) {
-            return undefined;
+            makeObservable(this, {
+                waveformLineController: observable,
+                chartImage: observable,
+                waveformRenderJobSpecification: computed,
+                componentDidUpdate: action,
+                drawStep: action.bound
+            });
         }
 
-        return {
-            renderAlgorithm: globalViewOptions.renderAlgorithm,
-            waveform,
-            xAxisController,
-            yAxisController,
-            xFromValue: xAxisController.from,
-            xToValue: xAxisController.to,
-            yFromValue: yAxisController.from,
-            yToValue: yAxisController.to,
-            strokeColor: globalViewOptions.blackBackground
-                ? yAxisController.axisModel.color
-                : yAxisController.axisModel.colorInverse,
-            label:
-                yAxisController.chartController!.lineControllers.length > 1 &&
-                chartsController.mode !== "preview"
-                    ? this.props.label
-                    : undefined
-        };
-    }
+        get waveformRenderJobSpecification():
+            | IWaveformRenderJobSpecification
+            | undefined {
+            const yAxisController = this.waveformLineController.yAxisController;
+            const chartsController = yAxisController.chartsController;
+            const xAxisController = chartsController.xAxisController;
+            const waveform = this.waveformLineController.waveform;
 
-    @action
-    componentDidUpdate(prevProps: any) {
-        if (this.props != prevProps) {
-            this.waveformLineController = this.props.waveformLineController;
+            if (chartsController.chartWidth < 1 || !waveform.length) {
+                return undefined;
+            }
+
+            return {
+                renderAlgorithm: globalViewOptions.renderAlgorithm,
+                waveform,
+                xAxisController,
+                yAxisController,
+                xFromValue: xAxisController.from,
+                xToValue: xAxisController.to,
+                yFromValue: yAxisController.from,
+                yToValue: yAxisController.to,
+                strokeColor: globalViewOptions.blackBackground
+                    ? yAxisController.axisModel.color
+                    : yAxisController.axisModel.colorInverse,
+                label:
+                    yAxisController.chartController!.lineControllers.length >
+                        1 && chartsController.mode !== "preview"
+                        ? this.props.label
+                        : undefined
+            };
         }
-        this.draw();
-    }
 
-    componentDidMount() {
-        this.draw();
-    }
+        componentDidUpdate(prevProps: any) {
+            if (this.props != prevProps) {
+                this.waveformLineController = this.props.waveformLineController;
+            }
+            this.draw();
+        }
 
-    @action.bound
-    drawStep() {
-        if (!this.canvas) {
+        componentDidMount() {
+            this.draw();
+        }
+
+        drawStep() {
+            if (!this.canvas) {
+                const chartsController =
+                    this.props.waveformLineController.yAxisController
+                        .chartsController;
+                this.canvas = document.createElement("canvas");
+                this.canvas.width = Math.floor(chartsController.chartWidth);
+                this.canvas.height = Math.floor(chartsController.chartHeight);
+            }
+
+            this.continuation = renderWaveformPath(
+                this.canvas,
+                this.nextJob!,
+                this.continuation
+            );
+            if (this.continuation) {
+                this.requestAnimationFrameId = window.requestAnimationFrame(
+                    this.drawStep
+                );
+            } else {
+                this.requestAnimationFrameId = undefined;
+                this.chartImage = this.canvas.toDataURL();
+                this.canvas = undefined;
+            }
+        }
+
+        draw() {
+            if (this.nextJob != this.waveformRenderJobSpecification) {
+                if (this.requestAnimationFrameId) {
+                    window.cancelAnimationFrame(this.requestAnimationFrameId);
+                    this.requestAnimationFrameId = undefined;
+                }
+
+                this.nextJob = this.waveformRenderJobSpecification;
+                this.continuation = undefined;
+                this.drawStep();
+            }
+        }
+
+        componentWillUnmount() {
+            if (this.requestAnimationFrameId) {
+                window.cancelAnimationFrame(this.requestAnimationFrameId);
+            }
+        }
+
+        render() {
+            if (!this.waveformRenderJobSpecification) {
+                return null;
+            }
             const chartsController =
                 this.props.waveformLineController.yAxisController
                     .chartsController;
-            this.canvas = document.createElement("canvas");
-            this.canvas.width = Math.floor(chartsController.chartWidth);
-            this.canvas.height = Math.floor(chartsController.chartHeight);
-        }
 
-        this.continuation = renderWaveformPath(
-            this.canvas,
-            this.nextJob!,
-            this.continuation
-        );
-        if (this.continuation) {
-            this.requestAnimationFrameId = window.requestAnimationFrame(
-                this.drawStep
+            return (
+                <image
+                    x={Math.floor(chartsController.chartLeft)}
+                    y={Math.floor(chartsController.chartTop)}
+                    width={Math.floor(chartsController.chartWidth)}
+                    height={Math.floor(chartsController.chartHeight)}
+                    href={this.chartImage}
+                />
             );
-        } else {
-            this.requestAnimationFrameId = undefined;
-            this.chartImage = this.canvas.toDataURL();
-            this.canvas = undefined;
         }
     }
-
-    draw() {
-        if (this.nextJob != this.waveformRenderJobSpecification) {
-            if (this.requestAnimationFrameId) {
-                window.cancelAnimationFrame(this.requestAnimationFrameId);
-                this.requestAnimationFrameId = undefined;
-            }
-
-            this.nextJob = this.waveformRenderJobSpecification;
-            this.continuation = undefined;
-            this.drawStep();
-        }
-    }
-
-    componentWillUnmount() {
-        if (this.requestAnimationFrameId) {
-            window.cancelAnimationFrame(this.requestAnimationFrameId);
-        }
-    }
-
-    render() {
-        if (!this.waveformRenderJobSpecification) {
-            return null;
-        }
-        const chartsController =
-            this.props.waveformLineController.yAxisController.chartsController;
-
-        return (
-            <image
-                x={Math.floor(chartsController.chartLeft)}
-                y={Math.floor(chartsController.chartTop)}
-                width={Math.floor(chartsController.chartWidth)}
-                height={Math.floor(chartsController.chartHeight)}
-                href={this.chartImage}
-            />
-        );
-    }
-}
+);

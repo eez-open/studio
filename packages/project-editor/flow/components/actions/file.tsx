@@ -1,3 +1,5 @@
+import { shell } from "electron";
+import { dialog } from "@electron/remote";
 import React from "react";
 
 import { registerActionComponents } from "project-editor/flow/component";
@@ -192,7 +194,7 @@ registerActionComponents("File", [
                 throw `"${fileName}" is not a string`;
             }
 
-            const result = await EEZStudio.remote.dialog.showSaveDialog({
+            const result = await dialog.showSaveDialog({
                 defaultPath: fileNameValue
             });
 
@@ -222,7 +224,7 @@ registerActionComponents("File", [
                 throw `"${filePathValue}" is not a string`;
             }
 
-            EEZStudio.electron.shell.showItemInFolder(filePathValue);
+            shell.showItemInFolder(filePathValue);
 
             return undefined;
         }

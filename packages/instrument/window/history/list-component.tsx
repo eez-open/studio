@@ -1,6 +1,7 @@
+import { Menu, MenuItem } from "@electron/remote";
 import React from "react";
 import { findDOMNode } from "react-dom";
-import { action } from "mobx";
+import { action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -61,218 +62,224 @@ export interface ISelection {
     selectItems(historyItems: IHistoryItem[]): void;
 }
 
-@observer
-export class HistoryItems extends React.Component<{
-    appStore: IAppStore;
-    historyItems: IHistoryItem[];
-    selection: ISelection;
-    selectHistoryItemsSpecification:
-        | SelectHistoryItemsSpecification
-        | undefined;
-    getAllItemsBetween: (
-        fromItem: IHistoryItem,
-        toItem: IHistoryItem
-    ) => IHistoryItem[];
-    isDeletedItemsHistory: boolean;
-    deleteSelectedHistoryItems: () => void;
-    viewType: "chat" | "thumbs";
-    thumbnailSize: number;
-    showInHistory?: () => void;
-}> {
-    render() {
-        return this.props.historyItems.map(historyItem => {
-            let element = historyItem.getListItemElement(this.props.appStore);
+export const HistoryItems = observer(
+    class HistoryItems extends React.Component<{
+        appStore: IAppStore;
+        historyItems: IHistoryItem[];
+        selection: ISelection;
+        selectHistoryItemsSpecification:
+            | SelectHistoryItemsSpecification
+            | undefined;
+        getAllItemsBetween: (
+            fromItem: IHistoryItem,
+            toItem: IHistoryItem
+        ) => IHistoryItem[];
+        isDeletedItemsHistory: boolean;
+        deleteSelectedHistoryItems: () => void;
+        viewType: "chat" | "thumbs";
+        thumbnailSize: number;
+        showInHistory?: () => void;
+    }> {
+        render() {
+            return this.props.historyItems.map(historyItem => {
+                let element = historyItem.getListItemElement(
+                    this.props.appStore
+                );
 
-            let showCheckbox = false;
+                let showCheckbox = false;
 
-            if (this.props.selectHistoryItemsSpecification) {
-                if (
-                    this.props.selectHistoryItemsSpecification
-                        .historyItemType === "chart"
-                ) {
-                    if (historyItem.canBePartOfMultiChart) {
-                        showCheckbox = true;
+                if (this.props.selectHistoryItemsSpecification) {
+                    if (
+                        this.props.selectHistoryItemsSpecification
+                            .historyItemType === "chart"
+                    ) {
+                        if (historyItem.canBePartOfMultiChart) {
+                            showCheckbox = true;
+                        } else {
+                            element = <div />;
+                        }
                     } else {
-                        element = <div />;
+                        showCheckbox = true;
                     }
-                } else {
-                    showCheckbox = true;
                 }
-            }
 
-            let className = classNames(
-                `EezStudio_HistoryItemEnclosure EezStudio_HistoryItem_${historyItem.id}`,
-                {
-                    EezStudio_HistoryItemEnclosure_Session:
-                        historyItem.type.startsWith("activity-log/session"),
-                    selected:
-                        !this.props.selectHistoryItemsSpecification &&
-                        historyItem.selected,
-                    disablePreview: showCheckbox
-                },
-                this.props.viewType
-            );
+                let className = classNames(
+                    `EezStudio_HistoryItemEnclosure EezStudio_HistoryItem_${historyItem.id}`,
+                    {
+                        EezStudio_HistoryItemEnclosure_Session:
+                            historyItem.type.startsWith("activity-log/session"),
+                        selected:
+                            !this.props.selectHistoryItemsSpecification &&
+                            historyItem.selected,
+                        disablePreview: showCheckbox
+                    },
+                    this.props.viewType
+                );
 
-            let style;
-            if (this.props.viewType === "thumbs") {
-                style = {
-                    "--historyItemThumbnailSize":
-                        this.props.thumbnailSize + "px"
-                } as React.CSSProperties;
-            }
+                let style;
+                if (this.props.viewType === "thumbs") {
+                    style = {
+                        "--historyItemThumbnailSize":
+                            this.props.thumbnailSize + "px"
+                    } as React.CSSProperties;
+                }
 
-            return (
-                <div
-                    key={historyItem.id}
-                    className={className}
-                    style={style}
-                    onMouseDown={event => {
-                        if (event.target instanceof HTMLAnchorElement) {
-                            // ignore <a>
-                            return;
-                        }
-
-                        if (this.props.selectHistoryItemsSpecification) {
-                            return;
-                        }
-
-                        // this is to prevent text selection with the SHIFT key
-                        if (event.shiftKey) {
-                            event.preventDefault();
-                        }
-                    }}
-                    onClick={event => {
-                        if (this.props.selectHistoryItemsSpecification) {
-                            return;
-                        }
-
-                        if (event.target instanceof HTMLAnchorElement) {
-                            // ignore <a>
-                            return;
-                        }
-
-                        if (
-                            $(event.target).parents("#EezStudio_ModalContent")
-                                .length
-                        ) {
-                            // ignore clicks on history items with preview in zoom mode
-                            return;
-                        }
-
-                        let historyItems;
-                        if (event.ctrlKey) {
-                            if (historyItem.selected) {
-                                historyItems =
-                                    this.props.selection.items.slice();
-                                historyItems.splice(
-                                    historyItems.indexOf(historyItem),
-                                    1
-                                );
-                            } else {
-                                historyItems =
-                                    this.props.selection.items.concat([
-                                        historyItem
-                                    ]);
+                return (
+                    <div
+                        key={historyItem.id}
+                        className={className}
+                        style={style}
+                        onMouseDown={event => {
+                            if (event.target instanceof HTMLAnchorElement) {
+                                // ignore <a>
+                                return;
                             }
-                        } else if (event.shiftKey) {
-                            if (this.props.selection.items.length > 0) {
-                                historyItems = this.props.getAllItemsBetween(
-                                    this.props.selection.items[0],
-                                    historyItem
-                                );
+
+                            if (this.props.selectHistoryItemsSpecification) {
+                                return;
+                            }
+
+                            // this is to prevent text selection with the SHIFT key
+                            if (event.shiftKey) {
+                                event.preventDefault();
+                            }
+                        }}
+                        onClick={event => {
+                            if (this.props.selectHistoryItemsSpecification) {
+                                return;
+                            }
+
+                            if (event.target instanceof HTMLAnchorElement) {
+                                // ignore <a>
+                                return;
+                            }
+
+                            if (
+                                $(event.target).parents(
+                                    "#EezStudio_ModalContent"
+                                ).length
+                            ) {
+                                // ignore clicks on history items with preview in zoom mode
+                                return;
+                            }
+
+                            let historyItems;
+                            if (event.ctrlKey) {
+                                if (historyItem.selected) {
+                                    historyItems =
+                                        this.props.selection.items.slice();
+                                    historyItems.splice(
+                                        historyItems.indexOf(historyItem),
+                                        1
+                                    );
+                                } else {
+                                    historyItems =
+                                        this.props.selection.items.concat([
+                                            historyItem
+                                        ]);
+                                }
+                            } else if (event.shiftKey) {
+                                if (this.props.selection.items.length > 0) {
+                                    historyItems =
+                                        this.props.getAllItemsBetween(
+                                            this.props.selection.items[0],
+                                            historyItem
+                                        );
+                                } else {
+                                    historyItems = [historyItem];
+                                }
                             } else {
                                 historyItems = [historyItem];
                             }
-                        } else {
-                            historyItems = [historyItem];
-                        }
 
-                        this.props.selection.selectItems(historyItems);
+                            this.props.selection.selectItems(historyItems);
 
-                        event.preventDefault();
-                    }}
-                    onContextMenu={event => {
-                        if (this.props.selectHistoryItemsSpecification) {
-                            return;
-                        }
+                            event.preventDefault();
+                        }}
+                        onContextMenu={event => {
+                            if (this.props.selectHistoryItemsSpecification) {
+                                return;
+                            }
 
-                        if (!historyItem.selected) {
-                            this.props.selection.selectItems([historyItem]);
-                        }
+                            if (!historyItem.selected) {
+                                this.props.selection.selectItems([historyItem]);
+                            }
 
-                        const { Menu, MenuItem } = EEZStudio.remote;
-                        const menu = new Menu();
+                            const menu = new Menu();
 
-                        if (this.props.isDeletedItemsHistory) {
-                            menu.append(
-                                new MenuItem({
-                                    label: "Restore",
-                                    click: () => {
-                                        this.props.appStore.deletedItemsHistory.restoreSelectedHistoryItems();
-                                    }
-                                })
-                            );
-                            menu.append(
-                                new MenuItem({
-                                    label: "Purge",
-                                    click: () => {
-                                        this.props.appStore.deletedItemsHistory.deleteSelectedHistoryItems();
-                                    }
-                                })
-                            );
-                        } else {
-                            if (this.props.showInHistory) {
+                            if (this.props.isDeletedItemsHistory) {
                                 menu.append(
                                     new MenuItem({
-                                        label: "Show in History",
-                                        click: this.props.showInHistory
+                                        label: "Restore",
+                                        click: () => {
+                                            this.props.appStore.deletedItemsHistory.restoreSelectedHistoryItems();
+                                        }
+                                    })
+                                );
+                                menu.append(
+                                    new MenuItem({
+                                        label: "Purge",
+                                        click: () => {
+                                            this.props.appStore.deletedItemsHistory.deleteSelectedHistoryItems();
+                                        }
+                                    })
+                                );
+                            } else {
+                                if (this.props.showInHistory) {
+                                    menu.append(
+                                        new MenuItem({
+                                            label: "Show in History",
+                                            click: this.props.showInHistory
+                                        })
+                                    );
+                                }
+
+                                menu.append(
+                                    new MenuItem({
+                                        label: "Delete",
+                                        click: () => {
+                                            this.props.deleteSelectedHistoryItems();
+                                        }
                                     })
                                 );
                             }
 
-                            menu.append(
-                                new MenuItem({
-                                    label: "Delete",
-                                    click: () => {
-                                        this.props.deleteSelectedHistoryItems();
-                                    }
-                                })
-                            );
-                        }
-
-                        menu.popup({});
-                    }}
-                    draggable={true}
-                    onDragStart={event => {
-                        event.stopPropagation();
-                        event.dataTransfer.effectAllowed = "copy";
-                        event.dataTransfer.setData(
-                            CLIPBOARD_DATA_TYPE,
-                            historyItem.id
-                        );
-                    }}
-                    onDrag={() => false}
-                >
-                    {showCheckbox && (
-                        <input
-                            type="checkbox"
-                            checked={this.props.appStore.isHistoryItemSelected(
+                            menu.popup({});
+                        }}
+                        draggable={true}
+                        onDragStart={event => {
+                            event.stopPropagation();
+                            event.dataTransfer.effectAllowed = "copy";
+                            event.dataTransfer.setData(
+                                CLIPBOARD_DATA_TYPE,
                                 historyItem.id
-                            )}
-                            onChange={event => {
-                                this.props.appStore.selectHistoryItem(
-                                    historyItem.id,
-                                    event.target.checked
-                                );
-                            }}
-                        />
-                    )}
-                    <ErrorBoundary id={historyItem.id}>{element}</ErrorBoundary>
-                </div>
-            );
-        });
+                            );
+                        }}
+                        onDrag={() => false}
+                    >
+                        {showCheckbox && (
+                            <input
+                                type="checkbox"
+                                checked={this.props.appStore.isHistoryItemSelected(
+                                    historyItem.id
+                                )}
+                                onChange={event => {
+                                    this.props.appStore.selectHistoryItem(
+                                        historyItem.id,
+                                        event.target.checked
+                                    );
+                                }}
+                            />
+                        )}
+                        <ErrorBoundary id={historyItem.id}>
+                            {element}
+                        </ErrorBoundary>
+                    </div>
+                );
+            });
+        }
     }
-}
+);
 
 class LoadMoreButton extends React.Component<{
     icon: string;
@@ -300,8 +307,7 @@ interface HistoryListComponentProps {
     history: History;
 }
 
-@observer
-export class HistoryListComponent extends React.Component<HistoryListComponentProps> {
+export class HistoryListComponentClass extends React.Component<HistoryListComponentProps> {
     animationFrameRequestId: any;
     div: Element;
 
@@ -316,6 +322,14 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
 
     findCenterItemTimeut: any;
     lastItemInTheCenterId: string | undefined;
+
+    constructor(props: HistoryListComponentProps) {
+        super(props);
+
+        makeObservable(this, {
+            showHistoryItem: action
+        });
+    }
 
     componentDidMount() {
         this.autoScroll();
@@ -354,7 +368,6 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
         this.fromTop = 0;
     }
 
-    @action
     showHistoryItem(historyItem: IHistoryItem) {
         this.autoReloadEnabled = false;
 
@@ -592,3 +605,5 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
         );
     }
 }
+
+export const HistoryListComponent = observer(HistoryListComponentClass);

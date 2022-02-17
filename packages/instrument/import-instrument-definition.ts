@@ -1,3 +1,4 @@
+import { dialog, getCurrentWindow } from "@electron/remote";
 import { getFileNameWithoutExtension } from "eez-studio-shared/util-electron";
 import { IExtension } from "eez-studio-shared/extensions/extension";
 import { installExtension } from "eez-studio-shared/extensions/extensions";
@@ -140,22 +141,19 @@ export function importInstrumentDefinition(
                     instrumentDefinitionFilePath
                 );
             } else {
-                const result = await EEZStudio.remote.dialog.showSaveDialog(
-                    EEZStudio.remote.getCurrentWindow(),
-                    {
-                        defaultPath:
-                            getFileNameWithoutExtension(
-                                instrumentDefinitionFilePath
-                            ) + ".eez-project",
-                        filters: [
-                            {
-                                name: "EEZ Project",
-                                extensions: ["eez-project"]
-                            },
-                            { name: "All Files", extensions: ["*"] }
-                        ]
-                    }
-                );
+                const result = await dialog.showSaveDialog(getCurrentWindow(), {
+                    defaultPath:
+                        getFileNameWithoutExtension(
+                            instrumentDefinitionFilePath
+                        ) + ".eez-project",
+                    filters: [
+                        {
+                            name: "EEZ Project",
+                            extensions: ["eez-project"]
+                        },
+                        { name: "All Files", extensions: ["*"] }
+                    ]
+                });
                 let projectFilePath = result.filePath;
                 if (projectFilePath) {
                     if (

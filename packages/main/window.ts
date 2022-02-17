@@ -62,7 +62,6 @@ export function createWindow(params: IWindowParams) {
             nodeIntegrationInWorker: true,
             plugins: true,
             contextIsolation: false,
-            enableRemoteModule: true,
             backgroundThrottling: false
         },
         show: false
@@ -73,6 +72,7 @@ export function createWindow(params: IWindowParams) {
     windowContructorParams.icon = getIcon();
 
     let browserWindow = new BrowserWindow(windowContructorParams);
+    require("@electron/remote/main").enable(browserWindow.webContents);
 
     runInAction(() =>
         windows.push({

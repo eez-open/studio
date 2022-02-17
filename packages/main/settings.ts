@@ -1,6 +1,13 @@
 import fs from "fs";
 import { app, screen, ipcMain, BrowserWindow } from "electron";
-import { observable, action, runInAction, autorun, toJS } from "mobx";
+import {
+    observable,
+    action,
+    runInAction,
+    autorun,
+    toJS,
+    makeObservable
+} from "mobx";
 
 import { getUserDataPath } from "eez-studio-shared/util-electron";
 import { SETTINGS_FILE_NAME, DEFAULT_DB_NAME } from "eez-studio-shared/conf";
@@ -22,9 +29,9 @@ export interface IMruItem {
 class Settings {
     firstTime: boolean;
 
-    @observable mru: IMruItem[];
+    mru: IMruItem[];
 
-    @observable windowStates: {
+    windowStates: {
         [key: string]: WindowState;
     };
 
@@ -34,7 +41,15 @@ class Settings {
     dateFormat: string;
     timeFormat: string;
 
-    @observable isDarkTheme: boolean;
+    isDarkTheme: boolean;
+
+    constructor() {
+        makeObservable(this, {
+            mru: observable,
+            windowStates: observable,
+            isDarkTheme: observable
+        });
+    }
 }
 
 export const settings = new Settings();

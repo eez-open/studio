@@ -1,5 +1,13 @@
+import { ipcRenderer } from "electron";
 import React from "react";
-import { observable, action, runInAction, reaction, autorun } from "mobx";
+import {
+    observable,
+    action,
+    runInAction,
+    reaction,
+    autorun,
+    makeObservable
+} from "mobx";
 
 import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
 import type { IStore } from "eez-studio-shared/store";
@@ -13,7 +21,7 @@ import type { InstrumentObject } from "instrument/instrument-object";
 
 import { App } from "instrument/window/app";
 import { NavigationStore } from "instrument/window/navigation-store";
-import { ScriptsModel, ScriptView } from "instrument/window/scripts";
+import { ScriptsModel, ScriptViewComponent } from "instrument/window/scripts";
 import type * as ScriptModule from "instrument/window/script";
 import { ShortcutsStore, GroupsStore } from "instrument/window/shortcuts";
 import { UndoManager } from "instrument/window/undo";
@@ -26,7 +34,7 @@ import {
 
 import { Filters } from "instrument/window/history/filters";
 
-import { Terminal } from "instrument/window/terminal/terminal";
+import { TerminalComponent } from "instrument/window/terminal/terminal";
 
 import { createInstrumentListStore } from "instrument/window/lists/store";
 import { BaseList } from "instrument/window/lists/store-renderer";
@@ -35,12 +43,12 @@ import { getScrapbookStore } from "instrument/window/history/scrapbook";
 ////////////////////////////////////////////////////////////////////////////////
 
 export class InstrumentAppStore implements IEditor {
-    @observable helpVisible: boolean = false;
-    @observable filters: Filters = new Filters();
-    @observable selectHistoryItemsSpecification:
+    helpVisible: boolean = false;
+    filters: Filters = new Filters();
+    selectHistoryItemsSpecification:
         | SelectHistoryItemsSpecification
         | undefined = undefined;
-    @observable selectedHistoryItems = new Map<string, boolean>();
+    selectedHistoryItems = new Map<string, boolean>();
 
     navigationStore = new NavigationStore(this);
     scriptsModel = new ScriptsModel(this);
@@ -53,20 +61,31 @@ export class InstrumentAppStore implements IEditor {
     undoManager = new UndoManager();
 
     instrumentListStore: IStore;
-    @observable instrumentLists: BaseList[] = [];
+    instrumentLists: BaseList[] = [];
 
     editor: JSX.Element | null = null;
 
-    terminal: Terminal | null = null;
+    terminal: TerminalComponent | null = null;
 
-    scriptView: ScriptView | null = null;
+    scriptView: ScriptViewComponent | null = null;
 
     autorunDisposer: any;
     reactionDisposer: any;
 
     _created = false;
 
-    constructor(public instrument: InstrumentObject) {}
+    constructor(public instrument: InstrumentObject) {
+        makeObservable(this, {
+            helpVisible: observable,
+            filters: observable,
+            selectHistoryItemsSpecification: observable,
+            selectedHistoryItems: observable,
+            instrumentLists: observable,
+            toggleHelpVisible: action,
+            selectHistoryItems: action,
+            selectHistoryItem: action
+        });
+    }
 
     get commandsTree() {
         return this.instrument.commandsTree;
@@ -165,27 +184,18 @@ export class InstrumentAppStore implements IEditor {
     }
 
     onActivate() {
-        EEZStudio.electron.ipcRenderer.on("undo", this.undoManager.undo);
-        EEZStudio.electron.ipcRenderer.on("redo", this.undoManager.redo);
-        EEZStudio.electron.ipcRenderer.on("save", this.onSave);
-        EEZStudio.electron.ipcRenderer.on("delete", this.onDeleteShortcut);
+        ipcRenderer.on("undo", this.undoManager.undo);
+        ipcRenderer.on("redo", this.undoManager.redo);
+        ipcRenderer.on("save", this.onSave);
+        ipcRenderer.on("delete", this.onDeleteShortcut);
         document.addEventListener("keydown", this.onKeyDown);
     }
 
     onDeactivate() {
-        EEZStudio.electron.ipcRenderer.removeListener(
-            "undo",
-            this.undoManager.undo
-        );
-        EEZStudio.electron.ipcRenderer.removeListener(
-            "redo",
-            this.undoManager.redo
-        );
-        EEZStudio.electron.ipcRenderer.removeListener("save", this.onSave);
-        EEZStudio.electron.ipcRenderer.removeListener(
-            "delete",
-            this.onDeleteShortcut
-        );
+        ipcRenderer.removeListener("undo", this.undoManager.undo);
+        ipcRenderer.removeListener("redo", this.undoManager.redo);
+        ipcRenderer.removeListener("save", this.onSave);
+        ipcRenderer.removeListener("delete", this.onDeleteShortcut);
         document.removeEventListener("keydown", this.onKeyDown);
     }
 
@@ -304,7 +314,6 @@ export class InstrumentAppStore implements IEditor {
         return filters;
     }
 
-    @action
     toggleHelpVisible() {
         this.helpVisible = !this.helpVisible;
         localStorage.setItem(
@@ -313,7 +322,6 @@ export class InstrumentAppStore implements IEditor {
         );
     }
 
-    @action
     selectHistoryItems(
         specification: SelectHistoryItemsSpecification | undefined
     ) {
@@ -325,7 +333,6 @@ export class InstrumentAppStore implements IEditor {
         return this.selectedHistoryItems.has(id);
     }
 
-    @action
     selectHistoryItem(id: string, selected: boolean) {
         if (selected) {
             this.selectedHistoryItems.set(id, true);

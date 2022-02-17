@@ -1,4 +1,4 @@
-import { observable, computed } from "mobx";
+import { observable, computed, makeObservable } from "mobx";
 import { css } from "@emotion/css";
 
 import { _map, _zipObject } from "eez-studio-shared/algorithm";
@@ -41,7 +41,7 @@ import { metrics } from "project-editor/features/style/metrics";
 import type { Project } from "project-editor/project/project";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
-const { MenuItem } = EEZStudio.remote || {};
+import { MenuItem } from "@electron/remote";
 
 export type BorderRadiusSpec = {
     topLeftX: number;
@@ -753,36 +753,36 @@ function getInheritedValue(
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Style extends EezObject {
-    @observable id: number | undefined;
-    @observable name: string;
-    @observable description?: string;
-    @observable inheritFrom?: string;
-    @observable alwaysBuild: boolean;
+    id: number | undefined;
+    name: string;
+    description?: string;
+    inheritFrom?: string;
+    alwaysBuild: boolean;
 
-    @observable font?: string;
-    @observable fontFamily?: string;
-    @observable fontSize?: string;
-    @observable fontWeight?: string;
-    @observable fontStyle?: string;
-    @observable alignHorizontal?: string;
-    @observable alignVertical?: string;
-    @observable color?: string;
-    @observable backgroundColor?: string;
-    @observable activeColor?: string;
-    @observable activeBackgroundColor?: string;
-    @observable focusColor?: string;
-    @observable focusBackgroundColor?: string;
-    @observable borderSize?: string;
-    @observable borderRadius?: string;
-    @observable borderColor?: string;
-    @observable borderStyle?: string;
-    @observable padding?: string;
-    @observable margin?: string;
-    @observable opacity: number;
-    @observable boxShadow?: string;
-    @observable blink?: boolean;
+    font?: string;
+    fontFamily?: string;
+    fontSize?: string;
+    fontWeight?: string;
+    fontStyle?: string;
+    alignHorizontal?: string;
+    alignVertical?: string;
+    color?: string;
+    backgroundColor?: string;
+    activeColor?: string;
+    activeBackgroundColor?: string;
+    focusColor?: string;
+    focusBackgroundColor?: string;
+    borderSize?: string;
+    borderRadius?: string;
+    borderColor?: string;
+    borderStyle?: string;
+    padding?: string;
+    margin?: string;
+    opacity: number;
+    boxShadow?: string;
+    blink?: boolean;
 
-    @observable css?: string;
+    css?: string;
 
     static classInfo: ClassInfo = {
         properties,
@@ -1057,12 +1057,171 @@ export class Style extends EezObject {
         }
     };
 
-    @computed
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            id: observable,
+            name: observable,
+            description: observable,
+            inheritFrom: observable,
+            alwaysBuild: observable,
+            font: observable,
+            fontFamily: observable,
+            fontSize: observable,
+            fontWeight: observable,
+            fontStyle: observable,
+            alignHorizontal: observable,
+            alignVertical: observable,
+            color: observable,
+            backgroundColor: observable,
+            activeColor: observable,
+            activeBackgroundColor: observable,
+            focusColor: observable,
+            focusBackgroundColor: observable,
+            borderSize: observable,
+            borderRadius: observable,
+            borderColor: observable,
+            borderStyle: observable,
+            padding: observable,
+            margin: observable,
+            opacity: observable,
+            boxShadow: observable,
+            blink: observable,
+            css: observable,
+            fontName: computed,
+            fontObject: computed,
+            fontFamilyProperty: computed,
+            fontSizeProperty: computed,
+            fontWeightProperty: computed,
+            fontStyleProperty: computed,
+
+            borderSizeProperty: computed({
+                keepAlive: true
+            }),
+
+            borderSizeRect: computed({
+                keepAlive: true
+            }),
+
+            borderRadiusProperty: computed({
+                keepAlive: true
+            }),
+
+            borderRadiusSpec: computed({
+                keepAlive: true
+            }),
+
+            alignHorizontalProperty: computed({
+                keepAlive: true
+            }),
+
+            alignVerticalProperty: computed({
+                keepAlive: true
+            }),
+
+            colorProperty: computed({
+                keepAlive: true
+            }),
+
+            color16: computed({
+                keepAlive: true
+            }),
+
+            backgroundColorProperty: computed({
+                keepAlive: true
+            }),
+
+            backgroundColor16: computed({
+                keepAlive: true
+            }),
+
+            backgroundImageProperty: computed({
+                keepAlive: true
+            }),
+
+            activeColorProperty: computed({
+                keepAlive: true
+            }),
+
+            activeColor16: computed({
+                keepAlive: true
+            }),
+
+            activeBackgroundColorProperty: computed({
+                keepAlive: true
+            }),
+
+            activeBackgroundColor16: computed({
+                keepAlive: true
+            }),
+
+            focusColorProperty: computed({
+                keepAlive: true
+            }),
+
+            focusColor16: computed({
+                keepAlive: true
+            }),
+
+            focusBackgroundColorProperty: computed({
+                keepAlive: true
+            }),
+
+            focusBackgroundColor16: computed({
+                keepAlive: true
+            }),
+
+            borderColorProperty: computed({
+                keepAlive: true
+            }),
+
+            borderColor16: computed({
+                keepAlive: true
+            }),
+
+            borderStyleProperty: computed({
+                keepAlive: true
+            }),
+
+            paddingProperty: computed({
+                keepAlive: true
+            }),
+
+            paddingRect: computed({
+                keepAlive: true
+            }),
+
+            marginProperty: computed({
+                keepAlive: true
+            }),
+
+            marginRect: computed({
+                keepAlive: true
+            }),
+
+            opacityProperty: computed({
+                keepAlive: true
+            }),
+
+            boxShadowProperty: computed({
+                keepAlive: true
+            }),
+
+            blinkProperty: computed({
+                keepAlive: true
+            }),
+
+            cssDeclarations: computed,
+            cssPreview: computed,
+            classNames: computed
+        });
+    }
+
     get fontName(): string {
         return getStyleProperty(this, "font");
     }
 
-    @computed
     get fontObject(): Font | undefined {
         if (this.font) {
             return findFont(ProjectEditor.getProject(this), this.font);
@@ -1084,22 +1243,18 @@ export class Style extends EezObject {
         return undefined;
     }
 
-    @computed
     get fontFamilyProperty(): string {
         return getStyleProperty(this, "fontFamily");
     }
 
-    @computed
     get fontSizeProperty(): string {
         return getStyleProperty(this, "fontSize");
     }
 
-    @computed
     get fontWeightProperty(): string {
         return getStyleProperty(this, "fontWeight");
     }
 
-    @computed
     get fontStyleProperty(): string {
         return getStyleProperty(this, "fontStyle");
     }
@@ -1371,191 +1526,110 @@ export class Style extends EezObject {
         };
     }
 
-    @computed({
-        keepAlive: true
-    })
     get borderSizeProperty(): string {
         return getStyleProperty(this, "borderSize");
     }
 
-    @computed({
-        keepAlive: true
-    })
     get borderSizeRect() {
         return Style.getRect(this.borderSizeProperty).rect;
     }
 
-    @computed({
-        keepAlive: true
-    })
     get borderRadiusProperty(): string {
         return getStyleProperty(this, "borderRadius");
     }
 
-    @computed({
-        keepAlive: true
-    })
     get borderRadiusSpec() {
         return Style.getRadiusSpec(this.borderRadiusProperty).spec;
     }
 
-    @computed({
-        keepAlive: true
-    })
     get alignHorizontalProperty(): string {
         return getStyleProperty(this, "alignHorizontal");
     }
 
-    @computed({
-        keepAlive: true
-    })
     get alignVerticalProperty(): string {
         return getStyleProperty(this, "alignVertical");
     }
 
-    @computed({
-        keepAlive: true
-    })
     get colorProperty(): string {
         return getStyleProperty(this, "color");
     }
 
-    @computed({
-        keepAlive: true
-    })
     get color16(): number {
         return strToColor16(this.colorProperty);
     }
 
-    @computed({
-        keepAlive: true
-    })
     get backgroundColorProperty(): string {
         return getStyleProperty(this, "backgroundColor");
     }
 
-    @computed({
-        keepAlive: true
-    })
     get backgroundColor16(): number {
         return strToColor16(this.backgroundColorProperty);
     }
 
-    @computed({
-        keepAlive: true
-    })
     get backgroundImageProperty(): string {
         return getStyleProperty(this, "backgroundImage");
     }
 
-    @computed({
-        keepAlive: true
-    })
     get activeColorProperty(): string {
         return getStyleProperty(this, "activeColor");
     }
 
-    @computed({
-        keepAlive: true
-    })
     get activeColor16(): number {
         return strToColor16(this.activeColorProperty);
     }
 
-    @computed({
-        keepAlive: true
-    })
     get activeBackgroundColorProperty(): string {
         return getStyleProperty(this, "activeBackgroundColor");
     }
 
-    @computed({
-        keepAlive: true
-    })
     get activeBackgroundColor16(): number {
         return strToColor16(this.activeBackgroundColorProperty);
     }
 
-    @computed({
-        keepAlive: true
-    })
     get focusColorProperty(): string {
         return getStyleProperty(this, "focusColor");
     }
 
-    @computed({
-        keepAlive: true
-    })
     get focusColor16(): number {
         return strToColor16(this.focusColorProperty);
     }
 
-    @computed({
-        keepAlive: true
-    })
     get focusBackgroundColorProperty(): string {
         return getStyleProperty(this, "focusBackgroundColor");
     }
 
-    @computed({
-        keepAlive: true
-    })
     get focusBackgroundColor16(): number {
         return strToColor16(this.focusBackgroundColorProperty);
     }
 
-    @computed({
-        keepAlive: true
-    })
     get borderColorProperty(): string {
         return getStyleProperty(this, "borderColor");
     }
 
-    @computed({
-        keepAlive: true
-    })
     get borderColor16(): number {
         return strToColor16(this.borderColorProperty);
     }
 
-    @computed({
-        keepAlive: true
-    })
     get borderStyleProperty(): string {
         return getStyleProperty(this, "borderStyle");
     }
 
-    @computed({
-        keepAlive: true
-    })
     get paddingProperty(): string {
         return getStyleProperty(this, "padding");
     }
 
-    @computed({
-        keepAlive: true
-    })
     get paddingRect() {
         return Style.getRect(this.paddingProperty).rect;
     }
 
-    @computed({
-        keepAlive: true
-    })
     get marginProperty(): string {
         return getStyleProperty(this, "margin");
     }
 
-    @computed({
-        keepAlive: true
-    })
     get marginRect() {
         return Style.getRect(this.marginProperty).rect;
     }
 
-    @computed({
-        keepAlive: true
-    })
     get opacityProperty(): number {
         const opacity = getStyleProperty(this, "opacity");
         if (isNaN(opacity)) {
@@ -1564,16 +1638,10 @@ export class Style extends EezObject {
         return opacity;
     }
 
-    @computed({
-        keepAlive: true
-    })
     get boxShadowProperty(): number {
         return getStyleProperty(this, "boxShadow");
     }
 
-    @computed({
-        keepAlive: true
-    })
     get blinkProperty(): number {
         return getStyleProperty(this, "blink");
     }
@@ -1611,7 +1679,7 @@ export class Style extends EezObject {
         );
     }
 
-    @computed get cssDeclarations() {
+    get cssDeclarations() {
         const DocumentStore = getDocumentStore(this);
 
         let spec = [
@@ -1801,7 +1869,7 @@ export class Style extends EezObject {
         return declarations;
     }
 
-    @computed get cssPreview() {
+    get cssPreview() {
         let cssPreview = "";
 
         if (this.inheritFrom) {
@@ -1832,7 +1900,7 @@ export class Style extends EezObject {
         return cssPreview;
     }
 
-    @computed get classNames(): string[] {
+    get classNames(): string[] {
         const classNames = [];
 
         if (isDashboardProject(this)) {

@@ -1,5 +1,12 @@
+import { ipcRenderer } from "electron";
 import React from "react";
-import { observable, computed, runInAction, action } from "mobx";
+import {
+    observable,
+    computed,
+    runInAction,
+    action,
+    makeObservable
+} from "mobx";
 import { observer } from "mobx-react";
 import css from "css";
 import * as FlexLayout from "flexlayout-react";
@@ -90,10 +97,10 @@ export const NAMESPACE_PREFIX = "::";
 ////////////////////////////////////////////////////////////////////////////////
 
 export class BuildConfiguration extends EezObject {
-    @observable name: string;
-    @observable description: string;
-    @observable properties: string;
-    @observable screenOrientation: "landscape" | "portrait";
+    name: string;
+    description: string;
+    properties: string;
+    screenOrientation: "landscape" | "portrait";
 
     static classInfo: ClassInfo = {
         properties: [
@@ -145,6 +152,17 @@ export class BuildConfiguration extends EezObject {
             return messages;
         }
     };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            description: observable,
+            properties: observable,
+            screenOrientation: observable
+        });
+    }
 }
 
 registerClass("BuildConfiguration", BuildConfiguration);
@@ -152,9 +170,9 @@ registerClass("BuildConfiguration", BuildConfiguration);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class BuildFile extends EezObject {
-    @observable fileName: string;
-    @observable description?: string;
-    @observable template: string;
+    fileName: string;
+    description?: string;
+    template: string;
 
     static classInfo: ClassInfo = {
         label: (buildFile: BuildFile) => {
@@ -183,6 +201,16 @@ export class BuildFile extends EezObject {
             });
         }
     };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            fileName: observable,
+            description: observable,
+            template: observable
+        });
+    }
 }
 
 registerClass("BuildFile", BuildFile);
@@ -199,9 +227,9 @@ function isFilesPropertyEnumerable(object: IEezObject): boolean {
 }
 
 export class Build extends EezObject {
-    @observable configurations: BuildConfiguration[];
-    @observable files: BuildFile[];
-    @observable destinationFolder?: string;
+    configurations: BuildConfiguration[];
+    files: BuildFile[];
+    destinationFolder?: string;
 
     static classInfo: ClassInfo = {
         label: () => "Build",
@@ -227,6 +255,16 @@ export class Build extends EezObject {
             }
         ]
     };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            configurations: observable,
+            files: observable,
+            destinationFolder: observable
+        });
+    }
 }
 
 registerClass("Build", Build);
@@ -237,10 +275,15 @@ class UsageTreeNode {
     id: string;
     label: string;
     children: UsageTreeNode[];
-    @observable selected: boolean;
-    @observable expanded: boolean;
+    selected: boolean;
+    expanded: boolean;
 
     constructor(label: string, children?: (string | UsageTreeNode)[]) {
+        makeObservable(this, {
+            selected: observable,
+            expanded: observable
+        });
+
         this.id = label;
         this.label = label;
         this.children = children
@@ -262,70 +305,82 @@ interface IAssetsUsage {
     selectedAsset: string | undefined;
 }
 
-@observer
-class UsageTreeField extends FieldComponent {
-    @observable selectedNode: UsageTreeNode | undefined;
+const UsageTreeField = observer(
+    class UsageTreeField extends FieldComponent {
+        selectedNode: UsageTreeNode | undefined;
 
-    @computed
-    get rootNode() {
-        let assetsUsage: IAssetsUsage =
-            this.props.values[this.props.fieldProperties.name];
-        return new UsageTreeNode(
-            "",
-            _keys(assetsUsage.assets)
-                .sort()
-                .map(key => {
-                    return new UsageTreeNode(
-                        humanize(key),
-                        assetsUsage.assets[key].split(", ")
-                    );
-                })
-        );
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                selectedNode: observable,
+                rootNode: computed
+            });
+        }
+
+        get rootNode() {
+            let assetsUsage: IAssetsUsage =
+                this.props.values[this.props.fieldProperties.name];
+            return new UsageTreeNode(
+                "",
+                _keys(assetsUsage.assets)
+                    .sort()
+                    .map(key => {
+                        return new UsageTreeNode(
+                            humanize(key),
+                            assetsUsage.assets[key].split(", ")
+                        );
+                    })
+            );
+        }
+
+        selectNode = action((node: UsageTreeNode) => {
+            if (this.selectedNode) {
+                this.selectedNode.selected = false;
+            }
+
+            this.selectedNode = node;
+
+            let assetsUsage: IAssetsUsage =
+                this.props.values[this.props.fieldProperties.name];
+            if (this.selectedNode && this.selectedNode.children.length === 0) {
+                assetsUsage.selectedAsset = this.selectedNode.id;
+            } else {
+                assetsUsage.selectedAsset = undefined;
+            }
+
+            if (this.selectedNode) {
+                this.selectedNode.selected = true;
+            }
+        });
+
+        render() {
+            return (
+                <Tree
+                    showOnlyChildren={true}
+                    rootNode={this.rootNode}
+                    selectNode={this.selectNode}
+                />
+            );
+        }
     }
-
-    selectNode = action((node: UsageTreeNode) => {
-        if (this.selectedNode) {
-            this.selectedNode.selected = false;
-        }
-
-        this.selectedNode = node;
-
-        let assetsUsage: IAssetsUsage =
-            this.props.values[this.props.fieldProperties.name];
-        if (this.selectedNode && this.selectedNode.children.length === 0) {
-            assetsUsage.selectedAsset = this.selectedNode.id;
-        } else {
-            assetsUsage.selectedAsset = undefined;
-        }
-
-        if (this.selectedNode) {
-            this.selectedNode.selected = true;
-        }
-    });
-
-    render() {
-        return (
-            <Tree
-                showOnlyChildren={true}
-                rootNode={this.rootNode}
-                selectNode={this.selectNode}
-            />
-        );
-    }
-}
+);
 
 class BuildAssetsUssage {
     assets: {
         [path: string]: Set<string>;
     } = {};
 
-    @observable
     assetsUsage: IAssetsUsage = {
         assets: {},
         selectedAsset: undefined
     };
 
-    constructor(private importDirective: ImportDirective) {}
+    constructor(private importDirective: ImportDirective) {
+        makeObservable(this, {
+            assetsUsage: observable
+        });
+    }
 
     onMessage(message: SearchCallbackMessage) {
         if (message.type == "value") {
@@ -421,7 +476,7 @@ function showUsage(importDirective: ImportDirective) {
 
 function openProject(importDirective: ImportDirective) {
     const DocumentStore = getDocumentStore(importDirective);
-    EEZStudio.electron.ipcRenderer.send(
+    ipcRenderer.send(
         "open-file",
         DocumentStore.getAbsoluteFilePath(importDirective.projectFilePath)
     );
@@ -450,7 +505,7 @@ const ImportDirectiveCustomUI = observer((props: PropertyProps) => {
 });
 
 export class ImportDirective {
-    @observable projectFilePath: string;
+    projectFilePath: string;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -524,6 +579,14 @@ export class ImportDirective {
         })
     };
 
+    constructor() {
+        makeObservable(this, {
+            projectFilePath: observable,
+            project: computed({ keepAlive: true }),
+            namespace: computed
+        });
+    }
+
     get projectAbsoluteFilePath() {
         const DocumentStore = getDocumentStore(this);
         return DocumentStore.getAbsoluteFilePath(
@@ -537,7 +600,6 @@ export class ImportDirective {
         await DocumentStore.loadExternalProject(this.projectAbsoluteFilePath);
     }
 
-    @computed({ keepAlive: true })
     get project(): Project | undefined {
         const DocumentStore = getDocumentStore(this);
 
@@ -550,7 +612,6 @@ export class ImportDirective {
             : undefined;
     }
 
-    @computed
     get namespace() {
         return this.project?.namespace;
     }
@@ -563,13 +624,13 @@ registerClass("ImportDirective", ImportDirective);
 export type ProjectVersion = "v1" | "v2" | "v3";
 
 export class General extends EezObject {
-    @observable projectVersion: ProjectVersion = "v3";
-    @observable projectType: ProjectType;
-    @observable scpiDocFolder?: string;
-    @observable namespace: string;
-    @observable masterProject: string;
-    @observable imports: ImportDirective[];
-    @observable flowSupport: boolean;
+    projectVersion: ProjectVersion = "v3";
+    projectType: ProjectType;
+    scpiDocFolder?: string;
+    namespace: string;
+    masterProject: string;
+    imports: ImportDirective[];
+    flowSupport: boolean;
 
     static classInfo: ClassInfo = {
         label: () => "General",
@@ -692,6 +753,20 @@ export class General extends EezObject {
         }
     };
 
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            projectVersion: observable,
+            projectType: observable,
+            scpiDocFolder: observable,
+            namespace: observable,
+            masterProject: observable,
+            imports: observable,
+            flowSupport: observable
+        });
+    }
+
     getProjectTypeAsNumber() {
         switch (this.projectType) {
             case ProjectType.FIRMWARE:
@@ -713,9 +788,9 @@ registerClass("General", General);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Settings extends EezObject {
-    @observable general: General;
-    @observable build: Build;
-    @observable scpiHelpFolder?: string;
+    general: General;
+    build: Build;
+    scpiHelpFolder?: string;
 
     static classInfo: ClassInfo = {
         label: () => "Settings",
@@ -746,6 +821,16 @@ export class Settings extends EezObject {
         hideInProperties: true,
         icon: "settings"
     };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            general: observable,
+            build: observable,
+            scpiHelpFolder: observable
+        });
+    }
 }
 
 registerClass("Settings", Settings);
@@ -1038,23 +1123,66 @@ export class Project extends EezObject {
     _isReadOnly: boolean = false;
     _isDashboardBuild: boolean = false;
 
-    @observable _fullyLoaded = false;
+    _fullyLoaded = false;
 
-    @observable settings: Settings;
-    @observable variables: ProjectVariables;
-    @observable actions: Action[];
-    @observable pages: Page[];
-    @observable styles: Style[];
-    @observable fonts: Font[];
-    @observable bitmaps: Bitmap[];
-    @observable scpi: Scpi;
-    @observable shortcuts: Shortcuts;
-    @observable micropython: MicroPython;
-    @observable extensionDefinitions: ExtensionDefinition[];
-    @observable colors: Color[];
-    @observable themes: Theme[];
+    settings: Settings;
+    variables: ProjectVariables;
+    actions: Action[];
+    pages: Page[];
+    styles: Style[];
+    fonts: Font[];
+    bitmaps: Bitmap[];
+    scpi: Scpi;
+    shortcuts: Shortcuts;
+    micropython: MicroPython;
+    extensionDefinitions: ExtensionDefinition[];
+    colors: Color[];
+    themes: Theme[];
 
-    @computed get projectName() {
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            _fullyLoaded: observable,
+            settings: observable,
+            variables: observable,
+            actions: observable,
+            pages: observable,
+            styles: observable,
+            fonts: observable,
+            bitmaps: observable,
+            scpi: observable,
+            shortcuts: observable,
+            micropython: observable,
+            extensionDefinitions: observable,
+            colors: observable,
+            themes: observable,
+            projectName: computed,
+            importDirective: computed,
+            globalVariablesMap: computed,
+            actionsMap: computed,
+            namespace: computed,
+            masterProject: computed({ keepAlive: true }),
+            allAssetsMaps: computed({ keepAlive: true }),
+            assetCollectionPaths: computed({ keepAlive: true }),
+            localAssets: computed({ keepAlive: true }),
+            importedAssets: computed({ keepAlive: true }),
+            masterAssets: computed({ keepAlive: true }),
+            allAssets: computed({ keepAlive: true }),
+            allGlobalVariables: computed({ keepAlive: true }),
+            pagesMap: computed({ keepAlive: true }),
+            stylesMap: computed({ keepAlive: true }),
+            allStyleIdToStyleMap: computed({ keepAlive: true }),
+            fontsMap: computed({ keepAlive: true }),
+            bitmapsMap: computed({ keepAlive: true }),
+            themeColors: observable,
+            setThemeColor: action,
+            colorToIndexMap: computed,
+            colorsMap: computed
+        });
+    }
+
+    get projectName() {
         if (this._DocumentStore.project === this) {
             return this._DocumentStore.filePath
                 ? getFileNameWithoutExtension(this._DocumentStore.filePath)
@@ -1114,14 +1242,12 @@ export class Project extends EezObject {
         );
     }
 
-    @computed
     get importDirective() {
         return this._DocumentStore.project.settings.general.imports.find(
             importDirective => importDirective.project === this
         );
     }
 
-    @computed
     get globalVariablesMap() {
         const map = new Map<String, Variable>();
         this.variables.globalVariables.forEach(globalVariable =>
@@ -1130,7 +1256,6 @@ export class Project extends EezObject {
         return map;
     }
 
-    @computed
     get actionsMap() {
         const map = new Map<String, Action>();
         this.actions.forEach(action => map.set(action.name, action));
@@ -1141,7 +1266,6 @@ export class Project extends EezObject {
         return getProjectClassInfo();
     }
 
-    @computed
     get namespace() {
         return this.settings.general.namespace;
     }
@@ -1158,7 +1282,6 @@ export class Project extends EezObject {
         );
     }
 
-    @computed({ keepAlive: true })
     get masterProject(): Project | undefined {
         return this.settings.general.masterProject
             ? this._DocumentStore.externalProjects.get(
@@ -1167,7 +1290,6 @@ export class Project extends EezObject {
             : undefined;
     }
 
-    @computed({ keepAlive: true })
     get allAssetsMaps() {
         return [
             {
@@ -1186,7 +1308,6 @@ export class Project extends EezObject {
         ];
     }
 
-    @computed({ keepAlive: true })
     get assetCollectionPaths() {
         const assetCollectionPaths = new Set<string>();
         this._DocumentStore.project.allAssetsMaps.forEach(assetsMap =>
@@ -1195,7 +1316,6 @@ export class Project extends EezObject {
         return assetCollectionPaths;
     }
 
-    @computed({ keepAlive: true })
     get localAssets() {
         const buildAssets = new BuildAssetsMap();
 
@@ -1210,7 +1330,6 @@ export class Project extends EezObject {
         return buildAssets.assets;
     }
 
-    @computed({ keepAlive: true })
     get importedAssets() {
         const buildAssets = new BuildAssetsMap();
 
@@ -1238,7 +1357,6 @@ export class Project extends EezObject {
         return buildAssets.assets;
     }
 
-    @computed({ keepAlive: true })
     get masterAssets() {
         const buildAssets = new BuildAssetsMap();
 
@@ -1257,7 +1375,6 @@ export class Project extends EezObject {
         return buildAssets.assets;
     }
 
-    @computed({ keepAlive: true })
     get allAssets() {
         return new Map([
             ...this.localAssets,
@@ -1286,7 +1403,6 @@ export class Project extends EezObject {
         }
     }
 
-    @computed({ keepAlive: true })
     get allGlobalVariables() {
         let allVariables = [...this.variables.globalVariables];
         for (const importDirective of this.settings.general.imports) {
@@ -1299,7 +1415,6 @@ export class Project extends EezObject {
         return allVariables;
     }
 
-    @computed({ keepAlive: true })
     get pagesMap() {
         const map = new Map<String, Page>();
         if (this.pages) {
@@ -1308,7 +1423,6 @@ export class Project extends EezObject {
         return map;
     }
 
-    @computed({ keepAlive: true })
     get stylesMap() {
         const map = new Map<String, Style>();
         if (this.styles) {
@@ -1317,7 +1431,6 @@ export class Project extends EezObject {
         return map;
     }
 
-    @computed({ keepAlive: true })
     get allStyleIdToStyleMap() {
         const map = new Map<number, Style[]>();
 
@@ -1345,7 +1458,6 @@ export class Project extends EezObject {
         return map;
     }
 
-    @computed({ keepAlive: true })
     get fontsMap() {
         const map = new Map<String, Font>();
         if (this.fonts) {
@@ -1354,7 +1466,6 @@ export class Project extends EezObject {
         return map;
     }
 
-    @computed({ keepAlive: true })
     get bitmapsMap() {
         const map = new Map<String, Bitmap>();
         if (this.bitmaps) {
@@ -1363,25 +1474,22 @@ export class Project extends EezObject {
         return map;
     }
 
-    @observable themeColors = new Map<string, string>();
+    themeColors = new Map<string, string>();
 
     getThemeColor(themeId: string, colorId: string) {
         return this.themeColors.get(themeId + colorId) || "#000000";
     }
 
-    @action
     setThemeColor(themeId: string, colorId: string, color: string) {
         this.themeColors.set(themeId + colorId, color);
     }
 
-    @computed
     get colorToIndexMap() {
         const map = new Map<String, number>();
         this.colors.forEach((color, i) => map.set(color.name, i));
         return map;
     }
 
-    @computed
     get colorsMap() {
         const map = new Map<String, Color>();
         this.colors.forEach((color, i) => map.set(color.name, color));

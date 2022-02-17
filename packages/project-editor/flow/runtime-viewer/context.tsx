@@ -1,4 +1,4 @@
-import { observable, action, computed } from "mobx";
+import { observable, action, computed, makeObservable } from "mobx";
 
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
@@ -28,10 +28,18 @@ class ViewState implements IViewState {
         this.flowContext.tabState.transform = transform;
     }
 
-    @observable dxMouseDrag: number | undefined;
-    @observable dyMouseDrag: number | undefined;
+    dxMouseDrag: number | undefined;
+    dyMouseDrag: number | undefined;
 
-    constructor(public flowContext: RuntimeFlowContext) {}
+    constructor(public flowContext: RuntimeFlowContext) {
+        makeObservable(this, {
+            dxMouseDrag: observable,
+            dyMouseDrag: observable,
+            resetTransform: action,
+            selectObjects: action,
+            deselectAllObjects: action
+        });
+    }
 
     get document() {
         return this.flowContext.document;
@@ -41,7 +49,6 @@ class ViewState implements IViewState {
         return this.flowContext.containerId;
     }
 
-    @action
     resetTransform() {
         this.flowContext.tabState.resetTransform();
     }
@@ -72,7 +79,6 @@ class ViewState implements IViewState {
         }
     }
 
-    @action
     selectObjects(objects: ITreeObjectAdapter[]) {
         this.document &&
             this.document.flow.selectItems(
@@ -80,7 +86,6 @@ class ViewState implements IViewState {
             );
     }
 
-    @action
     deselectAllObjects(): void {
         this.document && this.document.flow.selectItems([]);
     }
@@ -110,6 +115,12 @@ export class RuntimeFlowContext implements IFlowContext {
 
     _flowState: FlowState;
 
+    constructor() {
+        makeObservable(this, {
+            flowState: computed
+        });
+    }
+
     get DocumentStore() {
         return this.document.DocumentStore;
     }
@@ -122,7 +133,7 @@ export class RuntimeFlowContext implements IFlowContext {
         return this.tabState.flow;
     }
 
-    @computed get flowState() {
+    get flowState() {
         return this._flowState || this.tabState.flowState;
     }
 

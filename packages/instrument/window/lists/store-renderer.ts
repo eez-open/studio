@@ -1,4 +1,4 @@
-import { action, computed, observable, toJS } from "mobx";
+import { action, computed, observable, toJS, makeObservable } from "mobx";
 
 import { capitalize } from "eez-studio-shared/string";
 import {
@@ -114,7 +114,7 @@ export function checkPower(power: number, instrument: IInstrumentObject) {
 ////////////////////////////////////////////////////////////////////////////////
 
 class ListViewOptions {
-    @observable axesLines: IViewOptionsAxesLines = {
+    axesLines: IViewOptionsAxesLines = {
         type: "dynamic",
         steps: {
             x: [0.01, 0.1, 1, 10],
@@ -134,10 +134,16 @@ class ListViewOptions {
         snapToGrid: true,
         defaultZoomMode: "default"
     };
-    @observable showAxisLabels: boolean = true;
-    @observable showZoomButtons: boolean = true;
+    showAxisLabels: boolean = true;
+    showZoomButtons: boolean = true;
 
     constructor(props: any) {
+        makeObservable(this, {
+            axesLines: observable,
+            showAxisLabels: observable,
+            showZoomButtons: observable
+        });
+
         if (props) {
             this.axesLines = props.axesLines;
             this.showAxisLabels = props.showAxisLabels;
@@ -401,11 +407,14 @@ export class ListAxisModel implements IAxisModel {
         public list: BaseList,
         unit: IUnit
     ) {
+        makeObservable(this, {
+            listAxis: computed
+        });
+
         this.unit = unit.clone();
         this.unit.precision = appStore.instrument.getDigits(unit);
     }
 
-    @computed
     get listAxis() {
         return this.unit.name == "time"
             ? this.list.data.timeAxis
@@ -474,13 +483,20 @@ export interface ITableListData {
 }
 
 export class BaseListData {
-    @observable viewOptions: ListViewOptions;
+    viewOptions: ListViewOptions;
 
-    @observable timeAxis: ListAxis;
-    @observable voltageAxis: ListAxis;
-    @observable currentAxis: ListAxis;
+    timeAxis: ListAxis;
+    voltageAxis: ListAxis;
+    currentAxis: ListAxis;
 
     constructor(list: BaseList, props: Partial<BaseListData>) {
+        makeObservable(this, {
+            viewOptions: observable,
+            timeAxis: observable,
+            voltageAxis: observable,
+            currentAxis: observable
+        });
+
         this.viewOptions = new ListViewOptions(props.viewOptions);
 
         this.timeAxis = new ListAxis(
@@ -521,9 +537,9 @@ export class BaseListData {
 
 export abstract class BaseList implements ChartData {
     id: string;
-    @observable name: string;
-    @observable description: string;
-    @observable modifiedAt: Date | null;
+    name: string;
+    description: string;
+    modifiedAt: Date | null;
 
     type: string;
     abstract data: BaseListData;
@@ -531,6 +547,12 @@ export abstract class BaseList implements ChartData {
     isZoomable = false;
 
     constructor(public props: any) {
+        makeObservable(this, {
+            name: observable,
+            description: observable,
+            modifiedAt: observable
+        });
+
         this.id = props.id;
         this.name = props.name;
         this.description = props.description;

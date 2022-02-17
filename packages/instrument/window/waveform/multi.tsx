@@ -5,7 +5,8 @@ import {
     action,
     runInAction,
     reaction,
-    toJS
+    toJS,
+    makeObservable
 } from "mobx";
 import { observer } from "mobx-react";
 
@@ -92,36 +93,39 @@ export class MultiWaveformChartsController extends ChartsController {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class ChartHistoryItemComponent extends React.Component<{
-    appStore: IAppStore;
-    historyItem: MultiWaveform;
-}> {
-    setVisibleTimeoutId: any;
+export const ChartHistoryItemComponent = observer(
+    class ChartHistoryItemComponent extends React.Component<{
+        appStore: IAppStore;
+        historyItem: MultiWaveform;
+    }> {
+        setVisibleTimeoutId: any;
 
-    render() {
-        return (
-            <div className="EezStudio_ChartHistoryItem">
-                <Icon
-                    className="me-3"
-                    icon={"material:insert_chart"}
-                    size={48}
-                />
-                <div>
-                    <p>
-                        <small className="EezStudio_HistoryItemDate">
-                            {formatDateTimeLong(this.props.historyItem.date)}
-                        </small>
-                    </p>
-                    <ChartPreview
-                        appStore={this.props.appStore}
-                        data={this.props.historyItem}
+        render() {
+            return (
+                <div className="EezStudio_ChartHistoryItem">
+                    <Icon
+                        className="me-3"
+                        icon={"material:insert_chart"}
+                        size={48}
                     />
+                    <div>
+                        <p>
+                            <small className="EezStudio_HistoryItemDate">
+                                {formatDateTimeLong(
+                                    this.props.historyItem.date
+                                )}
+                            </small>
+                        </p>
+                        <ChartPreview
+                            appStore={this.props.appStore}
+                            data={this.props.historyItem}
+                        />
+                    </div>
                 </div>
-            </div>
-        );
+            );
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -134,6 +138,17 @@ interface ILinkedWaveform {
 export class MultiWaveform extends HistoryItem {
     constructor(store: IStore, activityLogEntry: IActivityLogEntry) {
         super(store, activityLogEntry);
+
+        makeObservable(this, {
+            waveformLinks: observable,
+            messageObject: computed,
+            measurements: computed,
+            linkedWaveforms: computed,
+            longestWaveform: computed,
+            xAxisUnit: computed,
+            samplingRate: computed,
+            length: computed
+        });
 
         const message = JSON.parse(this.message);
 
@@ -250,21 +265,20 @@ export class MultiWaveform extends HistoryItem {
 
     xAxisModel = new WaveformTimeAxisModel(this);
 
-    @observable waveformLinks: IWaveformLink[];
+    waveformLinks: IWaveformLink[];
 
     viewOptions: ViewOptions;
 
     rulers: IRulersModel;
 
-    @computed get messageObject() {
+    get messageObject() {
         return JSON.parse(this.message);
     }
 
-    @computed get measurements() {
+    get measurements() {
         return new MeasurementsModel(this.messageObject.measurements);
     }
 
-    @computed
     get linkedWaveforms() {
         return this.waveformLinks
             .map(waveformLink => {
@@ -281,7 +295,6 @@ export class MultiWaveform extends HistoryItem {
             .filter(waveformLink => !!waveformLink.waveform);
     }
 
-    @computed
     get longestWaveform() {
         let longestWaveform;
         let maxTime;
@@ -296,17 +309,14 @@ export class MultiWaveform extends HistoryItem {
         return longestWaveform;
     }
 
-    @computed
     get xAxisUnit() {
         return TIME_UNIT;
     }
 
-    @computed
     get samplingRate() {
         return this.longestWaveform ? this.longestWaveform.samplingRate : 1;
     }
 
-    @computed
     get length() {
         return this.longestWaveform ? this.longestWaveform.length : 0;
     }
@@ -385,6 +395,11 @@ export class MultiWaveform extends HistoryItem {
 
 class WaveformLinkProperties {
     constructor(public linkedWaveform: ILinkedWaveform) {
+        makeObservable(this, {
+            props: observable,
+            errors: observable
+        });
+
         this.props = Object.assign(
             {
                 label: this.linkedWaveform.yAxisModel.label,
@@ -395,8 +410,8 @@ class WaveformLinkProperties {
         );
     }
 
-    @observable props: IWaveformLink;
-    @observable errors: boolean = false;
+    props: IWaveformLink;
+    errors: boolean = false;
 
     async checkValidity() {
         return true;
@@ -436,203 +451,219 @@ interface IJoinedWaveformLinkAndDefinitionProperties {
     waveformDefinitionProperties: WaveformDefinitionProperties;
 }
 
-@observer
-class MultiWaveformConfigurationDialog extends React.Component<
-    {
-        multiWaveform: MultiWaveform;
-    },
-    {}
-> {
-    @observable
-    waveforms: IJoinedWaveformLinkAndDefinitionProperties[] = this.props.multiWaveform.linkedWaveforms.map(
-        (linkedWaveform: ILinkedWaveform, i: number) => {
-            return {
-                linkedWaveform,
-                waveformLinkProperties: new WaveformLinkProperties(
-                    linkedWaveform
-                ),
-                waveformDefinitionProperties: new WaveformDefinitionProperties(
-                    linkedWaveform.waveform.waveformDefinition
-                )
-            };
-        }
-    );
-
-    @observable.shallow
-    selectedWaveform: IJoinedWaveformLinkAndDefinitionProperties =
-        this.waveforms[0];
-
-    @computed
-    get waveformListNodes(): IListNode[] {
-        return this.waveforms.map(
-            joinedWaveformLinkAndDefinitionProperties => ({
-                id: joinedWaveformLinkAndDefinitionProperties.linkedWaveform
-                    .waveformLink.id,
-                data: joinedWaveformLinkAndDefinitionProperties,
-                selected:
-                    joinedWaveformLinkAndDefinitionProperties ===
-                    this.selectedWaveform
-            })
-        );
-    }
-
-    renderWaveformListNode = (node: IListNode) => {
-        let waveformLinkProperties =
-            node.data as IJoinedWaveformLinkAndDefinitionProperties;
-
-        const errors =
-            waveformLinkProperties.waveformLinkProperties.errors ||
-            (waveformLinkProperties.waveformDefinitionProperties &&
-                waveformLinkProperties.waveformDefinitionProperties.errors);
-
-        return (
-            <ListItem
-                label={
-                    waveformLinkProperties.waveformLinkProperties.props.label ||
-                    "<no label>"
-                }
-                rightIcon={errors ? "material:error_outline" : undefined}
-                rightIconClassName="text-danger"
-            />
-        );
-    };
-
-    @action.bound
-    selectWaveform(node: IListNode) {
-        this.selectedWaveform = node.data;
-    }
-
-    handleSubmit = async () => {
-        let anyError = false;
-
-        for (let i = 0; i < this.waveforms.length; i++) {
-            const waveformLinkProperties = this.waveforms[i];
-
-            if (
-                !(await waveformLinkProperties.waveformLinkProperties.checkValidity())
-            ) {
-                anyError = true;
-            }
-
-            const waveformProperties =
-                waveformLinkProperties.waveformDefinitionProperties;
-            if (waveformProperties) {
-                if (!(await waveformProperties.checkValidity())) {
-                    anyError = true;
-                }
-            }
-        }
-
-        if (anyError) {
-            return false;
-        }
-
-        const changedHistoryItems: {
-            id: string;
-            oid: string;
-            message: string;
-        }[] = [];
-
-        // update chart history item (if changed)
-        const waveformLinks = this.waveforms.map(
-            joinedWaveformLinkAndDefinitionProperties => ({
-                id: joinedWaveformLinkAndDefinitionProperties.linkedWaveform
-                    .waveformLink.id,
-                label: joinedWaveformLinkAndDefinitionProperties
-                    .waveformLinkProperties.props.label,
-                color: joinedWaveformLinkAndDefinitionProperties
-                    .waveformLinkProperties.props.color,
-                colorInverse:
-                    joinedWaveformLinkAndDefinitionProperties
-                        .waveformLinkProperties.props.colorInverse
-            })
-        );
-        if (
-            !objectEqual(
-                waveformLinks,
-                this.waveforms.map(x => x.linkedWaveform.waveformLink)
-            )
-        ) {
-            const multiWaveformHistoryItemMessage = Object.assign(
-                JSON.parse(this.props.multiWaveform.message),
-                {
-                    waveformLinks
+const MultiWaveformConfigurationDialog = observer(
+    class MultiWaveformConfigurationDialog extends React.Component<
+        {
+            multiWaveform: MultiWaveform;
+        },
+        {}
+    > {
+        waveforms: IJoinedWaveformLinkAndDefinitionProperties[] =
+            this.props.multiWaveform.linkedWaveforms.map(
+                (linkedWaveform: ILinkedWaveform, i: number) => {
+                    return {
+                        linkedWaveform,
+                        waveformLinkProperties: new WaveformLinkProperties(
+                            linkedWaveform
+                        ),
+                        waveformDefinitionProperties:
+                            new WaveformDefinitionProperties(
+                                linkedWaveform.waveform.waveformDefinition
+                            )
+                    };
                 }
             );
 
-            changedHistoryItems.push({
-                id: this.props.multiWaveform.id,
-                oid: this.props.multiWaveform.oid,
-                message: JSON.stringify(multiWaveformHistoryItemMessage)
+        selectedWaveform: IJoinedWaveformLinkAndDefinitionProperties =
+            this.waveforms[0];
+
+        constructor(props: { multiWaveform: MultiWaveform }) {
+            super(props);
+
+            makeObservable(this, {
+                waveforms: observable,
+                selectedWaveform: observable.shallow,
+                waveformListNodes: computed,
+                selectWaveform: action.bound
             });
         }
 
-        // update waveform history item's (if changed)
-        this.waveforms.forEach(joinedWaveformLinkAndDefinitionProperties => {
-            const waveformHistoryItemMessage = JSON.parse(
-                joinedWaveformLinkAndDefinitionProperties.linkedWaveform
-                    .waveform.message
+        get waveformListNodes(): IListNode[] {
+            return this.waveforms.map(
+                joinedWaveformLinkAndDefinitionProperties => ({
+                    id: joinedWaveformLinkAndDefinitionProperties.linkedWaveform
+                        .waveformLink.id,
+                    data: joinedWaveformLinkAndDefinitionProperties,
+                    selected:
+                        joinedWaveformLinkAndDefinitionProperties ===
+                        this.selectedWaveform
+                })
             );
+        }
 
+        renderWaveformListNode = (node: IListNode) => {
+            let waveformLinkProperties =
+                node.data as IJoinedWaveformLinkAndDefinitionProperties;
+
+            const errors =
+                waveformLinkProperties.waveformLinkProperties.errors ||
+                (waveformLinkProperties.waveformDefinitionProperties &&
+                    waveformLinkProperties.waveformDefinitionProperties.errors);
+
+            return (
+                <ListItem
+                    label={
+                        waveformLinkProperties.waveformLinkProperties.props
+                            .label || "<no label>"
+                    }
+                    rightIcon={errors ? "material:error_outline" : undefined}
+                    rightIconClassName="text-danger"
+                />
+            );
+        };
+
+        selectWaveform(node: IListNode) {
+            this.selectedWaveform = node.data;
+        }
+
+        handleSubmit = async () => {
+            let anyError = false;
+
+            for (let i = 0; i < this.waveforms.length; i++) {
+                const waveformLinkProperties = this.waveforms[i];
+
+                if (
+                    !(await waveformLinkProperties.waveformLinkProperties.checkValidity())
+                ) {
+                    anyError = true;
+                }
+
+                const waveformProperties =
+                    waveformLinkProperties.waveformDefinitionProperties;
+                if (waveformProperties) {
+                    if (!(await waveformProperties.checkValidity())) {
+                        anyError = true;
+                    }
+                }
+            }
+
+            if (anyError) {
+                return false;
+            }
+
+            const changedHistoryItems: {
+                id: string;
+                oid: string;
+                message: string;
+            }[] = [];
+
+            // update chart history item (if changed)
+            const waveformLinks = this.waveforms.map(
+                joinedWaveformLinkAndDefinitionProperties => ({
+                    id: joinedWaveformLinkAndDefinitionProperties.linkedWaveform
+                        .waveformLink.id,
+                    label: joinedWaveformLinkAndDefinitionProperties
+                        .waveformLinkProperties.props.label,
+                    color: joinedWaveformLinkAndDefinitionProperties
+                        .waveformLinkProperties.props.color,
+                    colorInverse:
+                        joinedWaveformLinkAndDefinitionProperties
+                            .waveformLinkProperties.props.colorInverse
+                })
+            );
             if (
                 !objectEqual(
-                    joinedWaveformLinkAndDefinitionProperties
-                        .waveformDefinitionProperties.propsValidated,
-                    waveformHistoryItemMessage.waveformDefinition
+                    waveformLinks,
+                    this.waveforms.map(x => x.linkedWaveform.waveformLink)
                 )
             ) {
-                const newWaveformHistoryItemMessage = Object.assign(
-                    waveformHistoryItemMessage,
+                const multiWaveformHistoryItemMessage = Object.assign(
+                    JSON.parse(this.props.multiWaveform.message),
                     {
-                        waveformDefinition:
-                            joinedWaveformLinkAndDefinitionProperties
-                                .waveformDefinitionProperties.propsValidated
+                        waveformLinks
                     }
                 );
 
                 changedHistoryItems.push({
-                    id: joinedWaveformLinkAndDefinitionProperties.linkedWaveform
-                        .waveform.id,
-                    oid: joinedWaveformLinkAndDefinitionProperties
-                        .linkedWaveform.waveform.oid,
-                    message: JSON.stringify(newWaveformHistoryItemMessage)
+                    id: this.props.multiWaveform.id,
+                    oid: this.props.multiWaveform.oid,
+                    message: JSON.stringify(multiWaveformHistoryItemMessage)
                 });
             }
-        });
 
-        if (changedHistoryItems.length > 0) {
-            beginTransaction("Edit chart configuration");
+            // update waveform history item's (if changed)
+            this.waveforms.forEach(
+                joinedWaveformLinkAndDefinitionProperties => {
+                    const waveformHistoryItemMessage = JSON.parse(
+                        joinedWaveformLinkAndDefinitionProperties.linkedWaveform
+                            .waveform.message
+                    );
 
-            changedHistoryItems.forEach(changedHistoryItem => {
-                logUpdate(activityLogStore, changedHistoryItem, {
-                    undoable: true
+                    if (
+                        !objectEqual(
+                            joinedWaveformLinkAndDefinitionProperties
+                                .waveformDefinitionProperties.propsValidated,
+                            waveformHistoryItemMessage.waveformDefinition
+                        )
+                    ) {
+                        const newWaveformHistoryItemMessage = Object.assign(
+                            waveformHistoryItemMessage,
+                            {
+                                waveformDefinition:
+                                    joinedWaveformLinkAndDefinitionProperties
+                                        .waveformDefinitionProperties
+                                        .propsValidated
+                            }
+                        );
+
+                        changedHistoryItems.push({
+                            id: joinedWaveformLinkAndDefinitionProperties
+                                .linkedWaveform.waveform.id,
+                            oid: joinedWaveformLinkAndDefinitionProperties
+                                .linkedWaveform.waveform.oid,
+                            message: JSON.stringify(
+                                newWaveformHistoryItemMessage
+                            )
+                        });
+                    }
+                }
+            );
+
+            if (changedHistoryItems.length > 0) {
+                beginTransaction("Edit chart configuration");
+
+                changedHistoryItems.forEach(changedHistoryItem => {
+                    logUpdate(activityLogStore, changedHistoryItem, {
+                        undoable: true
+                    });
                 });
-            });
 
-            commitTransaction();
+                commitTransaction();
+            }
+
+            return true;
+        };
+
+        render() {
+            return (
+                <Dialog size="medium" onOk={this.handleSubmit}>
+                    <div className="EezStudio_MultiWaveformConfigurationDialogBody">
+                        <PropertyList>
+                            <SelectFromListProperty
+                                nodes={this.waveformListNodes}
+                                renderNode={this.renderWaveformListNode}
+                                onChange={this.selectWaveform}
+                            />
+                        </PropertyList>
+                        <PropertyList>
+                            {this.selectedWaveform.waveformLinkProperties.render()}
+                            {this.selectedWaveform
+                                .waveformDefinitionProperties &&
+                                this.selectedWaveform.waveformDefinitionProperties.render()}
+                        </PropertyList>
+                    </div>
+                </Dialog>
+            );
         }
-
-        return true;
-    };
-
-    render() {
-        return (
-            <Dialog size="medium" onOk={this.handleSubmit}>
-                <div className="EezStudio_MultiWaveformConfigurationDialogBody">
-                    <PropertyList>
-                        <SelectFromListProperty
-                            nodes={this.waveformListNodes}
-                            renderNode={this.renderWaveformListNode}
-                            onChange={this.selectWaveform}
-                        />
-                    </PropertyList>
-                    <PropertyList>
-                        {this.selectedWaveform.waveformLinkProperties.render()}
-                        {this.selectedWaveform.waveformDefinitionProperties &&
-                            this.selectedWaveform.waveformDefinitionProperties.render()}
-                    </PropertyList>
-                </div>
-            </Dialog>
-        );
     }
-}
+);

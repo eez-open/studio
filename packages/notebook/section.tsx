@@ -1,3 +1,4 @@
+import { dialog, getCurrentWindow } from "@electron/remote";
 import React from "react";
 import {
     observable,
@@ -6,13 +7,14 @@ import {
     runInAction,
     values,
     toJS,
-    autorun
+    autorun,
+    makeObservable
 } from "mobx";
 import { observer } from "mobx-react";
 
 import { stringCompare } from "eez-studio-shared/string";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
-import { sendSimpleMessage } from "eez-studio-shared/util";
+import { sendSimpleMessage } from "eez-studio-shared/util-renderer";
 
 import { Splitter } from "eez-studio-ui/splitter";
 import {
@@ -66,10 +68,16 @@ import type { IUnit } from "eez-studio-shared/units";
 ////////////////////////////////////////////////////////////////////////////////
 
 class NotebooksHomeSectionStore {
-    @observable private _selectedNotebook: INotebook | undefined;
-    @observable showDeletedHistoryItems = false;
+    private _selectedNotebook: INotebook | undefined;
+    showDeletedHistoryItems = false;
 
     constructor() {
+        makeObservable<NotebooksHomeSectionStore, "_selectedNotebook">(this, {
+            _selectedNotebook: observable,
+            showDeletedHistoryItems: observable,
+            appStore: computed
+        });
+
         autorun(() => {
             if (
                 this.selectedNotebook &&
@@ -102,7 +110,6 @@ class NotebooksHomeSectionStore {
         });
     }
 
-    @computed
     get appStore() {
         if (this._selectedNotebook) {
             return new AppStore(this._selectedNotebook.id);
@@ -115,71 +122,77 @@ const notebooksHomeSectionStore = new NotebooksHomeSectionStore();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class MasterView extends React.Component {
-    @computed
-    get sortedNotebooks() {
-        return Array.from(notebooks.values())
-            .sort((a, b) => stringCompare(a.name, b.name))
-            .map(notebook => ({
-                id: notebook.id,
-                data: notebook,
-                selected:
-                    notebooksHomeSectionStore.selectedNotebook !== undefined &&
-                    notebook.id ===
-                        notebooksHomeSectionStore.selectedNotebook.id
-            }));
-    }
+const MasterView = observer(
+    class MasterView extends React.Component {
+        constructor(props: any) {
+            super(props);
 
-    addNotebook = () => {
-        showGenericDialog({
-            dialogDefinition: {
-                fields: [
-                    {
-                        name: "name",
-                        displayName: "Notebook name",
-                        type: "string",
-                        validators: [
-                            validators.required,
-                            validators.unique(
-                                {},
-                                values(notebooks),
-                                "Notebook with the same name already exists"
-                            )
-                        ]
-                    }
-                ]
-            },
-            values: {
-                name: ""
-            }
-        })
-            .then(result => {
-                beginTransaction("Add notebook");
-                const notebookId = addNotebook(result.values);
-                commitTransaction();
+            makeObservable(this, {
+                sortedNotebooks: computed
+            });
+        }
 
-                setTimeout(() => {
-                    notebooksHomeSectionStore.selectedNotebook =
-                        notebooks.get(notebookId);
+        get sortedNotebooks() {
+            return Array.from(notebooks.values())
+                .sort((a, b) => stringCompare(a.name, b.name))
+                .map(notebook => ({
+                    id: notebook.id,
+                    data: notebook,
+                    selected:
+                        notebooksHomeSectionStore.selectedNotebook !==
+                            undefined &&
+                        notebook.id ===
+                            notebooksHomeSectionStore.selectedNotebook.id
+                }));
+        }
+
+        addNotebook = () => {
+            showGenericDialog({
+                dialogDefinition: {
+                    fields: [
+                        {
+                            name: "name",
+                            displayName: "Notebook name",
+                            type: "string",
+                            validators: [
+                                validators.required,
+                                validators.unique(
+                                    {},
+                                    values(notebooks),
+                                    "Notebook with the same name already exists"
+                                )
+                            ]
+                        }
+                    ]
+                },
+                values: {
+                    name: ""
+                }
+            })
+                .then(result => {
+                    beginTransaction("Add notebook");
+                    const notebookId = addNotebook(result.values);
+                    commitTransaction();
 
                     setTimeout(() => {
-                        let element = document.querySelector(
-                            `.EezStudio_Notebook_${notebookId}`
-                        );
-                        if (element) {
-                            element.scrollIntoView();
-                        }
-                    }, 10);
-                }, 10);
-            })
-            .catch(() => {});
-    };
+                        notebooksHomeSectionStore.selectedNotebook =
+                            notebooks.get(notebookId);
 
-    importNotebook = async () => {
-        const result = await EEZStudio.remote.dialog.showOpenDialog(
-            EEZStudio.remote.getCurrentWindow(),
-            {
+                        setTimeout(() => {
+                            let element = document.querySelector(
+                                `.EezStudio_Notebook_${notebookId}`
+                            );
+                            if (element) {
+                                element.scrollIntoView();
+                            }
+                        }, 10);
+                    }, 10);
+                })
+                .catch(() => {});
+        };
+
+        importNotebook = async () => {
+            const result = await dialog.showOpenDialog(getCurrentWindow(), {
                 properties: ["openFile"],
                 filters: [
                     {
@@ -188,125 +201,140 @@ class MasterView extends React.Component {
                     },
                     { name: "All Files", extensions: ["*"] }
                 ]
+            });
+            const filePaths = result.filePaths;
+            if (filePaths && filePaths[0]) {
+                importNotebook(filePaths[0], { showNotebook: true });
             }
-        );
-        const filePaths = result.filePaths;
-        if (filePaths && filePaths[0]) {
-            importNotebook(filePaths[0], { showNotebook: true });
-        }
-    };
+        };
 
-    removeNotebook = () => {
-        confirm("Are you sure?", undefined, () => {
-            beginTransaction("Remove notebook");
-            deleteNotebook(toJS(notebooksHomeSectionStore.selectedNotebook!));
-            commitTransaction();
-        });
-    };
-
-    showDeletedNotebooks = () => {
-        showDeletedNotebooksDialog();
-    };
-
-    changeNotebookName = () => {
-        showGenericDialog({
-            dialogDefinition: {
-                fields: [
-                    {
-                        name: "name",
-                        displayName: "Name",
-                        type: "string",
-                        validators: [
-                            validators.required,
-                            validators.unique(
-                                notebooksHomeSectionStore.selectedNotebook,
-                                values(notebooks),
-                                "Notebook with the same name already exists"
-                            )
-                        ]
-                    }
-                ]
-            },
-            values: notebooksHomeSectionStore.selectedNotebook
-        })
-            .then(result => {
-                beginTransaction("Rename notebook");
-                updateNotebook(
-                    Object.assign(
-                        {},
-                        notebooksHomeSectionStore.selectedNotebook,
-                        result.values
-                    )
+        removeNotebook = () => {
+            confirm("Are you sure?", undefined, () => {
+                beginTransaction("Remove notebook");
+                deleteNotebook(
+                    toJS(notebooksHomeSectionStore.selectedNotebook!)
                 );
                 commitTransaction();
-            })
-            .catch(() => {});
-    };
+            });
+        };
 
-    render() {
-        return (
-            <VerticalHeaderWithBody>
-                <ToolbarHeader>
-                    <DropdownIconAction
-                        key="notebook/export"
-                        icon="material:add"
-                        iconSize={16}
-                        title="Add notebook"
-                    >
-                        <DropdownItem
-                            text="Add an empty notebook"
-                            onClick={this.addNotebook}
-                        />
-                        <DropdownItem
-                            text="Import notebook from file"
-                            onClick={this.importNotebook}
-                        />
-                    </DropdownIconAction>
-                    <IconAction
-                        icon="material:delete"
-                        iconSize={16}
-                        title="Remove notebook"
-                        enabled={!!notebooksHomeSectionStore.selectedNotebook}
-                        onClick={this.removeNotebook}
-                    />
-                    <IconAction
-                        icon="material:edit"
-                        iconSize={16}
-                        title="Change notebook name"
-                        enabled={!!notebooksHomeSectionStore.selectedNotebook}
-                        onClick={this.changeNotebookName}
-                    />
-                    <IconAction
-                        icon="material:delete_sweep"
-                        iconSize={16}
-                        title="Show deleted notebooks"
-                        enabled={deletedNotebooks.size > 0}
-                        onClick={this.showDeletedNotebooks}
-                    />
-                </ToolbarHeader>
-                <Body tabIndex={0}>
-                    <ListComponent
-                        nodes={this.sortedNotebooks}
-                        renderNode={node => (
-                            <div className={"EezStudio_Notebook_" + node.id}>
-                                {node.data.name}
-                            </div>
-                        )}
-                        selectNode={node =>
-                            (notebooksHomeSectionStore.selectedNotebook =
-                                node.data)
+        showDeletedNotebooks = () => {
+            showDeletedNotebooksDialog();
+        };
+
+        changeNotebookName = () => {
+            showGenericDialog({
+                dialogDefinition: {
+                    fields: [
+                        {
+                            name: "name",
+                            displayName: "Name",
+                            type: "string",
+                            validators: [
+                                validators.required,
+                                validators.unique(
+                                    notebooksHomeSectionStore.selectedNotebook,
+                                    values(notebooks),
+                                    "Notebook with the same name already exists"
+                                )
+                            ]
                         }
-                    />
-                </Body>
-            </VerticalHeaderWithBody>
-        );
+                    ]
+                },
+                values: notebooksHomeSectionStore.selectedNotebook
+            })
+                .then(result => {
+                    beginTransaction("Rename notebook");
+                    updateNotebook(
+                        Object.assign(
+                            {},
+                            notebooksHomeSectionStore.selectedNotebook,
+                            result.values
+                        )
+                    );
+                    commitTransaction();
+                })
+                .catch(() => {});
+        };
+
+        render() {
+            return (
+                <VerticalHeaderWithBody>
+                    <ToolbarHeader>
+                        <DropdownIconAction
+                            key="notebook/export"
+                            icon="material:add"
+                            iconSize={16}
+                            title="Add notebook"
+                        >
+                            <DropdownItem
+                                text="Add an empty notebook"
+                                onClick={this.addNotebook}
+                            />
+                            <DropdownItem
+                                text="Import notebook from file"
+                                onClick={this.importNotebook}
+                            />
+                        </DropdownIconAction>
+                        <IconAction
+                            icon="material:delete"
+                            iconSize={16}
+                            title="Remove notebook"
+                            enabled={
+                                !!notebooksHomeSectionStore.selectedNotebook
+                            }
+                            onClick={this.removeNotebook}
+                        />
+                        <IconAction
+                            icon="material:edit"
+                            iconSize={16}
+                            title="Change notebook name"
+                            enabled={
+                                !!notebooksHomeSectionStore.selectedNotebook
+                            }
+                            onClick={this.changeNotebookName}
+                        />
+                        <IconAction
+                            icon="material:delete_sweep"
+                            iconSize={16}
+                            title="Show deleted notebooks"
+                            enabled={deletedNotebooks.size > 0}
+                            onClick={this.showDeletedNotebooks}
+                        />
+                    </ToolbarHeader>
+                    <Body tabIndex={0}>
+                        <ListComponent
+                            nodes={this.sortedNotebooks}
+                            renderNode={node => (
+                                <div
+                                    className={"EezStudio_Notebook_" + node.id}
+                                >
+                                    {node.data.name}
+                                </div>
+                            )}
+                            selectNode={node =>
+                                (notebooksHomeSectionStore.selectedNotebook =
+                                    node.data)
+                            }
+                        />
+                    </Body>
+                </VerticalHeaderWithBody>
+            );
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class AppStore implements IAppStore {
     constructor(public notebookId: string) {
+        makeObservable(this, {
+            selectHistoryItemsSpecification: observable,
+            selectedHistoryItems: observable,
+            selectHistoryItem: action,
+            selectHistoryItems: action
+        });
+
         this.history = new History(this, {
             store: itemsStore,
             isSessionsSupported: false,
@@ -318,10 +346,10 @@ class AppStore implements IAppStore {
         });
     }
 
-    @observable selectHistoryItemsSpecification:
+    selectHistoryItemsSpecification:
         | SelectHistoryItemsSpecification
         | undefined;
-    @observable selectedHistoryItems = new Map<string, boolean>();
+    selectedHistoryItems = new Map<string, boolean>();
 
     instrument: IInstrumentObject = {
         id: "0",
@@ -351,7 +379,6 @@ class AppStore implements IAppStore {
         return this.selectedHistoryItems.has(id);
     }
 
-    @action
     selectHistoryItem(id: string, selected: boolean): void {
         if (selected) {
             this.selectedHistoryItems.set(id, true);
@@ -360,7 +387,6 @@ class AppStore implements IAppStore {
         }
     }
 
-    @action
     selectHistoryItems(
         specification: SelectHistoryItemsSpecification | undefined
     ) {
@@ -399,66 +425,68 @@ class AppStore implements IAppStore {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class DetailsView extends React.Component {
-    render() {
-        if (notebooksHomeSectionStore.showDeletedHistoryItems) {
-            return (
-                <VerticalHeaderWithBody>
-                    <ToolbarHeader>
-                        <DeletedHistoryItemsTools
-                            appStore={notebooksHomeSectionStore.appStore!}
-                        />
-                    </ToolbarHeader>
-                    <Body>
-                        <DeletedHistoryItemsView
-                            appStore={notebooksHomeSectionStore.appStore!}
-                            persistId={"notebook/deleted-items"}
-                        />
-                    </Body>
-                </VerticalHeaderWithBody>
-            );
-        } else {
-            return (
-                <VerticalHeaderWithBody>
-                    <ToolbarHeader>
-                        <HistoryTools
-                            appStore={notebooksHomeSectionStore.appStore!}
-                        />
-                    </ToolbarHeader>
-                    <Body>
-                        <HistoryView
-                            appStore={notebooksHomeSectionStore.appStore!}
-                            persistId={"notebook/items"}
-                        />
-                    </Body>
-                </VerticalHeaderWithBody>
-            );
+export const DetailsView = observer(
+    class DetailsView extends React.Component {
+        render() {
+            if (notebooksHomeSectionStore.showDeletedHistoryItems) {
+                return (
+                    <VerticalHeaderWithBody>
+                        <ToolbarHeader>
+                            <DeletedHistoryItemsTools
+                                appStore={notebooksHomeSectionStore.appStore!}
+                            />
+                        </ToolbarHeader>
+                        <Body>
+                            <DeletedHistoryItemsView
+                                appStore={notebooksHomeSectionStore.appStore!}
+                                persistId={"notebook/deleted-items"}
+                            />
+                        </Body>
+                    </VerticalHeaderWithBody>
+                );
+            } else {
+                return (
+                    <VerticalHeaderWithBody>
+                        <ToolbarHeader>
+                            <HistoryTools
+                                appStore={notebooksHomeSectionStore.appStore!}
+                            />
+                        </ToolbarHeader>
+                        <Body>
+                            <HistoryView
+                                appStore={notebooksHomeSectionStore.appStore!}
+                                persistId={"notebook/items"}
+                            />
+                        </Body>
+                    </VerticalHeaderWithBody>
+                );
+            }
         }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class NotebooksHomeSection extends React.Component {
-    render() {
-        return (
-            <Splitter
-                type="horizontal"
-                sizes="240px|100%"
-                persistId="notebook/notebooks/splitter"
-            >
-                <MasterView />
-                {notebooksHomeSectionStore.selectedNotebook ? (
-                    <DetailsView />
-                ) : (
-                    <div />
-                )}
-            </Splitter>
-        );
+const NotebooksHomeSection = observer(
+    class NotebooksHomeSection extends React.Component {
+        render() {
+            return (
+                <Splitter
+                    type="horizontal"
+                    sizes="240px|100%"
+                    persistId="notebook/notebooks/splitter"
+                >
+                    <MasterView />
+                    {notebooksHomeSectionStore.selectedNotebook ? (
+                        <DetailsView />
+                    ) : (
+                        <div />
+                    )}
+                </Splitter>
+            );
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 

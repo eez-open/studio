@@ -133,90 +133,94 @@ registerClass("TerminalWidget", TerminalWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class TerminalElement extends React.Component<{
-    widget: TerminalWidget;
-    flowContext: IFlowContext;
-}> {
-    ref = React.createRef<HTMLDivElement>();
+const TerminalElement = observer(
+    class TerminalElement extends React.Component<{
+        widget: TerminalWidget;
+        flowContext: IFlowContext;
+    }> {
+        ref = React.createRef<HTMLDivElement>();
 
-    terminal: any;
-    fitAddon: any;
+        terminal: any;
+        fitAddon: any;
 
-    dispose: any;
+        dispose: any;
 
-    async componentDidMount() {
-        if (!this.ref.current) {
-            return;
-        }
+        async componentDidMount() {
+            if (!this.ref.current) {
+                return;
+            }
 
-        addCssStylesheet("xterm-css", "../../node_modules/xterm/css/xterm.css");
+            addCssStylesheet(
+                "xterm-css",
+                "../../node_modules/xterm/css/xterm.css"
+            );
 
-        const { Terminal } = await import("xterm");
-        const { FitAddon } = await import("xterm-addon-fit");
-        this.terminal = new Terminal({
-            rendererType: "dom"
-        });
-        this.fitAddon = new FitAddon();
-        this.terminal.loadAddon(this.fitAddon);
-        this.terminal.open(this.ref.current);
-        this.terminal.write("$ ");
-        this.fitAddon.fit();
+            const { Terminal } = await import("xterm");
+            const { FitAddon } = await import("xterm-addon-fit");
+            this.terminal = new Terminal({
+                rendererType: "dom"
+            });
+            this.fitAddon = new FitAddon();
+            this.terminal.loadAddon(this.fitAddon);
+            this.terminal.open(this.ref.current);
+            this.terminal.write("$ ");
+            this.fitAddon.fit();
 
-        this.terminal.onData((data: string) => {
-            this.terminal.write(data);
+            this.terminal.onData((data: string) => {
+                this.terminal.write(data);
+
+                if (this.props.flowContext.flowState) {
+                    this.props.flowContext.flowState.runtime.propagateValue(
+                        this.props.flowContext.flowState,
+                        this.props.widget,
+                        "onData",
+                        data
+                    );
+                }
+            });
 
             if (this.props.flowContext.flowState) {
-                this.props.flowContext.flowState.runtime.propagateValue(
-                    this.props.flowContext.flowState,
-                    this.props.widget,
-                    "onData",
-                    data
-                );
-            }
-        });
-
-        if (this.props.flowContext.flowState) {
-            let runningState =
-                this.props.flowContext.flowState.getComponentRunningState<RunningState>(
-                    this.props.widget
-                );
-            if (!runningState) {
-                runningState = new RunningState();
-                this.props.flowContext.flowState.setComponentRunningState(
-                    this.props.widget,
-                    runningState
-                );
-            }
-            if (runningState) {
-                runningState.onData = data => {
-                    this.terminal.write(data);
-                };
+                let runningState =
+                    this.props.flowContext.flowState.getComponentRunningState<RunningState>(
+                        this.props.widget
+                    );
+                if (!runningState) {
+                    runningState = new RunningState();
+                    this.props.flowContext.flowState.setComponentRunningState(
+                        this.props.widget,
+                        runningState
+                    );
+                }
+                if (runningState) {
+                    runningState.onData = data => {
+                        this.terminal.write(data);
+                    };
+                }
             }
         }
-    }
 
-    componentDidUpdate() {
-        if (this.fitAddon) {
-            this.fitAddon.fit();
+        componentDidUpdate() {
+            if (this.fitAddon) {
+                this.fitAddon.fit();
+            }
+        }
+
+        componentWillUnmount() {
+            if (this.dispose) {
+                this.dispose();
+            }
+        }
+
+        render() {
+            return (
+                <div
+                    ref={this.ref}
+                    style={{
+                        width: this.props.widget.width,
+                        height: this.props.widget.height
+                    }}
+                ></div>
+            );
         }
     }
-
-    componentWillUnmount() {
-        if (this.dispose) {
-            this.dispose();
-        }
-    }
-
-    render() {
-        return (
-            <div
-                ref={this.ref}
-                style={{
-                    width: this.props.widget.width,
-                    height: this.props.widget.height
-                }}
-            ></div>
-        );
-    }
-}
+);

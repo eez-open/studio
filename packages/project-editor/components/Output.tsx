@@ -1,4 +1,4 @@
-import { observable, autorun, runInAction, IReactionDisposer } from "mobx";
+import { observable, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
 import classNames from "classnames";
@@ -25,148 +25,137 @@ const MAX_OUTPUT_PATH_PART_TEXT_SIZE = 25;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class Messages
-    extends React.Component<{
-        section: OutputSection;
-    }>
-    implements IPanel
-{
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
+export const Messages = observer(
+    class Messages
+        extends React.Component<{
+            section: OutputSection;
+        }>
+        implements IPanel
+    {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
 
-    private divRef = React.createRef<any>();
+        private divRef = React.createRef<any>();
 
-    dispose: IReactionDisposer;
-    @observable rows: React.ReactNode[];
+        rows: React.ReactNode[];
 
-    onSelectMessage = (message: OutputMessage) => {
-        this.props.section.selectMessage(message);
-    };
+        onSelectMessage = (message: OutputMessage) => {
+            this.props.section.selectMessage(message);
+        };
 
-    scrollToBottom() {
-        if (this.divRef.current && this.props.section.scrollToBottom) {
-            const div: HTMLDivElement = this.divRef.current;
-            div.scrollTop = div.scrollHeight;
+        constructor(props: { section: OutputSection }) {
+            super(props);
+
+            makeObservable(this, {
+                rows: observable
+            });
         }
-    }
 
-    componentDidMount() {
-        // do not update rows immediatelly on messages change,
-        // this is massive performance improvement beacuse
-        // component is not refreshed after every message push
-        this.dispose = autorun(
-            () => {
-                let rows = this.props.section.messages.map(message => (
-                    <Message
-                        key={message.id}
-                        message={message}
-                        onSelect={this.onSelectMessage}
-                    />
-                ));
-
-                runInAction(() => {
-                    this.rows = rows;
-                });
-            },
-            {
-                delay: 100 // delay 100 ms before update
+        scrollToBottom() {
+            if (this.divRef.current && this.props.section.scrollToBottom) {
+                const div: HTMLDivElement = this.divRef.current;
+                div.scrollTop = div.scrollHeight;
             }
-        );
-    }
-
-    componentDidUpdate() {
-        this.scrollToBottom();
-    }
-
-    componentWillUnmount() {
-        this.dispose();
-    }
-
-    // interface IPanel implementation
-    get selectedObject() {
-        const object = this.props.section.selectedMessage?.object;
-        if (object) {
-            return ProjectEditor.getNavigationObject(object);
         }
-        return object;
-    }
-    cutSelection() {}
-    copySelection() {}
-    pasteSelection() {}
-    deleteSelection() {}
-    onFocus = () => {
-        this.context.navigationStore.setSelectedPanel(this);
-    };
 
-    render() {
-        return (
-            <div
-                className="EezStudio_Messages"
-                ref={this.divRef}
-                onFocus={this.onFocus}
-                tabIndex={0}
-            >
-                <table>
-                    <tbody>{this.rows}</tbody>
-                </table>
-            </div>
-        );
+        componentDidUpdate() {
+            this.scrollToBottom();
+        }
+
+        // interface IPanel implementation
+        get selectedObject() {
+            const object = this.props.section.selectedMessage?.object;
+            if (object) {
+                return ProjectEditor.getNavigationObject(object);
+            }
+            return object;
+        }
+        cutSelection() {}
+        copySelection() {}
+        pasteSelection() {}
+        deleteSelection() {}
+        onFocus = () => {
+            this.context.navigationStore.setSelectedPanel(this);
+        };
+
+        render() {
+            return (
+                <div
+                    className="EezStudio_Messages"
+                    ref={this.divRef}
+                    onFocus={this.onFocus}
+                    tabIndex={0}
+                >
+                    <table>
+                        <tbody>
+                            {this.props.section.messages.map(message => (
+                                <Message
+                                    key={message.id}
+                                    message={message}
+                                    onSelect={this.onSelectMessage}
+                                />
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            );
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class Message extends React.Component<
-    {
-        message: OutputMessage;
-        onSelect: (message: OutputMessage) => void;
-    },
-    {}
-> {
-    render() {
-        let iconName = "material:";
-        let iconClassName;
-        if (this.props.message.type == MessageType.ERROR) {
-            iconName += "error";
-            iconClassName = "error";
-        } else if (this.props.message.type == MessageType.WARNING) {
-            iconName += "warning";
-            iconClassName = "warning";
-        } else {
-            iconName += "info";
-            iconClassName = "info";
+const Message = observer(
+    class Message extends React.Component<
+        {
+            message: OutputMessage;
+            onSelect: (message: OutputMessage) => void;
+        },
+        {}
+    > {
+        render() {
+            let iconName = "material:";
+            let iconClassName;
+            if (this.props.message.type == MessageType.ERROR) {
+                iconName += "error";
+                iconClassName = "error";
+            } else if (this.props.message.type == MessageType.WARNING) {
+                iconName += "warning";
+                iconClassName = "warning";
+            } else {
+                iconName += "info";
+                iconClassName = "info";
+            }
+            let icon = <Icon icon={iconName} className={iconClassName} />;
+
+            let objectPath: JSX.Element | undefined;
+            if (this.props.message.object) {
+                objectPath = <ObjectPath object={this.props.message.object} />;
+            }
+
+            let text = this.props.message.text.toString();
+            if (text.length > MAX_OUTPUT_MESSAGE_TEXT_SIZE) {
+                text = text.substring(0, MAX_OUTPUT_MESSAGE_TEXT_SIZE) + "...";
+            }
+
+            let className = classNames({
+                selected: this.props.message.selected
+            });
+
+            return (
+                <tr
+                    className={className}
+                    onClick={() => this.props.onSelect(this.props.message)}
+                >
+                    <td>
+                        {icon} {text}
+                    </td>
+                    <td>{objectPath}</td>
+                </tr>
+            );
         }
-        let icon = <Icon icon={iconName} className={iconClassName} />;
-
-        let objectPath: JSX.Element | undefined;
-        if (this.props.message.object) {
-            objectPath = <ObjectPath object={this.props.message.object} />;
-        }
-
-        let text = this.props.message.text.toString();
-        if (text.length > MAX_OUTPUT_MESSAGE_TEXT_SIZE) {
-            text = text.substring(0, MAX_OUTPUT_MESSAGE_TEXT_SIZE) + "...";
-        }
-
-        let className = classNames({
-            selected: this.props.message.selected
-        });
-
-        return (
-            <tr
-                className={className}
-                onClick={() => this.props.onSelect(this.props.message)}
-            >
-                <td>
-                    {icon} {text}
-                </td>
-                <td>{objectPath}</td>
-            </tr>
-        );
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, reaction } from "mobx";
+import { observable, reaction, makeObservable } from "mobx";
 
 import {
     registerClass,
@@ -350,7 +350,13 @@ const LineChartElement = observer(
 );
 
 class RunningState {
-    @observable values: InputData[] = [];
+    values: InputData[] = [];
+
+    constructor() {
+        makeObservable(this, {
+            values: observable
+        });
+    }
 }
 
 export class LineChartWidget extends Widget {
@@ -408,10 +414,21 @@ export class LineChartWidget extends Widget {
             projectType === ProjectType.DASHBOARD
     });
 
-    @observable title: string;
-    @observable maxPoints: number;
-    @observable color: string;
-    @observable margin: RectObject;
+    title: string;
+    maxPoints: number;
+    color: string;
+    margin: RectObject;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            title: observable,
+            maxPoints: observable,
+            color: observable,
+            margin: observable
+        });
+    }
 
     render(flowContext: IFlowContext): React.ReactNode {
         return (
@@ -664,11 +681,23 @@ export class GaugeWidget extends Widget {
             projectType === ProjectType.DASHBOARD
     });
 
-    @observable title: string;
-    @observable minRange: number;
-    @observable maxRange: number;
-    @observable color: string;
-    @observable margin: RectObject;
+    title: string;
+    minRange: number;
+    maxRange: number;
+    color: string;
+    margin: RectObject;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            title: observable,
+            minRange: observable,
+            maxRange: observable,
+            color: observable,
+            margin: observable
+        });
+    }
 
     render(flowContext: IFlowContext): React.ReactNode {
         return (

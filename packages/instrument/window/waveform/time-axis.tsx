@@ -1,4 +1,4 @@
-import { observable } from "mobx";
+import { observable, makeObservable } from "mobx";
 
 import { IUnit } from "eez-studio-shared/units";
 import type {
@@ -22,7 +22,12 @@ export class WaveformTimeAxisModel implements IAxisModel {
     constructor(
         private waveform: IWaveform,
         public semiLogarithmic?: { a: number; b: number }
-    ) {}
+    ) {
+        makeObservable(this, {
+            dynamic: observable,
+            fixed: observable
+        });
+    }
 
     chartsController: IChartsController;
 
@@ -57,7 +62,7 @@ export class WaveformTimeAxisModel implements IAxisModel {
         return 1e15;
     }
 
-    @observable dynamic: {
+    dynamic: {
         zoomMode: ZoomMode;
         from: number;
         to: number;
@@ -67,7 +72,7 @@ export class WaveformTimeAxisModel implements IAxisModel {
         to: 0
     };
 
-    @observable fixed: {
+    fixed: {
         zoomMode: ZoomMode;
         subdivisionOffset: number;
         subdivisonScale: number;

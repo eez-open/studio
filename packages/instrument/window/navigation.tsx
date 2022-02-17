@@ -15,72 +15,77 @@ export interface INavigationItem {
     renderToolbarButtons: () => JSX.Element;
 }
 
-@observer
-export class NavigationItem extends React.Component<
-    {
-        item: INavigationItem;
-        selected: boolean;
-        selectItem: (item: INavigationItem) => void;
-    },
-    {}
-> {
-    constructor(props: any) {
-        super(props);
+export const NavigationItem = observer(
+    class NavigationItem extends React.Component<
+        {
+            item: INavigationItem;
+            selected: boolean;
+            selectItem: (item: INavigationItem) => void;
+        },
+        {}
+    > {
+        constructor(props: any) {
+            super(props);
 
-        this.handleClick = this.handleClick.bind(this);
-    }
+            this.handleClick = this.handleClick.bind(this);
+        }
 
-    handleClick(event: React.MouseEvent<HTMLDivElement>) {
-        event.preventDefault();
-        this.props.selectItem(this.props.item);
-    }
+        handleClick(event: React.MouseEvent<HTMLDivElement>) {
+            event.preventDefault();
+            this.props.selectItem(this.props.item);
+        }
 
-    render() {
-        let className = classNames("EezStudio_NavigationMenuItemContainer", {
-            selected: this.props.selected
-        });
+        render() {
+            let className = classNames(
+                "EezStudio_NavigationMenuItemContainer",
+                {
+                    selected: this.props.selected
+                }
+            );
 
-        return (
-            <div
-                className={className}
-                title={this.props.item.title}
-                onClick={this.handleClick}
-            >
-                <Icon
-                    icon={this.props.item.icon!}
-                    attention={this.props.item.attention}
-                />
-                <span>{this.props.item.title}</span>
-            </div>
-        );
-    }
-}
-
-@observer
-export class Navigation extends React.Component<
-    {
-        items: INavigationItem[];
-        selectedItem: INavigationItem;
-        selectItem: (item: INavigationItem) => void;
-    },
-    {}
-> {
-    render() {
-        return (
-            <div className="EezStudio_MenuNavigationContainer">
-                <div className="EezStudio_MenuContainer">
-                    {this.props.items
-                        .filter(item => item.position != "hidden")
-                        .map(item => (
-                            <NavigationItem
-                                key={item.id}
-                                item={item}
-                                selected={item === this.props.selectedItem}
-                                selectItem={this.props.selectItem}
-                            />
-                        ))}
+            return (
+                <div
+                    className={className}
+                    title={this.props.item.title}
+                    onClick={this.handleClick}
+                >
+                    <Icon
+                        icon={this.props.item.icon!}
+                        attention={this.props.item.attention}
+                    />
+                    <span>{this.props.item.title}</span>
                 </div>
-            </div>
-        );
+            );
+        }
     }
-}
+);
+
+export const Navigation = observer(
+    class Navigation extends React.Component<
+        {
+            items: INavigationItem[];
+            selectedItem: INavigationItem;
+            selectItem: (item: INavigationItem) => void;
+        },
+        {}
+    > {
+        render() {
+            return (
+                <div className="EezStudio_MenuNavigationContainer">
+                    <div className="EezStudio_MenuContainer">
+                        {this.props.items
+                            .filter(item => item.position != "hidden")
+                            .map(item => (
+                                <NavigationItem
+                                    key={item.id}
+                                    item={item}
+                                    selected={item === this.props.selectedItem}
+                                    selectItem={this.props.selectItem}
+                                />
+                            ))}
+                    </div>
+                </div>
+            );
+        }
+    }
+);

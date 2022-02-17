@@ -1,5 +1,13 @@
+import { dialog, getCurrentWindow } from "@electron/remote";
 import React from "react";
-import { observable, computed, action, runInAction, autorun } from "mobx";
+import {
+    observable,
+    computed,
+    action,
+    runInAction,
+    autorun,
+    makeObservable
+} from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -172,10 +180,25 @@ class ExtensionsVersionsCatalogBuilder {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ExtensionsManagerStore {
-    @observable selectedExtension: IExtension | undefined;
-    @observable _viewFilter: ViewFilter | undefined;
+    selectedExtension: IExtension | undefined;
+    _viewFilter: ViewFilter | undefined;
 
-    @computed
+    constructor() {
+        makeObservable(this, {
+            selectedExtension: observable,
+            _viewFilter: observable,
+            viewFilter: computed,
+            extensionsVersionsCatalogBuilder: computed,
+            all: computed,
+            installed: computed,
+            notInstalled: computed,
+            newVersions: computed,
+            extensionNodes: computed,
+            selectExtensionById: action,
+            selectedExtensionVersions: computed
+        });
+    }
+
     get viewFilter() {
         if (this._viewFilter !== undefined) {
             return this._viewFilter;
@@ -192,7 +215,6 @@ export class ExtensionsManagerStore {
         this._viewFilter = value;
     }
 
-    @computed
     get extensionsVersionsCatalogBuilder() {
         const builder = new ExtensionsVersionsCatalogBuilder();
 
@@ -218,31 +240,26 @@ export class ExtensionsManagerStore {
         return builder;
     }
 
-    @computed
     get all() {
         return this.extensionsVersionsCatalogBuilder.get(ViewFilter.ALL);
     }
 
-    @computed
     get installed() {
         return this.extensionsVersionsCatalogBuilder.get(ViewFilter.INSTALLED);
     }
 
-    @computed
     get notInstalled() {
         return this.extensionsVersionsCatalogBuilder.get(
             ViewFilter.NOT_INSTALLED
         );
     }
 
-    @computed
     get newVersions() {
         return this.extensionsVersionsCatalogBuilder.get(
             ViewFilter.NEW_VERSIONS
         );
     }
 
-    @computed
     get extensionNodes() {
         return this.extensionsVersionsCatalogBuilder
             .get(extensionsManagerStore.viewFilter)
@@ -262,7 +279,6 @@ export class ExtensionsManagerStore {
             }));
     }
 
-    @action
     selectExtensionById(id: string) {
         const extensionNode = this.extensionNodes.find(
             extensionNode => extensionNode.id === id
@@ -279,7 +295,6 @@ export class ExtensionsManagerStore {
             );
     }
 
-    @computed
     get selectedExtensionVersions() {
         if (!this.selectedExtension) {
             return undefined;
@@ -301,70 +316,78 @@ export const extensionsManagerStore = new ExtensionsManagerStore();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class ExtensionInMasterView extends React.Component<
-    {
-        extension: IExtension;
-    },
-    {}
-> {
-    @computed
-    get extensionInstalled() {
-        const extensionVersions =
-            extensionsManagerStore.getExtensionVersionsById(
-                this.props.extension.id
-            );
-        return extensionVersions && extensionVersions.installedVersion;
-    }
+export const ExtensionInMasterView = observer(
+    class ExtensionInMasterView extends React.Component<
+        {
+            extension: IExtension;
+        },
+        {}
+    > {
+        constructor(props: { extension: IExtension }) {
+            super(props);
 
-    render() {
-        const badgeClassName = classNames("badge", {
-            "badge-success": this.extensionInstalled,
-            "badge-secondary": !this.extensionInstalled
-        });
+            makeObservable(this, {
+                extensionInstalled: computed
+            });
+        }
 
-        return (
-            <ListItem
-                leftIcon={this.props.extension.image}
-                leftIconSize={64}
-                label={
-                    <div>
-                        <div
-                            style={{
-                                display: "flex",
-                                flexDirection: "row",
-                                justifyContent: "space-between"
-                            }}
-                        >
-                            <h5
-                                className="EezStudio_NoWrap"
-                                style={{ marginBottom: 0 }}
+        get extensionInstalled() {
+            const extensionVersions =
+                extensionsManagerStore.getExtensionVersionsById(
+                    this.props.extension.id
+                );
+            return extensionVersions && extensionVersions.installedVersion;
+        }
+
+        render() {
+            const badgeClassName = classNames("badge", {
+                "badge-success": this.extensionInstalled,
+                "badge-secondary": !this.extensionInstalled
+            });
+
+            return (
+                <ListItem
+                    leftIcon={this.props.extension.image}
+                    leftIconSize={64}
+                    label={
+                        <div>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    flexDirection: "row",
+                                    justifyContent: "space-between"
+                                }}
                             >
-                                {this.props.extension.displayName ||
-                                    this.props.extension.name}
-                                <span
-                                    className={badgeClassName}
-                                    style={{ marginLeft: 10 }}
+                                <h5
+                                    className="EezStudio_NoWrap"
+                                    style={{ marginBottom: 0 }}
                                 >
-                                    <div>
-                                        {this.extensionInstalled
-                                            ? "Installed"
-                                            : "Not installed"}
-                                    </div>
-                                </span>
-                            </h5>
-                            <small>{this.props.extension.version}</small>
+                                    {this.props.extension.displayName ||
+                                        this.props.extension.name}
+                                    <span
+                                        className={badgeClassName}
+                                        style={{ marginLeft: 10 }}
+                                    >
+                                        <div>
+                                            {this.extensionInstalled
+                                                ? "Installed"
+                                                : "Not installed"}
+                                        </div>
+                                    </span>
+                                </h5>
+                                <small>{this.props.extension.version}</small>
+                            </div>
+                            <div>{this.props.extension.description}</div>
+                            <div className="EezStudio_NoWrap">
+                                <small>{this.props.extension.author}</small>
+                            </div>
                         </div>
-                        <div>{this.props.extension.description}</div>
-                        <div className="EezStudio_NoWrap">
-                            <small>{this.props.extension.author}</small>
-                        </div>
-                    </div>
-                }
-            />
-        );
+                    }
+                />
+            );
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -380,232 +403,248 @@ Click 'Cancel' to stop the installation.`;
 
 const BUTTONS = ["OK", "Cancel"];
 
-@observer
-class MasterView extends React.Component {
-    @observable isUpdatingAll: boolean = false;
+const MasterView = observer(
+    class MasterView extends React.Component {
+        isUpdatingAll: boolean = false;
 
-    async installExtension() {
-        const result = await EEZStudio.remote.dialog.showOpenDialog({
-            properties: ["openFile"],
-            filters: [
-                { name: "Extensions", extensions: ["zip"] },
-                { name: "All Files", extensions: ["*"] }
-            ]
-        });
+        constructor(props: any) {
+            super(props);
 
-        const filePaths = result.filePaths;
-        if (filePaths && filePaths[0]) {
-            try {
-                let filePath = filePaths[0];
+            makeObservable(this, {
+                isUpdatingAll: observable
+            });
+        }
 
-                const extension = await installExtension(filePath, {
-                    notFound() {
-                        info(
-                            "This is not a valid extension package file.",
-                            undefined
+        async installExtension() {
+            const result = await dialog.showOpenDialog({
+                properties: ["openFile"],
+                filters: [
+                    { name: "Extensions", extensions: ["zip"] },
+                    { name: "All Files", extensions: ["*"] }
+                ]
+            });
+
+            const filePaths = result.filePaths;
+            if (filePaths && filePaths[0]) {
+                try {
+                    let filePath = filePaths[0];
+
+                    const extension = await installExtension(filePath, {
+                        notFound() {
+                            info(
+                                "This is not a valid extension package file.",
+                                undefined
+                            );
+                        },
+                        async confirmReplaceNewerVersion(
+                            newExtension: IExtension,
+                            existingExtension: IExtension
+                        ) {
+                            return (
+                                (await confirmWithButtons(
+                                    confirmMessage(newExtension),
+                                    `The newer version ${existingExtension.version} is already installed.${BUTTON_INSTRUCTIONS}`,
+                                    BUTTONS
+                                )) === 0
+                            );
+                        },
+                        async confirmReplaceOlderVersion(
+                            newExtension: IExtension,
+                            existingExtension: IExtension
+                        ) {
+                            return (
+                                (await confirmWithButtons(
+                                    confirmMessage(newExtension),
+                                    `The older version ${existingExtension.version} is already installed.${BUTTON_INSTRUCTIONS}`,
+                                    BUTTONS
+                                )) === 0
+                            );
+                        },
+                        async confirmReplaceTheSameVersion(
+                            newExtension: IExtension,
+                            existingExtension: IExtension
+                        ) {
+                            return (
+                                (await confirmWithButtons(
+                                    confirmMessage(newExtension),
+                                    `That version is already installed.${BUTTON_INSTRUCTIONS}`,
+                                    BUTTONS
+                                )) === 0
+                            );
+                        }
+                    });
+
+                    if (extension) {
+                        notification.success(
+                            `Extension "${
+                                extension.displayName || extension.name
+                            }" installed`
                         );
-                    },
-                    async confirmReplaceNewerVersion(
-                        newExtension: IExtension,
-                        existingExtension: IExtension
-                    ) {
-                        return (
-                            (await confirmWithButtons(
-                                confirmMessage(newExtension),
-                                `The newer version ${existingExtension.version} is already installed.${BUTTON_INSTRUCTIONS}`,
-                                BUTTONS
-                            )) === 0
-                        );
-                    },
-                    async confirmReplaceOlderVersion(
-                        newExtension: IExtension,
-                        existingExtension: IExtension
-                    ) {
-                        return (
-                            (await confirmWithButtons(
-                                confirmMessage(newExtension),
-                                `The older version ${existingExtension.version} is already installed.${BUTTON_INSTRUCTIONS}`,
-                                BUTTONS
-                            )) === 0
-                        );
-                    },
-                    async confirmReplaceTheSameVersion(
-                        newExtension: IExtension,
-                        existingExtension: IExtension
-                    ) {
-                        return (
-                            (await confirmWithButtons(
-                                confirmMessage(newExtension),
-                                `That version is already installed.${BUTTON_INSTRUCTIONS}`,
-                                BUTTONS
-                            )) === 0
+
+                        extensionsManagerStore.selectExtensionById(
+                            extension.id
                         );
                     }
-                });
-
-                if (extension) {
-                    notification.success(
-                        `Extension "${
-                            extension.displayName || extension.name
-                        }" installed`
-                    );
-
-                    extensionsManagerStore.selectExtensionById(extension.id);
+                } catch (err) {
+                    notification.error(err.toString());
                 }
-            } catch (err) {
-                notification.error(err.toString());
             }
         }
-    }
 
-    async updateCatalog() {
-        if (!(await extensionsCatalog.checkNewVersionOfCatalog())) {
-            notification.info(
-                "There is currently no new version of catalog available."
-            );
-        }
-    }
-
-    updateAll = async () => {
-        runInAction(() => (this.isUpdatingAll = true));
-
-        const extensionsToUpdate = extensionsManagerStore.extensionNodes.map(
-            extensionNode =>
-                extensionsManagerStore.getExtensionVersionsById(
-                    extensionNode.data.id
-                )!.latestVersion
-        );
-
-        const progressToastId = notification.info("Updating...", {
-            autoClose: false
-        });
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        for (let i = 0; i < extensionsToUpdate.length; ++i) {
-            await downloadAndInstallExtension(
-                extensionsToUpdate[i],
-                progressToastId
-            );
+        async updateCatalog() {
+            if (!(await extensionsCatalog.checkNewVersionOfCatalog())) {
+                notification.info(
+                    "There is currently no new version of catalog available."
+                );
+            }
         }
 
-        notification.update(progressToastId, {
-            render: "All extensions successfully updated!",
-            type: notification.SUCCESS,
-            autoClose: 5000
-        });
+        updateAll = async () => {
+            runInAction(() => (this.isUpdatingAll = true));
 
-        runInAction(() => (this.isUpdatingAll = false));
-    };
+            const extensionsToUpdate =
+                extensionsManagerStore.extensionNodes.map(
+                    extensionNode =>
+                        extensionsManagerStore.getExtensionVersionsById(
+                            extensionNode.data.id
+                        )!.latestVersion
+                );
 
-    render() {
-        return (
-            <VerticalHeaderWithBody>
-                <ToolbarHeader>
-                    <div style={{ flexGrow: 1 }}>
-                        <label style={{ paddingRight: 5 }}>View:</label>
-                        <label className="form-check-label">
-                            <select
-                                className="form-control"
-                                value={extensionsManagerStore.viewFilter}
-                                onChange={action(
-                                    (
-                                        event: React.ChangeEvent<HTMLSelectElement>
-                                    ) =>
-                                        (extensionsManagerStore.viewFilter =
-                                            parseInt(event.currentTarget.value))
+            const progressToastId = notification.info("Updating...", {
+                autoClose: false
+            });
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            for (let i = 0; i < extensionsToUpdate.length; ++i) {
+                await downloadAndInstallExtension(
+                    extensionsToUpdate[i],
+                    progressToastId
+                );
+            }
+
+            notification.update(progressToastId, {
+                render: "All extensions successfully updated!",
+                type: notification.SUCCESS,
+                autoClose: 5000
+            });
+
+            runInAction(() => (this.isUpdatingAll = false));
+        };
+
+        render() {
+            return (
+                <VerticalHeaderWithBody>
+                    <ToolbarHeader>
+                        <div style={{ flexGrow: 1 }}>
+                            <label style={{ paddingRight: 5 }}>View:</label>
+                            <label className="form-check-label">
+                                <select
+                                    className="form-control"
+                                    value={extensionsManagerStore.viewFilter}
+                                    onChange={action(
+                                        (
+                                            event: React.ChangeEvent<HTMLSelectElement>
+                                        ) =>
+                                            (extensionsManagerStore.viewFilter =
+                                                parseInt(
+                                                    event.currentTarget.value
+                                                ))
+                                    )}
+                                >
+                                    <option value={ViewFilter.ALL.toString()}>
+                                        All ({extensionsManagerStore.all.length}
+                                        )
+                                    </option>
+                                    {extensionsManagerStore.installed.length >
+                                        0 && (
+                                        <option
+                                            value={ViewFilter.INSTALLED.toString()}
+                                        >
+                                            Installed (
+                                            {
+                                                extensionsManagerStore.installed
+                                                    .length
+                                            }
+                                            )
+                                        </option>
+                                    )}
+                                    {extensionsManagerStore.notInstalled
+                                        .length > 0 && (
+                                        <option
+                                            value={ViewFilter.NOT_INSTALLED.toString()}
+                                        >
+                                            Not installed (
+                                            {
+                                                extensionsManagerStore
+                                                    .notInstalled.length
+                                            }
+                                            )
+                                        </option>
+                                    )}
+                                    {extensionsManagerStore.newVersions.length >
+                                        0 && (
+                                        <option
+                                            value={ViewFilter.NEW_VERSIONS.toString()}
+                                        >
+                                            New versions (
+                                            {
+                                                extensionsManagerStore
+                                                    .newVersions.length
+                                            }
+                                            )
+                                        </option>
+                                    )}
+                                </select>
+                            </label>
+                        </div>
+
+                        <Toolbar>
+                            {extensionsManagerStore.viewFilter ===
+                                ViewFilter.NEW_VERSIONS &&
+                                extensionsManagerStore.extensionNodes.length >
+                                    0 &&
+                                !this.isUpdatingAll && (
+                                    <ButtonAction
+                                        text="Update All"
+                                        title=""
+                                        className="btn-success"
+                                        onClick={this.updateAll}
+                                    />
                                 )}
+                            <DropdownIconAction
+                                icon="material:menu"
+                                title="Actions"
                             >
-                                <option value={ViewFilter.ALL.toString()}>
-                                    All ({extensionsManagerStore.all.length})
-                                </option>
-                                {extensionsManagerStore.installed.length >
-                                    0 && (
-                                    <option
-                                        value={ViewFilter.INSTALLED.toString()}
-                                    >
-                                        Installed (
-                                        {
-                                            extensionsManagerStore.installed
-                                                .length
-                                        }
-                                        )
-                                    </option>
-                                )}
-                                {extensionsManagerStore.notInstalled.length >
-                                    0 && (
-                                    <option
-                                        value={ViewFilter.NOT_INSTALLED.toString()}
-                                    >
-                                        Not installed (
-                                        {
-                                            extensionsManagerStore.notInstalled
-                                                .length
-                                        }
-                                        )
-                                    </option>
-                                )}
-                                {extensionsManagerStore.newVersions.length >
-                                    0 && (
-                                    <option
-                                        value={ViewFilter.NEW_VERSIONS.toString()}
-                                    >
-                                        New versions (
-                                        {
-                                            extensionsManagerStore.newVersions
-                                                .length
-                                        }
-                                        )
-                                    </option>
-                                )}
-                            </select>
-                        </label>
-                    </div>
-
-                    <Toolbar>
-                        {extensionsManagerStore.viewFilter ===
-                            ViewFilter.NEW_VERSIONS &&
-                            extensionsManagerStore.extensionNodes.length > 0 &&
-                            !this.isUpdatingAll && (
-                                <ButtonAction
-                                    text="Update All"
-                                    title=""
-                                    className="btn-success"
-                                    onClick={this.updateAll}
+                                <DropdownItem
+                                    text="Update Catalog"
+                                    onClick={this.updateCatalog}
                                 />
+                                <DropdownItem
+                                    text="Install Extension"
+                                    title="Install extension from local file"
+                                    onClick={this.installExtension}
+                                />
+                            </DropdownIconAction>
+                        </Toolbar>
+                    </ToolbarHeader>
+                    <Body tabIndex={0}>
+                        <List
+                            nodes={extensionsManagerStore.extensionNodes}
+                            renderNode={node => (
+                                <ExtensionInMasterView extension={node.data} />
                             )}
-                        <DropdownIconAction
-                            icon="material:menu"
-                            title="Actions"
-                        >
-                            <DropdownItem
-                                text="Update Catalog"
-                                onClick={this.updateCatalog}
-                            />
-                            <DropdownItem
-                                text="Install Extension"
-                                title="Install extension from local file"
-                                onClick={this.installExtension}
-                            />
-                        </DropdownIconAction>
-                    </Toolbar>
-                </ToolbarHeader>
-                <Body tabIndex={0}>
-                    <List
-                        nodes={extensionsManagerStore.extensionNodes}
-                        renderNode={node => (
-                            <ExtensionInMasterView extension={node.data} />
-                        )}
-                        selectNode={action(
-                            (node: IListNode) =>
-                                (extensionsManagerStore.selectedExtension =
-                                    node.data)
-                        )}
-                    />
-                </Body>
-            </VerticalHeaderWithBody>
-        );
+                            selectNode={action(
+                                (node: IListNode) =>
+                                    (extensionsManagerStore.selectedExtension =
+                                        node.data)
+                            )}
+                        />
+                    </Body>
+                </VerticalHeaderWithBody>
+            );
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -615,114 +654,121 @@ interface ExtensionSectionsProps {
     extension: IExtension;
 }
 
-@observer
-export class ExtensionSections extends React.Component<
-    ExtensionSectionsProps,
-    {}
-> {
-    @observable activeSection: SectionType = "properties";
-    @observable propertiesComponent: JSX.Element | undefined;
+export const ExtensionSections = observer(
+    class ExtensionSections extends React.Component<
+        ExtensionSectionsProps,
+        {}
+    > {
+        activeSection: SectionType = "properties";
+        propertiesComponent: JSX.Element | undefined;
 
-    constructor(props: ExtensionSectionsProps) {
-        super(props);
+        constructor(props: ExtensionSectionsProps) {
+            super(props);
 
-        this.renderPropertiesComponent(this.props.extension);
-    }
-
-    renderPropertiesComponent(extension: IExtension) {
-        if (extension.renderPropertiesComponent) {
-            extension
-                .renderPropertiesComponent()
-                .then(propertiesComponent =>
-                    runInAction(
-                        () => (this.propertiesComponent = propertiesComponent)
-                    )
-                );
-        } else {
-            runInAction(() => {
-                this.propertiesComponent = undefined;
+            makeObservable(this, {
+                activeSection: observable,
+                propertiesComponent: observable,
+                activateSection: action
             });
-        }
-    }
 
-    componentDidUpdate(prevProps: any) {
-        if (this.props.extension != prevProps.extension) {
             this.renderPropertiesComponent(this.props.extension);
         }
-    }
 
-    @action
-    activateSection(section: SectionType, event: any) {
-        event.preventDefault();
-        this.activeSection = section;
-    }
-
-    render() {
-        let availableSections: SectionType[] = [];
-
-        if (this.propertiesComponent) {
-            availableSections.push("properties");
+        renderPropertiesComponent(extension: IExtension) {
+            if (extension.renderPropertiesComponent) {
+                extension
+                    .renderPropertiesComponent()
+                    .then(propertiesComponent =>
+                        runInAction(
+                            () =>
+                                (this.propertiesComponent = propertiesComponent)
+                        )
+                    );
+            } else {
+                runInAction(() => {
+                    this.propertiesComponent = undefined;
+                });
+            }
         }
 
-        if (
-            this.props.extension.properties &&
-            this.props.extension.properties.shortcuts
-        ) {
-            availableSections.push("shortcuts");
+        componentDidUpdate(prevProps: any) {
+            if (this.props.extension != prevProps.extension) {
+                this.renderPropertiesComponent(this.props.extension);
+            }
         }
 
-        if (availableSections.length === 0) {
-            return null;
+        activateSection(section: SectionType, event: any) {
+            event.preventDefault();
+            this.activeSection = section;
         }
 
-        let activeSection = this.activeSection;
+        render() {
+            let availableSections: SectionType[] = [];
 
-        if (availableSections.indexOf(activeSection) === -1) {
-            activeSection = availableSections[0];
-        }
+            if (this.propertiesComponent) {
+                availableSections.push("properties");
+            }
 
-        let navigationItems = availableSections.map(section => {
-            let className = classNames("nav-link", {
-                active: section === activeSection
+            if (
+                this.props.extension.properties &&
+                this.props.extension.properties.shortcuts
+            ) {
+                availableSections.push("shortcuts");
+            }
+
+            if (availableSections.length === 0) {
+                return null;
+            }
+
+            let activeSection = this.activeSection;
+
+            if (availableSections.indexOf(activeSection) === -1) {
+                activeSection = availableSections[0];
+            }
+
+            let navigationItems = availableSections.map(section => {
+                let className = classNames("nav-link", {
+                    active: section === activeSection
+                });
+
+                return (
+                    <li key={section} className="nav-item">
+                        <a
+                            className={className}
+                            href="#"
+                            onClick={this.activateSection.bind(this, section)}
+                        >
+                            {humanize(section)}
+                        </a>
+                    </li>
+                );
             });
 
+            let body;
+            if (activeSection === "properties") {
+                body = this.propertiesComponent;
+            } else if (activeSection === "shortcuts") {
+                body = <ExtensionShortcuts extension={this.props.extension} />;
+            }
+
             return (
-                <li key={section} className="nav-item">
-                    <a
-                        className={className}
-                        href="#"
-                        onClick={this.activateSection.bind(this, section)}
+                <div>
+                    <div style={{ marginTop: "10px" }}>
+                        <ul className="nav nav-tabs">{navigationItems}</ul>
+                    </div>
+
+                    <div
+                        style={{
+                            padding: "10px"
+                        }}
                     >
-                        {humanize(section)}
-                    </a>
-                </li>
+                        {body}
+                    </div>
+                </div>
             );
-        });
-
-        let body;
-        if (activeSection === "properties") {
-            body = this.propertiesComponent;
-        } else if (activeSection === "shortcuts") {
-            body = <ExtensionShortcuts extension={this.props.extension} />;
         }
-
-        return (
-            <div>
-                <div style={{ marginTop: "10px" }}>
-                    <ul className="nav nav-tabs">{navigationItems}</ul>
-                </div>
-
-                <div
-                    style={{
-                        padding: "10px"
-                    }}
-                >
-                    {body}
-                </div>
-            </div>
-        );
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -865,142 +911,149 @@ export function downloadAndInstallExtension(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class DetailsView extends React.Component {
-    @observable selectedVersion: string;
+export const DetailsView = observer(
+    class DetailsView extends React.Component {
+        selectedVersion: string;
 
-    constructor(props: any) {
-        super(props);
+        constructor(props: any) {
+            super(props);
 
-        autorun(() => {
-            const selectedExtensionVersions =
-                extensionsManagerStore.selectedExtensionVersions;
-            if (selectedExtensionVersions) {
-                runInAction(
-                    () =>
-                        (this.selectedVersion =
-                            selectedExtensionVersions.versionInFocus.version)
-                );
-            }
-        });
-    }
+            makeObservable(this, {
+                selectedVersion: observable,
+                displayedExtension: computed,
+                extensionVersions: computed,
+                installEnabled: computed,
+                updateEnabled: computed,
+                replaceEnabled: computed,
+                uninstallEnabled: computed
+            });
 
-    @computed
-    get displayedExtension() {
-        return extensionsManagerStore.getSelectedExtensionByVersion(
-            this.selectedVersion
-        );
-    }
+            autorun(() => {
+                const selectedExtensionVersions =
+                    extensionsManagerStore.selectedExtensionVersions;
+                if (selectedExtensionVersions) {
+                    runInAction(
+                        () =>
+                            (this.selectedVersion =
+                                selectedExtensionVersions.versionInFocus.version)
+                    );
+                }
+            });
+        }
 
-    @computed
-    get extensionVersions() {
-        return extensionsManagerStore.selectedExtensionVersions;
-    }
+        get displayedExtension() {
+            return extensionsManagerStore.getSelectedExtensionByVersion(
+                this.selectedVersion
+            );
+        }
 
-    @computed
-    get installEnabled() {
-        return !(
-            this.extensionVersions && this.extensionVersions.installedVersion
-        );
-    }
+        get extensionVersions() {
+            return extensionsManagerStore.selectedExtensionVersions;
+        }
 
-    @computed
-    get updateEnabled() {
-        return (
-            this.extensionVersions &&
-            this.extensionVersions.installedVersion &&
-            this.displayedExtension ===
+        get installEnabled() {
+            return !(
+                this.extensionVersions &&
+                this.extensionVersions.installedVersion
+            );
+        }
+
+        get updateEnabled() {
+            return (
+                this.extensionVersions &&
                 this.extensionVersions.installedVersion &&
-            compareVersions(
-                this.extensionVersions.latestVersion.version,
-                this.extensionVersions.installedVersion.version
-            ) > 0
-        );
-    }
-
-    @computed
-    get replaceEnabled() {
-        return (
-            this.extensionVersions &&
-            this.extensionVersions.installedVersion &&
-            this.displayedExtension !== this.extensionVersions.installedVersion
-        );
-    }
-
-    @computed
-    get uninstallEnabled() {
-        return (
-            this.extensionVersions && this.extensionVersions.installedVersion
-        );
-    }
-
-    handleInstall = async () => {
-        if (!this.extensionVersions) {
-            return;
+                this.displayedExtension ===
+                    this.extensionVersions.installedVersion &&
+                compareVersions(
+                    this.extensionVersions.latestVersion.version,
+                    this.extensionVersions.installedVersion.version
+                ) > 0
+            );
         }
 
-        let extensionToInstall = this.displayedExtension;
-        if (!extensionToInstall) {
-            return;
+        get replaceEnabled() {
+            return (
+                this.extensionVersions &&
+                this.extensionVersions.installedVersion &&
+                this.displayedExtension !==
+                    this.extensionVersions.installedVersion
+            );
         }
 
-        if (extensionToInstall === this.extensionVersions.installedVersion) {
-            // if already installed then install latest version
-            extensionToInstall = this.extensionVersions.latestVersion;
+        get uninstallEnabled() {
+            return (
+                this.extensionVersions &&
+                this.extensionVersions.installedVersion
+            );
+        }
+
+        handleInstall = async () => {
+            if (!this.extensionVersions) {
+                return;
+            }
+
+            let extensionToInstall = this.displayedExtension;
             if (!extensionToInstall) {
                 return;
             }
-        }
 
-        const progressToastId = notification.info("Updating...", {
-            autoClose: false
-        });
-        await new Promise(resolve => setTimeout(resolve, 500));
+            if (
+                extensionToInstall === this.extensionVersions.installedVersion
+            ) {
+                // if already installed then install latest version
+                extensionToInstall = this.extensionVersions.latestVersion;
+                if (!extensionToInstall) {
+                    return;
+                }
+            }
 
-        const extension = await downloadAndInstallExtension(
-            extensionToInstall,
-            progressToastId
-        );
+            const progressToastId = notification.info("Updating...", {
+                autoClose: false
+            });
+            await new Promise(resolve => setTimeout(resolve, 500));
 
-        if (extension) {
-            extensionsManagerStore.selectExtensionById(extension.id);
-        }
-    };
-
-    handleUninstall = () => {
-        if (!this.extensionVersions) {
-            return;
-        }
-
-        const extension = this.extensionVersions.installedVersion;
-        if (!extension) {
-            return;
-        }
-
-        confirm("Are you sure?", undefined, async () => {
-            await uninstallExtension(extension.id);
-            notification.success(
-                `Extension "${
-                    extension.displayName || extension.name
-                }" uninstalled`
+            const extension = await downloadAndInstallExtension(
+                extensionToInstall,
+                progressToastId
             );
-            extensionsManagerStore.selectExtensionById(extension.id);
-        });
-    };
 
-    handleExport = async () => {
-        if (!this.extensionVersions) {
-            return;
-        }
+            if (extension) {
+                extensionsManagerStore.selectExtensionById(extension.id);
+            }
+        };
 
-        const extension = this.extensionVersions.installedVersion;
-        if (!extension) {
-            return;
-        }
+        handleUninstall = () => {
+            if (!this.extensionVersions) {
+                return;
+            }
 
-        const result = await EEZStudio.remote.dialog.showSaveDialog(
-            EEZStudio.remote.getCurrentWindow(),
-            {
+            const extension = this.extensionVersions.installedVersion;
+            if (!extension) {
+                return;
+            }
+
+            confirm("Are you sure?", undefined, async () => {
+                await uninstallExtension(extension.id);
+                notification.success(
+                    `Extension "${
+                        extension.displayName || extension.name
+                    }" uninstalled`
+                );
+                extensionsManagerStore.selectExtensionById(extension.id);
+            });
+        };
+
+        handleExport = async () => {
+            if (!this.extensionVersions) {
+                return;
+            }
+
+            const extension = this.extensionVersions.installedVersion;
+            if (!extension) {
+                return;
+            }
+
+            const result = await dialog.showSaveDialog(getCurrentWindow(), {
                 filters: [
                     { name: "Extension files", extensions: ["zip"] },
                     { name: "All Files", extensions: ["*"] }
@@ -1008,212 +1061,217 @@ export class DetailsView extends React.Component {
                 defaultPath: getValidFileNameFromFileName(
                     extension.name + ".zip"
                 )
+            });
+
+            let filePath = result.filePath;
+            if (filePath) {
+                if (!filePath.toLowerCase().endsWith(".zip")) {
+                    filePath += ".zip";
+                }
+
+                try {
+                    const tempFilePath = await getTempFilePath();
+                    await exportExtension(extension, tempFilePath);
+                    await copyFile(tempFilePath, filePath);
+                    notification.success(`Saved to "${filePath}"`);
+                } catch (err) {
+                    notification.error(err.toString());
+                }
             }
-        );
+        };
 
-        let filePath = result.filePath;
-        if (filePath) {
-            if (!filePath.toLowerCase().endsWith(".zip")) {
-                filePath += ".zip";
+        handleChangeImage = async () => {
+            if (!this.extensionVersions) {
+                return;
             }
 
-            try {
-                const tempFilePath = await getTempFilePath();
-                await exportExtension(extension, tempFilePath);
-                await copyFile(tempFilePath, filePath);
-                notification.success(`Saved to "${filePath}"`);
-            } catch (err) {
-                notification.error(err.toString());
+            const extension = this.extensionVersions.installedVersion;
+            if (!extension) {
+                return;
             }
-        }
-    };
 
-    handleChangeImage = async () => {
-        if (!this.extensionVersions) {
-            return;
-        }
-
-        const extension = this.extensionVersions.installedVersion;
-        if (!extension) {
-            return;
-        }
-
-        const result = await EEZStudio.remote.dialog.showOpenDialog(
-            EEZStudio.remote.getCurrentWindow(),
-            {
+            const result = await dialog.showOpenDialog(getCurrentWindow(), {
                 properties: ["openFile"],
                 filters: [
-                    { name: "Image files", extensions: ["png", "jpg", "jpeg"] },
+                    {
+                        name: "Image files",
+                        extensions: ["png", "jpg", "jpeg"]
+                    },
                     { name: "All Files", extensions: ["*"] }
                 ]
+            });
+            const filePaths = result.filePaths;
+            if (filePaths && filePaths[0]) {
+                changeExtensionImage(extension, filePaths[0]);
             }
-        );
-        const filePaths = result.filePaths;
-        if (filePaths && filePaths[0]) {
-            changeExtensionImage(extension, filePaths[0]);
-        }
-    };
+        };
 
-    static getFullDescription(extension: IExtension): React.ReactNode {
-        let fullDescription;
-        if (extension.moreDescription) {
-            if (extension.description) {
-                fullDescription = extension.description.trim();
-                if (fullDescription) {
-                    if (!fullDescription.endsWith(".")) {
-                        fullDescription += ".";
-                    }
-                }
-            }
-
+        static getFullDescription(extension: IExtension): React.ReactNode {
+            let fullDescription;
             if (extension.moreDescription) {
-                if (fullDescription) {
-                    fullDescription += "\n";
-                }
-                fullDescription += extension.moreDescription.trim();
-                if (fullDescription) {
-                    if (!fullDescription.endsWith(".")) {
-                        fullDescription += ".";
+                if (extension.description) {
+                    fullDescription = extension.description.trim();
+                    if (fullDescription) {
+                        if (!fullDescription.endsWith(".")) {
+                            fullDescription += ".";
+                        }
                     }
                 }
+
+                if (extension.moreDescription) {
+                    if (fullDescription) {
+                        fullDescription += "\n";
+                    }
+                    fullDescription += extension.moreDescription.trim();
+                    if (fullDescription) {
+                        if (!fullDescription.endsWith(".")) {
+                            fullDescription += ".";
+                        }
+                    }
+                }
+            } else {
+                fullDescription = extension.description;
             }
-        } else {
-            fullDescription = extension.description;
-        }
-        if (fullDescription) {
-            fullDescription = <pre>{fullDescription}</pre>;
-        }
-        return fullDescription;
-    }
-
-    render() {
-        const extension = this.displayedExtension;
-        if (!extension) {
-            return null;
+            if (fullDescription) {
+                fullDescription = <pre>{fullDescription}</pre>;
+            }
+            return fullDescription;
         }
 
-        return (
-            <VerticalHeaderWithBody>
-                <Header className="EezStudio_ExtensionDetailsHeader">
-                    <div className="EezStudio_ExtensionDetailsHeaderImageContainer">
-                        <img src={extension.image} width={256} />
-                        {extension.type == "instrument" && (
-                            <a
-                                href="#"
-                                style={{ cursor: "pointer" }}
-                                onClick={this.handleChangeImage}
-                            >
-                                Change image
-                            </a>
-                        )}
-                    </div>
-                    <div className="EezStudio_ExtensionDetailsHeaderProperties">
-                        <div className="EezStudio_ExtensionDetailsHeaderPropertiesNameAndVersion">
-                            <h5>{extension.displayName || extension.name}</h5>
-                            <div className="form-inline">
-                                <label
-                                    className="my-1 me-2"
-                                    htmlFor="EezStudio_Extension_Details_VersionSelect"
+        render() {
+            const extension = this.displayedExtension;
+            if (!extension) {
+                return null;
+            }
+
+            return (
+                <VerticalHeaderWithBody>
+                    <Header className="EezStudio_ExtensionDetailsHeader">
+                        <div className="EezStudio_ExtensionDetailsHeaderImageContainer">
+                            <img src={extension.image} width={256} />
+                            {extension.type == "instrument" && (
+                                <a
+                                    href="#"
+                                    style={{ cursor: "pointer" }}
+                                    onClick={this.handleChangeImage}
                                 >
-                                    Versions:
-                                </label>
-                                <select
-                                    id="EezStudio_Extension_Details_VersionSelect"
-                                    className="custom-select my-1 me-sm-2"
-                                    value={this.selectedVersion}
-                                    onChange={action(
-                                        (
-                                            event: React.ChangeEvent<HTMLSelectElement>
-                                        ) => {
-                                            this.selectedVersion =
-                                                event.currentTarget.value;
-                                        }
-                                    )}
-                                >
-                                    {this.extensionVersions!.allVersions.map(
-                                        extension => (
-                                            <option
-                                                key={extension.version}
-                                                value={extension.version}
-                                            >
-                                                {extension.version}
-                                            </option>
-                                        )
-                                    )}
-                                </select>
+                                    Change image
+                                </a>
+                            )}
+                        </div>
+                        <div className="EezStudio_ExtensionDetailsHeaderProperties">
+                            <div className="EezStudio_ExtensionDetailsHeaderPropertiesNameAndVersion">
+                                <h5>
+                                    {extension.displayName || extension.name}
+                                </h5>
+                                <div className="form-inline">
+                                    <label
+                                        className="my-1 me-2"
+                                        htmlFor="EezStudio_Extension_Details_VersionSelect"
+                                    >
+                                        Versions:
+                                    </label>
+                                    <select
+                                        id="EezStudio_Extension_Details_VersionSelect"
+                                        className="custom-select my-1 me-sm-2"
+                                        value={this.selectedVersion}
+                                        onChange={action(
+                                            (
+                                                event: React.ChangeEvent<HTMLSelectElement>
+                                            ) => {
+                                                this.selectedVersion =
+                                                    event.currentTarget.value;
+                                            }
+                                        )}
+                                    >
+                                        {this.extensionVersions!.allVersions.map(
+                                            extension => (
+                                                <option
+                                                    key={extension.version}
+                                                    value={extension.version}
+                                                >
+                                                    {extension.version}
+                                                </option>
+                                            )
+                                        )}
+                                    </select>
+                                </div>
                             </div>
+                            <div>
+                                {DetailsView.getFullDescription(extension)}
+                            </div>
+                            <div>{extension.author}</div>
+                            <div style={{ marginBottom: "10px" }}>
+                                <small>{extension.id}</small>
+                            </div>
+                            <Toolbar>
+                                {this.installEnabled && (
+                                    <ButtonAction
+                                        text="Install"
+                                        title="Install extension"
+                                        className="btn-success"
+                                        onClick={this.handleInstall}
+                                    />
+                                )}
+                                {this.updateEnabled && (
+                                    <ButtonAction
+                                        text="Update"
+                                        title="Update extension to the latest version"
+                                        className="btn-success"
+                                        onClick={this.handleInstall}
+                                    />
+                                )}
+                                {this.replaceEnabled && (
+                                    <ButtonAction
+                                        text="Replace"
+                                        title="Replace installed extension with selected version"
+                                        className="btn-success"
+                                        onClick={this.handleInstall}
+                                    />
+                                )}
+                                {this.uninstallEnabled && (
+                                    <ButtonAction
+                                        text="Uninstall"
+                                        title="Uninstall extension"
+                                        className="btn-danger"
+                                        onClick={this.handleUninstall}
+                                    />
+                                )}
+                                {extension.isEditable && extension.isDirty && (
+                                    <ButtonAction
+                                        text="Export"
+                                        title="Export extension"
+                                        className="btn-secondary"
+                                        onClick={this.handleExport}
+                                    />
+                                )}
+                            </Toolbar>
                         </div>
-                        <div>{DetailsView.getFullDescription(extension)}</div>
-                        <div>{extension.author}</div>
-                        <div style={{ marginBottom: "10px" }}>
-                            <small>{extension.id}</small>
-                        </div>
-                        <Toolbar>
-                            {this.installEnabled && (
-                                <ButtonAction
-                                    text="Install"
-                                    title="Install extension"
-                                    className="btn-success"
-                                    onClick={this.handleInstall}
-                                />
-                            )}
-                            {this.updateEnabled && (
-                                <ButtonAction
-                                    text="Update"
-                                    title="Update extension to the latest version"
-                                    className="btn-success"
-                                    onClick={this.handleInstall}
-                                />
-                            )}
-                            {this.replaceEnabled && (
-                                <ButtonAction
-                                    text="Replace"
-                                    title="Replace installed extension with selected version"
-                                    className="btn-success"
-                                    onClick={this.handleInstall}
-                                />
-                            )}
-                            {this.uninstallEnabled && (
-                                <ButtonAction
-                                    text="Uninstall"
-                                    title="Uninstall extension"
-                                    className="btn-danger"
-                                    onClick={this.handleUninstall}
-                                />
-                            )}
-                            {extension.isEditable && extension.isDirty && (
-                                <ButtonAction
-                                    text="Export"
-                                    title="Export extension"
-                                    className="btn-secondary"
-                                    onClick={this.handleExport}
-                                />
-                            )}
-                        </Toolbar>
-                    </div>
-                </Header>
-                <Body>
-                    <ExtensionSections extension={extension} />
-                </Body>
-            </VerticalHeaderWithBody>
-        );
+                    </Header>
+                    <Body>
+                        <ExtensionSections extension={extension} />
+                    </Body>
+                </VerticalHeaderWithBody>
+            );
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class ExtensionsManager extends React.Component {
-    render() {
-        return (
-            <Splitter
-                type="horizontal"
-                sizes="240px|100%"
-                persistId="home/extensions-manager/splitter"
-            >
-                <MasterView />
-                <DetailsView />
-            </Splitter>
-        );
+export const ExtensionsManager = observer(
+    class ExtensionsManager extends React.Component {
+        render() {
+            return (
+                <Splitter
+                    type="horizontal"
+                    sizes="240px|100%"
+                    persistId="home/extensions-manager/splitter"
+                >
+                    <MasterView />
+                    <DetailsView />
+                </Splitter>
+            );
+        }
     }
-}
+);

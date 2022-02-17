@@ -1,4 +1,12 @@
-import { observable, computed, action, runInAction, toJS, autorun } from "mobx";
+import {
+    observable,
+    computed,
+    action,
+    runInAction,
+    toJS,
+    autorun,
+    makeObservable
+} from "mobx";
 
 import {
     createStore,
@@ -71,14 +79,14 @@ const UNKNOWN_INSTRUMENT_EXTENSION: IExtension = {
 export class InstrumentObject {
     id: string;
 
-    @observable instrumentExtensionId: string;
-    @observable label: string | undefined;
-    @observable idn: string | undefined;
-    @observable lastConnection: ConnectionParameters | undefined;
-    @observable autoConnect: boolean;
-    @observable lastFileUploadInstructions: IFileUploadInstructions | undefined;
-    @observable selectedShortcutGroups: string[];
-    @observable custom: any;
+    instrumentExtensionId: string;
+    label: string | undefined;
+    idn: string | undefined;
+    lastConnection: ConnectionParameters | undefined;
+    autoConnect: boolean;
+    lastFileUploadInstructions: IFileUploadInstructions | undefined;
+    selectedShortcutGroups: string[];
+    custom: any;
 
     connection: IConnection;
 
@@ -87,6 +95,38 @@ export class InstrumentObject {
     _commandsTree: CommandsTree;
 
     constructor(props: IInstrumentObjectProps) {
+        makeObservable(this, {
+            instrumentExtensionId: observable,
+            label: observable,
+            idn: observable,
+            lastConnection: observable,
+            autoConnect: observable,
+            lastFileUploadInstructions: observable,
+            selectedShortcutGroups: observable,
+            custom: observable,
+            _extension: observable,
+            extension: computed,
+            properties: computed,
+            channelsProperty: computed,
+            firstChannel: computed,
+            listsProperty: computed,
+            listsMaxPointsProperty: computed,
+            listsMinDwellProperty: computed,
+            listsMaxDwellProperty: computed,
+            listsDwellDigitsProperty: computed,
+            listsVoltageDigitsProperty: computed,
+            listsCurrentDigitsProperty: computed,
+            name: computed,
+            setLabel: action,
+            setIdn: action,
+            setConnectionParameters: action,
+            setLastFileUploadInstructions: action,
+            setAutoConnect: action,
+            sendFileToInstrumentHandler: computed,
+            setCustomProperty: action,
+            isBB3: computed
+        });
+
         this.id = props.id;
         this.instrumentExtensionId = props.instrumentExtensionId;
         this.label = props.label;
@@ -153,9 +193,8 @@ export class InstrumentObject {
     // This complication with extension loading
     // is because we want to load extension only
     // when and if needed.
-    @observable _extension: IExtension | undefined;
+    _extension: IExtension | undefined;
     _loadingExtension: boolean;
-    @computed
     get extension() {
         if (this._extension) {
             return this._extension;
@@ -216,7 +255,6 @@ export class InstrumentObject {
         return this._commandsTree;
     }
 
-    @computed
     get properties(): IInstrumentProperties | undefined {
         if (!this.extension) {
             return undefined;
@@ -225,12 +263,10 @@ export class InstrumentObject {
             .properties;
     }
 
-    @computed
     get channelsProperty() {
         return this.properties ? this.properties.channels : undefined;
     }
 
-    @computed
     get firstChannel() {
         const channels = this.channelsProperty;
         if (channels && channels.length > 0) {
@@ -239,12 +275,10 @@ export class InstrumentObject {
         return undefined;
     }
 
-    @computed
     get listsProperty() {
         return this.properties ? this.properties.lists : undefined;
     }
 
-    @computed
     get listsMaxPointsProperty(): number {
         const lists = this.listsProperty;
         if (lists && typeof lists.maxPoints === "number") {
@@ -253,7 +287,6 @@ export class InstrumentObject {
         return CONF_LISTS_MAX_POINTS;
     }
 
-    @computed
     get listsMinDwellProperty(): number {
         const lists = this.listsProperty;
         if (lists && typeof lists.minDwell === "number") {
@@ -262,7 +295,6 @@ export class InstrumentObject {
         return CONF_LISTS_MIN_DWELL;
     }
 
-    @computed
     get listsMaxDwellProperty(): number {
         const lists = this.listsProperty;
         if (lists && typeof lists.maxDwell === "number") {
@@ -271,7 +303,6 @@ export class InstrumentObject {
         return CONF_LISTS_MAX_DWELL;
     }
 
-    @computed
     get listsDwellDigitsProperty(): number {
         const lists = this.listsProperty;
         if (lists && typeof lists.dwellDigits === "number") {
@@ -280,7 +311,6 @@ export class InstrumentObject {
         return CONF_LISTS_DWELL_DIGITS;
     }
 
-    @computed
     get listsVoltageDigitsProperty(): number {
         const lists = this.listsProperty;
         if (lists && typeof lists.voltageDigits === "number") {
@@ -289,7 +319,6 @@ export class InstrumentObject {
         return CONF_LISTS_VOLTAGE_DIGITS;
     }
 
-    @computed
     get listsCurrentDigitsProperty(): number {
         const lists = this.listsProperty;
         if (lists && typeof lists.currentDigits === "number") {
@@ -547,7 +576,6 @@ export class InstrumentObject {
         return this.extension && this.extension.image;
     }
 
-    @computed
     get name() {
         return (
             this.label ||
@@ -639,7 +667,6 @@ export class InstrumentObject {
         );
     }
 
-    @action
     setLabel(label: string) {
         if (label !== this.label) {
             this.label = label;
@@ -653,7 +680,6 @@ export class InstrumentObject {
         }
     }
 
-    @action
     setIdn(idn: string) {
         if (idn !== this.idn) {
             beginTransaction("Change instrument IDN");
@@ -665,7 +691,6 @@ export class InstrumentObject {
         }
     }
 
-    @action
     setConnectionParameters(connectionParameters: ConnectionParameters) {
         if (!objectEqual(connectionParameters, this.lastConnection)) {
             beginTransaction("Change instrument connection settings");
@@ -677,7 +702,6 @@ export class InstrumentObject {
         }
     }
 
-    @action
     setLastFileUploadInstructions(
         fileUploadInstructions: IFileUploadInstructions
     ) {
@@ -696,7 +720,6 @@ export class InstrumentObject {
         }
     }
 
-    @action
     setAutoConnect(autoConnect: boolean) {
         if (autoConnect !== this.autoConnect) {
             beginTransaction("Change instrument auto connect");
@@ -760,7 +783,6 @@ export class InstrumentObject {
         return command && (command as ICommandSyntax).sendsBackDataBlock;
     }
 
-    @computed
     get sendFileToInstrumentHandler() {
         if (this.getFileDownloadProperty()) {
             const fileUploadInstructions =
@@ -793,7 +815,6 @@ export class InstrumentObject {
         return undefined;
     }
 
-    @action
     setCustomProperty(customPropertyName: string, customPropertyValue: any) {
         beginTransaction(
             `Change instrument ${customPropertyName} custom property`
@@ -826,7 +847,6 @@ export class InstrumentObject {
         };
     }
 
-    @computed
     get isBB3() {
         return (
             this.instrumentExtensionId ==

@@ -19,7 +19,8 @@
         "watch": true,
         "outDir": "./build",
         "skipLibCheck": true,
-        "strictPropertyInitialization": false
+        "strictPropertyInitialization": false,
+        "useDefineForClassFields": true
     },
     "include": ["./packages"]
 }

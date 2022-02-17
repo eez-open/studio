@@ -1,5 +1,12 @@
 import React from "react";
-import { observable, computed, reaction, toJS, runInAction } from "mobx";
+import {
+    observable,
+    computed,
+    reaction,
+    toJS,
+    runInAction,
+    makeObservable
+} from "mobx";
 
 import { objectEqual, formatDateTimeLong } from "eez-studio-shared/util";
 import { capitalize } from "eez-studio-shared/string";
@@ -80,7 +87,15 @@ class DlogWaveformAxisModel implements IAxisModel {
         public yAxis: IDlogYAxis<IUnit>,
         public semiLogarithmic?: { a: number; b: number },
         private yAxes?: IDlogYAxis<IUnit>[]
-    ) {}
+    ) {
+        makeObservable(this, {
+            dynamic: observable,
+            fixed: observable,
+            label: computed,
+            color: computed,
+            colorInverse: computed
+        });
+    }
 
     get unit() {
         return this.yAxis.unit;
@@ -127,7 +142,7 @@ class DlogWaveformAxisModel implements IAxisModel {
         return this.maxValue;
     }
 
-    @observable dynamic: {
+    dynamic: {
         zoomMode: ZoomMode;
         from: number;
         to: number;
@@ -137,7 +152,7 @@ class DlogWaveformAxisModel implements IAxisModel {
         to: 0
     };
 
-    @observable fixed: {
+    fixed: {
         zoomMode: ZoomMode;
         subdivisionOffset: number;
         subdivisonScale: number;
@@ -149,7 +164,6 @@ class DlogWaveformAxisModel implements IAxisModel {
     defaultSubdivisionOffset: number | undefined = undefined;
     defaultSubdivisionScale: number | undefined = undefined;
 
-    @computed
     get label() {
         function getLabel(yAxis: IDlogYAxis<IUnit>) {
             return yAxis.label
@@ -166,12 +180,10 @@ class DlogWaveformAxisModel implements IAxisModel {
         return getLabel(this.yAxis);
     }
 
-    @computed
     get color() {
         return this.yAxis.unit.color;
     }
 
-    @computed
     get colorInverse() {
         return this.yAxis.unit.colorInverse;
     }
@@ -230,6 +242,12 @@ class DlogWaveformLineController extends LineController {
     ) {
         super(id, yAxisController);
 
+        makeObservable(this, {
+            yAxisController: computed,
+            yMin: computed,
+            yMax: computed
+        });
+
         const yAxisIndex = this.dlogWaveform.channels.indexOf(channel);
 
         const columnDataIndex = dlogWaveform.dlog.columnDataIndexes[yAxisIndex];
@@ -278,7 +296,7 @@ class DlogWaveformLineController extends LineController {
         valueUnit: keyof typeof UNITS;
     };
 
-    @computed get yAxisController() {
+    get yAxisController() {
         const yAxisController = super.yAxisController;
 
         if (this.channel.yAxis.dataType === DataType.DATA_TYPE_BIT) {
@@ -299,12 +317,10 @@ class DlogWaveformLineController extends LineController {
         return yAxisController;
     }
 
-    @computed
     get yMin(): number {
         return this.yAxisController.axisModel.minValue;
     }
 
-    @computed
     get yMax(): number {
         return this.yAxisController.axisModel.maxValue;
     }
@@ -386,6 +402,23 @@ export class DlogWaveform extends FileHistoryItem {
         activityLogEntry: IActivityLogEntry | FileHistoryItem
     ) {
         super(store, activityLogEntry);
+
+        makeObservable(this, {
+            values: computed,
+            dlog: computed,
+            version: computed,
+            xAxisUnit: computed,
+            xAxisLabel: computed,
+            samplingRate: computed,
+            startTime: computed,
+            channels: computed,
+            hasJitterColumn: computed,
+            length: computed,
+            dataOffset: computed,
+            charts: observable,
+            channelsGroups: computed,
+            xAxisModel: computed
+        });
 
         const message = JSON.parse(this.message);
 
@@ -486,7 +519,6 @@ export class DlogWaveform extends FileHistoryItem {
         );
     }
 
-    @computed
     get values() {
         if (!this.transferSucceeded) {
             return undefined;
@@ -499,7 +531,6 @@ export class DlogWaveform extends FileHistoryItem {
         return this.data;
     }
 
-    @computed
     get dlog(): IDlog<IUnit> {
         return (
             (this.values && decodeDlog(this.values, dlogUnitToStudioUnit)) || {
@@ -544,32 +575,26 @@ export class DlogWaveform extends FileHistoryItem {
         );
     }
 
-    @computed
     get version() {
         return this.dlog.version;
     }
 
-    @computed
     get xAxisUnit() {
         return this.dlog.xAxis.unit;
     }
 
-    @computed
     get xAxisLabel() {
         return this.dlog.xAxis.label;
     }
 
-    @computed
     get samplingRate() {
         return 1 / this.dlog.xAxis.step;
     }
 
-    @computed
     get startTime() {
         return this.dlog.startTime;
     }
 
-    @computed
     get channels() {
         return this.dlog.yAxes.map(yAxis => ({
             yAxis,
@@ -577,24 +602,20 @@ export class DlogWaveform extends FileHistoryItem {
         })) as IChannel[];
     }
 
-    @computed
     get hasJitterColumn() {
         return this.dlog.hasJitterColumn;
     }
 
-    @computed
     get length() {
         return this.dlog.length;
     }
 
-    @computed
     get dataOffset() {
         return this.dlog.dataOffset;
     }
 
-    @observable charts: IDlogChart = [];
+    charts: IDlogChart = [];
 
-    @computed
     get description() {
         if (!this.values) {
             return null;
@@ -644,7 +665,7 @@ export class DlogWaveform extends FileHistoryItem {
         );
     }
 
-    @computed get channelsGroups(): IChannelsGroup[] {
+    get channelsGroups(): IChannelsGroup[] {
         const channelsGroups: IChannelsGroup[] = [];
 
         function compareYAxis(
@@ -753,7 +774,7 @@ export class DlogWaveform extends FileHistoryItem {
     rulers: IRulersModel;
     measurements: IMeasurementsModel;
 
-    @computed get xAxisModel() {
+    get xAxisModel() {
         return new WaveformTimeAxisModel(
             this,
             this.dlog.xAxis.scaleType === ScaleType.LOGARITHMIC

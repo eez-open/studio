@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action } from "mobx";
+import { observable, computed, action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -40,51 +40,60 @@ interface ChartPreviewProps {
     data: ChartData;
 }
 
-@observer
-export class ChartPreview extends React.Component<ChartPreviewProps> {
-    @observable zoom: boolean = false;
+export const ChartPreview = observer(
+    class ChartPreview extends React.Component<ChartPreviewProps> {
+        zoom: boolean = false;
 
-    @action.bound
-    toggleZoom() {
-        this.zoom = !this.zoom;
-    }
+        constructor(props: ChartPreviewProps) {
+            super(props);
 
-    @computed
-    get chartsController() {
-        return createChartsController(
-            this.props.appStore,
-            this.props.data,
-            "split",
-            this.zoom ? "interactive" : "preview"
-        );
-    }
+            makeObservable(this, {
+                zoom: observable,
+                toggleZoom: action.bound,
+                chartsController: computed
+            });
+        }
 
-    render() {
-        const className = classNames("EezStudio_ChartPreview", {
-            EezStudio_ChartPreview_BlackBackground:
-                globalViewOptions.blackBackground
-        });
+        toggleZoom() {
+            this.zoom = !this.zoom;
+        }
 
-        let toolbarWhenZoomed;
-        if (this.zoom || this.props.data.isZoomable) {
-            toolbarWhenZoomed = this.props.data.renderToolbar(
-                this.chartsController
+        get chartsController() {
+            return createChartsController(
+                this.props.appStore,
+                this.props.data,
+                "split",
+                this.zoom ? "interactive" : "preview"
             );
         }
 
-        return (
-            <HistoryItemPreview
-                className={className}
-                toolbarWhenZoomed={toolbarWhenZoomed}
-                zoom={this.zoom}
-                toggleZoom={this.toggleZoom}
-                enableUnzoomWithEsc={false}
-            >
-                <ChartsView
-                    chartsController={this.chartsController}
-                    tabIndex={this.zoom ? 0 : undefined}
-                />
-            </HistoryItemPreview>
-        );
+        render() {
+            const className = classNames("EezStudio_ChartPreview", {
+                EezStudio_ChartPreview_BlackBackground:
+                    globalViewOptions.blackBackground
+            });
+
+            let toolbarWhenZoomed;
+            if (this.zoom || this.props.data.isZoomable) {
+                toolbarWhenZoomed = this.props.data.renderToolbar(
+                    this.chartsController
+                );
+            }
+
+            return (
+                <HistoryItemPreview
+                    className={className}
+                    toolbarWhenZoomed={toolbarWhenZoomed}
+                    zoom={this.zoom}
+                    toggleZoom={this.toggleZoom}
+                    enableUnzoomWithEsc={false}
+                >
+                    <ChartsView
+                        chartsController={this.chartsController}
+                        tabIndex={this.zoom ? 0 : undefined}
+                    />
+                </HistoryItemPreview>
+            );
+        }
     }
-}
+);

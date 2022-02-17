@@ -1,5 +1,12 @@
 import React from "react";
-import { computed, action, observable, runInAction, toJS } from "mobx";
+import {
+    computed,
+    action,
+    observable,
+    runInAction,
+    toJS,
+    makeObservable
+} from "mobx";
 import { observer } from "mobx-react";
 
 import { validators } from "eez-studio-shared/validation";
@@ -175,12 +182,19 @@ export const RenderVariableStatus = observer(
     }
 );
 
-@observer
 export class RenderVariableStatusPropertyUI extends React.Component<PropertyProps> {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    @observable objectVariableValue: IObjectVariableValue | undefined;
+    objectVariableValue: IObjectVariableValue | undefined;
+
+    constructor(props: PropertyProps) {
+        super(props);
+
+        makeObservable(this, {
+            objectVariableValue: observable
+        });
+    }
 
     async updateObjectVariableValue() {
         const variable = this.props.objects[0] as Variable;
@@ -250,21 +264,21 @@ function isGlobalVariable(variable: Variable) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Variable extends EezObject {
-    @observable name: string;
-    @observable description?: string;
+    name: string;
+    description?: string;
 
-    @observable type: ValueType;
+    type: ValueType;
 
-    @observable defaultValue: string;
-    @observable defaultValueList: string;
-    @observable defaultMinValue: number;
-    @observable defaultMaxValue: number;
+    defaultValue: string;
+    defaultValueList: string;
+    defaultMinValue: number;
+    defaultMaxValue: number;
 
-    @observable usedIn?: string[];
+    usedIn?: string[];
 
-    @observable persistent: boolean;
+    persistent: boolean;
 
-    @observable native: boolean;
+    native: boolean;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -432,6 +446,23 @@ export class Variable extends EezObject {
             return messages;
         }
     };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            description: observable,
+            type: observable,
+            defaultValue: observable,
+            defaultValueList: observable,
+            defaultMinValue: observable,
+            defaultMaxValue: observable,
+            usedIn: observable,
+            persistent: observable,
+            native: observable
+        });
+    }
 }
 
 registerClass("Variable", Variable);
@@ -443,7 +474,7 @@ export class DataContext implements IDataContext {
     parentDataContext: DataContext | undefined;
     defaultValueOverrides: any;
     localVariables: Map<string, IVariable> | undefined = undefined;
-    @observable runtimeValues: Map<string, any>;
+    runtimeValues: Map<string, any>;
 
     constructor(
         project: Project,
@@ -451,6 +482,11 @@ export class DataContext implements IDataContext {
         defaultValueOverrides?: any,
         localVariables?: Map<string, IVariable>
     ) {
+        makeObservable(this, {
+            runtimeValues: observable,
+            clear: action
+        });
+
         this.project = project;
         this.parentDataContext = parentDataContext;
         this.defaultValueOverrides = defaultValueOverrides;
@@ -579,7 +615,6 @@ export class DataContext implements IDataContext {
         }
     }
 
-    @action
     clear() {
         this.runtimeValues.clear();
         this.initGlobalVariables();
@@ -853,8 +888,8 @@ export class DataContext implements IDataContext {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class StructureField extends EezObject {
-    @observable name: string;
-    @observable type: ValueType;
+    name: string;
+    type: ValueType;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -912,6 +947,15 @@ export class StructureField extends EezObject {
             });
         }
     };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            type: observable
+        });
+    }
 }
 
 registerClass("StructureField", StructureField);
@@ -919,8 +963,8 @@ registerClass("StructureField", StructureField);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Structure extends EezObject {
-    @observable name: string;
-    @observable fields: StructureField[];
+    name: string;
+    fields: StructureField[];
 
     static classInfo: ClassInfo = {
         label: (structure: Structure) => {
@@ -964,7 +1008,16 @@ export class Structure extends EezObject {
         }
     };
 
-    @computed({ keepAlive: true })
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            fields: observable,
+            fieldsMap: computed({ keepAlive: true })
+        });
+    }
+
     get fieldsMap() {
         const fieldsMap = new Map<string, StructureField>();
         this.fields.forEach(field => fieldsMap.set(field.name, field));
@@ -977,8 +1030,8 @@ registerClass("Structure", Structure);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class EnumMember extends EezObject {
-    @observable name: string;
-    @observable value: number;
+    name: string;
+    value: number;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -1029,6 +1082,15 @@ export class EnumMember extends EezObject {
             });
         }
     };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            value: observable
+        });
+    }
 }
 
 registerClass("EnumMember", EnumMember);
@@ -1036,8 +1098,8 @@ registerClass("EnumMember", EnumMember);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Enum extends EezObject {
-    @observable name: string;
-    @observable members: EnumMember[];
+    name: string;
+    members: EnumMember[];
 
     static classInfo: ClassInfo = {
         label: (enumDef: Enum) => {
@@ -1081,7 +1143,17 @@ export class Enum extends EezObject {
         }
     };
 
-    @computed get membersMap() {
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            members: observable,
+            membersMap: computed
+        });
+    }
+
+    get membersMap() {
         const map = new Map<string, EnumMember>();
         for (const member of this.members) {
             map.set(member.name, member);
@@ -1093,9 +1165,9 @@ export class Enum extends EezObject {
 registerClass("Enum", Enum);
 
 export class ProjectVariables extends EezObject {
-    @observable globalVariables: Variable[];
-    @observable structures: Structure[];
-    @observable enums: Enum[];
+    globalVariables: Variable[];
+    structures: Structure[];
+    enums: Enum[];
 
     static classInfo: ClassInfo = {
         label: () => "Variables",
@@ -1127,7 +1199,19 @@ export class ProjectVariables extends EezObject {
         }
     };
 
-    @computed({ keepAlive: true }) get enumsMap() {
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            globalVariables: observable,
+            structures: observable,
+            enums: observable,
+            enumsMap: computed({ keepAlive: true }),
+            structsMap: computed({ keepAlive: true })
+        });
+    }
+
+    get enumsMap() {
         const map = new Map<string, Enum>();
         for (const enumDef of this.enums) {
             map.set(enumDef.name, enumDef);
@@ -1135,7 +1219,7 @@ export class ProjectVariables extends EezObject {
         return map;
     }
 
-    @computed({ keepAlive: true }) get structsMap() {
+    get structsMap() {
         const map = new Map<string, Structure>();
         for (const structure of this.structures) {
             map.set(structure.name, structure);

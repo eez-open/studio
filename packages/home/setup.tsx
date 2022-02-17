@@ -1,5 +1,11 @@
 import React from "react";
-import { observable, computed, action, runInAction } from "mobx";
+import {
+    observable,
+    computed,
+    action,
+    runInAction,
+    makeObservable
+} from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -28,31 +34,36 @@ const BB3_INSTRUMENT_EXTENSION_ID = "687b6dee-2093-4c36-afb7-cfc7ea2bf262";
 const BB3_INSTRUMENT_MANUFACTURER = "EEZ";
 
 class SetupState {
-    @observable selectedExtensionId: string | undefined =
-        BB3_INSTRUMENT_EXTENSION_ID;
-    @observable selectedManufacturer: string | undefined =
-        BB3_INSTRUMENT_MANUFACTURER;
+    selectedExtensionId: string | undefined = BB3_INSTRUMENT_EXTENSION_ID;
+    selectedManufacturer: string | undefined = BB3_INSTRUMENT_MANUFACTURER;
 
     extensionsManagerStore: ExtensionsManagerStore;
 
     constructor() {
+        makeObservable(this, {
+            selectedExtensionId: observable,
+            selectedManufacturer: observable,
+            reset: action,
+            instrumentExtensionNodes: computed,
+            manufacturers: computed,
+            extensionNodes: computed,
+            extensionInstalling: observable
+        });
+
         this.extensionsManagerStore = new ExtensionsManagerStore();
         this.extensionsManagerStore.viewFilter = ViewFilter.ALL;
     }
 
-    @action
     reset() {
         this.extensionInstalling = undefined;
     }
 
-    @computed
     get instrumentExtensionNodes() {
         return this.extensionsManagerStore.all.filter(extension =>
             isInstrumentExtension(extension.latestVersion)
         );
     }
 
-    @computed
     get manufacturers() {
         return _uniqBy(this.instrumentExtensionNodes, extension =>
             getManufacturer(extension.latestVersion)
@@ -65,7 +76,6 @@ class SetupState {
         }));
     }
 
-    @computed
     get extensionNodes() {
         return this.instrumentExtensionNodes
             .filter(
@@ -89,7 +99,7 @@ class SetupState {
         this.selectedExtensionId = (node.data as IExtension).id;
     });
 
-    @observable extensionInstalling:
+    extensionInstalling:
         | {
               inProgress: boolean;
               infoNode: React.ReactNode;

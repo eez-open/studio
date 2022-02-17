@@ -5,7 +5,7 @@ declare const EEZStudio: {
     electron: typeof Electron;
     require: any;
     windowType: string;
-    remote: typeof Electron.remote;
+    remote: any;
 };
 
 declare module "quill";
@@ -22,3 +22,5 @@ interface CanvasRenderingContext2D {
 declare class GoldenLayout {
     constructor(config: any, layout: any);
 }
+
+declare module "xml-formatter";

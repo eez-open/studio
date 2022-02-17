@@ -1,9 +1,9 @@
+import path from "path";
+
 import { service } from "eez-studio-shared/service";
 
 import type * as BdfModule from "font-services/bdf";
 import type * as FreeTypeModule from "font-services/freetype";
-
-const path = require("path");
 
 interface Params {
     name?: string;

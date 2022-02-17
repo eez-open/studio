@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, values } from "mobx";
+import { observable, computed, values, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
 import { IShortcut, IGroup } from "shortcuts/interfaces";
@@ -49,7 +49,12 @@ export const allShortcuts = computed(() => {
 });
 
 class ShortcutsStore {
-    @computed
+    constructor() {
+        makeObservable(this, {
+            shortcuts: computed
+        });
+    }
+
     get shortcuts() {
         return allShortcuts.get();
     }
@@ -133,39 +138,40 @@ const groupsStore = {
     }
 };
 
-@observer
-export class ShortcutsAndGroups extends React.Component<{}, {}> {
-    render() {
-        return (
-            <VerticalHeaderWithBody>
-                <ToolbarHeader>
-                    {shortcutsOrGroups.get() ? (
-                        <ShortcutsToolbarButtons
-                            shortcutsOrGroups={shortcutsOrGroups}
-                            shortcutsStore={shortcutsStore}
-                            groupsStore={groupsStore}
-                        />
-                    ) : (
-                        <GroupsToolbarButtons
-                            shortcutsOrGroups={shortcutsOrGroups}
-                            groupsStore={groupsStore}
-                        />
-                    )}
-                </ToolbarHeader>
-                <Body tabIndex={0}>
-                    {shortcutsOrGroups.get() ? (
-                        <Shortcuts
-                            shortcutsStore={shortcutsStore}
-                            groupsStore={groupsStore}
-                        />
-                    ) : (
-                        <Groups
-                            shortcutsStore={shortcutsStore}
-                            groupsStore={groupsStore}
-                        />
-                    )}
-                </Body>
-            </VerticalHeaderWithBody>
-        );
+export const ShortcutsAndGroups = observer(
+    class ShortcutsAndGroups extends React.Component<{}, {}> {
+        render() {
+            return (
+                <VerticalHeaderWithBody>
+                    <ToolbarHeader>
+                        {shortcutsOrGroups.get() ? (
+                            <ShortcutsToolbarButtons
+                                shortcutsOrGroups={shortcutsOrGroups}
+                                shortcutsStore={shortcutsStore}
+                                groupsStore={groupsStore}
+                            />
+                        ) : (
+                            <GroupsToolbarButtons
+                                shortcutsOrGroups={shortcutsOrGroups}
+                                groupsStore={groupsStore}
+                            />
+                        )}
+                    </ToolbarHeader>
+                    <Body tabIndex={0}>
+                        {shortcutsOrGroups.get() ? (
+                            <Shortcuts
+                                shortcutsStore={shortcutsStore}
+                                groupsStore={groupsStore}
+                            />
+                        ) : (
+                            <Groups
+                                shortcutsStore={shortcutsStore}
+                                groupsStore={groupsStore}
+                            />
+                        )}
+                    </Body>
+                </VerticalHeaderWithBody>
+            );
+        }
     }
-}
+);

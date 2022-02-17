@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, runInAction } from "mobx";
+import { computed, runInAction, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -17,210 +17,238 @@ import type { Flow } from "project-editor/flow/flow";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class ComponentsContainerEnclosure extends React.Component<{
-    components: Component[];
-    flowContext: IFlowContext;
-    visibleComponent?: Component;
-}> {
-    render() {
-        const { components, flowContext, visibleComponent } = this.props;
+export const ComponentsContainerEnclosure = observer(
+    class ComponentsContainerEnclosure extends React.Component<{
+        components: Component[];
+        flowContext: IFlowContext;
+        visibleComponent?: Component;
+    }> {
+        render() {
+            const { components, flowContext, visibleComponent } = this.props;
 
-        return components.map((component, i) => (
-            <ComponentEnclosure
-                key={getId(component)}
-                component={component}
-                flowContext={flowContext}
-                visible={!visibleComponent || visibleComponent == component}
-            />
-        ));
+            return components.map((component, i) => (
+                <ComponentEnclosure
+                    key={getId(component)}
+                    component={component}
+                    flowContext={flowContext}
+                    visible={!visibleComponent || visibleComponent == component}
+                />
+            ));
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class ComponentEnclosure extends React.Component<{
-    component: Component | Page;
-    flowContext: IFlowContext;
-    left?: number;
-    top?: number;
-    visible?: boolean;
-}> {
-    elRef = React.createRef<HTMLDivElement>();
+export const ComponentEnclosure = observer(
+    class ComponentEnclosure extends React.Component<{
+        component: Component | Page;
+        flowContext: IFlowContext;
+        left?: number;
+        top?: number;
+        visible?: boolean;
+    }> {
+        elRef = React.createRef<HTMLDivElement>();
 
-    @computed
-    get listIndex() {
-        if (
-            this.props.flowContext.dataContext.has(FLOW_ITERATOR_INDEX_VARIABLE)
-        ) {
-            return this.props.flowContext.dataContext.get(
-                FLOW_ITERATOR_INDEX_VARIABLE
-            );
+        constructor(props: {
+            component: Component | Page;
+            flowContext: IFlowContext;
+            left?: number;
+            top?: number;
+            visible?: boolean;
+        }) {
+            super(props);
+
+            makeObservable(this, {
+                listIndex: computed
+            });
         }
-        return 0;
-    }
 
-    updateComponentGeometry() {
-        if (this.elRef.current && this.listIndex == 0) {
-            const el = this.elRef.current.closest(".LayoutViewWidget");
-            if (el && el != this.elRef.current) {
-                // do not calculate geometry if component is inside LayoutViewWidget
-                return;
+        get listIndex() {
+            if (
+                this.props.flowContext.dataContext.has(
+                    FLOW_ITERATOR_INDEX_VARIABLE
+                )
+            ) {
+                return this.props.flowContext.dataContext.get(
+                    FLOW_ITERATOR_INDEX_VARIABLE
+                );
             }
-
-            if (this.elRef.current.offsetParent == null) {
-                // do not calculate geometry if element is not visible
-                return;
-            }
-
-            const geometry = calcComponentGeometry(
-                this.props.component,
-                this.elRef.current,
-                this.props.flowContext
-            );
-            if (geometry) {
-                runInAction(() => {
-                    this.props.component.geometry = geometry;
-                });
-            }
-        }
-    }
-
-    componentDidMount() {
-        this.updateComponentGeometry();
-    }
-
-    componentDidUpdate() {
-        this.updateComponentGeometry();
-    }
-
-    render() {
-        const { component, flowContext, left, top, visible } = this.props;
-
-        // data-eez-flow-object-id
-        let dataFlowObjectId = getId(component);
-        if (this.listIndex > 0) {
-            dataFlowObjectId = dataFlowObjectId + "-" + this.listIndex;
+            return 0;
         }
 
-        // style
-        const style: React.CSSProperties = {
-            left: left ?? component.left,
-            top: top ?? component.top
-        };
+        updateComponentGeometry() {
+            if (this.elRef.current && this.listIndex == 0) {
+                const el = this.elRef.current.closest(".LayoutViewWidget");
+                if (el && el != this.elRef.current) {
+                    // do not calculate geometry if component is inside LayoutViewWidget
+                    return;
+                }
 
-        if (!(component.autoSize == "width" || component.autoSize == "both")) {
-            style.width = component.width;
-        }
-        if (!(component.autoSize == "height" || component.autoSize == "both")) {
-            style.height = component.height;
-        }
+                if (this.elRef.current.offsetParent == null) {
+                    // do not calculate geometry if element is not visible
+                    return;
+                }
 
-        component.styleHook(style, flowContext);
-
-        // className
-        const DocumentStore = flowContext.DocumentStore;
-        const uiStateStore = DocumentStore.uiStateStore;
-        const runtime = DocumentStore.runtime;
-
-        let breakpointClass;
-        if (component instanceof ProjectEditor.ComponentClass) {
-            if (uiStateStore.isBreakpointAddedForComponent(component)) {
-                if (uiStateStore.isBreakpointEnabledForComponent(component)) {
-                    breakpointClass = "enabled-breakpoint";
-                } else {
-                    breakpointClass = "disabled-breakpoint";
+                const geometry = calcComponentGeometry(
+                    this.props.component,
+                    this.elRef.current,
+                    this.props.flowContext
+                );
+                if (geometry) {
+                    runInAction(() => {
+                        this.props.component.geometry = geometry;
+                    });
                 }
             }
         }
 
-        const componentClassName = component.getClassName();
-
-        const className = classNames(
-            "EezStudio_ComponentEnclosure",
-            breakpointClass,
-            componentClassName,
-            {
-                "eez-flow-editor-capture-pointers":
-                    runtime && !(runtime.isDebuggerActive && runtime.isPaused)
-            }
-        );
-
-        if (visible === false) {
-            if (this.props.flowContext.flowState) {
-                style.visibility = "hidden";
-            } else {
-                style.opacity = "0.05";
-            }
-            style.pointerEvents = "none";
+        componentDidMount() {
+            this.updateComponentGeometry();
         }
 
-        return (
-            <div
-                ref={this.elRef}
-                data-eez-flow-object-id={dataFlowObjectId}
-                className={className}
-                style={style}
-            >
-                {component.render(flowContext)}
-            </div>
-        );
+        componentDidUpdate() {
+            this.updateComponentGeometry();
+        }
+
+        render() {
+            const { component, flowContext, left, top, visible } = this.props;
+
+            // data-eez-flow-object-id
+            let dataFlowObjectId = getId(component);
+            if (this.listIndex > 0) {
+                dataFlowObjectId = dataFlowObjectId + "-" + this.listIndex;
+            }
+
+            // style
+            const style: React.CSSProperties = {
+                left: left ?? component.left,
+                top: top ?? component.top
+            };
+
+            if (
+                !(component.autoSize == "width" || component.autoSize == "both")
+            ) {
+                style.width = component.width;
+            }
+            if (
+                !(
+                    component.autoSize == "height" ||
+                    component.autoSize == "both"
+                )
+            ) {
+                style.height = component.height;
+            }
+
+            component.styleHook(style, flowContext);
+
+            // className
+            const DocumentStore = flowContext.DocumentStore;
+            const uiStateStore = DocumentStore.uiStateStore;
+            const runtime = DocumentStore.runtime;
+
+            let breakpointClass;
+            if (component instanceof ProjectEditor.ComponentClass) {
+                if (uiStateStore.isBreakpointAddedForComponent(component)) {
+                    if (
+                        uiStateStore.isBreakpointEnabledForComponent(component)
+                    ) {
+                        breakpointClass = "enabled-breakpoint";
+                    } else {
+                        breakpointClass = "disabled-breakpoint";
+                    }
+                }
+            }
+
+            const componentClassName = component.getClassName();
+
+            const className = classNames(
+                "EezStudio_ComponentEnclosure",
+                breakpointClass,
+                componentClassName,
+                {
+                    "eez-flow-editor-capture-pointers":
+                        runtime &&
+                        !(runtime.isDebuggerActive && runtime.isPaused)
+                }
+            );
+
+            if (visible === false) {
+                if (this.props.flowContext.flowState) {
+                    style.visibility = "hidden";
+                } else {
+                    style.opacity = "0.05";
+                }
+                style.pointerEvents = "none";
+            }
+
+            return (
+                <div
+                    ref={this.elRef}
+                    data-eez-flow-object-id={dataFlowObjectId}
+                    className={className}
+                    style={style}
+                >
+                    {component.render(flowContext)}
+                </div>
+            );
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class ComponentCanvas extends React.Component<{
-    component: Page | Component;
-    draw: (ctx: CanvasRenderingContext2D) => void;
-}> {
-    elRef = React.createRef<HTMLDivElement>();
+export const ComponentCanvas = observer(
+    class ComponentCanvas extends React.Component<{
+        component: Page | Component;
+        draw: (ctx: CanvasRenderingContext2D) => void;
+    }> {
+        elRef = React.createRef<HTMLDivElement>();
 
-    canvas: HTMLCanvasElement;
+        canvas: HTMLCanvasElement;
 
-    addCanvasToDOM() {
-        if (!this.elRef.current) {
-            return;
+        addCanvasToDOM() {
+            if (!this.elRef.current) {
+                return;
+            }
+
+            if (this.elRef.current.children[0]) {
+                this.elRef.current.replaceChild(
+                    this.canvas,
+                    this.elRef.current.children[0]
+                );
+            } else {
+                this.elRef.current.appendChild(this.canvas);
+            }
         }
 
-        if (this.elRef.current.children[0]) {
-            this.elRef.current.replaceChild(
-                this.canvas,
-                this.elRef.current.children[0]
+        componentDidMount() {
+            this.addCanvasToDOM();
+        }
+
+        componentDidUpdate() {
+            this.addCanvasToDOM();
+        }
+
+        render() {
+            const { component, draw } = this.props;
+
+            this.canvas = document.createElement("canvas");
+            this.canvas.width = component.width;
+            this.canvas.height = component.height;
+            this.canvas.style.imageRendering = "pixelated";
+            this.canvas.style.display = "block";
+            draw(this.canvas.getContext("2d")!);
+
+            return (
+                <div
+                    ref={this.elRef}
+                    style={{ width: component.width, height: component.height }}
+                ></div>
             );
-        } else {
-            this.elRef.current.appendChild(this.canvas);
         }
     }
-
-    componentDidMount() {
-        this.addCanvasToDOM();
-    }
-
-    componentDidUpdate() {
-        this.addCanvasToDOM();
-    }
-
-    render() {
-        const { component, draw } = this.props;
-
-        this.canvas = document.createElement("canvas");
-        this.canvas.width = component.width;
-        this.canvas.height = component.height;
-        this.canvas.style.imageRendering = "pixelated";
-        this.canvas.style.display = "block";
-        draw(this.canvas.getContext("2d")!);
-
-        return (
-            <div
-                ref={this.elRef}
-                style={{ width: component.width, height: component.height }}
-            ></div>
-        );
-    }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 

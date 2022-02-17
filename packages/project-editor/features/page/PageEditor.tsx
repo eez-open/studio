@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, runInAction, observable } from "mobx";
+import { computed, runInAction, observable, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import { IEezObject } from "project-editor/core/object";
 import {
@@ -19,40 +19,47 @@ import { EditorComponent } from "project-editor/project/EditorComponent";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class PageEditor extends EditorComponent {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
+export const PageEditor = observer(
+    class PageEditor extends EditorComponent {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
 
-    get pageTabState() {
-        return this.props.editor.state as PageTabState;
-    }
+        constructor(props: any) {
+            super(props);
 
-    @computed
-    get treeAdapter() {
-        return new TreeAdapter(
-            this.pageTabState.widgetContainer,
-            undefined,
-            undefined,
-            true
-        );
-    }
+            makeObservable(this, {
+                treeAdapter: computed
+            });
+        }
 
-    render() {
-        return this.pageTabState.isRuntime ? (
-            <FlowViewer tabState={this.pageTabState} />
-        ) : (
-            <FlowEditor tabState={this.pageTabState} />
-        );
+        get pageTabState() {
+            return this.props.editor.state as PageTabState;
+        }
+
+        get treeAdapter() {
+            return new TreeAdapter(
+                this.pageTabState.widgetContainer,
+                undefined,
+                undefined,
+                true
+            );
+        }
+
+        render() {
+            return this.pageTabState.isRuntime ? (
+                <FlowViewer tabState={this.pageTabState} />
+            ) : (
+                <FlowEditor tabState={this.pageTabState} />
+            );
+        }
     }
-}
+);
 ////////////////////////////////////////////////////////////////////////////////
 class PageTreeObjectAdapter extends TreeObjectAdapter {
     constructor(private page: Page, private frontFace: boolean) {
         super(page);
     }
 
-    @computed
     get children(): TreeObjectAdapterChildren {
         if (this.frontFace) {
             return this.page.components
@@ -74,13 +81,18 @@ export class PageTabState extends FlowTabState {
     widgetContainerFrontFace: ITreeObjectAdapter;
     widgetContainerBackFace: ITreeObjectAdapter;
 
-    @observable _transform: Transform = new Transform({
+    _transform: Transform = new Transform({
         translate: { x: 0, y: 0 },
         scale: 1
     });
 
     constructor(object: IEezObject) {
         super(object as Flow);
+
+        makeObservable(this, {
+            _transform: observable,
+            frontFace: computed
+        });
 
         this.widgetContainerFrontFace = new PageTreeObjectAdapter(
             this.page,
@@ -101,7 +113,7 @@ export class PageTabState extends FlowTabState {
         return this.flow as Page;
     }
 
-    @computed get frontFace() {
+    get frontFace() {
         return this.isRuntime
             ? this.DocumentStore.uiStateStore.pageRuntimeFrontFace
             : this.DocumentStore.uiStateStore.pageEditorFrontFace;

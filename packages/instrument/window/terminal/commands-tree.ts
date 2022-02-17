@@ -1,4 +1,4 @@
-import { observable, runInAction } from "mobx";
+import { observable, runInAction, makeObservable } from "mobx";
 
 import { loadCommands } from "instrument/import";
 import { IEnum } from "instrument/scpi";
@@ -15,26 +15,46 @@ import { ICommandNode } from "instrument/window/terminal/commands-browser";
 ////////////////////////////////////////////////////////////////////////////////
 
 class CommandNode implements ICommandNode {
-    @observable id: string = "";
-    @observable label: string = "";
-    @observable selected: boolean = false;
-    @observable expanded: boolean = true;
-    @observable children: CommandsTree[] = [];
-    @observable commandSyntax: ICommandSyntax | undefined = undefined;
-    @observable querySyntax: IQuerySyntax | undefined = undefined;
+    id: string = "";
+    label: string = "";
+    selected: boolean = false;
+    expanded: boolean = true;
+    children: CommandsTree[] = [];
+    commandSyntax: ICommandSyntax | undefined = undefined;
+    querySyntax: IQuerySyntax | undefined = undefined;
 
     constructor(props: any) {
+        makeObservable(this, {
+            id: observable,
+            label: observable,
+            selected: observable,
+            expanded: observable,
+            children: observable,
+            commandSyntax: observable,
+            querySyntax: observable
+        });
+
         Object.assign(this, props);
     }
 }
 
 export class CommandsTree {
-    @observable id: string = "";
-    @observable label: string = "";
-    @observable selected: boolean = false;
-    @observable expanded: boolean = true;
-    @observable children: ICommandNode[] = [];
+    id: string = "";
+    label: string = "";
+    selected: boolean = false;
+    expanded: boolean = true;
+    children: ICommandNode[] = [];
     enums: IEnum[];
+
+    constructor() {
+        makeObservable(this, {
+            id: observable,
+            label: observable,
+            selected: observable,
+            expanded: observable,
+            children: observable
+        });
+    }
 
     transform(nodes: ScpiCommandTreeNode[] | undefined): ICommandNode[] {
         if (nodes) {

@@ -1,4 +1,4 @@
-import { computed } from "mobx";
+import { computed, makeObservable } from "mobx";
 
 import type { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
@@ -31,7 +31,13 @@ export interface ISendOptions {
 }
 
 export abstract class ConnectionBase {
-    constructor(public instrument: InstrumentObject) {}
+    constructor(public instrument: InstrumentObject) {
+        makeObservable(this, {
+            isIdle: computed,
+            isTransitionState: computed,
+            isConnected: computed
+        });
+    }
 
     abstract get state(): ConnectionState;
     abstract get errorCode(): ConnectionErrorCode;
@@ -39,12 +45,10 @@ export abstract class ConnectionBase {
 
     abstract dismissError(): void;
 
-    @computed
     get isIdle() {
         return this.state === ConnectionState.IDLE;
     }
 
-    @computed
     get isTransitionState() {
         return (
             this.state === ConnectionState.CONNECTING ||
@@ -53,7 +57,6 @@ export abstract class ConnectionBase {
         );
     }
 
-    @computed
     get isConnected() {
         return this.state === ConnectionState.CONNECTED;
     }

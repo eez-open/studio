@@ -1,5 +1,12 @@
 import React from "react";
-import { observable, computed, runInAction, action, toJS } from "mobx";
+import {
+    observable,
+    computed,
+    runInAction,
+    action,
+    toJS,
+    makeObservable
+} from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -69,12 +76,18 @@ export function createEmptyTableListData() {
 }
 
 export class TableListData extends BaseListData {
-    @observable dwell: number[];
-    @observable voltage: number[];
-    @observable current: number[];
+    dwell: number[];
+    voltage: number[];
+    current: number[];
 
     constructor(list: BaseList, props: Partial<TableListData>) {
         super(list, props);
+
+        makeObservable(this, {
+            dwell: observable,
+            voltage: observable,
+            current: observable
+        });
 
         this.dwell = props.dwell || TABLE_LIST_DATA_DEFAULTS.dwell;
         this.voltage = props.voltage || TABLE_LIST_DATA_DEFAULTS.voltage;
@@ -107,15 +120,20 @@ export class TableListData extends BaseListData {
 }
 
 export class TableList extends BaseList {
-    @observable data: TableListData;
+    data: TableListData;
 
     constructor(props: any) {
         super(props);
+
+        makeObservable(this, {
+            data: observable,
+            numPoints: computed
+        });
+
         this.type = "table";
         this.data = new TableListData(this, props.data);
     }
 
-    @computed
     get numPoints() {
         return Math.max(
             this.data.dwell.length,
@@ -172,6 +190,15 @@ export class TableLineController extends LineController {
         yAxisController: IAxisController
     ) {
         super(id, yAxisController);
+
+        makeObservable(this, {
+            tableData: computed,
+            dwells: computed,
+            values: computed,
+            size: computed,
+            yMin: computed,
+            yMax: computed
+        });
     }
 
     get list() {
@@ -179,35 +206,29 @@ export class TableLineController extends LineController {
             .list;
     }
 
-    @computed
     get tableData() {
         return this.list.data;
     }
 
-    @computed
     get dwells(): number[] {
         return this.tableData.dwell;
     }
 
-    @computed
     get values(): number[] {
         return this.tableData[
             this.yAxisController.unit.name as "voltage" | "current"
         ];
     }
 
-    @computed
     get size(): number {
         return this.list.numPoints;
     }
 
-    @computed
     get yMin(): number {
         //return Math.min(...this.values);
         return this.yAxisController.axisModel.minValue;
     }
 
-    @computed
     get yMax(): number {
         //return Math.max(...this.values);
         return this.yAxisController.axisModel.maxValue;
@@ -235,61 +256,62 @@ export class TableLineController extends LineController {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class TableLineView extends React.Component<
-    {
-        tableLineController: TableLineController;
-        clipId: string;
-    },
-    {}
-> {
-    render() {
-        const tableLineController = this.props.tableLineController;
-        const { dwells, values, size } = tableLineController;
-        const yAxisController = tableLineController.yAxisController;
-        const chartsController = yAxisController.chartsController;
-        const xAxisController = chartsController.xAxisController;
-        const { chartLeft, chartBottom } = chartsController;
+export const TableLineView = observer(
+    class TableLineView extends React.Component<
+        {
+            tableLineController: TableLineController;
+            clipId: string;
+        },
+        {}
+    > {
+        render() {
+            const tableLineController = this.props.tableLineController;
+            const { dwells, values, size } = tableLineController;
+            const yAxisController = tableLineController.yAxisController;
+            const chartsController = yAxisController.chartsController;
+            const xAxisController = chartsController.xAxisController;
+            const { chartLeft, chartBottom } = chartsController;
 
-        let path;
+            let path;
 
-        for (let i = 0; i < size; i++) {
-            if (i === 0) {
-                path = `M${chartLeft + xAxisController.valueToPx(0)} ${
-                    chartBottom -
-                    yAxisController.valueToPx(
-                        (values.length > 0 && values[0]) || 0
-                    )
-                }`;
-            } else {
-                if (i < values.length) {
-                    path +=
-                        " v " +
-                        -(values[i] - (values[i - 1] || 0)) *
-                            yAxisController.scale;
+            for (let i = 0; i < size; i++) {
+                if (i === 0) {
+                    path = `M${chartLeft + xAxisController.valueToPx(0)} ${
+                        chartBottom -
+                        yAxisController.valueToPx(
+                            (values.length > 0 && values[0]) || 0
+                        )
+                    }`;
+                } else {
+                    if (i < values.length) {
+                        path +=
+                            " v " +
+                            -(values[i] - (values[i - 1] || 0)) *
+                                yAxisController.scale;
+                    }
                 }
+                path +=
+                    " h " +
+                    (i < dwells.length
+                        ? dwells[i]
+                        : dwells[dwells.length - 1] || 1) *
+                        xAxisController.scale;
             }
-            path +=
-                " h " +
-                (i < dwells.length
-                    ? dwells[i]
-                    : dwells[dwells.length - 1] || 1) *
-                    xAxisController.scale;
-        }
 
-        return (
-            <path
-                d={path}
-                style={{ pointerEvents: "none" }}
-                stroke={yAxisController.axisModel.color}
-                clipPath={`url(#${this.props.clipId})`}
-                strokeWidth={1}
-                strokeOpacity={1}
-                fillOpacity={0}
-            />
-        );
+            return (
+                <path
+                    d={path}
+                    style={{ pointerEvents: "none" }}
+                    stroke={yAxisController.axisModel.color}
+                    clipPath={`url(#${this.props.clipId})`}
+                    strokeWidth={1}
+                    strokeOpacity={1}
+                    fillOpacity={0}
+                />
+            );
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -329,90 +351,94 @@ function cellKeyFromUnit(unit: IUnit): CellKey {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class TableChartsHeader extends React.Component<{
-    appStore: IAppStore;
-    chartsController: ChartsController;
-}> {
-    get list() {
-        return (this.props.chartsController as TableChartsController).list;
-    }
+const TableChartsHeader = observer(
+    class TableChartsHeader extends React.Component<{
+        appStore: IAppStore;
+        chartsController: ChartsController;
+    }> {
+        get list() {
+            return (this.props.chartsController as TableChartsController).list;
+        }
 
-    editProperties = () => {
-        showGenericDialog({
-            dialogDefinition: {
-                fields: [
-                    {
-                        name: "name",
-                        type: "string",
-                        validators: [
-                            validators.required,
-                            validators.unique(
-                                this.list,
-                                this.props.appStore.instrumentLists!
-                            )
-                        ]
-                    },
-                    {
-                        name: "description",
-                        type: "string"
-                    }
-                ]
-            },
-
-            values: {
-                name: this.list.name,
-                description: this.list.description
-            }
-        })
-            .then(result => {
-                const list = this.list;
-
-                const oldName = list.name;
-                const oldDescription = list.description;
-
-                const newName = result.values.name;
-                const newDescription = result.values.description;
-
-                if (oldName !== newName || oldDescription !== newDescription) {
-                    this.props.appStore.undoManager!.addCommand(
-                        "Edit envelope list",
-                        this.props.appStore.instrumentListStore!,
-                        list,
+        editProperties = () => {
+            showGenericDialog({
+                dialogDefinition: {
+                    fields: [
                         {
-                            execute: action(() => {
-                                list.name = newName;
-                                list.description = newDescription;
-                            }),
-                            undo: action(() => {
-                                list.name = oldName;
-                                list.description = oldDescription;
-                            })
+                            name: "name",
+                            type: "string",
+                            validators: [
+                                validators.required,
+                                validators.unique(
+                                    this.list,
+                                    this.props.appStore.instrumentLists!
+                                )
+                            ]
+                        },
+                        {
+                            name: "description",
+                            type: "string"
                         }
-                    );
+                    ]
+                },
+
+                values: {
+                    name: this.list.name,
+                    description: this.list.description
                 }
             })
-            .catch(() => {});
-    };
+                .then(result => {
+                    const list = this.list;
 
-    render() {
-        return (
-            <Header className="EezStudio_ListChartViewHeader">
-                <Toolbar>
-                    <ButtonAction
-                        text="Edit Properties"
-                        className="btn-secondary"
-                        title="Edit properties"
-                        onClick={this.editProperties}
-                    />
-                    <CommonTools
-                        chartsController={this.props.chartsController}
-                    />
-                </Toolbar>
-            </Header>
-        );
+                    const oldName = list.name;
+                    const oldDescription = list.description;
+
+                    const newName = result.values.name;
+                    const newDescription = result.values.description;
+
+                    if (
+                        oldName !== newName ||
+                        oldDescription !== newDescription
+                    ) {
+                        this.props.appStore.undoManager!.addCommand(
+                            "Edit envelope list",
+                            this.props.appStore.instrumentListStore!,
+                            list,
+                            {
+                                execute: action(() => {
+                                    list.name = newName;
+                                    list.description = newDescription;
+                                }),
+                                undo: action(() => {
+                                    list.name = oldName;
+                                    list.description = oldDescription;
+                                })
+                            }
+                        );
+                    }
+                })
+                .catch(() => {});
+        };
+
+        render() {
+            return (
+                <Header className="EezStudio_ListChartViewHeader">
+                    <Toolbar>
+                        <ButtonAction
+                            text="Edit Properties"
+                            className="btn-secondary"
+                            title="Edit properties"
+                            onClick={this.editProperties}
+                        />
+                        <CommonTools
+                            chartsController={this.props.chartsController}
+                        />
+                    </Toolbar>
+                </Header>
+            );
+        }
     }
-}
+);
 
 interface CellProps {
     index: number;
@@ -423,549 +449,596 @@ interface CellProps {
     setError(error: string | undefined): void;
 }
 
-@observer
-class Cell extends React.Component<CellProps, {}> {
-    @observable value: string = Cell.getValue(this.props);
+const Cell = observer(
+    class Cell extends React.Component<CellProps, {}> {
+        value: string = Cell.getValue(this.props);
 
-    static getValue(props: CellProps): string {
-        if (props.value === undefined) {
-            return "";
+        constructor(props: CellProps) {
+            super(props);
+
+            makeObservable(this, {
+                value: observable,
+                componentDidUpdate: action
+            });
         }
-        return props.unit.formatValue(props.value);
-    }
 
-    @action
-    componentDidUpdate(prevProps: any) {
-        if (this.props != prevProps) {
-            this.value = Cell.getValue(this.props);
-        }
-    }
-
-    onBlur = (e: React.FocusEvent<HTMLElement>) => {
-        this.props.onChange(
-            this.props.index,
-            this.props.unit,
-            (e.target as HTMLElement).innerText
-        );
-    };
-
-    static focusNext(element: HTMLElement, offset: number) {
-        element.blur();
-        setTimeout(() => {
-            let cells = $(element).parents("tbody").find("td");
-
-            let nextCellIndex = cells.index(element) + offset;
-
-            if (nextCellIndex < 0) {
-                nextCellIndex += cells.length;
-            } else if (nextCellIndex >= cells.length) {
-                nextCellIndex -= cells.length;
+        static getValue(props: CellProps): string {
+            if (props.value === undefined) {
+                return "";
             }
+            return props.unit.formatValue(props.value);
+        }
 
-            if (!cells.eq(nextCellIndex).attr("contenteditable")) {
-                nextCellIndex += offset;
+        componentDidUpdate(prevProps: any) {
+            if (this.props != prevProps) {
+                this.value = Cell.getValue(this.props);
+            }
+        }
+
+        onBlur = (e: React.FocusEvent<HTMLElement>) => {
+            this.props.onChange(
+                this.props.index,
+                this.props.unit,
+                (e.target as HTMLElement).innerText
+            );
+        };
+
+        static focusNext(element: HTMLElement, offset: number) {
+            element.blur();
+            setTimeout(() => {
+                let cells = $(element).parents("tbody").find("td");
+
+                let nextCellIndex = cells.index(element) + offset;
 
                 if (nextCellIndex < 0) {
                     nextCellIndex += cells.length;
                 } else if (nextCellIndex >= cells.length) {
                     nextCellIndex -= cells.length;
                 }
-            }
 
-            cells[nextCellIndex].focus();
-        }, 0);
-    }
+                if (!cells.eq(nextCellIndex).attr("contenteditable")) {
+                    nextCellIndex += offset;
 
-    static getCaretPosition(editableDiv: Element) {
-        var caretPos = 0,
-            sel,
-            range;
-        sel = window.getSelection();
-        if (sel != null && sel.rangeCount) {
-            range = sel.getRangeAt(0);
-            if (range.commonAncestorContainer.parentNode === editableDiv) {
-                caretPos = range.endOffset;
-            }
-        }
-        return caretPos;
-    }
-
-    onKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            e.stopPropagation();
-            Cell.focusNext(e.target as HTMLElement, 1);
-        } else if (e.key === "Escape") {
-            e.currentTarget.innerText = Cell.getValue(this.props);
-            this.props.setError(undefined);
-        } else if (!e.shiftKey && !e.ctrlKey) {
-            if (e.key === "ArrowUp") {
-                e.preventDefault();
-                e.stopPropagation();
-                Cell.focusNext(e.target as HTMLElement, -4);
-            } else if (e.key === "ArrowDown") {
-                e.preventDefault();
-                e.stopPropagation();
-                Cell.focusNext(e.target as HTMLElement, 4);
-            } else if (e.key === "ArrowLeft") {
-                if (
-                    e.altKey ||
-                    e.metaKey ||
-                    Cell.getCaretPosition(e.target as Element) === 0
-                ) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    Cell.focusNext(e.target as HTMLElement, -1);
+                    if (nextCellIndex < 0) {
+                        nextCellIndex += cells.length;
+                    } else if (nextCellIndex >= cells.length) {
+                        nextCellIndex -= cells.length;
+                    }
                 }
-            } else if (e.key === "ArrowRight") {
-                if (
-                    e.altKey ||
-                    e.metaKey ||
-                    Cell.getCaretPosition(e.target as Element) ===
-                        (e.target as HTMLElement).innerText.length
-                ) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    Cell.focusNext(e.target as HTMLElement, 1);
+
+                cells[nextCellIndex].focus();
+            }, 0);
+        }
+
+        static getCaretPosition(editableDiv: Element) {
+            var caretPos = 0,
+                sel,
+                range;
+            sel = window.getSelection();
+            if (sel != null && sel.rangeCount) {
+                range = sel.getRangeAt(0);
+                if (range.commonAncestorContainer.parentNode === editableDiv) {
+                    caretPos = range.endOffset;
                 }
             }
+            return caretPos;
         }
-    };
 
-    render() {
-        const { index, unit, onFocus } = this.props;
-        const className = classNames(
-            "EezStudio_CellTd",
-            `EezStudio_TableListEditor_Cell_${index}_${cellKeyFromUnit(unit)}`,
-            {
-                selected:
-                    index === selectedCell.index &&
-                    cellKeyFromUnit(unit) === selectedCell.key
+        onKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                e.stopPropagation();
+                Cell.focusNext(e.target as HTMLElement, 1);
+            } else if (e.key === "Escape") {
+                e.currentTarget.innerText = Cell.getValue(this.props);
+                this.props.setError(undefined);
+            } else if (!e.shiftKey && !e.ctrlKey) {
+                if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    Cell.focusNext(e.target as HTMLElement, -4);
+                } else if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    Cell.focusNext(e.target as HTMLElement, 4);
+                } else if (e.key === "ArrowLeft") {
+                    if (
+                        e.altKey ||
+                        e.metaKey ||
+                        Cell.getCaretPosition(e.target as Element) === 0
+                    ) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        Cell.focusNext(e.target as HTMLElement, -1);
+                    }
+                } else if (e.key === "ArrowRight") {
+                    if (
+                        e.altKey ||
+                        e.metaKey ||
+                        Cell.getCaretPosition(e.target as Element) ===
+                            (e.target as HTMLElement).innerText.length
+                    ) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        Cell.focusNext(e.target as HTMLElement, 1);
+                    }
+                }
             }
-        );
-        return (
-            <td
-                className={className}
-                contentEditable
-                suppressContentEditableWarning
-                onFocus={onFocus}
-                onBlur={this.onBlur}
-                onKeyDown={this.onKeyDown}
-            >
-                {this.value}
-            </td>
-        );
-    }
-}
+        };
 
-@observer
-export class Table extends React.Component<
-    {
-        appStore: IAppStore;
-        list: TableList;
-        className?: string;
-        onCellFocus: (index: number, key: CellKey) => void;
-        setError(error: string | undefined): void;
-    },
-    {}
-> {
-    @observable error: string | undefined;
-
-    @computed
-    get data() {
-        return this.props.list.data;
-    }
-
-    @computed
-    get isMaxPointsReached() {
-        return (
-            this.props.list.numPoints >=
-            this.props.appStore.instrument.listsMaxPointsProperty
-        );
-    }
-
-    @computed
-    get numRows() {
-        return this.isMaxPointsReached
-            ? this.props.list.numPoints
-            : this.props.list.numPoints + 1;
-    }
-
-    getValue(index: number, key: CellKey) {
-        const array = this.data[key];
-        if (array && index < array.length) {
-            return array[index];
+        render() {
+            const { index, unit, onFocus } = this.props;
+            const className = classNames(
+                "EezStudio_CellTd",
+                `EezStudio_TableListEditor_Cell_${index}_${cellKeyFromUnit(
+                    unit
+                )}`,
+                {
+                    selected:
+                        index === selectedCell.index &&
+                        cellKeyFromUnit(unit) === selectedCell.key
+                }
+            );
+            return (
+                <td
+                    className={className}
+                    contentEditable
+                    suppressContentEditableWarning
+                    onFocus={onFocus}
+                    onBlur={this.onBlur}
+                    onKeyDown={this.onKeyDown}
+                >
+                    {this.value}
+                </td>
+            );
         }
-        return undefined;
     }
+);
 
-    @action.bound
-    onValueChange(index: number, unit: IUnit, value: string) {
-        let key = cellKeyFromUnit(unit);
-        let array = this.data[key];
-        let currentValue =
-            array && index < array.length ? array[index] : undefined;
-        let numValue = unit.parseValue(value);
-        if (numValue != currentValue) {
-            if (typeof numValue !== "number") {
-                $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
-                this.props.setError("Invalid value");
-                return;
+export const Table = observer(
+    class Table extends React.Component<
+        {
+            appStore: IAppStore;
+            list: TableList;
+            className?: string;
+            onCellFocus: (index: number, key: CellKey) => void;
+            setError(error: string | undefined): void;
+        },
+        {}
+    > {
+        error: string | undefined;
+
+        constructor(props: {
+            appStore: IAppStore;
+            list: TableList;
+            className?: string;
+            onCellFocus: (index: number, key: CellKey) => void;
+            setError(error: string | undefined): void;
+        }) {
+            super(props);
+
+            makeObservable(this, {
+                error: observable,
+                data: computed,
+                isMaxPointsReached: computed,
+                numRows: computed,
+                onValueChange: action.bound
+            });
+        }
+
+        get data() {
+            return this.props.list.data;
+        }
+
+        get isMaxPointsReached() {
+            return (
+                this.props.list.numPoints >=
+                this.props.appStore.instrument.listsMaxPointsProperty
+            );
+        }
+
+        get numRows() {
+            return this.isMaxPointsReached
+                ? this.props.list.numPoints
+                : this.props.list.numPoints + 1;
+        }
+
+        getValue(index: number, key: CellKey) {
+            const array = this.data[key];
+            if (array && index < array.length) {
+                return array[index];
             }
+            return undefined;
+        }
 
-            if (key === "voltage" || key === "current") {
-            } else {
-                if (numValue <= 0) {
+        onValueChange(index: number, unit: IUnit, value: string) {
+            let key = cellKeyFromUnit(unit);
+            let array = this.data[key];
+            let currentValue =
+                array && index < array.length ? array[index] : undefined;
+            let numValue = unit.parseValue(value);
+            if (numValue != currentValue) {
+                if (typeof numValue !== "number") {
                     $(
                         `.EezStudio_TableListEditor_Cell_${index}_${key}`
                     ).focus();
                     this.props.setError("Invalid value");
                     return;
                 }
+
+                if (key === "voltage" || key === "current") {
+                } else {
+                    if (numValue <= 0) {
+                        $(
+                            `.EezStudio_TableListEditor_Cell_${index}_${key}`
+                        ).focus();
+                        this.props.setError("Invalid value");
+                        return;
+                    }
+                }
+
+                executeCommand(this.props.appStore, this.props.list, data => {
+                    let array: any = data[key];
+                    if (!array) {
+                        array = [];
+                        data[key] = array;
+                    }
+
+                    for (let i = index - 1; i >= 0 && isNaN(array[i]); i--) {
+                        array[i] = numValue;
+                    }
+
+                    array[index] = numValue;
+
+                    while (
+                        array.length > 0 &&
+                        !array[array.length - 1] &&
+                        array[array.length - 1] !== 0
+                    ) {
+                        array.splice(array.length - 1, 1);
+                    }
+                });
             }
 
-            executeCommand(this.props.appStore, this.props.list, data => {
-                let array: any = data[key];
-                if (!array) {
-                    array = [];
-                    data[key] = array;
-                }
-
-                for (let i = index - 1; i >= 0 && isNaN(array[i]); i--) {
-                    array[i] = numValue;
-                }
-
-                array[index] = numValue;
-
-                while (
-                    array.length > 0 &&
-                    !array[array.length - 1] &&
-                    array[array.length - 1] !== 0
-                ) {
-                    array.splice(array.length - 1, 1);
-                }
-            });
+            this.props.setError(undefined);
+            return true;
         }
 
-        this.props.setError(undefined);
-        return true;
-    }
-
-    render() {
-        return (
-            <table className={this.props.className}>
-                <thead>
-                    <tr>
-                        <th />
-                        <th>Dwell</th>
-                        <th>Voltage</th>
-                        <th>Current</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {_range(this.numRows).map(index => (
-                        <tr key={index}>
-                            <td>{index + 1}</td>
-                            <Cell
-                                index={index}
-                                unit={TIME_UNIT_NO_CUSTOM_FORMAT}
-                                value={this.getValue(index, "dwell")}
-                                onChange={this.onValueChange}
-                                onFocus={() =>
-                                    this.props.onCellFocus(index, "dwell")
-                                }
-                                setError={this.props.setError}
-                            />
-                            <Cell
-                                index={index}
-                                unit={VOLTAGE_UNIT}
-                                value={this.getValue(index, "voltage")}
-                                onChange={this.onValueChange}
-                                onFocus={() =>
-                                    this.props.onCellFocus(index, "voltage")
-                                }
-                                setError={this.props.setError}
-                            />
-                            <Cell
-                                index={index}
-                                unit={CURRENT_UNIT}
-                                value={this.getValue(index, "current")}
-                                onChange={this.onValueChange}
-                                onFocus={() =>
-                                    this.props.onCellFocus(index, "current")
-                                }
-                                setError={this.props.setError}
-                            />
+        render() {
+            return (
+                <table className={this.props.className}>
+                    <thead>
+                        <tr>
+                            <th />
+                            <th>Dwell</th>
+                            <th>Voltage</th>
+                            <th>Current</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
-        );
-    }
-}
-
-@observer
-export class TableDetailsView extends React.Component<{
-    appStore: IAppStore;
-    list: TableList;
-}> {
-    @observable list: TableList = this.props.list;
-
-    @computed
-    get chartsController() {
-        return createTableChartsController(
-            this.props.appStore,
-            this.list,
-            displayOption.get() as ChartsDisplayOption,
-            "editable"
-        );
-    }
-
-    @action
-    componentDidUpdate(prevProps: any) {
-        if (this.props != prevProps) {
-            this.list = this.props.list;
+                    </thead>
+                    <tbody>
+                        {_range(this.numRows).map(index => (
+                            <tr key={index}>
+                                <td>{index + 1}</td>
+                                <Cell
+                                    index={index}
+                                    unit={TIME_UNIT_NO_CUSTOM_FORMAT}
+                                    value={this.getValue(index, "dwell")}
+                                    onChange={this.onValueChange}
+                                    onFocus={() =>
+                                        this.props.onCellFocus(index, "dwell")
+                                    }
+                                    setError={this.props.setError}
+                                />
+                                <Cell
+                                    index={index}
+                                    unit={VOLTAGE_UNIT}
+                                    value={this.getValue(index, "voltage")}
+                                    onChange={this.onValueChange}
+                                    onFocus={() =>
+                                        this.props.onCellFocus(index, "voltage")
+                                    }
+                                    setError={this.props.setError}
+                                />
+                                <Cell
+                                    index={index}
+                                    unit={CURRENT_UNIT}
+                                    value={this.getValue(index, "current")}
+                                    onChange={this.onValueChange}
+                                    onFocus={() =>
+                                        this.props.onCellFocus(index, "current")
+                                    }
+                                    setError={this.props.setError}
+                                />
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            );
         }
     }
+);
 
-    @action.bound
-    onCellFocus(index: number, key: CellKey) {
-        selectedCell.index = index;
-        selectedCell.key = key;
-    }
+export const TableDetailsView = observer(
+    class TableDetailsView extends React.Component<{
+        appStore: IAppStore;
+        list: TableList;
+    }> {
+        list: TableList = this.props.list;
 
-    get isLastRow() {
-        return selectedCell.index === this.props.list.numPoints;
-    }
+        constructor(props: { appStore: IAppStore; list: TableList }) {
+            super(props);
 
-    @computed
-    get isMaxPointsReached() {
-        return (
-            this.props.list.numPoints >=
-            this.props.appStore.instrument.listsMaxPointsProperty
-        );
-    }
-
-    get canInsertRowAbove() {
-        return !this.isMaxPointsReached && !this.isLastRow;
-    }
-
-    insertRowAbove = () => {
-        if (this.canInsertRowAbove) {
-            const index = selectedCell.index;
-            const key = selectedCell.key;
-
-            executeCommand(this.props.appStore, this.props.list, data => {
-                data.dwell.splice(index, 0, data.dwell[index]);
-                data.voltage.splice(index, 0, data.voltage[index]);
-                data.current.splice(index, 0, data.current[index]);
+            makeObservable(this, {
+                list: observable,
+                chartsController: computed,
+                componentDidUpdate: action,
+                onCellFocus: action.bound,
+                isMaxPointsReached: computed,
+                error: observable,
+                setError: action.bound
             });
-
-            setTimeout(() => {
-                $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
-            }, 10);
         }
-    };
 
-    get canInsertRowBelow() {
-        return !this.isMaxPointsReached && !this.isLastRow;
-    }
-
-    insertRowBelow = () => {
-        if (this.canInsertRowBelow) {
-            const index = selectedCell.index;
-            const key = selectedCell.key;
-
-            executeCommand(this.props.appStore, this.props.list, data => {
-                data.dwell.splice(index + 1, 0, data.dwell[index]);
-                data.voltage.splice(index + 1, 0, data.voltage[index]);
-                data.current.splice(index + 1, 0, data.current[index]);
-            });
-
-            setTimeout(() => {
-                $(
-                    `.EezStudio_TableListEditor_Cell_${index + 1}_${key}`
-                ).focus();
-            }, 10);
+        get chartsController() {
+            return createTableChartsController(
+                this.props.appStore,
+                this.list,
+                displayOption.get() as ChartsDisplayOption,
+                "editable"
+            );
         }
-    };
 
-    get canDeleteRow() {
-        return !this.isLastRow;
-    }
-
-    deleteRow = () => {
-        if (this.canDeleteRow) {
-            const index = selectedCell.index;
-            const key = selectedCell.key;
-
-            executeCommand(this.props.appStore, this.props.list, data => {
-                data.dwell.splice(index, 1);
-                data.voltage.splice(index, 1);
-                data.current.splice(index, 1);
-            });
-
-            setTimeout(() => {
-                $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
-            }, 10);
+        componentDidUpdate(prevProps: any) {
+            if (this.props != prevProps) {
+                this.list = this.props.list;
+            }
         }
-    };
 
-    get canClearColumn() {
-        return (
-            selectedCell.index < this.props.list.data[selectedCell.key].length
-        );
-    }
-
-    clearColumn = () => {
-        if (this.canClearColumn) {
-            const index = selectedCell.index;
-            const key = selectedCell.key;
-
-            executeCommand(this.props.appStore, this.props.list, data => {
-                data[key].splice(index, data[key].length - index);
-            });
-
-            setTimeout(() => {
-                $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
-            }, 10);
+        onCellFocus(index: number, key: CellKey) {
+            selectedCell.index = index;
+            selectedCell.key = key;
         }
-    };
 
-    get canDeleteAllFromCursor() {
-        return !this.isLastRow;
-    }
-
-    deleteAllFromCursor = () => {
-        if (this.canDeleteAllFromCursor) {
-            const index = selectedCell.index;
-            const key = selectedCell.key;
-
-            executeCommand(this.props.appStore, this.props.list, data => {
-                data.dwell.splice(index, data.dwell.length - index);
-                data.voltage.splice(index, data.voltage.length - index);
-                data.current.splice(index, data.current.length - index);
-            });
-
-            setTimeout(() => {
-                $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
-            }, 10);
+        get isLastRow() {
+            return selectedCell.index === this.props.list.numPoints;
         }
-    };
 
-    get canDeleteAll() {
-        return this.props.list.numPoints > 0;
-    }
-
-    deleteAll = () => {
-        if (this.canDeleteAll) {
-            const key = selectedCell.key;
-
-            executeCommand(this.props.appStore, this.props.list, data => {
-                data.dwell = [];
-                data.voltage = [];
-                data.current = [];
-            });
-
-            setTimeout(() => {
-                $(`.EezStudio_TableListEditor_Cell_0_${key}`).focus();
-            }, 10);
+        get isMaxPointsReached() {
+            return (
+                this.props.list.numPoints >=
+                this.props.appStore.instrument.listsMaxPointsProperty
+            );
         }
-    };
 
-    @observable error: string | undefined;
+        get canInsertRowAbove() {
+            return !this.isMaxPointsReached && !this.isLastRow;
+        }
 
-    @action.bound
-    setError(error: string | undefined) {
-        this.error = error;
-    }
+        insertRowAbove = () => {
+            if (this.canInsertRowAbove) {
+                const index = selectedCell.index;
+                const key = selectedCell.key;
 
-    render() {
-        const { list } = this.props;
+                executeCommand(this.props.appStore, this.props.list, data => {
+                    data.dwell.splice(index, 0, data.dwell[index]);
+                    data.voltage.splice(index, 0, data.voltage[index]);
+                    data.current.splice(index, 0, data.current[index]);
+                });
 
-        return (
-            <Splitter
-                type="vertical"
-                sizes="66%|34%"
-                persistId="instrument/lists/table"
-            >
-                <VerticalHeaderWithBody>
-                    <TableChartsHeader
-                        appStore={this.props.appStore}
-                        chartsController={this.chartsController}
-                    />
-                    <Body>
-                        <ChartsView
-                            chartsController={this.chartsController}
-                            tabIndex={0}
-                        />
-                    </Body>
-                </VerticalHeaderWithBody>
+                setTimeout(() => {
+                    $(
+                        `.EezStudio_TableListEditor_Cell_${index}_${key}`
+                    ).focus();
+                }, 10);
+            }
+        };
 
-                <VerticalHeaderWithBody>
-                    <ToolbarHeader className="EezStudio_TableListEditorToolbarHeader">
-                        <DropdownButtonAction
-                            text="Insert"
-                            title="Insert rows"
-                            className="btn-secondary"
-                        >
-                            <DropdownItem
-                                text="Insert row above"
-                                onClick={this.insertRowAbove}
-                                disabled={!this.canInsertRowAbove}
-                            />
-                            <DropdownItem
-                                text="Insert row below"
-                                onClick={this.insertRowBelow}
-                                disabled={!this.canInsertRowBelow}
-                            />
-                        </DropdownButtonAction>
-                        <DropdownButtonAction
-                            text="Delete"
-                            title="Delete cells"
-                            className="btn-secondary"
-                        >
-                            <DropdownItem
-                                text="Delete row"
-                                onClick={this.deleteRow}
-                                disabled={!this.canDeleteRow}
-                            />
-                            <DropdownItem
-                                text="Clear column from cursor down"
-                                onClick={this.clearColumn}
-                                disabled={!this.canClearColumn}
-                            />
-                            <DropdownItem
-                                text="Delete all from cursor down"
-                                onClick={this.deleteAllFromCursor}
-                                disabled={!this.canDeleteAllFromCursor}
-                            />
-                            <DropdownItem
-                                text="Delete all"
-                                onClick={this.deleteAll}
-                            />
-                        </DropdownButtonAction>
-                        {this.isMaxPointsReached && (
-                            <div className="text-success">
-                                Max no. of points reached.
-                            </div>
-                        )}
-                        {<div className="text-danger">{this.error}</div>}
-                    </ToolbarHeader>
-                    <Body className="EezStudio_TableListEditorBody">
-                        <Table
+        get canInsertRowBelow() {
+            return !this.isMaxPointsReached && !this.isLastRow;
+        }
+
+        insertRowBelow = () => {
+            if (this.canInsertRowBelow) {
+                const index = selectedCell.index;
+                const key = selectedCell.key;
+
+                executeCommand(this.props.appStore, this.props.list, data => {
+                    data.dwell.splice(index + 1, 0, data.dwell[index]);
+                    data.voltage.splice(index + 1, 0, data.voltage[index]);
+                    data.current.splice(index + 1, 0, data.current[index]);
+                });
+
+                setTimeout(() => {
+                    $(
+                        `.EezStudio_TableListEditor_Cell_${index + 1}_${key}`
+                    ).focus();
+                }, 10);
+            }
+        };
+
+        get canDeleteRow() {
+            return !this.isLastRow;
+        }
+
+        deleteRow = () => {
+            if (this.canDeleteRow) {
+                const index = selectedCell.index;
+                const key = selectedCell.key;
+
+                executeCommand(this.props.appStore, this.props.list, data => {
+                    data.dwell.splice(index, 1);
+                    data.voltage.splice(index, 1);
+                    data.current.splice(index, 1);
+                });
+
+                setTimeout(() => {
+                    $(
+                        `.EezStudio_TableListEditor_Cell_${index}_${key}`
+                    ).focus();
+                }, 10);
+            }
+        };
+
+        get canClearColumn() {
+            return (
+                selectedCell.index <
+                this.props.list.data[selectedCell.key].length
+            );
+        }
+
+        clearColumn = () => {
+            if (this.canClearColumn) {
+                const index = selectedCell.index;
+                const key = selectedCell.key;
+
+                executeCommand(this.props.appStore, this.props.list, data => {
+                    data[key].splice(index, data[key].length - index);
+                });
+
+                setTimeout(() => {
+                    $(
+                        `.EezStudio_TableListEditor_Cell_${index}_${key}`
+                    ).focus();
+                }, 10);
+            }
+        };
+
+        get canDeleteAllFromCursor() {
+            return !this.isLastRow;
+        }
+
+        deleteAllFromCursor = () => {
+            if (this.canDeleteAllFromCursor) {
+                const index = selectedCell.index;
+                const key = selectedCell.key;
+
+                executeCommand(this.props.appStore, this.props.list, data => {
+                    data.dwell.splice(index, data.dwell.length - index);
+                    data.voltage.splice(index, data.voltage.length - index);
+                    data.current.splice(index, data.current.length - index);
+                });
+
+                setTimeout(() => {
+                    $(
+                        `.EezStudio_TableListEditor_Cell_${index}_${key}`
+                    ).focus();
+                }, 10);
+            }
+        };
+
+        get canDeleteAll() {
+            return this.props.list.numPoints > 0;
+        }
+
+        deleteAll = () => {
+            if (this.canDeleteAll) {
+                const key = selectedCell.key;
+
+                executeCommand(this.props.appStore, this.props.list, data => {
+                    data.dwell = [];
+                    data.voltage = [];
+                    data.current = [];
+                });
+
+                setTimeout(() => {
+                    $(`.EezStudio_TableListEditor_Cell_0_${key}`).focus();
+                }, 10);
+            }
+        };
+
+        error: string | undefined;
+
+        setError(error: string | undefined) {
+            this.error = error;
+        }
+
+        render() {
+            const { list } = this.props;
+
+            return (
+                <Splitter
+                    type="vertical"
+                    sizes="66%|34%"
+                    persistId="instrument/lists/table"
+                >
+                    <VerticalHeaderWithBody>
+                        <TableChartsHeader
                             appStore={this.props.appStore}
-                            className="EezStudio_TableListEditorTable"
-                            list={list}
-                            onCellFocus={this.onCellFocus}
-                            setError={this.setError}
+                            chartsController={this.chartsController}
                         />
-                    </Body>
-                </VerticalHeaderWithBody>
-            </Splitter>
-        );
+                        <Body>
+                            <ChartsView
+                                chartsController={this.chartsController}
+                                tabIndex={0}
+                            />
+                        </Body>
+                    </VerticalHeaderWithBody>
+
+                    <VerticalHeaderWithBody>
+                        <ToolbarHeader className="EezStudio_TableListEditorToolbarHeader">
+                            <DropdownButtonAction
+                                text="Insert"
+                                title="Insert rows"
+                                className="btn-secondary"
+                            >
+                                <DropdownItem
+                                    text="Insert row above"
+                                    onClick={this.insertRowAbove}
+                                    disabled={!this.canInsertRowAbove}
+                                />
+                                <DropdownItem
+                                    text="Insert row below"
+                                    onClick={this.insertRowBelow}
+                                    disabled={!this.canInsertRowBelow}
+                                />
+                            </DropdownButtonAction>
+                            <DropdownButtonAction
+                                text="Delete"
+                                title="Delete cells"
+                                className="btn-secondary"
+                            >
+                                <DropdownItem
+                                    text="Delete row"
+                                    onClick={this.deleteRow}
+                                    disabled={!this.canDeleteRow}
+                                />
+                                <DropdownItem
+                                    text="Clear column from cursor down"
+                                    onClick={this.clearColumn}
+                                    disabled={!this.canClearColumn}
+                                />
+                                <DropdownItem
+                                    text="Delete all from cursor down"
+                                    onClick={this.deleteAllFromCursor}
+                                    disabled={!this.canDeleteAllFromCursor}
+                                />
+                                <DropdownItem
+                                    text="Delete all"
+                                    onClick={this.deleteAll}
+                                />
+                            </DropdownButtonAction>
+                            {this.isMaxPointsReached && (
+                                <div className="text-success">
+                                    Max no. of points reached.
+                                </div>
+                            )}
+                            {<div className="text-danger">{this.error}</div>}
+                        </ToolbarHeader>
+                        <Body className="EezStudio_TableListEditorBody">
+                            <Table
+                                appStore={this.props.appStore}
+                                className="EezStudio_TableListEditorTable"
+                                list={list}
+                                onCellFocus={this.onCellFocus}
+                                setError={this.setError}
+                            />
+                        </Body>
+                    </VerticalHeaderWithBody>
+                </Splitter>
+            );
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 

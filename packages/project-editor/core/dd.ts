@@ -1,4 +1,4 @@
-import { observable, action } from "mobx";
+import { observable, action, makeObservable } from "mobx";
 
 import type { IEezObject } from "project-editor/core/object";
 import type {
@@ -13,8 +13,8 @@ interface IDropObject {}
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DragAndDropManagerClass {
-    @observable dragObject: IEezObject | undefined;
-    @observable dropObject: IDropObject | undefined;
+    dragObject: IEezObject | undefined;
+    dropObject: IDropObject | undefined;
     DocumentStore: DocumentStoreClass;
     dragItemDeleted: boolean;
     dropEffect: string | undefined;
@@ -24,12 +24,20 @@ export class DragAndDropManagerClass {
     undoManager?: UndoManager;
 
     constructor() {
+        makeObservable(this, {
+            dragObject: observable,
+            dropObject: observable,
+            start: action,
+            setDropObject: action,
+            unsetDropObject: action.bound,
+            end: action
+        });
+
         this.blankDragImage = new Image();
         this.blankDragImage.src =
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuOWwzfk4AAAANSURBVBhXY/j//z8DAAj8Av6IXwbgAAAAAElFTkSuQmCC";
     }
 
-    @action
     start(
         event: any,
         dragObject: IEezObject,
@@ -42,12 +50,10 @@ export class DragAndDropManagerClass {
         this.undoManager.setCombineCommands(true);
     }
 
-    @action
     setDropObject(object: IDropObject) {
         this.dropObject = object;
     }
 
-    @action.bound
     unsetDropObject() {
         this.dropObject = undefined;
     }
@@ -75,7 +81,6 @@ export class DragAndDropManagerClass {
         }
     }
 
-    @action
     end(event: any) {
         if (!this.dragItemDeleted) {
             this.dropEffect = event.dataTransfer.dropEffect;

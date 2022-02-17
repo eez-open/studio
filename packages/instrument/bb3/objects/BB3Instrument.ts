@@ -1,3 +1,4 @@
+import { dialog, getCurrentWindow } from "@electron/remote";
 import {
     observable,
     computed,
@@ -5,7 +6,8 @@ import {
     runInAction,
     action,
     autorun,
-    toJS
+    toJS,
+    makeObservable
 } from "mobx";
 
 import { stringCompare } from "eez-studio-shared/string";
@@ -219,23 +221,23 @@ type ScriptsCollectionType =
 export class BB3Instrument {
     static CUSTOM_PROPERTY_NAME = "bb3";
 
-    @observable timeOfLastRefresh: Date | undefined;
-    @observable mcu: IMcu;
-    @observable modules: Module[] | undefined;
-    @observable scripts: Script[] = [];
-    @observable lists: List[] = [];
+    timeOfLastRefresh: Date | undefined;
+    mcu: IMcu;
+    modules: Module[] | undefined;
+    scripts: Script[] = [];
+    lists: List[] = [];
 
     // UI state
-    @observable selectedScriptsCollectionType: ScriptsCollectionType;
-    @observable refreshInProgress: boolean = false;
-    @observable busy: boolean = false;
+    selectedScriptsCollectionType: ScriptsCollectionType;
+    refreshInProgress: boolean = false;
+    busy: boolean = false;
 
-    @observable latestHistoryItem: IHistoryItem | undefined;
+    latestHistoryItem: IHistoryItem | undefined;
 
-    @observable scriptsOnInstrumentFetchError: boolean = false;
-    @observable listsOnInstrumentFetchError: boolean = false;
+    scriptsOnInstrumentFetchError: boolean = false;
+    listsOnInstrumentFetchError: boolean = false;
 
-    @observable isUploadingMasterFirmware: boolean = false;
+    isUploadingMasterFirmware: boolean = false;
 
     terminate: () => void;
 
@@ -244,6 +246,38 @@ export class BB3Instrument {
         public appStore: InstrumentAppStore,
         public instrument: InstrumentObject
     ) {
+        makeObservable(this, {
+            timeOfLastRefresh: observable,
+            mcu: observable,
+            modules: observable,
+            scripts: observable,
+            lists: observable,
+            selectedScriptsCollectionType: observable,
+            refreshInProgress: observable,
+            busy: observable,
+            latestHistoryItem: observable,
+            scriptsOnInstrumentFetchError: observable,
+            listsOnInstrumentFetchError: observable,
+            isUploadingMasterFirmware: observable,
+            setRefreshInProgress: action,
+            refreshScripts: action,
+            scriptsOnInstrument: computed,
+            allScriptsCollection: computed,
+            catalogScriptsCollection: computed,
+            instrumentScriptsCollection: computed,
+            notInstalledCatalogScriptsCollection: computed,
+            installedCatalogScriptsCollection: computed,
+            instrumentScriptsNotInCatalogCollection: computed,
+            selectedScriptsCollection: computed,
+            canInstallAllScripts: computed,
+            setBusy: action,
+            refreshLists: action,
+            sortedLists: computed,
+            listsOnInstrument: computed,
+            canDownloadAllLists: computed,
+            canUploadAllLists: computed
+        });
+
         const bb3Properties =
             instrument.custom[BB3Instrument.CUSTOM_PROPERTY_NAME];
 
@@ -359,7 +393,7 @@ export class BB3Instrument {
         };
     }
 
-    @action setRefreshInProgress(value: boolean) {
+    setRefreshInProgress(value: boolean) {
         this.refreshInProgress = value;
     }
 
@@ -475,7 +509,6 @@ export class BB3Instrument {
         );
     }
 
-    @action
     refreshScripts(scriptsOnInstrument: IScriptOnInstrument[]) {
         const scripts: Script[] = [];
 
@@ -511,67 +544,59 @@ export class BB3Instrument {
         this.scripts = scripts;
     }
 
-    @computed
     get scriptsOnInstrument() {
         return this.scripts
             .filter(script => !!script.scriptOnInstrument)
             .map(script => script.scriptOnInstrument) as IScriptOnInstrument[];
     }
 
-    @computed
     get allScriptsCollection() {
         return this.scripts
             .slice()
             .sort((a, b) => stringCompare(a.name, b.name));
     }
 
-    @computed
     get catalogScriptsCollection() {
         return this.allScriptsCollection.filter(
             script => script.catalogScriptItem
         );
     }
 
-    @computed
     get instrumentScriptsCollection() {
         return this.allScriptsCollection.filter(
             script => script.scriptOnInstrument
         );
     }
 
-    @computed
     get notInstalledCatalogScriptsCollection() {
         return this.allScriptsCollection.filter(
             script => script.catalogScriptItem && !script.scriptOnInstrument
         );
     }
 
-    @computed
     get installedCatalogScriptsCollection() {
         return this.allScriptsCollection.filter(
             script => script.catalogScriptItem && script.scriptOnInstrument
         );
     }
 
-    @computed
     get instrumentScriptsNotInCatalogCollection() {
         return this.allScriptsCollection.filter(
             script => !script.catalogScriptItem && script.scriptOnInstrument
         );
     }
 
-    @computed
     get selectedScriptsCollection() {
         return this[this.selectedScriptsCollectionType];
     }
 
-    @computed get canInstallAllScripts() {
+    get canInstallAllScripts() {
         return (
             this.notInstalledCatalogScriptsCollection.length > 0 && !this.busy
         );
     }
 
-    @action setBusy(value: boolean) {
+    setBusy(value: boolean) {
         this.busy = value;
     }
 
@@ -589,7 +614,6 @@ export class BB3Instrument {
         }
     };
 
-    @action
     refreshLists(listsOnInstrument: IListOnInstrument[]) {
         const lists: List[] = [];
 
@@ -617,21 +641,18 @@ export class BB3Instrument {
         this.lists = lists;
     }
 
-    @computed
     get sortedLists() {
         return this.lists
             .slice()
             .sort((a, b) => stringCompare(a.baseName, b.baseName));
     }
 
-    @computed
     get listsOnInstrument() {
         return this.lists
             .filter(list => !!list.listOnInstrument)
             .map(list => list.listOnInstrument) as IListOnInstrument[];
     }
 
-    @computed
     get canDownloadAllLists() {
         return (
             !this.busy &&
@@ -656,7 +677,6 @@ export class BB3Instrument {
         }
     };
 
-    @computed
     get canUploadAllLists() {
         return (
             !this.busy &&
@@ -773,16 +793,13 @@ export class BB3Instrument {
     };
 
     upgradeMasterFirmwareWithLocalFile = async () => {
-        const result = await EEZStudio.remote.dialog.showOpenDialog(
-            EEZStudio.remote.getCurrentWindow(),
-            {
-                properties: ["openFile"],
-                filters: [
-                    { name: "SREC files", extensions: ["srec"] },
-                    { name: "All Files", extensions: ["*"] }
-                ]
-            }
-        );
+        const result = await dialog.showOpenDialog(getCurrentWindow(), {
+            properties: ["openFile"],
+            filters: [
+                { name: "SREC files", extensions: ["srec"] },
+                { name: "All Files", extensions: ["*"] }
+            ]
+        });
         const filePaths = result.filePaths;
         if (filePaths && filePaths[0]) {
             await useConnection(

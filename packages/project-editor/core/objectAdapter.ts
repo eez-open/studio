@@ -1,3 +1,4 @@
+import { Menu, MenuItem } from "@electron/remote";
 import {
     observable,
     action,
@@ -5,7 +6,8 @@ import {
     runInAction,
     autorun,
     IReactionDisposer,
-    IObservableValue
+    IObservableValue,
+    makeObservable
 } from "mobx";
 import { createTransformer } from "mobx-utils";
 
@@ -64,8 +66,6 @@ import { DragAndDropManager } from "project-editor/core/dd";
 
 import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
 import { IEditorState } from "project-editor/project/EditorComponent";
-
-const { Menu, MenuItem } = EEZStudio.remote || {};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -202,14 +202,36 @@ export interface ITreeObjectAdapter
 export class TreeObjectAdapter implements ITreeObjectAdapter {
     protected transformer: (object: IEezObject) => ITreeObjectAdapter;
 
-    @observable selected: boolean;
-    @observable expanded: boolean;
+    selected: boolean;
+    expanded: boolean;
 
     constructor(
         public object: IEezObject,
         transformer?: (object: IEezObject) => ITreeObjectAdapter,
         expanded?: boolean
     ) {
+        makeObservable(this, {
+            selected: observable,
+            expanded: observable,
+            children: computed,
+            rect: computed,
+            hasChildren: computed,
+            selectedItems: computed,
+            selectedObject: computed,
+            selectedObjects: computed,
+            selectedItem: computed,
+            selectItem: action,
+            deselectItem: action,
+            selectItems: action,
+            selectObjects: action,
+            selectObjectIds: action,
+            selectObject: action,
+            toggleSelected: action,
+            toggleExpanded: action,
+            loadState: action,
+            objectIdMap: computed
+        });
+
         if (transformer) {
             this.transformer = transformer;
         } else {
@@ -224,7 +246,6 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         return getId(this.object);
     }
 
-    @computed
     get children(): TreeObjectAdapterChildren {
         if (isArray(this.object)) {
             return this.object.map(child => this.transformer(child));
@@ -272,7 +293,6 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         }, {} as TreeObjectAdapterChildrenObject);
     }
 
-    @computed
     get rect() {
         const classInfo = getClassInfo(this.object);
         if (classInfo.getRect) {
@@ -333,12 +353,10 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         return undefined;
     }
 
-    @computed
     get hasChildren() {
         return _map(this.children).length > 0;
     }
 
-    @computed
     get selectedItems(): ITreeObjectAdapter[] {
         let items: ITreeObjectAdapter[] = [];
 
@@ -353,7 +371,6 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         return items;
     }
 
-    @computed
     get selectedObject() {
         if (this.selectedItems.length == 1) {
             return this.selectedItems[0].object;
@@ -361,12 +378,10 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         return undefined;
     }
 
-    @computed
     get selectedObjects() {
         return this.selectedItems.map(item => item.object);
     }
 
-    @computed
     get selectedItem() {
         if (this.selectedItems.length == 1) {
             return this.selectedItems[0];
@@ -374,7 +389,6 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         return undefined;
     }
 
-    @action
     selectItem(item: ITreeObjectAdapter) {
         item.selected = true;
 
@@ -387,12 +401,10 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         }
     }
 
-    @action
     deselectItem(item: ITreeObjectAdapter) {
         item.selected = false;
     }
 
-    @action
     selectItems(items: ITreeObjectAdapter[]) {
         // deselect previously selected items
         this.selectedItems.forEach(item => (item.selected = false));
@@ -401,7 +413,6 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         items.forEach(item => this.selectItem(item));
     }
 
-    @action
     selectObjects(objects: IEezObject[]) {
         const items: ITreeObjectAdapter[] = [];
         for (const object of objects) {
@@ -413,7 +424,6 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         this.selectItems(items);
     }
 
-    @action
     selectObjectIds(objectIds: string[]) {
         const currentlySelectedObjectIds = this.selectedItems.map(item =>
             getId(item.object)
@@ -435,7 +445,6 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         this.selectObjects(objects);
     }
 
-    @action
     selectObject(object: IEezObject) {
         let objectAdapter = this.getAncestorObjectAdapter(object);
         if (objectAdapter) {
@@ -445,7 +454,6 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         }
     }
 
-    @action
     toggleSelected(item: ITreeObjectAdapter) {
         if (item.selected) {
             item.selected = false;
@@ -454,12 +462,10 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         }
     }
 
-    @action
     toggleExpanded() {
         this.expanded = !this.expanded;
     }
 
-    @action
     loadState(state: any) {
         function loadState(treeObjectAdapter: TreeObjectAdapter, state: any) {
             if (!state) {
@@ -511,7 +517,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         return saveState(this);
     }
 
-    @computed get objectIdMap() {
+    get objectIdMap() {
         const map = new Map<string, ITreeObjectAdapter>();
 
         function makeMap(objectAdapter: ITreeObjectAdapter) {
@@ -1308,9 +1314,13 @@ export class TreeAdapter implements ITreeAdapter {
 ////////////////////////////////////////////////////////////////////////////////
 
 class ListItem {
-    constructor(public object: IEezObject) {}
+    constructor(public object: IEezObject) {
+        makeObservable(this, {
+            selected: observable
+        });
+    }
 
-    @observable selected: boolean = false;
+    selected: boolean = false;
 
     get item() {
         return this;
@@ -1342,6 +1352,13 @@ export class ListAdapter implements ITreeAdapter {
         protected searchText?: string,
         protected filter?: (object: IEezObject) => boolean
     ) {
+        makeObservable(this, {
+            items: computed,
+            selectedItem: computed,
+            selectItem: action,
+            selectItems: action
+        });
+
         this.parentItem = new ListItem(this.object);
 
         this.onClickCallback = onClick;
@@ -1374,7 +1391,6 @@ export class ListAdapter implements ITreeAdapter {
 
     parentItem: ListItem;
 
-    @computed
     get items() {
         let objects = this.object as IEezObject[];
 
@@ -1443,7 +1459,6 @@ export class ListAdapter implements ITreeAdapter {
         return item.selected;
     }
 
-    @computed
     get selectedItem(): ListItem | undefined {
         const selectedObject = this.selectedObject.get();
 
@@ -1454,7 +1469,6 @@ export class ListAdapter implements ITreeAdapter {
         return undefined;
     }
 
-    @action
     selectItem(item: ListItem): void {
         let selectedItem = this.selectedItem;
         if (selectedItem) {
@@ -1469,7 +1483,6 @@ export class ListAdapter implements ITreeAdapter {
         }
     }
 
-    @action
     selectItems(items: ListItem[]): void {
         if (items[0]) {
             this.selectItem(items[0]);

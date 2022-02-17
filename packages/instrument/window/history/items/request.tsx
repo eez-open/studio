@@ -9,32 +9,33 @@ import { PreventDraggable } from "instrument/window/history/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class RequestHistoryItemComponent extends React.Component<
-    {
-        appStore: IAppStore;
-        historyItem: HistoryItem;
-    },
-    {}
-> {
-    render() {
-        return (
-            <div className="EezStudio_RequestHistoryItem">
-                <p>
-                    <small className="EezStudio_HistoryItemDate">
-                        {formatDateTimeLong(this.props.historyItem.date)}
-                    </small>
-                </p>
-                {this.props.historyItem.getSourceDescriptionElement(
-                    this.props.appStore
-                )}
-                <PreventDraggable tag="pre">
-                    {this.props.historyItem.message}
-                </PreventDraggable>
-            </div>
-        );
+export const RequestHistoryItemComponent = observer(
+    class RequestHistoryItemComponent extends React.Component<
+        {
+            appStore: IAppStore;
+            historyItem: HistoryItem;
+        },
+        {}
+    > {
+        render() {
+            return (
+                <div className="EezStudio_RequestHistoryItem">
+                    <p>
+                        <small className="EezStudio_HistoryItemDate">
+                            {formatDateTimeLong(this.props.historyItem.date)}
+                        </small>
+                    </p>
+                    {this.props.historyItem.getSourceDescriptionElement(
+                        this.props.appStore
+                    )}
+                    <PreventDraggable tag="pre">
+                        {this.props.historyItem.message}
+                    </PreventDraggable>
+                </div>
+            );
+        }
     }
-}
+);
 
 export class RequestHistoryItem extends HistoryItem {
     getListItemElement(appStore: IAppStore): React.ReactNode {

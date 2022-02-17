@@ -1,6 +1,15 @@
 import path from "path";
+import { ipcRenderer } from "electron";
+import { Menu, MenuItem } from "@electron/remote";
 import React from "react";
-import { computed, action, observable, toJS, runInAction } from "mobx";
+import {
+    computed,
+    action,
+    observable,
+    toJS,
+    runInAction,
+    makeObservable
+} from "mobx";
 import { observer } from "mobx-react";
 
 import {
@@ -23,8 +32,6 @@ import { stringCompare } from "eez-studio-shared/string";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 
 import type * as TabsStoreModule from "home/tabs-store";
-
-const { Menu, MenuItem } = EEZStudio.remote;
 
 import { instruments, InstrumentObject } from "instrument/instrument-object";
 import { instrumentStore } from "instrument/instrument-object";
@@ -56,7 +63,7 @@ function openEditor(
 ) {
     if (target === "default") {
         if (
-            EEZStudio.electron.ipcRenderer.sendSync(
+            ipcRenderer.sendSync(
                 "focusWindow",
                 instrument.getEditorWindowArgs()
             )
@@ -75,7 +82,7 @@ function openEditor(
             tabs.makeActive(tab);
         } else {
             // close window if open
-            EEZStudio.electron.ipcRenderer.send(
+            ipcRenderer.send(
                 "closeWindow",
                 toJS(instrument.getEditorWindowArgs())
             );
@@ -92,10 +99,7 @@ function openEditor(
         }
 
         // open window
-        EEZStudio.electron.ipcRenderer.send(
-            "openWindow",
-            toJS(instrument.getEditorWindowArgs())
-        );
+        ipcRenderer.send("openWindow", toJS(instrument.getEditorWindowArgs()));
     }
 }
 
@@ -118,7 +122,12 @@ window.addEventListener("message", (message: any) => {
 ////////////////////////////////////////////////////////////////////////////////
 
 class WorkbenchDocument {
-    @computed
+    constructor() {
+        makeObservable(this, {
+            instruments: computed
+        });
+    }
+
     get instruments() {
         return Array.from(instruments.values());
     }
@@ -144,8 +153,6 @@ class WorkbenchDocument {
             const instrument = instruments[0];
 
             if (instrument.isUnknownExtension) {
-                const { MenuItem } = EEZStudio.remote;
-
                 if (menu.items.length > 0) {
                     menu.append(
                         new MenuItem({
@@ -218,67 +225,68 @@ export const workbenchDocument = new WorkbenchDocument();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class WorkbenchToolbar extends React.Component {
-    get buttons() {
-        let buttons = [
-            {
-                id: "instrument-add",
-                label: "Add Instrument",
-                title: "Add instrument",
-                className: "btn-success",
-                onClick: () => {
-                    const { showAddInstrumentDialog } =
-                        require("instrument/add-instrument-dialog") as typeof AddInstrumentDialogModule;
+export const WorkbenchToolbar = observer(
+    class WorkbenchToolbar extends React.Component {
+        get buttons() {
+            let buttons = [
+                {
+                    id: "instrument-add",
+                    label: "Add Instrument",
+                    title: "Add instrument",
+                    className: "btn-success",
+                    onClick: () => {
+                        const { showAddInstrumentDialog } =
+                            require("instrument/add-instrument-dialog") as typeof AddInstrumentDialogModule;
 
-                    showAddInstrumentDialog(instrumentId => {
-                        setTimeout(() => {
-                            runInAction(() =>
-                                selectedInstrument.set(instrumentId)
-                            );
-                        }, 100);
-                    });
+                        showAddInstrumentDialog(instrumentId => {
+                            setTimeout(() => {
+                                runInAction(() =>
+                                    selectedInstrument.set(instrumentId)
+                                );
+                            }, 100);
+                        });
+                    }
                 }
+            ];
+
+            const { showDeletedInstrumentsDialog, deletedInstruments } =
+                require("instrument/deleted-instruments-dialog") as typeof DeletedInstrumentsDialogModule;
+
+            if (deletedInstruments.size > 0) {
+                buttons.push({
+                    id: "show-deleted-instruments",
+                    label: "Deleted Instruments",
+                    title: "Show deleted instruments",
+                    className: "btn-secondary",
+                    onClick: () => {
+                        showDeletedInstrumentsDialog(selectedInstrument);
+                    }
+                });
             }
-        ];
 
-        const { showDeletedInstrumentsDialog, deletedInstruments } =
-            require("instrument/deleted-instruments-dialog") as typeof DeletedInstrumentsDialogModule;
-
-        if (deletedInstruments.size > 0) {
-            buttons.push({
-                id: "show-deleted-instruments",
-                label: "Deleted Instruments",
-                title: "Show deleted instruments",
-                className: "btn-secondary",
-                onClick: () => {
-                    showDeletedInstrumentsDialog(selectedInstrument);
-                }
-            });
+            return buttons;
         }
 
-        return buttons;
+        render() {
+            return (
+                <ToolbarHeader>
+                    <h5>Instruments</h5>
+                    <div>
+                        {this.buttons.map(button => (
+                            <ButtonAction
+                                key={button.id}
+                                text={button.label}
+                                title={button.title}
+                                className={button.className}
+                                onClick={button.onClick}
+                            />
+                        ))}
+                    </div>
+                </ToolbarHeader>
+            );
+        }
     }
-
-    render() {
-        return (
-            <ToolbarHeader>
-                <h5>Instruments</h5>
-                <div>
-                    {this.buttons.map(button => (
-                        <ButtonAction
-                            key={button.id}
-                            text={button.label}
-                            title={button.title}
-                            className={button.className}
-                            onClick={button.onClick}
-                        />
-                    ))}
-                </div>
-            </ToolbarHeader>
-        );
-    }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -288,197 +296,221 @@ export class PanelTitle extends React.Component<{ title?: string }, {}> {
     }
 }
 
-@observer
-export class Properties extends React.Component<{
-    selectedInstrumentId: string | undefined;
-}> {
-    render() {
-        if (!this.props.selectedInstrumentId) {
-            return <div />;
+export const Properties = observer(
+    class Properties extends React.Component<{
+        selectedInstrumentId: string | undefined;
+    }> {
+        render() {
+            if (!this.props.selectedInstrumentId) {
+                return <div />;
+            }
+
+            let history = (
+                <div className="EezStudio_HistoryContainer">
+                    <PanelTitle title="History" />
+                    <div className="EezStudio_HistoryContent">
+                        <HistorySection
+                            oids={[this.props.selectedInstrumentId]}
+                            simple={true}
+                        />
+                    </div>
+                </div>
+            );
+
+            const instrument = instruments.get(this.props.selectedInstrumentId);
+
+            return (
+                <Splitter
+                    type="vertical"
+                    sizes={"100%|240px"}
+                    persistId={"home/designer/properties/splitter"}
+                >
+                    <div className="EezStudio_InstrumentDetailsEnclosure">
+                        {instrument && (
+                            <InstrumentDetails instrument={instrument} />
+                        )}
+                    </div>
+                    {history}
+                </Splitter>
+            );
         }
-
-        let history = (
-            <div className="EezStudio_HistoryContainer">
-                <PanelTitle title="History" />
-                <div className="EezStudio_HistoryContent">
-                    <HistorySection
-                        oids={[this.props.selectedInstrumentId]}
-                        simple={true}
-                    />
-                </div>
-            </div>
-        );
-
-        const instrument = instruments.get(this.props.selectedInstrumentId);
-
-        return (
-            <Splitter
-                type="vertical"
-                sizes={"100%|240px"}
-                persistId={"home/designer/properties/splitter"}
-            >
-                <div className="EezStudio_InstrumentDetailsEnclosure">
-                    {instrument && (
-                        <InstrumentDetails instrument={instrument} />
-                    )}
-                </div>
-                {history}
-            </Splitter>
-        );
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class InstrumentComponent extends React.Component<
-    {
-        instrument: InstrumentObject;
-        isSelected: boolean;
+const InstrumentComponent = observer(
+    class InstrumentComponent extends React.Component<
+        {
+            instrument: InstrumentObject;
+            isSelected: boolean;
+            selectInstrument: (instrument: InstrumentObject) => void;
+        },
+        {}
+    > {
+        ref = React.createRef<HTMLDivElement>();
+
+        open = () => {
+            openEditor(this.props.instrument, "default");
+        };
+
+        componentDidUpdate() {
+            if (this.props.isSelected) {
+                this.ref.current!.scrollIntoView({
+                    block: "nearest",
+                    behavior: "smooth"
+                });
+            }
+        }
+
+        render() {
+            const { instrument } = this.props;
+
+            return (
+                <div
+                    ref={this.ref}
+                    className={classNames(
+                        "EezStudio_InstrumentComponentEnclosure shadow-sm p-3 m-3 rounded bg-light",
+                        {
+                            selected: this.props.isSelected
+                        }
+                    )}
+                    onClick={() => this.props.selectInstrument(instrument)}
+                    onDoubleClick={this.open}
+                    onContextMenu={() => {
+                        runInAction(() =>
+                            selectedInstrument.set(instrument.id)
+                        );
+                        const contextMenu = workbenchDocument.createContextMenu(
+                            [instrument]
+                        );
+                        contextMenu.popup({});
+                    }}
+                >
+                    <InstrumentContent instrument={instrument} />
+                </div>
+            );
+        }
+    }
+);
+
+export const WorkbenchDocumentComponent = observer(
+    class WorkbenchDocumentComponent extends React.Component<{
+        selectedInstrumentId: string | undefined;
         selectInstrument: (instrument: InstrumentObject) => void;
-    },
-    {}
-> {
-    ref = React.createRef<HTMLDivElement>();
+    }> {
+        render() {
+            return (
+                <div className="EezStudio_WorkbenchDocument d-flex flex-wrap justify-content-center align-items-center">
+                    {workbenchDocument.instruments
+                        .sort((a, b) => stringCompare(a.name, b.name))
+                        .map(obj => (
+                            <InstrumentComponent
+                                key={obj.id}
+                                instrument={obj}
+                                isSelected={
+                                    obj.id == this.props.selectedInstrumentId
+                                }
+                                selectInstrument={this.props.selectInstrument}
+                            />
+                        ))}
+                </div>
+            );
+        }
+    }
+);
 
-    open = () => {
-        openEditor(this.props.instrument, "default");
-    };
+////////////////////////////////////////////////////////////////////////////////
 
-    componentDidUpdate() {
-        if (this.props.isSelected) {
-            this.ref.current!.scrollIntoView({
-                block: "nearest",
-                behavior: "smooth"
+export const InstrumentContent = observer(
+    class InstrumentContent extends React.Component<{
+        instrument: InstrumentObject;
+    }> {
+        render() {
+            const { instrument } = this.props;
+            return (
+                <div className="EezStudio_InstrumentContent">
+                    {instrument.image && (
+                        <img src={instrument.image} draggable={false} />
+                    )}
+                    <div className="EezStudio_InstrumentLabel">
+                        {instrument.name}
+                    </div>
+                    <div className="EezStudio_InstrumentConnectionState">
+                        <span
+                            style={{
+                                backgroundColor:
+                                    instrument.connectionState.color
+                            }}
+                        />
+                        <span>{instrument.connectionState.label}</span>
+                        {instrument.connectionState.error && (
+                            <Icon
+                                className="text-danger"
+                                icon="material:error"
+                            />
+                        )}
+                    </div>
+                </div>
+            );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const Workbench = observer(
+    class Workbench extends React.Component<{}, {}> {
+        constructor(props: {}) {
+            super(props);
+
+            makeObservable(this, {
+                selectInstrument: action.bound
             });
         }
+
+        selectInstrument(instrument: InstrumentObject) {
+            selectedInstrument.set(instrument.id);
+        }
+
+        render() {
+            return (
+                <VerticalHeaderWithBody>
+                    <Header>
+                        <WorkbenchToolbar />
+                    </Header>
+                    <Body>
+                        <Splitter
+                            type="horizontal"
+                            sizes={/*"240px|100%|240px"*/ "100%|240px"}
+                            persistId="home/designer/splitter"
+                        >
+                            <WorkbenchDocumentComponent
+                                selectedInstrumentId={selectedInstrument.get()}
+                                selectInstrument={this.selectInstrument}
+                            />
+
+                            <Properties
+                                selectedInstrumentId={selectedInstrument.get()}
+                            />
+                        </Splitter>
+                    </Body>
+                </VerticalHeaderWithBody>
+            );
+        }
     }
-
-    render() {
-        const { instrument } = this.props;
-
-        return (
-            <div
-                ref={this.ref}
-                className={classNames(
-                    "EezStudio_InstrumentComponentEnclosure shadow-sm p-3 m-3 rounded bg-light",
-                    {
-                        selected: this.props.isSelected
-                    }
-                )}
-                onClick={() => this.props.selectInstrument(instrument)}
-                onDoubleClick={this.open}
-                onContextMenu={() => {
-                    runInAction(() => selectedInstrument.set(instrument.id));
-                    const contextMenu = workbenchDocument.createContextMenu([
-                        instrument
-                    ]);
-                    contextMenu.popup({});
-                }}
-            >
-                <InstrumentContent instrument={instrument} />
-            </div>
-        );
-    }
-}
-
-@observer
-export class WorkbenchDocumentComponent extends React.Component<{
-    selectedInstrumentId: string | undefined;
-    selectInstrument: (instrument: InstrumentObject) => void;
-}> {
-    render() {
-        return (
-            <div className="EezStudio_WorkbenchDocument d-flex flex-wrap justify-content-center align-items-center">
-                {workbenchDocument.instruments
-                    .sort((a, b) => stringCompare(a.name, b.name))
-                    .map(obj => (
-                        <InstrumentComponent
-                            key={obj.id}
-                            instrument={obj}
-                            isSelected={
-                                obj.id == this.props.selectedInstrumentId
-                            }
-                            selectInstrument={this.props.selectInstrument}
-                        />
-                    ))}
-            </div>
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-export class InstrumentContent extends React.Component<{
-    instrument: InstrumentObject;
-}> {
-    render() {
-        const { instrument } = this.props;
-        return (
-            <div className="EezStudio_InstrumentContent">
-                {instrument.image && (
-                    <img src={instrument.image} draggable={false} />
-                )}
-                <div className="EezStudio_InstrumentLabel">
-                    {instrument.name}
-                </div>
-                <div className="EezStudio_InstrumentConnectionState">
-                    <span
-                        style={{
-                            backgroundColor: instrument.connectionState.color
-                        }}
-                    />
-                    <span>{instrument.connectionState.label}</span>
-                    {instrument.connectionState.error && (
-                        <Icon className="text-danger" icon="material:error" />
-                    )}
-                </div>
-            </div>
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-export class Workbench extends React.Component<{}, {}> {
-    @action.bound
-    selectInstrument(instrument: InstrumentObject) {
-        selectedInstrument.set(instrument.id);
-    }
-
-    render() {
-        return (
-            <VerticalHeaderWithBody>
-                <Header>
-                    <WorkbenchToolbar />
-                </Header>
-                <Body>
-                    <Splitter
-                        type="horizontal"
-                        sizes={/*"240px|100%|240px"*/ "100%|240px"}
-                        persistId="home/designer/splitter"
-                    >
-                        <WorkbenchDocumentComponent
-                            selectedInstrumentId={selectedInstrument.get()}
-                            selectInstrument={this.selectInstrument}
-                        />
-
-                        <Properties
-                            selectedInstrumentId={selectedInstrument.get()}
-                        />
-                    </Splitter>
-                </Body>
-            </VerticalHeaderWithBody>
-        );
-    }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class AddTabPopupStuff {
-    @computed get sessionInfo() {
+    constructor() {
+        makeObservable(this, {
+            sessionInfo: computed
+        });
+    }
+
+    get sessionInfo() {
         const appStore = getAppStore();
         return !appStore.history.sessions.activeSession;
     }
@@ -488,195 +520,213 @@ const theAddTabPopupStuff = new AddTabPopupStuff();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class Projects extends React.Component {
-    @observable selectedFilePath: string | undefined;
+const Projects = observer(
+    class Projects extends React.Component {
+        selectedFilePath: string | undefined;
 
-    render() {
-        return (
-            <VerticalHeaderWithBody>
-                <Header>
-                    <ToolbarHeader>
-                        <h5>Recent projects</h5>
-                        <div>
-                            <ButtonAction
-                                text="New Project"
-                                title="New Project"
-                                className="btn-success"
-                                onClick={async () => {
-                                    const { showNewProjectWizard } =
-                                        await import(
-                                            "project-editor/project/Wizard"
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                selectedFilePath: observable
+            });
+        }
+
+        render() {
+            return (
+                <VerticalHeaderWithBody>
+                    <Header>
+                        <ToolbarHeader>
+                            <h5>Recent projects</h5>
+                            <div>
+                                <ButtonAction
+                                    text="New Project"
+                                    title="New Project"
+                                    className="btn-success"
+                                    onClick={async () => {
+                                        const { showNewProjectWizard } =
+                                            await import(
+                                                "project-editor/project/Wizard"
+                                            );
+                                        showNewProjectWizard();
+                                    }}
+                                />
+                                <ButtonAction
+                                    text="Open Project"
+                                    title="Open Project"
+                                    className="btn-primary"
+                                    onClick={() => {
+                                        ipcRenderer.send("open-project");
+                                    }}
+                                />
+                            </div>
+                        </ToolbarHeader>
+                    </Header>
+                    <Body>
+                        <ListContainer tabIndex={0}>
+                            <List
+                                nodes={settingsController.mru.map(mruItem => ({
+                                    id: mruItem.filePath,
+                                    data: mruItem,
+                                    selected:
+                                        mruItem.filePath ==
+                                        this.selectedFilePath
+                                }))}
+                                renderNode={(node: IListNode<IMruItem>) => {
+                                    let mruItem = node.data;
+
+                                    const isProject =
+                                        mruItem.filePath.endsWith(
+                                            ".eez-project"
                                         );
-                                    showNewProjectWizard();
-                                }}
-                            />
-                            <ButtonAction
-                                text="Open Project"
-                                title="Open Project"
-                                className="btn-primary"
-                                onClick={() => {
-                                    EEZStudio.electron.ipcRenderer.send(
-                                        "open-project"
+
+                                    let extension = isProject
+                                        ? ".eez-project"
+                                        : ".eez-dashboard";
+
+                                    const baseName = path.basename(
+                                        mruItem.filePath,
+                                        extension
+                                    );
+
+                                    return (
+                                        <ListItem
+                                            leftIcon={
+                                                isProject
+                                                    ? "../eez-studio-ui/_images/eez-project.png"
+                                                    : "../eez-studio-ui/_images/eez-dashboard.png"
+                                            }
+                                            leftIconSize={48}
+                                            label={
+                                                <div className="EezStudio_HomeTab_ProjectItem">
+                                                    <div className="fist-line">
+                                                        <span className="fw-bolder">
+                                                            {baseName}
+                                                        </span>
+                                                        <span>{extension}</span>
+                                                    </div>
+                                                    <div className="text-secondary">
+                                                        {path.dirname(
+                                                            mruItem.filePath
+                                                        )}
+                                                    </div>
+                                                    <IconAction
+                                                        icon="material:close"
+                                                        title="Remove project from the list"
+                                                        className="btn-secondary"
+                                                        onClick={() => {
+                                                            settingsController.removeItemFromMRU(
+                                                                mruItem
+                                                            );
+                                                        }}
+                                                    />
+                                                </div>
+                                            }
+                                        />
                                     );
                                 }}
-                            />
-                        </div>
-                    </ToolbarHeader>
-                </Header>
-                <Body>
-                    <ListContainer tabIndex={0}>
-                        <List
-                            nodes={settingsController.mru.map(mruItem => ({
-                                id: mruItem.filePath,
-                                data: mruItem,
-                                selected:
-                                    mruItem.filePath == this.selectedFilePath
-                            }))}
-                            renderNode={(node: IListNode<IMruItem>) => {
-                                let mruItem = node.data;
+                                selectNode={(node: IListNode<IMruItem>) => {
+                                    runInAction(
+                                        () =>
+                                            (this.selectedFilePath =
+                                                node.data.filePath)
+                                    );
 
-                                const isProject =
-                                    mruItem.filePath.endsWith(".eez-project");
-
-                                let extension = isProject
-                                    ? ".eez-project"
-                                    : ".eez-dashboard";
-
-                                const baseName = path.basename(
-                                    mruItem.filePath,
-                                    extension
-                                );
-
-                                return (
-                                    <ListItem
-                                        leftIcon={
-                                            isProject
-                                                ? "../eez-studio-ui/_images/eez-project.png"
-                                                : "../eez-studio-ui/_images/eez-dashboard.png"
-                                        }
-                                        leftIconSize={48}
-                                        label={
-                                            <div className="EezStudio_HomeTab_ProjectItem">
-                                                <div className="fist-line">
-                                                    <span className="fw-bolder">
-                                                        {baseName}
-                                                    </span>
-                                                    <span>{extension}</span>
-                                                </div>
-                                                <div className="text-secondary">
-                                                    {path.dirname(
-                                                        mruItem.filePath
-                                                    )}
-                                                </div>
-                                                <IconAction
-                                                    icon="material:close"
-                                                    title="Remove project from the list"
-                                                    className="btn-secondary"
-                                                    onClick={() => {
-                                                        settingsController.removeItemFromMRU(
-                                                            mruItem
-                                                        );
-                                                    }}
-                                                />
-                                            </div>
-                                        }
-                                    />
-                                );
-                            }}
-                            selectNode={(node: IListNode<IMruItem>) => {
-                                runInAction(
-                                    () =>
-                                        (this.selectedFilePath =
-                                            node.data.filePath)
-                                );
-
-                                EEZStudio.electron.ipcRenderer.send(
-                                    "open-file",
-                                    node.data.filePath
-                                );
-                            }}
-                        ></List>
-                    </ListContainer>
-                </Body>
-            </VerticalHeaderWithBody>
-        );
+                                    ipcRenderer.send(
+                                        "open-file",
+                                        node.data.filePath
+                                    );
+                                }}
+                            ></List>
+                        </ListContainer>
+                    </Body>
+                </VerticalHeaderWithBody>
+            );
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class Home extends React.Component<{}, {}> {
-    @action.bound
-    selectInstrument(instrument: InstrumentObject) {
-        selectedInstrument.set(instrument.id);
-    }
+export const Home = observer(
+    class Home extends React.Component<{}, {}> {
+        constructor(props: {}) {
+            super(props);
 
-    render() {
-        let allTabs = (
-            <div className="EezStudio_HomeTab_TabsContainer">
-                {tabs.allTabs
-                    .filter(tab => tab.instance.id != "home")
-                    .map(tab => {
-                        let icon;
-                        if (typeof tab.instance.icon == "string") {
-                            icon = <Icon icon={tab.instance.icon} />;
-                        } else {
-                            icon = tab.instance.icon;
-                        }
-                        return (
-                            <button
-                                key={tab.instance.id}
-                                className="btn btn btn-secondary"
-                                onClick={() => tab.open().makeActive()}
-                                title={
-                                    tab.instance.tooltipTitle
-                                        ? tab.instance.tooltipTitle
-                                        : `Show ${tab.instance.title} Tab`
-                                }
-                            >
-                                {icon}
-                                <span>{tab.instance.title}</span>
-                            </button>
-                        );
-                    })}
-            </div>
-        );
+            makeObservable(this, {
+                selectInstrument: action.bound
+            });
+        }
 
-        let sessionInfo;
-        const appStore = getAppStore();
-        if (theAddTabPopupStuff.sessionInfo) {
-            sessionInfo = (
-                <div className="EezStudio_SessionInfoContainer">
-                    <SessionInfo appStore={appStore} />
+        selectInstrument(instrument: InstrumentObject) {
+            selectedInstrument.set(instrument.id);
+        }
+
+        render() {
+            let allTabs = (
+                <div className="EezStudio_HomeTab_TabsContainer">
+                    {tabs.allTabs
+                        .filter(tab => tab.instance.id != "home")
+                        .map(tab => {
+                            let icon;
+                            if (typeof tab.instance.icon == "string") {
+                                icon = <Icon icon={tab.instance.icon} />;
+                            } else {
+                                icon = tab.instance.icon;
+                            }
+                            return (
+                                <button
+                                    key={tab.instance.id}
+                                    className="btn btn btn-secondary"
+                                    onClick={() => tab.open().makeActive()}
+                                    title={
+                                        tab.instance.tooltipTitle
+                                            ? tab.instance.tooltipTitle
+                                            : `Show ${tab.instance.title} Tab`
+                                    }
+                                >
+                                    {icon}
+                                    <span>{tab.instance.title}</span>
+                                </button>
+                            );
+                        })}
+                </div>
+            );
+
+            let sessionInfo;
+            const appStore = getAppStore();
+            if (theAddTabPopupStuff.sessionInfo) {
+                sessionInfo = (
+                    <div className="EezStudio_SessionInfoContainer">
+                        <SessionInfo appStore={appStore} />
+                    </div>
+                );
+            }
+
+            return (
+                <div className="EezStudio_HomeTab">
+                    <div className="EezStudio_HomeTab_Tabs_And_SessionInfo">
+                        {allTabs}
+                        {sessionInfo}
+                    </div>
+                    <div className="EezStudio_HomeTab_Projects_And_Instruments">
+                        <Splitter
+                            type="horizontal"
+                            sizes={"35%|65%"}
+                            persistId={
+                                "home/home-tab/projects-and-instruments-splitter"
+                            }
+                        >
+                            <div className="EezStudio_HomeTab_Projects">
+                                <Projects />
+                            </div>
+                            <div className="EezStudio_HomeTab_Instruments">
+                                <Workbench />
+                            </div>
+                        </Splitter>
+                    </div>
                 </div>
             );
         }
-
-        return (
-            <div className="EezStudio_HomeTab">
-                <div className="EezStudio_HomeTab_Tabs_And_SessionInfo">
-                    {allTabs}
-                    {sessionInfo}
-                </div>
-                <div className="EezStudio_HomeTab_Projects_And_Instruments">
-                    <Splitter
-                        type="horizontal"
-                        sizes={"35%|65%"}
-                        persistId={
-                            "home/home-tab/projects-and-instruments-splitter"
-                        }
-                    >
-                        <div className="EezStudio_HomeTab_Projects">
-                            <Projects />
-                        </div>
-                        <div className="EezStudio_HomeTab_Instruments">
-                            <Workbench />
-                        </div>
-                    </Splitter>
-                </div>
-            </div>
-        );
     }
-}
+);

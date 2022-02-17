@@ -1,3 +1,7 @@
+import fs from "fs";
+import archiver from "archiver";
+import xmlFormatter from "xml-formatter";
+
 import {
     ScpiCommand,
     ScpiCommandTreeNode,
@@ -425,17 +429,13 @@ export function buildInstrumentExtension(
     idf: IdfProperties,
     subsystems: ISubsystem[],
     enums: IEnum[],
-    moduleFilePath: string | undefined,
+    moduleFilePath: string,
     imageFilePath: string | undefined,
     scpiHelpFolderPath: string | undefined,
     projectFilePath: string,
     properties: any
 ) {
     return new Promise<void>((resolve, reject) => {
-        const fs = EEZStudio.remote.require("fs");
-        const archiver = EEZStudio.remote.require("archiver");
-        const xmlFormatter = require("xml-formatter");
-
         let extensionName = idf.extensionName;
         var output = fs.createWriteStream(moduleFilePath);
 

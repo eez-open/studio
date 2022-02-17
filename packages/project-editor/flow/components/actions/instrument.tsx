@@ -1,5 +1,12 @@
 import React from "react";
-import { observable, computed, action, runInAction, ObservableMap } from "mobx";
+import {
+    observable,
+    computed,
+    action,
+    runInAction,
+    ObservableMap,
+    makeObservable
+} from "mobx";
 import { observer } from "mobx-react";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
@@ -201,8 +208,17 @@ export class SCPIActionComponent extends ActionComponent {
         componentPaletteGroupName: "Instrument"
     });
 
-    @observable instrument: string;
-    @observable scpi: string;
+    instrument: string;
+    scpi: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            instrument: observable,
+            scpi: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -387,108 +403,124 @@ registerClass("SCPIActionComponent", SCPIActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class SelectInstrumentDialog extends React.Component<
-    {
-        name?: string;
-        instruments: ObservableMap<string, InstrumentObject>;
-        instrument?: InstrumentObject;
-        callback: (instrument: InstrumentObject | undefined) => void;
-    },
-    {}
-> {
-    @observable _selectedInstrument: InstrumentObject | undefined;
+export const SelectInstrumentDialog = observer(
+    class SelectInstrumentDialog extends React.Component<
+        {
+            name?: string;
+            instruments: ObservableMap<string, InstrumentObject>;
+            instrument?: InstrumentObject;
+            callback: (instrument: InstrumentObject | undefined) => void;
+        },
+        {}
+    > {
+        _selectedInstrument: InstrumentObject | undefined;
 
-    get selectedInstrument() {
-        return this._selectedInstrument || this.props.instrument;
-    }
+        constructor(props: {
+            name?: string;
+            instruments: ObservableMap<string, InstrumentObject>;
+            instrument?: InstrumentObject;
+            callback: (instrument: InstrumentObject | undefined) => void;
+        }) {
+            super(props);
 
-    set selectedInstrument(value: InstrumentObject | undefined) {
-        runInAction(() => (this._selectedInstrument = value));
-    }
+            makeObservable(this, {
+                _selectedInstrument: observable,
+                instrumentNodes: computed,
+                selectInstrumentExtension: action.bound
+            });
+        }
 
-    renderNode(node: IListNode<InstrumentObject>) {
-        let instrument = node.data;
-        return (
-            <ListItem
-                leftIcon={instrument.image}
-                leftIconSize={48}
-                label={
-                    <div className="EezStudio_InstrumentConnectionState">
-                        <span
-                            style={{
-                                backgroundColor:
-                                    instrument.connectionState.color
-                            }}
+        get selectedInstrument() {
+            return this._selectedInstrument || this.props.instrument;
+        }
+
+        set selectedInstrument(value: InstrumentObject | undefined) {
+            runInAction(() => (this._selectedInstrument = value));
+        }
+
+        renderNode(node: IListNode<InstrumentObject>) {
+            let instrument = node.data;
+            return (
+                <ListItem
+                    leftIcon={instrument.image}
+                    leftIconSize={48}
+                    label={
+                        <div className="EezStudio_InstrumentConnectionState">
+                            <span
+                                style={{
+                                    backgroundColor:
+                                        instrument.connectionState.color
+                                }}
+                            />
+                            <span>{instrument.name}</span>
+                        </div>
+                    }
+                />
+            );
+        }
+
+        get instrumentNodes() {
+            const instrumentObjects = [];
+
+            for (let [_, instrument] of this.props.instruments) {
+                instrumentObjects.push(instrument);
+            }
+
+            instrumentObjects.sort((a, b) =>
+                a.name
+                    .toLocaleLowerCase()
+                    .localeCompare(b.name.toLocaleLowerCase())
+            );
+
+            return instrumentObjects.map(instrument => ({
+                id: instrument.id,
+                data: instrument,
+                selected: this.selectedInstrument
+                    ? instrument.id === this.selectedInstrument.id
+                    : false
+            }));
+        }
+
+        selectInstrumentExtension(node: IListNode<InstrumentObject>) {
+            this.selectedInstrument = node.data;
+        }
+
+        isOkEnabled = () => {
+            return this.selectedInstrument != undefined;
+        };
+
+        onOk = () => {
+            if (this.selectedInstrument) {
+                this.props.callback(this.selectedInstrument);
+                return true;
+            }
+            return false;
+        };
+
+        onCancel = () => {
+            this.props.callback(undefined);
+        };
+
+        render() {
+            return (
+                <Dialog
+                    okEnabled={this.isOkEnabled}
+                    onOk={this.onOk}
+                    onCancel={this.onCancel}
+                >
+                    <PropertyList>
+                        <SelectFromListProperty
+                            name={this.props.name || "Select instrument:"}
+                            nodes={this.instrumentNodes}
+                            renderNode={this.renderNode}
+                            onChange={this.selectInstrumentExtension}
                         />
-                        <span>{instrument.name}</span>
-                    </div>
-                }
-            />
-        );
-    }
-
-    @computed
-    get instrumentNodes() {
-        const instrumentObjects = [];
-
-        for (let [_, instrument] of this.props.instruments) {
-            instrumentObjects.push(instrument);
+                    </PropertyList>
+                </Dialog>
+            );
         }
-
-        instrumentObjects.sort((a, b) =>
-            a.name.toLocaleLowerCase().localeCompare(b.name.toLocaleLowerCase())
-        );
-
-        return instrumentObjects.map(instrument => ({
-            id: instrument.id,
-            data: instrument,
-            selected: this.selectedInstrument
-                ? instrument.id === this.selectedInstrument.id
-                : false
-        }));
     }
-
-    @action.bound
-    selectInstrumentExtension(node: IListNode<InstrumentObject>) {
-        this.selectedInstrument = node.data;
-    }
-
-    isOkEnabled = () => {
-        return this.selectedInstrument != undefined;
-    };
-
-    onOk = () => {
-        if (this.selectedInstrument) {
-            this.props.callback(this.selectedInstrument);
-            return true;
-        }
-        return false;
-    };
-
-    onCancel = () => {
-        this.props.callback(undefined);
-    };
-
-    render() {
-        return (
-            <Dialog
-                okEnabled={this.isOkEnabled}
-                onOk={this.onOk}
-                onCancel={this.onCancel}
-            >
-                <PropertyList>
-                    <SelectFromListProperty
-                        name={this.props.name || "Select instrument:"}
-                        nodes={this.instrumentNodes}
-                        renderNode={this.renderNode}
-                        onChange={this.selectInstrumentExtension}
-                    />
-                </PropertyList>
-            </Dialog>
-        );
-    }
-}
+);
 
 export async function showSelectInstrumentDialog(
     name?: string,
@@ -688,7 +720,15 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
         componentPaletteGroupName: "Instrument"
     });
 
-    @observable instrument: string;
+    instrument: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            instrument: observable
+        });
+    }
 
     getInputs() {
         return [

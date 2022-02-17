@@ -1,4 +1,4 @@
-import { observable, runInAction, autorun } from "mobx";
+import { observable, runInAction, autorun, makeObservable } from "mobx";
 
 import {
     isDev,
@@ -26,10 +26,14 @@ interface ICatalogVersion {
 }
 
 class ExtensionsCatalog {
-    @observable catalog: IExtension[] = [];
+    catalog: IExtension[] = [];
     catalogVersion: ICatalogVersion;
 
     constructor() {
+        makeObservable(this, {
+            catalog: observable
+        });
+
         this.loadCatalog()
             .then(catalog => {
                 runInAction(() => (this.catalog = catalog));

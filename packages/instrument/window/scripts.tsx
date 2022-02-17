@@ -1,5 +1,15 @@
+import path from "path";
+
 import React from "react";
-import { observable, computed, values, action, runInAction, toJS } from "mobx";
+import {
+    observable,
+    computed,
+    values,
+    action,
+    runInAction,
+    toJS,
+    makeObservable
+} from "mobx";
 import { observer } from "mobx-react";
 
 import { stringCompare } from "eez-studio-shared/string";
@@ -40,9 +50,24 @@ import type { IModel } from "instrument/window/undo";
 import { Terminal } from "instrument/window/terminal/terminal";
 
 export class ScriptsModel implements IModel {
-    constructor(private appStore: InstrumentAppStore) {}
+    constructor(private appStore: InstrumentAppStore) {
+        makeObservable(this, {
+            _newActionCode: observable,
+            errorMessage: observable,
+            errorLineNumber: observable,
+            errorColumnNumber: observable,
+            terminalVisible: observable,
+            selectedScript: computed,
+            modified: computed,
+            commit: action.bound,
+            rollback: action.bound,
+            dismissError: action.bound,
+            toggleTerminal: action.bound,
+            canUpload: computed
+        });
+    }
 
-    @observable _newActionCode: string | undefined;
+    _newActionCode: string | undefined;
 
     get newActionCode() {
         return this._newActionCode;
@@ -59,12 +84,11 @@ export class ScriptsModel implements IModel {
         }
     }
 
-    @observable errorMessage: string | undefined;
-    @observable errorLineNumber: number | undefined;
-    @observable errorColumnNumber: number | undefined;
-    @observable terminalVisible: boolean;
+    errorMessage: string | undefined;
+    errorLineNumber: number | undefined;
+    errorColumnNumber: number | undefined;
+    terminalVisible: boolean;
 
-    @computed
     get selectedScript() {
         return values(this.appStore.shortcutsStore.shortcuts).find(
             script =>
@@ -72,7 +96,6 @@ export class ScriptsModel implements IModel {
         );
     }
 
-    @computed
     get modified() {
         return !!(
             this.selectedScript &&
@@ -81,7 +104,6 @@ export class ScriptsModel implements IModel {
         );
     }
 
-    @action.bound
     commit() {
         if (this.selectedScript) {
             this.appStore.shortcutsStore.updateShortcut({
@@ -94,19 +116,16 @@ export class ScriptsModel implements IModel {
         this.newActionCode = undefined;
     }
 
-    @action.bound
     rollback() {
         if (this.selectedScript) {
             this._newActionCode = undefined;
         }
     }
 
-    @action.bound
     dismissError() {
         this.errorMessage = undefined;
     }
 
-    @action.bound
     toggleTerminal() {
         this.terminalVisible = !this.terminalVisible;
     }
@@ -228,7 +247,6 @@ export class ScriptsModel implements IModel {
         }
     };
 
-    @computed
     get canUpload() {
         const instrument = this.appStore.instrument;
         const connection = instrument.connection;
@@ -263,8 +281,7 @@ export class ScriptsModel implements IModel {
     };
 }
 
-@observer
-export class ScriptView extends React.Component<
+export class ScriptViewComponent extends React.Component<
     { appStore: InstrumentAppStore },
     {}
 > {
@@ -321,6 +338,7 @@ export class ScriptView extends React.Component<
         );
     }
 }
+export const ScriptView = observer(ScriptViewComponent);
 
 function getScriptIcon(script: IShortcut) {
     if (script.action.type === "scpi-commands") {
@@ -332,170 +350,198 @@ function getScriptIcon(script: IShortcut) {
     }
 }
 
-@observer
-class MasterView extends React.Component<{
-    appStore: InstrumentAppStore;
-    selectedScript: IShortcut | undefined;
-    selectScript: (script: IShortcut) => void;
-}> {
-    @computed
-    get sortedLists() {
-        return Array.from(this.props.appStore.shortcutsStore.shortcuts.values())
-            .sort((a, b) => stringCompare(a.name, b.name))
-            .map(script => ({
-                id: script.id,
-                data: script,
-                selected:
-                    this.props.appStore.scriptsModel.selectedScript === script
-            }));
-    }
+const MasterView = observer(
+    class MasterView extends React.Component<{
+        appStore: InstrumentAppStore;
+        selectedScript: IShortcut | undefined;
+        selectScript: (script: IShortcut) => void;
+    }> {
+        constructor(props: {
+            appStore: InstrumentAppStore;
+            selectedScript: IShortcut | undefined;
+            selectScript: (script: IShortcut) => void;
+        }) {
+            super(props);
 
-    render() {
-        const scriptsModel = this.props.appStore.scriptsModel;
-
-        return (
-            <VerticalHeaderWithBody>
-                <ToolbarHeader>
-                    <IconAction
-                        icon="material:add"
-                        iconSize={16}
-                        title="Add script"
-                        onClick={scriptsModel.addScript}
-                    />
-                    <IconAction
-                        icon="material:delete"
-                        iconSize={16}
-                        title="Delete script"
-                        enabled={!!scriptsModel.selectedScript}
-                        onClick={scriptsModel.deleteScript}
-                    />
-                </ToolbarHeader>
-                <Body tabIndex={0}>
-                    <List
-                        nodes={this.sortedLists}
-                        renderNode={node => (
-                            <div>
-                                {getScriptIcon(node.data)} {node.data.name}
-                            </div>
-                        )}
-                        selectNode={node => this.props.selectScript(node.data)}
-                    />
-                </Body>
-            </VerticalHeaderWithBody>
-        );
-    }
-}
-
-@observer
-export class ScriptHeader extends React.Component<{
-    appStore: InstrumentAppStore;
-}> {
-    editShortcut = () => {
-        const selectedScript = this.props.appStore.scriptsModel.selectedScript;
-        if (!selectedScript) {
-            return;
+            makeObservable(this, {
+                sortedLists: computed
+            });
         }
 
-        showShortcutDialog(
-            this.props.appStore.shortcutsStore,
-            this.props.appStore.groupsStore,
-            selectedScript,
-            shortcut => {
-                this.props.appStore.shortcutsStore.updateShortcut!(shortcut);
-            },
-            undefined,
-            undefined,
-            undefined,
-            true
-        );
-    };
-
-    searchAndReplace = action(() => {
-        if (this.props.appStore.scriptsModel.codeEditor) {
-            this.props.appStore.scriptsModel.codeEditor.openSearchbox();
+        get sortedLists() {
+            return Array.from(
+                this.props.appStore.shortcutsStore.shortcuts.values()
+            )
+                .sort((a, b) => stringCompare(a.name, b.name))
+                .map(script => ({
+                    id: script.id,
+                    data: script,
+                    selected:
+                        this.props.appStore.scriptsModel.selectedScript ===
+                        script
+                }));
         }
-    });
 
-    render() {
-        return (
-            <Header className="EezStudio_ScriptsHeaderContainer">
-                <Toolbar
-                    style={{ display: "flex", justifyContent: "space-between" }}
-                >
-                    <ButtonAction
-                        text="Edit Shortcut"
-                        className="btn-secondary btn-sm"
-                        title="Edit shortcut"
-                        onClick={this.editShortcut}
-                    />
-                    <ButtonAction
-                        text="Search and replace"
-                        icon="material:search"
-                        iconSize={20}
-                        className="btn-secondary btn-sm"
-                        title="Search and replace"
-                        onClick={this.searchAndReplace}
-                    />
-                </Toolbar>
-            </Header>
-        );
+        render() {
+            const scriptsModel = this.props.appStore.scriptsModel;
+
+            return (
+                <VerticalHeaderWithBody>
+                    <ToolbarHeader>
+                        <IconAction
+                            icon="material:add"
+                            iconSize={16}
+                            title="Add script"
+                            onClick={scriptsModel.addScript}
+                        />
+                        <IconAction
+                            icon="material:delete"
+                            iconSize={16}
+                            title="Delete script"
+                            enabled={!!scriptsModel.selectedScript}
+                            onClick={scriptsModel.deleteScript}
+                        />
+                    </ToolbarHeader>
+                    <Body tabIndex={0}>
+                        <List
+                            nodes={this.sortedLists}
+                            renderNode={node => (
+                                <div>
+                                    {getScriptIcon(node.data)} {node.data.name}
+                                </div>
+                            )}
+                            selectNode={node =>
+                                this.props.selectScript(node.data)
+                            }
+                        />
+                    </Body>
+                </VerticalHeaderWithBody>
+            );
+        }
     }
-}
+);
 
-@observer
-export class DetailsView extends React.Component<{
-    appStore: InstrumentAppStore;
-}> {
-    render() {
-        const { appStore } = this.props;
-        return this.props.appStore.scriptsModel.selectedScript ? (
-            <VerticalHeaderWithBody>
-                <ScriptHeader appStore={appStore} />
-                <Body>
-                    <ScriptView appStore={appStore} />
-                </Body>
-            </VerticalHeaderWithBody>
-        ) : null;
+export const ScriptHeader = observer(
+    class ScriptHeader extends React.Component<{
+        appStore: InstrumentAppStore;
+    }> {
+        editShortcut = () => {
+            const selectedScript =
+                this.props.appStore.scriptsModel.selectedScript;
+            if (!selectedScript) {
+                return;
+            }
+
+            showShortcutDialog(
+                this.props.appStore.shortcutsStore,
+                this.props.appStore.groupsStore,
+                selectedScript,
+                shortcut => {
+                    this.props.appStore.shortcutsStore.updateShortcut!(
+                        shortcut
+                    );
+                },
+                undefined,
+                undefined,
+                undefined,
+                true
+            );
+        };
+
+        searchAndReplace = action(() => {
+            if (this.props.appStore.scriptsModel.codeEditor) {
+                this.props.appStore.scriptsModel.codeEditor.openSearchbox();
+            }
+        });
+
+        render() {
+            return (
+                <Header className="EezStudio_ScriptsHeaderContainer">
+                    <Toolbar
+                        style={{
+                            display: "flex",
+                            justifyContent: "space-between"
+                        }}
+                    >
+                        <ButtonAction
+                            text="Edit Shortcut"
+                            className="btn-secondary btn-sm"
+                            title="Edit shortcut"
+                            onClick={this.editShortcut}
+                        />
+                        <ButtonAction
+                            text="Search and replace"
+                            icon="material:search"
+                            iconSize={20}
+                            className="btn-secondary btn-sm"
+                            title="Search and replace"
+                            onClick={this.searchAndReplace}
+                        />
+                    </Toolbar>
+                </Header>
+            );
+        }
     }
-}
+);
 
-@observer
-export class ScriptsEditor extends React.Component<{
-    appStore: InstrumentAppStore;
-}> {
-    render() {
-        const appStore = this.props.appStore;
-        const scriptsModel = this.props.appStore.scriptsModel;
-        const navigationStore = this.props.appStore.navigationStore;
+export const DetailsView = observer(
+    class DetailsView extends React.Component<{
+        appStore: InstrumentAppStore;
+    }> {
+        render() {
+            const { appStore } = this.props;
+            return this.props.appStore.scriptsModel.selectedScript ? (
+                <VerticalHeaderWithBody>
+                    <ScriptHeader appStore={appStore} />
+                    <Body>
+                        <ScriptView appStore={appStore} />
+                    </Body>
+                </VerticalHeaderWithBody>
+            ) : null;
+        }
+    }
+);
 
-        return (
-            <Splitter
-                type="horizontal"
-                sizes={scriptsModel.terminalVisible ? "50%|50%" : "100%"}
-                persistId="instrument/window/scripts/splitter"
-            >
+export const ScriptsEditor = observer(
+    class ScriptsEditor extends React.Component<{
+        appStore: InstrumentAppStore;
+    }> {
+        render() {
+            const appStore = this.props.appStore;
+            const scriptsModel = this.props.appStore.scriptsModel;
+            const navigationStore = this.props.appStore.navigationStore;
+
+            return (
                 <Splitter
                     type="horizontal"
-                    sizes="240px|100%"
-                    persistId="instrument/lists/splitter"
+                    sizes={scriptsModel.terminalVisible ? "50%|50%" : "100%"}
+                    persistId="instrument/window/scripts/splitter"
                 >
-                    <MasterView
-                        appStore={appStore}
-                        selectedScript={scriptsModel.selectedScript}
-                        selectScript={(script: IShortcut) =>
-                            navigationStore.changeSelectedScriptId(script.id)
-                        }
-                    />
-                    <DetailsView appStore={appStore} />
-                </Splitter>
+                    <Splitter
+                        type="horizontal"
+                        sizes="240px|100%"
+                        persistId="instrument/lists/splitter"
+                    >
+                        <MasterView
+                            appStore={appStore}
+                            selectedScript={scriptsModel.selectedScript}
+                            selectScript={(script: IShortcut) =>
+                                navigationStore.changeSelectedScriptId(
+                                    script.id
+                                )
+                            }
+                        />
+                        <DetailsView appStore={appStore} />
+                    </Splitter>
 
-                {scriptsModel.terminalVisible && appStore.instrument && (
-                    <Terminal appStore={appStore} />
-                )}
-            </Splitter>
-        );
+                    {scriptsModel.terminalVisible && appStore.instrument && (
+                        <Terminal appStore={appStore} />
+                    )}
+                </Splitter>
+            );
+        }
     }
-}
+);
 
 export function render(appStore: InstrumentAppStore) {
     return <ScriptsEditor appStore={appStore} />;
@@ -575,8 +621,6 @@ export async function importScript(
     }
 
     const scriptSourceText = await readTextFile(filePath);
-
-    const path = EEZStudio.remote.require("path");
 
     const name = path.basename(filePath, filePath.slice(-3));
 

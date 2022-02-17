@@ -1,4 +1,4 @@
-import { observable, runInAction } from "mobx";
+import { observable, runInAction, makeObservable } from "mobx";
 
 import { SCRIPTS_CATALOG_URL } from "instrument/bb3/conf";
 
@@ -14,10 +14,15 @@ export interface ICatalogScriptItem {
 }
 
 export class ScriptsCatalog {
-    @observable scriptItems: ICatalogScriptItem[] | undefined;
-    @observable loadError: string | undefined;
+    scriptItems: ICatalogScriptItem[] | undefined;
+    loadError: string | undefined;
 
-    constructor() {}
+    constructor() {
+        makeObservable(this, {
+            scriptItems: observable,
+            loadError: observable
+        });
+    }
 
     load() {
         let req = new XMLHttpRequest();

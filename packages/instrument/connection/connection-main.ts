@@ -1,4 +1,11 @@
-import { observable, action, autorun, toJS, runInAction } from "mobx";
+import {
+    observable,
+    action,
+    autorun,
+    toJS,
+    runInAction,
+    makeObservable
+} from "mobx";
 
 import { activityLogStore, log } from "eez-studio-shared/activity-log";
 import {
@@ -47,7 +54,7 @@ export class Connection
     extends ConnectionBase
     implements CommunicationInterfaceHost
 {
-    @observable _state: ConnectionState = ConnectionState.IDLE;
+    _state: ConnectionState = ConnectionState.IDLE;
     get state() {
         return this._state;
     }
@@ -57,7 +64,7 @@ export class Connection
         })();
     }
 
-    @observable _errorCode: ConnectionErrorCode = ConnectionErrorCode.NONE;
+    _errorCode: ConnectionErrorCode = ConnectionErrorCode.NONE;
     get errorCode() {
         return this._errorCode;
     }
@@ -67,7 +74,7 @@ export class Connection
         })();
     }
 
-    @observable _error: string | undefined;
+    _error: string | undefined;
     get error() {
         return this._error;
     }
@@ -108,6 +115,12 @@ export class Connection
 
     constructor(public instrument: InstrumentObject) {
         super(instrument);
+
+        makeObservable(this, {
+            _state: observable,
+            _errorCode: observable,
+            _error: observable
+        });
 
         this.notifySource = {
             id: "instrument/" + this.instrument.id + "/connection",

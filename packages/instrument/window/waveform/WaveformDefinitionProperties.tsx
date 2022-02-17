@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, runInAction, action } from "mobx";
+import { observable, runInAction, action, makeObservable } from "mobx";
 
 import { objectClone } from "eez-studio-shared/util";
 import { capitalize } from "eez-studio-shared/string";
@@ -16,6 +16,11 @@ import type { IWaveformDefinition } from "./generic";
 
 export class WaveformDefinitionProperties {
     constructor(public waveformDefinition: IWaveformDefinition) {
+        makeObservable(this, {
+            props: observable,
+            errors: observable
+        });
+
         const unit = UNITS[this.waveformDefinition.unitName];
 
         this.props = {
@@ -31,7 +36,7 @@ export class WaveformDefinitionProperties {
         this.propsValidated = objectClone(this.waveformDefinition);
     }
 
-    @observable props: {
+    props: {
         samplingRate: string;
         format: WaveformFormat;
         unit: IUnit;
@@ -41,7 +46,7 @@ export class WaveformDefinitionProperties {
 
     propsValidated: IWaveformDefinition;
 
-    @observable errors: boolean;
+    errors: boolean;
 
     validator = makeValidator({
         samplingRate: [

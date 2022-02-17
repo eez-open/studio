@@ -1,6 +1,12 @@
 import React from "react";
 import { findDOMNode } from "react-dom";
-import { computed, IObservableValue, runInAction, values } from "mobx";
+import {
+    computed,
+    IObservableValue,
+    runInAction,
+    values,
+    makeObservable
+} from "mobx";
 import { observer } from "mobx-react";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
@@ -26,132 +32,146 @@ export const deletedInstruments = deletedInstrumentCollection.objects;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class DeletedInstrumentsDialog extends React.Component<{
-    selectedInstrument: IObservableValue<string | undefined>;
-}> {
-    element: Element;
+const DeletedInstrumentsDialog = observer(
+    class DeletedInstrumentsDialog extends React.Component<{
+        selectedInstrument: IObservableValue<string | undefined>;
+    }> {
+        element: Element;
 
-    renderNode = (node: IListNode) => {
-        let instrument = node.data as InstrumentObject;
+        renderNode = (node: IListNode) => {
+            let instrument = node.data as InstrumentObject;
 
-        let creationDate;
-        try {
-            const result = db
-                .prepare(
-                    `SELECT * FROM "activityLog" WHERE oid=? AND type='instrument/created'`
-                )
-                .get(instrument.id);
-            creationDate = new Date(Number(result.date));
-        } catch (err) {
-            console.error(err);
-            creationDate = null;
-        }
-
-        return (
-            <ListItem
-                leftIcon={instrument.image}
-                leftIconSize={48}
-                label={
-                    <>
-                        <div>{instrument.name}</div>
-                        <div>
-                            {"Creation date: " +
-                                (creationDate
-                                    ? formatDateTimeLong(creationDate)
-                                    : "unknown")}
-                        </div>
-                        <div style={{ display: "flex" }}>
-                            <ButtonAction
-                                className="btn btn-sm btn-outline-success"
-                                text="Restore"
-                                title="Restore"
-                                onClick={() => {
-                                    instrument.restore();
-                                    runInAction(() =>
-                                        this.props.selectedInstrument.set(
-                                            instrument.id
-                                        )
-                                    );
-                                }}
-                                style={{ marginRight: "5px" }}
-                            />
-                            <ButtonAction
-                                className="btn btn-sm btn-outline-danger"
-                                text="Delete Permanently"
-                                title="Delete instrument permanently including all the history"
-                                onClick={() => {
-                                    confirm(
-                                        "Are you sure?",
-                                        "It will also delete all the history.",
-                                        () => {
-                                            instrument.deletePermanently();
-                                        }
-                                    );
-                                }}
-                            />
-                        </div>
-                    </>
-                }
-            />
-        );
-    };
-
-    @computed
-    get deletedInstruments() {
-        return values(deletedInstruments).map(instrument => ({
-            id: instrument.id,
-            data: instrument,
-            selected: false
-        }));
-    }
-
-    deleteAllPermanently() {
-        confirm("Are you sure?", "It will also delete all the history.", () => {
-            let deletedInstruments = this.deletedInstruments.slice();
-            for (let i = 0; i < deletedInstruments.length; i++) {
-                deletedInstruments[i].data.deletePermanently();
+            let creationDate;
+            try {
+                const result = db
+                    .prepare(
+                        `SELECT * FROM "activityLog" WHERE oid=? AND type='instrument/created'`
+                    )
+                    .get(instrument.id);
+                creationDate = new Date(Number(result.date));
+            } catch (err) {
+                console.error(err);
+                creationDate = null;
             }
-        });
-    }
 
-    componentDidUpdate() {
-        if (this.deletedInstruments.length === 0) {
-            $(this.element).modal("hide");
+            return (
+                <ListItem
+                    leftIcon={instrument.image}
+                    leftIconSize={48}
+                    label={
+                        <>
+                            <div>{instrument.name}</div>
+                            <div>
+                                {"Creation date: " +
+                                    (creationDate
+                                        ? formatDateTimeLong(creationDate)
+                                        : "unknown")}
+                            </div>
+                            <div style={{ display: "flex" }}>
+                                <ButtonAction
+                                    className="btn btn-sm btn-outline-success"
+                                    text="Restore"
+                                    title="Restore"
+                                    onClick={() => {
+                                        instrument.restore();
+                                        runInAction(() =>
+                                            this.props.selectedInstrument.set(
+                                                instrument.id
+                                            )
+                                        );
+                                    }}
+                                    style={{ marginRight: "5px" }}
+                                />
+                                <ButtonAction
+                                    className="btn btn-sm btn-outline-danger"
+                                    text="Delete Permanently"
+                                    title="Delete instrument permanently including all the history"
+                                    onClick={() => {
+                                        confirm(
+                                            "Are you sure?",
+                                            "It will also delete all the history.",
+                                            () => {
+                                                instrument.deletePermanently();
+                                            }
+                                        );
+                                    }}
+                                />
+                            </div>
+                        </>
+                    }
+                />
+            );
+        };
+
+        constructor(props: {
+            selectedInstrument: IObservableValue<string | undefined>;
+        }) {
+            super(props);
+
+            makeObservable(this, {
+                deletedInstruments: computed
+            });
+        }
+
+        get deletedInstruments() {
+            return values(deletedInstruments).map(instrument => ({
+                id: instrument.id,
+                data: instrument,
+                selected: false
+            }));
+        }
+
+        deleteAllPermanently() {
+            confirm(
+                "Are you sure?",
+                "It will also delete all the history.",
+                () => {
+                    let deletedInstruments = this.deletedInstruments.slice();
+                    for (let i = 0; i < deletedInstruments.length; i++) {
+                        deletedInstruments[i].data.deletePermanently();
+                    }
+                }
+            );
+        }
+
+        componentDidUpdate() {
+            if (this.deletedInstruments.length === 0) {
+                $(this.element).modal("hide");
+            }
+        }
+
+        render() {
+            return (
+                <Dialog
+                    ref={(ref: any) => {
+                        this.element = findDOMNode(ref) as Element;
+                    }}
+                    additionalButton={{
+                        id: "deleteAllPermanently",
+                        type: "danger",
+                        position: "left",
+                        onClick: () => this.deleteAllPermanently(),
+                        disabled: false,
+                        style: { marginRight: "auto" },
+                        text: "Delete All Permanently"
+                    }}
+                >
+                    <ListContainer
+                        tabIndex={0}
+                        minHeight={240}
+                        maxHeight={400}
+                        className="EezStudio_DeletedInstrumentsList"
+                    >
+                        <List
+                            nodes={this.deletedInstruments}
+                            renderNode={this.renderNode}
+                        />
+                    </ListContainer>
+                </Dialog>
+            );
         }
     }
-
-    render() {
-        return (
-            <Dialog
-                ref={(ref: any) => {
-                    this.element = findDOMNode(ref) as Element;
-                }}
-                additionalButton={{
-                    id: "deleteAllPermanently",
-                    type: "danger",
-                    position: "left",
-                    onClick: () => this.deleteAllPermanently(),
-                    disabled: false,
-                    style: { marginRight: "auto" },
-                    text: "Delete All Permanently"
-                }}
-            >
-                <ListContainer
-                    tabIndex={0}
-                    minHeight={240}
-                    maxHeight={400}
-                    className="EezStudio_DeletedInstrumentsList"
-                >
-                    <List
-                        nodes={this.deletedInstruments}
-                        renderNode={this.renderNode}
-                    />
-                </ListContainer>
-            </Dialog>
-        );
-    }
-}
+);
 
 export function showDeletedInstrumentsDialog(
     selectedInstrument: IObservableValue<string | undefined>

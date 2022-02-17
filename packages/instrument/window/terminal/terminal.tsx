@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, action, runInAction } from "mobx";
+import { observable, action, runInAction, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
 import { Splitter } from "eez-studio-ui/splitter";
@@ -30,8 +30,16 @@ export interface ITerminalState {
 }
 
 class TerminalState {
-    @observable _command: string = "";
-    @observable selectedSession: ISession | undefined;
+    _command: string = "";
+    selectedSession: ISession | undefined;
+
+    constructor() {
+        makeObservable(this, {
+            _command: observable,
+            selectedSession: observable,
+            selectSession: action
+        });
+    }
 
     get command() {
         return this._command;
@@ -43,7 +51,6 @@ class TerminalState {
         });
     }
 
-    @action
     selectSession(selectedSession: ISession | undefined) {
         if (this.selectedSession) {
             this.selectedSession.selected = false;
@@ -59,187 +66,188 @@ const terminalState = new TerminalState();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class Input extends React.Component<
-    {
-        appStore: InstrumentAppStore;
-        sendCommand: () => void;
-        sendFileToInstrumentHandler: (() => void) | undefined;
-    },
-    {}
-> {
-    input: HTMLInputElement;
+const Input = observer(
+    class Input extends React.Component<
+        {
+            appStore: InstrumentAppStore;
+            sendCommand: () => void;
+            sendFileToInstrumentHandler: (() => void) | undefined;
+        },
+        {}
+    > {
+        input: HTMLInputElement;
 
-    constructor(props: any) {
-        super(props);
+        constructor(props: any) {
+            super(props);
 
-        const commandsHistoryJSON = window.localStorage.getItem(
-            `instrument/${this.props.appStore.history.oid}/window/terminal/commands-history`
-        );
-        if (commandsHistoryJSON) {
-            try {
-                this.commandsHistory = JSON.parse(commandsHistoryJSON);
-            } catch (error) {
-                console.error(error);
-            }
-        }
-
-        this.handleHelpClick = this.handleHelpClick.bind(this);
-        this.handleChange = this.handleChange.bind(this);
-        this.handleKeyDown = this.handleKeyDown.bind(this);
-        this.handleSendCommandClick = this.handleSendCommandClick.bind(this);
-    }
-
-    commandsHistory: string[] = [];
-    historyItemIndex: number | undefined;
-    moveCursorToTheEnd: boolean;
-
-    componentDidMount() {
-        this.input.focus();
-    }
-
-    componentDidUpdate() {
-        if (this.moveCursorToTheEnd) {
-            this.input.selectionStart = this.input.selectionEnd =
-                terminalState.command.length;
-            this.moveCursorToTheEnd = false;
-        }
-    }
-
-    handleHelpClick() {
-        this.props.appStore.toggleHelpVisible();
-    }
-
-    handleChange(event: any) {
-        terminalState.command = event.target.value;
-    }
-
-    sendCommand() {
-        if (terminalState.command) {
-            this.commandsHistory.push(terminalState.command);
-            if (this.commandsHistory.length > CONF_COMMANDS_HISTORY_SIZE) {
-                this.commandsHistory.splice(0, 1);
-            }
-            window.localStorage.setItem(
-                `instrument/${this.props.appStore.history.oid}/window/terminal/commands-history`,
-                JSON.stringify(this.commandsHistory)
+            const commandsHistoryJSON = window.localStorage.getItem(
+                `instrument/${this.props.appStore.history.oid}/window/terminal/commands-history`
             );
-
-            this.historyItemIndex = undefined;
-
-            this.props.sendCommand();
-        }
-    }
-
-    findPreviousCommand() {
-        while (true) {
-            let historyItemIndex = this.historyItemIndex;
-            if (historyItemIndex === undefined) {
-                historyItemIndex = this.commandsHistory.length - 1;
-            } else {
-                if (historyItemIndex >= 0) {
-                    historyItemIndex--;
+            if (commandsHistoryJSON) {
+                try {
+                    this.commandsHistory = JSON.parse(commandsHistoryJSON);
+                } catch (error) {
+                    console.error(error);
                 }
             }
 
-            this.historyItemIndex = historyItemIndex;
-
-            if (
-                this.historyItemIndex < 0 ||
-                this.historyItemIndex >= this.commandsHistory.length
-            ) {
-                return undefined;
-            }
-
-            return this.commandsHistory[this.historyItemIndex];
+            this.handleHelpClick = this.handleHelpClick.bind(this);
+            this.handleChange = this.handleChange.bind(this);
+            this.handleKeyDown = this.handleKeyDown.bind(this);
+            this.handleSendCommandClick =
+                this.handleSendCommandClick.bind(this);
         }
-    }
 
-    findNextCommand() {
-        while (true) {
-            let historyItemIndex = this.historyItemIndex;
-            if (historyItemIndex === undefined) {
-                return undefined;
-            } else {
-                if (historyItemIndex < this.commandsHistory.length) {
-                    historyItemIndex++;
+        commandsHistory: string[] = [];
+        historyItemIndex: number | undefined;
+        moveCursorToTheEnd: boolean;
+
+        componentDidMount() {
+            this.input.focus();
+        }
+
+        componentDidUpdate() {
+            if (this.moveCursorToTheEnd) {
+                this.input.selectionStart = this.input.selectionEnd =
+                    terminalState.command.length;
+                this.moveCursorToTheEnd = false;
+            }
+        }
+
+        handleHelpClick() {
+            this.props.appStore.toggleHelpVisible();
+        }
+
+        handleChange(event: any) {
+            terminalState.command = event.target.value;
+        }
+
+        sendCommand() {
+            if (terminalState.command) {
+                this.commandsHistory.push(terminalState.command);
+                if (this.commandsHistory.length > CONF_COMMANDS_HISTORY_SIZE) {
+                    this.commandsHistory.splice(0, 1);
                 }
+                window.localStorage.setItem(
+                    `instrument/${this.props.appStore.history.oid}/window/terminal/commands-history`,
+                    JSON.stringify(this.commandsHistory)
+                );
+
+                this.historyItemIndex = undefined;
+
+                this.props.sendCommand();
             }
-
-            this.historyItemIndex = historyItemIndex;
-
-            if (
-                this.historyItemIndex < 0 ||
-                this.historyItemIndex >= this.commandsHistory.length
-            ) {
-                return undefined;
-            }
-
-            return this.commandsHistory[this.historyItemIndex];
         }
-    }
 
-    handleKeyDown(event: any) {
-        if (event.key === "Enter") {
-            event.preventDefault();
+        findPreviousCommand() {
+            while (true) {
+                let historyItemIndex = this.historyItemIndex;
+                if (historyItemIndex === undefined) {
+                    historyItemIndex = this.commandsHistory.length - 1;
+                } else {
+                    if (historyItemIndex >= 0) {
+                        historyItemIndex--;
+                    }
+                }
+
+                this.historyItemIndex = historyItemIndex;
+
+                if (
+                    this.historyItemIndex < 0 ||
+                    this.historyItemIndex >= this.commandsHistory.length
+                ) {
+                    return undefined;
+                }
+
+                return this.commandsHistory[this.historyItemIndex];
+            }
+        }
+
+        findNextCommand() {
+            while (true) {
+                let historyItemIndex = this.historyItemIndex;
+                if (historyItemIndex === undefined) {
+                    return undefined;
+                } else {
+                    if (historyItemIndex < this.commandsHistory.length) {
+                        historyItemIndex++;
+                    }
+                }
+
+                this.historyItemIndex = historyItemIndex;
+
+                if (
+                    this.historyItemIndex < 0 ||
+                    this.historyItemIndex >= this.commandsHistory.length
+                ) {
+                    return undefined;
+                }
+
+                return this.commandsHistory[this.historyItemIndex];
+            }
+        }
+
+        handleKeyDown(event: any) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                this.sendCommand();
+            } else if (event.key === "ArrowUp") {
+                event.preventDefault();
+                terminalState.command = this.findPreviousCommand() || "";
+                this.moveCursorToTheEnd = true;
+            } else if (event.key === "ArrowDown") {
+                event.preventDefault();
+                terminalState.command = this.findNextCommand() || "";
+                this.moveCursorToTheEnd = true;
+            }
+        }
+
+        handleSendCommandClick() {
             this.sendCommand();
-        } else if (event.key === "ArrowUp") {
-            event.preventDefault();
-            terminalState.command = this.findPreviousCommand() || "";
-            this.moveCursorToTheEnd = true;
-        } else if (event.key === "ArrowDown") {
-            event.preventDefault();
-            terminalState.command = this.findNextCommand() || "";
-            this.moveCursorToTheEnd = true;
+        }
+
+        render() {
+            return (
+                <div className="EezStudio_InputContainer">
+                    <div>
+                        <IconAction
+                            icon="material:help"
+                            onClick={this.handleHelpClick}
+                            title="Show/hide commands catalog"
+                        />
+                    </div>
+                    <div>
+                        <input
+                            ref={(ref: any) => (this.input = ref)}
+                            className="mousetrap"
+                            type="text"
+                            onKeyDown={this.handleKeyDown}
+                            value={terminalState.command}
+                            onChange={this.handleChange}
+                            disabled={
+                                !this.props.appStore.instrument.connection
+                                    .isConnected
+                            }
+                        />
+                    </div>
+                    <div>
+                        <IconAction
+                            icon="material:play_arrow"
+                            onClick={this.handleSendCommandClick}
+                            enabled={
+                                this.props.appStore.instrument.connection
+                                    .isConnected
+                            }
+                            title="Run command"
+                        />
+                    </div>
+                </div>
+            );
         }
     }
+);
 
-    handleSendCommandClick() {
-        this.sendCommand();
-    }
-
-    render() {
-        return (
-            <div className="EezStudio_InputContainer">
-                <div>
-                    <IconAction
-                        icon="material:help"
-                        onClick={this.handleHelpClick}
-                        title="Show/hide commands catalog"
-                    />
-                </div>
-                <div>
-                    <input
-                        ref={(ref: any) => (this.input = ref)}
-                        className="mousetrap"
-                        type="text"
-                        onKeyDown={this.handleKeyDown}
-                        value={terminalState.command}
-                        onChange={this.handleChange}
-                        disabled={
-                            !this.props.appStore.instrument.connection
-                                .isConnected
-                        }
-                    />
-                </div>
-                <div>
-                    <IconAction
-                        icon="material:play_arrow"
-                        onClick={this.handleSendCommandClick}
-                        enabled={
-                            this.props.appStore.instrument.connection
-                                .isConnected
-                        }
-                        title="Run command"
-                    />
-                </div>
-            </div>
-        );
-    }
-}
-
-@observer
-export class Terminal extends React.Component<
+export class TerminalComponent extends React.Component<
     { appStore: InstrumentAppStore },
     {}
 > {
@@ -305,6 +313,8 @@ export class Terminal extends React.Component<
         );
     }
 }
+
+export const Terminal = observer(TerminalComponent);
 
 export function render(appStore: InstrumentAppStore) {
     return <Terminal appStore={appStore} />;

@@ -1,14 +1,19 @@
-import { observable, action } from "mobx";
+import { observable, action, makeObservable } from "mobx";
 
 import { IEezObject, PropertyInfo } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 class PropertyCollapsedStore {
-    @observable map: {
+    map: {
         [key: string]: boolean;
     } = {};
 
     constructor() {
+        makeObservable(this, {
+            map: observable,
+            toggleColapsed: action
+        });
+
         const savedState = localStorage.getItem("PropertyCollapsedStore");
         if (savedState) {
             this.map = JSON.parse(savedState);
@@ -35,7 +40,6 @@ class PropertyCollapsedStore {
         return !(propertyInfo.name === "style");
     }
 
-    @action
     toggleColapsed(object: IEezObject, propertyInfo: PropertyInfo) {
         this.map[this.getKey(propertyInfo)] = !this.isCollapsed(
             object,

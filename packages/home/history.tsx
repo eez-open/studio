@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, action, runInAction } from "mobx";
+import { observable, action, runInAction, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
 import {
@@ -31,12 +31,19 @@ import type { IUnit } from "eez-studio-shared/units";
 ////////////////////////////////////////////////////////////////////////////////
 
 class HomeAppStore implements IAppStore {
-    constructor(public oids?: string[]) {}
+    constructor(public oids?: string[]) {
+        makeObservable(this, {
+            selectHistoryItemsSpecification: observable,
+            selectedHistoryItems: observable,
+            selectHistoryItem: action,
+            selectHistoryItems: action
+        });
+    }
 
-    @observable selectHistoryItemsSpecification:
+    selectHistoryItemsSpecification:
         | SelectHistoryItemsSpecification
         | undefined;
-    @observable selectedHistoryItems = new Map<string, boolean>();
+    selectedHistoryItems = new Map<string, boolean>();
 
     instrument: IInstrumentObject = {
         id: "0",
@@ -70,7 +77,6 @@ class HomeAppStore implements IAppStore {
         return this.selectedHistoryItems.has(id);
     }
 
-    @action
     selectHistoryItem(id: string, selected: boolean): void {
         if (selected) {
             this.selectedHistoryItems.set(id, true);
@@ -79,7 +85,6 @@ class HomeAppStore implements IAppStore {
         }
     }
 
-    @action
     selectHistoryItems(
         specification: SelectHistoryItemsSpecification | undefined
     ) {
@@ -110,73 +115,81 @@ export function getAppStore(oids?: string[]) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class HistorySection extends React.Component<{
-    oids?: string[];
-    simple?: boolean;
-}> {
-    @observable
-    appStore: HomeAppStore;
+export const HistorySection = observer(
+    class HistorySection extends React.Component<{
+        oids?: string[];
+        simple?: boolean;
+    }> {
+        appStore: HomeAppStore;
 
-    constructor(props: any) {
-        super(props);
-        this.appStore = getAppStore(props.oids);
-        this.appStore.history.load();
-    }
+        constructor(props: any) {
+            super(props);
 
-    componentDidUpdate(prevProps: any) {
-        if (this.props != prevProps) {
-            runInAction(() => (this.appStore = getAppStore(this.props.oids)));
+            makeObservable(this, {
+                appStore: observable
+            });
+
+            this.appStore = getAppStore(props.oids);
             this.appStore.history.load();
         }
-    }
 
-    render() {
-        const historyView = (
-            <HistoryView
-                appStore={this.appStore}
-                persistId={"home/history"}
-                simple={this.props.simple}
-            />
-        );
-
-        if (this.props.simple) {
-            return historyView;
+        componentDidUpdate(prevProps: any) {
+            if (this.props != prevProps) {
+                runInAction(
+                    () => (this.appStore = getAppStore(this.props.oids))
+                );
+                this.appStore.history.load();
+            }
         }
 
-        return (
-            <VerticalHeaderWithBody>
-                <ToolbarHeader>
-                    <HistoryTools appStore={this.appStore} />
-                </ToolbarHeader>
-                <Body>{historyView}</Body>
-            </VerticalHeaderWithBody>
-        );
+        render() {
+            const historyView = (
+                <HistoryView
+                    appStore={this.appStore}
+                    persistId={"home/history"}
+                    simple={this.props.simple}
+                />
+            );
+
+            if (this.props.simple) {
+                return historyView;
+            }
+
+            return (
+                <VerticalHeaderWithBody>
+                    <ToolbarHeader>
+                        <HistoryTools appStore={this.appStore} />
+                    </ToolbarHeader>
+                    <Body>{historyView}</Body>
+                </VerticalHeaderWithBody>
+            );
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class DeletedHistoryItemsSection extends React.Component {
-    constructor(props: any) {
-        super(props);
-        getAppStore().history.load();
-    }
+export const DeletedHistoryItemsSection = observer(
+    class DeletedHistoryItemsSection extends React.Component {
+        constructor(props: any) {
+            super(props);
+            getAppStore().history.load();
+        }
 
-    render() {
-        return (
-            <VerticalHeaderWithBody>
-                <ToolbarHeader>
-                    <DeletedHistoryItemsTools appStore={getAppStore()} />
-                </ToolbarHeader>
-                <Body>
-                    <DeletedHistoryItemsView
-                        appStore={getAppStore()}
-                        persistId={"home/deleted-history-items"}
-                    />
-                </Body>
-            </VerticalHeaderWithBody>
-        );
+        render() {
+            return (
+                <VerticalHeaderWithBody>
+                    <ToolbarHeader>
+                        <DeletedHistoryItemsTools appStore={getAppStore()} />
+                    </ToolbarHeader>
+                    <Body>
+                        <DeletedHistoryItemsView
+                            appStore={getAppStore()}
+                            persistId={"home/deleted-history-items"}
+                        />
+                    </Body>
+                </VerticalHeaderWithBody>
+            );
+        }
     }
-}
+);

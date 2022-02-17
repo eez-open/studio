@@ -1,4 +1,10 @@
-import { observable, computed, action, runInAction } from "mobx";
+import {
+    observable,
+    computed,
+    action,
+    runInAction,
+    makeObservable
+} from "mobx";
 
 import { compareVersions } from "eez-studio-shared/util";
 
@@ -108,21 +114,37 @@ async function uploadScriptFilesToInstrument(
 }
 
 export class Script {
-    @observable scriptOnInstrument: IScriptOnInstrument | undefined;
-    @observable busy: boolean = false;
+    scriptOnInstrument: IScriptOnInstrument | undefined;
+    busy: boolean = false;
 
     // private
-    @observable _selectedVersion: string | undefined;
+    _selectedVersion: string | undefined;
 
     constructor(
         public bb3Instrument: BB3Instrument,
         scriptOnInstrument: IScriptOnInstrument | undefined,
         public catalogScriptItem: ICatalogScriptItem | undefined
     ) {
+        makeObservable(this, {
+            scriptOnInstrument: observable,
+            busy: observable,
+            _selectedVersion: observable,
+            selectedVersion: computed,
+            name: computed,
+            description: computed,
+            versions: computed,
+            latestVersion: computed,
+            isInstalled: computed,
+            setBusy: action,
+            canInstall: computed,
+            canUninstall: computed,
+            canUpdate: computed,
+            canReplace: computed
+        });
+
         this.scriptOnInstrument = scriptOnInstrument;
     }
 
-    @computed
     get selectedVersion() {
         if (this._selectedVersion != undefined) {
             return this._selectedVersion;
@@ -143,7 +165,6 @@ export class Script {
         });
     }
 
-    @computed
     get name() {
         if (this.catalogScriptItem) {
             return this.catalogScriptItem.name;
@@ -151,7 +172,6 @@ export class Script {
         return this.scriptOnInstrument!.name;
     }
 
-    @computed
     get description() {
         if (this.catalogScriptItem) {
             return this.catalogScriptItem.description;
@@ -159,7 +179,6 @@ export class Script {
         return "";
     }
 
-    @computed
     get versions() {
         if (this.catalogScriptItem) {
             return this.catalogScriptItem.versions.slice().reverse();
@@ -167,7 +186,6 @@ export class Script {
         return undefined;
     }
 
-    @computed
     get latestVersion() {
         if (this.versions) {
             return this.versions[0];
@@ -175,16 +193,14 @@ export class Script {
         return undefined;
     }
 
-    @computed
     get isInstalled() {
         return !!this.scriptOnInstrument;
     }
 
-    @action setBusy(value: boolean) {
+    setBusy(value: boolean) {
         this.busy = value;
     }
 
-    @computed
     get canInstall() {
         return !this.isInstalled;
     }
@@ -226,7 +242,6 @@ export class Script {
         );
     };
 
-    @computed
     get canUninstall() {
         return this.isInstalled;
     }
@@ -258,7 +273,6 @@ export class Script {
         );
     };
 
-    @computed
     get canUpdate() {
         return (
             this.scriptOnInstrument &&
@@ -275,7 +289,6 @@ export class Script {
         this.replace();
     };
 
-    @computed
     get canReplace() {
         return (
             this.scriptOnInstrument &&

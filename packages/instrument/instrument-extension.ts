@@ -48,7 +48,7 @@ const instrumentExtension: IExtensionDefinition = {
 
             setupIpcServer();
 
-            require("instrument/connection/list-operations");
+            require("instrument/connection/list-operations-main");
         }
     },
 

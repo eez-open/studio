@@ -4,7 +4,8 @@ import {
     computed,
     action,
     runInAction,
-    IObservableValue
+    IObservableValue,
+    makeObservable
 } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
@@ -26,71 +27,75 @@ const selectedGroupId = observable.box<string>();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class GroupsToolbarButtons extends React.Component<
-    {
-        shortcutsOrGroups: IObservableValue<boolean>;
-        groupsStore: IGroupsStore;
-    },
-    {}
-> {
-    constructor(props: any) {
-        super(props);
+export const GroupsToolbarButtons = observer(
+    class GroupsToolbarButtons extends React.Component<
+        {
+            shortcutsOrGroups: IObservableValue<boolean>;
+            groupsStore: IGroupsStore;
+        },
+        {}
+    > {
+        constructor(props: any) {
+            super(props);
 
-        this.addGroup = this.addGroup.bind(this);
-        this.showShortcuts = this.showShortcuts.bind(this);
+            makeObservable(this, {
+                showShortcuts: action
+            });
+
+            this.addGroup = this.addGroup.bind(this);
+            this.showShortcuts = this.showShortcuts.bind(this);
+        }
+
+        addGroup() {
+            showDialog(
+                <GroupDialog
+                    groupsStore={this.props.groupsStore}
+                    group={{
+                        id: "",
+                        name: ""
+                    }}
+                    callback={(group: IGroup) => {
+                        let groupId = this.props.groupsStore.addGroup(group);
+
+                        runInAction(() => selectedGroupId.set(groupId));
+
+                        setTimeout(() => {
+                            let element = document.querySelector(
+                                `.group-${groupId}`
+                            );
+                            if (element) {
+                                element.scrollIntoView();
+                            }
+                        }, 10);
+                    }}
+                />
+            );
+        }
+
+        showShortcuts() {
+            this.props.shortcutsOrGroups.set(true);
+        }
+
+        render() {
+            return [
+                <ButtonAction
+                    key="addGroup"
+                    text="Add Group"
+                    title="Add group"
+                    onClick={this.addGroup}
+                    className="btn-success"
+                />,
+                <ButtonAction
+                    key="shortcuts"
+                    text="Show Shortcuts"
+                    title="Show shortcuts"
+                    onClick={this.showShortcuts}
+                    className="btn-secondary"
+                />
+            ];
+        }
     }
-
-    addGroup() {
-        showDialog(
-            <GroupDialog
-                groupsStore={this.props.groupsStore}
-                group={{
-                    id: "",
-                    name: ""
-                }}
-                callback={(group: IGroup) => {
-                    let groupId = this.props.groupsStore.addGroup(group);
-
-                    runInAction(() => selectedGroupId.set(groupId));
-
-                    setTimeout(() => {
-                        let element = document.querySelector(
-                            `.group-${groupId}`
-                        );
-                        if (element) {
-                            element.scrollIntoView();
-                        }
-                    }, 10);
-                }}
-            />
-        );
-    }
-
-    @action
-    showShortcuts() {
-        this.props.shortcutsOrGroups.set(true);
-    }
-
-    render() {
-        return [
-            <ButtonAction
-                key="addGroup"
-                text="Add Group"
-                title="Add group"
-                onClick={this.addGroup}
-                className="btn-success"
-            />,
-            <ButtonAction
-                key="shortcuts"
-                text="Show Shortcuts"
-                title="Show shortcuts"
-                onClick={this.showShortcuts}
-                className="btn-secondary"
-            />
-        ];
-    }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -101,13 +106,20 @@ class GroupRow implements IRow {
             group: IGroup;
             numShortcuts: number;
         }
-    ) {}
+    ) {
+        makeObservable(this, {
+            selected: computed,
+            isGroupEnabledComponent: computed,
+            actions: computed,
+            className: computed,
+            selectGroup: action
+        });
+    }
 
     get id() {
         return this.props.group.id;
     }
 
-    @computed
     get selected() {
         return selectedGroupId.get() === this.id;
     }
@@ -116,7 +128,6 @@ class GroupRow implements IRow {
         return this.props.groupsStore.isGroupEnabled ? 1 : 0;
     }
 
-    @computed
     get isGroupEnabledComponent() {
         return (
             this.props.groupsStore.isGroupEnabled && (
@@ -145,7 +156,6 @@ class GroupRow implements IRow {
         return this.props.numShortcuts;
     }
 
-    @computed
     get actions() {
         return (
             <Toolbar>
@@ -163,14 +173,12 @@ class GroupRow implements IRow {
         );
     }
 
-    @computed
     get className() {
         return classNames(`group-${this.id}`, {
             selected: this.selected
         });
     }
 
-    @action
     selectGroup() {
         selectedGroupId.set(this.id);
     }
@@ -210,71 +218,82 @@ class GroupRow implements IRow {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class Groups extends React.Component<{
-    groupsStore: IGroupsStore;
-    shortcutsStore: IShortcutsStore;
-}> {
-    @computed
-    get columns() {
-        let result: IColumn[] = [];
+export const Groups = observer(
+    class Groups extends React.Component<{
+        groupsStore: IGroupsStore;
+        shortcutsStore: IShortcutsStore;
+    }> {
+        constructor(props: {
+            groupsStore: IGroupsStore;
+            shortcutsStore: IShortcutsStore;
+        }) {
+            super(props);
 
-        if (this.props.groupsStore.isGroupEnabled) {
-            result.push({
-                name: "isGroupEnabled",
-                title: "",
-                sortEnabled: true
+            makeObservable(this, {
+                columns: computed,
+                numShortcuts: computed,
+                rows: computed
             });
         }
 
-        result.push({
-            name: "name",
-            title: "Name",
-            sortEnabled: true
-        });
-        result.push({
-            name: "numShortcuts",
-            title: "# Shortcuts",
-            sortEnabled: true
-        });
-        result.push({
-            name: "actions",
-            title: "",
-            sortEnabled: false
-        });
+        get columns() {
+            let result: IColumn[] = [];
 
-        return result;
-    }
+            if (this.props.groupsStore.isGroupEnabled) {
+                result.push({
+                    name: "isGroupEnabled",
+                    title: "",
+                    sortEnabled: true
+                });
+            }
 
-    @computed
-    get numShortcuts() {
-        return _countBy(
-            Array.from(this.props.shortcutsStore.shortcuts.values()),
-            shortcut => shortcut.groupName
-        );
-    }
+            result.push({
+                name: "name",
+                title: "Name",
+                sortEnabled: true
+            });
+            result.push({
+                name: "numShortcuts",
+                title: "# Shortcuts",
+                sortEnabled: true
+            });
+            result.push({
+                name: "actions",
+                title: "",
+                sortEnabled: false
+            });
 
-    @computed
-    get rows() {
-        return Array.from(this.props.groupsStore.groups.values()).map(
-            group =>
-                new GroupRow({
-                    groupsStore: this.props.groupsStore,
-                    group,
-                    numShortcuts: this.numShortcuts[group.name] || 0
-                })
-        );
-    }
+            return result;
+        }
 
-    render() {
-        return (
-            <Table
-                className="EezStudio_GroupsTable"
-                persistId="shortcuts/groups"
-                columns={this.columns}
-                rows={this.rows}
-                defaultSortColumn="name"
-            />
-        );
+        get numShortcuts() {
+            return _countBy(
+                Array.from(this.props.shortcutsStore.shortcuts.values()),
+                shortcut => shortcut.groupName
+            );
+        }
+
+        get rows() {
+            return Array.from(this.props.groupsStore.groups.values()).map(
+                group =>
+                    new GroupRow({
+                        groupsStore: this.props.groupsStore,
+                        group,
+                        numShortcuts: this.numShortcuts[group.name] || 0
+                    })
+            );
+        }
+
+        render() {
+            return (
+                <Table
+                    className="EezStudio_GroupsTable"
+                    persistId="shortcuts/groups"
+                    columns={this.columns}
+                    rows={this.rows}
+                    defaultSortColumn="name"
+                />
+            );
+        }
     }
-}
+);

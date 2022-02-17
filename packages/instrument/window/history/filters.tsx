@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, action } from "mobx";
+import { observable, action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
 import type { IActivityLogEntry } from "eez-studio-shared/activity-log";
@@ -12,16 +12,31 @@ import type { IAppStore, History } from "instrument/window/history/history";
 import type { IHistoryItem } from "instrument/window/history/item";
 
 export class Filters {
-    @observable session: boolean = true;
-    @observable connectsAndDisconnects: boolean = true;
-    @observable scpi: boolean = true;
-    @observable downloadedFiles: boolean = true;
-    @observable uploadedFiles: boolean = true;
-    @observable attachedFiles: boolean = true;
-    @observable charts: boolean = true;
-    @observable lists: boolean = true;
-    @observable notes: boolean = true;
-    @observable launchedScripts: boolean = true;
+    session: boolean = true;
+    connectsAndDisconnects: boolean = true;
+    scpi: boolean = true;
+    downloadedFiles: boolean = true;
+    uploadedFiles: boolean = true;
+    attachedFiles: boolean = true;
+    charts: boolean = true;
+    lists: boolean = true;
+    notes: boolean = true;
+    launchedScripts: boolean = true;
+
+    constructor() {
+        makeObservable(this, {
+            session: observable,
+            connectsAndDisconnects: observable,
+            scpi: observable,
+            downloadedFiles: observable,
+            uploadedFiles: observable,
+            attachedFiles: observable,
+            charts: observable,
+            lists: observable,
+            notes: observable,
+            launchedScripts: observable
+        });
+    }
 
     filterActivityLogEntry(activityLogEntry: IActivityLogEntry): boolean {
         if (this.session) {
@@ -162,18 +177,32 @@ export class Filters {
 }
 
 export class FilterStats {
-    @observable session = 0;
-    @observable connectsAndDisconnects = 0;
-    @observable scpi = 0;
-    @observable downloadedFiles = 0;
-    @observable uploadedFiles = 0;
-    @observable attachedFiles = 0;
-    @observable charts = 0;
-    @observable lists = 0;
-    @observable notes = 0;
-    @observable launchedScripts = 0;
+    session = 0;
+    connectsAndDisconnects = 0;
+    scpi = 0;
+    downloadedFiles = 0;
+    uploadedFiles = 0;
+    attachedFiles = 0;
+    charts = 0;
+    lists = 0;
+    notes = 0;
+    launchedScripts = 0;
 
     constructor(public history: History) {
+        makeObservable(this, {
+            session: observable,
+            connectsAndDisconnects: observable,
+            scpi: observable,
+            downloadedFiles: observable,
+            uploadedFiles: observable,
+            attachedFiles: observable,
+            charts: observable,
+            lists: observable,
+            notes: observable,
+            launchedScripts: observable,
+            add: action
+        });
+
         scheduleTask("Get filter stats", Priority.Lowest, async () => {
             const rows = await dbQuery(
                 `SELECT
@@ -192,7 +221,6 @@ export class FilterStats {
         });
     }
 
-    @action
     add(type: string, amount: number) {
         if (
             [
@@ -241,108 +269,111 @@ export class FilterStats {
     }
 }
 
-@observer
-export class FiltersComponent extends React.Component<{ appStore: IAppStore }> {
-    render() {
-        const filterStats = this.props.appStore.history.filterStats;
+export const FiltersComponent = observer(
+    class FiltersComponent extends React.Component<{ appStore: IAppStore }> {
+        render() {
+            const filterStats = this.props.appStore.history.filterStats;
 
-        return (
-            <div className="EezStudio_FiltersComponentContainer">
-                <PropertyList>
-                    <BooleanProperty
-                        name={`Session start and close (${filterStats.session})`}
-                        value={this.props.appStore.filters.session}
-                        onChange={action(
-                            (value: boolean) =>
-                                (this.props.appStore.filters.session = value)
-                        )}
-                    />
-                    <BooleanProperty
-                        name={`Connects and disconnects (${filterStats.connectsAndDisconnects})`}
-                        value={
-                            this.props.appStore.filters.connectsAndDisconnects
-                        }
-                        onChange={action(
-                            (value: boolean) =>
-                                (this.props.appStore.filters.connectsAndDisconnects =
-                                    value)
-                        )}
-                    />
-                    <BooleanProperty
-                        name={`SCPI commands, queries and query results (${filterStats.scpi})`}
-                        value={this.props.appStore.filters.scpi}
-                        onChange={action(
-                            (value: boolean) =>
-                                (this.props.appStore.filters.scpi = value)
-                        )}
-                    />
-                    <BooleanProperty
-                        name={`Downloaded files (${filterStats.downloadedFiles})`}
-                        value={this.props.appStore.filters.downloadedFiles}
-                        onChange={action(
-                            (value: boolean) =>
-                                (this.props.appStore.filters.downloadedFiles =
-                                    value)
-                        )}
-                    />
-                    <BooleanProperty
-                        name={`Uploaded files (${filterStats.uploadedFiles})`}
-                        value={this.props.appStore.filters.uploadedFiles}
-                        onChange={action(
-                            (value: boolean) =>
-                                (this.props.appStore.filters.uploadedFiles =
-                                    value)
-                        )}
-                    />
-                    <BooleanProperty
-                        name={`Attached files (${filterStats.attachedFiles})`}
-                        value={this.props.appStore.filters.attachedFiles}
-                        onChange={action(
-                            (value: boolean) =>
-                                (this.props.appStore.filters.attachedFiles =
-                                    value)
-                        )}
-                    />
-                    <BooleanProperty
-                        name={`Charts (${filterStats.charts})`}
-                        value={this.props.appStore.filters.charts}
-                        onChange={action(
-                            (value: boolean) =>
-                                (this.props.appStore.filters.charts = value)
-                        )}
-                    />
+            return (
+                <div className="EezStudio_FiltersComponentContainer">
+                    <PropertyList>
+                        <BooleanProperty
+                            name={`Session start and close (${filterStats.session})`}
+                            value={this.props.appStore.filters.session}
+                            onChange={action(
+                                (value: boolean) =>
+                                    (this.props.appStore.filters.session =
+                                        value)
+                            )}
+                        />
+                        <BooleanProperty
+                            name={`Connects and disconnects (${filterStats.connectsAndDisconnects})`}
+                            value={
+                                this.props.appStore.filters
+                                    .connectsAndDisconnects
+                            }
+                            onChange={action(
+                                (value: boolean) =>
+                                    (this.props.appStore.filters.connectsAndDisconnects =
+                                        value)
+                            )}
+                        />
+                        <BooleanProperty
+                            name={`SCPI commands, queries and query results (${filterStats.scpi})`}
+                            value={this.props.appStore.filters.scpi}
+                            onChange={action(
+                                (value: boolean) =>
+                                    (this.props.appStore.filters.scpi = value)
+                            )}
+                        />
+                        <BooleanProperty
+                            name={`Downloaded files (${filterStats.downloadedFiles})`}
+                            value={this.props.appStore.filters.downloadedFiles}
+                            onChange={action(
+                                (value: boolean) =>
+                                    (this.props.appStore.filters.downloadedFiles =
+                                        value)
+                            )}
+                        />
+                        <BooleanProperty
+                            name={`Uploaded files (${filterStats.uploadedFiles})`}
+                            value={this.props.appStore.filters.uploadedFiles}
+                            onChange={action(
+                                (value: boolean) =>
+                                    (this.props.appStore.filters.uploadedFiles =
+                                        value)
+                            )}
+                        />
+                        <BooleanProperty
+                            name={`Attached files (${filterStats.attachedFiles})`}
+                            value={this.props.appStore.filters.attachedFiles}
+                            onChange={action(
+                                (value: boolean) =>
+                                    (this.props.appStore.filters.attachedFiles =
+                                        value)
+                            )}
+                        />
+                        <BooleanProperty
+                            name={`Charts (${filterStats.charts})`}
+                            value={this.props.appStore.filters.charts}
+                            onChange={action(
+                                (value: boolean) =>
+                                    (this.props.appStore.filters.charts = value)
+                            )}
+                        />
 
-                    {this.props.appStore.instrument &&
-                        this.props.appStore.instrument.listsProperty && (
-                            <BooleanProperty
-                                name={`Lists (${filterStats.lists})`}
-                                value={this.props.appStore.filters.lists}
-                                onChange={action(
-                                    (value: boolean) =>
-                                        (this.props.appStore.filters.lists =
-                                            value)
-                                )}
-                            />
-                        )}
-                    <BooleanProperty
-                        name={`Notes (${filterStats.notes})`}
-                        value={this.props.appStore.filters.notes}
-                        onChange={action(
-                            (value: boolean) =>
-                                (this.props.appStore.filters.notes = value)
-                        )}
-                    />
-                    <BooleanProperty
-                        name={`Launched scripts (${filterStats.launchedScripts})`}
-                        value={this.props.appStore.filters.launchedScripts}
-                        onChange={action(
-                            (value: boolean) =>
-                                (this.props.appStore.filters.launchedScripts =
-                                    value)
-                        )}
-                    />
-                </PropertyList>
-            </div>
-        );
+                        {this.props.appStore.instrument &&
+                            this.props.appStore.instrument.listsProperty && (
+                                <BooleanProperty
+                                    name={`Lists (${filterStats.lists})`}
+                                    value={this.props.appStore.filters.lists}
+                                    onChange={action(
+                                        (value: boolean) =>
+                                            (this.props.appStore.filters.lists =
+                                                value)
+                                    )}
+                                />
+                            )}
+                        <BooleanProperty
+                            name={`Notes (${filterStats.notes})`}
+                            value={this.props.appStore.filters.notes}
+                            onChange={action(
+                                (value: boolean) =>
+                                    (this.props.appStore.filters.notes = value)
+                            )}
+                        />
+                        <BooleanProperty
+                            name={`Launched scripts (${filterStats.launchedScripts})`}
+                            value={this.props.appStore.filters.launchedScripts}
+                            onChange={action(
+                                (value: boolean) =>
+                                    (this.props.appStore.filters.launchedScripts =
+                                        value)
+                            )}
+                        />
+                    </PropertyList>
+                </div>
+            );
+        }
     }
-}
+);

@@ -8,7 +8,7 @@ import { Loader } from "eez-studio-ui/loader";
 import { Icon } from "eez-studio-ui/icon";
 import { IconAction } from "eez-studio-ui/action";
 
-const { Menu, MenuItem } = EEZStudio.remote || {};
+import { Menu, MenuItem } from "@electron/remote";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -275,35 +275,36 @@ const AddTabButton = observer(
     }
 );
 
-@observer
-export class TabsView extends React.Component<{
-    tabs: ITab[];
-    addTabTitle?: string;
-    addTabIcon?: string;
-    addTabCallback?: () => void;
-    addTabAttention?: boolean;
-    moveTab?: (dragIndex: number, hoverIndex: number) => void;
-}> {
-    render() {
-        return (
-            <div className="EezStudio_TabsView">
-                {this.props.tabs.map((tab, index) => (
-                    <TabView
-                        key={tab.id}
-                        tab={tab}
-                        index={index}
-                        moveTab={this.props.moveTab}
-                    />
-                ))}
-                {this.props.addTabCallback && (
-                    <AddTabButton
-                        addTabTitle={this.props.addTabTitle}
-                        addTabIcon={this.props.addTabIcon}
-                        addTabCallback={this.props.addTabCallback}
-                        attention={this.props.addTabAttention}
-                    />
-                )}
-            </div>
-        );
+export const TabsView = observer(
+    class TabsView extends React.Component<{
+        tabs: ITab[];
+        addTabTitle?: string;
+        addTabIcon?: string;
+        addTabCallback?: () => void;
+        addTabAttention?: boolean;
+        moveTab?: (dragIndex: number, hoverIndex: number) => void;
+    }> {
+        render() {
+            return (
+                <div className="EezStudio_TabsView">
+                    {this.props.tabs.map((tab, index) => (
+                        <TabView
+                            key={tab.id}
+                            tab={tab}
+                            index={index}
+                            moveTab={this.props.moveTab}
+                        />
+                    ))}
+                    {this.props.addTabCallback && (
+                        <AddTabButton
+                            addTabTitle={this.props.addTabTitle}
+                            addTabIcon={this.props.addTabIcon}
+                            addTabCallback={this.props.addTabCallback}
+                            attention={this.props.addTabAttention}
+                        />
+                    )}
+                </div>
+            );
+        }
     }
-}
+);

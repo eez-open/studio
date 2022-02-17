@@ -1,4 +1,4 @@
-import { observable, runInAction } from "mobx";
+import { observable, runInAction, makeObservable } from "mobx";
 
 import { db } from "eez-studio-shared/db-path";
 import { IStore } from "eez-studio-shared/store";
@@ -452,10 +452,15 @@ export function logGet(store: IStore, id: string) {
 ////////////////////////////////////////////////////////////////////////////////
 
 class ActiveSession {
-    @observable id: string | undefined;
-    @observable message: string | undefined;
+    id: string | undefined;
+    message: string | undefined;
 
     constructor() {
+        makeObservable(this, {
+            id: observable,
+            message: observable
+        });
+
         activityLogStore.watch(
             {
                 createObject: (object: any) => {

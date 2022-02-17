@@ -1,6 +1,6 @@
 import React from "react";
 import { guid } from "eez-studio-shared/guid";
-import { action, computed, observable } from "mobx";
+import { action, computed, observable, makeObservable } from "mobx";
 import {
     ClassInfo,
     EezObject,
@@ -52,13 +52,13 @@ import { activateConnectionLine } from "project-editor/flow/editor/real-time-tra
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ConnectionLine extends EezObject {
-    @observable description: string;
-    @observable source: string;
-    @observable output: string;
-    @observable target: string;
-    @observable input: string;
+    description: string;
+    source: string;
+    output: string;
+    target: string;
+    input: string;
 
-    @observable _active: boolean;
+    _active: boolean;
 
     static classInfo: ClassInfo = {
         label: (connectionLine: ConnectionLine) => {
@@ -124,17 +124,39 @@ export class ConnectionLine extends EezObject {
         }
     };
 
-    @computed get sourceComponent() {
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            description: observable,
+            source: observable,
+            output: observable,
+            target: observable,
+            input: observable,
+            _active: observable,
+            sourceComponent: computed,
+            targetComponent: computed,
+            _sourcePosition: computed,
+            _targetPosition: computed,
+            sourceAndTargetPositions: computed,
+            sourcePosition: computed,
+            targetPosition: computed,
+            sourceRect: computed,
+            targetRect: computed
+        });
+    }
+
+    get sourceComponent() {
         const page = getParent(getParent(this)) as Flow;
         return page.wiredComponents.get(this.source);
     }
 
-    @computed get targetComponent() {
+    get targetComponent() {
         const page = getParent(getParent(this)) as Flow;
         return page.wiredComponents.get(this.target);
     }
 
-    @computed get _sourcePosition() {
+    get _sourcePosition() {
         if (!(this.sourceComponent && this.sourceComponent._geometry)) {
             return undefined;
         }
@@ -155,7 +177,7 @@ export class ConnectionLine extends EezObject {
         };
     }
 
-    @computed get _targetPosition() {
+    get _targetPosition() {
         if (!(this.targetComponent && this.targetComponent._geometry)) {
             return undefined;
         }
@@ -174,7 +196,7 @@ export class ConnectionLine extends EezObject {
         };
     }
 
-    @computed get sourceAndTargetPositions() {
+    get sourceAndTargetPositions() {
         let sourcePositionX = 0;
         let sourcePositionY = 0;
         let targetPositionX = 100;
@@ -206,15 +228,15 @@ export class ConnectionLine extends EezObject {
         };
     }
 
-    @computed get sourcePosition() {
+    get sourcePosition() {
         return this.sourceAndTargetPositions.sourcePosition;
     }
 
-    @computed get targetPosition() {
+    get targetPosition() {
         return this.sourceAndTargetPositions.targetPosition;
     }
 
-    @computed get sourceRect() {
+    get sourceRect() {
         if (!(this.sourceComponent && this.sourceComponent._geometry)) {
             return {
                 left: 0,
@@ -227,7 +249,7 @@ export class ConnectionLine extends EezObject {
         return this.sourceComponent._geometry;
     }
 
-    @computed get targetRect() {
+    get targetRect() {
         if (!(this.targetComponent && this.targetComponent._geometry)) {
             return {
                 left: 0,
@@ -426,7 +448,20 @@ export abstract class Flow extends EezObject {
     connectionLines: ConnectionLine[];
     localVariables: Variable[];
 
-    @computed get wiredComponents() {
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            wiredComponents: computed,
+            actionComponents: computed,
+            startComponent: computed,
+            endComponent: computed,
+            inputComponents: computed,
+            outputComponents: computed
+        });
+    }
+
+    get wiredComponents() {
         const components = new Map<string, Component>();
 
         const v = visitObjects(this.components);
@@ -444,7 +479,7 @@ export abstract class Flow extends EezObject {
         return components;
     }
 
-    @computed get actionComponents() {
+    get actionComponents() {
         const components = [];
 
         const v = visitObjects(this.components);
@@ -580,25 +615,25 @@ export abstract class Flow extends EezObject {
 
     abstract get pageRect(): Rect;
 
-    @computed get startComponent() {
+    get startComponent() {
         return this.components.find(
             component => component instanceof StartActionComponent
         );
     }
 
-    @computed get endComponent() {
+    get endComponent() {
         return this.components.find(
             component => component instanceof EndActionComponent
         );
     }
 
-    @computed get inputComponents() {
+    get inputComponents() {
         return this.components
             .filter(component => component instanceof InputActionComponent)
             .sort((a, b) => a.top - b.top) as InputActionComponent[];
     }
 
-    @computed get outputComponents() {
+    get outputComponents() {
         return this.components
             .filter(component => component instanceof OutputActionComponent)
             .sort((a, b) => a.top - b.top) as OutputActionComponent[];
@@ -734,20 +769,31 @@ registerClass("FlowFragment", FlowFragment);
 export abstract class FlowTabState implements IEditorState {
     containerId = guid();
 
-    constructor(public flow: Flow) {}
+    constructor(public flow: Flow) {
+        makeObservable(this, {
+            flowState: computed,
+            DocumentStore: computed,
+            isRuntime: computed,
+            resetTransform: action,
+            selectedObject: computed,
+            selectedObjects: computed,
+            selectObject: action,
+            selectObjects: action
+        });
+    }
 
-    @computed get flowState() {
+    get flowState() {
         if (this.DocumentStore.runtime) {
             return this.DocumentStore.runtime.getFlowState(this.flow);
         }
         return undefined;
     }
 
-    @computed get DocumentStore() {
+    get DocumentStore() {
         return getDocumentStore(this.flow);
     }
 
-    @computed get isRuntime() {
+    get isRuntime() {
         return !!this.DocumentStore.runtime;
     }
 
@@ -759,7 +805,6 @@ export abstract class FlowTabState implements IEditorState {
     abstract get transform(): Transform;
     abstract set transform(transform: Transform);
 
-    @action
     resetTransform(transform?: Transform) {
         if (!transform) {
             transform = this.transform;
@@ -774,17 +819,14 @@ export abstract class FlowTabState implements IEditorState {
     abstract get frontFace(): boolean;
     abstract set frontFace(value: boolean);
 
-    @computed
     get selectedObject(): IEezObject | undefined {
         return this.widgetContainer.selectedObject || this.flow;
     }
 
-    @computed
     get selectedObjects() {
         return this.widgetContainer.selectedObjects;
     }
 
-    @action
     selectObject(object: IEezObject) {
         let ancestor: IEezObject | undefined;
         for (ancestor = object; ancestor; ancestor = getParent(ancestor)) {
@@ -796,7 +838,6 @@ export abstract class FlowTabState implements IEditorState {
         }
     }
 
-    @action
     selectObjects(objects: IEezObject[]) {
         const items: ITreeObjectAdapter[] = [];
 

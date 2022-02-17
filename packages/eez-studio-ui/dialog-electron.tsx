@@ -1,29 +1,25 @@
+import { dialog, getCurrentWindow } from "@electron/remote";
+
 export function info(message: string, detail: string | undefined) {
-    return EEZStudio.remote.dialog.showMessageBox(
-        EEZStudio.remote.getCurrentWindow(),
-        {
-            type: "info",
-            title: "EEZ Studio",
-            message: message,
-            detail: detail,
-            noLink: true,
-            buttons: ["OK"]
-        }
-    );
+    return dialog.showMessageBox(getCurrentWindow(), {
+        type: "info",
+        title: "EEZ Studio",
+        message: message,
+        detail: detail,
+        noLink: true,
+        buttons: ["OK"]
+    });
 }
 
 export function error(message: string, detail: string | undefined) {
-    return EEZStudio.remote.dialog.showMessageBox(
-        EEZStudio.remote.getCurrentWindow(),
-        {
-            type: "error",
-            title: "EEZ Studio",
-            message: message,
-            detail: detail,
-            noLink: true,
-            buttons: ["OK"]
-        }
-    );
+    return dialog.showMessageBox(getCurrentWindow(), {
+        type: "error",
+        title: "EEZ Studio",
+        message: message,
+        detail: detail,
+        noLink: true,
+        buttons: ["OK"]
+    });
 }
 
 export async function confirm(
@@ -32,18 +28,15 @@ export async function confirm(
     callback: () => void,
     cancelCallback?: () => void
 ) {
-    const result = await EEZStudio.remote.dialog.showMessageBox(
-        EEZStudio.remote.getCurrentWindow(),
-        {
-            type: "question",
-            title: "EEZ Studio",
-            message: message,
-            detail: detail,
-            noLink: true,
-            buttons: ["Yes", "No"],
-            cancelId: 1
-        }
-    );
+    const result = await dialog.showMessageBox(getCurrentWindow(), {
+        type: "question",
+        title: "EEZ Studio",
+        message: message,
+        detail: detail,
+        noLink: true,
+        buttons: ["Yes", "No"],
+        cancelId: 1
+    });
     const buttonIndex = result.response;
     if (buttonIndex == 0) {
         callback();
@@ -57,17 +50,14 @@ export async function confirmWithButtons(
     detail: string | undefined,
     buttons: string[]
 ) {
-    const result = await EEZStudio.remote.dialog.showMessageBox(
-        EEZStudio.remote.getCurrentWindow(),
-        {
-            type: "question",
-            title: "EEZ Studio",
-            message: message,
-            detail: detail,
-            noLink: true,
-            buttons: buttons || ["Yes", "No"],
-            cancelId: 1
-        }
-    );
+    const result = await dialog.showMessageBox(getCurrentWindow(), {
+        type: "question",
+        title: "EEZ Studio",
+        message: message,
+        detail: detail,
+        noLink: true,
+        buttons: buttons || ["Yes", "No"],
+        cancelId: 1
+    });
     return result.response;
 }

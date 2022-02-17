@@ -1,3 +1,5 @@
+import { ipcRenderer } from "electron";
+import { getCurrentWindow } from "@electron/remote";
 import React from "react";
 import {
     observable,
@@ -5,11 +7,12 @@ import {
     runInAction,
     reaction,
     autorun,
-    computed
+    computed,
+    makeObservable
 } from "mobx";
 import * as path from "path";
 
-import { onSimpleMessage } from "eez-studio-shared/util";
+import { onSimpleMessage } from "eez-studio-shared/util-renderer";
 
 import {
     loadPreinstalledExtension,
@@ -21,7 +24,7 @@ import { ITab } from "eez-studio-ui/tabs";
 import { Icon } from "eez-studio-ui/icon";
 
 import {
-    HistoryView,
+    HistoryViewComponent,
     showSessionsList
 } from "instrument/window/history/history-view";
 
@@ -58,11 +61,16 @@ export interface IHomeTab extends ITab {
 ////////////////////////////////////////////////////////////////////////////////
 
 class HomeTab implements IHomeTab {
-    constructor(public tabs: Tabs) {}
+    constructor(public tabs: Tabs) {
+        makeObservable(this, {
+            active: observable,
+            makeActive: action
+        });
+    }
 
     permanent: boolean = true;
     dragDisabled: boolean = true;
-    @observable active: boolean = false;
+    active: boolean = false;
     loading: boolean = false;
 
     id = "home";
@@ -78,17 +86,21 @@ class HomeTab implements IHomeTab {
         return <Home />;
     }
 
-    @action
     makeActive(): void {
         this.tabs.makeActive(this);
     }
 }
 
 class HistoryTab implements IHomeTab {
-    constructor(public tabs: Tabs) {}
+    constructor(public tabs: Tabs) {
+        makeObservable(this, {
+            active: observable,
+            makeActive: action
+        });
+    }
 
     permanent: boolean = true;
-    @observable active: boolean = false;
+    active: boolean = false;
     loading: boolean = false;
 
     id = "history";
@@ -111,7 +123,6 @@ class HistoryTab implements IHomeTab {
         }
     }
 
-    @action
     makeActive(): void {
         this.tabs.makeActive(this);
     }
@@ -122,10 +133,15 @@ class HistoryTab implements IHomeTab {
 }
 
 class ShortcutsAndGroupsTab implements IHomeTab {
-    constructor(public tabs: Tabs) {}
+    constructor(public tabs: Tabs) {
+        makeObservable(this, {
+            active: observable,
+            makeActive: action
+        });
+    }
 
     permanent: boolean = true;
-    @observable active: boolean = false;
+    active: boolean = false;
     loading: boolean = false;
 
     id = "shortcutsAndGroups";
@@ -142,7 +158,6 @@ class ShortcutsAndGroupsTab implements IHomeTab {
         return <ShortcutsAndGroups />;
     }
 
-    @action
     makeActive(): void {
         this.tabs.makeActive(this);
     }
@@ -153,10 +168,18 @@ class ShortcutsAndGroupsTab implements IHomeTab {
 }
 
 class ExtensionManagerTab implements IHomeTab {
-    constructor(public tabs: Tabs) {}
+    constructor(public tabs: Tabs) {
+        makeObservable(this, {
+            active: observable,
+            numNewVersions: computed,
+            tooltipTitle: computed,
+            attention: computed,
+            makeActive: action
+        });
+    }
 
     permanent: boolean = true;
-    @observable active: boolean = false;
+    active: boolean = false;
     loading: boolean = false;
 
     id = "extensions";
@@ -166,7 +189,6 @@ class ExtensionManagerTab implements IHomeTab {
         return this.title;
     }
 
-    @computed
     get numNewVersions() {
         const { extensionsManagerStore } =
             require("home/extensions-manager/extensions-manager") as typeof ExtensionsManagerModule;
@@ -182,7 +204,6 @@ class ExtensionManagerTab implements IHomeTab {
         );
     }
 
-    @computed
     get tooltipTitle() {
         const { extensionsManagerStore } =
             require("home/extensions-manager/extensions-manager") as typeof ExtensionsManagerModule;
@@ -197,7 +218,6 @@ class ExtensionManagerTab implements IHomeTab {
         return title;
     }
 
-    @computed
     get attention() {
         return this.numNewVersions > 0;
     }
@@ -208,7 +228,6 @@ class ExtensionManagerTab implements IHomeTab {
         return <ExtensionsManager />;
     }
 
-    @action
     makeActive(): void {
         this.tabs.makeActive(this);
     }
@@ -219,10 +238,16 @@ class ExtensionManagerTab implements IHomeTab {
 }
 
 class SettingsTab implements IHomeTab {
-    constructor(public tabs: Tabs) {}
+    constructor(public tabs: Tabs) {
+        makeObservable(this, {
+            active: observable,
+            attention: computed,
+            makeActive: action
+        });
+    }
 
     permanent: boolean = true;
-    @observable active: boolean = false;
+    active: boolean = false;
     loading: boolean = false;
 
     id = "settings";
@@ -232,7 +257,6 @@ class SettingsTab implements IHomeTab {
         return this.title;
     }
 
-    @computed
     get attention() {
         const { settingsController } =
             require("home/settings") as typeof SettingsModule;
@@ -258,7 +282,6 @@ class SettingsTab implements IHomeTab {
         return <Settings />;
     }
 
-    @action
     makeActive(): void {
         this.tabs.makeActive(this);
     }
@@ -271,10 +294,15 @@ class SettingsTab implements IHomeTab {
 ////////////////////////////////////////////////////////////////////////////////
 
 class HomeSectionTab implements IHomeTab {
-    constructor(public tabs: Tabs, public homeSection: IHomeSection) {}
+    constructor(public tabs: Tabs, public homeSection: IHomeSection) {
+        makeObservable(this, {
+            active: observable,
+            makeActive: action
+        });
+    }
 
     permanent: boolean = true;
-    @observable active: boolean = false;
+    active: boolean = false;
     loading: boolean = false;
 
     get id() {
@@ -295,7 +323,6 @@ class HomeSectionTab implements IHomeTab {
         return this.homeSection.renderContent();
     }
 
-    @action
     makeActive(): void {
         this.tabs.makeActive(this);
     }
@@ -309,6 +336,11 @@ class HomeSectionTab implements IHomeTab {
 
 class InstrumentTab implements IHomeTab {
     constructor(public tabs: Tabs, public object: InstrumentObject) {
+        makeObservable(this, {
+            _active: observable,
+            makeActive: action
+        });
+
         this.editor = this.object.getEditor();
         this.editor.onCreate();
     }
@@ -316,7 +348,7 @@ class InstrumentTab implements IHomeTab {
     editor?: IEditor;
 
     permanent: boolean = true;
-    @observable _active: boolean = false;
+    _active: boolean = false;
 
     loading = false;
 
@@ -376,7 +408,6 @@ class InstrumentTab implements IHomeTab {
         return this.editor ? this.editor.render() : null;
     }
 
-    @action
     makeActive(): void {
         this.tabs.makeActive(this);
     }
@@ -403,16 +434,23 @@ class InstrumentTab implements IHomeTab {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ProjectEditorTab implements IHomeTab {
-    constructor(public tabs: Tabs, public _filePath: string | undefined) {}
+    constructor(public tabs: Tabs, public _filePath: string | undefined) {
+        makeObservable(this, {
+            _active: observable,
+            DocumentStore: observable,
+            error: observable,
+            makeActive: action,
+            showCommandPalette: action
+        });
+    }
 
     permanent: boolean = true;
-    @observable _active: boolean = false;
+    _active: boolean = false;
     loading: boolean = false;
 
-    @observable
     DocumentStore: DocumentStoreClass | undefined;
 
-    @observable error: string | undefined;
+    error: string | undefined;
 
     ProjectContext: React.Context<DocumentStoreClass>;
     ProjectEditor: typeof ProjectEditorModule.ProjectEditor;
@@ -532,41 +570,32 @@ export class ProjectEditorTab implements IHomeTab {
         };
         const showMetrics = () => DocumentStore.showMetrics();
 
-        EEZStudio.electron.ipcRenderer.on("save", save);
-        EEZStudio.electron.ipcRenderer.on("saveAs", saveAs);
-        EEZStudio.electron.ipcRenderer.on("check", check);
-        EEZStudio.electron.ipcRenderer.on("build", build);
-        EEZStudio.electron.ipcRenderer.on("build-extensions", buildExtensions);
-        EEZStudio.electron.ipcRenderer.on("undo", undo);
-        EEZStudio.electron.ipcRenderer.on("redo", redo);
-        EEZStudio.electron.ipcRenderer.on("cut", cut);
-        EEZStudio.electron.ipcRenderer.on("copy", copy);
-        EEZStudio.electron.ipcRenderer.on("paste", paste);
-        EEZStudio.electron.ipcRenderer.on("delete", deleteSelection);
-        EEZStudio.electron.ipcRenderer.on("showProjectMetrics", showMetrics);
+        ipcRenderer.on("save", save);
+        ipcRenderer.on("saveAs", saveAs);
+        ipcRenderer.on("check", check);
+        ipcRenderer.on("build", build);
+        ipcRenderer.on("build-extensions", buildExtensions);
+        ipcRenderer.on("undo", undo);
+        ipcRenderer.on("redo", redo);
+        ipcRenderer.on("cut", cut);
+        ipcRenderer.on("copy", copy);
+        ipcRenderer.on("paste", paste);
+        ipcRenderer.on("delete", deleteSelection);
+        ipcRenderer.on("showProjectMetrics", showMetrics);
 
         this.removeListeners = () => {
-            EEZStudio.electron.ipcRenderer.removeListener("save", save);
-            EEZStudio.electron.ipcRenderer.removeListener("saveAs", saveAs);
-            EEZStudio.electron.ipcRenderer.removeListener("check", check);
-            EEZStudio.electron.ipcRenderer.removeListener("build", build);
-            EEZStudio.electron.ipcRenderer.removeListener(
-                "build-extensions",
-                buildExtensions
-            );
-            EEZStudio.electron.ipcRenderer.removeListener("undo", undo);
-            EEZStudio.electron.ipcRenderer.removeListener("redo", redo);
-            EEZStudio.electron.ipcRenderer.removeListener("cut", cut);
-            EEZStudio.electron.ipcRenderer.removeListener("copy", copy);
-            EEZStudio.electron.ipcRenderer.removeListener("paste", paste);
-            EEZStudio.electron.ipcRenderer.removeListener(
-                "delete",
-                deleteSelection
-            );
-            EEZStudio.electron.ipcRenderer.removeListener(
-                "showProjectMetrics",
-                showMetrics
-            );
+            ipcRenderer.removeListener("save", save);
+            ipcRenderer.removeListener("saveAs", saveAs);
+            ipcRenderer.removeListener("check", check);
+            ipcRenderer.removeListener("build", build);
+            ipcRenderer.removeListener("build-extensions", buildExtensions);
+            ipcRenderer.removeListener("undo", undo);
+            ipcRenderer.removeListener("redo", redo);
+            ipcRenderer.removeListener("cut", cut);
+            ipcRenderer.removeListener("copy", copy);
+            ipcRenderer.removeListener("paste", paste);
+            ipcRenderer.removeListener("delete", deleteSelection);
+            ipcRenderer.removeListener("showProjectMetrics", showMetrics);
         };
     }
 
@@ -637,7 +666,6 @@ export class ProjectEditorTab implements IHomeTab {
         );
     }
 
-    @action
     makeActive(): void {
         this.tabs.makeActive(this);
     }
@@ -663,7 +691,6 @@ export class ProjectEditorTab implements IHomeTab {
         return true;
     }
 
-    @action
     showCommandPalette() {
         if (this.DocumentStore) {
             this.DocumentStore.uiStateStore.showCommandPalette = true;
@@ -693,10 +720,9 @@ interface ISavedTab {
 }
 
 export class Tabs {
-    @observable tabs: IHomeTab[] = [];
-    @observable activeTab: IHomeTab | undefined;
+    tabs: IHomeTab[] = [];
+    activeTab: IHomeTab | undefined;
 
-    @computed
     get allTabs() {
         const TabClassToTabDefinition = (TabClass: any) => ({
             instance: new TabClass(this),
@@ -745,6 +771,20 @@ export class Tabs {
     }
 
     constructor() {
+        makeObservable(this, {
+            tabs: observable,
+            activeTab: observable,
+            allTabs: computed,
+            addInstrumentTab: action,
+            addProjectTab: action,
+            removeTab: action,
+            makeActive: action,
+            viewDeletedHistory: observable,
+            navigateToHistory: action.bound,
+            navigateToDeletedHistoryItems: action.bound,
+            navigateToSessionsList: action.bound
+        });
+
         loadPreinstalledExtension("instrument").then(async () => {
             if (!firstTime.get()) {
                 if (location.search) {
@@ -762,10 +802,7 @@ export class Tabs {
                     for (const savedTab of savedTabs) {
                         if (savedTab.id) {
                             try {
-                                await this.openTabById(
-                                    savedTab.id,
-                                    savedTab.active
-                                );
+                                this.openTabById(savedTab.id, savedTab.active);
                             } catch (err) {
                                 console.error(err);
                             }
@@ -773,7 +810,7 @@ export class Tabs {
                     }
                 }
             } else {
-                await this.openTabById("home", true);
+                this.openTabById("home", true);
             }
 
             reaction(
@@ -788,7 +825,7 @@ export class Tabs {
                 tabs => {
                     const tabsJSON = JSON.stringify(tabs);
                     window.localStorage.setItem("home/tabs", tabsJSON);
-                    EEZStudio.electron.ipcRenderer.send("tabs-change", tabs);
+                    ipcRenderer.send("tabs-change", tabs);
                 }
             );
 
@@ -801,7 +838,7 @@ export class Tabs {
                 tabsToClose.forEach(tab => tab.close());
             });
 
-            EEZStudio.electron.ipcRenderer.on(
+            ipcRenderer.on(
                 "openTab",
                 action((sender: any, tabId: string) => {
                     this.openTabById(tabId, true);
@@ -831,7 +868,7 @@ export class Tabs {
             onSimpleMessage(
                 "home/show-section",
                 (args: { sectionId: string; itemId?: string }) => {
-                    EEZStudio.remote.getCurrentWindow().show();
+                    getCurrentWindow().show();
                     this.navigateToTab(args.sectionId, args.itemId);
                 }
             );
@@ -850,7 +887,7 @@ export class Tabs {
         this.tabs.push(tab);
     }
 
-    async openTabById(tabId: string, makeActive: boolean) {
+    openTabById(tabId: string, makeActive: boolean) {
         let tab = this.findTab(tabId);
 
         if (!tab) {
@@ -889,7 +926,6 @@ export class Tabs {
         return null;
     }
 
-    @action
     addInstrumentTab(instrument: InstrumentObject) {
         for (let tabIndex = 0; tabIndex < this.tabs.length; tabIndex++) {
             if (this.tabs[tabIndex].id === instrument.id) {
@@ -902,14 +938,12 @@ export class Tabs {
         return tab;
     }
 
-    @action
     addProjectTab(filePath: string | undefined) {
         const tab = new ProjectEditorTab(this, filePath);
         this.addTab(tab);
         return tab;
     }
 
-    @action
     removeTab(tab: IHomeTab) {
         const tabIndex = this.tabs.indexOf(tab);
         if (tabIndex > 0) {
@@ -929,7 +963,6 @@ export class Tabs {
         }
     }
 
-    @action
     makeActive(tab: IHomeTab | undefined) {
         if (this.activeTab) {
             this.activeTab.active = false;
@@ -940,28 +973,25 @@ export class Tabs {
         }
     }
 
-    @observable viewDeletedHistory = false;
+    viewDeletedHistory = false;
 
-    @action.bound
     navigateToHistory() {
         this.openTabById("history", true);
         this.viewDeletedHistory = false;
     }
 
-    @action.bound
     navigateToDeletedHistoryItems() {
         this.openTabById("history", true);
         this.viewDeletedHistory = true;
     }
 
-    @action.bound
     navigateToSessionsList() {
         this.openTabById("history", true);
         this.viewDeletedHistory = false;
         showSessionsList(this);
     }
 
-    mainHistoryView: HistoryView | undefined;
+    mainHistoryView: HistoryViewComponent | undefined;
 
     // @TODO remove this, not requred in home
     selectedListId: string | undefined = undefined;
@@ -970,10 +1000,10 @@ export class Tabs {
         this.selectedListId = selectedListId;
     }
 
-    async navigateToTab(tabId: string, itemId?: string) {
+    navigateToTab(tabId: string, itemId?: string) {
         const tabDefinition = this.findTabDefinition(tabId);
         if (tabDefinition) {
-            await tabs.openTabById(tabId, true);
+            tabs.openTabById(tabId, true);
 
             if (itemId && tabDefinition.selectItem) {
                 tabDefinition.selectItem(itemId);

@@ -1,7 +1,9 @@
-import electron from "electron";
+//import electron from "electron";
+import type * as ElectronModule from "electron";
+import type * as ElectronRemoteModule from "@electron/remote";
+import { ipcMain, ipcRenderer } from "electron";
 import { isRenderer } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
-import { BrowserWindow } from "electron";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -27,11 +29,14 @@ const targets = new Map<string, INotifyTarget>();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getBrowserWindow() {
+function getBrowserWindow(): typeof ElectronModule.BrowserWindow {
     if (isRenderer()) {
-        return EEZStudio.remote.BrowserWindow;
+        const { BrowserWindow } =
+            require("@electron/remote") as typeof ElectronRemoteModule;
+        return BrowserWindow;
     } else {
-        return electron.BrowserWindow;
+        const { BrowserWindow } = require("electron") as typeof ElectronModule;
+        return BrowserWindow;
     }
 }
 
@@ -63,7 +68,7 @@ export function sendMessage(
                 // notify target in this window
                 target.callback(message);
             } else if (target.targetWindowId === -1) {
-                sendSendMessage(EEZStudio.electron.ipcRenderer, {
+                sendSendMessage(ipcRenderer, {
                     targetId,
                     message
                 });
@@ -111,14 +116,16 @@ export function watch(
     // add target to other windows
     let targetWindowId: number;
     if (isRenderer()) {
-        targetWindowId = EEZStudio.remote.getCurrentWindow().id;
+        const { getCurrentWindow } =
+            require("@electron/remote") as typeof ElectronRemoteModule;
+        targetWindowId = getCurrentWindow().id;
     } else {
         targetWindowId = -1;
     }
 
     getBrowserWindow()
         .getAllWindows()
-        .forEach((window: BrowserWindow) => {
+        .forEach((window: ElectronModule.BrowserWindow) => {
             if (window.id !== targetWindowId) {
                 sendNotifyWatch(window.webContents, {
                     sourceId,
@@ -130,7 +137,7 @@ export function watch(
         });
 
     if (isRenderer()) {
-        sendNotifyWatch(EEZStudio.electron.ipcRenderer, {
+        sendNotifyWatch(ipcRenderer, {
             sourceId,
             filterSpecification,
             targetId,
@@ -175,9 +182,9 @@ function sendSendMessage(
 
 let ipc: Electron.IpcRenderer | Electron.IpcMain;
 if (isRenderer()) {
-    ipc = EEZStudio.electron.ipcRenderer;
+    ipc = ipcRenderer;
 } else {
-    ipc = electron.ipcMain;
+    ipc = ipcMain;
 }
 
 ipc.on("notify/watch", function (event: any, args: INotifyWatchArgs) {
@@ -208,7 +215,9 @@ ipc.on("notify/send-message", function (event: any, args: ISendMessageArgs) {
 ipc.on("notify/get-targets", function (event: any, windowId: number) {
     let targetWindowId: number;
     if (isRenderer()) {
-        targetWindowId = EEZStudio.remote.getCurrentWindow().id;
+        const { getCurrentWindow } =
+            require("@electron/remote") as typeof ElectronRemoteModule;
+        targetWindowId = getCurrentWindow().id;
     } else {
         targetWindowId = -1;
     }
@@ -225,18 +234,22 @@ ipc.on("notify/get-targets", function (event: any, windowId: number) {
 });
 
 if (isRenderer()) {
-    let currentWindowId = EEZStudio.remote.getCurrentWindow().id;
-    EEZStudio.remote.BrowserWindow.getAllWindows().forEach(window => {
-        if (currentWindowId !== window.id) {
-            window.webContents.send(
-                "notify/get-targets",
-                EEZStudio.remote.getCurrentWindow().id
-            );
-        }
-    });
+    const { getCurrentWindow } =
+        require("@electron/remote") as typeof ElectronRemoteModule;
 
-    EEZStudio.electron.ipcRenderer.send(
-        "notify/get-targets",
-        EEZStudio.remote.getCurrentWindow().id
-    );
+    let currentWindowId = getCurrentWindow().id;
+
+    getBrowserWindow()
+        .getAllWindows()
+        .forEach(window => {
+            if (currentWindowId !== window.id) {
+                window.webContents.send(
+                    "notify/get-targets",
+                    getCurrentWindow().id
+                );
+            }
+        });
+
+    const { ipcRenderer } = require("electron") as typeof ElectronModule;
+    ipcRenderer.send("notify/get-targets", getCurrentWindow().id);
 }

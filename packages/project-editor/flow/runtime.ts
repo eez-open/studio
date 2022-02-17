@@ -1,8 +1,17 @@
+import { dialog, getCurrentWindow } from "@electron/remote";
 import path from "path";
+import fs from "fs";
 
 import { guid } from "eez-studio-shared/guid";
 
-import { action, computed, observable, runInAction, toJS } from "mobx";
+import {
+    action,
+    computed,
+    observable,
+    runInAction,
+    toJS,
+    makeObservable
+} from "mobx";
 import {
     DocumentStoreClass,
     getLabel,
@@ -70,19 +79,19 @@ export enum StateMachineAction {
 }
 
 export abstract class RuntimeBase {
-    @observable state: State = State.STARTING;
-    @observable isDebuggerActive = false;
+    state: State = State.STARTING;
+    isDebuggerActive = false;
 
-    @observable _selectedPage: Page;
-    @observable selectedFlowState: FlowState | undefined;
-    @observable selectedQueueTask: QueueTask | undefined;
+    _selectedPage: Page;
+    selectedFlowState: FlowState | undefined;
+    selectedQueueTask: QueueTask | undefined;
 
-    @observable error: string | undefined;
+    error: string | undefined;
 
     queueTaskId = 0;
-    @observable queue: QueueTask[] = [];
+    queue: QueueTask[] = [];
 
-    @observable flowStates: FlowState[] = [];
+    flowStates: FlowState[] = [];
 
     logs = new RuntimeLogs();
 
@@ -120,6 +129,22 @@ export abstract class RuntimeBase {
     }
 
     constructor(public DocumentStore: DocumentStoreClass) {
+        makeObservable<RuntimeBase, "setState">(this, {
+            state: observable,
+            isDebuggerActive: observable,
+            _selectedPage: observable,
+            selectedFlowState: observable,
+            selectedQueueTask: observable,
+            error: observable,
+            queue: observable,
+            flowStates: observable,
+            stopRuntimeWithError: action,
+            setState: action,
+            transition: action,
+            pushTask: action,
+            showNextQueueTask: action
+        });
+
         this.selectedPage = this.DocumentStore.project.pages[0];
     }
 
@@ -151,13 +176,12 @@ export abstract class RuntimeBase {
         await this.doStopRuntime(notifyUser);
     }
 
-    @action
     stopRuntimeWithError(error: string) {
         this.error = error;
         this.stopRuntime(true);
     }
 
-    @action private setState(state: State) {
+    private setState(state: State) {
         this.state = state;
 
         if (this.state == State.PAUSED) {
@@ -165,7 +189,6 @@ export abstract class RuntimeBase {
         }
     }
 
-    @action
     transition(action: StateMachineAction) {
         const wasState = this.state;
 
@@ -253,7 +276,6 @@ export abstract class RuntimeBase {
         return undefined;
     }
 
-    @action
     pushTask({
         flowState,
         component,
@@ -287,7 +309,6 @@ export abstract class RuntimeBase {
         });
     }
 
-    @action
     showNextQueueTask() {
         const nextQueueTask = this.queue.length > 0 ? this.queue[0] : undefined;
 
@@ -571,24 +592,19 @@ export abstract class RuntimeBase {
             );
         }
 
-        const result = await EEZStudio.remote.dialog.showSaveDialog(
-            EEZStudio.remote.getCurrentWindow(),
-            {
-                defaultPath,
-                filters: [
-                    {
-                        name: "EEZ Debug Info",
-                        extensions: ["eez-debug-info"]
-                    },
-                    { name: "All Files", extensions: ["*"] }
-                ]
-            }
-        );
+        const result = await dialog.showSaveDialog(getCurrentWindow(), {
+            defaultPath,
+            filters: [
+                {
+                    name: "EEZ Debug Info",
+                    extensions: ["eez-debug-info"]
+                },
+                { name: "All Files", extensions: ["*"] }
+            ]
+        });
         let filePath = result.filePath;
         if (filePath) {
             await new Promise<void>((resolve, reject) => {
-                const fs = EEZStudio.remote.require("fs");
-                const path = EEZStudio.remote.require("path");
                 const archiver = require("archiver");
 
                 var archive = archiver("zip", {
@@ -597,7 +613,7 @@ export abstract class RuntimeBase {
                     }
                 });
 
-                var output = fs.createWriteStream(filePath);
+                var output = fs.createWriteStream(filePath || "");
 
                 output.on("close", function () {
                     resolve();
@@ -620,7 +636,7 @@ export abstract class RuntimeBase {
                     reject(err);
                 }
 
-                archive.append(json, { name: path.basename(filePath) });
+                archive.append(json, { name: path.basename(filePath || "") });
 
                 archive.finalize();
             });
@@ -635,10 +651,10 @@ export abstract class RuntimeBase {
 export class FlowState {
     id = guid();
     componentStates = new Map<Component, ComponentState>();
-    @observable flowStates: FlowState[] = [];
+    flowStates: FlowState[] = [];
     dataContext: IDataContext;
-    @observable error: string | undefined = undefined;
-    @observable isFinished: boolean = false;
+    error: string | undefined = undefined;
+    isFinished: boolean = false;
     numActiveComponents = 0;
 
     constructor(
@@ -647,6 +663,16 @@ export class FlowState {
         public parentFlowState?: FlowState,
         public component?: Component
     ) {
+        makeObservable(this, {
+            flowStates: observable,
+            error: observable,
+            isFinished: observable,
+            setComponentRunningState: action,
+            isRunning: computed({ keepAlive: true }),
+            hasAnyDiposableComponent: computed({ keepAlive: true }),
+            finish: action
+        });
+
         this.dataContext =
             this.runtime.DocumentStore.dataContext.createWithLocalVariables(
                 flow.localVariables
@@ -727,7 +753,6 @@ export class FlowState {
         return this.getComponentState(component).runningState;
     }
 
-    @action
     setComponentRunningState<T>(component: Component, runningState: T) {
         this.getComponentState(component).runningState = runningState;
     }
@@ -740,7 +765,7 @@ export class FlowState {
         return this.dataContext.set(variableName, value);
     }
 
-    @computed({ keepAlive: true }) get isRunning(): boolean {
+    get isRunning(): boolean {
         for (let [_, componentState] of this.componentStates) {
             if (componentState.isRunning) {
                 return true;
@@ -752,7 +777,7 @@ export class FlowState {
         );
     }
 
-    @computed({ keepAlive: true }) get hasAnyDiposableComponent() {
+    get hasAnyDiposableComponent() {
         for (let [_, componentState] of this.componentStates) {
             if (componentState.dispose) {
                 return true;
@@ -761,7 +786,6 @@ export class FlowState {
         return false;
     }
 
-    @action
     finish() {
         this.runtime.destroyObjectLocalVariables(this);
         this.flowStates.forEach(flowState => flowState.finish());
@@ -860,25 +884,33 @@ export class FlowState {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ComponentState {
-    @observable inputsData = new Map<string, any>();
-    @observable unreadInputsData = new Set<string>();
-    @observable isRunning: boolean = false;
-    @observable runningState: any;
-    @observable dispose: (() => void) | undefined = undefined;
+    inputsData = new Map<string, any>();
+    unreadInputsData = new Set<string>();
+    isRunning: boolean = false;
+    runningState: any;
+    dispose: (() => void) | undefined = undefined;
 
-    constructor(public flowState: FlowState, public component: Component) {}
+    constructor(public flowState: FlowState, public component: Component) {
+        makeObservable(this, {
+            inputsData: observable,
+            unreadInputsData: observable,
+            isRunning: observable,
+            runningState: observable,
+            dispose: observable,
+            setInputData: action,
+            markInputsDataRead: action
+        });
+    }
 
     getInputValue(input: string) {
         return this.inputsData.get(input);
     }
 
-    @action
     setInputData(input: string, inputData: any) {
         this.inputsData.set(input, inputData);
         this.unreadInputsData.add(input);
     }
 
-    @action
     markInputsDataRead() {
         this.unreadInputsData.clear();
     }

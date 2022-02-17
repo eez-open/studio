@@ -1,5 +1,5 @@
 import React from "react";
-import { observable } from "mobx";
+import { observable, makeObservable } from "mobx";
 
 import { validators } from "eez-studio-shared/validation";
 
@@ -21,14 +21,12 @@ import {
 } from "project-editor/core/store";
 
 import { metrics } from "project-editor/features/extension-definitions/metrics";
-import { observer } from "mobx-react";
 import { ProjectContext } from "project-editor/project/context";
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { NavigationComponent } from "project-editor/project/NavigationComponent";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
 export class ExtensionDefinitionNavigation extends NavigationComponent {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
@@ -51,28 +49,28 @@ export class ExtensionDefinitionNavigation extends NavigationComponent {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ExtensionDefinition extends EezObject {
-    @observable name: string;
-    @observable description: string;
-    @observable doNotBuild: boolean;
-    @observable buildConfiguration: string;
-    @observable buildFolder: string;
-    @observable image: string;
-    @observable extensionName: string;
-    @observable idn: string;
+    name: string;
+    description: string;
+    doNotBuild: boolean;
+    buildConfiguration: string;
+    buildFolder: string;
+    image: string;
+    extensionName: string;
+    idn: string;
 
-    @observable properties: string;
+    properties: string;
 
-    @observable idfName: string;
-    @observable idfShortName: string;
-    @observable idfFirmwareVersion: string;
-    @observable idfGuid: string;
-    @observable idfRevisionNumber: string;
-    @observable idfDescription: string;
-    @observable idfSupportedModels: string;
-    @observable idfRevisionComments: string;
-    @observable idfAuthor: string;
+    idfName: string;
+    idfShortName: string;
+    idfFirmwareVersion: string;
+    idfGuid: string;
+    idfRevisionNumber: string;
+    idfDescription: string;
+    idfSupportedModels: string;
+    idfRevisionComments: string;
+    idfAuthor: string;
 
-    @observable sdlFriendlyName: string;
+    sdlFriendlyName: string;
 
     static classInfo: ClassInfo = {
         listLabel: (extensionDefinition: ExtensionDefinition) => {
@@ -263,6 +261,32 @@ export class ExtensionDefinition extends EezObject {
             return messages;
         }
     };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            description: observable,
+            doNotBuild: observable,
+            buildConfiguration: observable,
+            buildFolder: observable,
+            image: observable,
+            extensionName: observable,
+            idn: observable,
+            properties: observable,
+            idfName: observable,
+            idfShortName: observable,
+            idfFirmwareVersion: observable,
+            idfGuid: observable,
+            idfRevisionNumber: observable,
+            idfDescription: observable,
+            idfSupportedModels: observable,
+            idfRevisionComments: observable,
+            idfAuthor: observable,
+            sdlFriendlyName: observable
+        });
+    }
 }
 
 registerClass("ExtensionDefinition", ExtensionDefinition);

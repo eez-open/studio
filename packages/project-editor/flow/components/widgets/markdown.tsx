@@ -17,7 +17,7 @@ import {
     evalConstantExpression,
     evalExpression
 } from "project-editor/flow/expression/expression";
-import { observable } from "mobx";
+import { observable, makeObservable } from "mobx";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,7 +61,15 @@ export class MarkdownWidget extends Widget {
             projectType === ProjectType.DASHBOARD
     });
 
-    @observable text: string;
+    text: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            text: observable
+        });
+    }
 
     getText(flowContext: IFlowContext): { __html: string } | string {
         if (flowContext.DocumentStore.project.isDashboardProject) {

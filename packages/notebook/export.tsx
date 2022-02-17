@@ -1,6 +1,9 @@
-import fsModule from "fs";
-import pathModule from "path";
-import archiverModule from "archiver";
+import { shell } from "electron";
+import { dialog, getCurrentWindow } from "@electron/remote";
+import fs from "fs";
+import path from "path";
+import archiver from "archiver";
+
 import React from "react";
 import { values } from "mobx";
 
@@ -120,12 +123,6 @@ function doExport(
     progressToastId: notification.ToastId
 ) {
     return new Promise<void>((resolve, reject) => {
-        const fs = EEZStudio.remote.require("fs") as typeof fsModule;
-        const path = EEZStudio.remote.require("path") as typeof pathModule;
-        const archiver = EEZStudio.remote.require(
-            "archiver"
-        ) as typeof archiverModule;
-
         var output = fs.createWriteStream(filePath);
         var archive = archiver("zip", {
             zlib: {
@@ -216,15 +213,12 @@ export async function exportActivityLogItems(
     store: IStore,
     items: IActivityLogEntry[]
 ) {
-    const result = await EEZStudio.remote.dialog.showSaveDialog(
-        EEZStudio.remote.getCurrentWindow(),
-        {
-            filters: [
-                { name: "EEZ Notebook files", extensions: ["eez-notebook"] },
-                { name: "All Files", extensions: ["*"] }
-            ]
-        }
-    );
+    const result = await dialog.showSaveDialog(getCurrentWindow(), {
+        filters: [
+            { name: "EEZ Notebook files", extensions: ["eez-notebook"] },
+            { name: "All Files", extensions: ["*"] }
+        ]
+    });
 
     if (result.filePath) {
         let filePath = result.filePath;
@@ -245,9 +239,7 @@ export async function exportActivityLogItems(
                             <button
                                 className="btn btn-sm"
                                 onClick={() => {
-                                    EEZStudio.electron.shell.showItemInFolder(
-                                        filePath
-                                    );
+                                    shell.showItemInFolder(filePath);
                                 }}
                             >
                                 Show in Folder

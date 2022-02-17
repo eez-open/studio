@@ -1,5 +1,5 @@
 import React from "react";
-import { observable } from "mobx";
+import { observable, makeObservable } from "mobx";
 
 import { formatDuration } from "eez-studio-shared/util";
 import {
@@ -35,13 +35,18 @@ export class HistoryItem implements IHistoryItem {
     oid: string;
     date: Date;
     type: string;
-    @observable message: string;
+    message: string;
     _data: any;
-    @observable selected: boolean;
+    selected: boolean;
     deleted: boolean;
     canBePartOfMultiChart = false;
 
     constructor(protected store: IStore, activityLogEntry: IActivityLogEntry) {
+        makeObservable(this, {
+            message: observable,
+            selected: observable
+        });
+
         this.id = activityLogEntry.id;
         this.sid = activityLogEntry.sid;
         this.oid = activityLogEntry.oid;

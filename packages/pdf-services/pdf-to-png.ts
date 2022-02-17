@@ -2,7 +2,8 @@ import { service } from "eez-studio-shared/service";
 
 export default service("pdf-services/pdf-to-png", async (data: string) => {
     const pdfjsLib = require("../../libs/pdfjs/build/pdf.js");
-    pdfjsLib.GlobalWorkerOptions.workerSrc = "../../libs/pdfjs/build/pdf.worker.js";
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "../../libs/pdfjs/build/pdf.worker.js";
 
     var pdfDocument = await pdfjsLib.getDocument(data);
 

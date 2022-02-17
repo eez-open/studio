@@ -25,6 +25,7 @@ const OtherReleases = observer(
         const firmwareVersion = module.firmwareVersion;
 
         const otherReleases = module.allReleases
+            .slice()
             .sort((a, b) => compareVersions(b.version, a.version))
             .filter(
                 release =>

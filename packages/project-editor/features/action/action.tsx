@@ -1,5 +1,5 @@
 import React from "react";
-import { observable } from "mobx";
+import { observable, makeObservable } from "mobx";
 
 import { validators } from "eez-studio-shared/validation";
 import {
@@ -29,11 +29,11 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Action extends Flow {
-    @observable name: string;
-    @observable description?: string;
-    @observable implementationType: "native" | "flow";
-    @observable implementation?: string;
-    @observable usedIn?: string[];
+    name: string;
+    description?: string;
+    implementationType: "native" | "flow";
+    implementation?: string;
+    usedIn?: string[];
 
     static classInfo = makeDerivedClassInfo(Flow.classInfo, {
         properties: [
@@ -126,6 +126,18 @@ export class Action extends Flow {
         },
         icon: "code"
     });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            description: observable,
+            implementationType: observable,
+            implementation: observable,
+            usedIn: observable
+        });
+    }
 
     get pageRect() {
         return { left: 0, top: 0, width: 0, height: 0 };

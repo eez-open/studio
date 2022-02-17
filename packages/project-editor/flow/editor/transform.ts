@@ -1,4 +1,4 @@
-import { observable, action, runInAction } from "mobx";
+import { observable, action, runInAction, makeObservable } from "mobx";
 
 import { Point, Rect } from "eez-studio-shared/geometry";
 import type { IPointerEvent } from "project-editor/flow/editor/mouse-handler";
@@ -15,12 +15,19 @@ export interface ITransform {
 }
 
 export class Transform implements ITransform {
-    @observable _translate: Point = { x: 0, y: 0 };
-    @observable _scale: number = 1;
+    _translate: Point = { x: 0, y: 0 };
+    _scale: number = 1;
 
-    @observable clientRect = { left: 0, top: 0, width: 1, height: 1 };
+    clientRect = { left: 0, top: 0, width: 1, height: 1 };
 
     constructor(params: ITransform) {
+        makeObservable(this, {
+            _translate: observable,
+            _scale: observable,
+            clientRect: observable,
+            translateBy: action
+        });
+
         Object.assign(this, params);
     }
 
@@ -56,7 +63,6 @@ export class Transform implements ITransform {
         });
     }
 
-    @action
     translateBy(translate: Point) {
         this.translate = {
             x: this.translate.x + translate.x,

@@ -1,4 +1,5 @@
-import { computed, observable, action } from "mobx";
+import fs from "fs";
+import { computed, observable, action, makeObservable } from "mobx";
 
 import {
     ClassInfo,
@@ -26,12 +27,12 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Bitmap extends EezObject {
-    @observable name: string;
-    @observable description?: string;
-    @observable image: string;
-    @observable bpp: number;
-    @observable alwaysBuild: boolean;
-    @observable style?: string;
+    name: string;
+    description?: string;
+    image: string;
+    bpp: number;
+    alwaysBuild: boolean;
+    style?: string;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -110,7 +111,6 @@ export class Bitmap extends EezObject {
                 }
             }).then(result => {
                 return new Promise((resolve, reject) => {
-                    const fs = EEZStudio.remote.require("fs");
                     fs.readFile(
                         getDocumentStore(parent).getAbsoluteFilePath(
                             result.values.imageFilePath
@@ -135,10 +135,25 @@ export class Bitmap extends EezObject {
         icon: "image"
     };
 
-    @observable private _imageElement: HTMLImageElement | null = null;
+    private _imageElement: HTMLImageElement | null = null;
     private _imageElementImage: string;
 
-    @computed
+    constructor() {
+        super();
+
+        makeObservable<Bitmap, "_imageElement">(this, {
+            name: observable,
+            description: observable,
+            image: observable,
+            bpp: observable,
+            alwaysBuild: observable,
+            style: observable,
+            _imageElement: observable,
+            backgroundColor: computed,
+            imageElement: computed
+        });
+    }
+
     get backgroundColor() {
         if (this.bpp !== 32) {
             const style = findStyle(
@@ -155,7 +170,6 @@ export class Bitmap extends EezObject {
         return "transparent";
     }
 
-    @computed
     get imageElement() {
         if (!this.image) {
             return null;

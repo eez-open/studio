@@ -1,13 +1,18 @@
-import { observable, action } from "mobx";
+import { observable, action, makeObservable } from "mobx";
 
 import { IPropertyGridGroupDefinition } from "project-editor/core/object";
 
 class GroupCollapsedStore {
-    @observable map: {
+    map: {
         [key: string]: boolean;
     } = {};
 
     constructor() {
+        makeObservable(this, {
+            map: observable,
+            toggleColapsed: action
+        });
+
         const savedState = localStorage.getItem("GroupCollapsedStore");
         if (savedState) {
             this.map = JSON.parse(savedState);
@@ -22,7 +27,6 @@ class GroupCollapsedStore {
         return false;
     }
 
-    @action
     toggleColapsed(group: IPropertyGridGroupDefinition) {
         this.map[group.id] = !this.isCollapsed(group);
         localStorage.setItem("GroupCollapsedStore", JSON.stringify(this.map));

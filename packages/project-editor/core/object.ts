@@ -1,5 +1,5 @@
 import React from "react";
-import { observable } from "mobx";
+import { observable, makeObservable } from "mobx";
 
 import { _uniqWith } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
@@ -654,10 +654,21 @@ export class RectObject extends EezObject {
         }
     };
 
-    @observable top: number;
-    @observable right: number;
-    @observable bottom: number;
-    @observable left: number;
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            top: observable,
+            right: observable,
+            bottom: observable,
+            left: observable
+        });
+    }
 }
 
 registerClass("RectObject", RectObject);

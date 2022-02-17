@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { observable, computed, runInAction } from "mobx";
+import { observable, computed, runInAction, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
 import { formatDateTimeLong, compareVersions } from "eez-studio-shared/util";
@@ -72,164 +72,170 @@ async function getLatestVersion() {
     });
 }
 
-@observer
-class AboutBox extends React.Component {
-    packageJSON: {
-        version: string;
-    };
+const AboutBox = observer(
+    class AboutBox extends React.Component {
+        packageJSON: {
+            version: string;
+        };
 
-    @observable checkingForUpdates: boolean = false;
-    @observable latestVersion: string | undefined = undefined;
+        checkingForUpdates: boolean = false;
+        latestVersion: string | undefined = undefined;
 
-    constructor(props: any) {
-        super(props);
+        constructor(props: any) {
+            super(props);
 
-        this.packageJSON = require("../../package.json");
-    }
+            makeObservable(this, {
+                checkingForUpdates: observable,
+                latestVersion: observable,
+                versionInfo: computed
+            });
 
-    checkForUpdates = async (event: React.MouseEvent) => {
-        event.preventDefault();
-
-        if (this.checkingForUpdates) {
-            return;
+            this.packageJSON = require("../../package.json");
         }
 
-        runInAction(() => {
-            this.checkingForUpdates = true;
-        });
+        checkForUpdates = async (event: React.MouseEvent) => {
+            event.preventDefault();
 
-        const latestVersion = await getLatestVersion();
+            if (this.checkingForUpdates) {
+                return;
+            }
 
-        runInAction(() => {
-            this.checkingForUpdates = false;
-            this.latestVersion = latestVersion;
-        });
-    };
+            runInAction(() => {
+                this.checkingForUpdates = true;
+            });
 
-    @computed
-    get versionInfo() {
-        let versionInfo: ReactNode;
+            const latestVersion = await getLatestVersion();
 
-        if (this.checkingForUpdates) {
-            versionInfo = (
-                <>
-                    <Loader size={20} />
-                    <span>Checking for updates...</span>
-                </>
-            );
-        } else {
-            if (this.latestVersion) {
-                if (
-                    compareVersions(
-                        this.latestVersion,
-                        this.packageJSON.version
-                    ) > 0
-                ) {
-                    versionInfo = (
-                        <>
-                            There is a newer version {this.latestVersion} (
+            runInAction(() => {
+                this.checkingForUpdates = false;
+                this.latestVersion = latestVersion;
+            });
+        };
+
+        get versionInfo() {
+            let versionInfo: ReactNode;
+
+            if (this.checkingForUpdates) {
+                versionInfo = (
+                    <>
+                        <Loader size={20} />
+                        <span>Checking for updates...</span>
+                    </>
+                );
+            } else {
+                if (this.latestVersion) {
+                    if (
+                        compareVersions(
+                            this.latestVersion,
+                            this.packageJSON.version
+                        ) > 0
+                    ) {
+                        versionInfo = (
+                            <>
+                                There is a newer version {this.latestVersion} (
+                                <a
+                                    href="#"
+                                    onClick={event => {
+                                        event.preventDefault();
+                                        openLink(
+                                            STUDIO_SPECIFIC_RELEASE_URL +
+                                                this.latestVersion
+                                        );
+                                    }}
+                                >
+                                    download
+                                </a>
+                                )
+                            </>
+                        );
+                    } else {
+                        versionInfo = "You have the latest version";
+                    }
+                } else {
+                    versionInfo = "";
+                }
+            }
+
+            return <div className="EezStudio_VersionInfo">{versionInfo}</div>;
+        }
+
+        render() {
+            var fs = require("fs");
+            var stats = fs.statSync(process.execPath);
+            var mtime = new Date(stats.mtime);
+            var buildDate = mtime.toString();
+
+            return (
+                <Dialog cancelButtonText="Close">
+                    <div className="EezStudio_AboutBox">
+                        <div className="EezStudio_Logo">
+                            <img
+                                src="../eez-studio-ui/_images/eez_logo.png"
+                                width={48}
+                                height={48}
+                            ></img>
+                        </div>
+
+                        <h5 className="EezStudio_AppName">EEZ Studio</h5>
+
+                        <div className="EezStudio_Version">
+                            Version {this.packageJSON.version} (
                             <a
                                 href="#"
                                 onClick={event => {
                                     event.preventDefault();
                                     openLink(
                                         STUDIO_SPECIFIC_RELEASE_URL +
-                                            this.latestVersion
+                                            this.packageJSON.version
                                     );
                                 }}
                             >
-                                download
+                                release notes
                             </a>
                             )
-                        </>
-                    );
-                } else {
-                    versionInfo = "You have the latest version";
-                }
-            } else {
-                versionInfo = "";
-            }
+                        </div>
+
+                        <div className="EezStudio_BuildDate">
+                            Build date {formatDateTimeLong(new Date(buildDate))}
+                        </div>
+
+                        {this.versionInfo}
+
+                        <button
+                            className="EezStudio_CheckForUpdate btn btn-sm btn-light"
+                            onClick={this.checkForUpdates}
+                            disabled={this.checkingForUpdates}
+                        >
+                            Check for Updates
+                        </button>
+
+                        <div className="EezStudio_Links">
+                            <a
+                                href="#"
+                                onClick={event => {
+                                    event.preventDefault();
+                                    openLink(STUDIO_HOME_PAGE_URL);
+                                }}
+                            >
+                                Home
+                            </a>
+                            {" | "}
+                            <a
+                                href="#"
+                                onClick={event => {
+                                    event.preventDefault();
+                                    openLink(STUDIO_GITHUB_PAGE_URL);
+                                }}
+                            >
+                                GitHub
+                            </a>
+                        </div>
+                    </div>
+                </Dialog>
+            );
         }
-
-        return <div className="EezStudio_VersionInfo">{versionInfo}</div>;
     }
-
-    render() {
-        var fs = require("fs");
-        var stats = fs.statSync(process.execPath);
-        var mtime = new Date(stats.mtime);
-        var buildDate = mtime.toString();
-
-        return (
-            <Dialog cancelButtonText="Close">
-                <div className="EezStudio_AboutBox">
-                    <div className="EezStudio_Logo">
-                        <img
-                            src="../eez-studio-ui/_images/eez_logo.png"
-                            width={48}
-                            height={48}
-                        ></img>
-                    </div>
-
-                    <h5 className="EezStudio_AppName">EEZ Studio</h5>
-
-                    <div className="EezStudio_Version">
-                        Version {this.packageJSON.version} (
-                        <a
-                            href="#"
-                            onClick={event => {
-                                event.preventDefault();
-                                openLink(
-                                    STUDIO_SPECIFIC_RELEASE_URL +
-                                        this.packageJSON.version
-                                );
-                            }}
-                        >
-                            release notes
-                        </a>
-                        )
-                    </div>
-
-                    <div className="EezStudio_BuildDate">
-                        Build date {formatDateTimeLong(new Date(buildDate))}
-                    </div>
-
-                    {this.versionInfo}
-
-                    <button
-                        className="EezStudio_CheckForUpdate btn btn-sm btn-light"
-                        onClick={this.checkForUpdates}
-                        disabled={this.checkingForUpdates}
-                    >
-                        Check for Updates
-                    </button>
-
-                    <div className="EezStudio_Links">
-                        <a
-                            href="#"
-                            onClick={event => {
-                                event.preventDefault();
-                                openLink(STUDIO_HOME_PAGE_URL);
-                            }}
-                        >
-                            Home
-                        </a>
-                        {" | "}
-                        <a
-                            href="#"
-                            onClick={event => {
-                                event.preventDefault();
-                                openLink(STUDIO_GITHUB_PAGE_URL);
-                            }}
-                        >
-                            GitHub
-                        </a>
-                    </div>
-                </div>
-            </Dialog>
-        );
-    }
-}
+);
 
 export function showAboutBox() {
     showDialog(<AboutBox />);

@@ -1,4 +1,4 @@
-import { computed } from "mobx";
+import { computed, makeObservable } from "mobx";
 import React from "react";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
@@ -10,86 +10,95 @@ import { Bitmap } from "./bitmap";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class BitmapsNavigation extends NavigationComponent {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
+export const BitmapsNavigation = observer(
+    class BitmapsNavigation extends NavigationComponent {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
 
-    @computed
-    get bitmap() {
-        if (this.context.navigationStore.selectedPanel) {
-            if (
-                this.context.navigationStore.selectedPanel
-                    .selectedObject instanceof Bitmap
-            ) {
-                return this.context.navigationStore.selectedPanel
-                    .selectedObject;
-            }
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                bitmap: computed
+            });
         }
 
-        return this.context.navigationStore.selectedBitmapObject.get() as Bitmap;
-    }
+        get bitmap() {
+            if (this.context.navigationStore.selectedPanel) {
+                if (
+                    this.context.navigationStore.selectedPanel
+                        .selectedObject instanceof Bitmap
+                ) {
+                    return this.context.navigationStore.selectedPanel
+                        .selectedObject;
+                }
+            }
 
-    factory = (node: FlexLayout.TabNode) => {
-        var component = node.getComponent();
+            return this.context.navigationStore.selectedBitmapObject.get() as Bitmap;
+        }
 
-        if (component === "bitmaps") {
+        factory = (node: FlexLayout.TabNode) => {
+            var component = node.getComponent();
+
+            if (component === "bitmaps") {
+                return (
+                    <ListNavigation
+                        id={this.props.id}
+                        navigationObject={this.props.navigationObject}
+                        selectedObject={
+                            this.context.navigationStore.selectedBitmapObject
+                        }
+                    />
+                );
+            }
+
+            if (component === "preview") {
+                return <BitmapEditor />;
+            }
+
+            return null;
+        };
+
+        render() {
             return (
-                <ListNavigation
-                    id={this.props.id}
-                    navigationObject={this.props.navigationObject}
-                    selectedObject={
-                        this.context.navigationStore.selectedBitmapObject
-                    }
+                <FlexLayout.Layout
+                    model={this.context.layoutModels.bitmaps}
+                    factory={this.factory}
+                    realtimeResize={true}
+                    font={LayoutModels.FONT_SUB}
                 />
             );
         }
-
-        if (component === "preview") {
-            return <BitmapEditor />;
-        }
-
-        return null;
-    };
-
-    render() {
-        return (
-            <FlexLayout.Layout
-                model={this.context.layoutModels.bitmaps}
-                factory={this.factory}
-                realtimeResize={true}
-                font={LayoutModels.FONT_SUB}
-            />
-        );
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class BitmapEditor extends React.Component {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
+const BitmapEditor = observer(
+    class BitmapEditor extends React.Component {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
 
-    render() {
-        const bitmap =
-            this.context.navigationStore.selectedBitmapObject.get() as Bitmap;
+        render() {
+            const bitmap =
+                this.context.navigationStore.selectedBitmapObject.get() as Bitmap;
 
-        if (!bitmap || !bitmap.imageElement) {
-            return null;
+            if (!bitmap || !bitmap.imageElement) {
+                return null;
+            }
+
+            return (
+                <div className="EezStudio_BitmapEditorContainer">
+                    <img
+                        src={bitmap.image}
+                        style={{ backgroundColor: bitmap.backgroundColor }}
+                    />
+                    <h4>
+                        Dimension: {bitmap.imageElement.width} x{" "}
+                        {bitmap.imageElement.height}
+                    </h4>
+                </div>
+            );
         }
-
-        return (
-            <div className="EezStudio_BitmapEditorContainer">
-                <img
-                    src={bitmap.image}
-                    style={{ backgroundColor: bitmap.backgroundColor }}
-                />
-                <h4>
-                    Dimension: {bitmap.imageElement.width} x{" "}
-                    {bitmap.imageElement.height}
-                </h4>
-            </div>
-        );
     }
-}
+);

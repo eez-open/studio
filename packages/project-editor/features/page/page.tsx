@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed } from "mobx";
+import { observable, computed, makeObservable } from "mobx";
 
 import { _find } from "eez-studio-shared/algorithm";
 import { to16bitsColor } from "eez-studio-shared/color";
@@ -62,12 +62,12 @@ import * as draw from "project-editor/flow/editor/draw";
 ////////////////////////////////////////////////////////////////////////////////
 
 export class PageOrientation extends EezObject {
-    @observable x: number;
-    @observable y: number;
-    @observable width: number;
-    @observable height: number;
-    @observable style?: string;
-    @observable components: Component[];
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    style?: string;
+    components: Component[];
 
     static classInfo: ClassInfo = {
         properties: [
@@ -112,17 +112,31 @@ export class PageOrientation extends EezObject {
         }
     };
 
-    @computed
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            x: observable,
+            y: observable,
+            width: observable,
+            height: observable,
+            style: observable,
+            components: observable,
+            left: computed,
+            top: computed,
+            rect: computed,
+            closePageIfTouchedOutside: computed
+        });
+    }
+
     get left() {
         return this.x;
     }
 
-    @computed
     get top() {
         return this.y;
     }
 
-    @computed
     get rect() {
         return {
             left: this.x,
@@ -132,7 +146,6 @@ export class PageOrientation extends EezObject {
         };
     }
 
-    @computed
     get closePageIfTouchedOutside() {
         return (getParent(this) as Page).closePageIfTouchedOutside;
     }
@@ -143,24 +156,24 @@ registerClass("PageOrientation", PageOrientation);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Page extends Flow {
-    @observable name: string;
-    @observable description?: string;
-    @observable style?: string;
-    @observable usedIn?: string[];
-    @observable closePageIfTouchedOutside: boolean;
+    name: string;
+    description?: string;
+    style?: string;
+    usedIn?: string[];
+    closePageIfTouchedOutside: boolean;
 
-    @observable left: number;
-    @observable top: number;
-    @observable width: number;
-    @observable height: number;
+    left: number;
+    top: number;
+    width: number;
+    height: number;
 
-    @observable portrait: PageOrientation;
+    portrait: PageOrientation;
 
-    @observable isUsedAsCustomWidget: boolean;
+    isUsedAsCustomWidget: boolean;
 
-    @observable dataContextOverrides: string;
+    dataContextOverrides: string;
 
-    @observable _geometry: ComponentGeometry;
+    _geometry: ComponentGeometry;
 
     static classInfo = makeDerivedClassInfo(Flow.classInfo, {
         properties: [
@@ -370,6 +383,27 @@ export class Page extends Flow {
         }
     });
 
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            description: observable,
+            style: observable,
+            usedIn: observable,
+            closePageIfTouchedOutside: observable,
+            left: observable,
+            top: observable,
+            width: observable,
+            height: observable,
+            portrait: observable,
+            isUsedAsCustomWidget: observable,
+            dataContextOverrides: observable,
+            _geometry: observable,
+            dataContextOverridesObject: computed
+        });
+    }
+
     set geometry(value: ComponentGeometry) {
         this._geometry = value;
     }
@@ -398,7 +432,6 @@ export class Page extends Flow {
         ];
     }
 
-    @computed
     get dataContextOverridesObject() {
         try {
             return JSON.parse(this.dataContextOverrides);

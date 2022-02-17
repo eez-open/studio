@@ -1,4 +1,4 @@
-import { computed, observable, runInAction } from "mobx";
+import { computed, observable, runInAction, makeObservable } from "mobx";
 
 import { UNITS } from "eez-studio-shared/units";
 import { _range } from "eez-studio-shared/algorithm";
@@ -26,9 +26,15 @@ export class Measurement implements IMeasurement {
         public measurementsController: IMeasurementsController,
         public measurementDefinition: IMeasurementDefinition,
         public measurementFunction: IMeasurementFunction | undefined
-    ) {}
+    ) {
+        makeObservable(this, {
+            dirty: observable,
+            name: computed,
+            result: observable
+        });
+    }
 
-    @observable dirty = true;
+    dirty = true;
 
     get measurementId() {
         return this.measurementDefinition.measurementId;
@@ -41,7 +47,6 @@ export class Measurement implements IMeasurement {
         );
     }
 
-    @computed
     get name() {
         const namePrefix = this.namePrefix;
 
@@ -332,7 +337,7 @@ export class Measurement implements IMeasurement {
         });
     }
 
-    @observable result: {
+    result: {
         result: number | string | IChart | null;
         resultUnit?: keyof typeof UNITS | undefined;
     } | null = null;

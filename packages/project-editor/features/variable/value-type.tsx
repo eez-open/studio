@@ -1,6 +1,6 @@
 import React from "react";
-import { action, observable, autorun, runInAction } from "mobx";
-import { disposeOnUnmount, observer } from "mobx-react";
+import { action, observable, autorun, runInAction, makeObservable } from "mobx";
+import { observer } from "mobx-react";
 import { FieldComponent } from "eez-studio-ui/generic-dialog";
 import {
     PropertyType,
@@ -283,99 +283,115 @@ const VariableTypeSelect = observer(
     })
 );
 
-@observer
-export class VariableTypeUI extends React.Component<PropertyProps> {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
+export const VariableTypeUI = observer(
+    class VariableTypeUI extends React.Component<PropertyProps> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
 
-    ref = React.createRef<HTMLSelectElement>();
+        ref = React.createRef<HTMLSelectElement>();
 
-    @observable _type: ValueType;
-    @observable updateCounter: number = 0;
+        _type: ValueType;
+        updateCounter: number = 0;
 
-    @disposeOnUnmount
-    changeDocumentDisposer = autorun(() => {
-        this.updateCounter;
-        if (this.context.project) {
-            const getPropertyValueResultForType = getPropertyValue(
-                this.props.objects,
-                this.props.propertyInfo
-            );
+        changeDocumentDisposer = autorun(() => {
+            this.updateCounter;
+            if (this.context.project) {
+                const getPropertyValueResultForType = getPropertyValue(
+                    this.props.objects,
+                    this.props.propertyInfo
+                );
 
-            let type = getPropertyValueResultForType
-                ? getPropertyValueResultForType.value
-                : "";
+                let type = getPropertyValueResultForType
+                    ? getPropertyValueResultForType.value
+                    : "";
 
-            if (type == undefined) {
-                type = "";
+                if (type == undefined) {
+                    type = "";
+                }
+
+                runInAction(() => {
+                    this._type = type;
+                });
             }
-
-            runInAction(() => {
-                this._type = type;
-            });
-        }
-    });
-
-    componentDidMount() {
-        let el = this.ref.current;
-        if (el) {
-            $(el).on("focus", () => {
-                this.context.undoManager.setCombineCommands(true);
-            });
-
-            $(el).on("blur", () => {
-                this.context.undoManager.setCombineCommands(false);
-            });
-        }
-    }
-
-    @action
-    componentDidUpdate() {
-        this.updateCounter++;
-    }
-
-    onChange = (type: string) => {
-        runInAction(() => (this._type = type as ValueType));
-
-        this.props.updateObject({
-            [this.props.propertyInfo.name]: type
         });
-    };
 
-    render() {
-        return (
-            <VariableTypeSelect
-                ref={this.ref}
-                value={this._type}
-                onChange={this.onChange}
-                project={this.context.project}
-            />
-        );
-    }
-}
+        constructor(props: PropertyProps) {
+            super(props);
 
-@observer
-export class VariableTypeFieldComponent extends FieldComponent {
-    get project() {
-        return this.props.dialogContext as Project;
-    }
+            makeObservable(this, {
+                _type: observable,
+                updateCounter: observable,
+                componentDidUpdate: action
+            });
+        }
 
-    render() {
-        return (
-            <VariableTypeSelect
-                value={this.props.values[this.props.fieldProperties.name] ?? ""}
-                onChange={(value: string) => {
-                    runInAction(() => {
-                        this.props.values["defaultValue"] =
-                            getDefaultValueForType(this.project, value);
-                    });
-                    this.props.onChange(value);
-                }}
-                project={this.project}
-            />
-        );
+        componentDidMount() {
+            let el = this.ref.current;
+            if (el) {
+                $(el).on("focus", () => {
+                    this.context.undoManager.setCombineCommands(true);
+                });
+
+                $(el).on("blur", () => {
+                    this.context.undoManager.setCombineCommands(false);
+                });
+            }
+        }
+
+        componentDidUpdate() {
+            this.updateCounter++;
+        }
+
+        componentWillUnmount() {
+            this.changeDocumentDisposer();
+        }
+
+        onChange = (type: string) => {
+            runInAction(() => (this._type = type as ValueType));
+
+            this.props.updateObject({
+                [this.props.propertyInfo.name]: type
+            });
+        };
+
+        render() {
+            return (
+                <VariableTypeSelect
+                    ref={this.ref}
+                    value={this._type}
+                    onChange={this.onChange}
+                    project={this.context.project}
+                />
+            );
+        }
     }
-}
+);
+
+export const VariableTypeFieldComponent = observer(
+    class VariableTypeFieldComponent extends FieldComponent {
+        get project() {
+            return this.props.dialogContext as Project;
+        }
+
+        render() {
+            return (
+                <VariableTypeSelect
+                    value={
+                        this.props.values[this.props.fieldProperties.name] ?? ""
+                    }
+                    onChange={(value: string) => {
+                        runInAction(() => {
+                            this.props.values["defaultValue"] =
+                                getDefaultValueForType(this.project, value);
+                        });
+                        this.props.onChange(value);
+                    }}
+                    project={this.project}
+                />
+            );
+        }
+    }
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 

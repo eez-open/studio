@@ -4,15 +4,17 @@ import { isRenderer } from "eez-studio-shared/util-electron";
 
 import type * as MainSettingsModule from "main/settings";
 
+import { ipcRenderer } from "electron";
+
 export let getDbPath: () => string;
 export let setDbPath: (dbPath: string) => void;
 if (isRenderer()) {
     getDbPath = function () {
-        return EEZStudio.electron.ipcRenderer.sendSync("getDbPath");
+        return ipcRenderer.sendSync("getDbPath");
     };
 
     setDbPath = function (dbPath: string) {
-        EEZStudio.electron.ipcRenderer.send("setDbPath", dbPath);
+        ipcRenderer.send("setDbPath", dbPath);
     };
 } else {
     ({ getDbPath, setDbPath } =

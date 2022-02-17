@@ -1,6 +1,6 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { computed } from "mobx";
+import { computed, makeObservable } from "mobx";
 import classNames from "classnames";
 
 import { Rect, rectExpand } from "eez-studio-shared/geometry";
@@ -15,157 +15,187 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class SelectedObject extends React.Component<
-    {
-        className?: string;
-        rect?: Rect;
-    },
-    {}
-> {
-    render() {
-        const { className } = this.props;
+const SelectedObject = observer(
+    class SelectedObject extends React.Component<
+        {
+            className?: string;
+            rect?: Rect;
+        },
+        {}
+    > {
+        render() {
+            const { className } = this.props;
 
-        let rect = this.props.rect;
-        if (!rect) {
-            return null;
+            let rect = this.props.rect;
+            if (!rect) {
+                return null;
+            }
+
+            rect = rectExpand(rect, 6);
+
+            return (
+                <div
+                    className={className}
+                    style={{
+                        position: "absolute",
+                        left: rect.left,
+                        top: rect.top,
+                        width: rect.width,
+                        height: rect.height
+                    }}
+                />
+            );
         }
-
-        rect = rectExpand(rect, 6);
-
-        return (
-            <div
-                className={className}
-                style={{
-                    position: "absolute",
-                    left: rect.left,
-                    top: rect.top,
-                    width: rect.width,
-                    height: rect.height
-                }}
-            />
-        );
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class Selection extends React.Component<
-    {
-        context: IFlowContext;
-        mouseHandler?: IMouseHandler;
-    },
-    {}
-> {
-    @computed get selectedObjects() {
-        return this.props.context.viewState.selectedObjects.filter(
-            selectedObject =>
-                !(
-                    selectedObject.object instanceof ProjectEditor.FlowClass ||
-                    selectedObject.object instanceof
-                        ProjectEditor.ConnectionLineClass
-                )
-        );
-    }
+export const Selection = observer(
+    class Selection extends React.Component<
+        {
+            context: IFlowContext;
+            mouseHandler?: IMouseHandler;
+        },
+        {}
+    > {
+        constructor(props: {
+            context: IFlowContext;
+            mouseHandler?: IMouseHandler;
+        }) {
+            super(props);
 
-    @computed get selectedObjectRects() {
-        const viewState = this.props.context.viewState;
-        return this.selectedObjects
-            .map(selectedObject => getObjectBoundingRect(selectedObject))
-            .map(rect => viewState.transform.pageToOffsetRect(rect!));
-    }
+            makeObservable(this, {
+                selectedObjects: computed,
+                selectedObjectRects: computed,
+                connectionLine: computed,
+                sourceComponent: computed,
+                targetComponent: computed
+            });
+        }
 
-    @computed get connectionLine() {
-        const connectionLines =
-            this.props.context.viewState.selectedObjects.filter(
+        get selectedObjects() {
+            return this.props.context.viewState.selectedObjects.filter(
                 selectedObject =>
-                    selectedObject.object instanceof
-                    ProjectEditor.ConnectionLineClass
+                    !(
+                        selectedObject.object instanceof
+                            ProjectEditor.FlowClass ||
+                        selectedObject.object instanceof
+                            ProjectEditor.ConnectionLineClass
+                    )
             );
-
-        if (connectionLines.length == 1) {
-            return connectionLines[0].object as ConnectionLine;
         }
 
-        return undefined;
-    }
+        get selectedObjectRects() {
+            const viewState = this.props.context.viewState;
+            return this.selectedObjects
+                .map(selectedObject => getObjectBoundingRect(selectedObject))
+                .map(rect => viewState.transform.pageToOffsetRect(rect!));
+        }
 
-    @computed get sourceComponent() {
-        if (this.selectedObjects.length != 2) {
+        get connectionLine() {
+            const connectionLines =
+                this.props.context.viewState.selectedObjects.filter(
+                    selectedObject =>
+                        selectedObject.object instanceof
+                        ProjectEditor.ConnectionLineClass
+                );
+
+            if (connectionLines.length == 1) {
+                return connectionLines[0].object as ConnectionLine;
+            }
+
             return undefined;
         }
-        const connectionLine = this.connectionLine;
-        if (!connectionLine) {
+
+        get sourceComponent() {
+            if (this.selectedObjects.length != 2) {
+                return undefined;
+            }
+            const connectionLine = this.connectionLine;
+            if (!connectionLine) {
+                return undefined;
+            }
+            if (
+                connectionLine.sourceComponent ===
+                this.selectedObjects[0].object
+            ) {
+                return this.selectedObjects[0].object;
+            }
+
+            if (
+                connectionLine.sourceComponent ===
+                this.selectedObjects[1].object
+            ) {
+                return this.selectedObjects[1].object;
+            }
             return undefined;
         }
-        if (connectionLine.sourceComponent === this.selectedObjects[0].object) {
-            return this.selectedObjects[0].object;
-        }
 
-        if (connectionLine.sourceComponent === this.selectedObjects[1].object) {
-            return this.selectedObjects[1].object;
-        }
-        return undefined;
-    }
+        get targetComponent() {
+            if (this.selectedObjects.length != 2) {
+                return undefined;
+            }
+            const connectionLine = this.connectionLine;
+            if (!connectionLine) {
+                return undefined;
+            }
+            if (
+                connectionLine.targetComponent ===
+                this.selectedObjects[0].object
+            ) {
+                return this.selectedObjects[0].object;
+            }
 
-    @computed get targetComponent() {
-        if (this.selectedObjects.length != 2) {
+            if (
+                connectionLine.targetComponent ===
+                this.selectedObjects[1].object
+            ) {
+                return this.selectedObjects[1].object;
+            }
             return undefined;
         }
-        const connectionLine = this.connectionLine;
-        if (!connectionLine) {
-            return undefined;
-        }
-        if (connectionLine.targetComponent === this.selectedObjects[0].object) {
-            return this.selectedObjects[0].object;
-        }
 
-        if (connectionLine.targetComponent === this.selectedObjects[1].object) {
-            return this.selectedObjects[1].object;
-        }
-        return undefined;
-    }
+        render() {
+            let selectedObjects = this.selectedObjects;
 
-    render() {
-        let selectedObjects = this.selectedObjects;
+            const isSelectionVisible = selectedObjects.length > 0;
 
-        const isSelectionVisible = selectedObjects.length > 0;
+            let selectedObjectRectsElement;
 
-        let selectedObjectRectsElement;
-
-        if (isSelectionVisible) {
-            selectedObjectRectsElement = selectedObjects.map(
-                (selectedObject, i) => (
-                    <SelectedObject
-                        key={selectedObject.id}
-                        className={classNames(
-                            "EezStudio_FlowRuntimeSelection_SelectedObject",
-                            {
-                                source:
-                                    this.sourceComponent ==
-                                        selectedObject.object &&
-                                    this.targetComponent,
-                                target:
-                                    this.targetComponent ==
-                                        selectedObject.object &&
-                                    this.sourceComponent
+            if (isSelectionVisible) {
+                selectedObjectRectsElement = selectedObjects.map(
+                    (selectedObject, i) => (
+                        <SelectedObject
+                            key={selectedObject.id}
+                            className={classNames(
+                                "EezStudio_FlowRuntimeSelection_SelectedObject",
+                                {
+                                    source:
+                                        this.sourceComponent ==
+                                            selectedObject.object &&
+                                        this.targetComponent,
+                                    target:
+                                        this.targetComponent ==
+                                            selectedObject.object &&
+                                        this.sourceComponent
+                                }
+                            )}
+                            rect={
+                                i < this.selectedObjectRects.length
+                                    ? this.selectedObjectRects[i]
+                                    : undefined
                             }
-                        )}
-                        rect={
-                            i < this.selectedObjectRects.length
-                                ? this.selectedObjectRects[i]
-                                : undefined
-                        }
-                    />
-                )
+                        />
+                    )
+                );
+            }
+
+            return (
+                <div className="EezStudio_FlowRuntimeSelection">
+                    {isSelectionVisible && selectedObjectRectsElement}
+                </div>
             );
         }
-
-        return (
-            <div className="EezStudio_FlowRuntimeSelection">
-                {isSelectionVisible && selectedObjectRectsElement}
-            </div>
-        );
     }
-}
+);

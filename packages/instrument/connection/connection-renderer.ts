@@ -1,5 +1,6 @@
-import { observable, toJS, runInAction } from "mobx";
+import { observable, toJS, runInAction, makeObservable } from "mobx";
 import { ipcRenderer } from "electron";
+import { getCurrentWindow } from "@electron/remote";
 
 import { watch } from "eez-studio-shared/notify";
 
@@ -22,9 +23,9 @@ import { guid } from "eez-studio-shared/guid";
 export class IpcConnection extends ConnectionBase {
     static ipcConnections = new Map<string, IpcConnection>();
 
-    @observable state: ConnectionState = ConnectionState.IDLE;
-    @observable errorCode: ConnectionErrorCode = ConnectionErrorCode.NONE;
-    @observable error: string | undefined;
+    state: ConnectionState = ConnectionState.IDLE;
+    errorCode: ConnectionErrorCode = ConnectionErrorCode.NONE;
+    error: string | undefined;
 
     onSuccess?: () => void;
     onError?: (error: any) => void;
@@ -42,6 +43,12 @@ export class IpcConnection extends ConnectionBase {
 
     constructor(instrument: InstrumentObject) {
         super(instrument);
+
+        makeObservable(this, {
+            state: observable,
+            errorCode: observable,
+            error: observable
+        });
 
         watch(
             "instrument/" + instrument.id + "/connection",
@@ -72,7 +79,7 @@ export class IpcConnection extends ConnectionBase {
     }
 
     static setupIpcListeners() {
-        EEZStudio.electron.ipcRenderer.on(
+        ipcRenderer.on(
             "instrument/connection/long-operation-result",
             (
                 event: any,
@@ -105,7 +112,7 @@ export class IpcConnection extends ConnectionBase {
             }
         );
 
-        EEZStudio.electron.ipcRenderer.on(
+        ipcRenderer.on(
             "instrument/connection/acquire-result",
             (
                 event: any,
@@ -144,7 +151,7 @@ export class IpcConnection extends ConnectionBase {
             }
         );
 
-        EEZStudio.electron.ipcRenderer.on(
+        ipcRenderer.on(
             "instrument/connection/value",
             (
                 event: any,
@@ -174,32 +181,26 @@ export class IpcConnection extends ConnectionBase {
     }
 
     dismissError() {
-        EEZStudio.electron.ipcRenderer.send(
-            "instrument/connection/dismiss-error",
-            {
-                instrumentId: this.instrument.id
-            }
-        );
+        ipcRenderer.send("instrument/connection/dismiss-error", {
+            instrumentId: this.instrument.id
+        });
     }
 
     connect(connectionParameters?: ConnectionParameters) {
-        EEZStudio.electron.ipcRenderer.send("instrument/connection/connect", {
+        ipcRenderer.send("instrument/connection/connect", {
             instrumentId: this.instrument.id,
             connectionParameters: toJS(connectionParameters)
         });
     }
 
     disconnect() {
-        EEZStudio.electron.ipcRenderer.send(
-            "instrument/connection/disconnect",
-            {
-                instrumentId: this.instrument.id
-            }
-        );
+        ipcRenderer.send("instrument/connection/disconnect", {
+            instrumentId: this.instrument.id
+        });
     }
 
     destroy() {
-        EEZStudio.electron.ipcRenderer.send("instrument/connection/destroy", {
+        ipcRenderer.send("instrument/connection/destroy", {
             instrumentId: this.instrument.id
         });
     }
@@ -231,7 +232,7 @@ export class IpcConnection extends ConnectionBase {
             }
         }
 
-        EEZStudio.electron.ipcRenderer.send("instrument/connection/send", {
+        ipcRenderer.send("instrument/connection/send", {
             instrumentId: this.instrument.id,
             command,
             options
@@ -246,29 +247,23 @@ export class IpcConnection extends ConnectionBase {
         this.onSuccess = onSuccess;
         this.onError = onError;
 
-        EEZStudio.electron.ipcRenderer.send("instrument/connection/upload", {
+        ipcRenderer.send("instrument/connection/upload", {
             instrumentId: this.instrument.id,
             instructions: toJS(instructions),
-            callbackWindowId: EEZStudio.remote.getCurrentWindow().id
+            callbackWindowId: getCurrentWindow().id
         });
     }
 
     async isLongOperationInProgress() {
-        EEZStudio.electron.ipcRenderer.send(
-            "instrument/connection/abort-long-operation",
-            {
-                instrumentId: this.instrument.id
-            }
-        );
+        ipcRenderer.send("instrument/connection/abort-long-operation", {
+            instrumentId: this.instrument.id
+        });
     }
 
     abortLongOperation() {
-        EEZStudio.electron.ipcRenderer.send(
-            "instrument/connection/abort-long-operation",
-            {
-                instrumentId: this.instrument.id
-            }
-        );
+        ipcRenderer.send("instrument/connection/abort-long-operation", {
+            instrumentId: this.instrument.id
+        });
     }
 
     async doAcquire(
@@ -284,25 +279,19 @@ export class IpcConnection extends ConnectionBase {
                 reject
             });
 
-            EEZStudio.electron.ipcRenderer.send(
-                "instrument/connection/acquire",
-                {
-                    instrumentId,
-                    acquireId,
-                    callbackWindowId,
-                    traceEnabled
-                }
-            );
+            ipcRenderer.send("instrument/connection/acquire", {
+                instrumentId,
+                acquireId,
+                callbackWindowId,
+                traceEnabled
+            });
         });
     }
 
     doRelease() {
-        EEZStudio.electron.ipcRenderer.sendSync(
-            "instrument/connection/release",
-            {
-                instrumentId: this.instrument.id
-            }
-        );
+        ipcRenderer.sendSync("instrument/connection/release", {
+            instrumentId: this.instrument.id
+        });
     }
 
     get interfaceInfo() {
@@ -340,7 +329,7 @@ export class IpcConnection extends ConnectionBase {
         await this.doAcquire(
             this.instrument.id,
             this.acquireId,
-            EEZStudio.remote.getCurrentWindow().id,
+            getCurrentWindow().id,
             traceEnabled
         );
     }
@@ -471,7 +460,7 @@ class WebSimulatorMessageDispatcher {
                         }
                     }
                 } else if (data.msgId == "web-simulator-write-scpi-buffer") {
-                    EEZStudio.electron.ipcRenderer.send(
+                    ipcRenderer.send(
                         "web-simulator-connection-on-data",
                         data.simulatorID,
                         data.scpiOutputBuffer

@@ -96,41 +96,39 @@ let extensionsInitialized = false;
 export async function initExtensions() {
     if (!extensionsInitialized) {
         extensionsInitialized = true;
-        if (EEZStudio.electron) {
-            extensions.forEach(extension => {
-                if (extension.eezFlowExtensionInit) {
-                    try {
-                        extension.eezFlowExtensionInit({
-                            registerActionComponent: (
-                                actionComponentDefinition: IActionComponentDefinition
-                            ) =>
-                                registerActionComponent(
-                                    actionComponentDefinition,
-                                    `${extension.name}/${actionComponentDefinition.name}`
-                                ),
+        extensions.forEach(extension => {
+            if (extension.eezFlowExtensionInit) {
+                try {
+                    extension.eezFlowExtensionInit({
+                        registerActionComponent: (
+                            actionComponentDefinition: IActionComponentDefinition
+                        ) =>
+                            registerActionComponent(
+                                actionComponentDefinition,
+                                `${extension.name}/${actionComponentDefinition.name}`
+                            ),
 
-                            registerObjectVariableType: (
-                                name: string,
-                                objectVariableType: IObjectVariableType
-                            ) =>
-                                registerObjectVariableType(
-                                    `${extension.name}/${name}`,
-                                    objectVariableType
-                                ),
+                        registerObjectVariableType: (
+                            name: string,
+                            objectVariableType: IObjectVariableType
+                        ) =>
+                            registerObjectVariableType(
+                                `${extension.name}/${name}`,
+                                objectVariableType
+                            ),
 
-                            showGenericDialog,
+                        showGenericDialog,
 
-                            validators: {
-                                required: validators.required,
-                                rangeInclusive: validators.rangeInclusive
-                            }
-                        } as any);
-                    } catch (err) {
-                        console.error(err);
-                    }
+                        validators: {
+                            required: validators.required,
+                            rangeInclusive: validators.rangeInclusive
+                        }
+                    } as any);
+                } catch (err) {
+                    console.error(err);
                 }
-            });
-        }
+            }
+        });
     }
 }
 

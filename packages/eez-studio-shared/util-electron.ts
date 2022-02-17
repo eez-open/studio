@@ -9,7 +9,7 @@ fs = require("fs");
 path = require("path");
 
 if (isRenderer()) {
-    app = EEZStudio.remote.app;
+    app = require("@electron/remote").app;
 } else {
     app = require("electron").app;
 }

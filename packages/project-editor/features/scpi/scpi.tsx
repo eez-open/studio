@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed } from "mobx";
+import { observable, computed, makeObservable } from "mobx";
 
 import { humanize } from "eez-studio-shared/string";
 
@@ -43,8 +43,8 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ScpiParameterType extends EezObject implements IParameterType {
-    @observable type: IParameterTypeType;
-    @observable enumeration?: string;
+    type: IParameterTypeType;
+    enumeration?: string;
 
     static classInfo: ClassInfo = {
         label: (scpiType: ScpiParameterType) => {
@@ -69,6 +69,15 @@ export class ScpiParameterType extends EezObject implements IParameterType {
             type: "numeric"
         }
     };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            type: observable,
+            enumeration: observable
+        });
+    }
 
     check(object: IEezObject) {
         const messages: Message[] = [];
@@ -139,10 +148,10 @@ class ScpiParameterTable extends React.Component {
 }
 
 export class ScpiParameter extends EezObject {
-    @observable name: string;
-    @observable type: ScpiParameterType[];
-    @observable isOptional: string;
-    @observable description: string;
+    name: string;
+    type: ScpiParameterType[];
+    isOptional: string;
+    description: string;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -322,6 +331,17 @@ export class ScpiParameter extends EezObject {
         propertyGridTableComponent: ScpiParameterTable
     };
 
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            type: observable,
+            isOptional: observable,
+            description: observable
+        });
+    }
+
     check(object: IEezObject) {
         const messages: Message[] = [];
 
@@ -376,8 +396,8 @@ export class ScpiParameter extends EezObject {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ScpiResponseType extends EezObject implements IResponseType {
-    @observable type: IResponseTypeType;
-    @observable enumeration?: string;
+    type: IResponseTypeType;
+    enumeration?: string;
 
     static classInfo: ClassInfo = {
         label: (scpiType: ScpiResponseType) => {
@@ -403,6 +423,15 @@ export class ScpiResponseType extends EezObject implements IResponseType {
         }
     };
 
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            type: observable,
+            enumeration: observable
+        });
+    }
+
     check(object: IEezObject) {
         const messages: Message[] = [];
 
@@ -425,8 +454,8 @@ export class ScpiResponseType extends EezObject implements IResponseType {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ScpiResponse extends EezObject {
-    @observable type: ScpiResponseType[];
-    @observable description?: string;
+    type: ScpiResponseType[];
+    description?: string;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -629,6 +658,15 @@ export class ScpiResponse extends EezObject {
         }
     };
 
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            type: observable,
+            description: observable
+        });
+    }
+
     check(object: IEezObject) {
         const messages: Message[] = [];
 
@@ -646,13 +684,29 @@ export class ScpiResponse extends EezObject {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ScpiCommand extends EezObject {
-    @observable name: string;
-    @observable description?: string;
-    @observable helpLink?: string;
-    @observable usedIn?: string[];
-    @observable parameters: ScpiParameter[];
-    @observable response?: ScpiResponse;
-    @observable sendsBackDataBlock: boolean;
+    name: string;
+    description?: string;
+    helpLink?: string;
+    usedIn?: string[];
+    parameters: ScpiParameter[];
+    response?: ScpiResponse;
+    sendsBackDataBlock: boolean;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            description: observable,
+            helpLink: observable,
+            usedIn: observable,
+            parameters: observable,
+            response: observable,
+            sendsBackDataBlock: observable,
+            shortCommand: computed,
+            longCommand: computed
+        });
+    }
 
     get isQuery() {
         return this.name ? this.name.trim().endsWith("?") : false;
@@ -727,14 +781,12 @@ export class ScpiCommand extends EezObject {
         }
     };
 
-    @computed
     get shortCommand(): string {
         return this.name
             .replace(/[a-z]/g, "") // remove lower case letters
             .replace(/\[.*\]/g, ""); // remove optional parts (between [])
     }
 
-    @computed
     get longCommand(): string {
         return this.name.replace(/[\[\]]/g, ""); // remove [ and ]
     }
@@ -745,10 +797,10 @@ registerClass("ScpiCommand", ScpiCommand);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ScpiSubsystem extends EezObject {
-    @observable name: string;
-    @observable description?: string;
-    @observable helpLink?: string;
-    @observable commands: ScpiCommand[];
+    name: string;
+    description?: string;
+    helpLink?: string;
+    commands: ScpiCommand[];
 
     static classInfo: ClassInfo = {
         properties: [
@@ -796,6 +848,17 @@ export class ScpiSubsystem extends EezObject {
             });
         }
     };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            description: observable,
+            helpLink: observable,
+            commands: observable
+        });
+    }
 }
 
 registerClass("ScpiSubsystem", ScpiSubsystem);
@@ -803,8 +866,8 @@ registerClass("ScpiSubsystem", ScpiSubsystem);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Scpi extends EezObject {
-    @observable subsystems: ScpiSubsystem[];
-    @observable enums: ScpiEnum[];
+    subsystems: ScpiSubsystem[];
+    enums: ScpiEnum[];
 
     static classInfo: ClassInfo = {
         label: () => "SCPI",
@@ -824,6 +887,15 @@ export class Scpi extends EezObject {
         ],
         icon: "navigate_next"
     };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            subsystems: observable,
+            enums: observable
+        });
+    }
 }
 
 registerClass("Scpi", Scpi);

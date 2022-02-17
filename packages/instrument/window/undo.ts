@@ -1,6 +1,8 @@
-import { observable, action, runInAction, autorun } from "mobx";
+import { ipcRenderer } from "electron";
+import { observable, action, runInAction, autorun, makeObservable } from "mobx";
 
-import { confirmSave, objectClone } from "eez-studio-shared/util";
+import { objectClone } from "eez-studio-shared/util";
+import { confirmSave } from "eez-studio-shared/util-renderer";
 import {
     IStore,
     beginTransaction,
@@ -19,18 +21,30 @@ export interface IModel {
 }
 
 export class UndoManager {
-    @observable dbObject: boolean;
+    dbObject: boolean;
     store: IStore;
     object: any;
     transactionLabel: string;
-    @observable.shallow undoStack: ICommand[] = [];
-    @observable.shallow redoStack: ICommand[] = [];
-    @observable.shallow _model: IModel | undefined;
+    undoStack: ICommand[] = [];
+    redoStack: ICommand[] = [];
+    _model: IModel | undefined;
     autorunDisposer: any;
 
     constructor() {
+        makeObservable(this, {
+            dbObject: observable,
+            undoStack: observable.shallow,
+            redoStack: observable.shallow,
+            _model: observable.shallow,
+            commit: action.bound,
+            rollback: action,
+            addCommand: action,
+            undo: action.bound,
+            redo: action.bound
+        });
+
         this.autorunDisposer = autorun(() => {
-            EEZStudio.electron.ipcRenderer.send("windowSetState", {
+            ipcRenderer.send("windowSetState", {
                 modified: this.modified,
                 undo: this.canUndo,
                 redo: this.canRedo
@@ -69,7 +83,6 @@ export class UndoManager {
         );
     }
 
-    @action.bound
     commit() {
         if (this.dbObject) {
             beginTransaction(this.transactionLabel);
@@ -86,7 +99,6 @@ export class UndoManager {
         }
     }
 
-    @action
     rollback() {
         if (this.dbObject) {
             runInAction(() => {
@@ -115,7 +127,6 @@ export class UndoManager {
         });
     }
 
-    @action
     addCommand(
         transactionLabel: string,
         store: IStore,
@@ -159,7 +170,6 @@ export class UndoManager {
         return undefined;
     }
 
-    @action.bound
     undo() {
         if (this._model) {
             this._model.undo();
@@ -186,7 +196,6 @@ export class UndoManager {
         return undefined;
     }
 
-    @action.bound
     redo() {
         if (this._model) {
             this._model.redo();

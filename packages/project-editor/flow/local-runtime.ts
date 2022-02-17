@@ -1,4 +1,5 @@
-import { action, computed, runInAction } from "mobx";
+import { ipcRenderer } from "electron";
+import { action, computed, runInAction, makeObservable } from "mobx";
 import { DocumentStoreClass, getClassInfo } from "project-editor/core/store";
 import { Action, findAction } from "project-editor/features/action/action";
 import { Component, Widget } from "project-editor/flow/component";
@@ -46,6 +47,17 @@ export class LocalRuntime extends RuntimeBase {
 
     constructor(public DocumentStore: DocumentStoreClass) {
         super(DocumentStore);
+
+        makeObservable(this, {
+            isAnyFlowStateRunning: computed,
+            resume: action,
+            pause: action,
+            runSingleStep: action,
+            startFlow: action,
+            executeWidgetAction: action,
+            writeSettings: action,
+            run: action
+        });
     }
 
     doStartRuntime = async (isDebuggerActive: boolean) => {
@@ -63,7 +75,7 @@ export class LocalRuntime extends RuntimeBase {
         }
         this.pumpQueue();
 
-        EEZStudio.electron.ipcRenderer.send("preventAppSuspension", true);
+        ipcRenderer.send("preventAppSuspension", true);
 
         if (isDebuggerActive) {
             this.transition(StateMachineAction.PAUSE);
@@ -140,7 +152,7 @@ export class LocalRuntime extends RuntimeBase {
         }
     }
 
-    @computed get isAnyFlowStateRunning() {
+    get isAnyFlowStateRunning() {
         return (
             this.flowStates.find(flowState => flowState.isRunning) != undefined
         );
@@ -166,7 +178,7 @@ export class LocalRuntime extends RuntimeBase {
 
         await this.DocumentStore.runtimeSettings.savePersistentVariables();
 
-        EEZStudio.electron.ipcRenderer.send("preventAppSuspension", false);
+        ipcRenderer.send("preventAppSuspension", false);
 
         if (notifyUser) {
             if (!this.DocumentStore.project._isDashboardBuild) {
@@ -193,17 +205,14 @@ export class LocalRuntime extends RuntimeBase {
         }
     }
 
-    @action
     resume() {
         this.transition(StateMachineAction.RESUME);
     }
 
-    @action
     pause() {
         this.transition(StateMachineAction.PAUSE);
     }
 
-    @action
     runSingleStep() {
         this.transition(StateMachineAction.SINGLE_STEP);
     }
@@ -278,7 +287,6 @@ export class LocalRuntime extends RuntimeBase {
         }
     };
 
-    @action
     async startFlow(flowState: FlowState) {
         let componentState: ComponentState | undefined = undefined;
 
@@ -312,7 +320,6 @@ export class LocalRuntime extends RuntimeBase {
         }
     }
 
-    @action
     executeWidgetAction(
         flowContext: IFlowContext,
         widget: Widget,
@@ -428,7 +435,6 @@ export class LocalRuntime extends RuntimeBase {
         return this.DocumentStore.runtimeSettings.settings[key];
     }
 
-    @action
     writeSettings(key: string, value: any) {
         this.DocumentStore.runtimeSettings.settings[key] = value;
     }
@@ -561,7 +567,6 @@ export class LocalRuntime extends RuntimeBase {
         return true;
     }
 
-    @action
     async run(componentState: ComponentState) {
         componentState.flowState.runtime.logs.addLogItem(
             new ExecuteComponentLogItem(

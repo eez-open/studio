@@ -1,5 +1,12 @@
 import React from "react";
-import { observable, computed, action, runInAction, toJS } from "mobx";
+import {
+    observable,
+    computed,
+    action,
+    runInAction,
+    toJS,
+    makeObservable
+} from "mobx";
 import { observer } from "mobx-react";
 
 import { clamp, objectClone } from "eez-studio-shared/util";
@@ -123,13 +130,20 @@ export interface IEnvelopePoint {
 }
 
 export class EnvelopeListData extends BaseListData {
-    @observable duration: number;
-    @observable numSamples: number;
-    @observable voltage: IEnvelopePoint[];
-    @observable current: IEnvelopePoint[];
+    duration: number;
+    numSamples: number;
+    voltage: IEnvelopePoint[];
+    current: IEnvelopePoint[];
 
     constructor(list: BaseList, props: any) {
         super(list, props);
+
+        makeObservable(this, {
+            duration: observable,
+            numSamples: observable,
+            voltage: observable,
+            current: observable
+        });
 
         this.duration = props.duration;
         this.numSamples = props.numSamples;
@@ -168,10 +182,15 @@ export class EnvelopeListData extends BaseListData {
 }
 
 export class EnvelopeList extends BaseList {
-    @observable data: EnvelopeListData;
+    data: EnvelopeListData;
 
     constructor(props: any) {
         super(props);
+
+        makeObservable(this, {
+            data: observable
+        });
+
         this.type = "envelope";
         this.data = new EnvelopeListData(this, props.data);
     }
@@ -204,208 +223,228 @@ export class EnvelopeList extends BaseList {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class EditEnvelopeValue extends React.Component<
-    {
-        appStore: IAppStore;
-        list: EnvelopeList;
-        time: number | undefined;
-        minTime: number;
-        maxTime: number;
-        timeUnit: IUnit;
-        value: number;
-        minValue: number;
-        maxValue: number;
-        valueUnit: IUnit;
-        onTimeChange: (time: number) => void;
-        onValueChange: (value: number) => void;
-        onClose: () => void;
-        onSave: () => void;
-        onRemove: (() => void) | undefined;
-    },
-    {}
-> {
-    constructor(props: any) {
-        super(props);
+const EditEnvelopeValue = observer(
+    class EditEnvelopeValue extends React.Component<
+        {
+            appStore: IAppStore;
+            list: EnvelopeList;
+            time: number | undefined;
+            minTime: number;
+            maxTime: number;
+            timeUnit: IUnit;
+            value: number;
+            minValue: number;
+            maxValue: number;
+            valueUnit: IUnit;
+            onTimeChange: (time: number) => void;
+            onValueChange: (value: number) => void;
+            onClose: () => void;
+            onSave: () => void;
+            onRemove: (() => void) | undefined;
+        },
+        {}
+    > {
+        constructor(props: any) {
+            super(props);
 
-        this.onTimeChange = this.onTimeChange.bind(this);
-        this.onValueChange = this.onValueChange.bind(this);
-    }
+            makeObservable(this, {
+                time: observable,
+                timeError: observable,
+                value: observable,
+                valueError: observable,
+                lastTime: observable,
+                lastValue: observable,
+                canSave: computed,
+                instrument: computed,
+                tableListData: computed,
+                powerLimitError: computed,
+                onTimeChange: action,
+                onValueChange: action
+            });
 
-    @observable time =
-        this.props.time && this.props.timeUnit.formatValue(this.props.time);
-    @observable timeError: string | undefined;
-    @observable value = this.props.valueUnit.formatValue(this.props.value);
-    @observable valueError: string | undefined;
-
-    @observable lastTime: number | undefined = this.props.time;
-    @observable lastValue: number = this.props.value;
-
-    @computed
-    get canSave() {
-        return (
-            !this.timeError &&
-            !this.valueError &&
-            (this.props.time !== this.lastTime ||
-                this.props.value !== this.lastValue)
-        );
-    }
-
-    @computed get instrument() {
-        return this.props.appStore.instrument;
-    }
-
-    @computed get tableListData() {
-        return getTableListData(this.props.list, this.instrument);
-    }
-
-    @computed
-    get powerLimitError() {
-        for (let i = 0; i < this.tableListData.dwell.length; i++) {
-            let power =
-                this.tableListData.voltage[i] * this.tableListData.current[i];
-            if (!checkPower(power, this.instrument)) {
-                return getPowerLimitErrorMessage(this.instrument);
-            }
+            this.onTimeChange = this.onTimeChange.bind(this);
+            this.onValueChange = this.onValueChange.bind(this);
         }
-        return undefined;
-    }
 
-    @action
-    onTimeChange(event: React.ChangeEvent<HTMLInputElement>) {
-        this.time = event.target.value;
-        let time = this.props.timeUnit.parseValue(this.time);
-        if (typeof time === "number") {
-            if (time < this.props.minTime || time > this.props.maxTime) {
-                this.timeError = `Allowed range: ${this.props.timeUnit.formatValue(
-                    this.props.minTime
-                )} - ${this.props.timeUnit.formatValue(this.props.maxTime)}`;
+        time =
+            this.props.time && this.props.timeUnit.formatValue(this.props.time);
+        timeError: string | undefined;
+        value = this.props.valueUnit.formatValue(this.props.value);
+        valueError: string | undefined;
+
+        lastTime: number | undefined = this.props.time;
+        lastValue: number = this.props.value;
+
+        get canSave() {
+            return (
+                !this.timeError &&
+                !this.valueError &&
+                (this.props.time !== this.lastTime ||
+                    this.props.value !== this.lastValue)
+            );
+        }
+
+        get instrument() {
+            return this.props.appStore.instrument;
+        }
+
+        get tableListData() {
+            return getTableListData(this.props.list, this.instrument);
+        }
+
+        get powerLimitError() {
+            for (let i = 0; i < this.tableListData.dwell.length; i++) {
+                let power =
+                    this.tableListData.voltage[i] *
+                    this.tableListData.current[i];
+                if (!checkPower(power, this.instrument)) {
+                    return getPowerLimitErrorMessage(this.instrument);
+                }
+            }
+            return undefined;
+        }
+
+        onTimeChange(event: React.ChangeEvent<HTMLInputElement>) {
+            this.time = event.target.value;
+            let time = this.props.timeUnit.parseValue(this.time);
+            if (typeof time === "number") {
+                if (time < this.props.minTime || time > this.props.maxTime) {
+                    this.timeError = `Allowed range: ${this.props.timeUnit.formatValue(
+                        this.props.minTime
+                    )} - ${this.props.timeUnit.formatValue(
+                        this.props.maxTime
+                    )}`;
+                    this.props.onTimeChange(this.props.time!);
+                } else {
+                    this.props.onTimeChange(time);
+                    this.lastTime = time;
+                    this.timeError = this.powerLimitError;
+                }
+            } else {
+                this.timeError = "Invalid value";
                 this.props.onTimeChange(this.props.time!);
-            } else {
-                this.props.onTimeChange(time);
-                this.lastTime = time;
-                this.timeError = this.powerLimitError;
             }
-        } else {
-            this.timeError = "Invalid value";
-            this.props.onTimeChange(this.props.time!);
         }
-    }
 
-    @action
-    onValueChange(event: React.ChangeEvent<HTMLInputElement>) {
-        this.value = event.target.value;
-        let value = this.props.valueUnit.parseValue(this.value);
-        if (typeof value === "number") {
-            if (value < this.props.minValue || value > this.props.maxValue) {
-                this.valueError = `Allowed range: ${this.props.valueUnit.formatValue(
-                    this.props.minValue
-                )} - ${this.props.valueUnit.formatValue(this.props.maxValue)}`;
+        onValueChange(event: React.ChangeEvent<HTMLInputElement>) {
+            this.value = event.target.value;
+            let value = this.props.valueUnit.parseValue(this.value);
+            if (typeof value === "number") {
+                if (
+                    value < this.props.minValue ||
+                    value > this.props.maxValue
+                ) {
+                    this.valueError = `Allowed range: ${this.props.valueUnit.formatValue(
+                        this.props.minValue
+                    )} - ${this.props.valueUnit.formatValue(
+                        this.props.maxValue
+                    )}`;
+                    this.props.onValueChange(this.props.value);
+                } else {
+                    this.lastValue = value;
+                    this.props.onValueChange(value);
+                    this.valueError = this.powerLimitError;
+                }
+            } else {
+                this.valueError = "Invalid value";
                 this.props.onValueChange(this.props.value);
-            } else {
-                this.lastValue = value;
-                this.props.onValueChange(value);
-                this.valueError = this.powerLimitError;
             }
-        } else {
-            this.valueError = "Invalid value";
-            this.props.onValueChange(this.props.value);
         }
-    }
 
-    render() {
-        return (
-            <div className="EezStudio_EditEnvelopeValueContainer">
-                <table>
-                    <tbody>
-                        <tr>
-                            <td colSpan={2} className="text-center">
-                                {this.props.onRemove && (
-                                    <button
-                                        className="btn btn-sm btn-danger"
-                                        onClick={this.props.onRemove}
-                                    >
-                                        Remove
-                                    </button>
-                                )}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colSpan={2}>
-                                <div className="separator" />
-                            </td>
-                        </tr>
-                        {this.props.time !== undefined && (
+        render() {
+            return (
+                <div className="EezStudio_EditEnvelopeValueContainer">
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td colSpan={2} className="text-center">
+                                    {this.props.onRemove && (
+                                        <button
+                                            className="btn btn-sm btn-danger"
+                                            onClick={this.props.onRemove}
+                                        >
+                                            Remove
+                                        </button>
+                                    )}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colSpan={2}>
+                                    <div className="separator" />
+                                </td>
+                            </tr>
+                            {this.props.time !== undefined && (
+                                <tr>
+                                    <td>
+                                        <label>Time</label>
+                                    </td>
+                                    <td>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            value={this.time}
+                                            onChange={this.onTimeChange}
+                                        />
+                                    </td>
+                                </tr>
+                            )}
+                            {this.timeError && (
+                                <tr>
+                                    <td />
+                                    <td className="text-danger">
+                                        {this.timeError}
+                                    </td>
+                                </tr>
+                            )}
                             <tr>
                                 <td>
-                                    <label>Time</label>
+                                    <label>
+                                        {capitalize(this.props.valueUnit.name)}
+                                    </label>
                                 </td>
                                 <td>
                                     <input
                                         type="text"
                                         className="form-control"
-                                        value={this.time}
-                                        onChange={this.onTimeChange}
+                                        value={this.value}
+                                        onChange={this.onValueChange}
                                     />
                                 </td>
                             </tr>
-                        )}
-                        {this.timeError && (
+                            {this.valueError && (
+                                <tr>
+                                    <td />
+                                    <td className="text-danger">
+                                        {this.valueError}
+                                    </td>
+                                </tr>
+                            )}
                             <tr>
                                 <td />
-                                <td className="text-danger">
-                                    {this.timeError}
+                                <td>
+                                    <button
+                                        className="btn btn-success"
+                                        onClick={this.props.onSave}
+                                        disabled={!this.canSave}
+                                    >
+                                        Save
+                                    </button>
+                                    &nbsp;
+                                    <button
+                                        className="btn btn-default"
+                                        onClick={this.props.onClose}
+                                    >
+                                        Cancel
+                                    </button>
                                 </td>
                             </tr>
-                        )}
-                        <tr>
-                            <td>
-                                <label>
-                                    {capitalize(this.props.valueUnit.name)}
-                                </label>
-                            </td>
-                            <td>
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    value={this.value}
-                                    onChange={this.onValueChange}
-                                />
-                            </td>
-                        </tr>
-                        {this.valueError && (
-                            <tr>
-                                <td />
-                                <td className="text-danger">
-                                    {this.valueError}
-                                </td>
-                            </tr>
-                        )}
-                        <tr>
-                            <td />
-                            <td>
-                                <button
-                                    className="btn btn-success"
-                                    onClick={this.props.onSave}
-                                    disabled={!this.canSave}
-                                >
-                                    Save
-                                </button>
-                                &nbsp;
-                                <button
-                                    className="btn btn-default"
-                                    onClick={this.props.onClose}
-                                >
-                                    Cancel
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        );
+                        </tbody>
+                    </table>
+                </div>
+            );
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -427,6 +466,13 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         public valueIndex: number,
         public lineController: EnvelopeLineController
     ) {
+        makeObservable(this, {
+            instrument: computed,
+            tableListData: computed,
+            powerLimitError: computed,
+            move: action
+        });
+
         const values = lineController.values;
         this.startEnvelopeValue = { ...values[this.valueIndex] };
         this.startTime = new Date().getTime();
@@ -468,15 +514,14 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         );
     }
 
-    @computed get instrument() {
+    get instrument() {
         return this.appStore.instrument;
     }
 
-    @computed get tableListData() {
+    get tableListData() {
         return getTableListData(this.list, this.instrument);
     }
 
-    @computed
     get powerLimitError() {
         for (let i = 0; i < this.tableListData.dwell.length; i++) {
             let power =
@@ -494,7 +539,6 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         this.target = event.target!;
     }
 
-    @action
     move(point: SVGPoint, event: PointerEvent) {
         this.lastPoint = point;
 
@@ -856,6 +900,15 @@ export class EnvelopeLineController extends LineController {
         yAxisController: IAxisController
     ) {
         super(id, yAxisController);
+
+        makeObservable(this, {
+            values: computed,
+            yMin: computed,
+            yMax: computed,
+            instrument: computed,
+            tableListData: computed,
+            powerLimitError: computed
+        });
     }
 
     get list() {
@@ -864,34 +917,30 @@ export class EnvelopeLineController extends LineController {
         ).list;
     }
 
-    @computed
     get values() {
         return this.list.data[
             this.yAxisController.unit.name as "voltage" | "current"
         ] as IEnvelopePoint[];
     }
 
-    @computed
     get yMin(): number {
         //return Math.min(...this.values.map(value => value.value));
         return this.yAxisController.axisModel.minValue;
     }
 
-    @computed
     get yMax(): number {
         //return Math.max(...this.values.map(value => value.value));
         return this.yAxisController.axisModel.maxValue;
     }
 
-    @computed get instrument() {
+    get instrument() {
         return this.appStore.instrument;
     }
 
-    @computed get tableListData() {
+    get tableListData() {
         return getTableListData(this.list, this.instrument);
     }
 
-    @computed
     get powerLimitError() {
         for (let i = 0; i < this.tableListData.dwell.length; i++) {
             let power =
@@ -1112,478 +1161,510 @@ export class EnvelopeLineController extends LineController {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class EnvelopeLine extends React.Component<
-    {
-        chartLeft: number;
-        chartBottom: number;
-        from: IEnvelopePoint;
-        to: IEnvelopePoint;
-        xFrom: number;
-        xScale: number;
-        yFrom: number;
-        yScale: number;
-        axisModel: IAxisModel;
-    },
-    {}
-> {
-    render() {
-        const {
-            chartLeft,
-            chartBottom,
-            from,
-            to,
-            xFrom,
-            xScale,
-            yFrom,
-            yScale,
-            axisModel
-        } = this.props;
-        return (
-            <line
-                x1={chartLeft + (from.time - xFrom) * xScale}
-                y1={chartBottom - (from.value - yFrom) * yScale}
-                x2={chartLeft + (to.time - xFrom) * xScale}
-                y2={chartBottom - (to.value - yFrom) * yScale}
-                stroke={axisModel.color}
-                strokeWidth={1}
-                strokeOpacity={1}
-            />
-        );
-    }
-}
-
-@observer
-class EnvelopeLines extends React.Component<
-    {
-        envelopeLineController: EnvelopeLineController;
-    },
-    {}
-> {
-    render() {
-        const envelopeLineController = this.props.envelopeLineController;
-        const { values } = envelopeLineController;
-        const yAxisController = envelopeLineController.yAxisController;
-        const chartsController = yAxisController.chartsController;
-        const xAxisController = chartsController.xAxisController;
-        const { chartLeft, chartBottom } = chartsController;
-
-        return (
-            <g>
-                {_range(values.length - 1).map(i => (
-                    <EnvelopeLine
-                        key={i}
-                        chartLeft={chartLeft}
-                        chartBottom={chartBottom}
-                        from={values[i]}
-                        to={values[i + 1]}
-                        xFrom={xAxisController.from}
-                        xScale={xAxisController.scale}
-                        yFrom={yAxisController.from}
-                        yScale={yAxisController.scale}
-                        axisModel={yAxisController.axisModel}
-                    />
-                ))}
-            </g>
-        );
-    }
-}
-
-@observer
-class EnvelopeValue extends React.Component<
-    {
-        index: number;
-        value: IEnvelopePoint;
-        chartLeft: number;
-        chartBottom: number;
-        xFrom: number;
-        xScale: number;
-        yFrom: number;
-        yScale: number;
-        radius: number;
-        axisModel: IAxisModel;
-    },
-    {}
-> {
-    render() {
-        const {
-            index,
-            value,
-            chartLeft,
-            chartBottom,
-            xFrom,
-            xScale,
-            yFrom,
-            yScale,
-            radius,
-            axisModel
-        } = this.props;
-        return (
-            <circle
-                className="EezStudio_EnvelopeValueCircle"
-                data-value-index={index}
-                cx={chartLeft + (value.time - xFrom) * xScale}
-                cy={chartBottom - (value.value - yFrom) * yScale}
-                r={radius}
-                stroke={axisModel.color}
-                fill={axisModel.color}
-            />
-        );
-    }
-}
-
-@observer
-class EnvelopeValues extends React.Component<
-    {
-        envelopeLineController: EnvelopeLineController;
-    },
-    {}
-> {
-    render() {
-        const envelopeLineController = this.props.envelopeLineController;
-        const { values } = envelopeLineController;
-        const yAxisController = envelopeLineController.yAxisController;
-        const chartsController = yAxisController.chartsController;
-        const xAxisController = chartsController.xAxisController;
-        const { chartLeft, chartBottom } = chartsController;
-
-        return (
-            <g data-line-controller-id={envelopeLineController.id}>
-                {values.map((value, i) => (
-                    <EnvelopeValue
-                        key={i}
-                        index={i}
-                        value={value}
-                        chartLeft={chartLeft}
-                        chartBottom={chartBottom}
-                        xFrom={xAxisController.from}
-                        xScale={xAxisController.scale}
-                        yFrom={yAxisController.from}
-                        yScale={yAxisController.scale}
-                        radius={CONF_ENVELOPE_POINT_RADIUS}
-                        axisModel={yAxisController.axisModel}
-                    />
-                ))}
-            </g>
-        );
-    }
-}
-
-@observer
-export class EnvelopeLineView extends React.Component<
-    {
-        envelopeLineController: EnvelopeLineController;
-        clipId: string;
-    },
-    {}
-> {
-    render() {
-        return (
-            <g clipPath={`url(#${this.props.clipId})`}>
-                <EnvelopeLines
-                    envelopeLineController={this.props.envelopeLineController}
+const EnvelopeLine = observer(
+    class EnvelopeLine extends React.Component<
+        {
+            chartLeft: number;
+            chartBottom: number;
+            from: IEnvelopePoint;
+            to: IEnvelopePoint;
+            xFrom: number;
+            xScale: number;
+            yFrom: number;
+            yScale: number;
+            axisModel: IAxisModel;
+        },
+        {}
+    > {
+        render() {
+            const {
+                chartLeft,
+                chartBottom,
+                from,
+                to,
+                xFrom,
+                xScale,
+                yFrom,
+                yScale,
+                axisModel
+            } = this.props;
+            return (
+                <line
+                    x1={chartLeft + (from.time - xFrom) * xScale}
+                    y1={chartBottom - (from.value - yFrom) * yScale}
+                    x2={chartLeft + (to.time - xFrom) * xScale}
+                    y2={chartBottom - (to.value - yFrom) * yScale}
+                    stroke={axisModel.color}
+                    strokeWidth={1}
+                    strokeOpacity={1}
                 />
-                <EnvelopeValues
-                    envelopeLineController={this.props.envelopeLineController}
-                />
-            </g>
-        );
+            );
+        }
     }
-}
+);
+
+const EnvelopeLines = observer(
+    class EnvelopeLines extends React.Component<
+        {
+            envelopeLineController: EnvelopeLineController;
+        },
+        {}
+    > {
+        render() {
+            const envelopeLineController = this.props.envelopeLineController;
+            const { values } = envelopeLineController;
+            const yAxisController = envelopeLineController.yAxisController;
+            const chartsController = yAxisController.chartsController;
+            const xAxisController = chartsController.xAxisController;
+            const { chartLeft, chartBottom } = chartsController;
+
+            return (
+                <g>
+                    {_range(values.length - 1).map(i => (
+                        <EnvelopeLine
+                            key={i}
+                            chartLeft={chartLeft}
+                            chartBottom={chartBottom}
+                            from={values[i]}
+                            to={values[i + 1]}
+                            xFrom={xAxisController.from}
+                            xScale={xAxisController.scale}
+                            yFrom={yAxisController.from}
+                            yScale={yAxisController.scale}
+                            axisModel={yAxisController.axisModel}
+                        />
+                    ))}
+                </g>
+            );
+        }
+    }
+);
+
+const EnvelopeValue = observer(
+    class EnvelopeValue extends React.Component<
+        {
+            index: number;
+            value: IEnvelopePoint;
+            chartLeft: number;
+            chartBottom: number;
+            xFrom: number;
+            xScale: number;
+            yFrom: number;
+            yScale: number;
+            radius: number;
+            axisModel: IAxisModel;
+        },
+        {}
+    > {
+        render() {
+            const {
+                index,
+                value,
+                chartLeft,
+                chartBottom,
+                xFrom,
+                xScale,
+                yFrom,
+                yScale,
+                radius,
+                axisModel
+            } = this.props;
+            return (
+                <circle
+                    className="EezStudio_EnvelopeValueCircle"
+                    data-value-index={index}
+                    cx={chartLeft + (value.time - xFrom) * xScale}
+                    cy={chartBottom - (value.value - yFrom) * yScale}
+                    r={radius}
+                    stroke={axisModel.color}
+                    fill={axisModel.color}
+                />
+            );
+        }
+    }
+);
+
+const EnvelopeValues = observer(
+    class EnvelopeValues extends React.Component<
+        {
+            envelopeLineController: EnvelopeLineController;
+        },
+        {}
+    > {
+        render() {
+            const envelopeLineController = this.props.envelopeLineController;
+            const { values } = envelopeLineController;
+            const yAxisController = envelopeLineController.yAxisController;
+            const chartsController = yAxisController.chartsController;
+            const xAxisController = chartsController.xAxisController;
+            const { chartLeft, chartBottom } = chartsController;
+
+            return (
+                <g data-line-controller-id={envelopeLineController.id}>
+                    {values.map((value, i) => (
+                        <EnvelopeValue
+                            key={i}
+                            index={i}
+                            value={value}
+                            chartLeft={chartLeft}
+                            chartBottom={chartBottom}
+                            xFrom={xAxisController.from}
+                            xScale={xAxisController.scale}
+                            yFrom={yAxisController.from}
+                            yScale={yAxisController.scale}
+                            radius={CONF_ENVELOPE_POINT_RADIUS}
+                            axisModel={yAxisController.axisModel}
+                        />
+                    ))}
+                </g>
+            );
+        }
+    }
+);
+
+export const EnvelopeLineView = observer(
+    class EnvelopeLineView extends React.Component<
+        {
+            envelopeLineController: EnvelopeLineController;
+            clipId: string;
+        },
+        {}
+    > {
+        render() {
+            return (
+                <g clipPath={`url(#${this.props.clipId})`}>
+                    <EnvelopeLines
+                        envelopeLineController={
+                            this.props.envelopeLineController
+                        }
+                    />
+                    <EnvelopeValues
+                        envelopeLineController={
+                            this.props.envelopeLineController
+                        }
+                    />
+                </g>
+            );
+        }
+    }
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class EnvelopeChartsHeader extends React.Component<{
-    appStore: IAppStore;
-    chartsController: ChartsController;
-}> {
-    get list() {
-        return (this.props.chartsController as EnvelopeChartsController).list;
-    }
+const EnvelopeChartsHeader = observer(
+    class EnvelopeChartsHeader extends React.Component<{
+        appStore: IAppStore;
+        chartsController: ChartsController;
+    }> {
+        constructor(props: {
+            appStore: IAppStore;
+            chartsController: ChartsController;
+        }) {
+            super(props);
 
-    editProperties = () => {
-        showGenericDialog({
-            dialogDefinition: {
-                fields: [
-                    {
-                        name: "name",
-                        type: "string",
-                        validators: [
-                            validators.required,
-                            validators.unique(
-                                this.list,
-                                this.props.appStore.instrumentLists
-                            )
-                        ]
-                    },
-                    {
-                        name: "description",
-                        type: "string"
-                    },
-                    {
-                        name: "duration",
-                        unit: "time",
-                        validators: [validators.rangeExclusive(0)]
-                    },
-                    {
-                        name: "numSamples",
-                        displayName: "No. of samples",
-                        type: "integer",
-                        validators: [
-                            validators.rangeInclusive(
-                                1,
-                                this.props.appStore.instrument
-                                    .listsMaxPointsProperty
-                            )
-                        ]
-                    }
-                ]
-            },
+            makeObservable(this, {
+                clearAllPoints: action.bound,
+                clearAllVoltagePoints: action.bound,
+                clearAllCurrentPoints: action.bound
+            });
+        }
 
-            values: {
-                name: this.list.name,
-                description: this.list.description,
-                duration: this.list.data.duration,
-                numSamples: this.list.data.numSamples
-            }
-        })
-            .then(result => {
-                const list = this.list;
+        get list() {
+            return (this.props.chartsController as EnvelopeChartsController)
+                .list;
+        }
 
-                const oldName = list.name;
-                const oldDescription = list.description;
-                const oldDuration = list.data.duration;
-                const oldNumSamples = list.data.numSamples;
-
-                const newName = result.values.name;
-                const newDescription = result.values.description;
-                const newDuration = result.values.duration;
-                const newNumSamples = result.values.numSamples;
-
-                if (
-                    oldName !== newName ||
-                    oldDescription !== newDescription ||
-                    oldDuration !== newDuration ||
-                    oldNumSamples !== newNumSamples
-                ) {
-                    this.props.appStore.undoManager!.addCommand(
-                        "Edit envelope list",
-                        this.props.appStore.instrumentListStore!,
-                        list,
+        editProperties = () => {
+            showGenericDialog({
+                dialogDefinition: {
+                    fields: [
                         {
-                            execute: action(() => {
-                                list.name = newName;
-                                list.description = newDescription;
-                                list.data.duration = newDuration;
-                                list.data.numSamples = newNumSamples;
-                            }),
-                            undo: action(() => {
-                                list.name = oldName;
-                                list.description = oldDescription;
-                                list.data.duration = oldDuration;
-                                list.data.numSamples = oldNumSamples;
-                            })
+                            name: "name",
+                            type: "string",
+                            validators: [
+                                validators.required,
+                                validators.unique(
+                                    this.list,
+                                    this.props.appStore.instrumentLists
+                                )
+                            ]
+                        },
+                        {
+                            name: "description",
+                            type: "string"
+                        },
+                        {
+                            name: "duration",
+                            unit: "time",
+                            validators: [validators.rangeExclusive(0)]
+                        },
+                        {
+                            name: "numSamples",
+                            displayName: "No. of samples",
+                            type: "integer",
+                            validators: [
+                                validators.rangeInclusive(
+                                    1,
+                                    this.props.appStore.instrument
+                                        .listsMaxPointsProperty
+                                )
+                            ]
                         }
-                    );
+                    ]
+                },
+
+                values: {
+                    name: this.list.name,
+                    description: this.list.description,
+                    duration: this.list.data.duration,
+                    numSamples: this.list.data.numSamples
                 }
             })
-            .catch(() => {});
-    };
+                .then(result => {
+                    const list = this.list;
 
-    get canClearAllPoints() {
-        return this.canClearAllVoltagePoints || this.canClearAllCurrentPoints;
-    }
+                    const oldName = list.name;
+                    const oldDescription = list.description;
+                    const oldDuration = list.data.duration;
+                    const oldNumSamples = list.data.numSamples;
 
-    @action.bound
-    clearAllPoints() {
-        if (this.canClearAllPoints) {
-            const oldVoltage = this.list.data.voltage;
-            const oldCurrent = this.list.data.current;
+                    const newName = result.values.name;
+                    const newDescription = result.values.description;
+                    const newDuration = result.values.duration;
+                    const newNumSamples = result.values.numSamples;
 
-            const defaultEnvelopeListData = getDefaultEnvelopeListData(
-                this.props.appStore.instrument
-            );
+                    if (
+                        oldName !== newName ||
+                        oldDescription !== newDescription ||
+                        oldDuration !== newDuration ||
+                        oldNumSamples !== newNumSamples
+                    ) {
+                        this.props.appStore.undoManager!.addCommand(
+                            "Edit envelope list",
+                            this.props.appStore.instrumentListStore!,
+                            list,
+                            {
+                                execute: action(() => {
+                                    list.name = newName;
+                                    list.description = newDescription;
+                                    list.data.duration = newDuration;
+                                    list.data.numSamples = newNumSamples;
+                                }),
+                                undo: action(() => {
+                                    list.name = oldName;
+                                    list.description = oldDescription;
+                                    list.data.duration = oldDuration;
+                                    list.data.numSamples = oldNumSamples;
+                                })
+                            }
+                        );
+                    }
+                })
+                .catch(() => {});
+        };
 
-            const newVoltage = objectClone(defaultEnvelopeListData.voltage);
-            newVoltage[1].time = this.list.data.duration;
-
-            const newCurrent = objectClone(defaultEnvelopeListData.current);
-            newCurrent[1].time = this.list.data.duration;
-
-            this.props.appStore.undoManager!.addCommand(
-                "Edit envelope list",
-                this.props.appStore.instrumentListStore!,
-                this.list,
-                {
-                    execute: action(() => {
-                        this.list.data.voltage = newVoltage;
-                        this.list.data.current = newCurrent;
-                    }),
-                    undo: action(() => {
-                        this.list.data.voltage = oldVoltage;
-                        this.list.data.current = oldCurrent;
-                    })
-                }
-            );
-        }
-    }
-
-    get canClearAllVoltagePoints() {
-        return (
-            this.list.data.voltage.length > 2 ||
-            this.list.data.voltage[1].time !== this.list.data.duration
-        );
-    }
-
-    @action.bound
-    clearAllVoltagePoints() {
-        if (this.canClearAllVoltagePoints) {
-            const oldVoltage = this.list.data.voltage;
-
-            const defaultEnvelopeListData = getDefaultEnvelopeListData(
-                this.props.appStore.instrument
-            );
-
-            const newVoltage = defaultEnvelopeListData.voltage.slice();
-            newVoltage[1].time = this.list.data.duration;
-
-            this.props.appStore.undoManager!.addCommand(
-                "Edit envelope list",
-                this.props.appStore.instrumentListStore!,
-                this.list,
-                {
-                    execute: action(() => {
-                        this.list.data.voltage = newVoltage;
-                    }),
-                    undo: action(() => {
-                        this.list.data.voltage = oldVoltage;
-                    })
-                }
+        get canClearAllPoints() {
+            return (
+                this.canClearAllVoltagePoints || this.canClearAllCurrentPoints
             );
         }
-    }
 
-    get canClearAllCurrentPoints() {
-        return (
-            this.list.data.current.length > 2 ||
-            this.list.data.current[1].time !== this.list.data.duration
-        );
-    }
+        clearAllPoints() {
+            if (this.canClearAllPoints) {
+                const oldVoltage = this.list.data.voltage;
+                const oldCurrent = this.list.data.current;
 
-    @action.bound
-    clearAllCurrentPoints() {
-        if (this.canClearAllCurrentPoints) {
-            const oldCurrent = this.list.data.current;
+                const defaultEnvelopeListData = getDefaultEnvelopeListData(
+                    this.props.appStore.instrument
+                );
 
-            const defaultEnvelopeListData = getDefaultEnvelopeListData(
-                this.props.appStore.instrument
-            );
+                const newVoltage = objectClone(defaultEnvelopeListData.voltage);
+                newVoltage[1].time = this.list.data.duration;
 
-            const newCurrent = defaultEnvelopeListData.current.slice();
-            newCurrent[1].time = this.list.data.duration;
+                const newCurrent = objectClone(defaultEnvelopeListData.current);
+                newCurrent[1].time = this.list.data.duration;
 
-            this.props.appStore.undoManager!.addCommand(
-                "Edit envelope list",
-                this.props.appStore.instrumentListStore!,
-                this.list,
-                {
-                    execute: action(() => {
-                        this.list.data.current = newCurrent;
-                    }),
-                    undo: action(() => {
-                        this.list.data.current = oldCurrent;
-                    })
-                }
+                this.props.appStore.undoManager!.addCommand(
+                    "Edit envelope list",
+                    this.props.appStore.instrumentListStore!,
+                    this.list,
+                    {
+                        execute: action(() => {
+                            this.list.data.voltage = newVoltage;
+                            this.list.data.current = newCurrent;
+                        }),
+                        undo: action(() => {
+                            this.list.data.voltage = oldVoltage;
+                            this.list.data.current = oldCurrent;
+                        })
+                    }
+                );
+            }
+        }
+
+        get canClearAllVoltagePoints() {
+            return (
+                this.list.data.voltage.length > 2 ||
+                this.list.data.voltage[1].time !== this.list.data.duration
             );
         }
-    }
 
-    render() {
-        return (
-            <Header className="EezStudio_ListChartViewHeader">
-                <Toolbar>
+        clearAllVoltagePoints() {
+            if (this.canClearAllVoltagePoints) {
+                const oldVoltage = this.list.data.voltage;
+
+                const defaultEnvelopeListData = getDefaultEnvelopeListData(
+                    this.props.appStore.instrument
+                );
+
+                const newVoltage = defaultEnvelopeListData.voltage.slice();
+                newVoltage[1].time = this.list.data.duration;
+
+                this.props.appStore.undoManager!.addCommand(
+                    "Edit envelope list",
+                    this.props.appStore.instrumentListStore!,
+                    this.list,
+                    {
+                        execute: action(() => {
+                            this.list.data.voltage = newVoltage;
+                        }),
+                        undo: action(() => {
+                            this.list.data.voltage = oldVoltage;
+                        })
+                    }
+                );
+            }
+        }
+
+        get canClearAllCurrentPoints() {
+            return (
+                this.list.data.current.length > 2 ||
+                this.list.data.current[1].time !== this.list.data.duration
+            );
+        }
+
+        clearAllCurrentPoints() {
+            if (this.canClearAllCurrentPoints) {
+                const oldCurrent = this.list.data.current;
+
+                const defaultEnvelopeListData = getDefaultEnvelopeListData(
+                    this.props.appStore.instrument
+                );
+
+                const newCurrent = defaultEnvelopeListData.current.slice();
+                newCurrent[1].time = this.list.data.duration;
+
+                this.props.appStore.undoManager!.addCommand(
+                    "Edit envelope list",
+                    this.props.appStore.instrumentListStore!,
+                    this.list,
+                    {
+                        execute: action(() => {
+                            this.list.data.current = newCurrent;
+                        }),
+                        undo: action(() => {
+                            this.list.data.current = oldCurrent;
+                        })
+                    }
+                );
+            }
+        }
+
+        render() {
+            return (
+                <Header className="EezStudio_ListChartViewHeader">
                     <Toolbar>
-                        <ButtonAction
-                            text="Edit Properties"
-                            className="btn-secondary"
-                            title="Edit properties"
-                            onClick={this.editProperties}
+                        <Toolbar>
+                            <ButtonAction
+                                text="Edit Properties"
+                                className="btn-secondary"
+                                title="Edit properties"
+                                onClick={this.editProperties}
+                            />
+                            <DropdownButtonAction
+                                text="Clear Points"
+                                title="Clear points"
+                                className="btn-secondary"
+                            >
+                                <DropdownItem
+                                    text="Clear All Points"
+                                    onClick={this.clearAllPoints}
+                                    disabled={!this.canClearAllPoints}
+                                />
+                                <DropdownItem
+                                    text="Clear All Voltage Points"
+                                    onClick={this.clearAllVoltagePoints}
+                                    disabled={!this.canClearAllVoltagePoints}
+                                />
+                                <DropdownItem
+                                    text="Clear All Current Points"
+                                    onClick={this.clearAllCurrentPoints}
+                                    disabled={!this.canClearAllCurrentPoints}
+                                />
+                            </DropdownButtonAction>
+                        </Toolbar>
+                        <CommonTools
+                            chartsController={this.props.chartsController}
                         />
-                        <DropdownButtonAction
-                            text="Clear Points"
-                            title="Clear points"
-                            className="btn-secondary"
-                        >
-                            <DropdownItem
-                                text="Clear All Points"
-                                onClick={this.clearAllPoints}
-                                disabled={!this.canClearAllPoints}
-                            />
-                            <DropdownItem
-                                text="Clear All Voltage Points"
-                                onClick={this.clearAllVoltagePoints}
-                                disabled={!this.canClearAllVoltagePoints}
-                            />
-                            <DropdownItem
-                                text="Clear All Current Points"
-                                onClick={this.clearAllCurrentPoints}
-                                disabled={!this.canClearAllCurrentPoints}
-                            />
-                        </DropdownButtonAction>
                     </Toolbar>
-                    <CommonTools
-                        chartsController={this.props.chartsController}
-                    />
-                </Toolbar>
-            </Header>
-        );
+                </Header>
+            );
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class EnvelopeDetailsView extends React.Component<{
-    appStore: IAppStore;
-    list: EnvelopeList;
-}> {
-    @observable list: EnvelopeList = this.props.list;
+export const EnvelopeDetailsView = observer(
+    class EnvelopeDetailsView extends React.Component<{
+        appStore: IAppStore;
+        list: EnvelopeList;
+    }> {
+        list: EnvelopeList = this.props.list;
 
-    @computed
-    get chartsController() {
-        return createEnvelopeChartsController(
-            this.props.appStore,
-            this.list,
-            displayOption.get() as ChartsDisplayOption,
-            "editable"
-        );
-    }
+        constructor(props: { appStore: IAppStore; list: EnvelopeList }) {
+            super(props);
 
-    @action
-    componentDidUpdate(prevProps: any) {
-        if (this.props != prevProps) {
-            this.list = this.props.list;
+            makeObservable(this, {
+                list: observable,
+                chartsController: computed,
+                componentDidUpdate: action
+            });
+        }
+
+        get chartsController() {
+            return createEnvelopeChartsController(
+                this.props.appStore,
+                this.list,
+                displayOption.get() as ChartsDisplayOption,
+                "editable"
+            );
+        }
+
+        componentDidUpdate(prevProps: any) {
+            if (this.props != prevProps) {
+                this.list = this.props.list;
+            }
+        }
+
+        render() {
+            return (
+                <VerticalHeaderWithBody>
+                    <EnvelopeChartsHeader
+                        appStore={this.props.appStore}
+                        chartsController={this.chartsController}
+                    />
+                    <Body>
+                        <ChartsView
+                            chartsController={this.chartsController}
+                            tabIndex={0}
+                        />
+                    </Body>
+                </VerticalHeaderWithBody>
+            );
         }
     }
-
-    render() {
-        return (
-            <VerticalHeaderWithBody>
-                <EnvelopeChartsHeader
-                    appStore={this.props.appStore}
-                    chartsController={this.chartsController}
-                />
-                <Body>
-                    <ChartsView
-                        chartsController={this.chartsController}
-                        tabIndex={0}
-                    />
-                </Body>
-            </VerticalHeaderWithBody>
-        );
-    }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -1,5 +1,6 @@
 /// <reference path="./globals.d.ts"/>
 import "bootstrap";
+import { ipcRenderer } from "electron";
 import React from "react";
 import ReactDOM from "react-dom";
 import { configure } from "mobx";
@@ -8,6 +9,10 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
 import { loadExtensions } from "eez-studio-shared/extensions/extensions";
+import {
+    getNodeModuleFolders,
+    yarnInstall
+} from "eez-studio-shared/extensions/yarn";
 
 import * as notification from "eez-studio-ui/notification";
 import { showAboutBox } from "eez-studio-ui/about-box";
@@ -50,23 +55,23 @@ async function beforeAppClose() {
     return true;
 }
 
-EEZStudio.electron.ipcRenderer.on("beforeClose", async () => {
+ipcRenderer.on("beforeClose", async () => {
     if (await beforeAppClose()) {
-        EEZStudio.electron.ipcRenderer.send("readyToClose");
+        ipcRenderer.send("readyToClose");
     }
 });
 
-EEZStudio.electron.ipcRenderer.on("reload", async () => {
+ipcRenderer.on("reload", async () => {
     if (await beforeAppClose()) {
-        EEZStudio.electron.ipcRenderer.send("reload");
+        ipcRenderer.send("reload");
     }
 });
 
-EEZStudio.electron.ipcRenderer.on("switch-theme", async () => {
+ipcRenderer.on("switch-theme", async () => {
     settingsController.switchTheme(!settingsController.isDarkTheme);
 });
 
-EEZStudio.electron.ipcRenderer.on(
+ipcRenderer.on(
     "importInstrumentDefinitionFile",
     (sender: any, filePath: string) => {
         const { importInstrumentDefinition } =
@@ -75,71 +80,73 @@ EEZStudio.electron.ipcRenderer.on(
     }
 );
 
-EEZStudio.electron.ipcRenderer.on("show-about-box", async () => {
+ipcRenderer.on("show-about-box", async () => {
     showAboutBox();
 });
 
-EEZStudio.electron.ipcRenderer.on(
-    "open-project",
-    async (sender: any, filePath: any) => {
-        try {
-            let tab = tabs.findProjectEditorTab(filePath);
-            if (!tab) {
-                tab = tabs.addProjectTab(filePath);
-            }
-            if (tab) {
-                tab.makeActive();
-            }
-        } catch (err) {
-            console.error(err);
+ipcRenderer.on("open-project", async (sender: any, filePath: any) => {
+    try {
+        let tab = tabs.findProjectEditorTab(filePath);
+        if (!tab) {
+            tab = tabs.addProjectTab(filePath);
         }
-    }
-);
-
-EEZStudio.electron.ipcRenderer.on(
-    "load-debug-info",
-    async (sender: any, filePath: any) => {
-        try {
-            let tab = tabs.activeTab;
-            if (tab instanceof ProjectEditorTab) {
-                tab.loadDebugInfo(filePath);
-            }
-        } catch (err) {
-            console.error(err);
+        if (tab) {
+            tab.makeActive();
         }
+    } catch (err) {
+        console.error(err);
     }
-);
+});
 
-EEZStudio.electron.ipcRenderer.on(
-    "new-project",
-    async (sender: any, filePath: any) => {
-        const { showNewProjectWizard } = await import(
-            "project-editor/project/Wizard"
-        );
-        showNewProjectWizard();
+ipcRenderer.on("load-debug-info", async (sender: any, filePath: any) => {
+    try {
+        let tab = tabs.activeTab;
+        if (tab instanceof ProjectEditorTab) {
+            tab.loadDebugInfo(filePath);
+        }
+    } catch (err) {
+        console.error(err);
     }
-);
+});
 
-EEZStudio.electron.ipcRenderer.on("command-palette", () => {
+ipcRenderer.on("new-project", async (sender: any, filePath: any) => {
+    const { showNewProjectWizard } = await import(
+        "project-editor/project/Wizard"
+    );
+    showNewProjectWizard();
+});
+
+ipcRenderer.on("command-palette", () => {
     if (tabs.activeTab && tabs.activeTab.showCommandPalette) {
         tabs.activeTab.showCommandPalette();
     }
 });
 
-@observer
-class Main extends React.Component {
-    render() {
-        return (
-            <DndProvider backend={HTML5Backend}>
-                {this.props.children}
-                {notification.container}
-            </DndProvider>
-        );
+const Main = observer(
+    class Main extends React.Component {
+        render() {
+            return (
+                <DndProvider backend={HTML5Backend}>
+                    {this.props.children}
+                    {notification.container}
+                </DndProvider>
+            );
+        }
     }
-}
+);
 
 async function main() {
-    await loadExtensions();
+    let nodeModuleFolders: string[];
+    try {
+        nodeModuleFolders = await getNodeModuleFolders();
+    } catch (err) {
+        console.info(`Failed to get node module folders.`);
+        nodeModuleFolders = [];
+    }
+
+    await loadExtensions(nodeModuleFolders);
+
+    setTimeout(yarnInstall, 1000);
 
     loadTabs();
 
@@ -152,7 +159,7 @@ async function main() {
 
     handleDragAndDrop();
 
-    EEZStudio.electron.ipcRenderer.send("open-command-line-project");
+    ipcRenderer.send("open-command-line-project");
 }
 
 main();

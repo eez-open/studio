@@ -1,5 +1,11 @@
 import React from "react";
-import { observable, action, runInAction, reaction } from "mobx";
+import {
+    observable,
+    action,
+    runInAction,
+    reaction,
+    makeObservable
+} from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -233,8 +239,17 @@ export class InputActionComponent extends ActionComponent {
         componentHeaderColor: "#abc2a6"
     });
 
-    @observable name: string;
-    @observable inputType: ValueType;
+    name: string;
+    inputType: ValueType;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            inputType: observable
+        });
+    }
 
     getOutputs() {
         return [
@@ -314,8 +329,17 @@ export class OutputActionComponent extends ActionComponent {
         componentHeaderColor: "#abc2a6"
     });
 
-    @observable name: string;
-    @observable outputType: ValueType;
+    name: string;
+    outputType: ValueType;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            outputType: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -389,7 +413,15 @@ export class EvalExprActionComponent extends ActionComponent {
         componentHeaderColor: "#A6BBCF"
     });
 
-    @observable expression: string;
+    expression: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            expression: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -477,9 +509,17 @@ export class EvalJSExprActionComponent extends ActionComponent {
         componentHeaderColor: "#A6BBCF"
     });
 
-    @observable expression: string;
+    expression: string;
 
     static readonly PARAMS_REGEXP = /\{([^\}]+)\}/;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            expression: observable
+        });
+    }
 
     static parse(expression: string) {
         const inputs = new Set<string>();
@@ -611,8 +651,17 @@ export class SetVariableActionComponent extends ActionComponent {
         componentHeaderColor: "#A6BBCF"
     });
 
-    @observable variable: string;
-    @observable value: string;
+    variable: string;
+    value: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            variable: observable,
+            value: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -697,7 +746,15 @@ export class WatchVariableActionComponent extends ActionComponent {
         componentHeaderColor: "#A6BBCF"
     });
 
-    @observable variable: string;
+    variable: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            variable: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -796,8 +853,8 @@ registerClass("WatchVariableActionComponent", WatchVariableActionComponent);
 ////////////////////////////////////////////////////////////////////////////////
 
 class SwitchTest extends EezObject {
-    @observable condition: string;
-    @observable outputName: string;
+    condition: string;
+    outputName: string;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -834,6 +891,15 @@ class SwitchTest extends EezObject {
         },
         defaultValue: {}
     };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            condition: observable,
+            outputName: observable
+        });
+    }
 }
 
 export class SwitchActionComponent extends ActionComponent {
@@ -869,7 +935,15 @@ export class SwitchActionComponent extends ActionComponent {
         defaultValue: {}
     });
 
-    @observable tests: SwitchTest[];
+    tests: SwitchTest[];
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            tests: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -1021,10 +1095,21 @@ export class CompareActionComponent extends ActionComponent {
         }
     });
 
-    @observable A: string;
-    @observable B: string;
-    @observable C: string;
-    @observable operator: string;
+    A: string;
+    B: string;
+    C: string;
+    operator: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            A: observable,
+            B: observable,
+            C: observable,
+            operator: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -1209,7 +1294,15 @@ export class IsTrueActionComponent extends ActionComponent {
         }
     });
 
-    @observable value: any;
+    value: any;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            value: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -1313,7 +1406,15 @@ export class ConstantActionComponent extends ActionComponent {
         componentHeaderColor: "#C0C0C0"
     });
 
-    @observable value: string;
+    value: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            value: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -1432,7 +1533,15 @@ export class ReadSettingActionComponent extends ActionComponent {
         componentHeaderColor: "#C0DEED"
     });
 
-    @observable key: string;
+    key: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            key: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -1523,8 +1632,17 @@ export class WriteSettingsActionComponent extends ActionComponent {
         componentHeaderColor: "#C0DEED"
     });
 
-    @observable key: string;
-    @observable value: string;
+    key: string;
+    value: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            key: observable,
+            value: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -1598,7 +1716,15 @@ export class LogActionComponent extends ActionComponent {
         componentHeaderColor: "#C0DEED"
     });
 
-    @observable value: string;
+    value: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            value: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -1699,7 +1825,15 @@ export class CallActionActionComponent extends ActionComponent {
         }
     });
 
-    @observable action: string;
+    action: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            action: observable
+        });
+    }
 
     getInputs(): ComponentInput[] {
         let inputs: ComponentInput[];
@@ -1911,7 +2045,15 @@ export class DynamicCallActionActionComponent extends ActionComponent {
         componentPaletteGroupName: "Dashboard Specific"
     });
 
-    @observable action: string;
+    action: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            action: observable
+        });
+    }
 
     getInputs(): ComponentInput[] {
         return [
@@ -2004,7 +2146,15 @@ export class DelayActionComponent extends ActionComponent {
         componentHeaderColor: "#E6E0F8"
     });
 
-    @observable milliseconds: string;
+    milliseconds: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            milliseconds: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -2079,7 +2229,15 @@ export class ErrorActionComponent extends ActionComponent {
         componentHeaderColor: "#fc9b9b"
     });
 
-    @observable message: string;
+    message: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            message: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -2196,7 +2354,15 @@ export class CounterActionComponent extends ActionComponent {
         componentHeaderColor: "#E2D96E"
     });
 
-    @observable countValue: number;
+    countValue: number;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            countValue: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -2339,10 +2505,21 @@ export class LoopActionComponent extends ActionComponent {
         }
     });
 
-    @observable variable: string;
-    @observable from: string;
-    @observable to: string;
-    @observable step: string;
+    variable: string;
+    from: string;
+    to: string;
+    step: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            variable: observable,
+            from: observable,
+            to: observable,
+            step: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -2481,7 +2658,15 @@ export class ShowPageActionComponent extends ActionComponent {
         componentHeaderColor: "#DEB887"
     });
 
-    @observable page: string;
+    page: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            page: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -2589,8 +2774,17 @@ export class ShowMessageBoxActionComponent extends ActionComponent {
         componentHeaderColor: "#DEB887"
     });
 
-    @observable messageType: number;
-    @observable message: string;
+    messageType: number;
+    message: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            messageType: observable,
+            message: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -2705,11 +2899,23 @@ export class ShowKeyboardActionComponent extends ActionComponent {
         componentHeaderColor: "#DEB887"
     });
 
-    @observable label: string;
-    @observable initalText: string;
-    @observable minChars: string;
-    @observable maxChars: string;
-    @observable password: boolean;
+    label: string;
+    initalText: string;
+    minChars: string;
+    maxChars: string;
+    password: boolean;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            label: observable,
+            initalText: observable,
+            minChars: observable,
+            maxChars: observable,
+            password: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -2827,12 +3033,25 @@ export class ShowKeypadActionComponent extends ActionComponent {
         componentHeaderColor: "#DEB887"
     });
 
-    @observable label: string;
-    @observable initalValue: string;
-    @observable min: string;
-    @observable max: string;
-    @observable precision: string;
-    @observable unit: string;
+    label: string;
+    initalValue: string;
+    min: string;
+    max: string;
+    precision: string;
+    unit: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            label: observable,
+            initalValue: observable,
+            min: observable,
+            max: observable,
+            precision: observable,
+            unit: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -2927,7 +3146,15 @@ export class NoopActionComponent extends ActionComponent {
         componentHeaderColor: "#fff5c2"
     });
 
-    @observable name: string;
+    name: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -3071,7 +3298,15 @@ export class CommentActionComponent extends ActionComponent {
         }
     });
 
-    @observable text: string;
+    text: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            text: observable
+        });
+    }
 
     get autoSize(): AutoSize {
         return "height";

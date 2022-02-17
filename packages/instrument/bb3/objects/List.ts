@@ -1,4 +1,10 @@
-import { observable, action, computed, runInAction } from "mobx";
+import {
+    observable,
+    action,
+    computed,
+    runInAction,
+    makeObservable
+} from "mobx";
 
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { objectClone } from "eez-studio-shared/util";
@@ -65,18 +71,30 @@ export async function getListsOnTheInstrument(connection: ConnectionBase) {
 }
 
 export class List {
-    @observable listOnInstrument: IListOnInstrument | undefined;
-    @observable busy: boolean = false;
+    listOnInstrument: IListOnInstrument | undefined;
+    busy: boolean = false;
 
     constructor(
         public bb3Instrument: BB3Instrument,
         listOnInstrument: IListOnInstrument | undefined,
         public studioList: BaseList | undefined
     ) {
+        makeObservable(this, {
+            listOnInstrument: observable,
+            busy: observable,
+            baseName: computed,
+            fileName: computed,
+            description: computed,
+            instrumentDate: computed,
+            studioDate: computed,
+            instrumentVersionNewer: computed,
+            studioVersionNewer: computed,
+            setBusy: action
+        });
+
         this.listOnInstrument = listOnInstrument;
     }
 
-    @computed
     get baseName() {
         return (
             this.listOnInstrument?.name ??
@@ -84,27 +102,22 @@ export class List {
         );
     }
 
-    @computed
     get fileName() {
         return `${this.baseName}.list`;
     }
 
-    @computed
     get description() {
         return this.studioList?.description ?? "";
     }
 
-    @computed
     get instrumentDate() {
         return this.listOnInstrument?.date;
     }
 
-    @computed
     get studioDate() {
         return this.studioList?.modifiedAt;
     }
 
-    @computed
     get instrumentVersionNewer() {
         return (
             this.instrumentDate &&
@@ -112,7 +125,6 @@ export class List {
         );
     }
 
-    @computed
     get studioVersionNewer() {
         return (
             this.studioDate &&
@@ -124,7 +136,7 @@ export class List {
         return !!this.listOnInstrument;
     }
 
-    @action setBusy(value: boolean) {
+    setBusy(value: boolean) {
         this.busy = value;
     }
 

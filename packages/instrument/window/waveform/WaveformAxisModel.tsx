@@ -1,4 +1,4 @@
-import { observable, computed } from "mobx";
+import { observable, computed, makeObservable } from "mobx";
 import tinycolor from "tinycolor2";
 
 import { capitalize } from "eez-studio-shared/string";
@@ -14,9 +14,18 @@ export class WaveformAxisModel implements IAxisModel {
     constructor(
         private waveform: Waveform,
         private waveformLink: IWaveformLink | undefined
-    ) {}
+    ) {
+        makeObservable(this, {
+            minValue: computed,
+            maxValue: computed,
+            defaultFrom: computed,
+            defaultTo: computed,
+            unit: computed,
+            dynamic: observable,
+            fixed: observable
+        });
+    }
 
-    @computed
     get minValue() {
         return (
             this.waveform.minValue -
@@ -25,7 +34,6 @@ export class WaveformAxisModel implements IAxisModel {
         );
     }
 
-    @computed
     get maxValue() {
         return (
             this.waveform.maxValue +
@@ -34,22 +42,19 @@ export class WaveformAxisModel implements IAxisModel {
         );
     }
 
-    @computed
     get defaultFrom() {
         return this.minValue;
     }
 
-    @computed
     get defaultTo() {
         return this.maxValue;
     }
 
-    @computed
     get unit() {
         return UNITS[this.waveform.waveformDefinition.unitName];
     }
 
-    @observable dynamic: {
+    dynamic: {
         zoomMode: ZoomMode;
         from: number;
         to: number;
@@ -59,7 +64,7 @@ export class WaveformAxisModel implements IAxisModel {
         to: 0
     };
 
-    @observable fixed: {
+    fixed: {
         zoomMode: ZoomMode;
         subdivisionOffset: number;
         subdivisonScale: number;

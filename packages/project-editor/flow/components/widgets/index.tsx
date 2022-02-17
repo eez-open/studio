@@ -1,5 +1,13 @@
+import { MenuItem } from "@electron/remote";
+
 import React from "react";
-import { observable, computed, runInAction, reaction } from "mobx";
+import {
+    observable,
+    computed,
+    runInAction,
+    reaction,
+    makeObservable
+} from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -141,8 +149,6 @@ import { roundNumber } from "eez-studio-shared/roundNumber";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { detectFileType } from "instrument/connection/file-type";
 
-const { MenuItem } = EEZStudio.remote || {};
-
 const LIST_TYPE_VERTICAL = 1;
 const LIST_TYPE_HORIZONTAL = 2;
 
@@ -250,11 +256,11 @@ function buildWidgetText(
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ContainerWidget extends Widget {
-    @observable name?: string;
-    @observable widgets: Widget[];
-    @observable overlay?: string;
-    @observable shadow?: boolean;
-    @observable visible?: string;
+    name?: string;
+    widgets: Widget[];
+    overlay?: string;
+    shadow?: boolean;
+    visible?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_CONTAINER,
@@ -312,6 +318,18 @@ export class ContainerWidget extends Widget {
             return messages;
         }
     });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            widgets: observable,
+            overlay: observable,
+            shadow: observable,
+            visible: observable
+        });
+    }
 
     render(flowContext: IFlowContext) {
         let visible = getBooleanValue(
@@ -391,9 +409,9 @@ registerClass("ContainerWidget", ContainerWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ListWidget extends Widget {
-    @observable itemWidget?: Widget;
-    @observable listType?: string;
-    @observable gap?: number;
+    itemWidget?: Widget;
+    listType?: string;
+    gap?: number;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_LIST,
@@ -466,6 +484,16 @@ export class ListWidget extends Widget {
         }
     });
 
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            itemWidget: observable,
+            listType: observable,
+            gap: observable
+        });
+    }
+
     render(flowContext: IFlowContext) {
         const itemWidget = this.itemWidget;
         if (!itemWidget) {
@@ -535,49 +563,50 @@ export class ListWidget extends Widget {
 
 registerClass("ListWidget", ListWidget);
 
-@observer
-class ListWidgetItem extends React.Component<{
-    flowContext: IFlowContext;
-    listWidget: ListWidget;
-    itemWidget: Widget;
-    i: number;
-    gap: number;
-    iterators: any;
-}> {
-    render() {
-        const { flowContext, listWidget, itemWidget, i, gap, iterators } =
-            this.props;
-        let xListItem = 0;
-        let yListItem = 0;
+const ListWidgetItem = observer(
+    class ListWidgetItem extends React.Component<{
+        flowContext: IFlowContext;
+        listWidget: ListWidget;
+        itemWidget: Widget;
+        i: number;
+        gap: number;
+        iterators: any;
+    }> {
+        render() {
+            const { flowContext, listWidget, itemWidget, i, gap, iterators } =
+                this.props;
+            let xListItem = 0;
+            let yListItem = 0;
 
-        if (listWidget.listType === "horizontal") {
-            xListItem += i * (itemWidget.width + gap);
-        } else {
-            yListItem += i * (itemWidget.height + gap);
+            if (listWidget.listType === "horizontal") {
+                xListItem += i * (itemWidget.width + gap);
+            } else {
+                yListItem += i * (itemWidget.height + gap);
+            }
+
+            const overridenFlowContext = flowContext.overrideDataContext({
+                [FLOW_ITERATOR_INDEX_VARIABLE]: i,
+                [FLOW_ITERATOR_INDEXES_VARIABLE]: [i, ...iterators]
+            });
+
+            return (
+                <ComponentEnclosure
+                    key={i}
+                    component={itemWidget}
+                    flowContext={overridenFlowContext}
+                    left={xListItem}
+                    top={yListItem}
+                />
+            );
         }
-
-        const overridenFlowContext = flowContext.overrideDataContext({
-            [FLOW_ITERATOR_INDEX_VARIABLE]: i,
-            [FLOW_ITERATOR_INDEXES_VARIABLE]: [i, ...iterators]
-        });
-
-        return (
-            <ComponentEnclosure
-                key={i}
-                component={itemWidget}
-                flowContext={overridenFlowContext}
-                left={xListItem}
-                top={yListItem}
-            />
-        );
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class GridWidget extends Widget {
-    @observable itemWidget?: Widget;
-    @observable gridFlow?: string;
+    itemWidget?: Widget;
+    gridFlow?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_GRID,
@@ -646,6 +675,15 @@ export class GridWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.DASHBOARD
     });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            itemWidget: observable,
+            gridFlow: observable
+        });
+    }
 
     render(flowContext: IFlowContext) {
         const itemWidget = this.itemWidget;
@@ -725,7 +763,7 @@ export function htmlEncode(value: string) {
 }
 
 export class SelectWidget extends Widget {
-    @observable widgets: Widget[];
+    widgets: Widget[];
 
     _lastSelectedIndexInSelectWidget: number | undefined;
 
@@ -849,6 +887,14 @@ export class SelectWidget extends Widget {
             return messages;
         }
     });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            widgets: observable
+        });
+    }
 
     getChildLabel(childObject: Widget) {
         if (this.widgets) {
@@ -1006,34 +1052,35 @@ registerClass("SelectWidget", SelectWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class LayoutViewPropertyGridUI extends React.Component<PropertyProps> {
-    showLayout = () => {
-        (this.props.objects[0] as LayoutViewWidget).open();
-    };
+const LayoutViewPropertyGridUI = observer(
+    class LayoutViewPropertyGridUI extends React.Component<PropertyProps> {
+        showLayout = () => {
+            (this.props.objects[0] as LayoutViewWidget).open();
+        };
 
-    render() {
-        if (this.props.objects.length > 1) {
-            return null;
+        render() {
+            if (this.props.objects.length > 1) {
+                return null;
+            }
+            return (
+                <BootstrapButton
+                    color="primary"
+                    size="small"
+                    onClick={this.showLayout}
+                >
+                    Show Layout
+                </BootstrapButton>
+            );
         }
-        return (
-            <BootstrapButton
-                color="primary"
-                size="small"
-                onClick={this.showLayout}
-            >
-                Show Layout
-            </BootstrapButton>
-        );
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class LayoutViewWidget extends Widget {
-    @observable layout: string;
-    @observable context?: string;
-    @observable visible?: string;
+    layout: string;
+    context?: string;
+    visible?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_LAYOUT_VIEW,
@@ -1159,6 +1206,16 @@ export class LayoutViewWidget extends Widget {
             }
         }
     });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            layout: observable,
+            context: observable,
+            visible: observable
+        });
+    }
 
     get layoutPage() {
         return this.getLayoutPage(getDocumentStore(this).dataContext);
@@ -1506,8 +1563,8 @@ enum DisplayOption {
 }
 
 export class DisplayDataWidget extends Widget {
-    @observable focusStyle: Style;
-    @observable displayOption: DisplayOption;
+    focusStyle: Style;
+    displayOption: DisplayOption;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_DISPLAY_DATA,
@@ -1587,6 +1644,15 @@ export class DisplayDataWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.DASHBOARD
     });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            focusStyle: observable,
+            displayOption: observable
+        });
+    }
 
     getText(
         flowContext: IFlowContext
@@ -1764,10 +1830,10 @@ registerClass("DisplayDataWidget", DisplayDataWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class TextWidget extends Widget {
-    @observable name: string;
-    @observable text?: string;
-    @observable ignoreLuminocity: boolean;
-    @observable focusStyle: Style;
+    name: string;
+    text?: string;
+    ignoreLuminocity: boolean;
+    focusStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_TEXT,
@@ -1881,6 +1947,17 @@ export class TextWidget extends Widget {
             return messages;
         }
     });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            text: observable,
+            ignoreLuminocity: observable,
+            focusStyle: observable
+        });
+    }
 
     getText(
         flowContext: IFlowContext
@@ -2237,10 +2314,10 @@ export const indentationGroup: IPropertyGridGroupDefinition = {
 };
 
 export class MultilineTextWidget extends Widget {
-    @observable name: string;
-    @observable text?: string;
-    @observable firstLineIndent: number;
-    @observable hangingIndent: number;
+    name: string;
+    text?: string;
+    firstLineIndent: number;
+    hangingIndent: number;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_MULTILINE_TEXT,
@@ -2359,6 +2436,17 @@ export class MultilineTextWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.DASHBOARD
     });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            text: observable,
+            firstLineIndent: observable,
+            hangingIndent: observable
+        });
+    }
 
     getText(
         flowContext: IFlowContext
@@ -2501,8 +2589,8 @@ registerClass("MultilineTextWidget", MultilineTextWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class RectangleWidget extends Widget {
-    @observable ignoreLuminocity: boolean;
-    @observable invertColors: boolean;
+    ignoreLuminocity: boolean;
+    invertColors: boolean;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_RECTANGLE,
@@ -2545,6 +2633,15 @@ export class RectangleWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.DASHBOARD
     });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            ignoreLuminocity: observable,
+            invertColors: observable
+        });
+    }
 
     render(flowContext: IFlowContext) {
         const invertColors = isV3OrNewerProject(this)
@@ -2596,57 +2693,67 @@ registerClass("RectangleWidget", RectangleWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class BitmapWidgetPropertyGridUI extends React.Component<PropertyProps> {
-    get bitmapWidget() {
-        return this.props.objects[0] as BitmapWidget;
-    }
+const BitmapWidgetPropertyGridUI = observer(
+    class BitmapWidgetPropertyGridUI extends React.Component<PropertyProps> {
+        get bitmapWidget() {
+            return this.props.objects[0] as BitmapWidget;
+        }
 
-    resizeToFitBitmap = () => {
-        getDocumentStore(this.props.objects[0]).updateObject(
-            this.props.objects[0],
-            {
-                width: this.bitmapWidget.bitmapObject!.imageElement!.width,
-                height: this.bitmapWidget.bitmapObject!.imageElement!.height
+        resizeToFitBitmap = () => {
+            getDocumentStore(this.props.objects[0]).updateObject(
+                this.props.objects[0],
+                {
+                    width: this.bitmapWidget.bitmapObject!.imageElement!.width,
+                    height: this.bitmapWidget.bitmapObject!.imageElement!.height
+                }
+            );
+        };
+
+        render() {
+            if (this.props.readOnly) {
+                return null;
             }
-        );
-    };
 
-    render() {
-        if (this.props.readOnly) {
-            return null;
+            if (this.props.objects.length > 1) {
+                return null;
+            }
+
+            const bitmapObject = this.bitmapWidget.bitmapObject;
+            if (!bitmapObject) {
+                return null;
+            }
+
+            const imageElement = bitmapObject.imageElement;
+            if (!imageElement) {
+                return null;
+            }
+
+            return (
+                <BootstrapButton
+                    color="primary"
+                    size="small"
+                    onClick={this.resizeToFitBitmap}
+                >
+                    Resize to Fit Bitmap
+                </BootstrapButton>
+            );
         }
-
-        if (this.props.objects.length > 1) {
-            return null;
-        }
-
-        const bitmapObject = this.bitmapWidget.bitmapObject;
-        if (!bitmapObject) {
-            return null;
-        }
-
-        const imageElement = bitmapObject.imageElement;
-        if (!imageElement) {
-            return null;
-        }
-
-        return (
-            <BootstrapButton
-                color="primary"
-                size="small"
-                onClick={this.resizeToFitBitmap}
-            >
-                Resize to Fit Bitmap
-            </BootstrapButton>
-        );
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class BitmapWidget extends Widget {
-    @observable bitmap?: string;
+    bitmap?: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            bitmap: observable,
+            bitmapObject: computed
+        });
+    }
 
     get label() {
         return this.bitmap ? `${this.type}: ${this.bitmap}` : this.type;
@@ -2716,7 +2823,6 @@ export class BitmapWidget extends Widget {
         }
     });
 
-    @computed
     get bitmapObject() {
         return this.getBitmapObject(getDocumentStore(this).dataContext);
     }
@@ -2876,9 +2982,9 @@ registerClass("BitmapWidget", BitmapWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ButtonWidget extends Widget {
-    @observable text?: string;
-    @observable enabled?: string;
-    @observable disabledStyle: Style;
+    text?: string;
+    enabled?: string;
+    disabledStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_BUTTON,
@@ -2960,6 +3066,16 @@ export class ButtonWidget extends Widget {
             return messages;
         }
     });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            text: observable,
+            enabled: observable,
+            disabledStyle: observable
+        });
+    }
 
     getText(
         flowContext: IFlowContext
@@ -3114,8 +3230,8 @@ registerClass("ButtonWidget", ButtonWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ToggleButtonWidget extends Widget {
-    @observable text1?: string;
-    @observable text2?: string;
+    text1?: string;
+    text2?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_TOGGLE_BUTTON,
@@ -3164,6 +3280,15 @@ export class ToggleButtonWidget extends Widget {
             projectType !== ProjectType.DASHBOARD
     });
 
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            text1: observable,
+            text2: observable
+        });
+    }
+
     render(flowContext: IFlowContext) {
         return (
             <>
@@ -3203,7 +3328,7 @@ registerClass("ToggleButtonWidget", ToggleButtonWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ButtonGroupWidget extends Widget {
-    @observable selectedStyle: Style;
+    selectedStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_BUTTON_GROUP,
@@ -3232,6 +3357,14 @@ export class ButtonGroupWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.DASHBOARD
     });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            selectedStyle: observable
+        });
+    }
 
     render(flowContext: IFlowContext) {
         return (
@@ -3358,13 +3491,13 @@ registerClass("ButtonGroupWidget", ButtonGroupWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class BarGraphWidget extends Widget {
-    @observable orientation?: string;
-    @observable displayValue: boolean;
-    @observable textStyle: Style;
-    @observable line1Data?: string;
-    @observable line1Style: Style;
-    @observable line2Data?: string;
-    @observable line2Style: Style;
+    orientation?: string;
+    displayValue: boolean;
+    textStyle: Style;
+    line1Data?: string;
+    line1Style: Style;
+    line2Data?: string;
+    line2Style: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_BAR_GRAPH,
@@ -3448,6 +3581,20 @@ export class BarGraphWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.DASHBOARD
     });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            orientation: observable,
+            displayValue: observable,
+            textStyle: observable,
+            line1Data: observable,
+            line1Style: observable,
+            line2Data: observable,
+            line2Style: observable
+        });
+    }
 
     render(flowContext: IFlowContext) {
         return (
@@ -3743,9 +3890,9 @@ registerClass("BarGraphWidget", BarGraphWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class YTGraphWidget extends Widget {
-    @observable y1Style: Style;
-    @observable y2Data?: string;
-    @observable y2Style: Style;
+    y1Style: Style;
+    y2Data?: string;
+    y2Style: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_YT_GRAPH,
@@ -3804,6 +3951,16 @@ export class YTGraphWidget extends Widget {
             projectType !== ProjectType.DASHBOARD
     });
 
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            y1Style: observable,
+            y2Data: observable,
+            y2Style: observable
+        });
+    }
+
     render(flowContext: IFlowContext) {
         return (
             <>
@@ -3836,9 +3993,9 @@ registerClass("YTGraphWidget", YTGraphWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class UpDownWidget extends Widget {
-    @observable buttonsStyle: Style;
-    @observable downButtonText?: string;
-    @observable upButtonText?: string;
+    buttonsStyle: Style;
+    downButtonText?: string;
+    upButtonText?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_UP_DOWN,
@@ -3885,6 +4042,16 @@ export class UpDownWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.DASHBOARD
     });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            buttonsStyle: observable,
+            downButtonText: observable,
+            upButtonText: observable
+        });
+    }
 
     render(flowContext: IFlowContext) {
         return (
@@ -3964,13 +4131,13 @@ registerClass("UpDownWidget", UpDownWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ListGraphWidget extends Widget {
-    @observable dwellData?: string;
-    @observable y1Data?: string;
-    @observable y1Style: Style;
-    @observable y2Data?: string;
-    @observable y2Style: Style;
-    @observable cursorData?: string;
-    @observable cursorStyle: Style;
+    dwellData?: string;
+    y1Data?: string;
+    y1Style: Style;
+    y2Data?: string;
+    y2Style: Style;
+    cursorData?: string;
+    cursorStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_LIST_GRAPH,
@@ -4050,6 +4217,20 @@ export class ListGraphWidget extends Widget {
             projectType !== ProjectType.DASHBOARD
     });
 
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            dwellData: observable,
+            y1Data: observable,
+            y1Style: observable,
+            y2Data: observable,
+            y2Style: observable,
+            cursorData: observable,
+            cursorStyle: observable
+        });
+    }
+
     render(flowContext: IFlowContext) {
         return (
             <>
@@ -4099,7 +4280,7 @@ registerClass("ListGraphWidget", ListGraphWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class AppViewWidget extends Widget {
-    @observable page: string;
+    page: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_APP_VIEW,
@@ -4127,6 +4308,14 @@ export class AppViewWidget extends Widget {
             projectType !== ProjectType.DASHBOARD
     });
 
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            page: observable
+        });
+    }
+
     render(flowContext: IFlowContext) {
         if (!this.data) {
             return null;
@@ -4153,10 +4342,10 @@ registerClass("AppViewWidget", AppViewWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ScrollBarWidget extends Widget {
-    @observable thumbStyle: Style;
-    @observable buttonsStyle: Style;
-    @observable leftButtonText?: string;
-    @observable rightButtonText?: string;
+    thumbStyle: Style;
+    buttonsStyle: Style;
+    leftButtonText?: string;
+    rightButtonText?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_SCROLL_BAR,
@@ -4200,6 +4389,17 @@ export class ScrollBarWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.DASHBOARD
     });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            thumbStyle: observable,
+            buttonsStyle: observable,
+            leftButtonText: observable,
+            rightButtonText: observable
+        });
+    }
 
     render(flowContext: IFlowContext) {
         return (
@@ -4530,14 +4730,14 @@ registerClass("CanvasWidget", CanvasWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class GaugeEmbeddedWidget extends Widget {
-    @observable min: string;
-    @observable max: string;
-    @observable threshold: string;
-    @observable unit: string;
-    @observable barStyle: Style;
-    @observable valueStyle: Style;
-    @observable ticksStyle: Style;
-    @observable thresholdStyle: Style;
+    min: string;
+    max: string;
+    threshold: string;
+    unit: string;
+    barStyle: Style;
+    valueStyle: Style;
+    ticksStyle: Style;
+    thresholdStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_GAUGE,
@@ -4579,6 +4779,21 @@ export class GaugeEmbeddedWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.DASHBOARD
     });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            min: observable,
+            max: observable,
+            threshold: observable,
+            unit: observable,
+            barStyle: observable,
+            valueStyle: observable,
+            ticksStyle: observable,
+            thresholdStyle: observable
+        });
+    }
 
     render(flowContext: IFlowContext) {
         let widget = this;
@@ -4965,15 +5180,15 @@ registerClass("GaugeEmbeddedWidget", GaugeEmbeddedWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class InputEmbeddedWidget extends Widget {
-    @observable inputType: "text" | "number";
+    inputType: "text" | "number";
 
-    @observable password: boolean;
+    password: boolean;
 
-    @observable min: string;
-    @observable max: string;
+    min: string;
+    max: string;
 
-    @observable precision: string;
-    @observable unit: string;
+    precision: string;
+    unit: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_INPUT,
@@ -5085,6 +5300,19 @@ export class InputEmbeddedWidget extends Widget {
             projectType !== ProjectType.DASHBOARD
     });
 
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            inputType: observable,
+            password: observable,
+            min: observable,
+            max: observable,
+            precision: observable,
+            unit: observable
+        });
+    }
+
     render(flowContext: IFlowContext) {
         return (
             <>
@@ -5194,10 +5422,14 @@ registerClass("InputEmbeddedWidget", InputEmbeddedWidget);
 
 class TextInputRunningState {
     constructor(value: string) {
+        makeObservable(this, {
+            value: observable
+        });
+
         this.value = value;
     }
 
-    @observable value: string;
+    value: string;
 }
 
 export class TextInputWidget extends Widget {
@@ -5245,7 +5477,15 @@ export class TextInputWidget extends Widget {
             projectType === ProjectType.DASHBOARD
     });
 
-    @observable password: boolean;
+    password: boolean;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            password: observable
+        });
+    }
 
     getOutputs(): ComponentOutput[] {
         return [
@@ -5385,7 +5625,15 @@ export class CheckboxWidget extends Widget {
             projectType === ProjectType.DASHBOARD
     });
 
-    @observable label: string;
+    label: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            label: observable
+        });
+    }
 
     getOutputs(): ComponentOutput[] {
         return [...super.getOutputs()];
@@ -5521,11 +5769,11 @@ registerClass("CheckboxWidget", CheckboxWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class RollerWidget extends Widget {
-    @observable min: string;
-    @observable max: string;
-    @observable text: string;
-    @observable selectedValueStyle: Style;
-    @observable unselectedValueStyle: Style;
+    min: string;
+    max: string;
+    text: string;
+    selectedValueStyle: Style;
+    unselectedValueStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_ROLLER,
@@ -5568,6 +5816,18 @@ export class RollerWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.DASHBOARD
     });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            min: observable,
+            max: observable,
+            text: observable,
+            selectedValueStyle: observable,
+            unselectedValueStyle: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -5753,8 +6013,8 @@ registerClass("SwitchWidget", SwitchWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class SliderWidget extends Widget {
-    @observable min: string;
-    @observable max: string;
+    min: string;
+    max: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_SLIDER,
@@ -5795,6 +6055,15 @@ export class SliderWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.DASHBOARD
     });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            min: observable,
+            max: observable
+        });
+    }
 
     render(flowContext: IFlowContext) {
         return (
@@ -5892,7 +6161,7 @@ registerClass("SliderWidget", SliderWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DropDownListWidget extends Widget {
-    @observable options: string;
+    options: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_DROP_DOWN_LIST,
@@ -5915,6 +6184,14 @@ export class DropDownListWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.DASHBOARD
     });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            options: observable
+        });
+    }
 
     render(flowContext: IFlowContext) {
         return (

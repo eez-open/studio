@@ -1,3 +1,6 @@
+import path from "path";
+import fs from "fs";
+import archiver from "archiver";
 import { createTransformer } from "mobx-utils";
 
 import { formatNumber } from "eez-studio-shared/util";
@@ -255,8 +258,6 @@ async function generateFiles(
         [configurationName: string]: BuildResult[];
     }
 ) {
-    const path = EEZStudio.remote.require("path");
-
     let parts: any = undefined;
 
     const project = DocumentStore.project;
@@ -271,7 +272,7 @@ async function generateFiles(
             undefined,
             destinationFolderPath +
                 "/" +
-                path.basename(DocumentStore.filePath, ".eez-project") +
+                path.basename(DocumentStore.filePath || "", ".eez-project") +
                 (project.isAppletProject ? ".app" : ".res")
         );
 
@@ -279,7 +280,10 @@ async function generateFiles(
             await writeTextFile(
                 destinationFolderPath +
                     "/" +
-                    path.basename(DocumentStore.filePath, ".eez-project") +
+                    path.basename(
+                        DocumentStore.filePath || "",
+                        ".eez-project"
+                    ) +
                     ".py",
                 project.micropython.code
             );
@@ -383,7 +387,6 @@ export async function build(
                 project.settings.build.destinationFolder || "."
             );
 
-            const fs = EEZStudio.remote.require("fs");
             if (!fs.existsSync(destinationFolderPath)) {
                 throw new BuildException("Cannot find destination folder.");
             }
@@ -452,14 +455,12 @@ export async function build(
         if (!project.isDashboardProject) {
             parts = await generateFiles(
                 DocumentStore,
-                destinationFolderPath,
+                destinationFolderPath || "",
                 configurationBuildResuts
             );
         } else {
-            const path = EEZStudio.remote.require("path");
-
             const baseName = path.basename(
-                DocumentStore.filePath,
+                DocumentStore.filePath || "",
                 ".eez-project"
             );
 
@@ -467,9 +468,6 @@ export async function build(
                 destinationFolderPath + "/" + baseName + ".eez-dashboard";
 
             await new Promise<void>((resolve, reject) => {
-                const fs = EEZStudio.remote.require("fs");
-                const archiver = require("archiver");
-
                 var archive = archiver("zip", {
                     zlib: {
                         level: 9
@@ -563,7 +561,6 @@ export async function buildExtensions(DocumentStore: DocumentStoreClass) {
         let destinationFolderPath = DocumentStore.getAbsoluteFilePath(
             project.settings.build.destinationFolder || "."
         );
-        const fs = EEZStudio.remote.require("fs");
         if (!fs.existsSync(destinationFolderPath)) {
             throw new BuildException("Cannot find destination folder.");
         }

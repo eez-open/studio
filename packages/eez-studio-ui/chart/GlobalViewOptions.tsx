@@ -1,15 +1,22 @@
-import { autorun, observable, runInAction, toJS } from "mobx";
+import { autorun, observable, runInAction, toJS, makeObservable } from "mobx";
 import type { WaveformRenderAlgorithm } from "eez-studio-ui/chart/chart";
 
 class GlobalViewOptions {
     static LOCAL_STORAGE_ITEM_ID = "shared/ui/chart/globalViewOptions";
 
-    @observable enableZoomAnimations: boolean = true;
-    @observable blackBackground: boolean = false;
-    @observable renderAlgorithm: WaveformRenderAlgorithm = "minmax";
-    @observable showSampledData: boolean = false;
+    enableZoomAnimations: boolean = true;
+    blackBackground: boolean = false;
+    renderAlgorithm: WaveformRenderAlgorithm = "minmax";
+    showSampledData: boolean = false;
 
     constructor() {
+        makeObservable(this, {
+            enableZoomAnimations: observable,
+            blackBackground: observable,
+            renderAlgorithm: observable,
+            showSampledData: observable
+        });
+
         const globalViewOptionsJSON = localStorage.getItem(
             GlobalViewOptions.LOCAL_STORAGE_ITEM_ID
         );

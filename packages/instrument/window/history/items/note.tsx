@@ -18,66 +18,69 @@ import { PreventDraggable } from "instrument/window/history/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class NoteHistoryItemComponent extends React.Component<
-    {
-        appStore: IAppStore;
-        historyItem: NoteHistoryItem;
-    },
-    {}
-> {
-    handleEditNote = () => {
-        showEditNoteDialog(this.props.historyItem.message, note => {
-            beginTransaction("Edit note");
-            logUpdate(
-                this.props.appStore.history.options.store,
-                {
-                    id: this.props.historyItem.id,
-                    oid: this.props.appStore.history.oid,
-                    message: note
-                },
-                {
-                    undoable: true
-                }
-            );
-            commitTransaction();
-        });
-    };
+export const NoteHistoryItemComponent = observer(
+    class NoteHistoryItemComponent extends React.Component<
+        {
+            appStore: IAppStore;
+            historyItem: NoteHistoryItem;
+        },
+        {}
+    > {
+        handleEditNote = () => {
+            showEditNoteDialog(this.props.historyItem.message, note => {
+                beginTransaction("Edit note");
+                logUpdate(
+                    this.props.appStore.history.options.store,
+                    {
+                        id: this.props.historyItem.id,
+                        oid: this.props.appStore.history.oid,
+                        message: note
+                    },
+                    {
+                        undoable: true
+                    }
+                );
+                commitTransaction();
+            });
+        };
 
-    render() {
-        return (
-            <div
-                className="EezStudio_NoteHistoryItem"
-                onDoubleClick={this.handleEditNote}
-            >
-                <Balloon>
-                    <p>
-                        <small className="EezStudio_HistoryItemDate">
-                            {formatDateTimeLong(this.props.historyItem.date)}
-                        </small>
-                    </p>
-                    {this.props.historyItem.getSourceDescriptionElement(
-                        this.props.appStore
-                    )}
-                    <PreventDraggable tag="div">
-                        <PropertyList>
-                            <StaticRichTextProperty
-                                value={this.props.historyItem.message}
-                            />
-                        </PropertyList>
-                    </PreventDraggable>
-                </Balloon>
-                <Toolbar>
-                    <IconAction
-                        icon="material:edit"
-                        title="Edit note"
-                        onClick={this.handleEditNote}
-                    />
-                </Toolbar>
-            </div>
-        );
+        render() {
+            return (
+                <div
+                    className="EezStudio_NoteHistoryItem"
+                    onDoubleClick={this.handleEditNote}
+                >
+                    <Balloon>
+                        <p>
+                            <small className="EezStudio_HistoryItemDate">
+                                {formatDateTimeLong(
+                                    this.props.historyItem.date
+                                )}
+                            </small>
+                        </p>
+                        {this.props.historyItem.getSourceDescriptionElement(
+                            this.props.appStore
+                        )}
+                        <PreventDraggable tag="div">
+                            <PropertyList>
+                                <StaticRichTextProperty
+                                    value={this.props.historyItem.message}
+                                />
+                            </PropertyList>
+                        </PreventDraggable>
+                    </Balloon>
+                    <Toolbar>
+                        <IconAction
+                            icon="material:edit"
+                            title="Edit note"
+                            onClick={this.handleEditNote}
+                        />
+                    </Toolbar>
+                </div>
+            );
+        }
     }
-}
+);
 
 export class NoteHistoryItem extends HistoryItem {
     get info() {

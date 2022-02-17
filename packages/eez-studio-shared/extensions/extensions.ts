@@ -1,9 +1,8 @@
 import { observable, action } from "mobx";
 const EventEmitter = require("events");
 const fs = require("fs");
-const path = require("path");
 
-import { delay, sourceRootDir } from "eez-studio-shared/util";
+import { delay } from "eez-studio-shared/util";
 import {
     localPathToFileUrl,
     zipExtract,
@@ -12,17 +11,13 @@ import {
     readJsObjectFromFile,
     removeFolder,
     renameFile,
-    readFolder,
-    makeFolder,
-    isRenderer
+    readFolder
 } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
 import { firstWord } from "eez-studio-shared/string";
 import { _difference } from "eez-studio-shared/algorithm";
 
 import { registerSource, sendMessage, watch } from "eez-studio-shared/notify";
-
-import { confirm } from "eez-studio-ui/dialog-electron";
 
 import {
     IExtension,
@@ -37,7 +32,7 @@ import {
 
 import type * as ShortcutsStoreModule from "shortcuts/shortcuts-store";
 
-const CONF_EEZ_STUDIO_PROPERTY_NAME = "eez-studio";
+export const CONF_EEZ_STUDIO_PROPERTY_NAME = "eez-studio";
 const CONF_MAIN_SCRIPT_PROPERTY_NAME = "main";
 const CONF_NODE_MODULE_PROPERTY_NAME = "node-module";
 
@@ -170,133 +165,9 @@ async function loadAndRegisterExtension(folder: string) {
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
-function yarnFn(args: string[]) {
-    const yarn = sourceRootDir() + "/../libs/yarn-1.22.10.js";
-    const cp = require("child_process");
-
-    return new Promise<void>((resolve, reject) => {
-        const env = {
-            NODE_ENV: "production",
-            ELECTRON_RUN_AS_NODE: "true"
-        };
-
-        const cmd = [process.execPath, yarn].concat(args).join(" ");
-
-        console.log("Launching yarn:", cmd);
-
-        cp.execFile(
-            process.execPath,
-            [yarn].concat(args),
-            {
-                cwd: extensionsFolderPath,
-                env,
-                timeout: 10 * 1000, // 10 seconds
-                maxBuffer: 1024 * 1024
-            },
-            (err: any, stdout: any, stderr: any) => {
-                if (err) {
-                    reject(stderr);
-                } else {
-                    console.log("yarn", stdout);
-                    resolve();
-                }
-            }
-        );
-    });
-}
-
-async function yarnInstall() {
-    const cacheFolderPath = `${extensionsFolderPath}/cache`;
-    await makeFolder(cacheFolderPath);
-
-    try {
-        await yarnFn([
-            "install",
-            "--no-emoji",
-            "--no-lockfile",
-            "--cache-folder",
-            cacheFolderPath
-        ]);
-
-        const packageJsonPath = `${extensionsFolderPath}/package.json`;
-        const packageJson = require(packageJsonPath);
-
-        const folders = Object.keys(packageJson.dependencies ?? []).map(
-            plugin =>
-                path.resolve(
-                    extensionsFolderPath,
-                    "node_modules",
-                    plugin.split("#")[0]
-                )
-        );
-
-        const newExtensions = [];
-
-        for (let i = 0; i < folders.length; i++) {
-            const folder = folders[i];
-            let packageJsonFilePath = folder + "/" + "package.json";
-            if (await fileExists(packageJsonFilePath)) {
-                try {
-                    const packageJson = await readJsObjectFromFile(
-                        packageJsonFilePath
-                    );
-                    const packageJsonEezStudio =
-                        packageJson[CONF_EEZ_STUDIO_PROPERTY_NAME];
-                    if (packageJsonEezStudio) {
-                        const extension = extensions.get(packageJson.name);
-                        if (
-                            !extension ||
-                            packageJson.version != extension.version
-                        ) {
-                            newExtensions.push(path.basename(folder));
-                        }
-                    }
-                } catch (err) {
-                    console.log(err);
-                }
-            }
-        }
-
-        if (newExtensions.length > 0) {
-            confirm(
-                "New extensions detected. Reload?",
-                newExtensions.join(", "),
-                () => {
-                    EEZStudio.remote.BrowserWindow.getAllWindows().forEach(
-                        window => {
-                            window.webContents.send("reload");
-                        }
-                    );
-                }
-            );
-        }
-    } catch (err) {
-        console.log("yarn", err);
-    }
-}
-
-async function getNodeModuleFolders() {
-    const packageJsonPath = `${extensionsFolderPath}/package.json`;
-    if (!(await fileExists(packageJsonPath))) {
-        try {
-            await yarnFn(["init", "-y"]);
-        } catch (err) {
-            console.log("yarn", err);
-        }
-    }
-
-    const packageJson = require(packageJsonPath);
-
-    return Object.keys(packageJson.dependencies).map(plugin =>
-        path.resolve(extensionsFolderPath, "node_modules", plugin.split("#")[0])
-    );
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export async function loadExtensions() {
+export async function loadExtensions(nodeModuleFolders: string[]) {
     let preinstalledExtensionFolders = await readFolder(
         preInstalledExtensionsFolderPath
     );
@@ -311,18 +182,6 @@ export async function loadExtensions() {
         installedExtensionFolders = [];
     }
 
-    let nodeModuleFolders;
-    if (isRenderer()) {
-        try {
-            nodeModuleFolders = await getNodeModuleFolders();
-        } catch (err) {
-            console.info(`Failed to get node module folders.`);
-            nodeModuleFolders = [];
-        }
-    } else {
-        nodeModuleFolders = [];
-    }
-
     for (let folder of [
         ...preinstalledExtensionFolders,
         ...installedExtensionFolders,
@@ -333,10 +192,6 @@ export async function loadExtensions() {
         } catch (err) {
             console.error(err);
         }
-    }
-
-    if (isRenderer()) {
-        setTimeout(yarnInstall, 1000);
     }
 }
 

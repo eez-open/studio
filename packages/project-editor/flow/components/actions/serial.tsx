@@ -8,7 +8,8 @@ import {
     showGenericDialog
 } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
-import { action, observable, runInAction } from "mobx";
+import { action, observable, runInAction, makeObservable } from "mobx";
+import { getSerialPorts } from "instrument/connection/interfaces/serial-ports-renderer";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -435,9 +436,7 @@ async function showConnectDialog(
     values: SerialConnectionConstructorParams | null
 ) {
     try {
-        const SerialPort = await import("serialport");
-        const ports = await SerialPort.default.list();
-        const serialPorts = ports.map(port => ({
+        const serialPorts = (await getSerialPorts()).map(port => ({
             id: port.path,
             label: port.path
         }));
@@ -523,14 +522,19 @@ interface SerialConnectionConstructorParams {
 const CONF_CHUNK_SIZE = 64;
 
 class SerialConnection {
-    constructor(public constructorParams: SerialConnectionConstructorParams) {}
+    constructor(public constructorParams: SerialConnectionConstructorParams) {
+        makeObservable(this, {
+            receivedData: observable,
+            isConnected: observable
+        });
+    }
 
     port: any;
     error: string | undefined = undefined;
     dataToWrite: string | undefined;
-    @observable receivedData: string | undefined;
+    receivedData: string | undefined;
 
-    @observable isConnected: boolean = false;
+    isConnected: boolean = false;
 
     get status() {
         return {

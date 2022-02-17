@@ -21,7 +21,7 @@ let setupFinished: boolean = false;
 
 app.commandLine.appendSwitch("disable-renderer-backgrounding");
 
-app.allowRendererProcessReuse = false;
+// app.allowRendererProcessReuse = false;
 
 app.on("ready", async function () {
     var gotTheLock = app.requestSingleInstanceLock();
@@ -63,6 +63,8 @@ app.on("ready", async function () {
     loadSettings();
 
     await setup();
+
+    await import("instrument/connection/interfaces/serial-ports-main");
 
     require("eez-studio-shared/service");
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, observable, runInAction } from "mobx";
+import { computed, observable, runInAction, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import { ProjectContext } from "project-editor/project/context";
 import { FlowEditor } from "project-editor/flow/editor/editor";
@@ -16,42 +16,50 @@ import { IEezObject } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class ActionEditor extends EditorComponent {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
+export const ActionEditor = observer(
+    class ActionEditor extends EditorComponent {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
 
-    @computed
-    get treeAdapter() {
-        let flowTabState = this.props.editor.state as ActionFlowTabState;
-        return new TreeAdapter(
-            flowTabState.widgetContainer,
-            undefined,
-            undefined,
-            true
-        );
-    }
+        constructor(props: any) {
+            super(props);
 
-    render() {
-        const tabState = this.props.editor.state as ActionFlowTabState;
+            makeObservable(this, {
+                treeAdapter: computed
+            });
+        }
 
-        if (this.context.runtime) {
-            return (
-                <div
-                    style={{
-                        flexGrow: 1,
-                        position: "relative",
-                        height: "100%"
-                    }}
-                >
-                    <FlowViewer tabState={tabState} />
-                </div>
+        get treeAdapter() {
+            let flowTabState = this.props.editor.state as ActionFlowTabState;
+            return new TreeAdapter(
+                flowTabState.widgetContainer,
+                undefined,
+                undefined,
+                true
             );
         }
 
-        return <FlowEditor tabState={tabState} />;
+        render() {
+            const tabState = this.props.editor.state as ActionFlowTabState;
+
+            if (this.context.runtime) {
+                return (
+                    <div
+                        style={{
+                            flexGrow: 1,
+                            position: "relative",
+                            height: "100%"
+                        }}
+                    >
+                        <FlowViewer tabState={tabState} />
+                    </div>
+                );
+            }
+
+            return <FlowEditor tabState={tabState} />;
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -60,13 +68,17 @@ export class ActionFlowTabState extends FlowTabState {
 
     widgetContainer: ITreeObjectAdapter;
 
-    @observable _transform: Transform = new Transform({
+    _transform: Transform = new Transform({
         translate: { x: 0, y: 0 },
         scale: 1
     });
 
     constructor(object: IEezObject) {
         super(object as Flow);
+
+        makeObservable(this, {
+            _transform: observable
+        });
 
         this.widgetContainer = new TreeObjectAdapter(this.flow);
         this.resetTransform();

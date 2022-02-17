@@ -6,7 +6,8 @@ import {
     action,
     toJS,
     when,
-    reaction
+    reaction,
+    makeObservable
 } from "mobx";
 import { observer } from "mobx-react";
 
@@ -131,6 +132,17 @@ export class Waveform extends FileHistoryItem {
         activityLogEntry: IActivityLogEntry | FileHistoryItem
     ) {
         super(store, activityLogEntry);
+
+        makeObservable(this, {
+            initWaveformDefinition: action.bound,
+            values: computed,
+            waveformHistoryItemMessage: computed,
+            waveformDefinition: observable.shallow,
+            length: observable,
+            xAxisUnit: computed,
+            samplingRate: computed,
+            yAxisDefaultSubdivisionOffsetAndScale: computed
+        });
 
         const message = JSON.parse(this.message);
 
@@ -354,7 +366,6 @@ export class Waveform extends FileHistoryItem {
         return migrated;
     }
 
-    @action.bound
     initWaveformDefinition() {
         let migrated = false;
 
@@ -391,7 +402,6 @@ export class Waveform extends FileHistoryItem {
         }
     }
 
-    @computed
     get values(): any {
         if (typeof this.data === "string") {
             return new Uint8Array(Buffer.from(this.data, "binary").buffer);
@@ -399,15 +409,13 @@ export class Waveform extends FileHistoryItem {
         return this.data;
     }
 
-    @computed
     get waveformHistoryItemMessage(): IWaveformHistoryItemMessage {
         return JSON.parse(this.message);
     }
 
-    @observable.shallow waveformDefinition =
-        this.getDefaultWaveformDefinition();
+    waveformDefinition = this.getDefaultWaveformDefinition();
 
-    @observable length: number = 0;
+    length: number = 0;
 
     get format() {
         return this.waveformDefinition.format;
@@ -429,12 +437,10 @@ export class Waveform extends FileHistoryItem {
         this.waveformDefinition.scale = value;
     }
 
-    @computed
     get xAxisUnit() {
         return TIME_UNIT;
     }
 
-    @computed
     get samplingRate() {
         return this.waveformDefinition.samplingRate;
     }
@@ -575,7 +581,6 @@ export class Waveform extends FileHistoryItem {
         return this.waveformHistoryItemMessage.horizontalScale;
     }
 
-    @computed
     get yAxisDefaultSubdivisionOffsetAndScale() {
         if (this.waveformHistoryItemMessage.verticalScale) {
             const verticalScale = this.waveformHistoryItemMessage.verticalScale;
@@ -633,14 +638,17 @@ class WaveformLineController extends LineController {
         yAxisController: IAxisController
     ) {
         super(id, yAxisController);
+
+        makeObservable(this, {
+            yMin: computed,
+            yMax: computed
+        });
     }
 
-    @computed
     get yMin(): number {
         return this.yAxisController.axisModel.minValue;
     }
 
-    @computed
     get yMax(): number {
         return this.yAxisController.axisModel.maxValue;
     }
@@ -665,63 +673,66 @@ class WaveformLineController extends LineController {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-class WaveformConfigurationDialog extends React.Component<
-    {
-        waveform: Waveform;
-    },
-    {}
-> {
-    waveformProperties: WaveformDefinitionProperties =
-        new WaveformDefinitionProperties(
-            this.props.waveform.waveformDefinition
-        );
-
-    handleSubmit = async () => {
-        const newWaveformDefinition =
-            await this.waveformProperties.checkValidity();
-        if (!newWaveformDefinition) {
-            return false;
-        }
-
-        if (
-            !objectEqual(
-                this.props.waveform.waveformDefinition,
-                newWaveformDefinition
-            )
-        ) {
-            const message = JSON.stringify(
-                Object.assign({}, this.props.waveform.fileState, {
-                    waveformDefinition: newWaveformDefinition
-                })
+const WaveformConfigurationDialog = observer(
+    class WaveformConfigurationDialog extends React.Component<
+        {
+            waveform: Waveform;
+        },
+        {}
+    > {
+        waveformProperties: WaveformDefinitionProperties =
+            new WaveformDefinitionProperties(
+                this.props.waveform.waveformDefinition
             );
 
-            beginTransaction("Edit waveform configuration");
-            logUpdate(
-                activityLogStore,
-                {
-                    id: this.props.waveform.id,
-                    oid: this.props.waveform.oid,
-                    message
-                },
-                {
-                    undoable: true
-                }
+        handleSubmit = async () => {
+            const newWaveformDefinition =
+                await this.waveformProperties.checkValidity();
+            if (!newWaveformDefinition) {
+                return false;
+            }
+
+            if (
+                !objectEqual(
+                    this.props.waveform.waveformDefinition,
+                    newWaveformDefinition
+                )
+            ) {
+                const message = JSON.stringify(
+                    Object.assign({}, this.props.waveform.fileState, {
+                        waveformDefinition: newWaveformDefinition
+                    })
+                );
+
+                beginTransaction("Edit waveform configuration");
+                logUpdate(
+                    activityLogStore,
+                    {
+                        id: this.props.waveform.id,
+                        oid: this.props.waveform.oid,
+                        message
+                    },
+                    {
+                        undoable: true
+                    }
+                );
+                commitTransaction();
+            }
+
+            return true;
+        };
+
+        render() {
+            return (
+                <Dialog onOk={this.handleSubmit}>
+                    <PropertyList>
+                        {this.waveformProperties.render()}
+                    </PropertyList>
+                </Dialog>
             );
-            commitTransaction();
         }
-
-        return true;
-    };
-
-    render() {
-        return (
-            <Dialog onOk={this.handleSubmit}>
-                <PropertyList>{this.waveformProperties.render()}</PropertyList>
-            </Dialog>
-        );
     }
-}
+);
 
 export async function convertToCsv(waveform: Waveform) {
     const { getLocale } =

@@ -9,51 +9,53 @@ import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class SessionHistoryItemComponent extends React.Component<
-    {
-        appStore: IAppStore;
-        historyItem: SessionHistoryItem;
-    },
-    {}
-> {
-    render() {
-        let className = classNames("EezStudio_SessionHistoryItem", {
-            EezStudio_HistoryItem_SessionStart:
-                this.props.historyItem.type === "activity-log/session-start",
-            EezStudio_HistoryItem_SessionClose:
-                this.props.historyItem.type === "activity-log/session-close"
-        });
+export const SessionHistoryItemComponent = observer(
+    class SessionHistoryItemComponent extends React.Component<
+        {
+            appStore: IAppStore;
+            historyItem: SessionHistoryItem;
+        },
+        {}
+    > {
+        render() {
+            let className = classNames("EezStudio_SessionHistoryItem", {
+                EezStudio_HistoryItem_SessionStart:
+                    this.props.historyItem.type ===
+                    "activity-log/session-start",
+                EezStudio_HistoryItem_SessionClose:
+                    this.props.historyItem.type === "activity-log/session-close"
+            });
 
-        return (
-            <div className={className}>
-                <p>
-                    <small className="EezStudio_HistoryItemDate">
-                        {formatDateTimeLong(this.props.historyItem.date)}
-                    </small>
-                    <span className="EezStudio_HistoryItem_SessionName">
-                        {this.props.historyItem.getSessionName(
-                            this.props.appStore
-                        )}
-                    </span>
-                    <span className="EezStudio_HistoryItem_SessionState">
-                        {this.props.historyItem.type ===
-                        "activity-log/session-start"
-                            ? ` - Started`
-                            : ` - Closed, Duration: ${formatDuration(
-                                  this.props.historyItem.getDuration(
-                                      this.props.appStore
-                                  )
-                              )}`}
-                    </span>
-                </p>
-                {this.props.historyItem.getSourceDescriptionElement(
-                    this.props.appStore
-                )}
-            </div>
-        );
+            return (
+                <div className={className}>
+                    <p>
+                        <small className="EezStudio_HistoryItemDate">
+                            {formatDateTimeLong(this.props.historyItem.date)}
+                        </small>
+                        <span className="EezStudio_HistoryItem_SessionName">
+                            {this.props.historyItem.getSessionName(
+                                this.props.appStore
+                            )}
+                        </span>
+                        <span className="EezStudio_HistoryItem_SessionState">
+                            {this.props.historyItem.type ===
+                            "activity-log/session-start"
+                                ? ` - Started`
+                                : ` - Closed, Duration: ${formatDuration(
+                                      this.props.historyItem.getDuration(
+                                          this.props.appStore
+                                      )
+                                  )}`}
+                        </span>
+                    </p>
+                    {this.props.historyItem.getSourceDescriptionElement(
+                        this.props.appStore
+                    )}
+                </div>
+            );
+        }
     }
-}
+);
 
 export class SessionHistoryItem extends HistoryItem {
     getListItemElement(appStore: IAppStore): React.ReactNode {

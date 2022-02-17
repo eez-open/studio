@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, values } from "mobx";
+import { observable, computed, values, makeObservable } from "mobx";
 
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 
@@ -38,6 +38,10 @@ export const shortcutsOrGroups = observable.box<boolean>(true);
 
 export class ShortcutsStore {
     constructor(public appStore: InstrumentAppStore) {
+        makeObservable(this, {
+            shortcuts: computed
+        });
+
         bindShortcuts(this.instrumentShortcuts, (shortcut: IShortcut) => {
             if (shortcut.action.type === "micropython") {
                 return;
@@ -75,7 +79,6 @@ export class ShortcutsStore {
         return observable.map(shortcutsMap);
     });
 
-    @computed
     get shortcuts() {
         return this.instrumentShortcuts.get();
     }

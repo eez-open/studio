@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, action, toJS, runInAction } from "mobx";
+import { observable, action, toJS, runInAction, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
 import {
@@ -27,83 +27,93 @@ interface PropertiesComponentProps {
     extension: IExtension;
 }
 
-@observer
-export class PropertiesComponent extends React.Component<
-    PropertiesComponentProps,
-    {}
-> {
-    @observable value: string = this.getValue();
-    @observable errors: string[] | undefined;
+export const PropertiesComponent = observer(
+    class PropertiesComponent extends React.Component<
+        PropertiesComponentProps,
+        {}
+    > {
+        value: string = this.getValue();
+        errors: string[] | undefined;
 
-    getValue(props?: PropertiesComponentProps) {
-        props = props || this.props;
-        return JSON.stringify(
-            (props.extension.properties as IInstrumentExtensionProperties)
-                .properties,
-            undefined,
-            2
-        );
-    }
+        constructor(props: PropertiesComponentProps) {
+            super(props);
 
-    @action.bound
-    onChange(value: string) {
-        this.value = value;
-
-        try {
-            JSON.parse(value);
-        } catch (error) {
-            this.errors = [error.toString()];
-            return;
+            makeObservable(this, {
+                value: observable,
+                errors: observable,
+                onChange: action.bound,
+                componentDidUpdate: action
+            });
         }
 
-        this.errors = undefined;
-    }
-
-    @action
-    componentDidUpdate(prevProps: any) {
-        if (this.props != prevProps) {
-            this.value = this.getValue(this.props);
-        }
-    }
-
-    onBlur = () => {
-        if (
-            this.props.extension.isEditable &&
-            !this.errors &&
-            this.value !== this.getValue()
-        ) {
-            const properties = Object.assign(
-                {},
-                toJS(this.props.extension.properties)
+        getValue(props?: PropertiesComponentProps) {
+            props = props || this.props;
+            return JSON.stringify(
+                (props.extension.properties as IInstrumentExtensionProperties)
+                    .properties,
+                undefined,
+                2
             );
-            properties.properties = JSON.parse(this.value);
-            changeExtensionProperties(
-                this.props.extension,
-                Object.assign(
+        }
+
+        onChange(value: string) {
+            this.value = value;
+
+            try {
+                JSON.parse(value);
+            } catch (error) {
+                this.errors = [error.toString()];
+                return;
+            }
+
+            this.errors = undefined;
+        }
+
+        componentDidUpdate(prevProps: any) {
+            if (this.props != prevProps) {
+                this.value = this.getValue(this.props);
+            }
+        }
+
+        onBlur = () => {
+            if (
+                this.props.extension.isEditable &&
+                !this.errors &&
+                this.value !== this.getValue()
+            ) {
+                const properties = Object.assign(
                     {},
-                    toJS(this.props.extension.properties),
-                    properties
-                )
+                    toJS(this.props.extension.properties)
+                );
+                properties.properties = JSON.parse(this.value);
+                changeExtensionProperties(
+                    this.props.extension,
+                    Object.assign(
+                        {},
+                        toJS(this.props.extension.properties),
+                        properties
+                    )
+                );
+            }
+        };
+
+        render() {
+            return (
+                <PropertyList>
+                    <CodeEditorProperty
+                        mode="json"
+                        value={this.value}
+                        onChange={this.onChange}
+                        onBlur={this.onBlur}
+                        readOnly={!this.props.extension.isEditable}
+                        errors={this.errors}
+                        height={480}
+                    />
+                </PropertyList>
             );
         }
-    };
-
-    render() {
-        return (
-            <PropertyList>
-                <CodeEditorProperty
-                    mode="json"
-                    value={this.value}
-                    onChange={this.onChange}
-                    onBlur={this.onBlur}
-                    readOnly={!this.props.extension.isEditable}
-                    errors={this.errors}
-                    height={480}
-                />
-            </PropertyList>
-        );
     }
-}
+);
 
 export function renderPropertiesComponent(extension: IExtension) {
     return <PropertiesComponent extension={extension} />;

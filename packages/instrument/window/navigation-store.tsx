@@ -1,5 +1,12 @@
 import React from "react";
-import { observable, computed, action, runInAction, autorun } from "mobx";
+import {
+    observable,
+    computed,
+    action,
+    runInAction,
+    autorun,
+    makeObservable
+} from "mobx";
 
 import type { InstrumentAppStore } from "instrument/window/app-store";
 import type * as ScriptsModule from "instrument/window/scripts";
@@ -9,7 +16,7 @@ import type * as TerminalModule from "instrument/window/terminal/terminal";
 
 import type * as DeletedHistoryItemsModule from "instrument/window/history/deleted-history-items-view";
 import {
-    HistoryView,
+    HistoryViewComponent,
     showSessionsList
 } from "instrument/window/history/history-view";
 
@@ -28,12 +35,29 @@ export class NavigationStore {
     shortcutsAndGroupsNavigationItem: INavigationItem;
     listsNavigationItem: INavigationItem;
 
-    @observable.ref
     private _mainNavigationSelectedItem: INavigationItem;
 
-    mainHistoryView: HistoryView | undefined;
+    mainHistoryView: HistoryViewComponent | undefined;
 
     constructor(public appStore: InstrumentAppStore) {
+        makeObservable<
+            NavigationStore,
+            | "_mainNavigationSelectedItem"
+            | "_selectedListId"
+            | "_selectedScriptId"
+        >(this, {
+            _mainNavigationSelectedItem: observable.ref,
+            startPageNavigationItem: computed({ keepAlive: true }),
+            navigationItems: computed,
+            mainNavigationSelectedItem: computed,
+            navigateToHistory: action.bound,
+            navigateToDeletedHistoryItems: action.bound,
+            navigateToSessionsList: action.bound,
+            navigateToScripts: action.bound,
+            _selectedListId: observable,
+            _selectedScriptId: observable
+        });
+
         this.terminalNavigationItem = {
             id: "terminal",
             icon: "material:navigate_next",
@@ -141,7 +165,6 @@ export class NavigationStore {
         });
     }
 
-    @computed({ keepAlive: true })
     get startPageNavigationItem() {
         if (this.appStore.instrument?.isBB3) {
             return {
@@ -164,7 +187,6 @@ export class NavigationStore {
         return undefined;
     }
 
-    @computed
     get navigationItems() {
         let navigationItems: INavigationItem[] = [];
 
@@ -187,7 +209,6 @@ export class NavigationStore {
         return navigationItems;
     }
 
-    @computed
     get mainNavigationSelectedItem() {
         if (this._mainNavigationSelectedItem) {
             return this._mainNavigationSelectedItem;
@@ -211,19 +232,16 @@ export class NavigationStore {
         }
     }
 
-    @action.bound
     navigateToHistory() {
         this.changeMainNavigationSelectedItem(this.terminalNavigationItem);
     }
 
-    @action.bound
     navigateToDeletedHistoryItems() {
         this.changeMainNavigationSelectedItem(
             this.deletedHistoryItemsNavigationItem
         );
     }
 
-    @action.bound
     async navigateToSessionsList() {
         if (
             await this.changeMainNavigationSelectedItem(
@@ -234,13 +252,12 @@ export class NavigationStore {
         }
     }
 
-    @action.bound
     navigateToScripts() {
         this.changeMainNavigationSelectedItem(this.scriptsNavigationItem);
     }
 
     //
-    @observable private _selectedListId: string | undefined;
+    private _selectedListId: string | undefined;
 
     get selectedListId() {
         return this._selectedListId;
@@ -272,7 +289,7 @@ export class NavigationStore {
     }
 
     //
-    @observable private _selectedScriptId: string | undefined;
+    private _selectedScriptId: string | undefined;
 
     get selectedScriptId() {
         return this._selectedScriptId;

@@ -1,5 +1,6 @@
+import { MenuItem } from "@electron/remote";
 import React from "react";
-import { observable, computed, decorate } from "mobx";
+import { observable, computed, makeObservable } from "mobx";
 
 import { _each, _find, _range } from "eez-studio-shared/algorithm";
 import { validators } from "eez-studio-shared/validation";
@@ -86,8 +87,6 @@ import { getComponentName } from "./editor/ComponentsPalette";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
 import type { IActionComponentDefinition, LogItemType } from "eez-studio-types";
-
-const { MenuItem } = EEZStudio.remote || {};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -657,8 +656,18 @@ export interface ComponentOutput {
 }
 
 export class CustomInput extends EezObject implements ComponentInput {
-    @observable name: string;
-    @observable type: ValueType;
+    name: string;
+    type: ValueType;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            type: observable
+        });
+    }
+
     get isSequenceInput() {
         return false;
     }
@@ -753,8 +762,18 @@ export class CustomInput extends EezObject implements ComponentInput {
 }
 
 export class CustomOutput extends EezObject implements ComponentOutput {
-    @observable name: string;
-    @observable type: ValueType;
+    name: string;
+    type: ValueType;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            type: observable
+        });
+    }
+
     get isSequenceOutput() {
         return false;
     }
@@ -982,23 +1001,48 @@ function addBreakpointMenuItems(
 export type AutoSize = "width" | "height" | "both" | "none";
 
 export class Component extends EezObject {
-    @observable type: string;
+    type: string;
 
-    @observable left: number;
-    @observable top: number;
-    @observable width: number;
-    @observable height: number;
+    left: number;
+    top: number;
+    width: number;
+    height: number;
 
-    @observable wireID: string;
+    wireID: string;
 
-    @observable customInputs: CustomInput[];
-    @observable customOutputs: CustomOutput[];
+    customInputs: CustomInput[];
+    customOutputs: CustomOutput[];
 
-    @observable asOutputProperties: string[];
+    asOutputProperties: string[];
 
-    @observable _geometry: ComponentGeometry;
+    _geometry: ComponentGeometry;
 
-    @observable catchError: boolean;
+    catchError: boolean;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            type: observable,
+            left: observable,
+            top: observable,
+            width: observable,
+            height: observable,
+            wireID: observable,
+            customInputs: observable,
+            customOutputs: observable,
+            asOutputProperties: observable,
+            _geometry: observable,
+            catchError: observable,
+            absolutePositionPoint: computed,
+            absolutePosition: computed,
+            inputs: computed,
+            outputs: computed,
+            buildInputs: computed({ keepAlive: true }),
+            buildOutputs: computed({ keepAlive: true }),
+            isMoveable: computed
+        });
+    }
 
     get autoSize(): AutoSize {
         return "none";
@@ -1396,7 +1440,6 @@ export class Component extends EezObject {
         };
     }
 
-    @computed
     get absolutePositionPoint() {
         let x = this.left;
         let y = this.top;
@@ -1415,7 +1458,6 @@ export class Component extends EezObject {
         return { x, y };
     }
 
-    @computed
     get absolutePosition() {
         const point = this.absolutePositionPoint;
 
@@ -1442,7 +1484,7 @@ export class Component extends EezObject {
         );
     }
 
-    @computed get inputs(): ComponentInput[] {
+    get inputs(): ComponentInput[] {
         return this.getInputs();
     }
 
@@ -1450,7 +1492,7 @@ export class Component extends EezObject {
         return this.customInputs ?? [];
     }
 
-    @computed get outputs(): ComponentOutput[] {
+    get outputs(): ComponentOutput[] {
         return this.getOutputs();
     }
 
@@ -1492,7 +1534,6 @@ export class Component extends EezObject {
         return outputs;
     }
 
-    @computed({ keepAlive: true })
     get buildInputs() {
         const flow = ProjectEditor.getFlow(this);
         return this.inputs.filter(
@@ -1506,7 +1547,6 @@ export class Component extends EezObject {
         );
     }
 
-    @computed({ keepAlive: true })
     get buildOutputs() {
         const outputs: { name: string; type: "output" | "property" }[] = [];
 
@@ -1534,7 +1574,6 @@ export class Component extends EezObject {
         return outputs;
     }
 
-    @computed
     get isMoveable() {
         return true;
     }
@@ -1570,12 +1609,12 @@ export class Component extends EezObject {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Widget extends Component {
-    @observable data?: string;
-    @observable action?: string;
-    @observable resizing: IResizing;
-    @observable style: Style;
+    data?: string;
+    action?: string;
+    resizing: IResizing;
+    style: Style;
 
-    @observable allowOutside: boolean;
+    allowOutside: boolean;
 
     static classInfo: ClassInfo = makeDerivedClassInfo(Component.classInfo, {
         properties: [
@@ -1825,7 +1864,19 @@ export class Widget extends Component {
         componentHeaderColor: "#ddd"
     });
 
-    @computed
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            data: observable,
+            action: observable,
+            resizing: observable,
+            style: observable,
+            allowOutside: observable,
+            styleObject: computed
+        });
+    }
+
     get styleObject() {
         return this.style;
     }
@@ -2426,13 +2477,20 @@ export class ActionComponent extends Component {
         ]
     });
 
-    @observable description: string;
+    description: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            description: observable
+        });
+    }
 
     get autoSize(): AutoSize {
         return "both";
     }
 
-    @computed
     get absolutePositionPoint() {
         return { x: this.left, y: this.top };
     }
@@ -2571,6 +2629,15 @@ export function registerActionComponent(
 
         constructor() {
             super();
+
+            const observables: any = {};
+
+            actionComponentDefinition.properties.forEach(propertyInfo => {
+                (this as any)[propertyInfo.name] = undefined;
+                observables[propertyInfo.name] = observable;
+            });
+
+            makeObservable(this, observables);
         }
 
         getInputs(): ComponentInput[] {
@@ -2676,16 +2743,6 @@ export function registerActionComponent(
             );
         }
     };
-
-    const decorators: {
-        [propertyName: string]: PropertyDecorator;
-    } = {};
-
-    actionComponentDefinition.properties.forEach(
-        propertyInfo => (decorators[propertyInfo.name] = observable)
-    );
-
-    decorate(actionComponentClass, decorators);
 
     registerClass(name || actionComponentDefinition.name, actionComponentClass);
 }

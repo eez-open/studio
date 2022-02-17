@@ -1,5 +1,12 @@
 import React from "react";
-import { action, autorun, computed, observable, runInAction } from "mobx";
+import {
+    action,
+    autorun,
+    computed,
+    observable,
+    runInAction,
+    makeObservable
+} from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -69,9 +76,15 @@ export class RulersController {
     constructor(
         public chartsController: IChartsController,
         public rulersModel: IRulersModel
-    ) {}
+    ) {
+        makeObservable(this, {
+            x1: computed,
+            x2: computed,
+            color: computed,
+            fillOpacity: computed
+        });
+    }
 
-    @computed
     get x1() {
         return (
             Math.round(
@@ -83,7 +96,6 @@ export class RulersController {
         );
     }
 
-    @computed
     get x2() {
         return (
             Math.round(
@@ -163,12 +175,10 @@ export class RulersController {
     static LINE_WIDTH = 2;
     static BAND_WIDTH = 8;
 
-    @computed
     get color() {
         return globalViewOptions.blackBackground ? "#d4e5f3" : "#337BB7";
     }
 
-    @computed
     get fillOpacity() {
         return globalViewOptions.blackBackground ? 0.2 : 0.1;
     }
@@ -377,471 +387,502 @@ interface RulersDockViewProps {
     chartsController: IChartsController;
 }
 
-@observer
-export class RulersDockView extends React.Component<RulersDockViewProps> {
-    @observable x1: string = "";
-    @observable x1Error: boolean = false;
-    @observable x2: string = "";
-    @observable x2Error: boolean = false;
-    @observable y1: string[] = [];
-    @observable y1Error: boolean[] = [];
-    @observable y2: string[] = [];
-    @observable y2Error: boolean[] = [];
+export const RulersDockView = observer(
+    class RulersDockView extends React.Component<RulersDockViewProps> {
+        x1: string = "";
+        x1Error: boolean = false;
+        x2: string = "";
+        x2Error: boolean = false;
+        y1: string[] = [];
+        y1Error: boolean[] = [];
+        y2: string[] = [];
+        y2Error: boolean[] = [];
 
-    outsideChangeInXRulersSubscriptionDisposer: any;
-    outsideChangeInYRulersSubscriptionDisposer: any;
+        outsideChangeInXRulersSubscriptionDisposer: any;
+        outsideChangeInYRulersSubscriptionDisposer: any;
 
-    isInsideChange: boolean = false;
+        isInsideChange: boolean = false;
 
-    constructor(props: RulersDockViewProps) {
-        super(props);
+        constructor(props: RulersDockViewProps) {
+            super(props);
 
-        this.subscribeToOutsideModelChanges();
-    }
+            makeObservable(this, {
+                x1: observable,
+                x1Error: observable,
+                x2: observable,
+                x2Error: observable,
+                y1: observable,
+                y1Error: observable,
+                y2: observable,
+                y2Error: observable,
+                subscribeToOutsideModelChanges: action,
+                enableXAxisRulers: action.bound,
+                enableYAxisRulers: action.bound
+            });
 
-    componentDidUpdate(prevProps: any) {
-        if (this.props != prevProps) {
             this.subscribeToOutsideModelChanges();
         }
-    }
 
-    @action
-    subscribeToOutsideModelChanges() {
-        if (this.outsideChangeInXRulersSubscriptionDisposer) {
-            this.outsideChangeInXRulersSubscriptionDisposer();
-        }
-
-        this.outsideChangeInXRulersSubscriptionDisposer = autorun(() => {
-            const x1 =
-                this.props.chartsController.xAxisController.unit.formatValue(
-                    this.rulersModel.x1,
-                    10
-                );
-            const x2 =
-                this.props.chartsController.xAxisController.unit.formatValue(
-                    this.rulersModel.x2,
-                    10
-                );
-            if (!this.isInsideChange) {
-                runInAction(() => {
-                    this.x1 = x1;
-                    this.x1Error = false;
-                    this.x2 = x2;
-                    this.x2Error = false;
-                });
+        componentDidUpdate(prevProps: any) {
+            if (this.props != prevProps) {
+                this.subscribeToOutsideModelChanges();
             }
-        });
-
-        if (this.outsideChangeInYRulersSubscriptionDisposer) {
-            this.outsideChangeInYRulersSubscriptionDisposer();
         }
 
-        this.outsideChangeInYRulersSubscriptionDisposer = autorun(() => {
-            for (
-                let i = 0;
-                i < this.props.chartsController.chartControllers.length;
-                ++i
-            ) {
-                const chartController =
-                    this.props.chartsController.chartControllers[i];
-                if (
-                    i < this.rulersModel.yAxisRulersEnabled.length &&
-                    this.rulersModel.yAxisRulersEnabled[i] &&
-                    !this.isInsideChange
-                ) {
-                    const y1 = chartController.yAxisController.unit.formatValue(
-                        this.rulersModel.y1[i],
-                        4
-                    );
-                    const y2 = chartController.yAxisController.unit.formatValue(
-                        this.rulersModel.y2[i],
-                        4
-                    );
+        subscribeToOutsideModelChanges() {
+            if (this.outsideChangeInXRulersSubscriptionDisposer) {
+                this.outsideChangeInXRulersSubscriptionDisposer();
+            }
 
+            this.outsideChangeInXRulersSubscriptionDisposer = autorun(() => {
+                const x1 =
+                    this.props.chartsController.xAxisController.unit.formatValue(
+                        this.rulersModel.x1,
+                        10
+                    );
+                const x2 =
+                    this.props.chartsController.xAxisController.unit.formatValue(
+                        this.rulersModel.x2,
+                        10
+                    );
+                if (!this.isInsideChange) {
                     runInAction(() => {
-                        this.y1[i] = y1;
-                        this.y1Error[i] = false;
-                        this.y2[i] = y2;
-                        this.y2Error[i] = false;
+                        this.x1 = x1;
+                        this.x1Error = false;
+                        this.x2 = x2;
+                        this.x2Error = false;
                     });
                 }
+            });
+
+            if (this.outsideChangeInYRulersSubscriptionDisposer) {
+                this.outsideChangeInYRulersSubscriptionDisposer();
             }
-        });
-    }
 
-    get rulersController() {
-        return this.props.chartsController.rulersController;
-    }
+            this.outsideChangeInYRulersSubscriptionDisposer = autorun(() => {
+                for (
+                    let i = 0;
+                    i < this.props.chartsController.chartControllers.length;
+                    ++i
+                ) {
+                    const chartController =
+                        this.props.chartsController.chartControllers[i];
+                    if (
+                        i < this.rulersModel.yAxisRulersEnabled.length &&
+                        this.rulersModel.yAxisRulersEnabled[i] &&
+                        !this.isInsideChange
+                    ) {
+                        const y1 =
+                            chartController.yAxisController.unit.formatValue(
+                                this.rulersModel.y1[i],
+                                4
+                            );
+                        const y2 =
+                            chartController.yAxisController.unit.formatValue(
+                                this.rulersModel.y2[i],
+                                4
+                            );
 
-    get rulersModel() {
-        return this.rulersController.rulersModel!;
-    }
-
-    validateXRange() {
-        const xAxisController = this.props.chartsController.xAxisController;
-
-        const x1 = xAxisController.unit.parseValue(this.x1);
-        this.x1Error =
-            x1 == null ||
-            x1 < xAxisController.minValue ||
-            x1 > xAxisController.maxValue;
-
-        const x2 = xAxisController.unit.parseValue(this.x2);
-        this.x2Error =
-            x2 == null ||
-            x2 < xAxisController.minValue ||
-            x2 > xAxisController.maxValue;
-
-        if (this.x1Error || this.x2Error) {
-            return;
+                        runInAction(() => {
+                            this.y1[i] = y1;
+                            this.y1Error[i] = false;
+                            this.y2[i] = y2;
+                            this.y2Error[i] = false;
+                        });
+                    }
+                }
+            });
         }
 
-        this.rulersModel.x1 = x1!;
-        this.rulersModel.x2 = x2!;
-    }
+        get rulersController() {
+            return this.props.chartsController.rulersController;
+        }
 
-    @action.bound
-    enableXAxisRulers(checked: boolean) {
-        if (checked) {
-            this.rulersModel.xAxisRulersEnabled = true;
+        get rulersModel() {
+            return this.rulersController.rulersModel!;
+        }
 
+        validateXRange() {
             const xAxisController = this.props.chartsController.xAxisController;
 
-            this.rulersModel.x1 = this.rulersController.snapToSample(
-                xAxisController.from + 0.1 * xAxisController.distance
+            const x1 = xAxisController.unit.parseValue(this.x1);
+            this.x1Error =
+                x1 == null ||
+                x1 < xAxisController.minValue ||
+                x1 > xAxisController.maxValue;
+
+            const x2 = xAxisController.unit.parseValue(this.x2);
+            this.x2Error =
+                x2 == null ||
+                x2 < xAxisController.minValue ||
+                x2 > xAxisController.maxValue;
+
+            if (this.x1Error || this.x2Error) {
+                return;
+            }
+
+            this.rulersModel.x1 = x1!;
+            this.rulersModel.x2 = x2!;
+        }
+
+        enableXAxisRulers(checked: boolean) {
+            if (checked) {
+                this.rulersModel.xAxisRulersEnabled = true;
+
+                const xAxisController =
+                    this.props.chartsController.xAxisController;
+
+                this.rulersModel.x1 = this.rulersController.snapToSample(
+                    xAxisController.from + 0.1 * xAxisController.distance
+                );
+
+                this.rulersModel.x2 = this.rulersController.snapToSample(
+                    xAxisController.to - 0.1 * xAxisController.distance
+                );
+            } else {
+                this.rulersModel.xAxisRulersEnabled = false;
+            }
+        }
+
+        setX1 = (event: React.ChangeEvent<HTMLInputElement>) => {
+            this.isInsideChange = true;
+            runInAction(() => {
+                this.x1 = event.target.value;
+                this.validateXRange();
+            });
+            this.isInsideChange = false;
+        };
+
+        setX2 = (event: React.ChangeEvent<HTMLInputElement>) => {
+            this.isInsideChange = true;
+            runInAction(() => {
+                this.x2 = event.target.value;
+                this.validateXRange();
+            });
+            this.isInsideChange = false;
+        };
+
+        zoomToFitXRulers = () => {
+            let x1;
+            let x2;
+            if (this.rulersModel.x1 < this.rulersModel.x2) {
+                x1 = this.rulersModel.x1;
+                x2 = this.rulersModel.x2;
+            } else {
+                x1 = this.rulersModel.x2;
+                x2 = this.rulersModel.x1;
+            }
+
+            const dx = x2 - x1;
+            this.props.chartsController.xAxisController.zoom(
+                x1 - 0.05 * dx,
+                x2 + 0.05 * dx
             );
+        };
 
-            this.rulersModel.x2 = this.rulersController.snapToSample(
-                xAxisController.to - 0.1 * xAxisController.distance
-            );
-        } else {
-            this.rulersModel.xAxisRulersEnabled = false;
-        }
-    }
-
-    setX1 = (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.isInsideChange = true;
-        runInAction(() => {
-            this.x1 = event.target.value;
-            this.validateXRange();
-        });
-        this.isInsideChange = false;
-    };
-
-    setX2 = (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.isInsideChange = true;
-        runInAction(() => {
-            this.x2 = event.target.value;
-            this.validateXRange();
-        });
-        this.isInsideChange = false;
-    };
-
-    zoomToFitXRulers = () => {
-        let x1;
-        let x2;
-        if (this.rulersModel.x1 < this.rulersModel.x2) {
-            x1 = this.rulersModel.x1;
-            x2 = this.rulersModel.x2;
-        } else {
-            x1 = this.rulersModel.x2;
-            x2 = this.rulersModel.x1;
-        }
-
-        const dx = x2 - x1;
-        this.props.chartsController.xAxisController.zoom(
-            x1 - 0.05 * dx,
-            x2 + 0.05 * dx
-        );
-    };
-
-    validateYRange(chartIndex: number) {
-        const yAxisController =
-            this.props.chartsController.chartControllers[chartIndex]
-                .yAxisController;
-
-        const y1 = yAxisController.unit.parseValue(this.y1[chartIndex]);
-        this.y1Error[chartIndex] =
-            y1 == null ||
-            y1 < yAxisController.minValue ||
-            y1 > yAxisController.maxValue;
-
-        const y2 = yAxisController.unit.parseValue(this.y2[chartIndex]);
-        this.y2Error[chartIndex] =
-            y2 == null ||
-            y2 < yAxisController.minValue ||
-            y2 > yAxisController.maxValue;
-
-        if (this.y1Error[chartIndex] || this.y2Error[chartIndex]) {
-            return;
-        }
-
-        this.rulersModel.y1[chartIndex] = y1!;
-        this.rulersModel.y2[chartIndex] = y2!;
-    }
-
-    @action.bound
-    enableYAxisRulers(chartIndex: number, checked: boolean) {
-        if (checked) {
-            this.rulersModel.yAxisRulersEnabled[chartIndex] = true;
-
+        validateYRange(chartIndex: number) {
             const yAxisController =
                 this.props.chartsController.chartControllers[chartIndex]
                     .yAxisController;
 
-            this.rulersModel.y1[chartIndex] =
-                yAxisController.from + 0.1 * yAxisController.distance;
-            this.rulersModel.y2[chartIndex] =
-                yAxisController.to - 0.1 * yAxisController.distance;
-        } else {
-            this.rulersModel.yAxisRulersEnabled[chartIndex] = false;
-        }
-    }
+            const y1 = yAxisController.unit.parseValue(this.y1[chartIndex]);
+            this.y1Error[chartIndex] =
+                y1 == null ||
+                y1 < yAxisController.minValue ||
+                y1 > yAxisController.maxValue;
 
-    setY1 = (
-        chartIndex: number,
-        event: React.ChangeEvent<HTMLInputElement>
-    ) => {
-        this.isInsideChange = true;
-        runInAction(() => {
-            this.y1[chartIndex] = event.target.value;
-            this.validateYRange(chartIndex);
-        });
-        this.isInsideChange = false;
-    };
+            const y2 = yAxisController.unit.parseValue(this.y2[chartIndex]);
+            this.y2Error[chartIndex] =
+                y2 == null ||
+                y2 < yAxisController.minValue ||
+                y2 > yAxisController.maxValue;
 
-    setY2 = (
-        chartIndex: number,
-        event: React.ChangeEvent<HTMLInputElement>
-    ) => {
-        this.isInsideChange = true;
-        runInAction(() => {
-            this.y2[chartIndex] = event.target.value;
-            this.validateYRange(chartIndex);
-        });
-        this.isInsideChange = false;
-    };
+            if (this.y1Error[chartIndex] || this.y2Error[chartIndex]) {
+                return;
+            }
 
-    zoomToFitYRulers = (chartIndex: number) => {
-        let y1;
-        let y2;
-        if (this.rulersModel.y1[chartIndex] < this.rulersModel.y2[chartIndex]) {
-            y1 = this.rulersModel.y1[chartIndex];
-            y2 = this.rulersModel.y2[chartIndex];
-        } else {
-            y1 = this.rulersModel.y2[chartIndex];
-            y2 = this.rulersModel.y1[chartIndex];
+            this.rulersModel.y1[chartIndex] = y1!;
+            this.rulersModel.y2[chartIndex] = y2!;
         }
 
-        const dy = y2 - y1;
-        this.props.chartsController.chartControllers[
-            chartIndex
-        ].yAxisController.zoom(y1 - 0.05 * dy, y2 + 0.05 * dy);
-    };
+        enableYAxisRulers(chartIndex: number, checked: boolean) {
+            if (checked) {
+                this.rulersModel.yAxisRulersEnabled[chartIndex] = true;
 
-    render() {
-        return (
-            <div className="EezStudio_SideDockViewContainer">
-                <div className="EezStudio_AxisRulersProperties">
-                    <div className="EezStudio_SideDockView_PropertyLabel">
-                        <Checkbox
-                            checked={this.rulersModel.xAxisRulersEnabled}
-                            onChange={this.enableXAxisRulers}
-                        >
-                            Enable X axis rulers
-                        </Checkbox>
-                    </div>
-                    {this.rulersModel.xAxisRulersEnabled && (
-                        <div className="EezStudio_SideDockView_Property">
-                            <table>
-                                <tbody>
-                                    <tr>
-                                        <td>X1</td>
-                                        <td>
-                                            <input
-                                                type="text"
-                                                className={classNames(
-                                                    "form-control",
-                                                    {
-                                                        error: this.x1Error
-                                                    }
-                                                )}
-                                                value={this.x1}
-                                                onChange={this.setX1}
-                                            />
-                                        </td>
-                                        <td>X2</td>
-                                        <td>
-                                            <input
-                                                type="text"
-                                                className={classNames(
-                                                    "form-control",
-                                                    {
-                                                        error: this.x2Error
-                                                    }
-                                                )}
-                                                value={this.x2}
-                                                onChange={this.setX2}
-                                            />
-                                        </td>
-                                        <td>&Delta;X</td>
-                                        <td>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                value={this.props.chartsController.xAxisController.unit.formatValue(
-                                                    this.rulersModel.x2 -
-                                                        this.rulersModel.x1,
-                                                    10
-                                                )}
-                                                readOnly={true}
-                                            />
-                                        </td>
-                                        <td />
-                                        <td style={{ textAlign: "left" }}>
-                                            <IconAction
-                                                icon="material:search"
-                                                onClick={this.zoomToFitXRulers}
-                                                title="Zoom chart to fit both x1 and x2"
-                                            />
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-                {_range(
-                    this.props.chartsController.chartControllers.length
-                ).map(chartIndex => (
-                    <div
-                        key={chartIndex}
-                        className="EezStudio_AxisRulersProperties"
-                    >
+                const yAxisController =
+                    this.props.chartsController.chartControllers[chartIndex]
+                        .yAxisController;
+
+                this.rulersModel.y1[chartIndex] =
+                    yAxisController.from + 0.1 * yAxisController.distance;
+                this.rulersModel.y2[chartIndex] =
+                    yAxisController.to - 0.1 * yAxisController.distance;
+            } else {
+                this.rulersModel.yAxisRulersEnabled[chartIndex] = false;
+            }
+        }
+
+        setY1 = (
+            chartIndex: number,
+            event: React.ChangeEvent<HTMLInputElement>
+        ) => {
+            this.isInsideChange = true;
+            runInAction(() => {
+                this.y1[chartIndex] = event.target.value;
+                this.validateYRange(chartIndex);
+            });
+            this.isInsideChange = false;
+        };
+
+        setY2 = (
+            chartIndex: number,
+            event: React.ChangeEvent<HTMLInputElement>
+        ) => {
+            this.isInsideChange = true;
+            runInAction(() => {
+                this.y2[chartIndex] = event.target.value;
+                this.validateYRange(chartIndex);
+            });
+            this.isInsideChange = false;
+        };
+
+        zoomToFitYRulers = (chartIndex: number) => {
+            let y1;
+            let y2;
+            if (
+                this.rulersModel.y1[chartIndex] <
+                this.rulersModel.y2[chartIndex]
+            ) {
+                y1 = this.rulersModel.y1[chartIndex];
+                y2 = this.rulersModel.y2[chartIndex];
+            } else {
+                y1 = this.rulersModel.y2[chartIndex];
+                y2 = this.rulersModel.y1[chartIndex];
+            }
+
+            const dy = y2 - y1;
+            this.props.chartsController.chartControllers[
+                chartIndex
+            ].yAxisController.zoom(y1 - 0.05 * dy, y2 + 0.05 * dy);
+        };
+
+        render() {
+            return (
+                <div className="EezStudio_SideDockViewContainer">
+                    <div className="EezStudio_AxisRulersProperties">
                         <div className="EezStudio_SideDockView_PropertyLabel">
                             <Checkbox
-                                checked={
-                                    chartIndex <
-                                        this.rulersModel.yAxisRulersEnabled
-                                            .length &&
-                                    this.rulersModel.yAxisRulersEnabled[
-                                        chartIndex
-                                    ]
-                                }
-                                onChange={(checked: boolean) =>
-                                    this.enableYAxisRulers(chartIndex, checked)
-                                }
+                                checked={this.rulersModel.xAxisRulersEnabled}
+                                onChange={this.enableXAxisRulers}
                             >
-                                Enable{" "}
-                                {this.props.chartsController.chartControllers
-                                    .length > 1
-                                    ? `"${this.props.chartsController.chartControllers[chartIndex].yAxisController.axisModel.label}" `
-                                    : ""}
-                                Y axis rulers
+                                Enable X axis rulers
                             </Checkbox>
                         </div>
-                        {chartIndex <
-                            this.rulersModel.yAxisRulersEnabled.length &&
-                            this.rulersModel.yAxisRulersEnabled[chartIndex] && (
-                                <div className="EezStudio_SideDockView_Property">
-                                    <table>
-                                        <tbody>
-                                            <tr>
-                                                <td>Y1</td>
-                                                <td>
-                                                    <input
-                                                        type="text"
-                                                        className={classNames(
-                                                            "form-control",
-                                                            {
-                                                                error: this
-                                                                    .y1Error[
-                                                                    chartIndex
-                                                                ]
-                                                            }
-                                                        )}
-                                                        value={
-                                                            this.y1[chartIndex]
+                        {this.rulersModel.xAxisRulersEnabled && (
+                            <div className="EezStudio_SideDockView_Property">
+                                <table>
+                                    <tbody>
+                                        <tr>
+                                            <td>X1</td>
+                                            <td>
+                                                <input
+                                                    type="text"
+                                                    className={classNames(
+                                                        "form-control",
+                                                        {
+                                                            error: this.x1Error
                                                         }
-                                                        onChange={event =>
-                                                            this.setY1(
-                                                                chartIndex,
-                                                                event
-                                                            )
+                                                    )}
+                                                    value={this.x1}
+                                                    onChange={this.setX1}
+                                                />
+                                            </td>
+                                            <td>X2</td>
+                                            <td>
+                                                <input
+                                                    type="text"
+                                                    className={classNames(
+                                                        "form-control",
+                                                        {
+                                                            error: this.x2Error
                                                         }
-                                                    />
-                                                </td>
-                                                <td>Y2</td>
-                                                <td>
-                                                    <input
-                                                        type="text"
-                                                        className={classNames(
-                                                            "form-control",
-                                                            {
-                                                                error: this
-                                                                    .y2Error[
-                                                                    chartIndex
-                                                                ]
-                                                            }
-                                                        )}
-                                                        value={
-                                                            this.y2[chartIndex]
-                                                        }
-                                                        onChange={event =>
-                                                            this.setY2(
-                                                                chartIndex,
-                                                                event
-                                                            )
-                                                        }
-                                                    />
-                                                </td>
-                                                <td>&Delta;Y</td>
-                                                <td>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-                                                        value={this.props.chartsController.chartControllers[
-                                                            chartIndex
-                                                        ].yAxisController.unit.formatValue(
-                                                            this.rulersModel.y2[
-                                                                chartIndex
-                                                            ] -
-                                                                this.rulersModel
-                                                                    .y1[
-                                                                    chartIndex
-                                                                ],
-                                                            4
-                                                        )}
-                                                        readOnly={true}
-                                                    />
-                                                </td>
-                                                <td />
-                                                <td
-                                                    style={{
-                                                        textAlign: "left"
-                                                    }}
-                                                >
-                                                    <IconAction
-                                                        icon="material:search"
-                                                        onClick={() =>
-                                                            this.zoomToFitYRulers(
-                                                                chartIndex
-                                                            )
-                                                        }
-                                                        title="Zoom chart to fit both y1 and y2"
-                                                    />
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
+                                                    )}
+                                                    value={this.x2}
+                                                    onChange={this.setX2}
+                                                />
+                                            </td>
+                                            <td>&Delta;X</td>
+                                            <td>
+                                                <input
+                                                    type="text"
+                                                    className="form-control"
+                                                    value={this.props.chartsController.xAxisController.unit.formatValue(
+                                                        this.rulersModel.x2 -
+                                                            this.rulersModel.x1,
+                                                        10
+                                                    )}
+                                                    readOnly={true}
+                                                />
+                                            </td>
+                                            <td />
+                                            <td style={{ textAlign: "left" }}>
+                                                <IconAction
+                                                    icon="material:search"
+                                                    onClick={
+                                                        this.zoomToFitXRulers
+                                                    }
+                                                    title="Zoom chart to fit both x1 and x2"
+                                                />
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
                     </div>
-                ))}
-            </div>
-        );
+                    {_range(
+                        this.props.chartsController.chartControllers.length
+                    ).map(chartIndex => (
+                        <div
+                            key={chartIndex}
+                            className="EezStudio_AxisRulersProperties"
+                        >
+                            <div className="EezStudio_SideDockView_PropertyLabel">
+                                <Checkbox
+                                    checked={
+                                        chartIndex <
+                                            this.rulersModel.yAxisRulersEnabled
+                                                .length &&
+                                        this.rulersModel.yAxisRulersEnabled[
+                                            chartIndex
+                                        ]
+                                    }
+                                    onChange={(checked: boolean) =>
+                                        this.enableYAxisRulers(
+                                            chartIndex,
+                                            checked
+                                        )
+                                    }
+                                >
+                                    Enable{" "}
+                                    {this.props.chartsController
+                                        .chartControllers.length > 1
+                                        ? `"${this.props.chartsController.chartControllers[chartIndex].yAxisController.axisModel.label}" `
+                                        : ""}
+                                    Y axis rulers
+                                </Checkbox>
+                            </div>
+                            {chartIndex <
+                                this.rulersModel.yAxisRulersEnabled.length &&
+                                this.rulersModel.yAxisRulersEnabled[
+                                    chartIndex
+                                ] && (
+                                    <div className="EezStudio_SideDockView_Property">
+                                        <table>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Y1</td>
+                                                    <td>
+                                                        <input
+                                                            type="text"
+                                                            className={classNames(
+                                                                "form-control",
+                                                                {
+                                                                    error: this
+                                                                        .y1Error[
+                                                                        chartIndex
+                                                                    ]
+                                                                }
+                                                            )}
+                                                            value={
+                                                                this.y1[
+                                                                    chartIndex
+                                                                ]
+                                                            }
+                                                            onChange={event =>
+                                                                this.setY1(
+                                                                    chartIndex,
+                                                                    event
+                                                                )
+                                                            }
+                                                        />
+                                                    </td>
+                                                    <td>Y2</td>
+                                                    <td>
+                                                        <input
+                                                            type="text"
+                                                            className={classNames(
+                                                                "form-control",
+                                                                {
+                                                                    error: this
+                                                                        .y2Error[
+                                                                        chartIndex
+                                                                    ]
+                                                                }
+                                                            )}
+                                                            value={
+                                                                this.y2[
+                                                                    chartIndex
+                                                                ]
+                                                            }
+                                                            onChange={event =>
+                                                                this.setY2(
+                                                                    chartIndex,
+                                                                    event
+                                                                )
+                                                            }
+                                                        />
+                                                    </td>
+                                                    <td>&Delta;Y</td>
+                                                    <td>
+                                                        <input
+                                                            type="text"
+                                                            className="form-control"
+                                                            value={this.props.chartsController.chartControllers[
+                                                                chartIndex
+                                                            ].yAxisController.unit.formatValue(
+                                                                this.rulersModel
+                                                                    .y2[
+                                                                    chartIndex
+                                                                ] -
+                                                                    this
+                                                                        .rulersModel
+                                                                        .y1[
+                                                                        chartIndex
+                                                                    ],
+                                                                4
+                                                            )}
+                                                            readOnly={true}
+                                                        />
+                                                    </td>
+                                                    <td />
+                                                    <td
+                                                        style={{
+                                                            textAlign: "left"
+                                                        }}
+                                                    >
+                                                        <IconAction
+                                                            icon="material:search"
+                                                            onClick={() =>
+                                                                this.zoomToFitYRulers(
+                                                                    chartIndex
+                                                                )
+                                                            }
+                                                            title="Zoom chart to fit both y1 and y2"
+                                                        />
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                        </div>
+                    ))}
+                </div>
+            );
+        }
     }
-}
+);
 
 class DragXRulerMouseHandler implements MouseHandler {
     cursor = "ew-resize";
@@ -852,13 +893,18 @@ class DragXRulerMouseHandler implements MouseHandler {
     constructor(
         private rulersController: IRulersController,
         private whichRuller: "x1" | "x2" | "both" | "none"
-    ) {}
+    ) {
+        makeObservable(this, {
+            down: action,
+            move: action,
+            up: action
+        });
+    }
 
     get xAxisController() {
         return this.rulersController.chartsController.xAxisController;
     }
 
-    @action
     down(point: SVGPoint, event: PointerEvent) {
         this.rulersController.rulersModel.pauseDbUpdate = true;
 
@@ -878,7 +924,6 @@ class DragXRulerMouseHandler implements MouseHandler {
             this.rulersController.rulersModel.x1;
     }
 
-    @action
     move(point: SVGPoint, event: PointerEvent) {
         let x = this.xAxisController.pxToValue(point.x);
         if (this.whichRuller === "both") {
@@ -937,7 +982,6 @@ class DragXRulerMouseHandler implements MouseHandler {
         }
     }
 
-    @action
     up(
         point: SVGPoint | undefined,
         event: PointerEvent | undefined,
@@ -967,6 +1011,12 @@ class DragYRulerMouseHandler implements MouseHandler {
         private chartView: IChartView,
         private whichRuller: "y1" | "y2" | "both" | "none"
     ) {
+        makeObservable(this, {
+            down: action,
+            move: action,
+            up: action
+        });
+
         this.chartIndex = chartView.props.chartController.chartIndex;
     }
 
@@ -983,7 +1033,6 @@ class DragYRulerMouseHandler implements MouseHandler {
         return this.chartView.props.chartController.yAxisController;
     }
 
-    @action
     down(point: SVGPoint, event: PointerEvent) {
         this.rulersModel.pauseDbUpdate = true;
 
@@ -1003,7 +1052,6 @@ class DragYRulerMouseHandler implements MouseHandler {
             this.rulersModel.y1[this.chartIndex];
     }
 
-    @action
     move(point: SVGPoint, event: PointerEvent) {
         let y = this.yAxisController.pxToValue(point.y);
         if (this.whichRuller === "both") {
@@ -1048,7 +1096,6 @@ class DragYRulerMouseHandler implements MouseHandler {
         }
     }
 
-    @action
     up(
         point: SVGPoint | undefined,
         event: PointerEvent | undefined,
@@ -1067,15 +1114,25 @@ class DragYRulerMouseHandler implements MouseHandler {
 }
 
 export class RulersModel {
-    @observable xAxisRulersEnabled: boolean = false;
-    @observable x1: number = 0;
-    @observable x2: number = 0;
-    @observable yAxisRulersEnabled: boolean[] = [];
-    @observable y1: number[] = [];
-    @observable y2: number[] = [];
-    @observable pauseDbUpdate?: boolean = false;
+    xAxisRulersEnabled: boolean = false;
+    x1: number = 0;
+    x2: number = 0;
+    yAxisRulersEnabled: boolean[] = [];
+    y1: number[] = [];
+    y2: number[] = [];
+    pauseDbUpdate?: boolean = false;
 
     constructor(props: any) {
+        makeObservable(this, {
+            xAxisRulersEnabled: observable,
+            x1: observable,
+            x2: observable,
+            yAxisRulersEnabled: observable,
+            y1: observable,
+            y2: observable,
+            pauseDbUpdate: observable
+        });
+
         if (props) {
             if (!Array.isArray(props.yAxisRulersEnabled)) {
                 props.yAxisRulersEnabled = [props.yAxisRulersEnabled];

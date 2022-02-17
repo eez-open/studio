@@ -1,4 +1,4 @@
-import { computed } from "mobx";
+import { computed, makeObservable } from "mobx";
 import { Point, Rect } from "eez-studio-shared/geometry";
 
 import { getDocumentStore } from "project-editor/core/store";
@@ -15,16 +15,23 @@ export class FlowDocument implements IDocument {
     constructor(
         public flow: ITreeObjectAdapter,
         private flowContext: RuntimeFlowContext
-    ) {}
+    ) {
+        makeObservable(this, {
+            connectionLines: computed,
+            selectedConnectionLines: computed,
+            nonSelectedConnectionLines: computed,
+            DocumentStore: computed
+        });
+    }
 
-    @computed get connectionLines(): ITreeObjectAdapter[] {
+    get connectionLines(): ITreeObjectAdapter[] {
         return (this.flow.children as ITreeObjectAdapter[]).filter(
             editorObject =>
                 editorObject.object instanceof ProjectEditor.ConnectionLineClass
         );
     }
 
-    @computed get selectedConnectionLines() {
+    get selectedConnectionLines() {
         if (
             this.DocumentStore.runtime &&
             (!this.DocumentStore.runtime.isDebuggerActive ||
@@ -41,7 +48,7 @@ export class FlowDocument implements IDocument {
         );
     }
 
-    @computed get nonSelectedConnectionLines() {
+    get nonSelectedConnectionLines() {
         if (
             this.DocumentStore.runtime &&
             (!this.DocumentStore.runtime.isDebuggerActive ||
@@ -91,7 +98,7 @@ export class FlowDocument implements IDocument {
 
     pasteSelection() {}
 
-    @computed get DocumentStore() {
+    get DocumentStore() {
         return getDocumentStore(this.flow.object);
     }
 

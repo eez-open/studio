@@ -1,4 +1,4 @@
-import { observable } from "mobx";
+import { observable, makeObservable } from "mobx";
 
 import { stringCompare } from "eez-studio-shared/string";
 
@@ -27,8 +27,8 @@ import { DocumentStoreClass } from "project-editor/core/store";
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ScpiEnumMember extends EezObject {
-    @observable name: string;
-    @observable value: string;
+    name: string;
+    value: string;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -77,13 +77,22 @@ export class ScpiEnumMember extends EezObject {
             return messages;
         }
     };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            value: observable
+        });
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ScpiEnum extends EezObject {
-    @observable name: string;
-    @observable members: ScpiEnumMember[];
+    name: string;
+    members: ScpiEnumMember[];
 
     static classInfo: ClassInfo = {
         label: (scpiEnum: ScpiEnum) => {
@@ -138,6 +147,15 @@ export class ScpiEnum extends EezObject {
             return messages;
         }
     };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            members: observable
+        });
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

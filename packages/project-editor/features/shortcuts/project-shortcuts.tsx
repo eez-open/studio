@@ -1,6 +1,5 @@
 import React from "react";
-import { observable, computed, action } from "mobx";
-import { observer } from "mobx-react";
+import { observable, computed, action, makeObservable } from "mobx";
 
 import { guid } from "eez-studio-shared/guid";
 
@@ -37,12 +36,18 @@ import { EditorComponent } from "project-editor/project/EditorComponent";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
 export class ShortcutsEditor extends EditorComponent {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    @computed
+    constructor(props: any) {
+        super(props);
+
+        makeObservable(this, {
+            shortcutsStore: computed
+        });
+    }
+
     get shortcutsStore() {
         const shortcuts = this.context.project.shortcuts.shortcuts;
 
@@ -112,8 +117,8 @@ export class ShortcutsEditor extends EditorComponent {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ShortcutAction extends EezObject {
-    @observable type: IActionType;
-    @observable data: string;
+    type: IActionType;
+    data: string;
 
     static classInfo: ClassInfo = {
         label: (shortcutAction: ShortcutAction) => {
@@ -131,6 +136,15 @@ export class ShortcutAction extends EezObject {
             }
         ]
     };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            type: observable,
+            data: observable
+        });
+    }
 }
 
 registerClass("ShortcutAction", ShortcutAction);
@@ -139,16 +153,16 @@ registerClass("ShortcutAction", ShortcutAction);
 
 export class Shortcut extends EezObject {
     id: string;
-    @observable name: string;
-    @observable usedIn?: string[];
-    @observable action: ShortcutAction;
-    @observable keybinding: string;
+    name: string;
+    usedIn?: string[];
+    action: ShortcutAction;
+    keybinding: string;
     groupName: string;
-    @observable showInToolbar: boolean;
-    @observable toolbarButtonPosition: number;
-    @observable toolbarButtonColor: string;
-    @observable requiresConfirmation: boolean;
-    @observable selected: boolean;
+    showInToolbar: boolean;
+    toolbarButtonPosition: number;
+    toolbarButtonColor: string;
+    requiresConfirmation: boolean;
+    selected: boolean;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -195,6 +209,22 @@ export class Shortcut extends EezObject {
             }
         ]
     };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable,
+            usedIn: observable,
+            action: observable,
+            keybinding: observable,
+            showInToolbar: observable,
+            toolbarButtonPosition: observable,
+            toolbarButtonColor: observable,
+            requiresConfirmation: observable,
+            selected: observable
+        });
+    }
 }
 
 registerClass("Shortcut", Shortcut);
@@ -202,7 +232,7 @@ registerClass("Shortcut", Shortcut);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Shortcuts extends EezObject {
-    @observable shortcuts: Shortcut[];
+    shortcuts: Shortcut[];
 
     static classInfo: ClassInfo = {
         label: () => "Shortcuts",
@@ -217,6 +247,14 @@ export class Shortcuts extends EezObject {
         hideInProperties: true,
         icon: "playlist_play"
     };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            shortcuts: observable
+        });
+    }
 }
 
 registerClass("Shortcuts", Shortcuts);

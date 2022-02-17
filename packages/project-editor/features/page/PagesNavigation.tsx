@@ -1,5 +1,5 @@
 import React from "react";
-import { computed } from "mobx";
+import { computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 
@@ -22,136 +22,145 @@ import { LocalVariables } from "../variable/VariablesNavigation";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class PagesNavigation extends NavigationComponent {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
+export const PagesNavigation = observer(
+    class PagesNavigation extends NavigationComponent {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
 
-    factory = (node: FlexLayout.TabNode) => {
-        var component = node.getComponent();
+        factory = (node: FlexLayout.TabNode) => {
+            var component = node.getComponent();
 
-        if (component === "pages") {
+            if (component === "pages") {
+                return (
+                    <ListNavigation
+                        id={this.props.id}
+                        navigationObject={this.props.navigationObject}
+                        selectedObject={
+                            this.context.navigationStore.selectedPageObject
+                        }
+                        editable={!this.context.runtime}
+                    />
+                );
+            }
+
+            if (component === "page-structure") {
+                return <PageStructure />;
+            }
+
+            if (component === "local-vars") {
+                return <LocalVariables />;
+            }
+
+            return null;
+        };
+
+        render() {
             return (
-                <ListNavigation
-                    id={this.props.id}
-                    navigationObject={this.props.navigationObject}
-                    selectedObject={
-                        this.context.navigationStore.selectedPageObject
-                    }
-                    editable={!this.context.runtime}
+                <FlexLayout.Layout
+                    model={this.context.layoutModels.pages}
+                    factory={this.factory}
+                    realtimeResize={true}
+                    font={LayoutModels.FONT_SUB}
                 />
             );
         }
+    }
+);
 
-        if (component === "page-structure") {
-            return <PageStructure />;
+export const PageStructure = observer(
+    class PageStructure extends React.Component implements IPanel {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                pageTabState: computed,
+                componentContainerDisplayItem: computed,
+                treeAdapter: computed
+            });
         }
 
-        if (component === "local-vars") {
-            return <LocalVariables />;
+        get pageTabState() {
+            const editor = this.context.editorsStore.activeEditor;
+            if (!editor) {
+                return undefined;
+            }
+
+            const object = editor.object;
+            if (!(object instanceof Page)) {
+                return undefined;
+            }
+
+            return editor.state as PageTabState;
         }
 
-        return null;
-    };
+        get componentContainerDisplayItem() {
+            if (!this.pageTabState) {
+                return undefined;
+            }
 
-    render() {
-        return (
-            <FlexLayout.Layout
-                model={this.context.layoutModels.pages}
-                factory={this.factory}
-                realtimeResize={true}
-                font={LayoutModels.FONT_SUB}
-            />
-        );
-    }
-}
-
-@observer
-export class PageStructure extends React.Component implements IPanel {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
-    @computed
-    get pageTabState() {
-        const editor = this.context.editorsStore.activeEditor;
-        if (!editor) {
-            return undefined;
+            return this.pageTabState.widgetContainer;
         }
 
-        const object = editor.object;
-        if (!(object instanceof Page)) {
-            return undefined;
+        get treeAdapter() {
+            if (!this.componentContainerDisplayItem) {
+                return null;
+            }
+            return new TreeAdapter(
+                this.componentContainerDisplayItem,
+                undefined,
+                (object: IEezObject) => {
+                    return object instanceof ProjectEditor.WidgetClass;
+                },
+                true
+            );
         }
 
-        return editor.state as PageTabState;
-    }
-
-    @computed
-    get componentContainerDisplayItem() {
-        if (!this.pageTabState) {
-            return undefined;
+        // interface IPanel implementation
+        get selectedObject() {
+            return this.selectedObjects[0];
         }
 
-        return this.pageTabState.widgetContainer;
-    }
+        get selectedObjects() {
+            const selectedObjects =
+                this.componentContainerDisplayItem &&
+                this.componentContainerDisplayItem.selectedObjects;
+            if (selectedObjects && selectedObjects.length > 0) {
+                return selectedObjects;
+            }
 
-    @computed
-    get treeAdapter() {
-        if (!this.componentContainerDisplayItem) {
-            return null;
+            if (this.pageTabState) {
+                return [this.pageTabState.page];
+            }
+
+            return [];
         }
-        return new TreeAdapter(
-            this.componentContainerDisplayItem,
-            undefined,
-            (object: IEezObject) => {
-                return object instanceof ProjectEditor.WidgetClass;
-            },
-            true
-        );
-    }
-
-    // interface IPanel implementation
-    get selectedObject() {
-        return this.selectedObjects[0];
-    }
-
-    get selectedObjects() {
-        const selectedObjects =
-            this.componentContainerDisplayItem &&
-            this.componentContainerDisplayItem.selectedObjects;
-        if (selectedObjects && selectedObjects.length > 0) {
-            return selectedObjects;
+        cutSelection() {
+            this.treeAdapter!.cutSelection();
         }
-
-        if (this.pageTabState) {
-            return [this.pageTabState.page];
+        copySelection() {
+            this.treeAdapter!.copySelection();
         }
+        pasteSelection() {
+            this.treeAdapter!.pasteSelection();
+        }
+        deleteSelection() {
+            this.treeAdapter!.deleteSelection();
+        }
+        onFocus = () => {
+            this.context.navigationStore.setSelectedPanel(this);
+        };
 
-        return [];
+        render() {
+            return this.treeAdapter ? (
+                <Tree
+                    treeAdapter={this.treeAdapter}
+                    onFocus={this.onFocus}
+                    tabIndex={0}
+                />
+            ) : null;
+        }
     }
-    cutSelection() {
-        this.treeAdapter!.cutSelection();
-    }
-    copySelection() {
-        this.treeAdapter!.copySelection();
-    }
-    pasteSelection() {
-        this.treeAdapter!.pasteSelection();
-    }
-    deleteSelection() {
-        this.treeAdapter!.deleteSelection();
-    }
-    onFocus = () => {
-        this.context.navigationStore.setSelectedPanel(this);
-    };
-
-    render() {
-        return this.treeAdapter ? (
-            <Tree
-                treeAdapter={this.treeAdapter}
-                onFocus={this.onFocus}
-                tabIndex={0}
-            />
-        ) : null;
-    }
-}
+);

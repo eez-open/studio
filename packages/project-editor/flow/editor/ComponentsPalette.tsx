@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, action, computed } from "mobx";
+import { observable, action, computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -37,183 +37,199 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 //  !6 -> "User Widgets"
 //  !7 -> "User Actions"
 
-@observer
-export class ComponentsPalette extends React.Component {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
+export const ComponentsPalette = observer(
+    class ComponentsPalette extends React.Component {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
 
-    @observable selectedComponentClass: IObjectClassInfo | undefined;
+        selectedComponentClass: IObjectClassInfo | undefined;
 
-    @action.bound
-    onSelect(widgetClass: IObjectClassInfo | undefined) {
-        this.selectedComponentClass = widgetClass;
-    }
+        constructor(props: any) {
+            super(props);
 
-    @computed get allComponentClasses() {
-        const activeEditor = this.context.editorsStore.activeEditor;
-
-        let showOnlyActions;
-
-        if (
-            activeEditor &&
-            activeEditor.object instanceof ProjectEditor.ActionClass
-        ) {
-            showOnlyActions = true;
-        } else {
-            showOnlyActions = false;
+            makeObservable(this, {
+                selectedComponentClass: observable,
+                onSelect: action.bound,
+                allComponentClasses: computed,
+                groups: computed,
+                searchText: observable,
+                onSearchChange: action.bound
+            });
         }
 
-        const stockComponents = getClassesDerivedFrom(
-            showOnlyActions
-                ? ProjectEditor.ActionComponentClass
-                : ProjectEditor.ComponentClass
-        ).filter(objectClassInfo =>
-            this.context.project.isAppletProject ||
-            this.context.project.isFirmwareWithFlowSupportProject
-                ? objectClassInfo.objectClass.classInfo.flowComponentId !=
-                  undefined
-                : true
-        );
+        onSelect(widgetClass: IObjectClassInfo | undefined) {
+            this.selectedComponentClass = widgetClass;
+        }
 
-        const userWidgets: IObjectClassInfo[] = [];
-        if (!showOnlyActions) {
-            for (const page of this.context.project.pages) {
-                if (page.isUsedAsCustomWidget) {
-                    userWidgets.push({
-                        id: `LayoutViewWidget<${page.name}>`,
-                        name: "LayoutViewWidget",
-                        objectClass: ProjectEditor.LayoutViewWidgetClass,
-                        displayName: page.name,
-                        componentPaletteGroupName: "!6User Widgets",
+        get allComponentClasses() {
+            const activeEditor = this.context.editorsStore.activeEditor;
+
+            let showOnlyActions;
+
+            if (
+                activeEditor &&
+                activeEditor.object instanceof ProjectEditor.ActionClass
+            ) {
+                showOnlyActions = true;
+            } else {
+                showOnlyActions = false;
+            }
+
+            const stockComponents = getClassesDerivedFrom(
+                showOnlyActions
+                    ? ProjectEditor.ActionComponentClass
+                    : ProjectEditor.ComponentClass
+            ).filter(objectClassInfo =>
+                this.context.project.isAppletProject ||
+                this.context.project.isFirmwareWithFlowSupportProject
+                    ? objectClassInfo.objectClass.classInfo.flowComponentId !=
+                      undefined
+                    : true
+            );
+
+            const userWidgets: IObjectClassInfo[] = [];
+            if (!showOnlyActions) {
+                for (const page of this.context.project.pages) {
+                    if (page.isUsedAsCustomWidget) {
+                        userWidgets.push({
+                            id: `LayoutViewWidget<${page.name}>`,
+                            name: "LayoutViewWidget",
+                            objectClass: ProjectEditor.LayoutViewWidgetClass,
+                            displayName: page.name,
+                            componentPaletteGroupName: "!6User Widgets",
+                            props: {
+                                layout: page.name,
+                                width: page.width,
+                                height: page.height
+                            }
+                        });
+                    }
+                }
+            }
+
+            const userActions: IObjectClassInfo[] = [];
+            if (
+                this.context.project.isDashboardProject ||
+                this.context.project.isAppletProject ||
+                this.context.project.settings.general.flowSupport
+            ) {
+                for (const action of this.context.project.actions) {
+                    userActions.push({
+                        id: `CallActionActionComponent<${action.name}>`,
+                        name: "CallActionActionComponent",
+                        objectClass:
+                            ProjectEditor.CallActionActionComponentClass,
+                        displayName: action.name,
+                        componentPaletteGroupName: "!7User Actions",
                         props: {
-                            layout: page.name,
-                            width: page.width,
-                            height: page.height
+                            action: action.name
                         }
                     });
                 }
             }
+
+            return [...stockComponents, ...userWidgets, ...userActions];
         }
 
-        const userActions: IObjectClassInfo[] = [];
-        if (
-            this.context.project.isDashboardProject ||
-            this.context.project.isAppletProject ||
-            this.context.project.settings.general.flowSupport
-        ) {
-            for (const action of this.context.project.actions) {
-                userActions.push({
-                    id: `CallActionActionComponent<${action.name}>`,
-                    name: "CallActionActionComponent",
-                    objectClass: ProjectEditor.CallActionActionComponentClass,
-                    displayName: action.name,
-                    componentPaletteGroupName: "!7User Actions",
-                    props: {
-                        action: action.name
-                    }
-                });
-            }
-        }
-
-        return [...stockComponents, ...userWidgets, ...userActions];
-    }
-
-    @computed get groups() {
-        const groups = new Map<string, IObjectClassInfo[]>();
-        const searchText = this.searchText && this.searchText.toLowerCase();
-        this.allComponentClasses.forEach(componentClass => {
-            if (
-                searchText &&
-                componentClass.name.toLowerCase().indexOf(searchText) == -1
-            ) {
-                return;
-            }
-
-            if (
-                componentClass.objectClass.classInfo.enabledInComponentPalette
-            ) {
+        get groups() {
+            const groups = new Map<string, IObjectClassInfo[]>();
+            const searchText = this.searchText && this.searchText.toLowerCase();
+            this.allComponentClasses.forEach(componentClass => {
                 if (
-                    !componentClass.objectClass.classInfo.enabledInComponentPalette(
-                        this.context.project.settings.general.projectType
-                    )
+                    searchText &&
+                    componentClass.name.toLowerCase().indexOf(searchText) == -1
                 ) {
                     return;
                 }
-            }
 
-            const parts = componentClass.name.split("/");
-            let groupName;
-            if (parts.length == 1) {
-                groupName =
-                    componentClass.componentPaletteGroupName != undefined
-                        ? componentClass.componentPaletteGroupName
-                        : componentClass.objectClass.classInfo
-                              .componentPaletteGroupName;
-                if (groupName) {
-                    if (!groupName.startsWith("!")) {
-                        groupName = "!3" + groupName;
-                    }
-                } else {
-                    if (componentClass.name.endsWith("Widget")) {
-                        groupName = "!1Common Widgets";
-                    } else if (
-                        componentClass.name.endsWith("ActionComponent")
+                if (
+                    componentClass.objectClass.classInfo
+                        .enabledInComponentPalette
+                ) {
+                    if (
+                        !componentClass.objectClass.classInfo.enabledInComponentPalette(
+                            this.context.project.settings.general.projectType
+                        )
                     ) {
-                        groupName = "!2Common Actions";
-                    } else {
-                        groupName = "!4Other components";
+                        return;
                     }
                 }
-            } else if (parts.length == 2) {
-                groupName = "!5" + parts[0];
-            }
 
-            if (groupName) {
-                let componentClasses = groups.get(groupName);
-                if (!componentClasses) {
-                    componentClasses = [];
-                    groups.set(groupName, componentClasses);
+                const parts = componentClass.name.split("/");
+                let groupName;
+                if (parts.length == 1) {
+                    groupName =
+                        componentClass.componentPaletteGroupName != undefined
+                            ? componentClass.componentPaletteGroupName
+                            : componentClass.objectClass.classInfo
+                                  .componentPaletteGroupName;
+                    if (groupName) {
+                        if (!groupName.startsWith("!")) {
+                            groupName = "!3" + groupName;
+                        }
+                    } else {
+                        if (componentClass.name.endsWith("Widget")) {
+                            groupName = "!1Common Widgets";
+                        } else if (
+                            componentClass.name.endsWith("ActionComponent")
+                        ) {
+                            groupName = "!2Common Actions";
+                        } else {
+                            groupName = "!4Other components";
+                        }
+                    }
+                } else if (parts.length == 2) {
+                    groupName = "!5" + parts[0];
                 }
-                componentClasses.push(componentClass);
-            }
-        });
-        return groups;
-    }
 
-    @observable searchText = "";
+                if (groupName) {
+                    let componentClasses = groups.get(groupName);
+                    if (!componentClasses) {
+                        componentClasses = [];
+                        groups.set(groupName, componentClasses);
+                    }
+                    componentClasses.push(componentClass);
+                }
+            });
+            return groups;
+        }
 
-    @action.bound
-    onSearchChange(event: any) {
-        this.searchText = ($(event.target).val() as string).trim();
-    }
+        searchText = "";
 
-    render() {
-        return (
-            <div className="EezStudio_ComponentsPalette_Enclosure">
-                <div className="EezStudio_Title">
-                    <SearchInput
-                        key="search-input"
-                        searchText={this.searchText}
-                        onChange={this.onSearchChange}
-                        onKeyDown={this.onSearchChange}
-                    />
+        onSearchChange(event: any) {
+            this.searchText = ($(event.target).val() as string).trim();
+        }
+
+        render() {
+            return (
+                <div className="EezStudio_ComponentsPalette_Enclosure">
+                    <div className="EezStudio_Title">
+                        <SearchInput
+                            key="search-input"
+                            searchText={this.searchText}
+                            onChange={this.onSearchChange}
+                            onKeyDown={this.onSearchChange}
+                        />
+                    </div>
+
+                    <div className="EezStudio_ComponentsPalette" tabIndex={0}>
+                        {[...this.groups.entries()].sort().map(entry => (
+                            <PaletteGroup
+                                key={entry[0]}
+                                name={entry[0]}
+                                componentClasses={entry[1]}
+                                selectedComponentClass={
+                                    this.selectedComponentClass
+                                }
+                                onSelect={this.onSelect}
+                            ></PaletteGroup>
+                        ))}
+                    </div>
                 </div>
-
-                <div className="EezStudio_ComponentsPalette" tabIndex={0}>
-                    {[...this.groups.entries()].sort().map(entry => (
-                        <PaletteGroup
-                            key={entry[0]}
-                            name={entry[0]}
-                            componentClasses={entry[1]}
-                            selectedComponentClass={this.selectedComponentClass}
-                            onSelect={this.onSelect}
-                        ></PaletteGroup>
-                    ))}
-                </div>
-            </div>
-        );
+            );
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -278,110 +294,124 @@ export function getComponentName(componentClassName: string) {
     return humanize(name);
 }
 
-@observer
-class PaletteItem extends React.Component<{
-    componentClass: IObjectClassInfo;
-    selected: boolean;
-    onSelect: (componentClass: IObjectClassInfo | undefined) => void;
-}> {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
+const PaletteItem = observer(
+    class PaletteItem extends React.Component<{
+        componentClass: IObjectClassInfo;
+        selected: boolean;
+        onSelect: (componentClass: IObjectClassInfo | undefined) => void;
+    }> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
 
-    @action.bound
-    onDragStart(event: React.DragEvent<HTMLDivElement>) {
-        event.stopPropagation();
+        constructor(props: {
+            componentClass: IObjectClassInfo;
+            selected: boolean;
+            onSelect: (componentClass: IObjectClassInfo | undefined) => void;
+        }) {
+            super(props);
 
-        let protoObject = new this.props.componentClass.objectClass();
-
-        const componentClass = getClass(protoObject);
-        const defaultValue = objectClone(
-            componentClass.classInfo.defaultValue!
-        );
-
-        defaultValue.type = this.props.componentClass.name;
-
-        Object.assign(defaultValue, this.props.componentClass.props);
-
-        let object = loadObject(
-            this.context,
-            undefined,
-            defaultValue,
-            this.props.componentClass.objectClass
-        ) as Component;
-
-        object.wireID = guid();
-
-        if (object.left == undefined) {
-            object.left = 0;
-        }
-        if (object.top == undefined) {
-            object.top = 0;
-        }
-        if (object.width == undefined) {
-            object.width = 0;
-        }
-        if (object.height == undefined) {
-            object.height = 0;
+            makeObservable(this, {
+                onDragStart: action.bound,
+                onDragEnd: action.bound
+            });
         }
 
-        setId(this.context.objects, object, "ComponentPaletteItem");
+        onDragStart(event: React.DragEvent<HTMLDivElement>) {
+            event.stopPropagation();
 
-        setClipboardData(event, objectToClipboardData(object));
+            let protoObject = new this.props.componentClass.objectClass();
 
-        event.dataTransfer.effectAllowed = "copy";
+            const componentClass = getClass(protoObject);
+            const defaultValue = objectClone(
+                componentClass.classInfo.defaultValue!
+            );
 
-        event.dataTransfer.setDragImage(
-            DragAndDropManager.blankDragImage,
-            0,
-            0
-        );
+            defaultValue.type = this.props.componentClass.name;
 
-        // postpone render, otherwise we can receive onDragEnd immediatelly
-        setTimeout(() => {
-            DragAndDropManager.start(event, object, this.context);
-        });
+            Object.assign(defaultValue, this.props.componentClass.props);
+
+            let object = loadObject(
+                this.context,
+                undefined,
+                defaultValue,
+                this.props.componentClass.objectClass
+            ) as Component;
+
+            object.wireID = guid();
+
+            if (object.left == undefined) {
+                object.left = 0;
+            }
+            if (object.top == undefined) {
+                object.top = 0;
+            }
+            if (object.width == undefined) {
+                object.width = 0;
+            }
+            if (object.height == undefined) {
+                object.height = 0;
+            }
+
+            setId(this.context.objects, object, "ComponentPaletteItem");
+
+            setClipboardData(event, objectToClipboardData(object));
+
+            event.dataTransfer.effectAllowed = "copy";
+
+            event.dataTransfer.setDragImage(
+                DragAndDropManager.blankDragImage,
+                0,
+                0
+            );
+
+            // postpone render, otherwise we can receive onDragEnd immediatelly
+            setTimeout(() => {
+                DragAndDropManager.start(event, object, this.context);
+            });
+        }
+
+        onDragEnd(event: any) {
+            DragAndDropManager.end(event);
+        }
+
+        render() {
+            let className = classNames("eez-component-palette-item", {
+                selected: this.props.selected,
+                dragging:
+                    DragAndDropManager.dragObject &&
+                    getClass(DragAndDropManager.dragObject) ===
+                        this.props.componentClass.objectClass
+            });
+
+            const classInfo = this.props.componentClass.objectClass.classInfo;
+            let icon = classInfo.icon;
+            let label = this.props.componentClass.displayName
+                ? this.props.componentClass.displayName
+                : classInfo.componentPaletteLabel ||
+                  getComponentName(this.props.componentClass.name);
+
+            let titleStyle: React.CSSProperties | undefined;
+            if (classInfo.componentHeaderColor) {
+                titleStyle = {
+                    backgroundColor: classInfo.componentHeaderColor
+                };
+            }
+
+            return (
+                <div
+                    className={className}
+                    onClick={() =>
+                        this.props.onSelect(this.props.componentClass)
+                    }
+                    draggable={true}
+                    onDragStart={this.onDragStart}
+                    onDragEnd={this.onDragEnd}
+                    style={titleStyle}
+                >
+                    {typeof icon === "string" ? <img src={icon} /> : icon}
+                    {label}
+                </div>
+            );
+        }
     }
-
-    @action.bound
-    onDragEnd(event: any) {
-        DragAndDropManager.end(event);
-    }
-
-    render() {
-        let className = classNames("eez-component-palette-item", {
-            selected: this.props.selected,
-            dragging:
-                DragAndDropManager.dragObject &&
-                getClass(DragAndDropManager.dragObject) ===
-                    this.props.componentClass.objectClass
-        });
-
-        const classInfo = this.props.componentClass.objectClass.classInfo;
-        let icon = classInfo.icon;
-        let label = this.props.componentClass.displayName
-            ? this.props.componentClass.displayName
-            : classInfo.componentPaletteLabel ||
-              getComponentName(this.props.componentClass.name);
-
-        let titleStyle: React.CSSProperties | undefined;
-        if (classInfo.componentHeaderColor) {
-            titleStyle = {
-                backgroundColor: classInfo.componentHeaderColor
-            };
-        }
-
-        return (
-            <div
-                className={className}
-                onClick={() => this.props.onSelect(this.props.componentClass)}
-                draggable={true}
-                onDragStart={this.onDragStart}
-                onDragEnd={this.onDragEnd}
-                style={titleStyle}
-            >
-                {typeof icon === "string" ? <img src={icon} /> : icon}
-                {label}
-            </div>
-        );
-    }
-}
+);

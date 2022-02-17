@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, action, IObservableValue } from "mobx";
+import { observable, action, IObservableValue, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -18,171 +18,196 @@ import { SearchInput } from "eez-studio-ui/search-input";
 import { Font, Glyph } from "project-editor/features/font/font";
 import { ProjectContext } from "project-editor/project/context";
 
-@observer
-export class Glyphs
-    extends React.Component<{
-        glyphs: Glyph[];
-        selectedGlyph: IObservableValue<Glyph | undefined>;
-        onSelectGlyph: (glyph: Glyph) => void;
-        onDoubleClickGlyph: (glyph: Glyph) => void;
-        onRebuildGlyphs?: () => void;
-        onAddGlyph?: () => void;
-        onDeleteGlyph?: () => void;
-        onCreateShadow?: () => void;
-        dialog: boolean;
-    }>
-    implements IPanel
-{
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
+export const Glyphs = observer(
+    class Glyphs
+        extends React.Component<{
+            glyphs: Glyph[];
+            selectedGlyph: IObservableValue<Glyph | undefined>;
+            onSelectGlyph: (glyph: Glyph) => void;
+            onDoubleClickGlyph: (glyph: Glyph) => void;
+            onRebuildGlyphs?: () => void;
+            onAddGlyph?: () => void;
+            onDeleteGlyph?: () => void;
+            onCreateShadow?: () => void;
+            dialog: boolean;
+        }>
+        implements IPanel
+    {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
 
-    @observable searchText: string;
+        searchText: string;
 
-    list: HTMLUListElement;
+        list: HTMLUListElement;
 
-    @action.bound
-    onSearchChange(event: any) {
-        this.searchText = ($(event.target).val() as string).trim();
+        constructor(props: {
+            glyphs: Glyph[];
+            selectedGlyph: IObservableValue<Glyph | undefined>;
+            onSelectGlyph: (glyph: Glyph) => void;
+            onDoubleClickGlyph: (glyph: Glyph) => void;
+            onRebuildGlyphs?: () => void;
+            onAddGlyph?: () => void;
+            onDeleteGlyph?: () => void;
+            onCreateShadow?: () => void;
+            dialog: boolean;
+        }) {
+            super(props);
 
-        const searchText = this.searchText.toLowerCase();
-
-        let glyph = this.props.glyphs.find(
-            glyph => getLabel(glyph).toLowerCase().indexOf(searchText) != -1
-        );
-
-        if (glyph) {
-            this.props.onSelectGlyph(glyph);
+            makeObservable(this, {
+                searchText: observable,
+                onSearchChange: action.bound
+            });
         }
-    }
 
-    componentDidMount() {
-        this.ensureVisible();
-    }
+        onSearchChange(event: any) {
+            this.searchText = ($(event.target).val() as string).trim();
 
-    componentDidUpdate() {
-        this.ensureVisible();
-    }
+            const searchText = this.searchText.toLowerCase();
 
-    ensureVisible() {
-        setTimeout(() => {
-            const $selectedGlyph = $(this.list).find(".selected");
-            if ($selectedGlyph.length == 1) {
-                $selectedGlyph[0].scrollIntoView({
-                    block: "nearest",
-                    behavior: "auto"
-                });
-            }
-        }, 100);
-    }
-
-    // interface IPanel implementation
-    get selectedObject() {
-        return this.props.selectedGlyph.get();
-    }
-    cutSelection() {}
-    copySelection() {}
-    pasteSelection() {}
-    deleteSelection() {}
-    onFocus = () => {
-        if (!this.props.dialog) {
-            this.context.navigationStore.setSelectedPanel(this);
-        }
-    };
-
-    render() {
-        const glyphs: JSX.Element[] = this.props.glyphs.map(glyph => (
-            <GlyphComponent
-                key={getId(glyph)}
-                glyph={glyph}
-                isSelected={glyph == this.props.selectedGlyph.get()}
-                onSelect={this.props.onSelectGlyph.bind(null, glyph)}
-                onDoubleClick={this.props.onDoubleClickGlyph.bind(null, glyph)}
-            />
-        ));
-
-        let rebuildGlyphsButton: JSX.Element | undefined;
-        if (!this.props.dialog && this.props.onRebuildGlyphs) {
-            rebuildGlyphsButton = (
-                <TextAction
-                    text="Rebuild"
-                    title="Rebuild Glyphs"
-                    onClick={this.props.onRebuildGlyphs}
-                />
+            let glyph = this.props.glyphs.find(
+                glyph => getLabel(glyph).toLowerCase().indexOf(searchText) != -1
             );
-        }
 
-        let addGlyphButton: JSX.Element | undefined;
-        if (!this.props.dialog && this.props.onAddGlyph) {
-            addGlyphButton = (
-                <IconAction
-                    title="Add Glyph"
-                    icon="material:add"
-                    iconSize={16}
-                    onClick={this.props.onAddGlyph}
-                />
-            );
-        }
-
-        let deleteGlyphButton: JSX.Element | undefined;
-        if (!this.props.dialog && this.props.onDeleteGlyph) {
-            const glyph = this.props.selectedGlyph.get();
             if (glyph) {
-                const font = getAncestorOfType(glyph, Font.classInfo) as Font;
-                if (
-                    font &&
-                    font.glyphs[font.glyphs.length - 1] ==
-                        this.props.selectedGlyph.get()
-                ) {
-                    deleteGlyphButton = (
-                        <IconAction
-                            title="Delete Glyph"
-                            icon="material:delete"
-                            iconSize={16}
-                            onClick={this.props.onDeleteGlyph}
-                        />
-                    );
+                this.props.onSelectGlyph(glyph);
+            }
+        }
+
+        componentDidMount() {
+            this.ensureVisible();
+        }
+
+        componentDidUpdate() {
+            this.ensureVisible();
+        }
+
+        ensureVisible() {
+            setTimeout(() => {
+                const $selectedGlyph = $(this.list).find(".selected");
+                if ($selectedGlyph.length == 1) {
+                    $selectedGlyph[0].scrollIntoView({
+                        block: "nearest",
+                        behavior: "auto"
+                    });
+                }
+            }, 100);
+        }
+
+        // interface IPanel implementation
+        get selectedObject() {
+            return this.props.selectedGlyph.get();
+        }
+        cutSelection() {}
+        copySelection() {}
+        pasteSelection() {}
+        deleteSelection() {}
+        onFocus = () => {
+            if (!this.props.dialog) {
+                this.context.navigationStore.setSelectedPanel(this);
+            }
+        };
+
+        render() {
+            const glyphs: JSX.Element[] = this.props.glyphs.map(glyph => (
+                <GlyphComponent
+                    key={getId(glyph)}
+                    glyph={glyph}
+                    isSelected={glyph == this.props.selectedGlyph.get()}
+                    onSelect={this.props.onSelectGlyph.bind(null, glyph)}
+                    onDoubleClick={this.props.onDoubleClickGlyph.bind(
+                        null,
+                        glyph
+                    )}
+                />
+            ));
+
+            let rebuildGlyphsButton: JSX.Element | undefined;
+            if (!this.props.dialog && this.props.onRebuildGlyphs) {
+                rebuildGlyphsButton = (
+                    <TextAction
+                        text="Rebuild"
+                        title="Rebuild Glyphs"
+                        onClick={this.props.onRebuildGlyphs}
+                    />
+                );
+            }
+
+            let addGlyphButton: JSX.Element | undefined;
+            if (!this.props.dialog && this.props.onAddGlyph) {
+                addGlyphButton = (
+                    <IconAction
+                        title="Add Glyph"
+                        icon="material:add"
+                        iconSize={16}
+                        onClick={this.props.onAddGlyph}
+                    />
+                );
+            }
+
+            let deleteGlyphButton: JSX.Element | undefined;
+            if (!this.props.dialog && this.props.onDeleteGlyph) {
+                const glyph = this.props.selectedGlyph.get();
+                if (glyph) {
+                    const font = getAncestorOfType(
+                        glyph,
+                        Font.classInfo
+                    ) as Font;
+                    if (
+                        font &&
+                        font.glyphs[font.glyphs.length - 1] ==
+                            this.props.selectedGlyph.get()
+                    ) {
+                        deleteGlyphButton = (
+                            <IconAction
+                                title="Delete Glyph"
+                                icon="material:delete"
+                                iconSize={16}
+                                onClick={this.props.onDeleteGlyph}
+                            />
+                        );
+                    }
                 }
             }
-        }
 
-        let createShadowButton: JSX.Element | undefined;
-        if (!this.props.dialog && this.props.onCreateShadow) {
-            // createShadowButton = (
-            //     <IconAction
-            //         title="Create Shadow"
-            //         icon="material:grid_on"
-            //         iconSize={16}
-            //         onClick={this.props.onCreateShadow}
-            //     />
-            // );
-        }
+            let createShadowButton: JSX.Element | undefined;
+            if (!this.props.dialog && this.props.onCreateShadow) {
+                // createShadowButton = (
+                //     <IconAction
+                //         title="Create Shadow"
+                //         icon="material:grid_on"
+                //         iconSize={16}
+                //         onClick={this.props.onCreateShadow}
+                //     />
+                // );
+            }
 
-        return (
-            <div
-                className="EezStudio_Glyphs"
-                onFocus={this.onFocus}
-                tabIndex={0}
-            >
-                <div>
-                    <div className="btn-toolbar" role="toolbar">
-                        <SearchInput
-                            searchText={this.searchText}
-                            onChange={this.onSearchChange}
-                            onKeyDown={this.onSearchChange}
-                        />
-                        {rebuildGlyphsButton}
-                        {addGlyphButton}
-                        {deleteGlyphButton}
-                        {createShadowButton}
+            return (
+                <div
+                    className="EezStudio_Glyphs"
+                    onFocus={this.onFocus}
+                    tabIndex={0}
+                >
+                    <div>
+                        <div className="btn-toolbar" role="toolbar">
+                            <SearchInput
+                                searchText={this.searchText}
+                                onChange={this.onSearchChange}
+                                onKeyDown={this.onSearchChange}
+                            />
+                            {rebuildGlyphsButton}
+                            {addGlyphButton}
+                            {deleteGlyphButton}
+                            {createShadowButton}
+                        </div>
+                    </div>
+                    <div>
+                        <ul ref={ref => (this.list = ref!)}>{glyphs}</ul>
                     </div>
                 </div>
-                <div>
-                    <ul ref={ref => (this.list = ref!)}>{glyphs}</ul>
-                </div>
-            </div>
-        );
+            );
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 

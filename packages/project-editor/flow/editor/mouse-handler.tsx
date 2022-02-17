@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, action, runInAction } from "mobx";
+import { observable, action, runInAction, makeObservable } from "mobx";
 
 import { Point, Rect, rectEqual, rectClone } from "eez-studio-shared/geometry";
 import {
@@ -209,14 +209,22 @@ export class PanMouseHandler extends MouseHandler {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class RubberBandSelectionMouseHandler extends MouseHandler {
-    @observable rubberBendRect: Rect | undefined;
+    rubberBendRect: Rect | undefined;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            rubberBendRect: observable,
+            move: action
+        });
+    }
 
     down(context: IFlowContext, event: IPointerEvent) {
         super.down(context, event);
         context.viewState.deselectAllObjects();
     }
 
-    @action
     move(context: IFlowContext, event: IPointerEvent) {
         super.move(context, event);
 
@@ -458,6 +466,15 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
     selectionNode: HTMLElement;
     objectNodes: HTMLElement[];
 
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            move: action,
+            up: action
+        });
+    }
+
     down(context: IFlowContext, event: IPointerEvent) {
         super.down(context, event);
 
@@ -478,7 +495,6 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
         this.top = this.selectionBoundingRectAtDown.top;
     }
 
-    @action
     move(context: IFlowContext, event: IPointerEvent) {
         super.move(context, event);
 
@@ -550,7 +566,6 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
         }
     }
 
-    @action
     up(context: IFlowContext) {
         super.up(context);
 
@@ -599,6 +614,10 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
 
     constructor(private handleType: ResizeHandleType) {
         super();
+
+        makeObservable(this, {
+            move: action
+        });
     }
 
     down(context: IFlowContext, event: IPointerEvent) {
@@ -757,7 +776,6 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
         }
     }
 
-    @action
     move(context: IFlowContext, event: IPointerEvent) {
         super.move(context, event);
 
@@ -818,9 +836,9 @@ const connectedLineStyle = {
 };
 
 export class NewConnectionLineFromOutputMouseHandler extends MouseHandler {
-    @observable startPoint: Point;
-    @observable endPoint: Point;
-    @observable.shallow target:
+    startPoint: Point;
+    endPoint: Point;
+    target:
         | {
               objectId: string;
               connectionInput: string;
@@ -837,9 +855,17 @@ export class NewConnectionLineFromOutputMouseHandler extends MouseHandler {
         private connectionOutput: string
     ) {
         super();
+
+        makeObservable(this, {
+            startPoint: observable,
+            endPoint: observable,
+            target: observable.shallow,
+            down: action,
+            move: action,
+            onTransformChanged: action
+        });
     }
 
-    @action
     down(context: IFlowContext, event: IPointerEvent) {
         super.down(context, event);
 
@@ -880,7 +906,6 @@ export class NewConnectionLineFromOutputMouseHandler extends MouseHandler {
         this.targetNodeHeight = 0;
     }
 
-    @action
     move(context: IFlowContext, event: IPointerEvent) {
         super.move(context, event);
 
@@ -1000,7 +1025,6 @@ export class NewConnectionLineFromOutputMouseHandler extends MouseHandler {
         );
     }
 
-    @action
     onTransformChanged(context: IFlowContext) {
         const startClientPoint = this.transform.offsetToPagePoint(
             this.startPoint
@@ -1013,9 +1037,9 @@ export class NewConnectionLineFromOutputMouseHandler extends MouseHandler {
 }
 
 export class NewConnectionLineFromInputMouseHandler extends MouseHandler {
-    @observable startPoint: Point;
-    @observable endPoint: Point;
-    @observable.shallow source:
+    startPoint: Point;
+    endPoint: Point;
+    source:
         | {
               objectId: string;
               connectionOutput: string;
@@ -1032,9 +1056,17 @@ export class NewConnectionLineFromInputMouseHandler extends MouseHandler {
         private connectionInput: string
     ) {
         super();
+
+        makeObservable(this, {
+            startPoint: observable,
+            endPoint: observable,
+            source: observable.shallow,
+            down: action,
+            move: action,
+            onTransformChanged: action
+        });
     }
 
-    @action
     down(context: IFlowContext, event: IPointerEvent) {
         super.down(context, event);
 
@@ -1075,7 +1107,6 @@ export class NewConnectionLineFromInputMouseHandler extends MouseHandler {
         this.sourceNodeHeight = 0;
     }
 
-    @action
     move(context: IFlowContext, event: IPointerEvent) {
         super.move(context, event);
 
@@ -1195,7 +1226,6 @@ export class NewConnectionLineFromInputMouseHandler extends MouseHandler {
         );
     }
 
-    @action
     onTransformChanged(context: IFlowContext) {
         const endClientPoint = this.transform.offsetToPagePoint(this.endPoint);
         this.endPoint =
@@ -1208,9 +1238,9 @@ export class NewConnectionLineFromInputMouseHandler extends MouseHandler {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class MoveOutputConnectionLinesMouseHandler extends MouseHandler {
-    @observable connectionLines: ConnectionLine[] = [];
-    @observable startPoint: Point;
-    @observable.shallow source:
+    connectionLines: ConnectionLine[] = [];
+    startPoint: Point;
+    source:
         | {
               objectId: string;
               connectionOutput: string;
@@ -1226,9 +1256,16 @@ export class MoveOutputConnectionLinesMouseHandler extends MouseHandler {
         private connectionOutput: string
     ) {
         super();
+
+        makeObservable(this, {
+            connectionLines: observable,
+            startPoint: observable,
+            source: observable.shallow,
+            down: action,
+            move: action
+        });
     }
 
-    @action
     down(context: IFlowContext, event: IPointerEvent) {
         super.down(context, event);
 
@@ -1291,7 +1328,6 @@ export class MoveOutputConnectionLinesMouseHandler extends MouseHandler {
         this.sourceNodeHeight = 0;
     }
 
-    @action
     move(context: IFlowContext, event: IPointerEvent) {
         super.move(context, event);
 
@@ -1453,9 +1489,9 @@ export class MoveOutputConnectionLinesMouseHandler extends MouseHandler {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
-    @observable connectionLines: ConnectionLine[] = [];
-    @observable endPoint: Point;
-    @observable.shallow target:
+    connectionLines: ConnectionLine[] = [];
+    endPoint: Point;
+    target:
         | {
               objectId: string;
               connectionInput: string;
@@ -1471,9 +1507,16 @@ export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
         private connectionInput: string
     ) {
         super();
+
+        makeObservable(this, {
+            connectionLines: observable,
+            endPoint: observable,
+            target: observable.shallow,
+            down: action,
+            move: action
+        });
     }
 
-    @action
     down(context: IFlowContext, event: IPointerEvent) {
         super.down(context, event);
 
@@ -1536,7 +1579,6 @@ export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
         this.targetNodeHeight = 0;
     }
 
-    @action
     move(context: IFlowContext, event: IPointerEvent) {
         super.move(context, event);
 

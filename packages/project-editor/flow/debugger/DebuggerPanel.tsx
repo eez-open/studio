@@ -12,43 +12,44 @@ import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class DebuggerPanel extends React.Component<{ runtime: RuntimeBase }> {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
+export const DebuggerPanel = observer(
+    class DebuggerPanel extends React.Component<{ runtime: RuntimeBase }> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
 
-    factory = (node: FlexLayout.TabNode) => {
-        var component = node.getComponent();
+        factory = (node: FlexLayout.TabNode) => {
+            var component = node.getComponent();
 
-        if (component === "queue") {
-            return <QueuePanel runtime={this.props.runtime} />;
+            if (component === "queue") {
+                return <QueuePanel runtime={this.props.runtime} />;
+            }
+
+            if (component === "watch") {
+                return <WatchPanel runtime={this.props.runtime} />;
+            }
+
+            if (component === "active-flows") {
+                return <ActiveFlowsPanel runtime={this.props.runtime} />;
+            }
+
+            if (component === "logs") {
+                return <LogsPanel runtime={this.props.runtime} />;
+            }
+
+            return null;
+        };
+
+        render() {
+            return (
+                <div className="EezStudio_DebuggerPanel">
+                    <FlexLayout.Layout
+                        model={this.context.layoutModels.debugger}
+                        factory={this.factory}
+                        realtimeResize={true}
+                        font={LayoutModels.FONT_SUB}
+                    />
+                </div>
+            );
         }
-
-        if (component === "watch") {
-            return <WatchPanel runtime={this.props.runtime} />;
-        }
-
-        if (component === "active-flows") {
-            return <ActiveFlowsPanel runtime={this.props.runtime} />;
-        }
-
-        if (component === "logs") {
-            return <LogsPanel runtime={this.props.runtime} />;
-        }
-
-        return null;
-    };
-
-    render() {
-        return (
-            <div className="EezStudio_DebuggerPanel">
-                <FlexLayout.Layout
-                    model={this.context.layoutModels.debugger}
-                    factory={this.factory}
-                    realtimeResize={true}
-                    font={LayoutModels.FONT_SUB}
-                />
-            </div>
-        );
     }
-}
+);

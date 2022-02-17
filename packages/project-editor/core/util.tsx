@@ -1,3 +1,4 @@
+import { dialog, getCurrentWindow } from "@electron/remote";
 import React from "react";
 import ReactDOM from "react-dom";
 
@@ -16,18 +17,15 @@ export async function confirm(
     detail: string | undefined,
     callback: () => void
 ) {
-    const result = await EEZStudio.remote.dialog.showMessageBox(
-        EEZStudio.remote.getCurrentWindow(),
-        {
-            type: "question",
-            title: "Project Editor - EEZ Studio",
-            message: message,
-            detail: detail,
-            noLink: true,
-            buttons: ["Yes", "No"],
-            cancelId: 1
-        }
-    );
+    const result = await dialog.showMessageBox(getCurrentWindow(), {
+        type: "question",
+        title: "Project Editor - EEZ Studio",
+        message: message,
+        detail: detail,
+        noLink: true,
+        buttons: ["Yes", "No"],
+        cancelId: 1
+    });
     const buttonIndex = result.response;
     if (buttonIndex == 0) {
         callback();
@@ -35,18 +33,15 @@ export async function confirm(
 }
 
 export function info(message: string, detail?: string) {
-    return EEZStudio.remote.dialog.showMessageBox(
-        EEZStudio.remote.getCurrentWindow(),
-        {
-            type: "info",
-            title: "Project Editor - EEZ Studio",
-            message: message,
-            detail: detail,
-            noLink: true,
-            buttons: ["OK"],
-            cancelId: 1
-        }
-    );
+    return dialog.showMessageBox(getCurrentWindow(), {
+        type: "info",
+        title: "Project Editor - EEZ Studio",
+        message: message,
+        detail: detail,
+        noLink: true,
+        buttons: ["OK"],
+        cancelId: 1
+    });
 }
 
 export function showGenericDialog(

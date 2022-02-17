@@ -1,6 +1,6 @@
-import { autorun, toJS } from "mobx";
+import { ipcMain, BrowserWindow } from "electron";
+import { autorun } from "mobx";
 
-import { isRenderer } from "eez-studio-shared/util-electron";
 import { roundNumber } from "eez-studio-shared/roundNumber";
 import {
     activityLogStore,
@@ -10,13 +10,9 @@ import {
 
 import type { Connection } from "instrument/connection/connection-main";
 
-////////////////////////////////////////////////////////////////////////////////
-
 const CONF_TIMEOUT_MS = 1000;
 
-////////////////////////////////////////////////////////////////////////////////
-
-abstract class ListOperation {
+export abstract class ListOperation {
     logId: string;
     logEntry: Partial<IActivityLogEntry>;
     dataReceived: string;
@@ -156,8 +152,6 @@ abstract class ListOperation {
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 export class GetListOperation extends ListOperation {
     listData: any = {};
 
@@ -235,8 +229,6 @@ export class GetListOperation extends ListOperation {
         }
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 export class SendListOperation extends ListOperation {
     isQuery = false;
@@ -330,157 +322,33 @@ export class SendListOperation extends ListOperation {
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-let resolveCallback: ((result: any) => void) | undefined;
-let rejectCallback: ((result: any) => void) | undefined;
-
-////////////////////////////////////////////////////////////////////////////////
-
-export async function getList(instrumentId: string, channelIndex: number) {
-    return new Promise<any>((resolve, reject) => {
-        resolveCallback = resolve;
-        rejectCallback = reject;
-
-        getListRenderer(
-            instrumentId,
-            channelIndex,
-            EEZStudio.remote.getCurrentWindow().id
-        );
-    });
-}
-
-function getListRenderer(
-    instrumentId: string,
-    channelIndex: number,
-    callbackWindowId: number
-) {
-    EEZStudio.electron.ipcRenderer.send("instrument/connection/get-list", {
-        instrumentId,
-        channelIndex,
-        callbackWindowId
-    });
-}
-
-if (!isRenderer()) {
-    const { ipcMain } = require("electron");
-
-    ipcMain.on(
-        "instrument/connection/get-list",
-        async function (
-            event: any,
-            arg: {
-                instrumentId: string;
-                channelIndex: number;
-                callbackWindowId: number;
-            }
-        ) {
-            const { connections } = await import(
-                "instrument/connection/connection-main"
-            );
-            let connection = connections.get(arg.instrumentId);
-            if (connection) {
-                getListMain(
-                    connection as Connection,
-                    arg.channelIndex,
-                    arg.callbackWindowId
-                );
-            }
+ipcMain.on(
+    "instrument/connection/send-list",
+    async function (
+        event: any,
+        arg: {
+            instrumentId: string;
+            channelIndex: number;
+            listData: any;
+            listName: any;
+            callbackWindowId: number;
         }
-    );
-}
-
-function getListMain(
-    connection: Connection,
-    channelIndex: number,
-    callbackWindowId: number
-) {
-    try {
-        connection.startLongOperation(
-            () =>
-                new GetListOperation(connection, channelIndex, callbackWindowId)
+    ) {
+        const { connections } = await import(
+            "instrument/connection/connection-main"
         );
-    } catch (error) {
-        let browserWindow =
-            require("electron").BrowserWindow.fromId(callbackWindowId)!;
-        browserWindow.webContents.send(
-            "instrument/connection/list-operation-result",
-            {
-                error
-            }
-        );
+        let connection = connections.get(arg.instrumentId);
+        if (connection) {
+            sendListMain(
+                connection as Connection,
+                arg.channelIndex,
+                arg.listName,
+                arg.listData,
+                arg.callbackWindowId
+            );
+        }
     }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export async function sendList(
-    instrumentId: string,
-    channelIndex: number,
-    listName: string,
-    listData: any
-) {
-    return new Promise<any>((resolve, reject) => {
-        resolveCallback = resolve;
-        rejectCallback = reject;
-
-        sendListRenderer(
-            instrumentId,
-            channelIndex,
-            listName,
-            listData,
-            EEZStudio.remote.getCurrentWindow().id
-        );
-    });
-}
-
-function sendListRenderer(
-    instrumentId: string,
-    channelIndex: number,
-    listName: string,
-    listData: any,
-    callbackWindowId: number
-) {
-    EEZStudio.electron.ipcRenderer.send("instrument/connection/send-list", {
-        instrumentId,
-        channelIndex,
-        listName,
-        listData: toJS(listData),
-        callbackWindowId
-    });
-}
-
-if (!isRenderer()) {
-    const { ipcMain } = require("electron");
-
-    ipcMain.on(
-        "instrument/connection/send-list",
-        async function (
-            event: any,
-            arg: {
-                instrumentId: string;
-                channelIndex: number;
-                listData: any;
-                listName: any;
-                callbackWindowId: number;
-            }
-        ) {
-            const { connections } = await import(
-                "instrument/connection/connection-main"
-            );
-            let connection = connections.get(arg.instrumentId);
-            if (connection) {
-                sendListMain(
-                    connection as Connection,
-                    arg.channelIndex,
-                    arg.listName,
-                    arg.listData,
-                    arg.callbackWindowId
-                );
-            }
-        }
-    );
-}
+);
 
 function sendListMain(
     connection: Connection,
@@ -501,8 +369,7 @@ function sendListMain(
                 )
         );
     } catch (error) {
-        let browserWindow =
-            require("electron").BrowserWindow.fromId(callbackWindowId)!;
+        let browserWindow = BrowserWindow.fromId(callbackWindowId)!;
         browserWindow.webContents.send(
             "instrument/connection/list-operation-result",
             {
@@ -510,25 +377,4 @@ function sendListMain(
             }
         );
     }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-if (isRenderer()) {
-    EEZStudio.electron.ipcRenderer.on(
-        "instrument/connection/list-operation-result",
-        (event: any, args: any) => {
-            if (args.error) {
-                if (rejectCallback) {
-                    rejectCallback(args.error);
-                }
-            } else {
-                if (resolveCallback) {
-                    resolveCallback(args);
-                }
-            }
-            rejectCallback = undefined;
-            resolveCallback = undefined;
-        }
-    );
 }

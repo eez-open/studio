@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, observable } from "mobx";
+import { computed, observable, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 
@@ -13,106 +13,118 @@ import { IEezObject } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class ProjectVariablesNavigation extends NavigationComponent {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
+export const ProjectVariablesNavigation = observer(
+    class ProjectVariablesNavigation extends NavigationComponent {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
 
-    factory = (node: FlexLayout.TabNode) => {
-        var component = node.getComponent();
+        factory = (node: FlexLayout.TabNode) => {
+            var component = node.getComponent();
 
-        if (component === "locals") {
-            return <LocalVariables />;
-        }
-
-        if (component === "globals") {
-            return (
-                <ListNavigation
-                    id="global-variables"
-                    navigationObject={
-                        this.context.project.variables.globalVariables
-                    }
-                    selectedObject={
-                        this.context.navigationStore
-                            .selectedGlobalVariableObject
-                    }
-                />
-            );
-        }
-
-        if (component === "structs") {
-            return (
-                <ListNavigation
-                    id="structs"
-                    navigationObject={this.context.project.variables.structures}
-                    selectedObject={
-                        this.context.navigationStore.selectedStructureObject
-                    }
-                />
-            );
-        }
-
-        if (component === "enums") {
-            return (
-                <ListNavigation
-                    id="enums"
-                    navigationObject={this.context.project.variables.enums}
-                    selectedObject={
-                        this.context.navigationStore.selectedEnumObject
-                    }
-                />
-            );
-        }
-
-        return null;
-    };
-
-    render() {
-        return (
-            <FlexLayout.Layout
-                model={this.context.layoutModels.variables}
-                factory={this.factory}
-                realtimeResize={true}
-                font={LayoutModels.FONT_SUB}
-            />
-        );
-    }
-}
-
-@observer
-export class LocalVariables extends React.Component {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
-    selectedObject = observable.box<IEezObject>();
-
-    @computed get navigationObject() {
-        const editor = this.context.editorsStore.activeEditor;
-        if (editor) {
-            const object = editor.object;
-            if (
-                object instanceof Page ||
-                (object instanceof Action &&
-                    object.implementationType == "flow")
-            ) {
-                return object.localVariables;
+            if (component === "locals") {
+                return <LocalVariables />;
             }
-        }
 
-        return undefined;
-    }
+            if (component === "globals") {
+                return (
+                    <ListNavigation
+                        id="global-variables"
+                        navigationObject={
+                            this.context.project.variables.globalVariables
+                        }
+                        selectedObject={
+                            this.context.navigationStore
+                                .selectedGlobalVariableObject
+                        }
+                    />
+                );
+            }
 
-    render() {
-        if (this.navigationObject) {
+            if (component === "structs") {
+                return (
+                    <ListNavigation
+                        id="structs"
+                        navigationObject={
+                            this.context.project.variables.structures
+                        }
+                        selectedObject={
+                            this.context.navigationStore.selectedStructureObject
+                        }
+                    />
+                );
+            }
+
+            if (component === "enums") {
+                return (
+                    <ListNavigation
+                        id="enums"
+                        navigationObject={this.context.project.variables.enums}
+                        selectedObject={
+                            this.context.navigationStore.selectedEnumObject
+                        }
+                    />
+                );
+            }
+
+            return null;
+        };
+
+        render() {
             return (
-                <ListNavigation
-                    id="local-variables"
-                    navigationObject={this.navigationObject}
-                    selectedObject={this.selectedObject}
+                <FlexLayout.Layout
+                    model={this.context.layoutModels.variables}
+                    factory={this.factory}
+                    realtimeResize={true}
+                    font={LayoutModels.FONT_SUB}
                 />
             );
         }
-
-        return null;
     }
-}
+);
+
+export const LocalVariables = observer(
+    class LocalVariables extends React.Component {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        selectedObject = observable.box<IEezObject>();
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                navigationObject: computed
+            });
+        }
+
+        get navigationObject() {
+            const editor = this.context.editorsStore.activeEditor;
+            if (editor) {
+                const object = editor.object;
+                if (
+                    object instanceof Page ||
+                    (object instanceof Action &&
+                        object.implementationType == "flow")
+                ) {
+                    return object.localVariables;
+                }
+            }
+
+            return undefined;
+        }
+
+        render() {
+            if (this.navigationObject) {
+                return (
+                    <ListNavigation
+                        id="local-variables"
+                        navigationObject={this.navigationObject}
+                        selectedObject={this.selectedObject}
+                    />
+                );
+            }
+
+            return null;
+        }
+    }
+);

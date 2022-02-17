@@ -1,4 +1,4 @@
-import { observable, computed, action } from "mobx";
+import { observable, computed, action, makeObservable } from "mobx";
 
 import { BoundingRectBuilder } from "eez-studio-shared/geometry";
 
@@ -34,12 +34,23 @@ class ViewState implements IViewState {
         this.flowContext.tabState.transform = transform;
     }
 
-    @observable dxMouseDrag: number | undefined;
-    @observable dyMouseDrag: number | undefined;
+    dxMouseDrag: number | undefined;
+    dyMouseDrag: number | undefined;
 
-    @observable hoveredConnectionLines: ObjectIdUnderPointer | undefined;
+    hoveredConnectionLines: ObjectIdUnderPointer | undefined;
 
-    constructor(public flowContext: EditorFlowContext) {}
+    constructor(public flowContext: EditorFlowContext) {
+        makeObservable(this, {
+            dxMouseDrag: observable,
+            dyMouseDrag: observable,
+            hoveredConnectionLines: observable,
+            resetTransform: action,
+            selectedObjects: computed,
+            selectObjects: action,
+            deselectAllObjects: action,
+            hoveredConnectionLinesComponent: computed
+        });
+    }
 
     get document() {
         return this.flowContext.document;
@@ -49,7 +60,6 @@ class ViewState implements IViewState {
         return this.flowContext.containerId;
     }
 
-    @action
     resetTransform() {
         this.flowContext.tabState.resetTransform();
     }
@@ -114,7 +124,7 @@ class ViewState implements IViewState {
         ];
     }
 
-    @computed get selectedObjects(): ITreeObjectAdapter[] {
+    get selectedObjects(): ITreeObjectAdapter[] {
         return this.flowContext.dragComponent
             ? [new TreeObjectAdapter(this.flowContext.dragComponent)]
             : this.document?.flow.selectedItems ?? [];
@@ -144,7 +154,6 @@ class ViewState implements IViewState {
         }
     }
 
-    @action
     selectObjects(objects: ITreeObjectAdapter[]) {
         if (this.document) {
             this.document.flow.selectItems(
@@ -153,7 +162,6 @@ class ViewState implements IViewState {
         }
     }
 
-    @action
     deselectAllObjects(): void {
         if (this.document) {
             this.document.flow.selectItems([]);
@@ -249,7 +257,7 @@ class ViewState implements IViewState {
         DocumentStore.undoManager.setCombineCommands(false);
     }
 
-    @computed get hoveredConnectionLinesComponent() {
+    get hoveredConnectionLinesComponent() {
         if (!this.hoveredConnectionLines) {
             return undefined;
         }
@@ -283,8 +291,14 @@ export class EditorFlowContext implements IFlowContext {
 
     viewState: ViewState = new ViewState(this);
     editorOptions: IEditorOptions = {};
-    @observable dragComponent: Component | undefined;
+    dragComponent: Component | undefined;
     dataContext: IDataContext;
+
+    constructor() {
+        makeObservable(this, {
+            dragComponent: observable
+        });
+    }
 
     get DocumentStore() {
         return this.document.DocumentStore;

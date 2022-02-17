@@ -1,4 +1,4 @@
-import { observable, action, runInAction, autorun } from "mobx";
+import { observable, action, runInAction, autorun, makeObservable } from "mobx";
 
 import { dbQuery } from "eez-studio-shared/db-query";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
@@ -30,11 +30,20 @@ export interface ISession {
 }
 
 export class HistorySessions {
-    @observable sessions: ISession[] = [];
-    @observable selectedSession: ISession | undefined;
-    @observable activeSession: SessionHistoryItem | undefined;
+    sessions: ISession[] = [];
+    selectedSession: ISession | undefined;
+    activeSession: SessionHistoryItem | undefined;
 
     constructor(public history: History) {
+        makeObservable(this, {
+            sessions: observable,
+            selectedSession: observable,
+            activeSession: observable,
+            load: action,
+            selectSession: action.bound,
+            closeActiveSession: action.bound
+        });
+
         autorun(
             () => {
                 let newActiveSession: SessionHistoryItem | undefined;
@@ -68,7 +77,6 @@ export class HistorySessions {
         );
     }
 
-    @action
     async load() {
         const rows = await dbQuery(
             `SELECT
@@ -100,7 +108,6 @@ export class HistorySessions {
         });
     }
 
-    @action.bound
     async selectSession(selectedSession: ISession | undefined) {
         if (this.selectedSession) {
             this.selectedSession.selected = false;
@@ -224,7 +231,6 @@ export class HistorySessions {
         }
     };
 
-    @action.bound
     closeActiveSession() {
         if (this.activeSession) {
             beginTransaction("Close session");

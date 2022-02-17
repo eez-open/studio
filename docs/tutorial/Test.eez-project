@@ -311,7 +311,7 @@
           "wireID": "69bdc907-a931-4d1d-81ef-2d7a5f939bf7",
           "customInputs": [],
           "customOutputs": [],
-          "milliseconds": "2000"
+          "milliseconds": "50"
         }
       ],
       "connectionLines": [

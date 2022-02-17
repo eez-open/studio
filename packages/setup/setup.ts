@@ -97,7 +97,7 @@ async function doSetup(webContents: WebContents) {
 
     const { loadExtensions } =
         require("eez-studio-shared/extensions/extensions") as typeof ExtensionsModule;
-    loadExtensions();
+    loadExtensions([]);
 
     const extensionsFolderPath = getUserDataPath(EXTENSIONS_FOLDER_NAME);
     if (!fs.existsSync(extensionsFolderPath)) {
@@ -110,7 +110,7 @@ export async function setup() {
         if (isDev || !isAnySetupRequired()) {
             const { loadExtensions } =
                 require("eez-studio-shared/extensions/extensions") as typeof ExtensionsModule;
-            loadExtensions();
+            loadExtensions([]);
 
             resolve();
             return;
@@ -123,14 +123,14 @@ export async function setup() {
                 webviewTag: true,
                 nodeIntegrationInWorker: true,
                 plugins: true,
-                contextIsolation: false,
-                enableRemoteModule: true
+                contextIsolation: false
             },
             width: 600,
             height: 200,
             backgroundColor: "#333",
             show: false
         });
+        require("@electron/remote/main").enable(win.webContents);
 
         win.setMenu(null);
         win.loadURL(`file://${__dirname}/../setup/setup.html`);

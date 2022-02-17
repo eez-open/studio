@@ -1,4 +1,4 @@
-import { observable, action, runInAction } from "mobx";
+import { observable, action, runInAction, makeObservable } from "mobx";
 
 import { fetchFileUrl, useConnection } from "instrument/bb3/helpers";
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
@@ -9,10 +9,8 @@ export interface ModuleFirmwareRelease {
 }
 
 export class Module {
-    @observable
     busy: boolean;
 
-    @observable
     firmwareVersion: string;
 
     constructor(
@@ -23,10 +21,15 @@ export class Module {
         firmwareVersion: string,
         public allReleases: ModuleFirmwareRelease[]
     ) {
+        makeObservable(this, {
+            busy: observable,
+            firmwareVersion: observable,
+            setBusy: action
+        });
+
         this.firmwareVersion = firmwareVersion;
     }
 
-    @action
     setBusy(value: boolean) {
         this.busy = value;
     }
