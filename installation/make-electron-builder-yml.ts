@@ -196,16 +196,18 @@ let files = [
     "!node_modules/better-sqlite3/deps",
     "!node_modules/better-sqlite3/src",
     "!node_modules/better-sqlite3/docs",
-    "!node_modules/bootstrap-dark-5/scss",
-    "!node_modules/ff-napi/deps",
-    "!node_modules/ff-napi/src",
+    "!node_modules/bootstrap/js",
+    "!node_modules/bootstrap/scss",
+    "!node_modules/ffi-napi/deps",
+    "!node_modules/ffi-napi/src",
     "!build/eez-studio-ui/_images/background.png",
     "!node_modules/plotly.js/dist/**",
     "!node_modules/plotly.js/src/**",
     "node_modules/plotly.js/dist/plotly.min.js",
     "!node_modules/mapbox-gl/dist/**",
     "!node_modules/mapbox-gl/src/**",
-    "node_modules/mapbox-gl/dist/mapbox-gl.js"
+    "node_modules/mapbox-gl/dist/mapbox-gl.js",
+    "!node_modules/xterm/src/**"
 ];
 
 (async function () {
