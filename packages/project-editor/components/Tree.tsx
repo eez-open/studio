@@ -325,6 +325,13 @@ export const Tree = observer(
                     }
 
                     event.preventDefault();
+                } else if (event.keyCode == 13) {
+                    let item = this.props.treeAdapter.getItemFromId(
+                        $focusedItem.attr("data-object-id")!
+                    );
+                    if (item) {
+                        this.props.treeAdapter.onClick(item);
+                    }
                 }
             }
         };
