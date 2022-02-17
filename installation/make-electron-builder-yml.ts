@@ -213,7 +213,7 @@ let files = [
 (async function () {
     const config = {
         appId: "hr.envox.eez.studio",
-        copyright: "Copyright © 2018-present Envox d.o.o.",
+        copyright: "Copyright © 2022 Envox d.o.o.",
         productName,
 
         nodeGypRebuild: false,
