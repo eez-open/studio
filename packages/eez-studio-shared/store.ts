@@ -1,5 +1,5 @@
 import type * as ElectronModule from "electron";
-import { observable, computed, action, toJS } from "mobx";
+import { observable, computed, action, toJS, makeObservable } from "mobx";
 
 import { db } from "eez-studio-shared/db-path";
 import { watch, sendMessage, registerSource } from "eez-studio-shared/notify";
@@ -909,18 +909,29 @@ interface ITransaction {
 }
 
 class UndoManager {
-    @observable.shallow undoStack: ITransaction[] = [];
-    @observable.shallow redoStack: ITransaction[] = [];
+    undoStack: ITransaction[] = [];
+    redoStack: ITransaction[] = [];
 
     currentTransaction: ITransaction | undefined;
     pendingTransactions: (() => void)[] = [];
 
-    @computed
+    constructor() {
+        makeObservable(this, {
+            undoStack: observable.shallow,
+            redoStack: observable.shallow,
+            canUndo: computed,
+            undo: action,
+            canRedo: computed,
+            redo: action,
+            execCommitTransaction: action,
+            removeAllTransactionsReferencingObject: action
+        });
+    }
+
     get canUndo() {
         return this.undoStack.length > 0;
     }
 
-    @action
     undo() {
         if (this.undoStack.length === 0) {
             console.error("Undo stack is empty");
@@ -948,12 +959,10 @@ class UndoManager {
         this.redoStack.push(transaction);
     }
 
-    @computed
     get canRedo() {
         return this.redoStack.length > 0;
     }
 
-    @action
     redo() {
         if (this.redoStack.length === 0) {
             console.error("Redo stack is empty");
@@ -1004,7 +1013,6 @@ class UndoManager {
         this.currentTransaction.commands.push(command);
     }
 
-    @action
     execCommitTransaction() {
         if (!this.currentTransaction) {
             console.error("No transaction to commit");
@@ -1027,7 +1035,6 @@ class UndoManager {
         }
     }
 
-    @action
     removeAllTransactionsReferencingObject(store: IStore, object: any) {
         const filter = (transaction: ITransaction) => {
             for (let i = 0; i < transaction.commands.length; i++) {
