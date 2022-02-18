@@ -91,7 +91,7 @@ const LogList = observer(
         render() {
             const itemCount = this.logs.length;
             return (
-                <div style={{ height: "100%" }}>
+                <div style={{ height: "100%", overflow: "hidden" }}>
                     <AutoSizer>
                         {({ width, height }) => (
                             <List

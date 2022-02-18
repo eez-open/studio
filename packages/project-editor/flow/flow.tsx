@@ -444,14 +444,18 @@ export abstract class Flow extends EezObject {
         }
     };
 
-    components: Component[];
-    connectionLines: ConnectionLine[];
-    localVariables: Variable[];
+    components: Component[] = [];
+    connectionLines: ConnectionLine[] = [];
+    localVariables: Variable[] = [];
 
     constructor() {
         super();
 
         makeObservable(this, {
+            components: observable,
+            connectionLines: observable,
+            localVariables: observable,
+
             wiredComponents: computed,
             actionComponents: computed,
             startComponent: computed,

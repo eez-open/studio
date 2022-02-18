@@ -1,5 +1,12 @@
 import React from "react";
-import { action, observable, autorun, runInAction, makeObservable } from "mobx";
+import {
+    action,
+    observable,
+    autorun,
+    runInAction,
+    makeObservable,
+    IReactionDisposer
+} from "mobx";
 import { observer } from "mobx-react";
 import { FieldComponent } from "eez-studio-ui/generic-dialog";
 import {
@@ -293,27 +300,7 @@ export const VariableTypeUI = observer(
         _type: ValueType;
         updateCounter: number = 0;
 
-        changeDocumentDisposer = autorun(() => {
-            this.updateCounter;
-            if (this.context.project) {
-                const getPropertyValueResultForType = getPropertyValue(
-                    this.props.objects,
-                    this.props.propertyInfo
-                );
-
-                let type = getPropertyValueResultForType
-                    ? getPropertyValueResultForType.value
-                    : "";
-
-                if (type == undefined) {
-                    type = "";
-                }
-
-                runInAction(() => {
-                    this._type = type;
-                });
-            }
-        });
+        changeDocumentDisposer: IReactionDisposer;
 
         constructor(props: PropertyProps) {
             super(props);
@@ -336,6 +323,28 @@ export const VariableTypeUI = observer(
                     this.context.undoManager.setCombineCommands(false);
                 });
             }
+
+            this.changeDocumentDisposer = autorun(() => {
+                this.updateCounter;
+                if (this.context.project) {
+                    const getPropertyValueResultForType = getPropertyValue(
+                        this.props.objects,
+                        this.props.propertyInfo
+                    );
+
+                    let type = getPropertyValueResultForType
+                        ? getPropertyValueResultForType.value
+                        : "";
+
+                    if (type == undefined) {
+                        type = "";
+                    }
+
+                    runInAction(() => {
+                        this._type = type;
+                    });
+                }
+            });
         }
 
         componentDidUpdate() {

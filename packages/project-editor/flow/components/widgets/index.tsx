@@ -331,13 +331,10 @@ export class ContainerWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext) {
-        let visible = getBooleanValue(
-            flowContext,
-            this,
-            this.visible,
-            flowContext.flowState ? !this.visible : true
-        );
+    render(flowContext: IFlowContext): React.ReactNode {
+        let visible: boolean = flowContext.flowState
+            ? getBooleanValue(flowContext, this, this.visible, !this.visible)
+            : true;
 
         return (
             <>

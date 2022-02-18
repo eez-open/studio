@@ -2458,15 +2458,20 @@ export class DocumentStoreClass {
     }
 
     startBackgroundCheck() {
-        this.dispose4 = autorun(() => {
-            // check the project in the background
-            if (
-                this.project &&
-                this.project._DocumentStore.backgroundCheckEnabled
-            ) {
-                ProjectEditor.build.backgroundCheck(this);
+        this.dispose4 = autorun(
+            () => {
+                // check the project in the background
+                if (
+                    this.project &&
+                    this.project._DocumentStore.backgroundCheckEnabled
+                ) {
+                    ProjectEditor.build.backgroundCheck(this);
+                }
+            },
+            {
+                delay: 100
             }
-        });
+        );
     }
 
     get title() {

@@ -1243,6 +1243,9 @@ export class Component extends EezObject {
         check: (component: Component) => {
             let messages: Message[] = [];
 
+            const connectionLines =
+                ProjectEditor.getFlow(component).connectionLines;
+
             // check connections to inputs
             component.inputs.forEach(componentInput => {
                 if (
@@ -1264,11 +1267,29 @@ export class Component extends EezObject {
                         )
                     );
                 }
+
+                if (
+                    !componentInput.isSequenceInput &&
+                    connectionLines.filter(
+                        connectionLine =>
+                            connectionLine.targetComponent === component &&
+                            connectionLine.input === componentInput.name
+                    ).length > 1
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.WARNING,
+                            `Multiple connections lines to data input "${
+                                componentInput.displayName ||
+                                componentInput.name
+                            }"`,
+                            component
+                        )
+                    );
+                }
             });
 
             // check connection from outputs
-            const connectionLines =
-                ProjectEditor.getFlow(component).connectionLines;
             component.outputs.forEach(componentOutput => {
                 if (
                     !connectionLines.find(
@@ -1292,6 +1313,33 @@ export class Component extends EezObject {
                                           )
                                     : componentOutput.name
                             }" is not connected`,
+                            component
+                        )
+                    );
+                }
+
+                if (
+                    componentOutput.isSequenceOutput &&
+                    connectionLines.filter(
+                        connectionLine =>
+                            connectionLine.sourceComponent === component &&
+                            connectionLine.output === componentOutput.name
+                    ).length > 1
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.WARNING,
+                            `Multiple connections lines from sequence output "${
+                                componentOutput.displayName
+                                    ? typeof componentOutput.displayName ==
+                                      "string"
+                                        ? componentOutput.displayName
+                                        : componentOutput.displayName(
+                                              component,
+                                              componentOutput
+                                          )
+                                    : componentOutput.name
+                            }"`,
                             component
                         )
                     );

@@ -488,16 +488,18 @@ export class EvalJSExprActionComponent extends ActionComponent {
         ],
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
             const inputs = EvalJSExprActionComponent.parse(jsObject.expression);
-            for (const inputName of inputs) {
-                if (
-                    !jsObject.customInputs.find(
-                        (input: CustomInput) => input.name == inputName
-                    )
-                ) {
-                    jsObject.customInputs.push({
-                        name: inputName,
-                        type: PropertyType.Any
-                    });
+            if (jsObject.customInputs) {
+                for (const inputName of inputs) {
+                    if (
+                        !jsObject.customInputs.find(
+                            (input: CustomInput) => input.name == inputName
+                        )
+                    ) {
+                        jsObject.customInputs.push({
+                            name: inputName,
+                            type: PropertyType.Any
+                        });
+                    }
                 }
             }
         },

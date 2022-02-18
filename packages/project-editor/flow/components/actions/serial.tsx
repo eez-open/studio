@@ -8,8 +8,14 @@ import {
     showGenericDialog
 } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
-import { action, observable, runInAction, makeObservable } from "mobx";
-import { getSerialPorts } from "instrument/connection/interfaces/serial-ports-renderer";
+import { action, observable, runInAction, makeObservable, toJS } from "mobx";
+import {
+    connect,
+    disconnect,
+    getSerialPorts,
+    SerialConnectionConstructorParams,
+    write
+} from "instrument/connection/interfaces/serial-ports-renderer";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -314,22 +320,12 @@ registerActionComponents("Serial Port", [
                 return undefined;
             }
 
-            if (!serialConnection.isConnected) {
-                throw `"${connection}" is not connected`;
+            if (serialConnection.isConnected) {
+                const data = serialConnection.read();
+                if (data) {
+                    flowState.propagateValue("data", data);
+                }
             }
-
-            flowState.propagateValue("data", serialConnection.port);
-
-            // return reaction(
-            //     () => {
-            //         return serialConnection.read();
-            //     },
-            //     data => {
-            //         if (data) {
-            //             flowState.propagateValue("data", data);
-            //         }
-            //     }
-            // );
 
             return undefined;
         }
@@ -361,10 +357,6 @@ registerActionComponents("Serial Port", [
 
             if (!(serialConnection instanceof SerialConnection)) {
                 throw `"${connection}" is not SerialConnection`;
-            }
-
-            if (!serialConnection.isConnected) {
-                throw `"${connection}" is not connected`;
             }
 
             const dataValue = flowState.evalExpression(data);
@@ -438,7 +430,10 @@ async function showConnectDialog(
     try {
         const serialPorts = (await getSerialPorts()).map(port => ({
             id: port.path,
-            label: port.path
+            label:
+                port.path +
+                (port.manufacturer ? " - " + port.manufacturer : "") +
+                (port.productId ? " - " + port.productId : "")
         }));
 
         const result = await showGenericDialog({
@@ -511,30 +506,26 @@ async function showConnectDialog(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface SerialConnectionConstructorParams {
-    port: string;
-    baudRate: number;
-    dataBits: 8 | 7 | 6 | 5;
-    stopBits: 1 | 2;
-    parity: "none" | "even" | "mark" | "odd" | "space";
-}
-
-const CONF_CHUNK_SIZE = 64;
-
 class SerialConnection {
     constructor(public constructorParams: SerialConnectionConstructorParams) {
         makeObservable(this, {
             receivedData: observable,
-            isConnected: observable
+            isConnected: observable,
+            onData: action,
+            read: action,
+            onConnected: action,
+            onDisconnected: action
         });
     }
 
-    port: any;
+    connectionId: string;
     error: string | undefined = undefined;
-    dataToWrite: string | undefined;
     receivedData: string | undefined;
 
     isConnected: boolean = false;
+
+    connectResolve: (() => void) | undefined;
+    connectReject: ((err: any) => void) | undefined;
 
     get status() {
         return {
@@ -546,61 +537,55 @@ class SerialConnection {
     }
 
     async connect() {
-        return new Promise<void>(async (resolve, reject) => {
-            try {
-                const SerialPort = await import("serialport");
-                const port = new SerialPort.default(
-                    this.constructorParams.port,
-                    {
-                        baudRate: this.constructorParams.baudRate,
-                        dataBits: this.constructorParams.dataBits,
-                        parity: this.constructorParams.parity,
-                        stopBits: this.constructorParams.stopBits
-                    },
-                    (err: any) => {
-                        if (err) {
-                            console.log("serial constructor error", err);
-                            reject(err);
-                        } else {
-                            console.log("serial constructor success");
-
-                            port.on("error", (err: any) => {
-                                console.error(err);
-                                this.port = undefined;
-                                runInAction(() => (this.isConnected = false));
-                            });
-
-                            port.on(
-                                "data",
-                                action((data: any) => {
-                                    if (!this.receivedData) {
-                                        this.receivedData =
-                                            data.toString("binary");
-                                    } else {
-                                        this.receivedData +=
-                                            data.toString("binary");
-                                    }
-                                })
-                            );
-
-                            this.port = port;
-                            runInAction(() => (this.isConnected = true));
-
-                            resolve();
-                        }
-                    }
-                );
-            } catch (err) {
-                reject(err);
-            }
+        return new Promise<void>((resolve, reject) => {
+            this.connectionId = connect(toJS(this.constructorParams), this);
+            this.connectResolve = resolve;
+            this.connectReject = reject;
         });
     }
 
+    onConnected() {
+        this.isConnected = true;
+
+        if (this.connectResolve) {
+            this.connectResolve();
+            this.connectResolve = undefined;
+            this.connectReject = undefined;
+        }
+    }
+
+    onData(data: string) {
+        if (!this.receivedData) {
+            this.receivedData = data;
+        } else {
+            this.receivedData += data;
+        }
+    }
+
+    onError(err: any) {
+        this.error = err.toString();
+        this.disconnect();
+
+        if (this.connectReject) {
+            this.connectReject(this.error);
+            this.connectResolve = undefined;
+            this.connectReject = undefined;
+        }
+    }
+
+    onDisconnected() {
+        this.isConnected = false;
+
+        if (this.connectReject) {
+            this.connectReject("disconnected");
+            this.connectResolve = undefined;
+            this.connectReject = undefined;
+        }
+    }
+
     disconnect() {
-        if (this.port) {
-            this.port.close();
-            this.port = undefined;
-            runInAction(() => (this.isConnected = false));
+        if (this.isConnected) {
+            disconnect(this.connectionId);
         }
     }
 
@@ -610,40 +595,14 @@ class SerialConnection {
         return data;
     }
 
-    sendNextChunkCallback = () => {
-        if (this.port && this.dataToWrite) {
-            let nextChunk;
-            if (this.dataToWrite.length <= CONF_CHUNK_SIZE) {
-                nextChunk = this.dataToWrite;
-                this.dataToWrite = undefined;
-            } else {
-                nextChunk = this.dataToWrite.slice(0, CONF_CHUNK_SIZE);
-                this.dataToWrite = this.dataToWrite.slice(CONF_CHUNK_SIZE);
-            }
-
-            this.port.write(nextChunk, "binary");
-
-            if (this.dataToWrite) {
-                this.port.drain(this.sendNextChunkCallback);
-            }
-        }
-    };
-
     write(data: string) {
-        if (!this.port) {
+        if (!this.isConnected) {
             throw "not connected";
         }
-
-        if (this.dataToWrite) {
-            this.dataToWrite += data;
-        } else {
-            this.dataToWrite = data;
-            this.port.drain(this.sendNextChunkCallback);
-        }
+        write(this.connectionId, data);
     }
 
     static async listPorts() {
-        const SerialPort = await import("serialport");
-        return await SerialPort.default.list();
+        return await getSerialPorts();
     }
 }
