@@ -20,9 +20,6 @@ jobs:
               with:
                   node-version: 14
 
-            - name: Set node config to set msvs_version to 2015
-              run: npm config set msvs_version 2022
-
             #- name: Install Snapcraft
             #  uses: samuelmeuli/action-snapcraft@v1
             #  # Only install Snapcraft on Ubuntu
