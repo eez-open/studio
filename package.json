@@ -47,7 +47,7 @@
         "@types/css": "0.0.33",
         "@types/debug": "^4.1.5",
         "@types/decompress": "^4.2.3",
-        "@types/ffi-napi": "^4.0.4",
+        "@types/ffi-napi": "^4.0.5",
         "@types/jquery": "^3.3.38",
         "@types/json-stable-stringify": "^1.0.32",
         "@types/lodash": "^4.14.150",
