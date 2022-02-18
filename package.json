@@ -120,7 +120,7 @@
         "jspanel4": "^4.10.2",
         "lodash": "^4.17.21",
         "lz4": "0.6.5",
-        "marked": "^0.8.2",
+        "marked": "^4.0.10",
         "math-expression-evaluator": "^1.2.22",
         "mobx": "6.3.13",
         "mobx-react": "^7.2.1",
