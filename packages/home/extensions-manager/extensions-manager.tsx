@@ -660,43 +660,15 @@ export const ExtensionSections = observer(
         {}
     > {
         activeSection: SectionType = "properties";
-        propertiesComponent: JSX.Element | undefined;
 
         constructor(props: ExtensionSectionsProps) {
             super(props);
 
             makeObservable(this, {
                 activeSection: observable,
-                propertiesComponent: observable,
                 activateSection: action
             });
-
-            this.renderPropertiesComponent(this.props.extension);
         }
-
-        renderPropertiesComponent(extension: IExtension) {
-            if (extension.renderPropertiesComponent) {
-                extension
-                    .renderPropertiesComponent()
-                    .then(propertiesComponent =>
-                        runInAction(
-                            () =>
-                                (this.propertiesComponent = propertiesComponent)
-                        )
-                    );
-            } else {
-                runInAction(() => {
-                    this.propertiesComponent = undefined;
-                });
-            }
-        }
-
-        componentDidUpdate(prevProps: any) {
-            if (this.props.extension != prevProps.extension) {
-                this.renderPropertiesComponent(this.props.extension);
-            }
-        }
-
         activateSection(section: SectionType, event: any) {
             event.preventDefault();
             this.activeSection = section;
@@ -705,7 +677,12 @@ export const ExtensionSections = observer(
         render() {
             let availableSections: SectionType[] = [];
 
-            if (this.propertiesComponent) {
+            const propertiesComponent = this.props.extension
+                .renderPropertiesComponent
+                ? this.props.extension.renderPropertiesComponent()
+                : null;
+
+            if (propertiesComponent) {
                 availableSections.push("properties");
             }
 
@@ -746,7 +723,7 @@ export const ExtensionSections = observer(
 
             let body;
             if (activeSection === "properties") {
-                body = this.propertiesComponent;
+                body = propertiesComponent;
             } else if (activeSection === "shortcuts") {
                 body = <ExtensionShortcuts extension={this.props.extension} />;
             }

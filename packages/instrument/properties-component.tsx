@@ -27,11 +27,8 @@ interface PropertiesComponentProps {
     extension: IExtension;
 }
 
-export const PropertiesComponent = observer(
-    class PropertiesComponent extends React.Component<
-        PropertiesComponentProps,
-        {}
-    > {
+const PropertiesComponent = observer(
+    class PropertiesComponent extends React.Component<PropertiesComponentProps> {
         value: string = this.getValue();
         errors: string[] | undefined;
 

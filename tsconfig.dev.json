@@ -14,7 +14,7 @@
         "noUnusedLocals": true,
         "strictNullChecks": true,
         "baseUrl": "./packages",
-        "sourceMap": true,
+        "inlineSourceMap": false,
         "pretty": true,
         "watch": true,
         "outDir": "./build",

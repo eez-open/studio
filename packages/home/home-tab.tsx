@@ -23,7 +23,11 @@ import { ButtonAction, IconAction } from "eez-studio-ui/action";
 import { Icon } from "eez-studio-ui/icon";
 
 import type * as AddInstrumentDialogModule from "instrument/add-instrument-dialog";
-import type * as DeletedInstrumentsDialogModule from "instrument/deleted-instruments-dialog";
+
+import {
+    showDeletedInstrumentsDialog,
+    deletedInstruments
+} from "instrument/deleted-instruments-dialog";
 
 import { getAppStore, HistorySection } from "home/history";
 
@@ -248,9 +252,6 @@ export const WorkbenchToolbar = observer(
                     }
                 }
             ];
-
-            const { showDeletedInstrumentsDialog, deletedInstruments } =
-                require("instrument/deleted-instruments-dialog") as typeof DeletedInstrumentsDialogModule;
 
             if (deletedInstruments.size > 0) {
                 buttons.push({

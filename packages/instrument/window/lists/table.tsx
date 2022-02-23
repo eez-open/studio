@@ -135,6 +135,9 @@ export class TableList extends BaseList {
     }
 
     get numPoints() {
+        if (this.data.dwell.length == 0) {
+            return 0;
+        }
         return Math.max(
             this.data.dwell.length,
             this.data.current.length,

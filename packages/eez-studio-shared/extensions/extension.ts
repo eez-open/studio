@@ -147,7 +147,7 @@ export interface IExtensionDefinition {
     loadExtension?: (
         extensionFolderPath: string
     ) => Promise<IExtension | undefined>;
-    renderPropertiesComponent?: () => Promise<JSX.Element>;
+    renderPropertiesComponent?: () => React.ReactNode;
     properties?: IExtensionProperties;
     isEditable?: boolean;
     isDirty?: boolean;

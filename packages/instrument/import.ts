@@ -519,9 +519,7 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                             const { renderPropertiesComponent } =
                                 require("instrument/properties-component") as typeof PropertiesComponentModule;
 
-                            return new Promise<JSX.Element>(resolve => {
-                                resolve(renderPropertiesComponent(extension));
-                            });
+                            return renderPropertiesComponent(extension);
                         },
                         properties,
                         isEditable,

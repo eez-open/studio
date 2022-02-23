@@ -105,6 +105,22 @@ export function pointMul(p: Point, f: number) {
     };
 }
 
+export function midPoint(p1: Point, p2: Point) {
+    return { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+}
+
+export function pointTranslateX(p: Point, offset: number) {
+    return { x: p.x + offset, y: p.y };
+}
+
+export function pointTranslateY(p: Point, offset: number) {
+    return { x: p.x, y: p.y + offset };
+}
+
+export function pointTranslate(p: Point, xOffset: number, yOffset: number) {
+    return { x: p.x + xOffset, y: p.y + yOffset };
+}
+
 export function pointInRect(point: Point, rect: Rect) {
     return (
         point.x >= rect.left &&

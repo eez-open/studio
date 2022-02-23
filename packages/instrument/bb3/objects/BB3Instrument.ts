@@ -165,7 +165,7 @@ async function getModulesInfoFromInstrument(
                 let firmwareVersion;
                 let allReleases: ModuleFirmwareRelease[];
                 if (moduleType === "DCP405") {
-                    firmwareVersion = "-";
+                    firmwareVersion = "n/a";
                     allReleases = [];
                 } else {
                     firmwareVersion = removeQuotes(

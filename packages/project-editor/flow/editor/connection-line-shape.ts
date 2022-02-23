@@ -1,3 +1,10 @@
+import { observable } from "mobx";
+import {
+    midPoint,
+    Point,
+    pointTranslate,
+    Rect
+} from "eez-studio-shared/geometry";
 import { getId, getParent, IEezObject } from "project-editor/core/object";
 import type { ConnectionLine } from "project-editor/flow/flow";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
@@ -12,6 +19,40 @@ export function getConnectionLineShape(
 
     let targetPositionX = connectionLine.targetPosition.x;
     let targetPositionY = connectionLine.targetPosition.y;
+
+    let sourceRect;
+    if (connectionLine.sourceComponent) {
+        sourceRect = {
+            left: connectionLine.sourceComponent.absolutePositionPoint.x,
+            top: connectionLine.sourceComponent.absolutePositionPoint.y,
+            width: connectionLine.sourceComponent.width,
+            height: connectionLine.sourceComponent.height
+        };
+    } else {
+        sourceRect = {
+            left: sourcePositionX,
+            top: sourcePositionY,
+            width: 1,
+            height: 1
+        };
+    }
+
+    let targetRect;
+    if (connectionLine.targetComponent) {
+        targetRect = {
+            left: connectionLine.targetComponent.absolutePositionPoint.x,
+            top: connectionLine.targetComponent.absolutePositionPoint.y,
+            width: connectionLine.targetComponent.width,
+            height: connectionLine.targetComponent.height
+        };
+    } else {
+        targetRect = {
+            left: targetPositionX,
+            top: targetPositionY,
+            width: 1,
+            height: 1
+        };
+    }
 
     const dx = context.viewState.dxMouseDrag ?? 0;
     const dy = context.viewState.dyMouseDrag ?? 0;
@@ -33,28 +74,217 @@ export function getConnectionLineShape(
         if (isObjectSelected(connectionLine.sourceComponent)) {
             sourcePositionX += dx;
             sourcePositionY += dy;
+
+            sourceRect.left += dx;
+            sourceRect.top += dy;
         }
 
         if (isObjectSelected(connectionLine.targetComponent)) {
             targetPositionX += dx;
             targetPositionY += dy;
+
+            targetRect.left += dx;
+            targetRect.top += dy;
         }
     }
 
-    const nodeHeight = Math.max(
-        connectionLine.sourceRect.height,
-        connectionLine.targetRect.height
-    );
+    if (nodeRed.get()) {
+        const nodeHeight = Math.max(
+            connectionLine.sourceRect.height,
+            connectionLine.targetRect.height
+        );
 
-    return generateNodeRedLinkPath(
-        sourcePositionX,
-        sourcePositionY,
-        targetPositionX,
-        targetPositionY,
-        1,
-        nodeHeight
+        return generateNodeRedLinkPath(
+            sourcePositionX,
+            sourcePositionY,
+            targetPositionX,
+            targetPositionY,
+            1,
+            nodeHeight
+        );
+    }
+
+    return generatePath(
+        { x: sourcePositionX, y: sourcePositionY },
+        sourceRect,
+        { x: targetPositionX, y: targetPositionY },
+        targetRect
     );
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+function pointOnSegment(point1: Point, point2: Point, A: number) {
+    return {
+        x: point1.x + A * (point2.x - point1.x),
+        y: point1.y + A * (point2.y - point1.y)
+    };
+}
+
+function interpolation3(pointsPolyline: Point[], A: number, B: number) {
+    const points = new Array<Point>(
+        pointsPolyline.length + (pointsPolyline.length - 2) / 2
+    );
+
+    if (pointsPolyline.length == 4) {
+        points[0] = pointsPolyline[0];
+        points[1] = pointOnSegment(pointsPolyline[0], pointsPolyline[1], A);
+        points[2] = pointOnSegment(pointsPolyline[2], pointsPolyline[1], B);
+        points[3] = midPoint(pointsPolyline[1], pointsPolyline[2]);
+        points[4] = pointOnSegment(pointsPolyline[1], pointsPolyline[2], B);
+        points[5] = pointOnSegment(pointsPolyline[3], pointsPolyline[2], A);
+        points[6] = pointsPolyline[3];
+    } else {
+        points[0] = pointsPolyline[0];
+        points[1] = pointOnSegment(pointsPolyline[0], pointsPolyline[1], A);
+        points[2] = pointOnSegment(pointsPolyline[2], pointsPolyline[1], A);
+        points[3] = midPoint(pointsPolyline[1], pointsPolyline[2]);
+        points[4] = pointOnSegment(pointsPolyline[1], pointsPolyline[2], B);
+        points[5] = pointOnSegment(pointsPolyline[3], pointsPolyline[2], B);
+        points[6] = midPoint(pointsPolyline[2], pointsPolyline[3]);
+        points[7] = pointOnSegment(pointsPolyline[2], pointsPolyline[3], B);
+        points[8] = pointOnSegment(pointsPolyline[4], pointsPolyline[3], B);
+        points[9] = midPoint(pointsPolyline[3], pointsPolyline[4]);
+        points[10] = pointOnSegment(pointsPolyline[4], pointsPolyline[4], A);
+        points[11] = pointOnSegment(pointsPolyline[5], pointsPolyline[4], A);
+        points[12] = pointsPolyline[5];
+    }
+
+    return points;
+}
+
+function generatePath(
+    source: Point,
+    sourceRect: Rect,
+    target: Point,
+    targetRect: Rect
+) {
+    const sourceTop = {
+        x: source.x,
+        y: sourceRect.top
+    };
+
+    const sourceBottom = {
+        x: source.x,
+        y: sourceRect.top + sourceRect.height
+    };
+
+    const targetTop = {
+        x: target.x,
+        y: targetRect.top
+    };
+
+    const targetBottom = {
+        x: target.x,
+        y: targetRect.top + targetRect.height
+    };
+
+    /////
+    let pointsPolyline: Point[];
+
+    const SPACE = 30;
+
+    const intersect = !(
+        sourceBottom.y < targetTop.y || sourceTop.y > targetBottom.y
+    );
+
+    if (source.x + SPACE < target.x || (intersect && source.x < target.x)) {
+        const HALF_SPACE = Math.min(SPACE, (target.x - source.x) / 2);
+        pointsPolyline = [
+            source,
+            pointTranslate(source, HALF_SPACE, 0),
+            pointTranslate(target, -HALF_SPACE, 0),
+            target
+        ];
+    } else {
+        if (intersect) {
+            if (
+                Math.abs(sourceTop.y - targetTop.y) <
+                Math.abs(sourceBottom.y - targetBottom.y)
+            ) {
+                const y = Math.min(sourceTop.y, targetTop.y);
+                pointsPolyline = [
+                    source,
+                    pointTranslate(source, SPACE, 0),
+                    pointTranslate(
+                        sourceTop,
+                        SPACE,
+                        -(sourceTop.y - y + SPACE)
+                    ),
+                    pointTranslate(
+                        targetTop,
+                        -SPACE,
+                        -(targetTop.y - y + SPACE)
+                    ),
+                    pointTranslate(target, -SPACE, 0),
+                    target
+                ];
+            } else {
+                const y = Math.max(sourceBottom.y, targetBottom.y);
+                pointsPolyline = [
+                    source,
+                    pointTranslate(source, SPACE, 0),
+                    pointTranslate(
+                        sourceBottom,
+                        SPACE,
+                        y - sourceBottom.y + SPACE
+                    ),
+                    pointTranslate(
+                        targetBottom,
+                        -SPACE,
+                        y - targetBottom.y + SPACE
+                    ),
+                    pointTranslate(target, -SPACE, 0),
+                    target
+                ];
+            }
+        } else {
+            if (source.y > target.y) {
+                const AVAILABLE_SPACE = Math.min(
+                    SPACE,
+                    (sourceTop.y - targetBottom.y) / 2
+                );
+                pointsPolyline = [
+                    source,
+                    pointTranslate(source, SPACE, 0),
+                    pointTranslate(sourceTop, SPACE, -AVAILABLE_SPACE),
+                    pointTranslate(targetBottom, -SPACE, AVAILABLE_SPACE),
+                    pointTranslate(target, -SPACE, 0),
+                    target
+                ];
+            } else {
+                const AVAILABLE_SPACE = Math.min(
+                    SPACE,
+                    (targetTop.y - sourceBottom.y) / 2
+                );
+                pointsPolyline = [
+                    source,
+                    pointTranslate(source, SPACE, 0),
+                    pointTranslate(sourceBottom, SPACE, AVAILABLE_SPACE),
+                    pointTranslate(targetTop, -SPACE, -AVAILABLE_SPACE),
+                    pointTranslate(target, -SPACE, 0),
+                    target
+                ];
+            }
+        }
+    }
+
+    const points = interpolation3(pointsPolyline, 0.8, 0.98);
+
+    let path = `M ${points[0].x} ${points[0].y}`;
+    for (let i = 1; i < points.length; i += 3) {
+        path += ` C ${points[i].x} ${points[i].y}, ${points[i + 1].x} ${
+            points[i + 1].y
+        }, ${points[i + 2].x} ${points[i + 2].y}`;
+    }
+
+    return {
+        lineShape: path,
+        center: points.length == 8 ? midPoint(points[3], points[5]) : points[3]
+    };
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 // Node-RED algorithm
 const LINE_CURVE_SCALE = 0.75;
@@ -211,3 +441,11 @@ export function generateNodeRedLinkPath(
         };
     }
 }
+
+const nodeRed = observable.box<boolean>(false);
+
+document.addEventListener("keydown", event => {
+    if (event.ctrlKey && event.shiftKey && event.key == "N") {
+        nodeRed.set(!nodeRed.get());
+    }
+});
