@@ -1268,25 +1268,25 @@ export class Component extends EezObject {
                     );
                 }
 
-                // if (
-                //     !componentInput.isSequenceInput &&
-                //     connectionLines.filter(
-                //         connectionLine =>
-                //             connectionLine.targetComponent === component &&
-                //             connectionLine.input === componentInput.name
-                //     ).length > 1
-                // ) {
-                //     messages.push(
-                //         new Message(
-                //             MessageType.WARNING,
-                //             `Multiple connections lines to data input "${
-                //                 componentInput.displayName ||
-                //                 componentInput.name
-                //             }"`,
-                //             component
-                //         )
-                //     );
-                // }
+                if (
+                    !componentInput.isSequenceInput &&
+                    connectionLines.filter(
+                        connectionLine =>
+                            connectionLine.targetComponent === component &&
+                            connectionLine.input === componentInput.name
+                    ).length > 1
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.WARNING,
+                            `Multiple connections lines to data input "${
+                                componentInput.displayName ||
+                                componentInput.name
+                            }"`,
+                            component
+                        )
+                    );
+                }
             });
 
             // check connection from outputs
