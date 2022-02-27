@@ -530,7 +530,7 @@ abstract class DebuggerConnectionBase {
         const addresses = str
             .substring(1, str.length - 1)
             .split(",")
-            .map(addressStr => parseInt(addressStr));
+            .map(addressStr => parseInt(addressStr, 16));
 
         const arrayAddress = addresses[0];
 
@@ -825,7 +825,7 @@ abstract class DebuggerConnectionBase {
                         const globalVariableIndex = parseInt(
                             messageParameters[1]
                         );
-                        const valueAddress = parseInt(messageParameters[2]);
+                        const valueAddress = parseInt(messageParameters[2], 16);
                         const value = messageParameters[3];
 
                         const globalVariableInAssetsMap =
@@ -877,7 +877,7 @@ abstract class DebuggerConnectionBase {
                         const localVariableIndex = parseInt(
                             messageParameters[2]
                         );
-                        const valueAddress = parseInt(messageParameters[3]);
+                        const valueAddress = parseInt(messageParameters[3], 16);
                         const value = messageParameters[4];
 
                         const { flowIndex, flowState } =
@@ -943,7 +943,7 @@ abstract class DebuggerConnectionBase {
                         const componentInputIndex = parseInt(
                             messageParameters[2]
                         );
-                        const valueAddress = parseInt(messageParameters[3]);
+                        const valueAddress = parseInt(messageParameters[3], 16);
                         const value = messageParameters[4];
 
                         const { flowIndex, flowState } =
@@ -1020,7 +1020,7 @@ abstract class DebuggerConnectionBase {
                         //     messageParameters.slice(1)
                         // );
 
-                        const valueAddress = parseInt(messageParameters[1]);
+                        const valueAddress = parseInt(messageParameters[1], 16);
                         const value = messageParameters[2];
 
                         const debuggerValue =
