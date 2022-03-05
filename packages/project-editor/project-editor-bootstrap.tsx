@@ -20,6 +20,7 @@ import {
 } from "project-editor/project-editor-interface";
 import { LocalRuntime } from "project-editor/flow/local-runtime";
 import { RemoteRuntime } from "project-editor/flow/remote-runtime";
+import { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
 import { DebugInfoRuntime } from "project-editor/flow/debug-info-runtime";
 import {
     build as buildProject,
@@ -152,6 +153,7 @@ export async function initProjectEditor(homeTabs: Tabs) {
         },
         LocalRuntimeClass: LocalRuntime,
         RemoteRuntimeClass: RemoteRuntime,
+        WasmRuntimeClass: WasmRuntime,
         DebugInfoRuntimeClass: DebugInfoRuntime,
         build: {
             buildProject,

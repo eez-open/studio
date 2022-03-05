@@ -450,6 +450,14 @@ export class Page extends Flow {
     }
 
     renderComponents(flowContext: IFlowContext) {
+        if (
+            flowContext.DocumentStore.runtime &&
+            flowContext.DocumentStore.runtime instanceof
+                ProjectEditor.WasmRuntimeClass
+        ) {
+            return flowContext.DocumentStore.runtime.renderPage();
+        }
+
         return (
             <>
                 <ComponentEnclosure

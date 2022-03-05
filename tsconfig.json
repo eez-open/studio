@@ -21,5 +21,6 @@
         "strictPropertyInitialization": false,
         "useDefineForClassFields": true
     },
-    "include": ["./packages"]
+    "include": ["./packages"],
+    "exclude": ["./packages/project-editor/flow/runtime/cpp"]
 }

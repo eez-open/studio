@@ -30,3 +30,5 @@ bundle-meta.json
 circular.txt
 
 !resources/project-templates/*.eez-project-ui-state
+
+packages/project-editor/flow/runtime/cpp/build

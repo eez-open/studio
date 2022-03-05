@@ -1230,7 +1230,8 @@ export class Project extends EezObject {
     static supportsDebugger(projectType: ProjectType, flowSupport: boolean) {
         return (
             projectType == ProjectType.DASHBOARD ||
-            projectType == ProjectType.APPLET
+            projectType == ProjectType.APPLET ||
+            projectType == ProjectType.FIRMWARE
         );
     }
 

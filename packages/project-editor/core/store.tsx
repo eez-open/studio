@@ -2992,10 +2992,12 @@ export class DocumentStoreClass {
     }
 
     setRuntimeMode(isDebuggerActive: boolean) {
-        let runtime: RuntimeBase | undefined;
+        let runtime: RuntimeBase;
 
         if (this.project.isDashboardProject) {
             runtime = new ProjectEditor.LocalRuntimeClass(this);
+        } else if (this.project.isFirmwareWithFlowSupportProject) {
+            runtime = new ProjectEditor.WasmRuntimeClass(this);
         } else {
             runtime = new ProjectEditor.RemoteRuntimeClass(this);
         }
