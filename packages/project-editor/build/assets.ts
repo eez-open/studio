@@ -217,14 +217,16 @@ export class Assets {
         // global variables
         //
         const nonNativeVariables = this.getAssets<Variable>(
-            project => project.allGlobalVariables,
+            project =>
+                project.variables ? project.variables.globalVariables : [],
             globalVariable =>
                 assetIncludePredicate(globalVariable) && !globalVariable.native
         );
 
         const nativeVariables: Variable[] = [];
         this.getAssets<Variable>(
-            project => project.allGlobalVariables,
+            project =>
+                project.variables ? project.variables.globalVariables : [],
             globalVariable =>
                 assetIncludePredicate(globalVariable) &&
                 globalVariable.native &&
@@ -235,7 +237,8 @@ export class Assets {
         );
 
         this.getAssets<Variable>(
-            project => project.allGlobalVariables,
+            project =>
+                project.variables ? project.variables.globalVariables : [],
             globalVariable =>
                 assetIncludePredicate(globalVariable) &&
                 globalVariable.native &&
@@ -606,12 +609,6 @@ export class Assets {
 
     getFontIndex(object: any, propertyName: string) {
         let fontName: string | undefined = object[propertyName];
-        for (let i = 0; i < this.fonts.length; i++) {
-            const font = this.fonts[i];
-            if (font && font.name == fontName) {
-                return this.DocumentStore.masterProject ? -(i + 1) : i + 1;
-            }
-        }
 
         const project = getProject(object);
 
@@ -621,8 +618,10 @@ export class Assets {
         }
 
         if (font) {
-            if (font.id != undefined) {
-                return font.id;
+            for (let i = 0; i < this.fonts.length; i++) {
+                if (font == this.fonts[i]) {
+                    return this.DocumentStore.masterProject ? -(i + 1) : i + 1;
+                }
             }
 
             const isMasterProjectFont =
@@ -647,12 +646,6 @@ export class Assets {
 
     getBitmapIndex(object: any, propertyName: string) {
         let bitmapName: string | undefined = object[propertyName];
-        for (let i = 0; i < this.bitmaps.length; i++) {
-            const bitmap = this.bitmaps[i];
-            if (bitmap && bitmap.name == bitmapName) {
-                return this.DocumentStore.masterProject ? -(i + 1) : i + 1;
-            }
-        }
 
         const project = getProject(object);
 
@@ -662,8 +655,10 @@ export class Assets {
         }
 
         if (bitmap) {
-            if (bitmap.id != undefined) {
-                return bitmap.id;
+            for (let i = 0; i < this.bitmaps.length; i++) {
+                if (bitmap == this.bitmaps[i]) {
+                    return this.DocumentStore.masterProject ? -(i + 1) : i + 1;
+                }
             }
 
             const isMasterProjectBitmap =
