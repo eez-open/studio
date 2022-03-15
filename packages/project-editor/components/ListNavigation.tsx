@@ -267,7 +267,8 @@ export const ListNavigation = observer(
                 this.sortDirection,
                 this.onClickItem,
                 this.onDoubleClickItem,
-                this.searchText
+                this.searchText,
+                this.props.editable ?? true
             );
         }
 

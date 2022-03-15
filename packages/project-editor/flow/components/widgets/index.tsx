@@ -1176,13 +1176,15 @@ export class LayoutViewWidget extends Widget {
             thisObject: Widget,
             context: IContextMenuContext,
             objects: IEezObject[],
-            menuItems: Electron.MenuItem[]
+            menuItems: Electron.MenuItem[],
+            editable: boolean
         ): void => {
             TextWidget.classInfo.parentClassInfo!.extendContextMenu!(
                 thisObject,
                 context,
                 objects,
-                menuItems
+                menuItems,
+                editable
             );
 
             if (objects.length === 1) {

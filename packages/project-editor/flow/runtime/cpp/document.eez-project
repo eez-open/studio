@@ -80,8 +80,7 @@
           ],
           "data": "\"Page 2\"",
           "style": {
-            "inheritFrom": "button",
-            "color": "button_text"
+            "inheritFrom": "button"
           },
           "disabledStyle": {
             "inheritFrom": "default"
@@ -2006,9 +2005,6 @@
       "name": "drop_down_list_background"
     },
     {
-      "name": "drop_down_list_active_background"
-    },
-    {
       "name": "drop_down_list_border"
     },
     {
@@ -2056,7 +2052,6 @@
         "#404040",
         "#808080",
         "#ffffff",
-        "#c0c0c0",
         "#404040",
         "#404040",
         "#808080",

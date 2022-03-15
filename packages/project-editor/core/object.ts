@@ -233,7 +233,8 @@ export interface ClassInfo {
         object: IEezObject,
         context: IContextMenuContext,
         objects: IEezObject[],
-        menuItems: Electron.MenuItem[]
+        menuItems: Electron.MenuItem[],
+        editable: boolean
     ) => void;
 
     check?: (object: IEezObject) => IMessage[];

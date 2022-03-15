@@ -3102,11 +3102,12 @@ export function extendContextMenu(
     context: IContextMenuContext,
     object: IEezObject,
     objects: IEezObject[],
-    menuItems: Electron.MenuItem[]
+    menuItems: Electron.MenuItem[],
+    editable: boolean
 ) {
     const extendContextMenu = getClassInfo(object).extendContextMenu;
     if (extendContextMenu) {
-        extendContextMenu(object, context, objects, menuItems);
+        extendContextMenu(object, context, objects, menuItems, editable);
     }
 }
 
@@ -3290,13 +3291,14 @@ export interface IContextMenuContext {
 
 export function createContextMenu(
     context: IContextMenuContext,
-    object: IEezObject
+    object: IEezObject,
+    editable: boolean
 ) {
     let menuItems: Electron.MenuItem[] = [];
 
     const DocumentStore = getDocumentStore(object);
 
-    if (canAdd(object)) {
+    if (editable && canAdd(object)) {
         menuItems.push(
             new MenuItem({
                 label: "Add",
@@ -3310,7 +3312,7 @@ export function createContextMenu(
         );
     }
 
-    if (canDuplicate(object)) {
+    if (editable && canDuplicate(object)) {
         menuItems.push(
             new MenuItem({
                 label: "Duplicate",
@@ -3345,7 +3347,7 @@ export function createContextMenu(
 
     let clipboardMenuItems: Electron.MenuItem[] = [];
 
-    if (canCut(object)) {
+    if (editable && canCut(object)) {
         clipboardMenuItems.push(
             new MenuItem({
                 label: "Cut",
@@ -3356,7 +3358,7 @@ export function createContextMenu(
         );
     }
 
-    if (canCopy(object)) {
+    if (editable && canCopy(object)) {
         clipboardMenuItems.push(
             new MenuItem({
                 label: "Copy",
@@ -3367,7 +3369,7 @@ export function createContextMenu(
         );
     }
 
-    if (canPaste(DocumentStore, object)) {
+    if (editable && canPaste(DocumentStore, object)) {
         clipboardMenuItems.push(
             new MenuItem({
                 label: "Paste",
@@ -3396,7 +3398,7 @@ export function createContextMenu(
         menuItems = menuItems.concat(clipboardMenuItems);
     }
 
-    if (canDelete(object)) {
+    if (editable && canDelete(object)) {
         if (menuItems.length > 0) {
             menuItems.push(
                 new MenuItem({
@@ -3415,7 +3417,7 @@ export function createContextMenu(
         );
     }
 
-    extendContextMenu(context, object, [object], menuItems);
+    extendContextMenu(context, object, [object], menuItems, editable);
 
     if (menuItems.length > 0) {
         const menu = new Menu();
@@ -3428,9 +3430,10 @@ export function createContextMenu(
 
 export function showContextMenu(
     context: IContextMenuContext,
-    object: IEezObject
+    object: IEezObject,
+    editable: boolean
 ) {
-    const menu = createContextMenu(context, object);
+    const menu = createContextMenu(context, object, editable);
 
     if (menu) {
         menu.popup();

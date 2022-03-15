@@ -61,11 +61,12 @@ function getProjectWithThemes(DocumentStore: DocumentStoreClass) {
 const ColorItem = observer(
     class ColorItem extends React.Component<{
         itemId: string;
+        readOnly: boolean;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
-        constructor(props: { itemId: string }) {
+        constructor(props: any) {
             super(props);
 
             makeObservable(this, {
@@ -140,6 +141,7 @@ const ColorItem = observer(
                         }
                         onChange={this.onChange}
                         tabIndex={0}
+                        disabled={this.props.readOnly}
                     />
                     <span title={this.colorObject.name}>
                         {this.colorObject.name}
@@ -149,10 +151,6 @@ const ColorItem = observer(
         }
     }
 );
-
-function renderColorItem(itemId: string) {
-    return <ColorItem itemId={itemId} />;
-}
 
 export const ThemesSideView = observer(
     class ThemesSideView extends React.Component {
@@ -267,6 +265,9 @@ export const ThemesSideView = observer(
         factory = (node: FlexLayout.TabNode) => {
             var component = node.getComponent();
 
+            const readOnly =
+                getProjectWithThemes(this.context) != this.context.project;
+
             if (component === "themes") {
                 return this.project ? (
                     <ListNavigation
@@ -277,7 +278,7 @@ export const ThemesSideView = observer(
                         }
                         onEditItem={this.onEditThemeName}
                         searchInput={false}
-                        editable={!this.context.masterProject}
+                        editable={!readOnly}
                     />
                 ) : null;
             }
@@ -292,8 +293,10 @@ export const ThemesSideView = observer(
                                 .selectedThemeColorObject
                         }
                         onEditItem={this.onEditColorName}
-                        renderItem={renderColorItem}
-                        editable={!this.context.masterProject}
+                        renderItem={itemId => (
+                            <ColorItem itemId={itemId} readOnly={readOnly} />
+                        )}
+                        editable={!readOnly}
                     />
                 ) : null;
             }
@@ -423,51 +426,55 @@ export class Color extends EezObject implements IColor {
             thisObject: Color,
             context: IContextMenuContext,
             objects: IEezObject[],
-            menuItems: Electron.MenuItem[]
+            menuItems: Electron.MenuItem[],
+            editable: boolean
         ) => {
             var additionalMenuItems: Electron.MenuItem[] = [];
 
-            additionalMenuItems.push(
-                new MenuItem({
-                    label: "Copy to other themes",
-                    click: () => {
-                        const DocumentStore = getDocumentStore(thisObject);
+            if (editable) {
+                additionalMenuItems.push(
+                    new MenuItem({
+                        label: "Copy to other themes",
+                        click: () => {
+                            const DocumentStore = getDocumentStore(thisObject);
 
-                        DocumentStore.undoManager.setCombineCommands(true);
+                            DocumentStore.undoManager.setCombineCommands(true);
 
-                        const project = getProjectWithThemes(
-                            getDocumentStore(thisObject)
-                        );
+                            const project = getProjectWithThemes(
+                                getDocumentStore(thisObject)
+                            );
 
-                        const selectedTheme =
-                            DocumentStore.navigationStore.selectedThemeObject.get() as Theme;
+                            const selectedTheme =
+                                DocumentStore.navigationStore.selectedThemeObject.get() as Theme;
 
-                        const colorIndex = project.colors.indexOf(thisObject);
-                        const color = project.getThemeColor(
-                            selectedTheme.themeId,
-                            thisObject.colorId
-                        );
+                            const colorIndex =
+                                project.colors.indexOf(thisObject);
+                            const color = project.getThemeColor(
+                                selectedTheme.themeId,
+                                thisObject.colorId
+                            );
 
-                        project.themes.forEach((theme: any, i: number) => {
-                            if (theme != selectedTheme) {
-                                const colors = theme.colors.slice();
-                                colors[colorIndex] = color;
-                                DocumentStore.updateObject(theme, {
-                                    colors
-                                });
-                            }
-                        });
+                            project.themes.forEach((theme: any, i: number) => {
+                                if (theme != selectedTheme) {
+                                    const colors = theme.colors.slice();
+                                    colors[colorIndex] = color;
+                                    DocumentStore.updateObject(theme, {
+                                        colors
+                                    });
+                                }
+                            });
 
-                        DocumentStore.undoManager.setCombineCommands(false);
-                    }
-                })
-            );
+                            DocumentStore.undoManager.setCombineCommands(false);
+                        }
+                    })
+                );
 
-            additionalMenuItems.push(
-                new MenuItem({
-                    type: "separator"
-                })
-            );
+                additionalMenuItems.push(
+                    new MenuItem({
+                        type: "separator"
+                    })
+                );
+            }
 
             menuItems.unshift(...additionalMenuItems);
         }

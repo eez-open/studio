@@ -832,7 +832,8 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
                     this,
                     selectedObjects[0],
                     selectedObjects,
-                    menuItems
+                    menuItems,
+                    true
                 );
             }
         }
@@ -1346,11 +1347,11 @@ export class ListAdapter implements ITreeAdapter {
     constructor(
         protected object: IEezObject,
         protected selectedObject: IObservableValue<IEezObject | undefined>,
-        public sortDirection?: SortDirectionType,
-        onClick?: (object: IEezObject) => void,
-        onDoubleClick?: (object: IEezObject) => void,
-        protected searchText?: string,
-        protected filter?: (object: IEezObject) => boolean
+        public sortDirection: SortDirectionType,
+        onClick: (object: IEezObject) => void,
+        onDoubleClick: (object: IEezObject) => void,
+        protected searchText: string,
+        protected editable: boolean
     ) {
         makeObservable(this, {
             items: computed,
@@ -1393,11 +1394,6 @@ export class ListAdapter implements ITreeAdapter {
 
     get items() {
         let objects = this.object as IEezObject[];
-
-        const filter = this.filter;
-        if (filter) {
-            objects = objects.filter(object => filter(object));
-        }
 
         if (this.searchText) {
             const searchText = this.searchText.toLowerCase();
@@ -1512,7 +1508,8 @@ export class ListAdapter implements ITreeAdapter {
     showSelectionContextMenu(): void {
         showContextMenu(
             this,
-            this.selectedItem ? this.selectedItem.object : this.object
+            this.selectedItem ? this.selectedItem.object : this.object,
+            this.editable
         );
     }
 
