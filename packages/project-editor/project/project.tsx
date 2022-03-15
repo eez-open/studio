@@ -51,7 +51,8 @@ import {
     DocumentStoreClass,
     getDocumentStore,
     isNotV1Project,
-    LayoutModels
+    LayoutModels,
+    propertyNotUniqueMessage
 } from "project-editor/core/store";
 
 import type { Action } from "project-editor/features/action/action";
@@ -69,7 +70,12 @@ import {
     startSearch,
     SearchCallbackMessage
 } from "project-editor/core/search";
-import { Color, Theme } from "project-editor/features/style/theme";
+import {
+    Color,
+    IColor,
+    ITheme,
+    Theme
+} from "project-editor/features/style/theme";
 import { guid } from "eez-studio-shared/guid";
 import { Page } from "project-editor/features/page/page";
 import type { Style } from "project-editor/features/style/style";
@@ -391,7 +397,11 @@ class BuildAssetsUssage {
             const importedProject = this.importDirective.project!;
 
             const assetName = message.valueObject.value;
-            if (!importedProject.assetCollectionPaths.has(path)) {
+            if (
+                !importedProject._assetsMap["name"].assetCollectionPaths.has(
+                    path
+                )
+            ) {
                 // console.log("NOT INTERESTED", path, assetName);
                 return true;
             }
@@ -953,19 +963,22 @@ function getProjectClassInfo() {
                 }
 
                 if (projectJs.colors) {
-                    for (const color of projectJs.colors) {
-                        color.id = guid();
+                    const colors: IColor[] = projectJs.colors;
+                    for (const color of colors) {
+                        color.colorId = guid();
                     }
                 }
 
                 if (projectJs.themes) {
-                    for (const theme of projectJs.themes) {
-                        theme.id = guid();
-                        for (let i = 0; i < theme.colors.length; i++) {
+                    const themes: ITheme[] = projectJs.themes;
+                    const colors: IColor[] = projectJs.colors;
+                    for (const theme of themes) {
+                        theme.themeId = guid();
+                        for (let i = 0; i < theme.colors!.length; i++) {
                             project.setThemeColor(
-                                theme.id,
-                                projectJs.colors[i].id,
-                                theme.colors[i]
+                                theme.themeId,
+                                colors[i].colorId!,
+                                theme.colors![i]
                             );
                         }
                         delete theme.colors;
@@ -1105,15 +1118,251 @@ function getProjectClassInfo() {
     return projectClassInfo;
 }
 
-class BuildAssetsMap {
-    assets = new Map<string, IEezObject[]>();
+class BuildAssetsMap<T extends IEezObject> {
+    assets = new Map<string, T[]>();
 
-    addAsset(path: string, object: IEezObject) {
+    addAsset(path: string, object: T) {
         let asset = this.assets.get(path);
         if (!asset) {
             this.assets.set(path, [object]);
         } else {
             asset.push(object);
+        }
+    }
+}
+
+type AssetType =
+    | "variables/globalVariables"
+    | "actions"
+    | "pages"
+    | "styles"
+    | "fonts"
+    | "bitmaps"
+    | "colors";
+
+class AssetsMap {
+    constructor(public project: Project, public key: "name" | "id") {
+        makeObservable(this, {
+            allAssetsMaps: computed,
+            assetCollectionPaths: computed,
+            localAssets: computed,
+            importedAssets: computed,
+            masterAssets: computed,
+            allAssets: computed,
+            globalVariablesMap: computed,
+            actionsMap: computed,
+            pagesMap: computed,
+            stylesMap: computed,
+            fontsMap: computed,
+            bitmapsMap: computed,
+            colorsMap: computed
+        });
+    }
+
+    get allAssetsMaps(): {
+        path: AssetType;
+        map: Map<string, IEezObject[]>;
+    }[] {
+        return [
+            {
+                path: "variables/globalVariables",
+                map: this.globalVariablesMap
+            },
+            { path: "actions", map: this.actionsMap },
+            { path: "pages", map: this.pagesMap },
+            { path: "styles", map: this.stylesMap },
+            { path: "fonts", map: this.fontsMap },
+            { path: "bitmaps", map: this.bitmapsMap },
+            { path: "colors", map: this.colorsMap }
+        ];
+    }
+
+    get assetCollectionPaths() {
+        const assetCollectionPaths = new Set<string>();
+        this.allAssetsMaps.forEach(assetsMap =>
+            assetCollectionPaths.add(assetsMap.path)
+        );
+        return assetCollectionPaths;
+    }
+
+    get localAssets() {
+        const buildAssets = new BuildAssetsMap();
+
+        this.allAssetsMaps.forEach(({ path, map }) => {
+            if (map) {
+                map.forEach((objects, key) =>
+                    objects.forEach(object => {
+                        buildAssets.addAsset(path + "/" + key, object);
+                    })
+                );
+            }
+        });
+
+        return buildAssets.assets;
+    }
+
+    get importedAssets() {
+        const buildAssets = new BuildAssetsMap();
+
+        for (const importDirective of this.project.settings.general.imports) {
+            const project = importDirective.project;
+            if (project) {
+                project._assetsMap[this.key].allAssetsMaps.forEach(
+                    ({ path, map }) => {
+                        if (map) {
+                            map.forEach((objects, key) =>
+                                objects.forEach(object =>
+                                    buildAssets.addAsset(
+                                        path +
+                                            "/" +
+                                            (project.namespace
+                                                ? project.namespace +
+                                                  NAMESPACE_PREFIX
+                                                : "") +
+                                            key,
+                                        object
+                                    )
+                                )
+                            );
+                        }
+                    }
+                );
+            }
+        }
+
+        return buildAssets.assets;
+    }
+
+    get masterAssets() {
+        const buildAssets = new BuildAssetsMap();
+
+        if (this.project.masterProject) {
+            this.project.masterProject._assetsMap[
+                this.key
+            ].allAssetsMaps.forEach(({ path, map }) => {
+                if (map) {
+                    map.forEach((objects, key) => {
+                        objects.forEach(object => {
+                            if ((object as any).id) {
+                                buildAssets.addAsset(path + "/" + key, object);
+                            }
+                        });
+                    });
+                }
+            });
+        }
+
+        return buildAssets.assets;
+    }
+
+    get allAssets() {
+        return new Map([
+            ...this.localAssets,
+            ...this.masterAssets,
+            ...this.importedAssets
+        ]);
+    }
+
+    addToMap<
+        T extends {
+            id: number | undefined;
+            name: string;
+        }
+    >(map: BuildAssetsMap<T>, asset: T) {
+        if (this.key == "name") {
+            if (asset.name) {
+                map.addAsset(asset.name, asset);
+            }
+        } else {
+            if (asset.id != undefined) {
+                map.addAsset(asset.id.toString(), asset);
+            }
+        }
+    }
+
+    get globalVariablesMap() {
+        const buildAssets = new BuildAssetsMap<Variable>();
+        if (this.project.variables && this.project.variables.globalVariables) {
+            this.project.variables.globalVariables.forEach(globalVariable =>
+                this.addToMap(buildAssets, globalVariable)
+            );
+        }
+        return buildAssets.assets;
+    }
+
+    get actionsMap() {
+        const buildAssets = new BuildAssetsMap<Action>();
+        if (this.project.actions) {
+            this.project.actions.forEach(action =>
+                this.addToMap(buildAssets, action)
+            );
+        }
+        return buildAssets.assets;
+    }
+
+    get pagesMap() {
+        const buildAssets = new BuildAssetsMap<Page>();
+        if (this.project.pages) {
+            this.project.pages.forEach(page =>
+                this.addToMap(buildAssets, page)
+            );
+        }
+        return buildAssets.assets;
+    }
+
+    get stylesMap() {
+        const buildAssets = new BuildAssetsMap<Style>();
+        if (this.project.styles) {
+            this.project.styles.forEach(style =>
+                this.addToMap(buildAssets, style)
+            );
+        }
+        return buildAssets.assets;
+    }
+
+    get fontsMap() {
+        const buildAssets = new BuildAssetsMap<Font>();
+        if (this.project.fonts) {
+            this.project.fonts.forEach(font =>
+                this.addToMap(buildAssets, font)
+            );
+        }
+        return buildAssets.assets;
+    }
+
+    get bitmapsMap() {
+        const buildAssets = new BuildAssetsMap<Bitmap>();
+        if (this.project.bitmaps) {
+            this.project.bitmaps.forEach(bitmap =>
+                this.addToMap(buildAssets, bitmap)
+            );
+        }
+        return buildAssets.assets;
+    }
+
+    get colorsMap() {
+        const buildAssets = new BuildAssetsMap<Color>();
+        this.project.colors.forEach(color => this.addToMap(buildAssets, color));
+        return buildAssets.assets;
+    }
+
+    getAllObjectsOfType(referencedObjectCollectionPath: string) {
+        const isAssetType = this.assetCollectionPaths.has(
+            referencedObjectCollectionPath
+        );
+
+        if (isAssetType) {
+            return Array.from(this.allAssets.keys())
+                .filter(key => key.startsWith(referencedObjectCollectionPath))
+                .map(key => this.allAssets.get(key)!)
+                .filter(assets => assets.length == 1)
+                .map(assets => assets[0]);
+        } else {
+            return (
+                (this.project._DocumentStore.getObjectFromPath(
+                    referencedObjectCollectionPath.split("/")
+                ) as IEezObject[]) || []
+            );
         }
     }
 }
@@ -1124,6 +1373,11 @@ export class Project extends EezObject {
     _isDashboardBuild: boolean = false;
 
     _fullyLoaded = false;
+
+    _assetsMap = {
+        name: new AssetsMap(this, "name"),
+        id: new AssetsMap(this, "id")
+    };
 
     settings: Settings;
     variables: ProjectVariables;
@@ -1159,26 +1413,13 @@ export class Project extends EezObject {
             themes: observable,
             projectName: computed,
             importDirective: computed,
-            globalVariablesMap: computed,
-            actionsMap: computed,
             namespace: computed,
             masterProject: computed({ keepAlive: true }),
-            allAssetsMaps: computed({ keepAlive: true }),
-            assetCollectionPaths: computed({ keepAlive: true }),
-            localAssets: computed({ keepAlive: true }),
-            importedAssets: computed({ keepAlive: true }),
-            masterAssets: computed({ keepAlive: true }),
-            allAssets: computed({ keepAlive: true }),
             allGlobalVariables: computed({ keepAlive: true }),
-            pagesMap: computed({ keepAlive: true }),
-            stylesMap: computed({ keepAlive: true }),
-            allStyleIdToStyleMap: computed({ keepAlive: true }),
-            fontsMap: computed({ keepAlive: true }),
-            bitmapsMap: computed({ keepAlive: true }),
             themeColors: observable,
             setThemeColor: action,
             colorToIndexMap: computed,
-            colorsMap: computed
+            buildColors: computed({ keepAlive: true })
         });
     }
 
@@ -1249,20 +1490,6 @@ export class Project extends EezObject {
         );
     }
 
-    get globalVariablesMap() {
-        const map = new Map<String, Variable>();
-        this.variables.globalVariables.forEach(globalVariable =>
-            map.set(globalVariable.name, globalVariable)
-        );
-        return map;
-    }
-
-    get actionsMap() {
-        const map = new Map<String, Action>();
-        this.actions.forEach(action => map.set(action.name, action));
-        return map;
-    }
-
     static get classInfo(): ClassInfo {
         return getProjectClassInfo();
     }
@@ -1291,121 +1518,10 @@ export class Project extends EezObject {
             : undefined;
     }
 
-    get allAssetsMaps() {
-        return [
-            {
-                path: "variables/globalVariables",
-                map:
-                    this.variables &&
-                    this.variables.globalVariables &&
-                    this.globalVariablesMap
-            },
-            { path: "actions", map: this.actions && this.actionsMap },
-            { path: "pages", map: this.pagesMap },
-            { path: "styles", map: this.stylesMap },
-            { path: "fonts", map: this.fontsMap },
-            { path: "bitmaps", map: this.bitmapsMap },
-            { path: "colors", map: this.colorsMap }
-        ];
-    }
-
-    get assetCollectionPaths() {
-        const assetCollectionPaths = new Set<string>();
-        this._DocumentStore.project.allAssetsMaps.forEach(assetsMap =>
-            assetCollectionPaths.add(assetsMap.path)
-        );
-        return assetCollectionPaths;
-    }
-
-    get localAssets() {
-        const buildAssets = new BuildAssetsMap();
-
-        this.allAssetsMaps.forEach(({ path, map }) => {
-            if (map) {
-                map.forEach((object: IEezObject, key: string) =>
-                    buildAssets.addAsset(path + "/" + key, object)
-                );
-            }
-        });
-
-        return buildAssets.assets;
-    }
-
-    get importedAssets() {
-        const buildAssets = new BuildAssetsMap();
-
-        for (const importDirective of this.settings.general.imports) {
-            const project = importDirective.project;
-            if (project) {
-                project.allAssetsMaps.forEach(({ path, map }) => {
-                    if (map) {
-                        map.forEach((object: IEezObject, key: string) =>
-                            buildAssets.addAsset(
-                                path +
-                                    "/" +
-                                    (project.namespace
-                                        ? project.namespace + NAMESPACE_PREFIX
-                                        : "") +
-                                    key,
-                                object
-                            )
-                        );
-                    }
-                });
-            }
-        }
-
-        return buildAssets.assets;
-    }
-
-    get masterAssets() {
-        const buildAssets = new BuildAssetsMap();
-
-        if (this.masterProject) {
-            this.masterProject.allAssetsMaps.forEach(({ path, map }) => {
-                if (map) {
-                    map.forEach((object: IEezObject, key: string) => {
-                        if ((object as any).id) {
-                            buildAssets.addAsset(path + "/" + key, object);
-                        }
-                    });
-                }
-            });
-        }
-
-        return buildAssets.assets;
-    }
-
-    get allAssets() {
-        return new Map([
-            ...this.localAssets,
-            ...this.masterAssets,
-            ...this.importedAssets
-        ]);
-    }
-
-    getAllObjectsOfType(referencedObjectCollectionPath: string) {
-        const isAssetType = this.assetCollectionPaths.has(
-            referencedObjectCollectionPath
-        );
-
-        if (isAssetType) {
-            return Array.from(this.allAssets.keys())
-                .filter(key => key.startsWith(referencedObjectCollectionPath))
-                .map(key => this.allAssets.get(key)!)
-                .filter(assets => assets.length == 1)
-                .map(assets => assets[0]);
-        } else {
-            return (
-                (this._DocumentStore.getObjectFromPath(
-                    referencedObjectCollectionPath.split("/")
-                ) as IEezObject[]) || []
-            );
-        }
-    }
-
     get allGlobalVariables() {
-        let allVariables = [...this.variables.globalVariables];
+        let allVariables = this.variables
+            ? [...this.variables.globalVariables]
+            : [];
         for (const importDirective of this.settings.general.imports) {
             if (importDirective.project) {
                 allVariables.push(
@@ -1414,65 +1530,6 @@ export class Project extends EezObject {
             }
         }
         return allVariables;
-    }
-
-    get pagesMap() {
-        const map = new Map<String, Page>();
-        if (this.pages) {
-            this.pages.forEach(page => map.set(page.name, page));
-        }
-        return map;
-    }
-
-    get stylesMap() {
-        const map = new Map<String, Style>();
-        if (this.styles) {
-            this.styles.forEach(style => map.set(style.name, style));
-        }
-        return map;
-    }
-
-    get allStyleIdToStyleMap() {
-        const map = new Map<number, Style[]>();
-
-        this.stylesMap.forEach(style => {
-            if (style.id != undefined) {
-                map.set(style.id, (map.get(style.id) || []).concat([style]));
-            }
-        });
-
-        for (const importDirective of getProject(this).settings.general
-            .imports) {
-            const project = importDirective.project;
-            if (project) {
-                project.stylesMap.forEach(style => {
-                    if (style.id != undefined) {
-                        map.set(
-                            style.id,
-                            (map.get(style.id) || []).concat([style])
-                        );
-                    }
-                });
-            }
-        }
-
-        return map;
-    }
-
-    get fontsMap() {
-        const map = new Map<String, Font>();
-        if (this.fonts) {
-            this.fonts.forEach(font => map.set(font.name, font));
-        }
-        return map;
-    }
-
-    get bitmapsMap() {
-        const map = new Map<String, Bitmap>();
-        if (this.bitmaps) {
-            this.bitmaps.forEach(bitmap => map.set(bitmap.name, bitmap));
-        }
-        return map;
     }
 
     themeColors = new Map<string, string>();
@@ -1491,10 +1548,44 @@ export class Project extends EezObject {
         return map;
     }
 
-    get colorsMap() {
-        const map = new Map<String, Color>();
-        this.colors.forEach((color, i) => map.set(color.name, color));
-        return map;
+    get buildColors() {
+        const colors: Color[] = [];
+
+        for (let i = 0; i < this.colors.length; i++) {
+            const id = this.colors[i].id;
+            if (id != undefined) {
+                colors[id] = this.colors[i];
+            }
+        }
+
+        for (let i = 0; i < this.colors.length; i++) {
+            const id = this.colors[i].id;
+            if (id == undefined) {
+                let j;
+                for (j = 0; j < colors.length; j++) {
+                    if (colors[j] == undefined) {
+                        colors[j] = this.colors[i];
+                        break;
+                    }
+                }
+                if (j == colors.length) {
+                    colors.push(this.colors[i]);
+                }
+            }
+        }
+
+        for (let i = 0; i < colors.length; i++) {
+            if (!colors[i]) {
+                for (let j = 0; j < colors.length; j++) {
+                    if (colors[j]) {
+                        colors[i] = colors[j];
+                        break;
+                    }
+                }
+            }
+        }
+
+        return colors;
     }
 
     enableTabs(projectType?: ProjectType, flowSupport?: boolean) {
@@ -1583,7 +1674,7 @@ export function findAllReferencedObjects(
     referencedObjectCollectionPath: string,
     referencedObjectName: string
 ) {
-    return project.allAssets.get(
+    return project._assetsMap["name"].allAssets.get(
         referencedObjectCollectionPath + "/" + referencedObjectName
     );
 }
@@ -1593,7 +1684,7 @@ export function findReferencedObject(
     referencedObjectCollectionPath: string,
     referencedObjectName: string
 ) {
-    let objects = project.allAssets.get(
+    let objects = project._assetsMap["name"].allAssets.get(
         referencedObjectCollectionPath + "/" + referencedObjectName
     );
     if (objects && objects.length === 1) {
@@ -1667,6 +1758,37 @@ export function getNameProperty(object: IEezObject) {
         name = project.namespace + NAMESPACE_PREFIX + name;
     }
     return name;
+}
+
+export function checkAssetId(
+    DocumentStore: DocumentStoreClass,
+    assetType: AssetType,
+    asset: {
+        id: number | undefined;
+    },
+    messages: Message[],
+    min: number = 1,
+    max: number = 1000
+) {
+    if (asset.id != undefined) {
+        if (!(asset.id >= min && asset.id <= max)) {
+            messages.push(
+                new Message(
+                    MessageType.ERROR,
+                    `"Id": invalid value, should be between ${min} and ${max}.`,
+                    getChildOfObject(asset, "id")
+                )
+            );
+        } else {
+            if (
+                DocumentStore.project._assetsMap["id"].allAssets.get(
+                    `${assetType}/${asset.id}`
+                )!.length > 1
+            ) {
+                messages.push(propertyNotUniqueMessage(asset, "id"));
+            }
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

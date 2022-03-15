@@ -1,8 +1,5 @@
 import type { Component } from "project-editor/flow/component";
-import type {
-    Assets,
-    DataBuffer
-} from "project-editor/features/page/build/assets";
+import type { Assets, DataBuffer } from "project-editor/build/assets";
 import type { Project } from "project-editor/project/project";
 import {
     binaryOperators,

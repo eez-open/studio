@@ -888,14 +888,33 @@ export class Font extends EezObject {
     screenOrientation: string;
     alwaysBuild: boolean;
 
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            id: observable,
+            name: observable,
+            description: observable,
+            source: observable,
+            bpp: observable,
+            height: observable,
+            ascent: observable,
+            descent: observable,
+            glyphs: observable,
+            screenOrientation: observable,
+            alwaysBuild: observable,
+            glyphsMap: computed,
+            maxDx: computed
+        });
+    }
+
     static classInfo: ClassInfo = {
         properties: [
             {
                 name: "id",
                 type: PropertyType.Number,
                 isOptional: true,
-                unique: true,
-                defaultValue: undefined
+                unique: true
             },
             {
                 name: "name",
@@ -958,6 +977,15 @@ export class Font extends EezObject {
                 type: PropertyType.Boolean
             }
         ],
+        check: (font: Font) => {
+            let messages: Message[] = [];
+
+            const DocumentStore = getDocumentStore(font);
+
+            ProjectEditor.checkAssetId(DocumentStore, "fonts", font, messages);
+
+            return messages;
+        },
         newItem: (parent: IEezObject) => {
             function isFont(obj: IEezObject) {
                 return getProperty(obj, "filePath");
@@ -1104,26 +1132,6 @@ export class Font extends EezObject {
         },
         icon: "font_download"
     };
-
-    constructor() {
-        super();
-
-        makeObservable(this, {
-            id: observable,
-            name: observable,
-            description: observable,
-            source: observable,
-            bpp: observable,
-            height: observable,
-            ascent: observable,
-            descent: observable,
-            glyphs: observable,
-            screenOrientation: observable,
-            alwaysBuild: observable,
-            glyphsMap: computed,
-            maxDx: computed
-        });
-    }
 
     get glyphsMap() {
         const map = new Map<number, Glyph>();

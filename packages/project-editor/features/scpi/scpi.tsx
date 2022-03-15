@@ -32,7 +32,6 @@ import type {
     IResponseTypeType
 } from "instrument/scpi";
 
-import { build } from "project-editor/features/scpi/build";
 import { metrics } from "project-editor/features/scpi/metrics";
 import {
     ScpiEnum,
@@ -923,7 +922,6 @@ export default {
                         enums: []
                     };
                 },
-                build: build,
                 metrics: metrics
             }
         }

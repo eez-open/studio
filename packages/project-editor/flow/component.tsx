@@ -67,10 +67,7 @@ import type {
 import { WIDGET_TYPE_NONE } from "project-editor/flow/components/widgets/widget_types";
 import { guid } from "eez-studio-shared/guid";
 import classNames from "classnames";
-import type {
-    Assets,
-    DataBuffer
-} from "project-editor/features/page/build/assets";
+import type { Assets, DataBuffer } from "project-editor/build/assets";
 import {
     checkAssignableExpression,
     checkExpression,

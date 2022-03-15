@@ -26,7 +26,7 @@ import {
     build as buildProject,
     backgroundCheck,
     buildExtensions
-} from "project-editor/project/build";
+} from "project-editor/build/build";
 import { getAllMetrics } from "project-editor/project/metrics";
 import {
     getProject,
@@ -34,7 +34,8 @@ import {
     Project,
     findReferencedObject,
     getNameProperty,
-    checkObjectReference
+    checkObjectReference,
+    checkAssetId
 } from "project-editor/project/project";
 
 import { extensions } from "eez-studio-shared/extensions/extensions";
@@ -189,7 +190,8 @@ export async function initProjectEditor(homeTabs: Tabs) {
         getEditorComponent,
         getAncestorWithEditorComponent,
         createEditorState,
-        browseGlyph
+        browseGlyph,
+        checkAssetId
     };
 
     Object.assign(ProjectEditor, projectEditor);

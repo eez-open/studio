@@ -12,6 +12,7 @@ import { DocumentStoreClass } from "project-editor/core/store";
 
 import { IExpressionContext } from "project-editor/flow/expression/expression";
 import { observer } from "mobx-react";
+import { AssetsMap } from "project-editor/build/assets";
 
 export class WasmRuntime extends RuntimeBase {
     constructor(public DocumentStore: DocumentStoreClass) {
@@ -20,21 +21,61 @@ export class WasmRuntime extends RuntimeBase {
 
     worker: Worker;
 
+    assetsDataMapJs: AssetsMap;
+
+    ctx: CanvasRenderingContext2D | undefined;
+    width: number = 480;
+    height: number = 272;
+
+    pointerEvents: {
+        x: number;
+        y: number;
+        pressed: number;
+    }[] = [];
+    wheelDeltaY = 0;
+    wheelClicked = 0;
+
     ////////////////////////////////////////////////////////////////////////////////
 
     async doStartRuntime(isDebuggerActive: boolean) {
-        this.worker = new Worker("./flow_runtime");
+        const result = await this.DocumentStore.buildAssets();
+        const assetsData = result.GUI_ASSETS_DATA;
+        this.assetsDataMapJs = result.GUI_ASSETS_DATA_MAP_JS;
 
-        this.worker.onmessage = function (e) {
+        this.worker = new Worker(
+            "../project-editor/flow/runtime/flow_runtime.js"
+        );
+
+        this.worker.onmessage = e => {
+            //console.log("renderer", e.data);
+
             if (e.data.init) {
-                const assets: Uint8Array = new Uint8Array(0);
-                // TODO build assets but this time don't save to file, just give back Uint8Array for assets and give back the map like in RemoteRuntime
+                this.worker.postMessage({
+                    assets: assetsData
+                });
+            } else {
+                if (e.data.screen) {
+                    if (this.ctx) {
+                        var imgData = new ImageData(
+                            e.data.screen,
+                            this.width,
+                            this.height
+                        );
+                        this.ctx.putImageData(imgData, 0, 0);
+                    }
+                }
 
-                var ptr = WasmFlowRuntime._malloc(assets.length);
-                WasmFlowRuntime.HEAPU8.set(assets, ptr);
-                WasmFlowRuntime._loadAssets(ptr, assets.length);
-            } else if (e.data.screen) {
-                // TODO
+                this.worker.postMessage({
+                    wheel: {
+                        deltaY: this.wheelDeltaY,
+                        clicked: this.wheelClicked
+                    },
+                    pointerEvents: this.pointerEvents
+                });
+
+                this.wheelDeltaY = 0;
+                this.wheelClicked = 0;
+                this.pointerEvents = [];
             }
         };
     }
@@ -116,66 +157,31 @@ export const WasmCanvas = observer(
         canvasRef = React.createRef<HTMLCanvasElement>();
 
         componentDidMount() {
-            const canvasElement1 = this.canvasRef.current;
-            if (!canvasElement1) {
+            const canvasElement = this.canvasRef.current;
+            if (!canvasElement) {
                 return;
             }
+            const canvas = canvasElement;
 
-            const canvas = canvasElement1;
+            const wasmRuntime = this.context.runtime as WasmRuntime;
 
-            canvas.width = 480;
-            canvas.height = 272;
-            var ctx = canvas.getContext("2d")!;
-
-            let wheelDeltaY = 0;
-            let wheelClicked = 0;
-
-            function update() {
-                if ((window as any).WasmFlowRuntime) {
-                    WasmFlowRuntime._onMouseWheelEvent(
-                        wheelDeltaY,
-                        wheelClicked
-                    );
-                    wheelDeltaY = 0;
-                    wheelClicked = 0;
-
-                    WasmFlowRuntime._mainLoop();
-
-                    var buf_addr = WasmFlowRuntime._getSyncedBuffer();
-
-                    if (buf_addr != 0) {
-                        var uint8ClampedArray = new Uint8ClampedArray(
-                            WasmFlowRuntime.HEAPU8.subarray(
-                                buf_addr,
-                                buf_addr + canvas.width * canvas.height * 4
-                            )
-                        );
-                        var imgData = new ImageData(
-                            uint8ClampedArray,
-                            canvas.width,
-                            canvas.height
-                        );
-
-                        ctx.putImageData(imgData, 0, 0);
-                    }
-                }
-
-                window.requestAnimationFrame(update);
-            }
-
-            window.requestAnimationFrame(update);
+            canvas.width = wasmRuntime.width;
+            canvas.height = wasmRuntime.height;
+            wasmRuntime.ctx = canvas.getContext("2d")!;
 
             function sendPointerEvent(event: PointerEvent) {
-                if ((window as any).WasmFlowRuntime) {
-                    var bbox = canvas.getBoundingClientRect();
-                    WasmFlowRuntime._onPointerEvent(
-                        (event.clientX - bbox.left) *
-                            (canvas.width / bbox.width),
-                        (event.clientY - bbox.top) *
-                            (canvas.height / bbox.height),
-                        event.buttons == 1 ? 1 : 0
-                    );
-                }
+                var bbox = canvas.getBoundingClientRect();
+
+                const x =
+                    (event.clientX - bbox.left) * (canvas.width / bbox.width);
+
+                const y =
+                    (event.clientY - bbox.top) * (canvas.height / bbox.height);
+
+                const pressed = event.buttons == 1 ? 1 : 0;
+
+                wasmRuntime.pointerEvents.push({ x, y, pressed });
+
                 event.preventDefault();
                 event.stopPropagation();
             }
@@ -184,7 +190,7 @@ export const WasmCanvas = observer(
                 "pointerdown",
                 event => {
                     if (event.buttons == 4) {
-                        wheelClicked = 1;
+                        wasmRuntime.wheelClicked = 1;
                     }
                     canvas.setPointerCapture(event.pointerId);
                     sendPointerEvent(event);
@@ -221,13 +227,18 @@ export const WasmCanvas = observer(
             document.addEventListener(
                 "wheel",
                 event => {
-                    wheelDeltaY += -event.deltaY;
+                    wasmRuntime.wheelDeltaY += -event.deltaY;
                 },
                 true
             );
         }
 
-        componentWillUnmount() {}
+        componentWillUnmount() {
+            const wasmRuntime = this.context.runtime as WasmRuntime;
+            if (wasmRuntime) {
+                wasmRuntime.ctx = undefined;
+            }
+        }
 
         render() {
             return <canvas ref={this.canvasRef} width="480" height="272" />;

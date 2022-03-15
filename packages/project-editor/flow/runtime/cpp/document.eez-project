@@ -108,6 +108,7 @@
         }
       ],
       "localVariables": [],
+      "id": 1,
       "name": "banner",
       "style": "background",
       "left": 0,
@@ -172,6 +173,7 @@
         }
       ],
       "localVariables": [],
+      "id": 2,
       "name": "page2",
       "style": "background",
       "left": 0,
@@ -180,51 +182,10 @@
       "height": 272
     }
   ],
-  "styles": [
-    {
-      "id": 1,
-      "name": "default",
-      "description": "",
-      "inheritFrom": "",
-      "font": "Oswald_12",
-      "color": "text",
-      "backgroundColor": "background",
-      "activeColor": "background",
-      "activeBackgroundColor": "text",
-      "borderColor": "border",
-      "padding": "0"
-    },
-    {
-      "id": 10,
-      "name": "background",
-      "inheritFrom": "default",
-      "backgroundColor": "background",
-      "backgroundImage": ""
-    },
-    {
-      "name": "button",
-      "inheritFrom": "default",
-      "color": "button_text",
-      "backgroundColor": "button_background",
-      "activeColor": "button_text",
-      "activeBackgroundColor": "button_active_background",
-      "borderSize": "2",
-      "borderRadius": "8",
-      "borderColor": "button_border"
-    },
-    {
-      "name": "button_disabled",
-      "inheritFrom": "button",
-      "color": "button_disabled_text",
-      "backgroundColor": "button_disabled_background",
-      "activeColor": "button_disabled_text",
-      "activeBackgroundColor": "button_disabled_background",
-      "borderColor": "button_disabled_border"
-    }
-  ],
+  "styles": [],
   "fonts": [
     {
-      "name": "Oswald_12",
+      "name": "medium",
       "source": {
         "filePath": "fonts\\Oswald-Medium.ttf",
         "size": 12
@@ -1984,6 +1945,7 @@
       "name": "border"
     },
     {
+      "id": 1,
       "name": "backdrop"
     },
     {

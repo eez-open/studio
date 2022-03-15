@@ -24,15 +24,3 @@ declare class GoldenLayout {
 }
 
 declare module "xml-formatter";
-
-declare const WasmFlowRuntime: {
-    HEAPU8: Uint8Array;
-    _malloc(size: number): number;
-    _free(ptr: number): void;
-
-    _mainLoop();
-    _getSyncedBuffer(): number;
-    _onMouseWheelEvent(wheelDeltaY: number, wheelClicked: number);
-    _onPointerEvent(x: number, y: number, pressed: number);
-    _loadAssets(assets: number, assetsSize: number);
-};

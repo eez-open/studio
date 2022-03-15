@@ -32,7 +32,6 @@ import {
     propertyNotSetMessage
 } from "project-editor/core/store";
 import type { Project } from "project-editor/project/project";
-import { build } from "project-editor/features/variable/build";
 import { metrics } from "project-editor/features/variable/metrics";
 import type {
     IDataContext,
@@ -64,6 +63,7 @@ import {
 } from "project-editor/features/variable/defs";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import classNames from "classnames";
+import { generalGroup } from "project-editor/flow/component";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -264,6 +264,7 @@ function isGlobalVariable(variable: Variable) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Variable extends EezObject {
+    id: number | undefined;
     name: string;
     description?: string;
 
@@ -280,8 +281,34 @@ export class Variable extends EezObject {
 
     native: boolean;
 
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            id: observable,
+            name: observable,
+            description: observable,
+            type: observable,
+            defaultValue: observable,
+            defaultValueList: observable,
+            defaultMinValue: observable,
+            defaultMaxValue: observable,
+            usedIn: observable,
+            persistent: observable,
+            native: observable
+        });
+    }
+
     static classInfo: ClassInfo = {
         properties: [
+            {
+                name: "id",
+                type: PropertyType.Number,
+                propertyGridGroup: generalGroup,
+                hideInPropertyGrid: (variable: Variable) =>
+                    !(variable.native && isGlobalVariable(variable)),
+                unique: true
+            },
             {
                 name: "name",
                 type: PropertyType.String,
@@ -398,6 +425,17 @@ export class Variable extends EezObject {
         check: (variable: Variable) => {
             let messages: Message[] = [];
 
+            const DocumentStore = getDocumentStore(variable);
+
+            if (isGlobalVariable(variable)) {
+                ProjectEditor.checkAssetId(
+                    DocumentStore,
+                    "variables/globalVariables",
+                    variable,
+                    messages
+                );
+            }
+
             if (!variable.type) {
                 messages.push(propertyNotSetMessage(variable, "type"));
             }
@@ -405,7 +443,6 @@ export class Variable extends EezObject {
             if (!variable.defaultValue) {
                 messages.push(propertyNotSetMessage(variable, "defaultValue"));
             } else {
-                const DocumentStore = getDocumentStore(variable);
                 if (
                     DocumentStore.project.isAppletProject ||
                     (DocumentStore.project.isFirmwareWithFlowSupportProject &&
@@ -446,23 +483,6 @@ export class Variable extends EezObject {
             return messages;
         }
     };
-
-    constructor() {
-        super();
-
-        makeObservable(this, {
-            name: observable,
-            description: observable,
-            type: observable,
-            defaultValue: observable,
-            defaultValueList: observable,
-            defaultMinValue: observable,
-            defaultMaxValue: observable,
-            usedIn: observable,
-            persistent: observable,
-            native: observable
-        });
-    }
 }
 
 registerClass("Variable", Variable);
@@ -537,9 +557,9 @@ export class DataContext implements IDataContext {
                         ) &&
                         !this.project.isDashboardProject
                     ) {
-                        const value = this.project.allAssets.get(
-                            variable.defaultValue
-                        );
+                        const value = this.project._assetsMap[
+                            "name"
+                        ].allAssets.get(variable.defaultValue);
                         if (value) {
                             this.runtimeValues.set(variable.name, value);
                         } else {
@@ -1279,7 +1299,6 @@ export default {
 
                     return messages;
                 },
-                build: build,
                 metrics: metrics
             }
         }

@@ -22,7 +22,7 @@ namespace eez {
 
         protected:
             int getMainPageId() override {
-                return PAGE_ID_BANNER;
+                return PAGE_ID_MAIN;
             }
         } g_myAppContext;
 

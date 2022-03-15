@@ -2,8 +2,21 @@
     "configurations": [
         {
             "name": "Win32",
-            "includePath": [],
-            "defines": ["_DEBUG", "UNICODE", "_UNICODE"],
+            "includePath": [
+                "./packages/project-editor/flow/runtime/cpp",
+                "./packages/project-editor/flow/runtime/cpp/src",
+                "./packages/project-editor/flow/runtime/cpp/src/conf",
+                "./packages/project-editor/flow/runtime/cpp/eez/platform/simulator",
+                "./packages/project-editor/flow/runtime/cpp/eez/libs/agg"
+            ],
+            "defines": [
+                "DEBUG",
+                "OPTION_DISPLAY",
+                "EEZ_PLATFORM_SIMULATOR",
+                "__EMSCRIPTEN__",
+                "OPTION_ENCODER",
+                "OPTION_ETHERNET"
+            ],
             "windowsSdkVersion": "10.0.17134.0",
             "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.16.27023/bin/Hostx64/x64/cl.exe",
             "cStandard": "c11",

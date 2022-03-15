@@ -33,7 +33,7 @@ import {
 } from "project-editor/flow/component";
 import { FlowState } from "project-editor/flow//runtime";
 import type { IFlowContext } from "project-editor/flow//flow-interfaces";
-import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
+import { Assets, DataBuffer } from "project-editor/build/assets";
 import {
     getChildOfObject,
     getDocumentStore,

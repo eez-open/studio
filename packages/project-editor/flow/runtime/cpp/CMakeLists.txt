@@ -7,7 +7,7 @@ set (CMAKE_CXX_STANDARD 17)
 #set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wunused-const-variable -Wno-nested-anon-types -Wno-dollar-in-identifier-extension -O2 --no-entry")
-set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_CXX_FLAGS} -s DEMANGLE_SUPPORT=1 -s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=83886080 -s LLD_REPORT_UNDEFINED --bind -lidbfs.js --pre-js ${PROJECT_SOURCE_DIR}/src/platform/simulator/emscripten/pre.js")
+set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_CXX_FLAGS} -s DEMANGLE_SUPPORT=1 -s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=83886080 -s LLD_REPORT_UNDEFINED -s ASSERTIONS=1 --bind -lidbfs.js --pre-js ${PROJECT_SOURCE_DIR}/src/platform/simulator/emscripten/pre.js")
 add_definitions(-DEMCC_DEBUG)
 
 set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fpermissive -pedantic")
@@ -98,6 +98,17 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Emscripten")
 
     add_custom_command(TARGET flow_runtime POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
+        "${PROJECT_SOURCE_DIR}/build/emscripten/flow_runtime.js"
+        "${PROJECT_SOURCE_DIR}/../../../../../build/project-editor/flow/runtime")
+
+
+    add_custom_command(TARGET flow_runtime POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
         "${PROJECT_SOURCE_DIR}/build/emscripten/flow_runtime.wasm"
         "${PROJECT_SOURCE_DIR}/..")
+
+    add_custom_command(TARGET flow_runtime POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        "${PROJECT_SOURCE_DIR}/build/emscripten/flow_runtime.wasm"
+        "${PROJECT_SOURCE_DIR}/../../../../../build/project-editor/flow/runtime")
 endif()

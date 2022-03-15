@@ -2690,17 +2690,23 @@ export class DocumentStoreClass {
             this.layoutModels.root,
             LayoutModels.CHECKS_TAB_ID
         );
-        ProjectEditor.build.buildProject(this, { onlyCheck: true });
+        ProjectEditor.build.buildProject(this, "check");
     }
 
-    async build() {
+    build() {
         this.layoutModels.selectTab(
             this.layoutModels.root,
             LayoutModels.OUTPUT_TAB_ID
         );
-        return await ProjectEditor.build.buildProject(this, {
-            onlyCheck: false
-        });
+        return ProjectEditor.build.buildProject(this, "buildFiles");
+    }
+
+    buildAssets() {
+        this.layoutModels.selectTab(
+            this.layoutModels.root,
+            LayoutModels.OUTPUT_TAB_ID
+        );
+        return ProjectEditor.build.buildProject(this, "buildAssets");
     }
 
     buildExtensions() {

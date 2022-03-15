@@ -17,7 +17,8 @@ import {
     DocumentStoreClass,
     IContextMenuContext,
     getDocumentStore,
-    LayoutModels
+    LayoutModels,
+    Message
 } from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
 import { replaceObjectReference } from "project-editor/core/search";
@@ -30,7 +31,7 @@ import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import type { Project } from "project-editor/project/project";
-import { getName, NamingConvention } from "project-editor/project/build";
+import { getName, NamingConvention } from "project-editor/build/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -201,6 +202,14 @@ export const ThemesSideView = observer(
                 dialogDefinition: {
                     fields: [
                         {
+                            name: "id",
+                            type: "optional-integer",
+                            validators: [
+                                validators.unique(color, getParent(color)),
+                                validators.rangeInclusive(0, 1000)
+                            ]
+                        },
+                        {
                             name: "name",
                             type: "string",
                             validators: [
@@ -213,15 +222,21 @@ export const ThemesSideView = observer(
                 values: color
             })
                 .then(result => {
-                    let newValue = result.values.name.trim();
-                    if (newValue != color.name) {
-                        this.context.undoManager.setCombineCommands(true);
-                        replaceObjectReference(color, newValue);
+                    this.context.undoManager.setCombineCommands(true);
+
+                    this.context.updateObject(color, {
+                        id: result.values.id
+                    });
+
+                    let newName = result.values.name.trim();
+                    if (newName != color.name) {
+                        replaceObjectReference(color, newName);
                         this.context.updateObject(color, {
-                            name: newValue
+                            name: newName
                         });
-                        this.context.undoManager.setCombineCommands(false);
                     }
+
+                    this.context.undoManager.setCombineCommands(false);
                 })
                 .catch(error => {
                     if (error !== undefined) {
@@ -302,21 +317,37 @@ export const ThemesSideView = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 export class IColor {
-    id: string;
-    name: string;
+    colorId?: string;
 }
 
 export class Color extends EezObject implements IColor {
-    id: string;
+    colorId: string;
+    id: number | undefined;
     name: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            colorId: observable,
+            id: observable,
+            name: observable
+        });
+    }
 
     static classInfo: ClassInfo = {
         properties: [
             {
-                name: "id",
+                name: "colorId",
                 type: PropertyType.String,
                 unique: true,
                 hideInPropertyGrid: true
+            },
+            {
+                name: "id",
+                type: PropertyType.Number,
+                isOptional: true,
+                unique: true
             },
             {
                 name: "name",
@@ -325,6 +356,22 @@ export class Color extends EezObject implements IColor {
                 unique: true
             }
         ],
+        check: (color: Color) => {
+            let messages: Message[] = [];
+
+            const DocumentStore = getDocumentStore(color);
+
+            ProjectEditor.checkAssetId(
+                DocumentStore,
+                "colors",
+                color,
+                messages,
+                0,
+                1000
+            );
+
+            return messages;
+        },
         newItem: (parent: IEezObject) => {
             return showGenericDialog({
                 dialogDefinition: {
@@ -366,7 +413,7 @@ export class Color extends EezObject implements IColor {
                 values: {}
             }).then(result => {
                 return Promise.resolve({
-                    id: guid(),
+                    colorId: guid(),
                     name: result.values.name
                 });
             });
@@ -397,8 +444,8 @@ export class Color extends EezObject implements IColor {
 
                         const colorIndex = project.colors.indexOf(thisObject);
                         const color = project.getThemeColor(
-                            selectedTheme.id,
-                            thisObject.id
+                            selectedTheme.themeId,
+                            thisObject.colorId
                         );
 
                         project.themes.forEach((theme: any, i: number) => {
@@ -425,29 +472,25 @@ export class Color extends EezObject implements IColor {
             menuItems.unshift(...additionalMenuItems);
         }
     };
-
-    constructor() {
-        super();
-
-        makeObservable(this, {
-            id: observable,
-            name: observable
-        });
-    }
 }
 
 registerClass("Color", Color);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class Theme extends EezObject {
-    id: string;
+export class ITheme {
+    themeId?: string;
+    colors?: string[];
+}
+
+export class Theme extends EezObject implements ITheme {
+    themeId: string;
     name: string;
 
     static classInfo: ClassInfo = {
         properties: [
             {
-                name: "id",
+                name: "themeId",
                 type: PropertyType.String,
                 unique: true,
                 hideInPropertyGrid: true
@@ -482,7 +525,7 @@ export class Theme extends EezObject {
                 values: {}
             }).then(result => {
                 return Promise.resolve({
-                    id: guid(),
+                    themeId: guid(),
                     name: result.values.name
                 });
             });
@@ -493,7 +536,7 @@ export class Theme extends EezObject {
         super();
 
         makeObservable(this, {
-            id: observable,
+            themeId: observable,
             name: observable,
             colors: computed
         });
@@ -502,14 +545,18 @@ export class Theme extends EezObject {
     get colors() {
         const project = ProjectEditor.getProject(this);
         return project.colors.map(color =>
-            project.getThemeColor(this.id, color.id)
+            project.getThemeColor(this.themeId, color.colorId)
         );
     }
 
     set colors(value: string[]) {
         const project = ProjectEditor.getProject(this);
         for (let i = 0; i < value.length; i++) {
-            project.setThemeColor(this.id, project.colors[i].id, value[i]);
+            project.setThemeColor(
+                this.themeId,
+                project.colors[i].colorId,
+                value[i]
+            );
         }
     }
 }

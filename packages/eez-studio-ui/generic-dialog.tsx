@@ -46,6 +46,7 @@ export interface IFieldProperties {
     displayName?: string;
     type?:
         | "integer"
+        | "optional-integer"
         | "number"
         | "string"
         | "password"
@@ -223,6 +224,13 @@ export const GenericDialog = observer(
                     values[fieldProperties.name] = parseInt(
                         this.fieldValues[fieldProperties.name]
                     );
+                } else if (fieldProperties.type === "optional-integer") {
+                    const value = this.fieldValues[fieldProperties.name].trim();
+                    if (value) {
+                        values[fieldProperties.name] = parseInt(value);
+                    } else {
+                        values[fieldProperties.name] = undefined;
+                    }
                 } else if (fieldProperties.type === "number") {
                     values[fieldProperties.name] = parseFloat(
                         this.fieldValues[fieldProperties.name]
@@ -323,6 +331,10 @@ export const GenericDialog = observer(
                         fieldValidators = fieldValidators.concat([
                             validators.integer
                         ]);
+                    } else if (fieldProperties.type === "optional-integer") {
+                        fieldValidators = fieldValidators.concat([
+                            validators.optionalInteger
+                        ]);
                     }
 
                     if (fieldProperties.unit) {
@@ -339,7 +351,7 @@ export const GenericDialog = observer(
 
                     fieldValidators.forEach(validator => {
                         let message = validator(
-                            this.fieldValues,
+                            this.values,
                             fieldProperties.name
                         );
                         if (message) {
@@ -428,6 +440,7 @@ export const GenericDialog = observer(
 
                             if (
                                 fieldProperties.type === "integer" ||
+                                fieldProperties.type === "optional-integer" ||
                                 fieldProperties.type === "number" ||
                                 fieldProperties.type === "string" ||
                                 !fieldProperties.type ||

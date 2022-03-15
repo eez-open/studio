@@ -108,8 +108,8 @@ import {
 
 import { FlowState } from "project-editor/flow/runtime";
 
-import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
-import { buildWidget } from "project-editor/features/page/build/widgets";
+import { Assets, DataBuffer } from "project-editor/build/assets";
+import { buildWidget } from "project-editor/build/widgets";
 import {
     WIDGET_TYPE_CONTAINER,
     WIDGET_TYPE_LIST,

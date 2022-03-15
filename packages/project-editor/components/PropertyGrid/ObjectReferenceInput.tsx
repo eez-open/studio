@@ -55,10 +55,9 @@ export const ObjectReferenceInput = observer(
         getObjectNames() {
             const { propertyInfo } = this.props;
 
-            let objects: IEezObject[] =
-                this.context.project.getAllObjectsOfType(
-                    propertyInfo.referencedObjectCollectionPath!
-                );
+            let objects: IEezObject[] = this.context.project._assetsMap[
+                "name"
+            ].getAllObjectsOfType(propertyInfo.referencedObjectCollectionPath!);
 
             return objects
                 .slice()

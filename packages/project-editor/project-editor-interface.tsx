@@ -10,9 +10,10 @@ import type {
     build,
     backgroundCheck,
     buildExtensions
-} from "project-editor/project/build";
+} from "project-editor/build/build";
 import type { getAllMetrics } from "project-editor/project/metrics";
 import type {
+    checkAssetId,
     getFlow,
     getNameProperty,
     getProject,
@@ -97,6 +98,7 @@ export interface IProjectEditor {
     getAncestorWithEditorComponent: typeof getAncestorWithEditorComponent;
     createEditorState: typeof createEditorState;
     browseGlyph: typeof browseGlyph;
+    checkAssetId: typeof checkAssetId;
 }
 
 export const ProjectEditor: IProjectEditor = {} as any;

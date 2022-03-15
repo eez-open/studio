@@ -10,16 +10,12 @@ gulp.task("copy", function () {
     return gulp
         .src([
             SRC + "/**/*.*",
+            "!" + SRC + "/project-editor/flow/runtime/cpp/**/*.*",
             "!" + SRC + "/**/*.ts",
             "!" + SRC + "/**/*.tsx",
             "!" + SRC + "/**/*.less",
             "!" + SRC + "/tsconfig.json",
-            "!" + SRC + "/tsconfig.dev.json",
-            // SRC folder must not contain *.js or *.js.map anymore,
-            // we add these two just in case there is some remains from
-            // the past when *.js is outputed in SRC folder
-            "!" + SRC + "/**/*.js",
-            "!" + SRC + "/**/*.js.map"
+            "!" + SRC + "/tsconfig.dev.json"
         ])
         .pipe(gulp.dest(DST));
 });

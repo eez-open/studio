@@ -55,7 +55,7 @@ import { FlowState } from "project-editor/flow/runtime";
 import { findAction } from "project-editor/features/action/action";
 import { getFlow, getProject } from "project-editor/project/project";
 import { findPage } from "project-editor/features/page/page";
-import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
+import { Assets, DataBuffer } from "project-editor/build/assets";
 import {
     buildAssignableExpression,
     buildExpression,

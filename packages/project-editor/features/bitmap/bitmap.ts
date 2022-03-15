@@ -27,6 +27,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Bitmap extends EezObject {
+    id: number | undefined;
     name: string;
     description?: string;
     image: string;
@@ -34,8 +35,31 @@ export class Bitmap extends EezObject {
     alwaysBuild: boolean;
     style?: string;
 
+    constructor() {
+        super();
+
+        makeObservable<Bitmap, "_imageElement">(this, {
+            id: observable,
+            name: observable,
+            description: observable,
+            image: observable,
+            bpp: observable,
+            alwaysBuild: observable,
+            style: observable,
+            _imageElement: observable,
+            backgroundColor: computed,
+            imageElement: computed
+        });
+    }
+
     static classInfo: ClassInfo = {
         properties: [
+            {
+                name: "id",
+                type: PropertyType.Number,
+                isOptional: true,
+                unique: true
+            },
             {
                 name: "name",
                 type: PropertyType.String,
@@ -68,6 +92,20 @@ export class Bitmap extends EezObject {
                 type: PropertyType.Boolean
             }
         ],
+        check: (bitmap: Bitmap) => {
+            let messages: Message[] = [];
+
+            const DocumentStore = getDocumentStore(bitmap);
+
+            ProjectEditor.checkAssetId(
+                DocumentStore,
+                "bitmaps",
+                bitmap,
+                messages
+            );
+
+            return messages;
+        },
         newItem: (parent: IEezObject) => {
             const DocumentStore = getDocumentStore(parent);
 
@@ -137,22 +175,6 @@ export class Bitmap extends EezObject {
 
     private _imageElement: HTMLImageElement | null = null;
     private _imageElementImage: string;
-
-    constructor() {
-        super();
-
-        makeObservable<Bitmap, "_imageElement">(this, {
-            name: observable,
-            description: observable,
-            image: observable,
-            bpp: observable,
-            alwaysBuild: observable,
-            style: observable,
-            _imageElement: observable,
-            backgroundColor: computed,
-            imageElement: computed
-        });
-    }
 
     get backgroundColor() {
         if (this.bpp !== 32) {

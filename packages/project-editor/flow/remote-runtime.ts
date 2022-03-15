@@ -7,7 +7,7 @@ import * as notification from "eez-studio-ui/notification";
 import type { InstrumentObject } from "instrument/instrument-object";
 import type { ConnectionParameters } from "instrument/connection/interface";
 
-import { AssetsMap } from "project-editor/features/page/build/assets";
+import { AssetsMap } from "project-editor/build/assets";
 import { action, observable, runInAction, makeObservable } from "mobx";
 import { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { Component, Widget } from "project-editor/flow/component";

@@ -49,9 +49,8 @@ import { getThemedColor } from "project-editor/features/style/theme";
 import { Rect } from "eez-studio-shared/geometry";
 import { Flow } from "project-editor/flow/flow";
 import { metrics } from "project-editor/features/page/metrics";
-import { build } from "project-editor/features/page/build";
-import type { Assets, DataBuffer } from "./build/assets";
-import { buildWidget } from "./build/widgets";
+import type { Assets, DataBuffer } from "project-editor/build/assets";
+import { buildWidget } from "project-editor/build/widgets";
 import { WIDGET_TYPE_CONTAINER } from "project-editor/flow/components/widgets/widget_types";
 import classNames from "classnames";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -156,6 +155,7 @@ registerClass("PageOrientation", PageOrientation);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Page extends Flow {
+    id: number | undefined;
     name: string;
     description?: string;
     style?: string;
@@ -175,8 +175,36 @@ export class Page extends Flow {
 
     _geometry: ComponentGeometry;
 
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            id: observable,
+            name: observable,
+            description: observable,
+            style: observable,
+            usedIn: observable,
+            closePageIfTouchedOutside: observable,
+            left: observable,
+            top: observable,
+            width: observable,
+            height: observable,
+            portrait: observable,
+            isUsedAsCustomWidget: observable,
+            dataContextOverrides: observable,
+            _geometry: observable,
+            dataContextOverridesObject: computed
+        });
+    }
+
     static classInfo = makeDerivedClassInfo(Flow.classInfo, {
         properties: [
+            {
+                name: "id",
+                type: PropertyType.Number,
+                propertyGridGroup: generalGroup,
+                unique: true
+            },
             {
                 name: "name",
                 type: PropertyType.String,
@@ -319,6 +347,10 @@ export class Page extends Flow {
         check: (page: Page) => {
             let messages: Message[] = [];
 
+            const DocumentStore = getDocumentStore(page);
+
+            ProjectEditor.checkAssetId(DocumentStore, "pages", page, messages);
+
             if (page.dataContextOverrides) {
                 try {
                     JSON.parse(page.dataContextOverrides);
@@ -332,7 +364,6 @@ export class Page extends Flow {
                 }
             }
 
-            const DocumentStore = getDocumentStore(page);
             if (page.style && !findStyle(DocumentStore.project, page.style)) {
                 messages.push(propertyNotFoundMessage(page, "style"));
             }
@@ -382,27 +413,6 @@ export class Page extends Flow {
             return object.getResizeHandlers();
         }
     });
-
-    constructor() {
-        super();
-
-        makeObservable(this, {
-            name: observable,
-            description: observable,
-            style: observable,
-            usedIn: observable,
-            closePageIfTouchedOutside: observable,
-            left: observable,
-            top: observable,
-            width: observable,
-            height: observable,
-            portrait: observable,
-            isUsedAsCustomWidget: observable,
-            dataContextOverrides: observable,
-            _geometry: observable,
-            dataContextOverridesObject: computed
-        });
-    }
 
     set geometry(value: ComponentGeometry) {
         this._geometry = value;
@@ -637,7 +647,6 @@ export default {
                 typeClass: Page,
                 icon: "filter",
                 create: () => [],
-                build: build,
                 metrics
             }
         }

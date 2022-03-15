@@ -17,7 +17,6 @@ import {
 } from "project-editor/core/store";
 import type { Project } from "project-editor/project/project";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
-import { build } from "project-editor/features/action/build";
 import { metrics } from "project-editor/features/action/metrics";
 import { getDocumentStore } from "project-editor/core/store";
 
@@ -25,18 +24,41 @@ import { Flow } from "project-editor/flow/flow";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { ComponentsContainerEnclosure } from "project-editor/flow/editor/render";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { generalGroup } from "project-editor/flow/component";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Action extends Flow {
+    id: number | undefined;
     name: string;
     description?: string;
     implementationType: "native" | "flow";
     implementation?: string;
     usedIn?: string[];
 
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            id: observable,
+            name: observable,
+            description: observable,
+            implementationType: observable,
+            implementation: observable,
+            usedIn: observable
+        });
+    }
+
     static classInfo = makeDerivedClassInfo(Flow.classInfo, {
         properties: [
+            {
+                name: "id",
+                type: PropertyType.Number,
+                propertyGridGroup: generalGroup,
+                hideInPropertyGrid: (action: Action) =>
+                    !(action.implementationType == "native"),
+                unique: true
+            },
             {
                 name: "name",
                 type: PropertyType.String,
@@ -73,6 +95,20 @@ export class Action extends Flow {
                 hideInPropertyGrid: isDashboardOrApplet
             }
         ],
+        check: (action: Action) => {
+            let messages: Message[] = [];
+
+            const DocumentStore = getDocumentStore(action);
+
+            ProjectEditor.checkAssetId(
+                DocumentStore,
+                "actions",
+                action,
+                messages
+            );
+
+            return messages;
+        },
         label: (action: Action) => {
             if (action.implementationType == "native") {
                 return "[NATIVE] " + action.name;
@@ -126,18 +162,6 @@ export class Action extends Flow {
         },
         icon: "code"
     });
-
-    constructor() {
-        super();
-
-        makeObservable(this, {
-            name: observable,
-            description: observable,
-            implementationType: observable,
-            implementation: observable,
-            usedIn: observable
-        });
-    }
 
     get pageRect() {
         return { left: 0, top: 0, width: 0, height: 0 };
@@ -198,7 +222,6 @@ export default {
 
                     return messages;
                 },
-                build: build,
                 metrics: metrics
             }
         }

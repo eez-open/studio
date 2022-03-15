@@ -1,4 +1,4 @@
-import type { Assets } from "project-editor/features/page/build/assets";
+import type { Assets } from "project-editor/build/assets";
 import { ValueType } from "project-editor/features/variable/value-type";
 
 const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_CONSTANT = 0 << 13;

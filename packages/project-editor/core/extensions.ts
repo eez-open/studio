@@ -6,10 +6,7 @@ import {
 } from "project-editor/core/object";
 import type { Message } from "project-editor/core/store";
 
-import type {
-    Project,
-    BuildConfiguration
-} from "project-editor/project/project";
+import type { Project } from "project-editor/project/project";
 
 import type { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 
@@ -36,11 +33,6 @@ export interface ExtensionImplementation {
         icon: string | React.ReactNode;
         create: () => any;
         check?: (object: IEezObject) => Message[];
-        build?: (
-            project: Project,
-            sectionNames: string[] | undefined,
-            buildConfiguration: BuildConfiguration | undefined
-        ) => Promise<BuildResult>;
         collectExtensionDefinitions?: (
             project: Project,
             extensionDefinition: ExtensionDefinition,

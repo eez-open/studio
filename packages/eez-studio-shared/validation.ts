@@ -90,6 +90,9 @@ export const validators = {
     unique: (origObject: any, collection: any, message?: string) => {
         return function (object: any, ruleName: string) {
             const value = object[ruleName];
+            if (value == undefined) {
+                return null;
+            }
             if (
                 collection.find(
                     (element: any) =>
@@ -103,6 +106,17 @@ export const validators = {
     },
 
     integer: (object: any, ruleName: string) => {
+        let value = filterInteger(object[ruleName]);
+        if (isNaN(value) || typeof value !== "number") {
+            return VALIDATION_MESSAGE_INVALID_VALUE;
+        }
+        return null;
+    },
+
+    optionalInteger: (object: any, ruleName: string) => {
+        if (object[ruleName] == undefined) {
+            return null;
+        }
         let value = filterInteger(object[ruleName]);
         if (isNaN(value) || typeof value !== "number") {
             return VALIDATION_MESSAGE_INVALID_VALUE;

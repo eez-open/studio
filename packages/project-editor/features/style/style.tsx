@@ -27,15 +27,19 @@ import {
     Message,
     propertyInvalidValueMessage,
     propertyNotFoundMessage,
-    propertyNotUniqueMessage,
-    updateObject
+    updateObject,
+    propertyNotSetMessage
 } from "project-editor/core/store";
 import { getDocumentStore } from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import { findFont } from "project-editor/features/font/font";
-import { getThemedColor } from "project-editor/features/style/theme";
+import {
+    getThemedColor,
+    IColor,
+    ITheme
+} from "project-editor/features/style/theme";
 import type { Font } from "project-editor/features/font/font";
 import { metrics } from "project-editor/features/style/metrics";
 import type { Project } from "project-editor/project/project";
@@ -784,279 +788,6 @@ export class Style extends EezObject {
 
     css?: string;
 
-    static classInfo: ClassInfo = {
-        properties,
-        beforeLoadHook(object: Style, jsObject: any) {
-            if (
-                jsObject.paddingHorizontal !== undefined ||
-                jsObject.paddingVertical !== undefined
-            ) {
-                const paddingHorizontal = jsObject.paddingHorizontal || 0;
-                const paddingVertical = jsObject.paddingVertical || 0;
-
-                delete jsObject.paddingHorizontal;
-                delete jsObject.paddingVertical;
-
-                if (paddingHorizontal !== paddingVertical) {
-                    jsObject.padding =
-                        paddingVertical + " " + paddingHorizontal;
-                } else {
-                    jsObject.padding = paddingHorizontal;
-                }
-            }
-
-            if (typeof jsObject.borderRadius == "number") {
-                jsObject.borderRadius = jsObject.borderRadius.toString();
-            }
-        },
-        isPropertyMenuSupported: true,
-        newItem: (parent: IEezObject) => {
-            return showGenericDialog({
-                dialogDefinition: {
-                    title: "New Style",
-                    fields: [
-                        {
-                            name: "name",
-                            type: "string",
-                            validators: [
-                                validators.required,
-                                validators.unique({}, parent)
-                            ]
-                        }
-                    ]
-                },
-                values: {}
-            }).then(result => {
-                return Promise.resolve({
-                    name: result.values.name
-                });
-            });
-        },
-        getInheritedValue: (styleObject: Style, propertyName: string) =>
-            getInheritedValue(styleObject, propertyName, [], false),
-        icon: "format_color_fill",
-        defaultValue: {},
-        check: (style: Style) => {
-            let messages: Message[] = [];
-
-            const DocumentStore = getDocumentStore(style);
-
-            function checkColor(propertyName: string) {
-                const color = (style as any)[propertyName];
-                if (color) {
-                    const colorValue = getThemedColor(DocumentStore, color);
-                    if (!isValid(colorValue)) {
-                        messages.push(
-                            new Message(
-                                MessageType.ERROR,
-                                `invalid color`,
-                                getChildOfObject(style, propertyName)
-                            )
-                        );
-                    }
-                }
-            }
-
-            checkColor("color");
-            checkColor("backgroundColor");
-            checkColor("activeColor");
-            checkColor("activeBackgroundColor");
-            checkColor("focusColor");
-            checkColor("focusBackgroundColor");
-            checkColor("borderColor");
-
-            if (DocumentStore.project.isDashboardProject) {
-                if (
-                    style.inheritFrom &&
-                    !findStyle(DocumentStore.project, style.inheritFrom)
-                ) {
-                    messages.push(
-                        propertyNotFoundMessage(style, "inheritFrom")
-                    );
-                }
-
-                // TODO
-            } else {
-                if (style.id != undefined) {
-                    if (!(style.id > 0 || style.id < 32768)) {
-                        messages.push(
-                            new Message(
-                                MessageType.ERROR,
-                                `"Id": invalid value, should be greater then 0 and less then 32768.`,
-                                getChildOfObject(style, "id")
-                            )
-                        );
-                    } else {
-                        if (
-                            DocumentStore.project.allStyleIdToStyleMap.get(
-                                style.id
-                            )!.length > 1
-                        ) {
-                            messages.push(
-                                propertyNotUniqueMessage(style, "id")
-                            );
-                        }
-                    }
-                }
-
-                if (
-                    style.inheritFrom &&
-                    !findStyle(DocumentStore.project, style.inheritFrom)
-                ) {
-                    messages.push(
-                        propertyNotFoundMessage(style, "inheritFrom")
-                    );
-                } else {
-                    // if (!object.fontName) {
-                    //     messages.push(output.propertyNotFoundMessage(object, "font"));
-                    // }
-
-                    let borderSizeError = Style.getRect(
-                        style.borderSizeProperty
-                    ).error;
-                    if (borderSizeError) {
-                        messages.push(
-                            new Message(
-                                MessageType.ERROR,
-                                `"Border size": ${borderSizeError}.`,
-                                getChildOfObject(style, "borderSize")
-                            )
-                        );
-                    }
-
-                    let borderRadiusError = Style.getRect(
-                        style.borderRadiusProperty
-                    ).error;
-                    if (borderRadiusError) {
-                        messages.push(
-                            new Message(
-                                MessageType.ERROR,
-                                `"Border radius": ${borderRadiusError}.`,
-                                getChildOfObject(style, "borderRadius")
-                            )
-                        );
-                    }
-
-                    let alignHorizontal = style.alignHorizontalProperty;
-                    if (
-                        alignHorizontal &&
-                        alignHorizontal != "left" &&
-                        alignHorizontal != "center" &&
-                        alignHorizontal != "right"
-                    ) {
-                        messages.push(
-                            propertyInvalidValueMessage(
-                                style,
-                                "alignHorizontal"
-                            )
-                        );
-                    }
-
-                    let alignVertical = style.alignVerticalProperty;
-                    if (
-                        alignVertical &&
-                        alignVertical != "top" &&
-                        alignVertical != "center" &&
-                        alignVertical != "bottom"
-                    ) {
-                        messages.push(
-                            propertyInvalidValueMessage(style, "alignVertical")
-                        );
-                    }
-
-                    if (isNaN(style.color16)) {
-                        messages.push(
-                            propertyInvalidValueMessage(style, "color")
-                        );
-                    }
-
-                    if (isNaN(style.backgroundColor16)) {
-                        messages.push(
-                            propertyInvalidValueMessage(
-                                style,
-                                "backgroundColor"
-                            )
-                        );
-                    }
-
-                    if (
-                        DocumentStore.project.settings.general
-                            .projectVersion !== "v1"
-                    ) {
-                        if (isNaN(style.activeColor16)) {
-                            messages.push(
-                                propertyInvalidValueMessage(
-                                    style,
-                                    "activeColor"
-                                )
-                            );
-                        }
-
-                        if (isNaN(style.activeBackgroundColor16)) {
-                            messages.push(
-                                propertyInvalidValueMessage(
-                                    style,
-                                    "activeBackgroundColor"
-                                )
-                            );
-                        }
-
-                        if (isNaN(style.focusColor16)) {
-                            messages.push(
-                                propertyInvalidValueMessage(style, "focusColor")
-                            );
-                        }
-
-                        if (isNaN(style.focusBackgroundColor16)) {
-                            messages.push(
-                                propertyInvalidValueMessage(
-                                    style,
-                                    "focusBackgroundColor"
-                                )
-                            );
-                        }
-                    }
-
-                    if (isNaN(style.borderColor16)) {
-                        messages.push(
-                            propertyInvalidValueMessage(style, "borderColor")
-                        );
-                    }
-
-                    let paddingError = Style.getRect(
-                        style.paddingProperty
-                    ).error;
-                    if (paddingError) {
-                        messages.push(
-                            new Message(
-                                MessageType.ERROR,
-                                `"Padding": ${paddingError}.`,
-                                getChildOfObject(style, "padding")
-                            )
-                        );
-                    }
-
-                    if (!isV3OrNewerProject(style)) {
-                        let marginError = Style.getRect(
-                            style.marginProperty
-                        ).error;
-                        if (marginError) {
-                            messages.push(
-                                new Message(
-                                    MessageType.ERROR,
-                                    `"Margin": ${marginError}.`,
-                                    getChildOfObject(style, "margin")
-                                )
-                            );
-                        }
-                    }
-                }
-            }
-
-            return messages;
-        }
-    };
-
     constructor() {
         super();
 
@@ -1217,6 +948,266 @@ export class Style extends EezObject {
             classNames: computed
         });
     }
+
+    static classInfo: ClassInfo = {
+        properties,
+        beforeLoadHook(object: Style, jsObject: any) {
+            if (
+                jsObject.paddingHorizontal !== undefined ||
+                jsObject.paddingVertical !== undefined
+            ) {
+                const paddingHorizontal = jsObject.paddingHorizontal || 0;
+                const paddingVertical = jsObject.paddingVertical || 0;
+
+                delete jsObject.paddingHorizontal;
+                delete jsObject.paddingVertical;
+
+                if (paddingHorizontal !== paddingVertical) {
+                    jsObject.padding =
+                        paddingVertical + " " + paddingHorizontal;
+                } else {
+                    jsObject.padding = paddingHorizontal;
+                }
+            }
+
+            if (typeof jsObject.borderRadius == "number") {
+                jsObject.borderRadius = jsObject.borderRadius.toString();
+            }
+        },
+        isPropertyMenuSupported: true,
+        newItem: (parent: IEezObject) => {
+            return showGenericDialog({
+                dialogDefinition: {
+                    title: "New Style",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [
+                                validators.required,
+                                validators.unique({}, parent)
+                            ]
+                        }
+                    ]
+                },
+                values: {}
+            }).then(result => {
+                return Promise.resolve({
+                    name: result.values.name
+                });
+            });
+        },
+        getInheritedValue: (styleObject: Style, propertyName: string) =>
+            getInheritedValue(styleObject, propertyName, [], false),
+        icon: "format_color_fill",
+        defaultValue: {},
+        check: (style: Style) => {
+            let messages: Message[] = [];
+
+            const DocumentStore = getDocumentStore(style);
+
+            function checkColor(propertyName: string) {
+                const color = (style as any)[propertyName];
+                if (color) {
+                    const colorValue = getThemedColor(DocumentStore, color);
+                    if (!isValid(colorValue)) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `invalid color`,
+                                getChildOfObject(style, propertyName)
+                            )
+                        );
+                    }
+                }
+            }
+
+            checkColor("color");
+            checkColor("backgroundColor");
+            checkColor("activeColor");
+            checkColor("activeBackgroundColor");
+            checkColor("focusColor");
+            checkColor("focusBackgroundColor");
+            checkColor("borderColor");
+
+            if (DocumentStore.project.isDashboardProject) {
+                if (
+                    style.inheritFrom &&
+                    !findStyle(DocumentStore.project, style.inheritFrom)
+                ) {
+                    messages.push(
+                        propertyNotFoundMessage(style, "inheritFrom")
+                    );
+                }
+
+                // TODO
+            } else {
+                ProjectEditor.checkAssetId(
+                    DocumentStore,
+                    "styles",
+                    style,
+                    messages
+                );
+
+                if (
+                    style.inheritFrom &&
+                    !findStyle(DocumentStore.project, style.inheritFrom)
+                ) {
+                    messages.push(
+                        propertyNotFoundMessage(style, "inheritFrom")
+                    );
+                } else {
+                    if (!style.fontName) {
+                        messages.push(propertyNotSetMessage(style, "font"));
+                    } else if (!style.fontObject) {
+                        messages.push(propertyNotFoundMessage(style, "font"));
+                    }
+
+                    let borderSizeError = Style.getRect(
+                        style.borderSizeProperty
+                    ).error;
+                    if (borderSizeError) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `"Border size": ${borderSizeError}.`,
+                                getChildOfObject(style, "borderSize")
+                            )
+                        );
+                    }
+
+                    let borderRadiusError = Style.getRect(
+                        style.borderRadiusProperty
+                    ).error;
+                    if (borderRadiusError) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `"Border radius": ${borderRadiusError}.`,
+                                getChildOfObject(style, "borderRadius")
+                            )
+                        );
+                    }
+
+                    let alignHorizontal = style.alignHorizontalProperty;
+                    if (
+                        alignHorizontal &&
+                        alignHorizontal != "left" &&
+                        alignHorizontal != "center" &&
+                        alignHorizontal != "right"
+                    ) {
+                        messages.push(
+                            propertyInvalidValueMessage(
+                                style,
+                                "alignHorizontal"
+                            )
+                        );
+                    }
+
+                    let alignVertical = style.alignVerticalProperty;
+                    if (
+                        alignVertical &&
+                        alignVertical != "top" &&
+                        alignVertical != "center" &&
+                        alignVertical != "bottom"
+                    ) {
+                        messages.push(
+                            propertyInvalidValueMessage(style, "alignVertical")
+                        );
+                    }
+
+                    if (isNaN(style.color16)) {
+                        messages.push(
+                            propertyInvalidValueMessage(style, "color")
+                        );
+                    }
+
+                    if (isNaN(style.backgroundColor16)) {
+                        messages.push(
+                            propertyInvalidValueMessage(
+                                style,
+                                "backgroundColor"
+                            )
+                        );
+                    }
+
+                    if (
+                        DocumentStore.project.settings.general
+                            .projectVersion !== "v1"
+                    ) {
+                        if (isNaN(style.activeColor16)) {
+                            messages.push(
+                                propertyInvalidValueMessage(
+                                    style,
+                                    "activeColor"
+                                )
+                            );
+                        }
+
+                        if (isNaN(style.activeBackgroundColor16)) {
+                            messages.push(
+                                propertyInvalidValueMessage(
+                                    style,
+                                    "activeBackgroundColor"
+                                )
+                            );
+                        }
+
+                        if (isNaN(style.focusColor16)) {
+                            messages.push(
+                                propertyInvalidValueMessage(style, "focusColor")
+                            );
+                        }
+
+                        if (isNaN(style.focusBackgroundColor16)) {
+                            messages.push(
+                                propertyInvalidValueMessage(
+                                    style,
+                                    "focusBackgroundColor"
+                                )
+                            );
+                        }
+                    }
+
+                    if (isNaN(style.borderColor16)) {
+                        messages.push(
+                            propertyInvalidValueMessage(style, "borderColor")
+                        );
+                    }
+
+                    let paddingError = Style.getRect(
+                        style.paddingProperty
+                    ).error;
+                    if (paddingError) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `"Padding": ${paddingError}.`,
+                                getChildOfObject(style, "padding")
+                            )
+                        );
+                    }
+
+                    if (!isV3OrNewerProject(style)) {
+                        let marginError = Style.getRect(
+                            style.marginProperty
+                        ).error;
+                        if (marginError) {
+                            messages.push(
+                                new Message(
+                                    MessageType.ERROR,
+                                    `"Margin": ${marginError}.`,
+                                    getChildOfObject(style, "margin")
+                                )
+                            );
+                        }
+                    }
+                }
+            }
+
+            return messages;
+        }
+    };
 
     get fontName(): string {
         return getStyleProperty(this, "font");
@@ -1983,10 +1974,12 @@ export default {
                 metrics,
                 toJsHook: (jsObject: Project, project: Project) => {
                     //
-                    jsObject.colors.forEach((color: any) => delete color.id);
+                    jsObject.colors.forEach(
+                        (color: IColor) => delete color.colorId
+                    );
 
-                    jsObject.themes.forEach((theme: any, i: number) => {
-                        delete theme.id;
+                    jsObject.themes.forEach((theme: ITheme, i: number) => {
+                        delete theme.themeId;
                         theme.colors = project.themes[i].colors;
                     });
 
