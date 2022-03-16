@@ -157,12 +157,12 @@ export class ConnectionLine extends EezObject {
     }
 
     get _sourcePosition() {
-        if (!(this.sourceComponent && this.sourceComponent._geometry)) {
+        if (!this.sourceComponent) {
             return undefined;
         }
 
         const outputGeometry =
-            this.sourceComponent._geometry.outputs[this.output];
+            this.sourceComponent.geometry.outputs[this.output];
         if (!outputGeometry) {
             return undefined;
         }
@@ -178,10 +178,10 @@ export class ConnectionLine extends EezObject {
     }
 
     get _targetPosition() {
-        if (!(this.targetComponent && this.targetComponent._geometry)) {
+        if (!this.targetComponent) {
             return undefined;
         }
-        const inputGeometry = this.targetComponent._geometry.inputs[this.input];
+        const inputGeometry = this.targetComponent.geometry.inputs[this.input];
         if (!inputGeometry) {
             return undefined;
         }
@@ -237,29 +237,29 @@ export class ConnectionLine extends EezObject {
     }
 
     get sourceRect() {
-        if (!(this.sourceComponent && this.sourceComponent._geometry)) {
+        if (!this.sourceComponent) {
             return {
                 left: 0,
                 top: 0,
-                width: 0,
-                height: 0
+                width: 1,
+                height: 1
             };
         }
 
-        return this.sourceComponent._geometry;
+        return this.sourceComponent.geometry;
     }
 
     get targetRect() {
-        if (!(this.targetComponent && this.targetComponent._geometry)) {
+        if (!this.targetComponent) {
             return {
                 left: 0,
                 top: 0,
-                width: 0,
-                height: 0
+                width: 1,
+                height: 1
             };
         }
 
-        return this.targetComponent._geometry;
+        return this.targetComponent.geometry;
     }
 
     setActive() {

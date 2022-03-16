@@ -24,8 +24,7 @@ import {
     isPropertyHidden,
     getProperty,
     MessageType,
-    registerClass,
-    IPropertyGridGroupDefinition
+    registerClass
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -52,7 +51,10 @@ import type {
     IFlowContext,
     IFlowState
 } from "project-editor/flow/flow-interfaces";
-import { ComponentGeometry } from "project-editor/flow/editor/render";
+import {
+    calcComponentGeometry,
+    ComponentGeometry
+} from "project-editor/flow/editor/render";
 import {
     IResizing,
     ResizingProperty
@@ -84,6 +86,13 @@ import { getComponentName } from "./editor/ComponentsPalette";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
 import type { IActionComponentDefinition, LogItemType } from "eez-studio-types";
+import {
+    flowGroup,
+    generalGroup,
+    geometryGroup,
+    specificGroup,
+    styleGroup
+} from "project-editor/components/PropertyGrid/groups";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -95,43 +104,6 @@ let positionAndSize:
           height: number;
       }
     | undefined = undefined;
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const generalGroup: IPropertyGridGroupDefinition = {
-    id: "general",
-    title: "General",
-    position: (object: IEezObject) =>
-        object instanceof ActionComponent ? 0 : 2
-};
-
-export const specificGroup: IPropertyGridGroupDefinition = {
-    id: "specific",
-    title: "Specific",
-    position: (object: IEezObject) =>
-        object instanceof ActionComponent ? 1 : 3
-};
-
-export const flowGroup: IPropertyGridGroupDefinition = {
-    id: "flow",
-    title: "Flow",
-    position: (object: IEezObject) =>
-        object instanceof ActionComponent ? 2 : 4
-};
-
-export const geometryGroup: IPropertyGridGroupDefinition = {
-    id: "geometry",
-    title: "Position and size",
-    position: (object: IEezObject) =>
-        object instanceof ActionComponent ? 3 : 0
-};
-
-export const styleGroup: IPropertyGridGroupDefinition = {
-    id: "style",
-    title: "Style",
-    position: (object: IEezObject) =>
-        object instanceof ActionComponent ? 4 : 1
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1469,6 +1441,14 @@ export class Component extends EezObject {
             return undefined;
         }
     };
+
+    get geometry() {
+        if (this._geometry) {
+            return this._geometry;
+        }
+
+        return calcComponentGeometry(this, undefined, undefined);
+    }
 
     set geometry(value: ComponentGeometry) {
         this._geometry = value;

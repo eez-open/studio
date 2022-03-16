@@ -324,12 +324,10 @@ export class Assets {
         // styles
         //
         this.styles = [];
-        if (!this.DocumentStore.masterProject) {
-            this.getAssets<Style>(
-                project => project.styles,
-                style => style.id != undefined
-            ).forEach(style => (this.styles[style.id! - 1] = style));
-        }
+        this.getAssets<Style>(
+            project => project.styles,
+            style => style.id != undefined
+        ).forEach(style => (this.styles[style.id! - 1] = style));
         this.getAssets<Style>(
             project => project.styles,
             style => style.id == undefined && style.alwaysBuild
@@ -355,12 +353,10 @@ export class Assets {
         // fonts
         //
         this.fonts = [];
-        if (!this.DocumentStore.masterProject) {
-            this.getAssets<Font>(
-                project => project.fonts,
-                font => font.id != undefined
-            ).forEach(font => (this.fonts[font.id! - 1] = font));
-        }
+        this.getAssets<Font>(
+            project => project.fonts,
+            font => font.id != undefined
+        ).forEach(font => (this.fonts[font.id! - 1] = font));
         this.getAssets<Font>(
             project => project.fonts,
             font => font.id == undefined && font.alwaysBuild
@@ -386,12 +382,10 @@ export class Assets {
         // bitmaps
         //
         this.bitmaps = [];
-        if (!this.DocumentStore.masterProject) {
-            this.getAssets<Bitmap>(
-                project => project.bitmaps,
-                bitmap => bitmap.id != undefined
-            ).forEach(bitmap => (this.bitmaps[bitmap.id! - 1] = bitmap));
-        }
+        this.getAssets<Bitmap>(
+            project => project.bitmaps,
+            bitmap => bitmap.id != undefined
+        ).forEach(bitmap => (this.bitmaps[bitmap.id! - 1] = bitmap));
         this.getAssets<Bitmap>(
             project => project.bitmaps,
             bitmap => bitmap.id == undefined && bitmap.alwaysBuild
@@ -568,20 +562,20 @@ export class Assets {
                 }
             }
 
-            if (style.id) {
-                return style.id;
-            }
-
             const isMasterProjectStyle =
                 this.DocumentStore.masterProject &&
                 getProject(style) == this.DocumentStore.masterProject;
             if (isMasterProjectStyle) {
-                this.DocumentStore.outputSectionsStore.write(
-                    Section.OUTPUT,
-                    MessageType.WARNING,
-                    `master project style without ID can not be used`,
-                    style
-                );
+                if (style.id) {
+                    return style.id;
+                } else {
+                    this.DocumentStore.outputSectionsStore.write(
+                        Section.OUTPUT,
+                        MessageType.WARNING,
+                        `master project style without ID can not be used`,
+                        style
+                    );
+                }
             } else {
                 this.styles.push(style);
                 return this.DocumentStore.masterProject
@@ -628,12 +622,16 @@ export class Assets {
                 this.DocumentStore.masterProject &&
                 getProject(font) == this.DocumentStore.masterProject;
             if (isMasterProjectFont) {
-                this.DocumentStore.outputSectionsStore.write(
-                    Section.OUTPUT,
-                    MessageType.WARNING,
-                    `master project font without ID can not be used`,
-                    font
-                );
+                if (font.id) {
+                    return font.id;
+                } else {
+                    this.DocumentStore.outputSectionsStore.write(
+                        Section.OUTPUT,
+                        MessageType.WARNING,
+                        `master project font without ID can not be used`,
+                        font
+                    );
+                }
             } else {
                 this.fonts.push(font);
                 return this.DocumentStore.masterProject
@@ -665,12 +663,16 @@ export class Assets {
                 this.DocumentStore.masterProject &&
                 getProject(bitmap) == this.DocumentStore.masterProject;
             if (isMasterProjectBitmap) {
-                this.DocumentStore.outputSectionsStore.write(
-                    Section.OUTPUT,
-                    MessageType.WARNING,
-                    `master project bitmap without ID can not be used`,
-                    bitmap
-                );
+                if (bitmap.id) {
+                    return bitmap.id;
+                } else {
+                    this.DocumentStore.outputSectionsStore.write(
+                        Section.OUTPUT,
+                        MessageType.WARNING,
+                        `master project bitmap without ID can not be used`,
+                        bitmap
+                    );
+                }
             } else {
                 this.bitmaps.push(bitmap);
                 return this.DocumentStore.masterProject

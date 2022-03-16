@@ -19,7 +19,6 @@ import {
     registerClass,
     PropertyType,
     makeDerivedClassInfo,
-    IPropertyGridGroupDefinition,
     isAncestor,
     getParent,
     PropertyProps,
@@ -94,9 +93,7 @@ import {
     ComponentInput,
     ComponentOutput,
     makeExpressionProperty,
-    makeActionPropertyInfo,
-    generalGroup,
-    specificGroup
+    makeActionPropertyInfo
 } from "project-editor/flow/component";
 
 import {
@@ -148,6 +145,11 @@ import { remap } from "eez-studio-shared/util";
 import { roundNumber } from "eez-studio-shared/roundNumber";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { detectFileType } from "instrument/connection/file-type";
+import {
+    generalGroup,
+    indentationGroup,
+    specificGroup
+} from "project-editor/components/PropertyGrid/groups";
 
 const LIST_TYPE_VERTICAL = 1;
 const LIST_TYPE_HORIZONTAL = 2;
@@ -2305,12 +2307,6 @@ class MultilineTextRender {
         this.executeStep(MultilineTextRenderStep.RENDER);
     }
 }
-
-export const indentationGroup: IPropertyGridGroupDefinition = {
-    id: "indentation",
-    title: "Indentation",
-    position: 3
-};
 
 export class MultilineTextWidget extends Widget {
     name: string;

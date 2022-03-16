@@ -23,6 +23,7 @@ import type { Project } from "project-editor/project/project";
 
 import { metrics } from "project-editor/features/bitmap/metrics";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { generalGroup } from "project-editor/components/PropertyGrid/groups";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -58,7 +59,8 @@ export class Bitmap extends EezObject {
                 name: "id",
                 type: PropertyType.Number,
                 isOptional: true,
-                unique: true
+                unique: true,
+                propertyGridGroup: generalGroup
             },
             {
                 name: "name",

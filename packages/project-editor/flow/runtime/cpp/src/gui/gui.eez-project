@@ -576,8 +576,8 @@
       "alwaysBuild": true,
       "color": "drop_down_list_color",
       "backgroundColor": "drop_down_list_background",
-      "activeColor": "drop_down_list_color",
-      "activeBackgroundColor": "drop_down_list_active_background",
+      "activeColor": "drop_down_list_background",
+      "activeBackgroundColor": "drop_down_list_color",
       "padding": "12"
     },
     {
@@ -653,6 +653,12 @@
       "backgroundColor": "#000000",
       "borderSize": "1",
       "borderColor": "backdrop"
+    },
+    {
+      "name": "slider_widget",
+      "inheritFrom": "default",
+      "color": "slider_widget_color",
+      "backgroundColor": "slider_widget_background"
     },
     {
       "name": "background",

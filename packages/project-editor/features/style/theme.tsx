@@ -32,6 +32,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import type { Project } from "project-editor/project/project";
 import { getName, NamingConvention } from "project-editor/build/helper";
+import { generalGroup } from "project-editor/components/PropertyGrid/groups";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -350,7 +351,8 @@ export class Color extends EezObject implements IColor {
                 name: "id",
                 type: PropertyType.Number,
                 isOptional: true,
-                unique: true
+                unique: true,
+                propertyGridGroup: generalGroup
             },
             {
                 name: "name",

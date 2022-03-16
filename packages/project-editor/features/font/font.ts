@@ -45,6 +45,7 @@ import {
     resizeGlyphBitmap,
     serializePixelArray
 } from "project-editor/features/font/font-utils";
+import { generalGroup } from "project-editor/components/PropertyGrid/groups";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -914,7 +915,8 @@ export class Font extends EezObject {
                 name: "id",
                 type: PropertyType.Number,
                 isOptional: true,
-                unique: true
+                unique: true,
+                propertyGridGroup: generalGroup
             },
             {
                 name: "name",

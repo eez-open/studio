@@ -7,11 +7,7 @@ import {
     PropertyType
 } from "project-editor/core/object";
 
-import {
-    makeDataPropertyInfo,
-    Widget,
-    specificGroup
-} from "project-editor/flow/component";
+import { makeDataPropertyInfo, Widget } from "project-editor/flow/component";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import {
     evalConstantExpression,
@@ -19,6 +15,7 @@ import {
 } from "project-editor/flow/expression/expression";
 import { observable, makeObservable } from "mobx";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { specificGroup } from "project-editor/components/PropertyGrid/groups";
 
 ////////////////////////////////////////////////////////////////////////////////
 

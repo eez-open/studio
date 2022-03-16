@@ -16,6 +16,7 @@ import {
 } from "project-editor/core/object";
 import {
     getDocumentStore,
+    getLabel,
     isDashboardProject,
     Message,
     propertyInvalidValueMessage,
@@ -35,14 +36,12 @@ import {
 
 import type { Project } from "project-editor/project/project";
 
+import { AutoSize, Component, Widget } from "project-editor/flow/component";
 import {
-    AutoSize,
-    Component,
     generalGroup,
     styleGroup,
-    geometryGroup,
-    Widget
-} from "project-editor/flow/component";
+    geometryGroup
+} from "project-editor/components/PropertyGrid/groups";
 
 import { findStyle } from "project-editor/features/style/style";
 import { getThemedColor } from "project-editor/features/style/theme";
@@ -57,6 +56,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import * as draw from "project-editor/flow/editor/draw";
+import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -202,8 +202,9 @@ export class Page extends Flow {
             {
                 name: "id",
                 type: PropertyType.Number,
-                propertyGridGroup: generalGroup,
-                unique: true
+                isOptional: true,
+                unique: true,
+                propertyGridGroup: generalGroup
             },
             {
                 name: "name",
@@ -276,10 +277,18 @@ export class Page extends Flow {
             }
         ],
         label: (page: Page) => {
+            let label = page.name;
             if (page.isUsedAsCustomWidget) {
-                return "[CUSTOM WIDGET] " + page.name;
+                label = "[CUSTOM WIDGET] " + label;
             }
-            return page.name;
+            return label;
+        },
+        listLabel: (page: Page) => {
+            let label: React.ReactNode = getLabel(page);
+            if (page.isRuntimeSelectedPage) {
+                label = <strong>{label}</strong>;
+            }
+            return label;
         },
         beforeLoadHook: (page: Page, jsObject: any) => {
             if (jsObject.widgets) {
@@ -459,21 +468,28 @@ export class Page extends Flow {
         };
     }
 
-    renderComponents(flowContext: IFlowContext) {
-        if (
-            flowContext.DocumentStore.runtime &&
-            flowContext.DocumentStore.runtime instanceof
-                ProjectEditor.WasmRuntimeClass
-        ) {
-            return flowContext.DocumentStore.runtime.renderPage();
-        }
+    get isRuntimeSelectedPage() {
+        const DocumentStore = getDocumentStore(this);
+        return (
+            DocumentStore.runtime &&
+            DocumentStore.runtime instanceof ProjectEditor.WasmRuntimeClass &&
+            DocumentStore.runtime.selectedPage == this
+        );
+    }
 
+    renderComponents(flowContext: IFlowContext) {
         return (
             <>
-                <ComponentEnclosure
-                    component={this}
-                    flowContext={flowContext}
-                />
+                {this.isRuntimeSelectedPage ? (
+                    (
+                        flowContext.DocumentStore.runtime! as WasmRuntime
+                    ).renderPage()
+                ) : (
+                    <ComponentEnclosure
+                        component={this}
+                        flowContext={flowContext}
+                    />
+                )}
 
                 {!flowContext.frontFace && (
                     <ComponentsContainerEnclosure

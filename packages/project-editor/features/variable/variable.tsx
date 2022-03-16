@@ -63,7 +63,7 @@ import {
 } from "project-editor/features/variable/defs";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import classNames from "classnames";
-import { generalGroup } from "project-editor/flow/component";
+import { generalGroup } from "project-editor/components/PropertyGrid/groups";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -304,10 +304,11 @@ export class Variable extends EezObject {
             {
                 name: "id",
                 type: PropertyType.Number,
+                isOptional: true,
+                unique: true,
                 propertyGridGroup: generalGroup,
                 hideInPropertyGrid: (variable: Variable) =>
-                    !(variable.native && isGlobalVariable(variable)),
-                unique: true
+                    !(variable.native && isGlobalVariable(variable))
             },
             {
                 name: "name",

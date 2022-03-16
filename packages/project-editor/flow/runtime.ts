@@ -159,8 +159,6 @@ export abstract class RuntimeBase {
 
         runInAction(() => {
             this.isDebuggerActive = isDebuggerActive;
-            this.DocumentStore.uiStateStore.pageRuntimeFrontFace =
-                !isDebuggerActive;
         });
 
         this.doStartRuntime(isDebuggerActive);
@@ -201,7 +199,10 @@ export abstract class RuntimeBase {
                 this.DocumentStore.uiStateStore.pageRuntimeFrontFace = false;
             }
         } else if (this.state == State.STARTING_WITHOUT_DEBUGGER) {
-            if (action == StateMachineAction.RUN) {
+            if (
+                action == StateMachineAction.RUN ||
+                action == StateMachineAction.RESUME
+            ) {
                 this.setState(State.RUNNING);
             }
         } else if (this.state == State.STARTING_WITH_DEBUGGER) {

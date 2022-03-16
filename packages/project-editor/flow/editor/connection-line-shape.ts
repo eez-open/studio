@@ -88,28 +88,39 @@ export function getConnectionLineShape(
         }
     }
 
-    if (nodeRed.get()) {
-        const nodeHeight = Math.max(
-            connectionLine.sourceRect.height,
-            connectionLine.targetRect.height
-        );
-
-        return generateNodeRedLinkPath(
-            sourcePositionX,
-            sourcePositionY,
-            targetPositionX,
-            targetPositionY,
-            1,
-            nodeHeight
-        );
-    }
-
-    return generatePath(
+    return generateConnectionLinePath(
         { x: sourcePositionX, y: sourcePositionY },
         sourceRect,
         { x: targetPositionX, y: targetPositionY },
         targetRect
     );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function generateConnectionLinePath(
+    source: Point,
+    sourceRect: Rect | undefined,
+    target: Point,
+    targetRect: Rect | undefined
+) {
+    if (!sourceRect || !targetRect || nodeRed.get()) {
+        const nodeHeight = Math.max(
+            sourceRect?.height ?? 0,
+            targetRect?.height ?? 0
+        );
+
+        return generateNodeRedLinkPath(
+            source.x,
+            source.y,
+            target.x,
+            target.y,
+            1,
+            nodeHeight
+        );
+    }
+
+    return generatePath(source, sourceRect, target, targetRect);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -289,7 +300,7 @@ function generatePath(
 // Node-RED algorithm
 const LINE_CURVE_SCALE = 0.75;
 const NODE_WIDTH = 100;
-export function generateNodeRedLinkPath(
+function generateNodeRedLinkPath(
     origX: number,
     origY: number,
     destX: number,

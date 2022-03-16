@@ -46,6 +46,7 @@ import type { Project } from "project-editor/project/project";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import { MenuItem } from "@electron/remote";
+import { generalGroup } from "project-editor/components/PropertyGrid/groups";
 
 export type BorderRadiusSpec = {
     topLeftX: number;
@@ -140,9 +141,10 @@ const backgroundColorPropertyMenu = (
 const idProperty: PropertyInfo = {
     name: "id",
     type: PropertyType.Number,
-    inheritable: false,
     isOptional: true,
     unique: true,
+    propertyGridGroup: generalGroup,
+    inheritable: false,
     hideInPropertyGrid: style =>
         isWidgetParentOfStyle(style) || isDashboardProject(style),
     defaultValue: undefined

@@ -10,7 +10,7 @@
     "main": "build/main/main.js",
     "scripts": {
         "postinstall": "electron-builder install-app-deps",
-        "start": "electron --trace-warnings .",
+        "start": "electron --trace-warnings --trace-deprecation .",
         "build": "npm run build-src && npm run build-css && npm run build-dark-css && npm run build-flow-runtime && npm run make-electron-builder-yml",
         "build-src": "tsc && node node_modules/gulp-cli/bin/gulp.js release",
         "build-css": "node node_modules/less/bin/lessc --clean-css packages/eez-studio-ui/_stylesheets/main.less build/eez-studio-ui/_stylesheets/main.css",

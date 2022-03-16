@@ -28,8 +28,7 @@ import { InstrumentObject, instruments } from "instrument/instrument-object";
 import {
     ActionComponent,
     ComponentOutput,
-    makeExpressionProperty,
-    specificGroup
+    makeExpressionProperty
 } from "project-editor/flow/component";
 import { FlowState } from "project-editor/flow//runtime";
 import type { IFlowContext } from "project-editor/flow//flow-interfaces";
@@ -66,6 +65,7 @@ import {
 } from "eez-studio-shared/scpi-parser";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { FileHistoryItem } from "instrument/window/history/items/file";
+import { specificGroup } from "project-editor/components/PropertyGrid/groups";
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -24,7 +24,7 @@ import { Flow } from "project-editor/flow/flow";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { ComponentsContainerEnclosure } from "project-editor/flow/editor/render";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { generalGroup } from "project-editor/flow/component";
+import { generalGroup } from "project-editor/components/PropertyGrid/groups";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -54,10 +54,11 @@ export class Action extends Flow {
             {
                 name: "id",
                 type: PropertyType.Number,
+                isOptional: true,
+                unique: true,
                 propertyGridGroup: generalGroup,
                 hideInPropertyGrid: (action: Action) =>
-                    !(action.implementationType == "native"),
-                unique: true
+                    !(action.implementationType == "native")
             },
             {
                 name: "name",

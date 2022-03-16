@@ -1,20 +1,18 @@
 import React from "react";
 
 import { ProjectContext } from "project-editor/project/context";
-import { Component, Widget } from "project-editor/flow/component";
-import { IFlowContext } from "project-editor/flow/flow-interfaces";
-import {
-    FlowState,
-    RuntimeBase,
-    StateMachineAction
-} from "project-editor/flow/runtime";
 import { DocumentStoreClass } from "project-editor/core/store";
 
-import { IExpressionContext } from "project-editor/flow/expression/expression";
 import { observer } from "mobx-react";
 import { AssetsMap } from "project-editor/build/assets";
+import {
+    RemoteRuntime,
+    DebuggerConnectionBase
+} from "project-editor/flow/remote-runtime";
 
-export class WasmRuntime extends RuntimeBase {
+export class WasmRuntime extends RemoteRuntime {
+    debuggerConnection = new WasmDebuggerConnection(this);
+
     constructor(public DocumentStore: DocumentStoreClass) {
         super(DocumentStore);
     }
@@ -34,115 +32,85 @@ export class WasmRuntime extends RuntimeBase {
     }[] = [];
     wheelDeltaY = 0;
     wheelClicked = 0;
+    messageFromDebugger: string | undefined;
+    screen: any;
+    requestAnimationFrameId: number | undefined;
 
     ////////////////////////////////////////////////////////////////////////////////
 
     async doStartRuntime(isDebuggerActive: boolean) {
         const result = await this.DocumentStore.buildAssets();
+
+        this.assetsMap = result.GUI_ASSETS_DATA_MAP_JS as AssetsMap;
+        if (!this.assetsMap) {
+            this.DocumentStore.setEditorMode();
+            return;
+        }
+
         const assetsData = result.GUI_ASSETS_DATA;
-        this.assetsDataMapJs = result.GUI_ASSETS_DATA_MAP_JS;
 
         this.worker = new Worker(
             "../project-editor/flow/runtime/flow_runtime.js"
         );
 
         this.worker.onmessage = e => {
-            //console.log("renderer", e.data);
-
             if (e.data.init) {
                 this.worker.postMessage({
                     assets: assetsData
                 });
+
+                if (!isDebuggerActive) {
+                    this.resumeAtStart = true;
+                }
             } else {
-                if (e.data.screen) {
-                    if (this.ctx) {
-                        var imgData = new ImageData(
-                            e.data.screen,
-                            this.width,
-                            this.height
-                        );
-                        this.ctx.putImageData(imgData, 0, 0);
-                    }
+                if (e.data.messageToDebugger) {
+                    this.debuggerConnection.onMessageToDebugger(
+                        arrayBufferToBinaryString(e.data.messageToDebugger)
+                    );
                 }
 
-                this.worker.postMessage({
-                    wheel: {
-                        deltaY: this.wheelDeltaY,
-                        clicked: this.wheelClicked
-                    },
-                    pointerEvents: this.pointerEvents
-                });
-
-                this.wheelDeltaY = 0;
-                this.wheelClicked = 0;
-                this.pointerEvents = [];
+                this.screen = e.data.screen;
+                this.requestAnimationFrameId = window.requestAnimationFrame(
+                    this.tick
+                );
             }
         };
     }
 
     async doStopRuntime(notifyUser: boolean) {
+        if (this.requestAnimationFrameId) {
+            window.cancelAnimationFrame(this.requestAnimationFrameId);
+        }
+
         this.worker.terminate();
     }
 
-    toggleDebugger(): void {
-        if (this.isDebuggerActive) {
-            this.transition(StateMachineAction.RUN);
-        } else {
-            this.transition(StateMachineAction.PAUSE);
-        }
-    }
-
-    resume() {
-        this.transition(StateMachineAction.RESUME);
-    }
-
-    pause() {
-        this.transition(StateMachineAction.PAUSE);
-    }
-
-    runSingleStep() {
-        this.transition(StateMachineAction.SINGLE_STEP);
-    }
-
-    onBreakpointAdded(component: Component) {}
-
-    onBreakpointRemoved(component: Component) {}
-
-    onBreakpointEnabled(component: Component) {}
-
-    onBreakpointDisabled(component: Component) {}
-
-    executeWidgetAction(
-        flowContext: IFlowContext,
-        widget: Widget,
-        value?: any
-    ) {}
-
-    readSettings(key: string) {}
-    writeSettings(key: string, value: any) {}
-
-    async startFlow(flowState: FlowState) {}
-
-    propagateValue(
-        flowState: FlowState,
-        sourceComponent: Component,
-        output: string,
-        value: any,
-        outputName?: string
-    ) {}
-
-    throwError(flowState: FlowState, component: Component, message: string) {}
-
-    assignValue(
-        expressionContext: IExpressionContext,
-        component: Component,
-        assignableExpression: string,
-        value: any
-    ) {}
-
-    destroyObjectLocalVariables(flowState: FlowState): void {}
-
     ////////////////////////////////////////////////////////////////////////////////
+
+    tick = () => {
+        this.requestAnimationFrameId = undefined;
+        if (this.screen && this.ctx) {
+            var imgData = new ImageData(this.screen, this.width, this.height);
+            this.ctx.putImageData(imgData, 0, 0);
+        }
+
+        this.worker.postMessage({
+            wheel: {
+                deltaY: this.wheelDeltaY,
+                clicked: this.wheelClicked
+            },
+            pointerEvents: this.pointerEvents,
+            messageFromDebugger: this.messageFromDebugger
+                ? binaryStringToArrayBuffer(this.messageFromDebugger)
+                : undefined
+        });
+
+        this.wheelDeltaY = 0;
+        this.wheelClicked = 0;
+        this.pointerEvents = [];
+        this.messageFromDebugger = undefined;
+        this.screen = undefined;
+    };
 
     renderPage() {
         return <WasmCanvas />;
@@ -245,3 +213,34 @@ export const WasmCanvas = observer(
         }
     }
 );
+
+class WasmDebuggerConnection extends DebuggerConnectionBase {
+    constructor(private wasmRuntime: WasmRuntime) {
+        super(wasmRuntime);
+    }
+
+    start() {}
+
+    stop() {}
+
+    sendMessageFromDebugger(data: string) {
+        if (this.wasmRuntime.messageFromDebugger) {
+            this.wasmRuntime.messageFromDebugger += data;
+        } else {
+            this.wasmRuntime.messageFromDebugger = data;
+        }
+    }
+}
+
+function arrayBufferToBinaryString(data: ArrayBuffer) {
+    const buffer = Buffer.from(data);
+    return buffer.toString("binary");
+}
+
+function binaryStringToArrayBuffer(data: string) {
+    const buffer = Buffer.from(data, "binary");
+    return buffer.buffer.slice(
+        buffer.byteOffset,
+        buffer.byteOffset + buffer.byteLength
+    );
+}

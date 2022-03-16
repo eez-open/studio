@@ -903,7 +903,7 @@ export interface ITreeAdapter {
     getItemId(item: ITreeItem): string;
     getItemFromId(id: string): ITreeItem | undefined;
     getItemParent(item: ITreeItem): ITreeItem | undefined;
-    itemToString(item: ITreeItem): string;
+    itemToString(item: ITreeItem): React.ReactNode;
     isAncestor(item: ITreeItem, ancestor: ITreeItem): boolean;
 
     isSelected(item: ITreeItem): boolean;
@@ -1036,7 +1036,7 @@ export class TreeAdapter implements ITreeAdapter {
         return this.rootItem.getParent(item);
     }
 
-    itemToString(item: ITreeObjectAdapter): string {
+    itemToString(item: ITreeObjectAdapter) {
         return objectToString(item.object);
     }
 
@@ -1444,6 +1444,10 @@ export class ListAdapter implements ITreeAdapter {
     }
 
     itemToString(item: ListItem) {
+        const listLabel = getClassInfo(item.object).listLabel;
+        if (listLabel) {
+            return listLabel(item.object);
+        }
         return objectToString(item.object);
     }
 

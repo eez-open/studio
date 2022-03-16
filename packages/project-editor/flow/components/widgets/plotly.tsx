@@ -9,13 +9,14 @@ import {
     ProjectType
 } from "project-editor/core/object";
 
-import { Widget, specificGroup } from "project-editor/flow/component";
+import { Widget } from "project-editor/flow/component";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { observer } from "mobx-react";
 
 import type * as PlotlyModule from "plotly.js-dist-min";
 import classNames from "classnames";
 import { FlowState } from "project-editor/flow/runtime";
+import { specificGroup } from "project-editor/components/PropertyGrid/groups";
 
 ////////////////////////////////////////////////////////////////////////////////
 

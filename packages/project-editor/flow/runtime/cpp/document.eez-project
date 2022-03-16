@@ -41,7 +41,7 @@
         {
           "type": "TextWidget",
           "left": 0,
-          "top": 60,
+          "top": 91,
           "width": 480,
           "height": 54,
           "wireID": "7a61c096-b521-41b3-a21d-85506a5edf35",
@@ -55,7 +55,7 @@
         {
           "type": "TextWidget",
           "left": 0,
-          "top": 120,
+          "top": 151,
           "width": 480,
           "height": 44,
           "wireID": "eab24b5b-fd70-4464-d05a-d3bf0df7eac9",
@@ -69,7 +69,7 @@
         {
           "type": "ButtonWidget",
           "left": 171,
-          "top": 164,
+          "top": 195,
           "width": 135,
           "height": 40,
           "wireID": "d379945a-402e-4b0e-b933-c034c249dd61",
@@ -83,7 +83,7 @@
             "inheritFrom": "button"
           },
           "disabledStyle": {
-            "inheritFrom": "default"
+            "inheritFrom": "button_disabled"
           }
         },
         {
@@ -96,6 +96,136 @@
           "customInputs": [],
           "customOutputs": [],
           "page": "page2"
+        },
+        {
+          "type": "TextWidget",
+          "left": 214,
+          "top": 36,
+          "width": 81,
+          "height": 32,
+          "wireID": "b7c6cd8b-b1ca-4f82-d3b4-ab5634d1ef20",
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "counter",
+          "style": {
+            "inheritFrom": "value"
+          }
+        },
+        {
+          "type": "LoopActionComponent",
+          "left": 0,
+          "top": -151,
+          "width": 264,
+          "height": 73,
+          "wireID": "5f4f6df1-79ff-4c9d-a3d4-0a38049d807f",
+          "customInputs": [],
+          "customOutputs": [],
+          "variable": "counter",
+          "from": "1",
+          "to": "1000",
+          "step": "1",
+          "version": 1
+        },
+        {
+          "type": "StartActionComponent",
+          "left": -173,
+          "top": -151,
+          "width": 87,
+          "height": 25,
+          "wireID": "fef0a4a7-a6c7-48e3-dfc1-9ac0a07ed711",
+          "customInputs": [],
+          "customOutputs": []
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": 357,
+          "top": -168,
+          "width": 87,
+          "height": 53,
+          "wireID": "fc6bd14f-ed92-4343-9a80-c9f561212d61",
+          "customInputs": [],
+          "customOutputs": [],
+          "milliseconds": "delay"
+        },
+        {
+          "type": "LogActionComponent",
+          "left": 344,
+          "top": -292,
+          "width": 87,
+          "height": 25,
+          "wireID": "555c430f-1763-40f0-d49e-e8225d24be90",
+          "customInputs": [],
+          "customOutputs": [],
+          "value": "counter"
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": 357,
+          "top": -102,
+          "width": 87,
+          "height": 53,
+          "wireID": "becd8bed-7f37-4844-80eb-992f20d9530d",
+          "customInputs": [],
+          "customOutputs": [],
+          "milliseconds": "1000"
+        },
+        {
+          "type": "SliderWidget",
+          "left": 0,
+          "top": 4,
+          "width": 290,
+          "height": 32,
+          "wireID": "6f50169b-b366-48a4-89c8-d3236171e3ce",
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "delay",
+          "style": {
+            "inheritFrom": "slider_widget"
+          },
+          "min": "10",
+          "max": "300"
+        },
+        {
+          "type": "TextWidget",
+          "left": 133,
+          "top": 36,
+          "width": 81,
+          "height": 32,
+          "wireID": "d5c124fd-fd77-4aa7-fbc2-63e7da35b976",
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "\"Counter:\"",
+          "style": {
+            "inheritFrom": "value_label"
+          }
+        },
+        {
+          "type": "TextWidget",
+          "left": 387,
+          "top": 4,
+          "width": 81,
+          "height": 32,
+          "wireID": "35ae4ad5-d7a8-4a9e-cc17-791e85c00095",
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "delay + \" ms\"",
+          "style": {
+            "inheritFrom": "value"
+          }
+        },
+        {
+          "type": "TextWidget",
+          "left": 306,
+          "top": 4,
+          "width": 81,
+          "height": 32,
+          "wireID": "b1666ba5-13f9-45e0-9ccd-988a9619103c",
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "\"Delay:\"",
+          "style": {
+            "inheritFrom": "value_label"
+          }
         }
       ],
       "connectionLines": [
@@ -104,11 +234,60 @@
           "output": "action",
           "target": "63d24201-6259-4cc6-ef44-6a8837e8220f",
           "input": "@seqin"
+        },
+        {
+          "source": "fef0a4a7-a6c7-48e3-dfc1-9ac0a07ed711",
+          "output": "@seqout",
+          "target": "5f4f6df1-79ff-4c9d-a3d4-0a38049d807f",
+          "input": "start"
+        },
+        {
+          "source": "5f4f6df1-79ff-4c9d-a3d4-0a38049d807f",
+          "output": "@seqout",
+          "target": "fc6bd14f-ed92-4343-9a80-c9f561212d61",
+          "input": "@seqin"
+        },
+        {
+          "source": "fc6bd14f-ed92-4343-9a80-c9f561212d61",
+          "output": "@seqout",
+          "target": "5f4f6df1-79ff-4c9d-a3d4-0a38049d807f",
+          "input": "next"
+        },
+        {
+          "source": "5f4f6df1-79ff-4c9d-a3d4-0a38049d807f",
+          "output": "done",
+          "target": "becd8bed-7f37-4844-80eb-992f20d9530d",
+          "input": "@seqin"
+        },
+        {
+          "source": "5f4f6df1-79ff-4c9d-a3d4-0a38049d807f",
+          "output": "@seqout",
+          "target": "555c430f-1763-40f0-d49e-e8225d24be90",
+          "input": "@seqin"
+        },
+        {
+          "source": "becd8bed-7f37-4844-80eb-992f20d9530d",
+          "output": "@seqout",
+          "target": "5f4f6df1-79ff-4c9d-a3d4-0a38049d807f",
+          "input": "start"
         }
       ],
-      "localVariables": [],
+      "localVariables": [
+        {
+          "name": "counter",
+          "type": "integer",
+          "defaultValue": "1",
+          "persistent": false
+        },
+        {
+          "name": "delay",
+          "type": "integer",
+          "defaultValue": "100",
+          "persistent": false
+        }
+      ],
       "id": 1,
-      "name": "banner",
+      "name": "main",
       "style": "background",
       "left": 0,
       "top": 0,
@@ -146,7 +325,7 @@
           "wireID": "ef9d7615-2e51-45ad-82bd-359e62b85d4d",
           "customInputs": [],
           "customOutputs": [],
-          "page": "banner"
+          "page": "main"
         },
         {
           "type": "TextWidget",
@@ -172,7 +351,6 @@
         }
       ],
       "localVariables": [],
-      "id": 2,
       "name": "page2",
       "style": "background",
       "left": 0,
@@ -181,7 +359,19 @@
       "height": 272
     }
   ],
-  "styles": [],
+  "styles": [
+    {
+      "name": "value_label",
+      "inheritFrom": "default",
+      "alignHorizontal": "right"
+    },
+    {
+      "name": "value",
+      "inheritFrom": "default",
+      "alignHorizontal": "left",
+      "padding": "0 0 0 5"
+    }
+  ],
   "fonts": [
     {
       "name": "medium",

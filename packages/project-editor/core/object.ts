@@ -191,7 +191,7 @@ export interface ClassInfo {
     // optional properties
     getClass?: (jsObject: any, aClass: EezClass) => any;
     label?: (object: IEezObject) => string;
-    listLabel?: (object: IEezObject) => JSX.Element | string;
+    listLabel?: (object: IEezObject) => React.ReactNode;
 
     parentClassInfo?: ClassInfo;
 

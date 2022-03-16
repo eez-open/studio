@@ -32,6 +32,7 @@ import { getObjectFromStringPath } from "project-editor/core/store";
 import { ConnectionBase } from "instrument/connection/connection-base";
 import { IExpressionContext } from "./expression/expression";
 import { webSimulatorMessageDispatcher } from "instrument/connection/connection-renderer";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 const DEBUGGER_TCP_PORT = 3333;
 
@@ -91,6 +92,7 @@ export class RemoteRuntime extends RuntimeBase {
         { flowIndex: number; flowState: FlowState }
     >();
     transitionToRunningMode: boolean = false;
+    resumeAtStart: boolean = false;
 
     constructor(public DocumentStore: DocumentStoreClass) {
         super(DocumentStore);
@@ -494,7 +496,7 @@ export class RemoteRuntime extends RuntimeBase {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-abstract class DebuggerConnectionBase {
+export abstract class DebuggerConnectionBase {
     dataAccumulated: string = "";
 
     timeoutTimerId: any;
@@ -655,8 +657,7 @@ abstract class DebuggerConnectionBase {
                 break;
             }
 
-            const message = this.dataAccumulated.substr(0, newLineIndex);
-
+            const message = this.dataAccumulated.substring(0, newLineIndex);
             this.dataAccumulated = this.dataAccumulated.substr(
                 newLineIndex + 1
             );
@@ -682,7 +683,12 @@ abstract class DebuggerConnectionBase {
                                 runtime.transition(StateMachineAction.RESUME);
                             }
                         } else if (state == DEBUGGER_STATE_PAUSED) {
-                            runtime.transition(StateMachineAction.PAUSE);
+                            if (runtime.resumeAtStart) {
+                                runtime.resumeAtStart = false;
+                                runtime.resume();
+                            } else {
+                                runtime.transition(StateMachineAction.PAUSE);
+                            }
                         } else if (state == DEBUGGER_STATE_SINGLE_STEP) {
                             runtime.transition(StateMachineAction.SINGLE_STEP);
                         }
@@ -1272,17 +1278,33 @@ abstract class DebuggerConnectionBase {
 
                 case MessagesToDebugger.MESSAGE_TO_DEBUGGER_PAGE_CHANGED:
                     {
-                        const pageId = parseInt(messageParameters[1]);
+                        let pageId = parseInt(messageParameters[1]);
+
+                        if (pageId < 0) {
+                            pageId = -pageId;
+                        }
+
+                        pageId -= 1;
+
                         if (
-                            pageId < 0 &&
-                            pageId >=
-                                this.runtime.DocumentStore.project.pages.length
+                            pageId < 0 ||
+                            pageId >= this.runtime.assetsMap.flows.length
                         ) {
                             console.error("UNEXPECTED!");
                             return;
                         }
-                        this.runtime.selectedPage =
-                            this.runtime.DocumentStore.project.pages[pageId];
+
+                        const page = getObjectFromStringPath(
+                            runtime.DocumentStore.project,
+                            this.runtime.assetsMap.flows[pageId].path
+                        );
+
+                        if (!(page instanceof ProjectEditor.PageClass)) {
+                            console.error("UNEXPECTED!");
+                            return;
+                        }
+
+                        this.runtime.selectedPage = page;
                     }
                     break;
             }

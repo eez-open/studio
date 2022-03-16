@@ -47,8 +47,7 @@ import {
     CustomInput,
     makeAssignableExpressionProperty,
     makeExpressionProperty,
-    outputIsOptionalIfAtLeastOneOutputExists,
-    specificGroup
+    outputIsOptionalIfAtLeastOneOutputExists
 } from "project-editor/flow/component";
 
 import { FlowState } from "project-editor/flow/runtime";
@@ -70,6 +69,7 @@ import {
     VariableTypeUI
 } from "project-editor/features/variable/value-type";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { specificGroup } from "project-editor/components/PropertyGrid/groups";
 
 const NOT_NAMED_LABEL = "<not named>";
 
@@ -3212,15 +3212,15 @@ const TrixEditor = observer(
             const onChange = () => {
                 const geometry = calcComponentGeometry(
                     component,
-                    trixEditor.closest(".EezStudio_ComponentEnclosure")!,
+                    trixEditor.closest(
+                        ".EezStudio_ComponentEnclosure"
+                    )! as HTMLElement,
                     flowContext
                 );
 
-                if (geometry) {
-                    runInAction(() => {
-                        component.geometry = geometry;
-                    });
-                }
+                runInAction(() => {
+                    component.geometry = geometry;
+                });
             };
             const onFocus = () => {
                 const trixToolbar =

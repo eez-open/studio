@@ -3833,6 +3833,10 @@ button.EezStudio_Action {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        border-right: 1px solid @borderColor;
+        &:last-child {
+            border-right: none;
+        }
     }
 
     thead,
@@ -3905,7 +3909,6 @@ button.EezStudio_Action {
     }
 
     .EezStudio_TreeRowLabel {
-        display: inline-block;
         margin-left: 18px;
     }
 

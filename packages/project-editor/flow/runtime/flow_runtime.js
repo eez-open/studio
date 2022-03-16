@@ -23,7 +23,6 @@ var objAssign = Object.assign;
 Module = {};
 
 Module.onRuntimeInitialized = function () {
-    console.log("onRuntimeInitialized");
     postMessage({ init: {} });
 };
 
@@ -41,16 +40,50 @@ Module.print = function (args) {
 //     _getSyncedBuffer(): number;
 //     _onMouseWheelEvent(wheelDeltaY: number, wheelClicked: number);
 //     _onPointerEvent(x: number, y: number, pressed: number);
+//     _onMessageFromDebugger(x: number, y: number, pressed: number);
 // };
 
-onmessage = function (e) {
-    let screen = 0;
+let allDebuggerMessages;
+let currentDebuggerMessage;
 
+function mergeArray(arrayOne, arrayTwo) {
+    if (arrayOne) {
+        var mergedArray = new Uint8Array(arrayOne.length + arrayTwo.length);
+        mergedArray.set(arrayOne);
+        mergedArray.set(arrayTwo, arrayOne.length);
+        return mergedArray;
+    } else {
+        return arrayTwo;
+    }
+}
+
+function startToDebuggerMessage() {
+    finishToDebuggerMessage();
+}
+
+function writeDebuggerBuffer(arr) {
+    currentDebuggerMessage = mergeArray(
+        currentDebuggerMessage,
+        new Uint8Array(arr)
+    );
+}
+
+function finishToDebuggerMessage() {
+    if (currentDebuggerMessage) {
+        allDebuggerMessages = mergeArray(
+            allDebuggerMessages,
+            currentDebuggerMessage
+        );
+        currentDebuggerMessage = undefined;
+    }
+}
+
+onmessage = function (e) {
     if (e.data.assets) {
         const assets = e.data.assets;
         var ptr = Module._malloc(assets.length);
         Module.HEAPU8.set(assets, ptr);
-        console.log(e.data);
+
         Module._init(ptr, assets.length);
     }
 
@@ -74,21 +107,36 @@ onmessage = function (e) {
         }
     }
 
+    if (e.data.messageFromDebugger) {
+        const messageFromDebugger = new Uint8Array(e.data.messageFromDebugger);
+        var ptr = Module._malloc(messageFromDebugger.length);
+        Module.HEAPU8.set(messageFromDebugger, ptr);
+
+        Module._onMessageFromDebugger(ptr, messageFromDebugger.length);
+
+        Module._free(ptr);
+    }
+
     Module._mainLoop();
 
     const WIDTH = 480;
     const HEIGHT = 272;
 
+    const data = {};
+
     var buf_addr = Module._getSyncedBuffer();
     if (buf_addr != 0) {
-        screen = new Uint8ClampedArray(
+        data.screen = new Uint8ClampedArray(
             Module.HEAPU8.subarray(buf_addr, buf_addr + WIDTH * HEIGHT * 4)
         );
     }
 
-    postMessage({
-        screen
-    });
+    if (allDebuggerMessages) {
+        data.messageToDebugger = allDebuggerMessages;
+        allDebuggerMessages = undefined;
+    }
+
+    postMessage(data);
 };
 
 
@@ -1781,8 +1829,11 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  41476: function() {FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; });},  
- 41637: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
+  51556: function() {FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; });},  
+ 51717: function() {startToDebuggerMessage();},  
+ 51747: function($0, $1) {writeDebuggerBuffer(new Uint8Array(Module.HEAPU8.buffer, $0, $1));},  
+ 51818: function() {finishToDebuggerMessage();},  
+ 51849: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
 };
 
 
@@ -5741,6 +5792,9 @@ var _init = Module["_init"] = createExportWrapper("init");
 
 /** @type {function(...*):?} */
 var _mainLoop = Module["_mainLoop"] = createExportWrapper("mainLoop");
+
+/** @type {function(...*):?} */
+var _onMessageFromDebugger = Module["_onMessageFromDebugger"] = createExportWrapper("onMessageFromDebugger");
 
 /** @type {function(...*):?} */
 var ___getTypeName = Module["___getTypeName"] = createExportWrapper("__getTypeName");

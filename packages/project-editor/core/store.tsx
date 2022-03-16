@@ -1317,11 +1317,13 @@ export class LayoutModels {
     }
 
     updateTabTitle(model: FlexLayout.Model, tabId: string, title: string) {
-        model.doAction(
-            FlexLayout.Actions.updateNodeAttributes(tabId, {
-                name: title
-            })
-        );
+        if (!this.DocumentStore.runtime) {
+            model.doAction(
+                FlexLayout.Actions.updateNodeAttributes(tabId, {
+                    name: title
+                })
+            );
+        }
     }
 }
 

@@ -21,7 +21,7 @@ import {
 } from "project-editor/flow/editor/bounding-rects";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { Transform } from "project-editor/flow/editor/transform";
-import { generateNodeRedLinkPath } from "project-editor/flow/editor/connection-line-shape";
+import { generateConnectionLinePath } from "project-editor/flow/editor/connection-line-shape";
 import type { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { getId } from "project-editor/core/object";
 import type { Component } from "project-editor/flow/component";
@@ -847,8 +847,8 @@ export class NewConnectionLineFromOutputMouseHandler extends MouseHandler {
 
     cursor: string = "crosshair";
 
-    sourceNodeHeight: number;
-    targetNodeHeight: number;
+    sourceRect: Rect;
+    targetRect: Rect | undefined;
 
     constructor(
         private sourceObject: ITreeObjectAdapter,
@@ -880,11 +880,9 @@ export class NewConnectionLineFromOutputMouseHandler extends MouseHandler {
         )!;
 
         const sourceNodeBoundingClientRect = sourceNode.getBoundingClientRect();
-        const sourceNodePageRect =
-            context.viewState.transform.clientToOffsetRect(
-                sourceNodeBoundingClientRect
-            );
-        this.sourceNodeHeight = sourceNodePageRect.height;
+        this.sourceRect = context.viewState.transform.clientToOffsetRect(
+            sourceNodeBoundingClientRect
+        );
 
         const nodeOutput = sourceNode.querySelector(
             `[data-connection-output-id="${this.connectionOutput}"]`
@@ -903,7 +901,7 @@ export class NewConnectionLineFromOutputMouseHandler extends MouseHandler {
 
         this.endPoint = this.lastOffsetPoint;
         this.target = undefined;
-        this.targetNodeHeight = 0;
+        this.targetRect = undefined;
     }
 
     move(context: IFlowContext, event: IPointerEvent) {
@@ -935,11 +933,9 @@ export class NewConnectionLineFromOutputMouseHandler extends MouseHandler {
 
             const targetNodeBoundingClientRect =
                 targetNode.getBoundingClientRect();
-            const targetNodePageRect =
-                context.viewState.transform.clientToOffsetRect(
-                    targetNodeBoundingClientRect
-                );
-            this.targetNodeHeight = targetNodePageRect.height;
+            this.targetRect = context.viewState.transform.clientToOffsetRect(
+                targetNodeBoundingClientRect
+            );
 
             const nodeInput = targetNode.querySelector(
                 `[data-connection-input-id="${result.connectionInput}"]`
@@ -963,7 +959,7 @@ export class NewConnectionLineFromOutputMouseHandler extends MouseHandler {
         } else {
             this.endPoint = this.lastOffsetPoint;
             this.target = undefined;
-            this.targetNodeHeight = 0;
+            this.targetRect = undefined;
         }
     }
 
@@ -987,23 +983,11 @@ export class NewConnectionLineFromOutputMouseHandler extends MouseHandler {
 
         const offsetRect = transform.clientToOffsetRect(transform.clientRect);
 
-        const nodeHeight = Math.max(
-            this.sourceNodeHeight,
-            this.targetNodeHeight
-        );
-
-        const { lineShape } = generateNodeRedLinkPath(
-            this.startPoint.x,
-            this.startPoint.y,
-            this.startPoint.y == this.endPoint.y
-                ? this.endPoint.x + 1
-                : this.endPoint.x,
-            this.startPoint.x >= this.endPoint.x &&
-                this.startPoint.y == this.endPoint.y
-                ? this.endPoint.y + 1
-                : this.endPoint.y,
-            1,
-            nodeHeight
+        const { lineShape } = generateConnectionLinePath(
+            this.startPoint,
+            this.sourceRect,
+            this.endPoint,
+            this.targetRect
         );
 
         return (
@@ -1048,8 +1032,8 @@ export class NewConnectionLineFromInputMouseHandler extends MouseHandler {
 
     cursor: string = "crosshair";
 
-    sourceNodeHeight: number;
-    targetNodeHeight: number;
+    sourceRect: Rect | undefined;
+    targetRect: Rect;
 
     constructor(
         private targetObject: ITreeObjectAdapter,
@@ -1081,11 +1065,9 @@ export class NewConnectionLineFromInputMouseHandler extends MouseHandler {
         )!;
 
         const targetNodeBoundingClientRect = targetNode.getBoundingClientRect();
-        const targetNodePageRect =
-            context.viewState.transform.clientToOffsetRect(
-                targetNodeBoundingClientRect
-            );
-        this.targetNodeHeight = targetNodePageRect.height;
+        this.targetRect = context.viewState.transform.clientToOffsetRect(
+            targetNodeBoundingClientRect
+        );
 
         const nodeInput = targetNode.querySelector(
             `[data-connection-input-id="${this.connectionInput}"]`
@@ -1104,7 +1086,7 @@ export class NewConnectionLineFromInputMouseHandler extends MouseHandler {
 
         this.startPoint = this.lastOffsetPoint;
         this.source = undefined;
-        this.sourceNodeHeight = 0;
+        this.sourceRect = undefined;
     }
 
     move(context: IFlowContext, event: IPointerEvent) {
@@ -1136,11 +1118,9 @@ export class NewConnectionLineFromInputMouseHandler extends MouseHandler {
 
             const sourceNodeBoundingClientRect =
                 sourceNode.getBoundingClientRect();
-            const sourceNodePageRect =
-                context.viewState.transform.clientToOffsetRect(
-                    sourceNodeBoundingClientRect
-                );
-            this.sourceNodeHeight = sourceNodePageRect.height;
+            this.sourceRect = context.viewState.transform.clientToOffsetRect(
+                sourceNodeBoundingClientRect
+            );
 
             const nodeOutput = sourceNode.querySelector(
                 `[data-connection-output-id="${result.connectionOutput}"]`
@@ -1164,7 +1144,7 @@ export class NewConnectionLineFromInputMouseHandler extends MouseHandler {
         } else {
             this.startPoint = this.lastOffsetPoint;
             this.source = undefined;
-            this.sourceNodeHeight = 0;
+            this.sourceRect = undefined;
         }
     }
 
@@ -1188,23 +1168,11 @@ export class NewConnectionLineFromInputMouseHandler extends MouseHandler {
 
         const offsetRect = transform.clientToOffsetRect(transform.clientRect);
 
-        const nodeHeight = Math.max(
-            this.sourceNodeHeight,
-            this.targetNodeHeight
-        );
-
-        const { lineShape } = generateNodeRedLinkPath(
-            this.startPoint.x,
-            this.startPoint.y,
-            this.startPoint.y == this.endPoint.y
-                ? this.endPoint.x + 1
-                : this.endPoint.x,
-            this.startPoint.x >= this.endPoint.x &&
-                this.startPoint.y == this.endPoint.y
-                ? this.endPoint.y + 1
-                : this.endPoint.y,
-            1,
-            nodeHeight
+        const { lineShape } = generateConnectionLinePath(
+            this.startPoint,
+            this.sourceRect,
+            this.endPoint,
+            this.targetRect
         );
 
         return (
@@ -1249,7 +1217,7 @@ export class MoveOutputConnectionLinesMouseHandler extends MouseHandler {
 
     cursor: string = "crosshair";
 
-    sourceNodeHeight: number;
+    sourceRect: Rect | undefined;
 
     constructor(
         private sourceObject: ITreeObjectAdapter,
@@ -1325,7 +1293,7 @@ export class MoveOutputConnectionLinesMouseHandler extends MouseHandler {
 
         this.startPoint = this.lastOffsetPoint;
         this.source = undefined;
-        this.sourceNodeHeight = 0;
+        this.sourceRect = undefined;
     }
 
     move(context: IFlowContext, event: IPointerEvent) {
@@ -1353,11 +1321,9 @@ export class MoveOutputConnectionLinesMouseHandler extends MouseHandler {
 
             const sourceNodeBoundingClientRect =
                 sourceNode.getBoundingClientRect();
-            const sourceNodePageRect =
-                context.viewState.transform.clientToOffsetRect(
-                    sourceNodeBoundingClientRect
-                );
-            this.sourceNodeHeight = sourceNodePageRect.height;
+            this.sourceRect = context.viewState.transform.clientToOffsetRect(
+                sourceNodeBoundingClientRect
+            );
 
             const nodeOutput = sourceNode.querySelector(
                 `[data-connection-output-id="${result.connectionOutput}"]`
@@ -1381,7 +1347,7 @@ export class MoveOutputConnectionLinesMouseHandler extends MouseHandler {
         } else {
             this.startPoint = this.lastOffsetPoint;
             this.source = undefined;
-            this.sourceNodeHeight = 0;
+            this.sourceRect = undefined;
         }
     }
 
@@ -1434,8 +1400,6 @@ export class MoveOutputConnectionLinesMouseHandler extends MouseHandler {
 
         const offsetRect = transform.clientToOffsetRect(transform.clientRect);
 
-        const startPoint = this.startPoint;
-
         return (
             <svg
                 width={offsetRect.width}
@@ -1450,25 +1414,19 @@ export class MoveOutputConnectionLinesMouseHandler extends MouseHandler {
                 {this.connectionLines.map(connectionLine => {
                     const endPoint =
                         context.viewState.transform.pageToOffsetPoint(
-                            connectionLine.targetPosition!
+                            connectionLine.targetPosition
                         );
 
-                    const nodeHeight = Math.max(
-                        connectionLine.sourceRect.height,
-                        this.sourceNodeHeight
-                    );
+                    const targetRect =
+                        context.viewState.transform.pageToOffsetRect(
+                            connectionLine.targetRect
+                        );
 
-                    const { lineShape } = generateNodeRedLinkPath(
-                        startPoint.x,
-                        startPoint.y,
-                        startPoint.y == endPoint.y
-                            ? endPoint.x + 1
-                            : endPoint.x,
-                        startPoint.x >= endPoint.x && startPoint.y == endPoint.y
-                            ? endPoint.y + 1
-                            : endPoint.y,
-                        1,
-                        nodeHeight
+                    const { lineShape } = generateConnectionLinePath(
+                        this.startPoint,
+                        this.sourceRect,
+                        endPoint,
+                        targetRect
                     );
 
                     return (
@@ -1500,7 +1458,7 @@ export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
 
     cursor: string = "crosshair";
 
-    targetNodeHeight: number;
+    targetRect: Rect | undefined;
 
     constructor(
         private targetObject: ITreeObjectAdapter,
@@ -1576,7 +1534,7 @@ export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
 
         this.endPoint = this.lastOffsetPoint;
         this.target = undefined;
-        this.targetNodeHeight = 0;
+        this.targetRect = undefined;
     }
 
     move(context: IFlowContext, event: IPointerEvent) {
@@ -1604,11 +1562,9 @@ export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
 
             const targetNodeBoundingClientRect =
                 targetNode.getBoundingClientRect();
-            const targetNodePageRect =
-                context.viewState.transform.clientToOffsetRect(
-                    targetNodeBoundingClientRect
-                );
-            this.targetNodeHeight = targetNodePageRect.height;
+            this.targetRect = context.viewState.transform.clientToOffsetRect(
+                targetNodeBoundingClientRect
+            );
 
             const nodeInput = targetNode.querySelector(
                 `[data-connection-input-id="${result.connectionInput}"]`
@@ -1632,7 +1588,7 @@ export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
         } else {
             this.endPoint = this.lastOffsetPoint;
             this.target = undefined;
-            this.targetNodeHeight = 0;
+            this.targetRect = undefined;
         }
     }
 
@@ -1685,8 +1641,6 @@ export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
 
         const offsetRect = transform.clientToOffsetRect(transform.clientRect);
 
-        const endPoint = this.endPoint;
-
         return (
             <svg
                 width={offsetRect.width}
@@ -1704,22 +1658,16 @@ export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
                             connectionLine.sourcePosition!
                         );
 
-                    const nodeHeight = Math.max(
-                        connectionLine.sourceRect.height,
-                        this.targetNodeHeight
-                    );
+                    const sourceRect =
+                        context.viewState.transform.pageToOffsetRect(
+                            connectionLine.sourceRect
+                        );
 
-                    const { lineShape } = generateNodeRedLinkPath(
-                        startPoint.x,
-                        startPoint.y,
-                        startPoint.y == endPoint.y
-                            ? endPoint.x + 1
-                            : endPoint.x,
-                        startPoint.x >= endPoint.x && startPoint.y == endPoint.y
-                            ? endPoint.y + 1
-                            : endPoint.y,
-                        1,
-                        nodeHeight
+                    const { lineShape } = generateConnectionLinePath(
+                        startPoint,
+                        sourceRect,
+                        this.endPoint,
+                        this.targetRect
                     );
 
                     return (

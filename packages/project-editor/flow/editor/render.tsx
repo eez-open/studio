@@ -95,11 +95,9 @@ export const ComponentEnclosure = observer(
                     this.elRef.current,
                     this.props.flowContext
                 );
-                if (geometry) {
-                    runInAction(() => {
-                        this.props.component.geometry = geometry;
-                    });
-                }
+                runInAction(() => {
+                    this.props.component.geometry = geometry;
+                });
             }
         }
 
@@ -260,6 +258,8 @@ interface PortsGeometry {
 }
 
 export interface ComponentGeometry {
+    left: number;
+    top: number;
     width: number;
     height: number;
     inputs: PortsGeometry;
@@ -268,15 +268,29 @@ export interface ComponentGeometry {
 
 export function calcComponentGeometry(
     component: Component | Page,
-    el: HTMLElement,
-    flowContext: IFlowContext
-): ComponentGeometry | undefined {
+    el: HTMLElement | undefined,
+    flowContext: IFlowContext | undefined
+): ComponentGeometry {
     const dInput = component instanceof ProjectEditor.WidgetClass ? 2 : 6;
     const dOutput = component instanceof ProjectEditor.WidgetClass ? 0 : 6;
 
-    const transform = flowContext.viewState.transform;
+    let rect: Rect;
 
-    const rect = transform.clientToPageRect(el.getBoundingClientRect());
+    if (el && flowContext) {
+        const transform = flowContext.viewState.transform;
+        rect = transform.clientToPageRect(el.getBoundingClientRect());
+    } else {
+        if (component instanceof ProjectEditor.ComponentClass) {
+            rect = {
+                left: component.absolutePositionPoint.x,
+                top: component.absolutePositionPoint.y,
+                width: component.width ?? 1,
+                height: component.height ?? 1
+            };
+        } else {
+            rect = component.pageRect;
+        }
+    }
 
     if (!(component.autoSize == "width" || component.autoSize == "both")) {
         rect.width = component.width;
@@ -290,13 +304,16 @@ export function calcComponentGeometry(
     const outputs: PortsGeometry = {};
 
     if (component instanceof ProjectEditor.ComponentClass) {
-        el.querySelectorAll(`[data-connection-input-id]`).forEach(
-            inputElement => {
-                const rectPort = transform.clientToPageRect(
-                    inputElement.getBoundingClientRect()
-                );
-                inputs[inputElement.getAttribute("data-connection-input-id")!] =
-                    {
+        const transform = flowContext?.viewState.transform;
+        if (el && transform) {
+            el.querySelectorAll(`[data-connection-input-id]`).forEach(
+                inputElement => {
+                    const rectPort = transform.clientToPageRect(
+                        inputElement.getBoundingClientRect()
+                    );
+                    inputs[
+                        inputElement.getAttribute("data-connection-input-id")!
+                    ] = {
                         rect: {
                             left: rectPort.left - rect.left,
                             top: rectPort.top - rect.top,
@@ -308,46 +325,77 @@ export function calcComponentGeometry(
                             y: rectPort.top - rect.top + rectPort.height / 2
                         }
                     };
-            }
-        );
+                }
+            );
 
-        el.querySelectorAll(`[data-connection-output-id]`).forEach(
-            outputElement => {
-                const rectPort = transform.clientToPageRect(
-                    outputElement.getBoundingClientRect()
-                );
-                outputs[
-                    outputElement.getAttribute("data-connection-output-id")!
-                ] = {
+            el.querySelectorAll(`[data-connection-output-id]`).forEach(
+                outputElement => {
+                    const rectPort = transform.clientToPageRect(
+                        outputElement.getBoundingClientRect()
+                    );
+                    outputs[
+                        outputElement.getAttribute("data-connection-output-id")!
+                    ] = {
+                        rect: {
+                            left: rectPort.left - rect.left,
+                            top: rectPort.top - rect.top,
+                            width: rectPort.width,
+                            height: rectPort.height
+                        },
+                        position: {
+                            x:
+                                rectPort.left -
+                                rect.left +
+                                rectPort.width +
+                                dOutput / 2 +
+                                strokeWidth / 2,
+                            y: rectPort.top - rect.top + rectPort.height / 2
+                        }
+                    };
+                }
+            );
+        }
+
+        for (let i = 0; i < component.inputs.length; i++) {
+            const inputName = component.inputs[i].name;
+            if (!inputs[inputName]) {
+                inputs[inputName] = {
                     rect: {
-                        left: rectPort.left - rect.left,
-                        top: rectPort.top - rect.top,
-                        width: rectPort.width,
-                        height: rectPort.height
+                        left: 0,
+                        top: 0,
+                        width: rect.width / 2,
+                        height: rect.height
                     },
                     position: {
-                        x:
-                            rectPort.left -
-                            rect.left +
-                            rectPort.width +
-                            dOutput / 2 +
-                            strokeWidth / 2,
-                        y: rectPort.top - rect.top + rectPort.height / 2
+                        x: 0,
+                        y: rect.height / 2
                     }
                 };
             }
-        );
-
-        if (Object.keys(inputs).length != component.inputs.length) {
-            return undefined;
         }
 
-        if (Object.keys(outputs).length != component.outputs.length) {
-            return undefined;
+        for (let i = 0; i < component.outputs.length; i++) {
+            const outputName = component.outputs[i].name;
+            if (!outputs[outputName]) {
+                outputs[outputName] = {
+                    rect: {
+                        left: rect.width / 2,
+                        top: 0,
+                        width: rect.width / 2,
+                        height: rect.height
+                    },
+                    position: {
+                        x: rect.width,
+                        y: rect.height / 2
+                    }
+                };
+            }
         }
     }
 
     return {
+        left: rect.left,
+        top: rect.top,
         width: rect.width,
         height: rect.height,
         inputs,
