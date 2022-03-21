@@ -21,7 +21,7 @@ import {
 import { ConnectionLine, FlowTabState } from "project-editor/flow/flow";
 import type { ComponentState, RuntimeBase } from "project-editor/flow/runtime";
 import { getInputDisplayName } from "project-editor/flow/component";
-import { evalExpressionGetValueType } from "../expression/expression";
+import { evalExpressionGetValueType } from "project-editor/flow/expression";
 import { IconAction } from "eez-studio-ui/action";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";

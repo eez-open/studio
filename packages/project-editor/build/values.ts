@@ -8,25 +8,20 @@ import {
     isStructType,
     ValueType
 } from "project-editor/features/variable/value-type";
-import { evalConstantExpression } from "project-editor/flow/expression/expression";
+import { evalConstantExpression } from "project-editor/flow/expression";
 import { Section } from "project-editor/core/store";
 import { MessageType } from "project-editor/core/object";
-
-export const FLOW_VALUE_TYPE_UNDEFINED = 0;
-export const FLOW_VALUE_TYPE_NULL = 1;
-export const FLOW_VALUE_TYPE_BOOLEAN = 2;
-export const FLOW_VALUE_TYPE_INT8 = 3;
-export const FLOW_VALUE_TYPE_UINT8 = 4;
-export const FLOW_VALUE_TYPE_INT16 = 5;
-export const FLOW_VALUE_TYPE_UINT16 = 6;
-export const FLOW_VALUE_TYPE_INT32 = 7;
-export const FLOW_VALUE_TYPE_UINT32 = 8;
-export const FLOW_VALUE_TYPE_INT64 = 9;
-export const FLOW_VALUE_TYPE_UINT64 = 10;
-export const FLOW_VALUE_TYPE_FLOAT = 11;
-export const FLOW_VALUE_TYPE_DOUBLE = 12;
-export const FLOW_VALUE_TYPE_STRING = 13;
-export const FLOW_VALUE_TYPE_ARRAY = 14;
+import {
+    FLOW_VALUE_TYPE_ARRAY,
+    FLOW_VALUE_TYPE_BOOLEAN,
+    FLOW_VALUE_TYPE_DOUBLE,
+    FLOW_VALUE_TYPE_FLOAT,
+    FLOW_VALUE_TYPE_INT32,
+    FLOW_VALUE_TYPE_NULL,
+    FLOW_VALUE_TYPE_STRING,
+    FLOW_VALUE_TYPE_UINT32,
+    FLOW_VALUE_TYPE_UNDEFINED
+} from "project-editor/build/value-types";
 
 export interface FlowValue {
     type: number;
@@ -205,7 +200,9 @@ function buildFlowValue(
                 }
 
                 dataBuffer.writeUint32(elements.length); // arraySize
-                dataBuffer.writeUint32(0); // reserved
+                dataBuffer.writeUint32(
+                    assets.getTypeIndex(flowValue.valueType)
+                ); // reserved
                 elements.forEach(element =>
                     buildFlowValue(assets, dataBuffer, element)
                 );

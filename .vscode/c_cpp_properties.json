@@ -13,7 +13,6 @@
                 "DEBUG",
                 "OPTION_DISPLAY",
                 "EEZ_PLATFORM_SIMULATOR",
-                "__EMSCRIPTEN__",
                 "OPTION_ENCODER",
                 "OPTION_ETHERNET"
             ],

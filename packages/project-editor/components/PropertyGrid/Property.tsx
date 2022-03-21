@@ -24,7 +24,7 @@ import { replaceObjectReference } from "project-editor/core/search";
 import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";
 
 import { ProjectContext } from "project-editor/project/context";
-import { parseIdentifier } from "project-editor/flow/expression/expression";
+import { parseIdentifier } from "project-editor/flow/expression";
 import {
     EXPR_MARK_END,
     EXPR_MARK_START

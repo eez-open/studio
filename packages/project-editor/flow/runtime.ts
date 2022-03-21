@@ -37,7 +37,7 @@ import { valueToString } from "project-editor/flow/debugger/WatchPanel";
 import {
     evalExpression,
     IExpressionContext
-} from "project-editor/flow/expression/expression";
+} from "project-editor/flow/expression";
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -39,7 +39,26 @@ export const DebuggerPanel = observer(
             return null;
         };
 
+        onRenderTab = (
+            node: FlexLayout.TabNode,
+            renderValues: FlexLayout.ITabRenderValues
+        ) => {
+            if (node.getId() == LayoutModels.DEBUGGER_LOGS_TAB_ID) {
+                if (this.context.runtime && this.context.runtime.error) {
+                    renderValues.leading = (
+                        <div className="EezStudio_AttentionContainer">
+                            <span></span>
+                            <div className="EezStudio_AttentionDiv" />
+                        </div>
+                    );
+                }
+            }
+        };
+
         render() {
+            // to make sure onRenderTab is observable
+            this.context.runtime && this.context.runtime.error;
+
             return (
                 <div className="EezStudio_DebuggerPanel">
                     <FlexLayout.Layout
@@ -47,6 +66,7 @@ export const DebuggerPanel = observer(
                         factory={this.factory}
                         realtimeResize={true}
                         font={LayoutModels.FONT_SUB}
+                        onRenderTab={this.onRenderTab}
                     />
                 </div>
             );

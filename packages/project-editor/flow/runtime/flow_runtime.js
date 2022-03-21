@@ -27,117 +27,10 @@ Module.onRuntimeInitialized = function () {
 };
 
 Module.print = function (args) {
-    console.log(args);
+    console.log("From WASM flow runtime", args);
 };
 
-// declare const WasmFlowRuntime: {
-//     HEAPU8: Uint8Array;
-//     _malloc(size: number): number;
-//     _free(ptr: number): void;
-//
-//     _init(assets: number, assetsSize: number);
-//     _mainLoop();
-//     _getSyncedBuffer(): number;
-//     _onMouseWheelEvent(wheelDeltaY: number, wheelClicked: number);
-//     _onPointerEvent(x: number, y: number, pressed: number);
-//     _onMessageFromDebugger(x: number, y: number, pressed: number);
-// };
-
-let allDebuggerMessages;
-let currentDebuggerMessage;
-
-function mergeArray(arrayOne, arrayTwo) {
-    if (arrayOne) {
-        var mergedArray = new Uint8Array(arrayOne.length + arrayTwo.length);
-        mergedArray.set(arrayOne);
-        mergedArray.set(arrayTwo, arrayOne.length);
-        return mergedArray;
-    } else {
-        return arrayTwo;
-    }
-}
-
-function startToDebuggerMessage() {
-    finishToDebuggerMessage();
-}
-
-function writeDebuggerBuffer(arr) {
-    currentDebuggerMessage = mergeArray(
-        currentDebuggerMessage,
-        new Uint8Array(arr)
-    );
-}
-
-function finishToDebuggerMessage() {
-    if (currentDebuggerMessage) {
-        allDebuggerMessages = mergeArray(
-            allDebuggerMessages,
-            currentDebuggerMessage
-        );
-        currentDebuggerMessage = undefined;
-    }
-}
-
-onmessage = function (e) {
-    if (e.data.assets) {
-        const assets = e.data.assets;
-        var ptr = Module._malloc(assets.length);
-        Module.HEAPU8.set(assets, ptr);
-
-        Module._init(ptr, assets.length);
-    }
-
-    if (e.data.wheel) {
-        if (e.data.wheel.deltaY != 0 || e.data.wheel.clicked != 0) {
-            Module._onMouseWheelEvent(
-                e.data.wheel.deltaY,
-                e.data.wheel.clicked
-            );
-        }
-    }
-
-    if (e.data.pointerEvents) {
-        for (let i = 0; i < e.data.pointerEvents.length; i++) {
-            const pointerEvent = e.data.pointerEvents[i];
-            Module._onPointerEvent(
-                pointerEvent.x,
-                pointerEvent.y,
-                pointerEvent.pressed
-            );
-        }
-    }
-
-    if (e.data.messageFromDebugger) {
-        const messageFromDebugger = new Uint8Array(e.data.messageFromDebugger);
-        var ptr = Module._malloc(messageFromDebugger.length);
-        Module.HEAPU8.set(messageFromDebugger, ptr);
-
-        Module._onMessageFromDebugger(ptr, messageFromDebugger.length);
-
-        Module._free(ptr);
-    }
-
-    Module._mainLoop();
-
-    const WIDTH = 480;
-    const HEIGHT = 272;
-
-    const data = {};
-
-    var buf_addr = Module._getSyncedBuffer();
-    if (buf_addr != 0) {
-        data.screen = new Uint8ClampedArray(
-            Module.HEAPU8.subarray(buf_addr, buf_addr + WIDTH * HEIGHT * 4)
-        );
-    }
-
-    if (allDebuggerMessages) {
-        data.messageToDebugger = allDebuggerMessages;
-        allDebuggerMessages = undefined;
-    }
-
-    postMessage(data);
-};
+WasmFlowRuntime = Module;
 
 
 // Sometimes an existing Module object exists with properties
@@ -1829,11 +1722,12 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  51556: function() {FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; });},  
- 51717: function() {startToDebuggerMessage();},  
- 51747: function($0, $1) {writeDebuggerBuffer(new Uint8Array(Module.HEAPU8.buffer, $0, $1));},  
- 51818: function() {finishToDebuggerMessage();},  
- 51849: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
+  51716: function() {FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; });},  
+ 51877: function() {startToDebuggerMessage();},  
+ 51907: function($0, $1) {writeDebuggerBuffer(new Uint8Array(Module.HEAPU8.buffer, $0, $1));},  
+ 51978: function() {finishToDebuggerMessage();},  
+ 52009: function($0, $1) {executeDashboardComponent($0, $1);},  
+ 52048: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
 };
 
 
@@ -5770,13 +5664,40 @@ var asm = createWasm();
 var ___wasm_call_ctors = Module["___wasm_call_ctors"] = createExportWrapper("__wasm_call_ctors");
 
 /** @type {function(...*):?} */
-var _fflush = Module["_fflush"] = createExportWrapper("fflush");
-
-/** @type {function(...*):?} */
 var _malloc = Module["_malloc"] = createExportWrapper("malloc");
 
 /** @type {function(...*):?} */
 var _free = Module["_free"] = createExportWrapper("free");
+
+/** @type {function(...*):?} */
+var _DashboardContext_getStringParam = Module["_DashboardContext_getStringParam"] = createExportWrapper("DashboardContext_getStringParam");
+
+/** @type {function(...*):?} */
+var _DashboardContext_getExpressionListParam = Module["_DashboardContext_getExpressionListParam"] = createExportWrapper("DashboardContext_getExpressionListParam");
+
+/** @type {function(...*):?} */
+var _DashboardContext_freeExpressionListParam = Module["_DashboardContext_freeExpressionListParam"] = createExportWrapper("DashboardContext_freeExpressionListParam");
+
+/** @type {function(...*):?} */
+var _DashboardContext_propagateIntValue = Module["_DashboardContext_propagateIntValue"] = createExportWrapper("DashboardContext_propagateIntValue");
+
+/** @type {function(...*):?} */
+var _DashboardContext_propagateDoubleValue = Module["_DashboardContext_propagateDoubleValue"] = createExportWrapper("DashboardContext_propagateDoubleValue");
+
+/** @type {function(...*):?} */
+var _DashboardContext_propagateBooleanValue = Module["_DashboardContext_propagateBooleanValue"] = createExportWrapper("DashboardContext_propagateBooleanValue");
+
+/** @type {function(...*):?} */
+var _DashboardContext_propagateStringValue = Module["_DashboardContext_propagateStringValue"] = createExportWrapper("DashboardContext_propagateStringValue");
+
+/** @type {function(...*):?} */
+var _DashboardContext_propagateValueThroughSeqout = Module["_DashboardContext_propagateValueThroughSeqout"] = createExportWrapper("DashboardContext_propagateValueThroughSeqout");
+
+/** @type {function(...*):?} */
+var _DashboardContext_throwError = Module["_DashboardContext_throwError"] = createExportWrapper("DashboardContext_throwError");
+
+/** @type {function(...*):?} */
+var _fflush = Module["_fflush"] = createExportWrapper("fflush");
 
 /** @type {function(...*):?} */
 var _getSyncedBuffer = Module["_getSyncedBuffer"] = createExportWrapper("getSyncedBuffer");
@@ -6155,7 +6076,7 @@ if (!Object.getOwnPropertyDescriptor(Module, "warnOnce")) Module["warnOnce"] = f
 if (!Object.getOwnPropertyDescriptor(Module, "stackSave")) Module["stackSave"] = function() { abort("'stackSave' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "stackRestore")) Module["stackRestore"] = function() { abort("'stackRestore' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "stackAlloc")) Module["stackAlloc"] = function() { abort("'stackAlloc' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
-if (!Object.getOwnPropertyDescriptor(Module, "AsciiToString")) Module["AsciiToString"] = function() { abort("'AsciiToString' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
+Module["AsciiToString"] = AsciiToString;
 if (!Object.getOwnPropertyDescriptor(Module, "stringToAscii")) Module["stringToAscii"] = function() { abort("'stringToAscii' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "UTF16ToString")) Module["UTF16ToString"] = function() { abort("'UTF16ToString' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "stringToUTF16")) Module["stringToUTF16"] = function() { abort("'stringToUTF16' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
@@ -6163,7 +6084,7 @@ if (!Object.getOwnPropertyDescriptor(Module, "lengthBytesUTF16")) Module["length
 if (!Object.getOwnPropertyDescriptor(Module, "UTF32ToString")) Module["UTF32ToString"] = function() { abort("'UTF32ToString' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "stringToUTF32")) Module["stringToUTF32"] = function() { abort("'stringToUTF32' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 if (!Object.getOwnPropertyDescriptor(Module, "lengthBytesUTF32")) Module["lengthBytesUTF32"] = function() { abort("'lengthBytesUTF32' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
-if (!Object.getOwnPropertyDescriptor(Module, "allocateUTF8")) Module["allocateUTF8"] = function() { abort("'allocateUTF8' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
+Module["allocateUTF8"] = allocateUTF8;
 if (!Object.getOwnPropertyDescriptor(Module, "allocateUTF8OnStack")) Module["allocateUTF8OnStack"] = function() { abort("'allocateUTF8OnStack' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)") };
 Module["writeStackCookie"] = writeStackCookie;
 Module["checkStackCookie"] = checkStackCookie;

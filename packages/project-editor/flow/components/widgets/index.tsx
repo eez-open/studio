@@ -135,12 +135,12 @@ import {
     WIDGET_TYPE_SWITCH,
     WIDGET_TYPE_SLIDER,
     WIDGET_TYPE_DROP_DOWN_LIST
-} from "./widget_types";
+} from "project-editor/flow/components/component_types";
 import {
     evalConstantExpression,
     evalExpression,
     ExpressionEvalError
-} from "project-editor/flow/expression/expression";
+} from "project-editor/flow/expression";
 import { remap } from "eez-studio-shared/util";
 import { roundNumber } from "eez-studio-shared/roundNumber";
 import { ProjectEditor } from "project-editor/project-editor-interface";

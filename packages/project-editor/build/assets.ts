@@ -67,6 +67,7 @@ import {
     NamingConvention,
     TAB
 } from "project-editor/build/helper";
+import { FIRST_DASHBOARD_COMPONENT_TYPE } from "project-editor/flow/components/component_types";
 
 export const PATH_SEPARATOR = "//";
 
@@ -123,8 +124,18 @@ export class Assets {
     map: AssetsMap = {
         flows: [],
         constants: [],
-        globalVariables: []
+        globalVariables: [],
+        dashboardComponentTypeToNameMap: {},
+        valueTypes: []
     };
+
+    actionComponentClassNameToActionComponentIdMap: {
+        [name: string]: number;
+    } = {};
+    nextActionComponentId = FIRST_DASHBOARD_COMPONENT_TYPE;
+    dashboardComponentTypeToNameMap: {
+        [componentType: number]: string;
+    } = {};
 
     get DocumentStore() {
         return this.rootProject._DocumentStore;
@@ -324,26 +335,28 @@ export class Assets {
         // styles
         //
         this.styles = [];
-        this.getAssets<Style>(
-            project => project.styles,
-            style => style.id != undefined
-        ).forEach(style => (this.styles[style.id! - 1] = style));
-        this.getAssets<Style>(
-            project => project.styles,
-            style => style.id == undefined && style.alwaysBuild
-        ).forEach(style => this.styles.push(style));
-        for (let i = 0; i < this.styles.length; i++) {
-            if (!this.styles[i]) {
-                this.DocumentStore.outputSectionsStore.write(
-                    Section.OUTPUT,
-                    MessageType.WARNING,
-                    `Missing style with ID = ${i + 1}`,
-                    this.rootProject.styles
-                );
-                for (let j = 0; j < this.styles.length; j++) {
-                    if (this.styles[j]) {
-                        this.styles[i] = this.styles[j];
-                        break;
+        if (!this.DocumentStore.project.isDashboardProject) {
+            this.getAssets<Style>(
+                project => project.styles,
+                style => style.id != undefined
+            ).forEach(style => (this.styles[style.id! - 1] = style));
+            this.getAssets<Style>(
+                project => project.styles,
+                style => style.id == undefined && style.alwaysBuild
+            ).forEach(style => this.styles.push(style));
+            for (let i = 0; i < this.styles.length; i++) {
+                if (!this.styles[i]) {
+                    this.DocumentStore.outputSectionsStore.write(
+                        Section.OUTPUT,
+                        MessageType.WARNING,
+                        `Missing style with ID = ${i + 1}`,
+                        this.rootProject.styles
+                    );
+                    for (let j = 0; j < this.styles.length; j++) {
+                        if (this.styles[j]) {
+                            this.styles[i] = this.styles[j];
+                            break;
+                        }
                     }
                 }
             }
@@ -353,55 +366,58 @@ export class Assets {
         // fonts
         //
         this.fonts = [];
-        this.getAssets<Font>(
-            project => project.fonts,
-            font => font.id != undefined
-        ).forEach(font => (this.fonts[font.id! - 1] = font));
-        this.getAssets<Font>(
-            project => project.fonts,
-            font => font.id == undefined && font.alwaysBuild
-        ).forEach(font => this.fonts.push(font));
-        for (let i = 0; i < this.fonts.length; i++) {
-            if (!this.fonts[i]) {
-                this.DocumentStore.outputSectionsStore.write(
-                    Section.OUTPUT,
-                    MessageType.WARNING,
-                    `Missing font with ID = ${i + 1}`,
-                    this.rootProject.fonts
-                );
-                for (let j = 0; j < this.fonts.length; j++) {
-                    if (this.fonts[j]) {
-                        this.fonts[i] = this.fonts[j];
-                        break;
+        if (!this.DocumentStore.project.isDashboardProject) {
+            this.getAssets<Font>(
+                project => project.fonts,
+                font => font.id != undefined
+            ).forEach(font => (this.fonts[font.id! - 1] = font));
+            this.getAssets<Font>(
+                project => project.fonts,
+                font => font.id == undefined && font.alwaysBuild
+            ).forEach(font => this.fonts.push(font));
+            for (let i = 0; i < this.fonts.length; i++) {
+                if (!this.fonts[i]) {
+                    this.DocumentStore.outputSectionsStore.write(
+                        Section.OUTPUT,
+                        MessageType.WARNING,
+                        `Missing font with ID = ${i + 1}`,
+                        this.rootProject.fonts
+                    );
+                    for (let j = 0; j < this.fonts.length; j++) {
+                        if (this.fonts[j]) {
+                            this.fonts[i] = this.fonts[j];
+                            break;
+                        }
                     }
                 }
             }
         }
-
         //
         // bitmaps
         //
         this.bitmaps = [];
-        this.getAssets<Bitmap>(
-            project => project.bitmaps,
-            bitmap => bitmap.id != undefined
-        ).forEach(bitmap => (this.bitmaps[bitmap.id! - 1] = bitmap));
-        this.getAssets<Bitmap>(
-            project => project.bitmaps,
-            bitmap => bitmap.id == undefined && bitmap.alwaysBuild
-        ).forEach(bitmap => this.bitmaps.push(bitmap));
-        for (let i = 0; i < this.bitmaps.length; i++) {
-            if (!this.bitmaps[i]) {
-                this.DocumentStore.outputSectionsStore.write(
-                    Section.OUTPUT,
-                    MessageType.WARNING,
-                    `Missing bitmap with ID = ${i + 1}`,
-                    this.rootProject.bitmaps
-                );
-                for (let j = 0; j < this.bitmaps.length; j++) {
-                    if (this.bitmaps[j]) {
-                        this.bitmaps[i] = this.bitmaps[j];
-                        break;
+        if (!this.DocumentStore.project.isDashboardProject) {
+            this.getAssets<Bitmap>(
+                project => project.bitmaps,
+                bitmap => bitmap.id != undefined
+            ).forEach(bitmap => (this.bitmaps[bitmap.id! - 1] = bitmap));
+            this.getAssets<Bitmap>(
+                project => project.bitmaps,
+                bitmap => bitmap.id == undefined && bitmap.alwaysBuild
+            ).forEach(bitmap => this.bitmaps.push(bitmap));
+            for (let i = 0; i < this.bitmaps.length; i++) {
+                if (!this.bitmaps[i]) {
+                    this.DocumentStore.outputSectionsStore.write(
+                        Section.OUTPUT,
+                        MessageType.WARNING,
+                        `Missing bitmap with ID = ${i + 1}`,
+                        this.rootProject.bitmaps
+                    );
+                    for (let j = 0; j < this.bitmaps.length; j++) {
+                        if (this.bitmaps[j]) {
+                            this.bitmaps[i] = this.bitmaps[j];
+                            break;
+                        }
                     }
                 }
             }
@@ -728,6 +744,18 @@ export class Assets {
         return colors.length + this.colors.length - 1;
     }
 
+    valueTypeIndexes = new Map<ValueType, number>();
+
+    getTypeIndex(valueType: ValueType) {
+        let index = this.valueTypeIndexes.get(valueType);
+        if (index == undefined) {
+            index = this.map.valueTypes.length;
+            this.map.valueTypes.push(valueType);
+            this.valueTypeIndexes.set(valueType, index);
+        }
+        return index;
+    }
+
     reportUnusedAssets() {
         this.projects.forEach(project => {
             if (project.styles?.length > 0) {
@@ -1020,6 +1048,11 @@ export class Assets {
                 };
             });
         });
+
+        if (this.DocumentStore.project.isDashboardProject) {
+            this.map.dashboardComponentTypeToNameMap =
+                this.dashboardComponentTypeToNameMap;
+        }
     }
 }
 
@@ -1631,4 +1664,8 @@ export interface AssetsMap {
         index: number;
         name: string;
     }[];
+    dashboardComponentTypeToNameMap: {
+        [componentType: number]: string;
+    };
+    valueTypes: ValueType[];
 }

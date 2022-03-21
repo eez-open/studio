@@ -30,7 +30,7 @@ import { DocumentStoreClass } from "project-editor/core/store";
 import net from "net";
 import { getObjectFromStringPath } from "project-editor/core/store";
 import { ConnectionBase } from "instrument/connection/connection-base";
-import { IExpressionContext } from "./expression/expression";
+import { IExpressionContext } from "./expression";
 import { webSimulatorMessageDispatcher } from "instrument/connection/connection-renderer";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
@@ -647,6 +647,8 @@ export abstract class DebuggerConnectionBase {
             }
         );
     }
+
+    counter = 0;
 
     onMessageToDebugger(data: string) {
         this.dataAccumulated += data;

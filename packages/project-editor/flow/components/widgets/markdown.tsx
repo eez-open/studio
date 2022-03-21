@@ -12,7 +12,7 @@ import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import {
     evalConstantExpression,
     evalExpression
-} from "project-editor/flow/expression/expression";
+} from "project-editor/flow/expression";
 import { observable, makeObservable } from "mobx";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { specificGroup } from "project-editor/components/PropertyGrid/groups";

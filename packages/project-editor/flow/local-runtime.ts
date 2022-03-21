@@ -34,7 +34,7 @@ import { visitObjects } from "project-editor/core/search";
 import {
     evalAssignableExpression,
     IExpressionContext
-} from "project-editor/flow/expression/expression";
+} from "project-editor/flow/expression";
 import {
     getObjectVariableTypeFromType,
     isObjectType

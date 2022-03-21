@@ -44,7 +44,7 @@ import {
     buildAssignableExpression,
     checkExpression,
     checkAssignableExpression
-} from "project-editor/flow/expression/expression";
+} from "project-editor/flow/expression";
 import {
     ConstructorParams,
     registerObjectVariableType,
@@ -66,12 +66,13 @@ import {
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { FileHistoryItem } from "instrument/window/history/items/file";
 import { specificGroup } from "project-editor/components/PropertyGrid/groups";
+import { COMPONENT_TYPE_SCPIACTION } from "project-editor/flow/components/component_types";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class SCPIActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1020,
+        flowComponentId: COMPONENT_TYPE_SCPIACTION,
         properties: [
             makeExpressionProperty(
                 {

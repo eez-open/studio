@@ -34,6 +34,7 @@ import {
 } from "project-editor/project/NavigationComponentFactory";
 import { getEditorComponent } from "project-editor/project/EditorComponentFactory";
 import { Icon } from "eez-studio-ui/icon";
+import { Loader } from "eez-studio-ui/loader";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -226,17 +227,79 @@ const Content = observer(
                 const section = this.context.outputSectionsStore.getSection(
                     Section.CHECKS
                 );
+
+                let icon;
                 if (section.numErrors > 0) {
-                    renderValues.leading = (
-                        <Icon icon="material:error" className="error" />
-                    );
+                    icon = <Icon icon="material:error" className="error" />;
                 } else if (section.numWarnings > 0) {
-                    renderValues.leading = (
-                        <Icon icon="material:warning" className="warning" />
-                    );
+                    icon = <Icon icon="material:warning" className="warning" />;
                 } else {
+                    icon = <Icon icon="material:check" className="info" />;
+                }
+
+                renderValues.leading = section.loading ? (
+                    <Loader size={20} />
+                ) : (
+                    icon
+                );
+
+                const numErrorsAndWarnings =
+                    section.numErrors + section.numWarnings;
+
+                renderValues.content =
+                    section.name +
+                    (numErrorsAndWarnings > 0
+                        ? ` (${section.messages.length})`
+                        : "");
+            } else if (node.getId() == LayoutModels.OUTPUT_TAB_ID) {
+                const section = this.context.outputSectionsStore.getSection(
+                    Section.OUTPUT
+                );
+
+                let icon;
+                if (section.numErrors > 0) {
+                    icon = <Icon icon="material:error" className="error" />;
+                } else if (section.numWarnings > 0) {
+                    icon = <Icon icon="material:warning" className="warning" />;
+                } else if (section.messages.length > 0) {
+                    icon = <Icon icon="material:check" className="info" />;
+                }
+
+                renderValues.leading = section.loading ? (
+                    <Loader size={20} />
+                ) : (
+                    icon
+                );
+
+                const numErrorsAndWarnings =
+                    section.numErrors + section.numWarnings;
+
+                renderValues.content =
+                    section.name +
+                    (numErrorsAndWarnings > 0
+                        ? ` (${section.messages.length})`
+                        : "");
+            } else if (node.getId() == LayoutModels.SEARCH_RESULTS_TAB_ID) {
+                const section = this.context.outputSectionsStore.getSection(
+                    Section.SEARCH
+                );
+
+                renderValues.leading = section.loading ? (
+                    <Loader size={20} />
+                ) : null;
+
+                renderValues.content =
+                    section.name +
+                    (section.messages.length > 0
+                        ? ` (${section.messages.length})`
+                        : "");
+            } else if (node.getId() == LayoutModels.DEBUGGER_TAB_ID) {
+                if (this.context.runtime && this.context.runtime.error) {
                     renderValues.leading = (
-                        <Icon icon="material:check" className="info" />
+                        <div className="EezStudio_AttentionContainer">
+                            <span></span>
+                            <div className="EezStudio_AttentionDiv" />
+                        </div>
                     );
                 }
             }
@@ -258,6 +321,31 @@ const Content = observer(
                     ></PageEditor>
                 );
             }
+
+            // to make sure onRenderTab is observable
+            const checksSection = this.context.outputSectionsStore.getSection(
+                Section.CHECKS
+            );
+            checksSection.numErrors;
+            checksSection.numWarnings;
+            checksSection.messages.length;
+            checksSection.loading;
+
+            const sectionOutput = this.context.outputSectionsStore.getSection(
+                Section.OUTPUT
+            );
+            sectionOutput.numErrors;
+            sectionOutput.numWarnings;
+            sectionOutput.messages.length;
+            sectionOutput.loading;
+
+            const sectionSearch = this.context.outputSectionsStore.getSection(
+                Section.SEARCH
+            );
+            sectionSearch.messages.length;
+            sectionSearch.loading;
+
+            this.context.runtime && this.context.runtime.error;
 
             return (
                 <div

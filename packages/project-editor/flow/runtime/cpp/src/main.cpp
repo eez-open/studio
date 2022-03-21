@@ -49,10 +49,20 @@ void finishToDebuggerMessage() {
     }, 0);
 }
 
+void executeDashboardComponent(uint16_t componentType, void *context) {
+    EM_ASM({
+        executeDashboardComponent($0, $1);
+    }, componentType, context);
+}
+
+void stopScript() {}
+
 EM_PORT_API(void) init(uint8_t *assets, uint32_t assetsSize) {
     eez::flow::startToDebuggerMessageHook = startToDebuggerMessage;
     eez::flow::writeDebuggerBufferHook = writeDebuggerBuffer;
     eez::flow::finishToDebuggerMessageHook = finishToDebuggerMessage;
+    eez::flow::executeDashboardComponentHook = executeDashboardComponent;
+    eez::flow::stopScriptHook = stopScript;
 
     eez::flow::onDebuggerClientConnected();
 

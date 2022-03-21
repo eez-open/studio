@@ -678,6 +678,7 @@ export class LayoutModels {
     static COMPONENTS_PALETTE_TAB_ID = "COMPONENTS_PALETTE";
     static BREAKPOINTS_TAB_ID = "BREAKPOINTS_PALETTE";
     static DEBUGGER_TAB_ID = "DEBUGGER";
+    static DEBUGGER_LOGS_TAB_ID = "DEBUGGER_LOGS";
 
     static LOCAL_VARS_TAB_ID = "LOCAL_VARS";
     static GLOBAL_VARS_TAB_ID = "GLOBAL_VARS";
@@ -1205,7 +1206,7 @@ export class LayoutModels {
             },
             {
                 name: "debugger",
-                version: 1,
+                version: 2,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: [],
@@ -1247,6 +1248,7 @@ export class LayoutModels {
                                                 type: "tab",
                                                 enableClose: false,
                                                 name: "Logs",
+                                                id: LayoutModels.DEBUGGER_LOGS_TAB_ID,
                                                 component: "logs"
                                             }
                                         ]
@@ -1273,16 +1275,6 @@ export class LayoutModels {
         }
 
         this.DocumentStore.project.enableTabs();
-
-        this.DocumentStore.outputSectionsStore.updateTitle(
-            this.DocumentStore.outputSectionsStore.sections[Section.CHECKS]
-        );
-        this.DocumentStore.outputSectionsStore.updateTitle(
-            this.DocumentStore.outputSectionsStore.sections[Section.OUTPUT]
-        );
-        this.DocumentStore.outputSectionsStore.updateTitle(
-            this.DocumentStore.outputSectionsStore.sections[Section.SEARCH]
-        );
     }
 
     save() {
@@ -1313,16 +1305,6 @@ export class LayoutModels {
             if (!isSelected) {
                 model.doAction(FlexLayout.Actions.selectTab(tabId));
             }
-        }
-    }
-
-    updateTabTitle(model: FlexLayout.Model, tabId: string, title: string) {
-        if (!this.DocumentStore.runtime) {
-            model.doAction(
-                FlexLayout.Actions.updateNodeAttributes(tabId, {
-                    name: title
-                })
-            );
         }
     }
 }
@@ -2238,19 +2220,6 @@ export class OutputSections {
     clear(sectionType: Section) {
         const section = this.sections[sectionType];
         section.clear();
-        this.updateTitle(section);
-    }
-
-    updateTitle(section: OutputSection) {
-        this.DocumentStore.layoutModels.updateTabTitle(
-            this.DocumentStore.layoutModels.root,
-            section.tabId,
-            `${section.name} ${
-                section.messages.length > 0
-                    ? ` (${section.messages.length})`
-                    : ""
-            }`
-        );
     }
 
     write(
@@ -2261,13 +2230,11 @@ export class OutputSections {
     ) {
         let section = this.sections[sectionType];
         section.messages.push(new Message(type, text, object));
-        this.updateTitle(section);
     }
 
     setMessages(sectionType: Section, messages: IMessage[]) {
         let section = this.sections[sectionType];
         section.messages = messages as Message[];
-        this.updateTitle(section);
     }
 }
 
@@ -3003,7 +2970,8 @@ export class DocumentStoreClass {
         let runtime: RuntimeBase;
 
         if (this.project.isDashboardProject) {
-            runtime = new ProjectEditor.LocalRuntimeClass(this);
+            //runtime = new ProjectEditor.LocalRuntimeClass(this);
+            runtime = new ProjectEditor.WasmRuntimeClass(this);
         } else if (this.project.isFirmwareWithFlowSupportProject) {
             runtime = new ProjectEditor.WasmRuntimeClass(this);
         } else {

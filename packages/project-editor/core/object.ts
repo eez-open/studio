@@ -370,14 +370,20 @@ export class EezObject {
 
 export type EezClass = typeof EezObject;
 
-let classes = new Map<string, EezClass>();
+let classNameToEezClassMap = new Map<string, EezClass>();
+let eezClassToClassNameMap = new Map<EezClass, string>();
 
-export function registerClass(name: string, aClass: EezClass) {
-    classes.set(name, aClass);
+export function registerClass(name: string, eezClass: EezClass) {
+    classNameToEezClassMap.set(name, eezClass);
+    eezClassToClassNameMap.set(eezClass, name);
 }
 
 export function getClassByName(className: string) {
-    return classes.get(className);
+    return classNameToEezClassMap.get(className);
+}
+
+export function getClassName(eezClass: EezClass) {
+    return eezClassToClassNameMap.get(eezClass);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -393,7 +399,7 @@ export function isEezObject(object: any): object is IEezObject {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function findClass(className: string) {
-    return classes.get(className);
+    return classNameToEezClassMap.get(className);
 }
 
 export interface IObjectClassInfo {
@@ -408,8 +414,8 @@ export interface IObjectClassInfo {
 export function getClassesDerivedFrom(parentClass: EezClass) {
     const derivedClasses: IObjectClassInfo[] = [];
 
-    for (const className of classes.keys()) {
-        const objectClass = classes.get(className)!;
+    for (const className of classNameToEezClassMap.keys()) {
+        const objectClass = classNameToEezClassMap.get(className)!;
         if (isProperSubclassOf(objectClass.classInfo, parentClass.classInfo)) {
             derivedClasses.push({
                 id: className,

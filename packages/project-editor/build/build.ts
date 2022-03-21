@@ -330,7 +330,11 @@ export async function build(
             [configurationName: string]: BuildResult[];
         } = {};
 
-        if (!project.isDashboardProject) {
+        if (
+            option == "check" ||
+            option == "buildAssets" ||
+            !project.isDashboardProject
+        ) {
             if (
                 project.settings.general.projectVersion !== "v1" &&
                 project.settings.build.configurations.length > 0 &&
@@ -595,6 +599,8 @@ let setMessagesTimeoutId: any;
 export function backgroundCheck(DocumentStore: DocumentStoreClass) {
     //console.time("backgroundCheck");
 
+    DocumentStore.outputSectionsStore.setLoading(Section.CHECKS, true);
+
     const messages = checkTransformer(DocumentStore.project);
 
     if (setMessagesTimeoutId) {
@@ -603,6 +609,7 @@ export function backgroundCheck(DocumentStore: DocumentStoreClass) {
 
     setMessagesTimeoutId = setTimeout(() => {
         DocumentStore.outputSectionsStore.setMessages(Section.CHECKS, messages);
+        DocumentStore.outputSectionsStore.setLoading(Section.CHECKS, false);
     }, 100);
 
     //console.timeEnd("backgroundCheck");

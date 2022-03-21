@@ -5,12 +5,15 @@ import type { Flow } from "project-editor/flow/flow";
 import { Component, isFlowProperty } from "project-editor/flow/component";
 import {
     getClassesDerivedFrom,
+    getClassName,
     getProperty,
     IObjectClassInfo,
+    isProperSubclassOf,
     MessageType
 } from "project-editor/core/object";
 import {
     getChildOfObject,
+    getClass,
     getClassInfo,
     getHumanReadableObjectPath,
     getObjectPathAsString,
@@ -21,12 +24,14 @@ import { CommentActionComponent } from "project-editor/flow/components/actions";
 import {
     buildExpression,
     operationIndexes
-} from "project-editor/flow/expression/expression";
+} from "project-editor/flow/expression";
 import {
     buildConstantFlowValue,
     buildVariableFlowValue
 } from "project-editor/build/values";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
+import { ProjectEditor } from "project-editor/project-editor-interface";
+import { FIRST_DASHBOARD_COMPONENT_TYPE } from "project-editor/flow/components/component_types";
 
 function getComponentName(componentType: IObjectClassInfo) {
     if (componentType.name.endsWith("Component")) {
@@ -66,6 +71,37 @@ function getFlowComponents(flow: Flow) {
     return components;
 }
 
+function getComponentIdOfComponent(assets: Assets, component: Component) {
+    const classInfo = getClassInfo(component);
+    let flowComponentId = classInfo.flowComponentId;
+
+    if (
+        flowComponentId == undefined &&
+        assets.DocumentStore.project.isDashboardProject &&
+        isProperSubclassOf(
+            classInfo,
+            ProjectEditor.ActionComponentClass.classInfo
+        )
+    ) {
+        const eezClass = getClass(component);
+        const name = getClassName(eezClass);
+        if (name) {
+            flowComponentId =
+                assets.actionComponentClassNameToActionComponentIdMap[name];
+            if (flowComponentId == undefined) {
+                flowComponentId = assets.nextActionComponentId++;
+                assets.actionComponentClassNameToActionComponentIdMap[name] =
+                    flowComponentId;
+                assets.dashboardComponentTypeToNameMap[flowComponentId] = name;
+            }
+        } else {
+            console.error("UNEXPECTED!");
+        }
+    }
+
+    return flowComponentId;
+}
+
 function buildComponent(
     assets: Assets,
     dataBuffer: DataBuffer,
@@ -82,7 +118,7 @@ function buildComponent(
     };
 
     // type
-    let flowComponentId = getClassInfo(component).flowComponentId;
+    let flowComponentId = getComponentIdOfComponent(assets, component);
     if (flowComponentId != undefined) {
         dataBuffer.writeUint16(flowComponentId);
     } else {
@@ -331,6 +367,7 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
 
 export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
     if (
+        assets.DocumentStore.project.isDashboardProject ||
         assets.DocumentStore.project.isAppletProject ||
         assets.DocumentStore.project.isFirmwareWithFlowSupportProject
     ) {
@@ -391,6 +428,10 @@ export function buildFlowDefs(assets: Assets) {
     );
 
     componentTypeEnumItems.unshift(`${TAB}COMPONENT_TYPE_NONE = 0`);
+
+    componentTypeEnumItems.push(
+        `${TAB}FIRST_DASHBOARD_COMPONENT_TYPE = ${FIRST_DASHBOARD_COMPONENT_TYPE}`
+    );
 
     defs.push(
         `enum ComponentTypes {\n${componentTypeEnumItems.join(",\n")}\n};`

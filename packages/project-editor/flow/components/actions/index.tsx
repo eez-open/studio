@@ -44,7 +44,6 @@ import {
     ComponentInput,
     ComponentOutput,
     componentOutputUnique,
-    CustomInput,
     makeAssignableExpressionProperty,
     makeExpressionProperty,
     outputIsOptionalIfAtLeastOneOutputExists
@@ -62,7 +61,7 @@ import {
     evalConstantExpression,
     evalExpression,
     ExpressionEvalError
-} from "project-editor/flow/expression/expression";
+} from "project-editor/flow/expression";
 import { calcComponentGeometry } from "project-editor/flow/editor/render";
 import {
     ValueType,
@@ -70,6 +69,33 @@ import {
 } from "project-editor/features/variable/value-type";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { specificGroup } from "project-editor/components/PropertyGrid/groups";
+import {
+    COMPONENT_TYPE_START_ACTION,
+    COMPONENT_TYPE_END_ACTION,
+    COMPONENT_TYPE_INPUT_ACTION,
+    COMPONENT_TYPE_OUTPUT_ACTION,
+    COMPONENT_TYPE_WATCH_VARIABLE_ACTION,
+    COMPONENT_TYPE_EVAL_EXPR_ACTION,
+    COMPONENT_TYPE_SET_VARIABLE_ACTION,
+    COMPONENT_TYPE_SWITCH_ACTION,
+    COMPONENT_TYPE_COMPARE_ACTION,
+    COMPONENT_TYPE_IS_TRUE_ACTION,
+    COMPONENT_TYPE_CONSTANT_ACTION,
+    COMPONENT_TYPE_LOG_ACTION,
+    COMPONENT_TYPE_CALL_ACTION_ACTION,
+    COMPONENT_TYPE_DELAY_ACTION,
+    COMPONENT_TYPE_ERROR_ACTION,
+    COMPONENT_TYPE_CATCH_ERROR_ACTION,
+    COMPONENT_TYPE_COUNTER_ACTION,
+    COMPONENT_TYPE_LOOP_ACTION,
+    COMPONENT_TYPE_SHOW_PAGE_ACTION,
+    COMPONENT_TYPE_SHOW_MESSAGE_BOX_ACTION,
+    COMPONENT_TYPE_SHOW_KEYBOARD_ACTION,
+    COMPONENT_TYPE_SHOW_KEYPAD_ACTION,
+    COMPONENT_TYPE_NOOP_ACTION,
+    COMPONENT_TYPE_COMMENT_ACTION
+} from "project-editor/flow/components/component_types";
+import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 
 const NOT_NAMED_LABEL = "<not named>";
 
@@ -115,7 +141,7 @@ export const RightArrow = () => (
 
 export class StartActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1001,
+        flowComponentId: COMPONENT_TYPE_START_ACTION,
 
         icon: (
             <svg viewBox="0 0 10.699999809265137 12">
@@ -144,7 +170,7 @@ registerClass("StartActionComponent", StartActionComponent);
 
 export class EndActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1002,
+        flowComponentId: COMPONENT_TYPE_END_ACTION,
 
         icon: (
             <svg viewBox="0 0 10.699999809265137 12">
@@ -185,7 +211,7 @@ registerClass("EndActionComponent", EndActionComponent);
 
 export class InputActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1003,
+        flowComponentId: COMPONENT_TYPE_INPUT_ACTION,
 
         properties: [
             {
@@ -275,7 +301,7 @@ registerClass("InputActionComponent", InputActionComponent);
 
 export class OutputActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1004,
+        flowComponentId: COMPONENT_TYPE_OUTPUT_ACTION,
 
         properties: [
             {
@@ -392,7 +418,7 @@ registerClass("OutputActionComponent", OutputActionComponent);
 
 export class EvalExprActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1006,
+        flowComponentId: COMPONENT_TYPE_EVAL_EXPR_ACTION,
         label: () => "Eval Expression",
         componentPaletteLabel: "Eval expr.",
         properties: [
@@ -472,255 +498,9 @@ registerClass("EvalExprActionComponent", EvalExprActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class EvalJSExprActionComponent extends ActionComponent {
-    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        label: () => "Eval JS expression",
-        componentPaletteLabel: "Eval JS expr.",
-        componentPaletteGroupName: "Dashboard Specific",
-        properties: [
-            {
-                name: "expression",
-                type: PropertyType.MultilineText,
-                propertyGridGroup: specificGroup,
-                monospaceFont: true,
-                disableSpellcheck: true
-            }
-        ],
-        beforeLoadHook: (object: IEezObject, jsObject: any) => {
-            const inputs = EvalJSExprActionComponent.parse(jsObject.expression);
-            if (jsObject.customInputs) {
-                for (const inputName of inputs) {
-                    if (
-                        !jsObject.customInputs.find(
-                            (input: CustomInput) => input.name == inputName
-                        )
-                    ) {
-                        jsObject.customInputs.push({
-                            name: inputName,
-                            type: PropertyType.Any
-                        });
-                    }
-                }
-            }
-        },
-        icon: (
-            <svg viewBox="0 0 22.556997299194336 17.176000595092773">
-                <path d="M4.912.27h3.751v10.514c0 4.738-2.271 6.392-5.899 6.392-.888 0-2.024-.148-2.764-.395l.42-3.036a6.18 6.18 0 0 0 1.925.296c1.58 0 2.567-.716 2.567-3.282V.27zm7.008 12.785c.987.518 2.567 1.037 4.171 1.037 1.728 0 2.641-.716 2.641-1.826 0-1.012-.79-1.629-2.789-2.32-2.764-.987-4.59-2.517-4.59-4.961C11.353 2.147 13.747 0 17.646 0c1.9 0 3.258.37 4.245.839l-.839 3.011a7.779 7.779 0 0 0-3.455-.79c-1.629 0-2.419.765-2.419 1.604 0 1.061.913 1.53 3.085 2.369 2.937 1.086 4.294 2.616 4.294 4.985 0 2.789-2.122 5.158-6.688 5.158-1.9 0-3.776-.518-4.714-1.037l.765-3.085z" />
-            </svg>
-        ),
-        componentHeaderColor: "#A6BBCF"
-    });
-
-    expression: string;
-
-    static readonly PARAMS_REGEXP = /\{([^\}]+)\}/;
-
-    constructor() {
-        super();
-
-        makeObservable(this, {
-            expression: observable
-        });
-    }
-
-    static parse(expression: string) {
-        const inputs = new Set<string>();
-
-        if (expression) {
-            EvalJSExprActionComponent.PARAMS_REGEXP.lastIndex = 0;
-            let str = expression;
-            while (true) {
-                let matches = str.match(
-                    EvalJSExprActionComponent.PARAMS_REGEXP
-                );
-                if (!matches) {
-                    break;
-                }
-                const input = matches[1].trim();
-                inputs.add(input);
-                str = str.substring(matches.index! + matches[1].length);
-            }
-        }
-
-        return Array.from(inputs.keys());
-    }
-
-    getInputs() {
-        return [
-            ...super.getInputs(),
-            {
-                name: "@seqin",
-                type: "null" as ValueType,
-                isSequenceInput: true,
-                isOptionalInput: true
-            }
-        ];
-    }
-
-    getOutputs(): ComponentOutput[] {
-        return [
-            ...super.getOutputs(),
-            {
-                name: "@seqout",
-                type: "null" as ValueType,
-                isSequenceOutput: true,
-                isOptionalOutput: true
-            },
-            {
-                name: "result",
-                type: "any",
-                isSequenceOutput: false,
-                isOptionalOutput: false
-            }
-        ];
-    }
-
-    getBody(flowContext: IFlowContext): React.ReactNode {
-        return (
-            <div className="body">
-                <pre>{this.expression}</pre>
-            </div>
-        );
-    }
-
-    expandExpression(flowState: FlowState) {
-        let jsEvalExpression = this.expression;
-        let values: any = {};
-
-        EvalJSExprActionComponent.parse(jsEvalExpression).forEach(
-            (expression, i) => {
-                const value = flowState.evalExpression(this, expression);
-                const name = `_val${i}`;
-                values[name] = value;
-                jsEvalExpression = jsEvalExpression.replace(
-                    new RegExp(`\{${expression}\}`, "g"),
-                    `values.${name}`
-                );
-            }
-        );
-
-        return { jsEvalExpression, values };
-    }
-
-    async execute(flowState: FlowState) {
-        const { jsEvalExpression, values } = this.expandExpression(flowState);
-        values;
-        let result = eval(jsEvalExpression);
-        flowState.runtime.propagateValue(flowState, this, "result", result);
-        return undefined;
-    }
-}
-
-registerClass("EvalJSExprActionComponent", EvalJSExprActionComponent);
-
-////////////////////////////////////////////////////////////////////////////////
-
-export class SetVariableActionComponent extends ActionComponent {
-    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1007,
-
-        properties: [
-            makeAssignableExpressionProperty(
-                {
-                    name: "variable",
-                    type: PropertyType.MultilineText,
-                    propertyGridGroup: specificGroup
-                },
-                "any"
-            ),
-            makeExpressionProperty(
-                {
-                    name: "value",
-                    type: PropertyType.MultilineText,
-                    propertyGridGroup: specificGroup
-                },
-                "any"
-            )
-        ],
-        icon: (
-            <svg
-                viewBox="0 0 24 24"
-                strokeWidth="2"
-                stroke="currentColor"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            >
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M5 9h14m-14 6h14"></path>
-            </svg>
-        ),
-        componentHeaderColor: "#A6BBCF"
-    });
-
-    variable: string;
-    value: string;
-
-    constructor() {
-        super();
-
-        makeObservable(this, {
-            variable: observable,
-            value: observable
-        });
-    }
-
-    getInputs() {
-        return [
-            ...super.getInputs(),
-            {
-                name: "@seqin",
-                type: "null" as ValueType,
-                isSequenceInput: true,
-                isOptionalInput: true
-            }
-        ];
-    }
-
-    getOutputs() {
-        return [
-            ...super.getOutputs(),
-            {
-                name: "@seqout",
-                type: "null" as ValueType,
-                isSequenceOutput: true,
-                isOptionalOutput: true
-            }
-        ];
-    }
-
-    getBody(flowContext: IFlowContext): React.ReactNode {
-        return (
-            <div className="body">
-                <pre>
-                    {this.variable}
-                    <LeftArrow />
-                    {this.value}
-                </pre>
-            </div>
-        );
-    }
-
-    async execute(flowState: FlowState) {
-        let value = flowState.evalExpression(this, this.value);
-
-        flowState.runtime.assignValue(flowState, this, this.variable, value);
-
-        return undefined;
-    }
-
-    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        buildAssignableExpression(assets, dataBuffer, this, this.variable);
-    }
-}
-
-registerClass("SetVariableActionComponent", SetVariableActionComponent);
-
-////////////////////////////////////////////////////////////////////////////////
-
 export class WatchVariableActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1005,
+        flowComponentId: COMPONENT_TYPE_WATCH_VARIABLE_ACTION,
         properties: [
             makeExpressionProperty(
                 {
@@ -854,6 +634,297 @@ registerClass("WatchVariableActionComponent", WatchVariableActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class EvalJSExprActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        label: () => "Eval JS expression",
+        componentPaletteLabel: "Eval JS expr.",
+        componentPaletteGroupName: "Dashboard Specific",
+        properties: [
+            {
+                name: "expression",
+                type: PropertyType.MultilineText,
+                propertyGridGroup: specificGroup,
+                monospaceFont: true,
+                disableSpellcheck: true
+            }
+        ],
+        check: (component: EvalJSExprActionComponent) => {
+            let messages: Message[] = [];
+
+            const { valueExpressions } = component.expandExpressionForBuild();
+
+            valueExpressions.forEach(valueExpression => {
+                try {
+                    checkExpression(component, valueExpression);
+                } catch (err) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid expression "${valueExpression}": ${err}`,
+                            getChildOfObject(component, "expression")
+                        )
+                    );
+                }
+            });
+
+            return messages;
+        },
+        icon: (
+            <svg viewBox="0 0 22.556997299194336 17.176000595092773">
+                <path d="M4.912.27h3.751v10.514c0 4.738-2.271 6.392-5.899 6.392-.888 0-2.024-.148-2.764-.395l.42-3.036a6.18 6.18 0 0 0 1.925.296c1.58 0 2.567-.716 2.567-3.282V.27zm7.008 12.785c.987.518 2.567 1.037 4.171 1.037 1.728 0 2.641-.716 2.641-1.826 0-1.012-.79-1.629-2.789-2.32-2.764-.987-4.59-2.517-4.59-4.961C11.353 2.147 13.747 0 17.646 0c1.9 0 3.258.37 4.245.839l-.839 3.011a7.779 7.779 0 0 0-3.455-.79c-1.629 0-2.419.765-2.419 1.604 0 1.061.913 1.53 3.085 2.369 2.937 1.086 4.294 2.616 4.294 4.985 0 2.789-2.122 5.158-6.688 5.158-1.9 0-3.776-.518-4.714-1.037l.765-3.085z" />
+            </svg>
+        ),
+        componentHeaderColor: "#A6BBCF"
+    });
+
+    expression: string;
+
+    static readonly PARAMS_REGEXP = /\{([^\}]+)\}/;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            expression: observable
+        });
+    }
+
+    static parse(expression: string) {
+        const inputs = new Set<string>();
+
+        if (expression) {
+            EvalJSExprActionComponent.PARAMS_REGEXP.lastIndex = 0;
+            let str = expression;
+            while (true) {
+                let matches = str.match(
+                    EvalJSExprActionComponent.PARAMS_REGEXP
+                );
+                if (!matches) {
+                    break;
+                }
+                const input = matches[1].trim();
+                inputs.add(input);
+                str = str.substring(matches.index! + matches[1].length);
+            }
+        }
+
+        return Array.from(inputs.keys());
+    }
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
+    getOutputs(): ComponentOutput[] {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            {
+                name: "result",
+                type: "any",
+                isSequenceOutput: false,
+                isOptionalOutput: false
+            }
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        return (
+            <div className="body">
+                <pre>{this.expression}</pre>
+            </div>
+        );
+    }
+
+    expandExpression(flowState: FlowState) {
+        let jsEvalExpression = this.expression;
+        let values: any = {};
+
+        EvalJSExprActionComponent.parse(jsEvalExpression).forEach(
+            (expression, i) => {
+                const value = flowState.evalExpression(this, expression);
+                const name = `_val${i}`;
+                values[name] = value;
+                jsEvalExpression = jsEvalExpression.replace(
+                    new RegExp(`\{${expression}\}`, "g"),
+                    `values.${name}`
+                );
+            }
+        );
+
+        return { jsEvalExpression, values };
+    }
+
+    async execute(flowState: FlowState) {
+        const { jsEvalExpression, values } = this.expandExpression(flowState);
+        values;
+        let result = eval(jsEvalExpression);
+        flowState.runtime.propagateValue(flowState, this, "result", result);
+        return undefined;
+    }
+
+    expandExpressionForBuild() {
+        let expression = this.expression;
+        let valueExpressions: any[] = [];
+
+        EvalJSExprActionComponent.parse(expression).forEach(
+            (valueExpression, i) => {
+                const name = `_val${i}`;
+                valueExpressions.push(valueExpression);
+                expression = expression.replace(
+                    new RegExp(`\{${valueExpression}\}`, "g"),
+                    `values.${name}`
+                );
+            }
+        );
+
+        return { expression, valueExpressions };
+    }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        const { expression, valueExpressions } =
+            this.expandExpressionForBuild();
+
+        dataBuffer.writeObjectOffset(() => dataBuffer.writeString(expression));
+
+        dataBuffer.writeArray(valueExpressions, valueExpression => {
+            try {
+                // as property
+                buildExpression(assets, dataBuffer, this, valueExpression);
+            } catch (err) {
+                assets.DocumentStore.outputSectionsStore.write(
+                    Section.OUTPUT,
+                    MessageType.ERROR,
+                    err,
+                    getChildOfObject(this, "expression")
+                );
+
+                dataBuffer.writeUint16NonAligned(makeEndInstruction());
+            }
+        });
+    }
+}
+
+registerClass("EvalJSExprActionComponent", EvalJSExprActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class SetVariableActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: COMPONENT_TYPE_SET_VARIABLE_ACTION,
+
+        properties: [
+            makeAssignableExpressionProperty(
+                {
+                    name: "variable",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "any"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "value",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "any"
+            )
+        ],
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M5 9h14m-14 6h14"></path>
+            </svg>
+        ),
+        componentHeaderColor: "#A6BBCF"
+    });
+
+    variable: string;
+    value: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            variable: observable,
+            value: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            }
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        return (
+            <div className="body">
+                <pre>
+                    {this.variable}
+                    <LeftArrow />
+                    {this.value}
+                </pre>
+            </div>
+        );
+    }
+
+    async execute(flowState: FlowState) {
+        let value = flowState.evalExpression(this, this.value);
+
+        flowState.runtime.assignValue(flowState, this, this.variable, value);
+
+        return undefined;
+    }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        buildAssignableExpression(assets, dataBuffer, this, this.variable);
+    }
+}
+
+registerClass("SetVariableActionComponent", SetVariableActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
 class SwitchTest extends EezObject {
     condition: string;
     outputName: string;
@@ -906,7 +977,7 @@ class SwitchTest extends EezObject {
 
 export class SwitchActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1008,
+        flowComponentId: COMPONENT_TYPE_SWITCH_ACTION,
 
         properties: [
             {
@@ -1023,7 +1094,7 @@ registerClass("SwitchActionComponent", SwitchActionComponent);
 
 export class CompareActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1009,
+        flowComponentId: COMPONENT_TYPE_COMPARE_ACTION,
         properties: [
             makeExpressionProperty(
                 {
@@ -1260,7 +1331,7 @@ registerClass("CompareActionComponent", CompareActionComponent);
 
 export class IsTrueActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1010,
+        flowComponentId: COMPONENT_TYPE_IS_TRUE_ACTION,
         properties: [
             makeExpressionProperty(
                 {
@@ -1377,7 +1448,7 @@ registerClass("IsTrueActionComponent", IsTrueActionComponent);
 
 export class ConstantActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1011,
+        flowComponentId: COMPONENT_TYPE_CONSTANT_ACTION,
 
         properties: [
             makeExpressionProperty(
@@ -1684,7 +1755,7 @@ registerClass("WriteSettingsActionComponent", WriteSettingsActionComponent);
 
 export class LogActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1012,
+        flowComponentId: COMPONENT_TYPE_LOG_ACTION,
         properties: [
             makeExpressionProperty(
                 {
@@ -1765,7 +1836,7 @@ registerClass("LogActionComponent", LogActionComponent);
 
 export class CallActionActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1013,
+        flowComponentId: COMPONENT_TYPE_CALL_ACTION_ACTION,
 
         properties: [
             makeExpressionProperty(
@@ -2129,7 +2200,7 @@ registerClass(
 
 export class DelayActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1014,
+        flowComponentId: COMPONENT_TYPE_DELAY_ACTION,
         properties: [
             makeExpressionProperty(
                 {
@@ -2212,7 +2283,7 @@ registerClass("DelayActionComponent", DelayActionComponent);
 
 export class ErrorActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1015,
+        flowComponentId: COMPONENT_TYPE_ERROR_ACTION,
         properties: [
             makeExpressionProperty(
                 {
@@ -2277,7 +2348,7 @@ registerClass("ErrorActionComponent", ErrorActionComponent);
 
 export class CatchErrorActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1016,
+        flowComponentId: COMPONENT_TYPE_CATCH_ERROR_ACTION,
         properties: [],
         icon: (
             <svg viewBox="0 0 40 40">
@@ -2328,7 +2399,7 @@ class CounterRunningState {
 
 export class CounterActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1017,
+        flowComponentId: COMPONENT_TYPE_COUNTER_ACTION,
         properties: [
             {
                 name: "countValue",
@@ -2434,7 +2505,7 @@ class LoopRunningState {
 
 export class LoopActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1018,
+        flowComponentId: COMPONENT_TYPE_LOOP_ACTION,
 
         properties: [
             makeAssignableExpressionProperty(
@@ -2629,7 +2700,7 @@ registerClass("LoopActionComponent", LoopActionComponent);
 
 export class ShowPageActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1019,
+        flowComponentId: COMPONENT_TYPE_SHOW_PAGE_ACTION,
         properties: [
             {
                 name: "page",
@@ -2740,7 +2811,7 @@ const MESSAGE_BOX_TYPE_ERROR = 2;
 
 export class ShowMessageBoxActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1021,
+        flowComponentId: COMPONENT_TYPE_SHOW_MESSAGE_BOX_ACTION,
         properties: [
             {
                 name: "messageType",
@@ -2844,7 +2915,7 @@ registerClass("ShowMessageBoxActionComponent", ShowMessageBoxActionComponent);
 
 export class ShowKeyboardActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1022,
+        flowComponentId: COMPONENT_TYPE_SHOW_KEYBOARD_ACTION,
         properties: [
             makeExpressionProperty(
                 {
@@ -2976,7 +3047,7 @@ registerClass("ShowKeyboardActionComponent", ShowKeyboardActionComponent);
 
 export class ShowKeypadActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1023,
+        flowComponentId: COMPONENT_TYPE_SHOW_KEYPAD_ACTION,
         properties: [
             makeExpressionProperty(
                 {
@@ -3108,7 +3179,7 @@ registerClass("ShowKeypadActionComponent", ShowKeypadActionComponent);
 
 export class NoopActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1024,
+        flowComponentId: COMPONENT_TYPE_NOOP_ACTION,
 
         properties: [
             {
@@ -3271,7 +3342,7 @@ const TrixEditor = observer(
 
 export class CommentActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1025,
+        flowComponentId: COMPONENT_TYPE_COMMENT_ACTION,
 
         label: () => "",
 

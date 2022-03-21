@@ -377,6 +377,11 @@ export class CurrentSearch {
             clearInterval(this.interval);
             this.interval = undefined;
         }
+
+        this.DocumentStore.outputSectionsStore.setLoading(
+            Section.SEARCH,
+            false
+        );
     }
 
     startNewSearch(
@@ -411,6 +416,11 @@ export class CurrentSearch {
                     : patternOrObject
                     ? searchForReference(root, patternOrObject, true)
                     : searchForAllReferences(root, true);
+
+            this.DocumentStore.outputSectionsStore.setLoading(
+                Section.SEARCH,
+                true
+            );
 
             this.interval = setInterval(() => {
                 let startTime = new Date().getTime();

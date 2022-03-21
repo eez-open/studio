@@ -17,7 +17,10 @@
         "xlocale": "cpp",
         "vector": "cpp",
         "xstring": "cpp",
-        "functional": "cpp"
+        "functional": "cpp",
+        "system_error": "cpp",
+        "xlocmon": "cpp",
+        "xtr1common": "cpp"
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "workbench.editor.enablePreview": false,

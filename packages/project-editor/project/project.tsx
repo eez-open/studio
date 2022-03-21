@@ -641,6 +641,7 @@ export class General extends EezObject {
     masterProject: string;
     imports: ImportDirective[];
     flowSupport: boolean;
+    //css: string;
 
     static classInfo: ClassInfo = {
         label: () => "General",
@@ -714,7 +715,11 @@ export class General extends EezObject {
                         general.projectType != ProjectType.FIRMWARE_MODULE
                     );
                 }
-            }
+            } /*,
+            {
+                name: "css",
+                type: PropertyType.CSS
+            }*/
         ],
         check: (object: General) => {
             let messages: Message[] = [];
@@ -1067,7 +1072,7 @@ function getProjectClassInfo() {
                         }
 
                         //console.log(ast);
-                        projectJs.settings.general.css = css.stringify(ast);
+                        //projectJs.settings.general.css = css.stringify(ast);
                     } catch (err) {
                         console.error(err);
                     }

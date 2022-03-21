@@ -66,7 +66,7 @@ import type {
     ContainerWidget,
     ListWidget
 } from "project-editor/flow/components/widgets";
-import { WIDGET_TYPE_NONE } from "project-editor/flow/components/widgets/widget_types";
+import { WIDGET_TYPE_NONE } from "project-editor/flow/components/component_types";
 import { guid } from "eez-studio-shared/guid";
 import classNames from "classnames";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
@@ -75,7 +75,7 @@ import {
     checkExpression,
     evalConstantExpression,
     parseIdentifier
-} from "project-editor/flow/expression/expression";
+} from "project-editor/flow/expression";
 import {
     variableTypeProperty,
     ValueType,

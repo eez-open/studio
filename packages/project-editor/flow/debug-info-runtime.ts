@@ -2,7 +2,7 @@ import { DocumentStoreClass } from "project-editor/core/store";
 import { Component, Widget } from "project-editor/flow/component";
 import { FlowState, QueueTask, RuntimeBase } from "project-editor/flow/runtime";
 import type { ConnectionLine } from "project-editor/flow/flow";
-import { IExpressionContext } from "project-editor/flow/expression/expression";
+import { IExpressionContext } from "project-editor/flow/expression";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 
 export class DebugInfoRuntime extends RuntimeBase {

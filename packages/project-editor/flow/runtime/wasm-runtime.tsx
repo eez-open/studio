@@ -10,6 +10,11 @@ import {
     DebuggerConnectionBase
 } from "project-editor/flow/remote-runtime";
 
+import type {
+    RendererToWorkerMessage,
+    WorkerToRenderMessage
+} from "./wasm-worker-interfaces";
+
 export class WasmRuntime extends RemoteRuntime {
     debuggerConnection = new WasmDebuggerConnection(this);
 
@@ -50,14 +55,17 @@ export class WasmRuntime extends RemoteRuntime {
         const assetsData = result.GUI_ASSETS_DATA;
 
         this.worker = new Worker(
-            "../project-editor/flow/runtime/flow_runtime.js"
+            "../project-editor/flow/runtime/wasm-worker-pre.js"
         );
 
-        this.worker.onmessage = e => {
+        this.worker.onmessage = (e: { data: WorkerToRenderMessage }) => {
             if (e.data.init) {
-                this.worker.postMessage({
-                    assets: assetsData
-                });
+                const message: RendererToWorkerMessage = {};
+                message.assets = {
+                    data: assetsData,
+                    map: this.assetsMap
+                };
+                this.worker.postMessage(message);
 
                 if (!isDebuggerActive) {
                     this.resumeAtStart = true;
@@ -82,7 +90,9 @@ export class WasmRuntime extends RemoteRuntime {
             window.cancelAnimationFrame(this.requestAnimationFrameId);
         }
 
-        this.worker.terminate();
+        if (this.worker) {
+            this.worker.terminate();
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +104,7 @@ export class WasmRuntime extends RemoteRuntime {
             this.ctx.putImageData(imgData, 0, 0);
         }
 
-        this.worker.postMessage({
+        const message: RendererToWorkerMessage = {
             wheel: {
                 deltaY: this.wheelDeltaY,
                 clicked: this.wheelClicked
@@ -103,7 +113,9 @@ export class WasmRuntime extends RemoteRuntime {
             messageFromDebugger: this.messageFromDebugger
                 ? binaryStringToArrayBuffer(this.messageFromDebugger)
                 : undefined
-        });
+        };
+
+        this.worker.postMessage(message);
 
         this.wheelDeltaY = 0;
         this.wheelClicked = 0;

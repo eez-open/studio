@@ -40,7 +40,7 @@ import type {
 import { getDocumentStore } from "project-editor/core/store";
 import { ProjectContext } from "project-editor/project/context";
 import { humanize } from "eez-studio-shared/string";
-import { evalConstantExpression } from "project-editor/flow/expression/expression";
+import { evalConstantExpression } from "project-editor/flow//expression";
 import { _difference } from "eez-studio-shared/algorithm";
 import { Icon } from "eez-studio-ui/icon";
 import {

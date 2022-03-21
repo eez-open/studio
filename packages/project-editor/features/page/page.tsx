@@ -50,7 +50,7 @@ import { Flow } from "project-editor/flow/flow";
 import { metrics } from "project-editor/features/page/metrics";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
 import { buildWidget } from "project-editor/build/widgets";
-import { WIDGET_TYPE_CONTAINER } from "project-editor/flow/components/widgets/widget_types";
+import { WIDGET_TYPE_CONTAINER } from "project-editor/flow/components/component_types";
 import classNames from "classnames";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
@@ -473,7 +473,8 @@ export class Page extends Flow {
         return (
             DocumentStore.runtime &&
             DocumentStore.runtime instanceof ProjectEditor.WasmRuntimeClass &&
-            DocumentStore.runtime.selectedPage == this
+            DocumentStore.runtime.selectedPage == this &&
+            !DocumentStore.project.isDashboardProject
         );
     }
 
@@ -600,9 +601,11 @@ export class Page extends Flow {
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
         // widgets
-        const widgets = this.components.filter(
-            widget => widget instanceof Widget
-        ) as Widget[];
+        const widgets = assets.DocumentStore.project.isDashboardProject
+            ? []
+            : (this.components.filter(
+                  widget => widget instanceof Widget
+              ) as Widget[]);
 
         dataBuffer.writeArray(widgets, widget =>
             buildWidget(widget, assets, dataBuffer)
