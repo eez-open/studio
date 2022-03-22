@@ -14,6 +14,7 @@ import type {
     RendererToWorkerMessage,
     WorkerToRenderMessage
 } from "./wasm-worker-interfaces";
+import { getObjectVariableTypeFromType } from "project-editor/features/variable/value-type";
 
 export class WasmRuntime extends RemoteRuntime {
     debuggerConnection = new WasmDebuggerConnection(this);
@@ -54,6 +55,11 @@ export class WasmRuntime extends RemoteRuntime {
 
         const assetsData = result.GUI_ASSETS_DATA;
 
+        if (this.DocumentStore.project.isDashboardProject) {
+            await this.DocumentStore.runtimeSettings.loadPersistentVariables();
+            await this.constructObjectGlobalVariables();
+        }
+
         this.worker = new Worker(
             "../project-editor/flow/runtime/wasm-worker-pre.js"
         );
@@ -92,6 +98,36 @@ export class WasmRuntime extends RemoteRuntime {
 
         if (this.worker) {
             this.worker.terminate();
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+
+    async constructObjectGlobalVariables() {
+        for (const variable of this.DocumentStore.project.allGlobalVariables) {
+            let value = this.DocumentStore.dataContext.get(variable.name);
+            if (value == null) {
+                const objectVariableType = getObjectVariableTypeFromType(
+                    variable.type
+                );
+                if (objectVariableType) {
+                    const constructorParams =
+                        await objectVariableType.editConstructorParams(
+                            variable,
+                            null
+                        );
+                    if (constructorParams) {
+                        const value = objectVariableType.constructorFunction(
+                            constructorParams,
+                            true
+                        );
+                        this.DocumentStore.dataContext.set(
+                            variable.name,
+                            value
+                        );
+                    }
+                }
+            }
         }
     }
 

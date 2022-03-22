@@ -68,6 +68,7 @@ import {
     TAB
 } from "project-editor/build/helper";
 import { FIRST_DASHBOARD_COMPONENT_TYPE } from "project-editor/flow/components/component_types";
+import { dynamicTypes } from "project-editor/flow/expression/type";
 
 export const PATH_SEPARATOR = "//";
 
@@ -1413,6 +1414,8 @@ function buildHeaderData(
 export async function buildGuiAssetsData(assets: Assets) {
     const dataBuffer = new DataBuffer();
 
+    dynamicTypes.clear();
+
     buildGuiDocumentData(assets, dataBuffer);
     buildGuiStylesData(assets, dataBuffer);
     await buildGuiFontsData(assets, dataBuffer);
@@ -1423,6 +1426,8 @@ export async function buildGuiAssetsData(assets: Assets) {
     buildFlowData(assets, dataBuffer);
 
     dataBuffer.finalize();
+
+    console.log(dynamicTypes);
 
     const decompressedSize = dataBuffer.size;
 

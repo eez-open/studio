@@ -26,6 +26,65 @@ import {
 } from "project-editor/features/variable/defs";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { IEezObject } from "project-editor/core/object";
+import { getObjectPathAsString } from "project-editor/core/store";
+
+////////////////////////////////////////////////////////////////////////////////
+
+class DynamicType {
+    fields = new Map<string, DynamicType>();
+    usedAsStruct: boolean = false;
+
+    constructor(public key: string) {}
+
+    getFieldType(fieldName: string): ValueType {
+        this.usedAsStruct = true;
+        let field = this.fields.get(fieldName);
+        if (!field) {
+            const path = this.key + "#" + fieldName;
+            field = new DynamicType(path);
+            dynamicTypes.set(path, field);
+            this.fields.set(fieldName, field);
+        }
+        return `dynamic:${field.key}`;
+    }
+}
+
+export const dynamicTypes = new Map<string, DynamicType>();
+
+function getDynamicType(object: IEezObject): `dynamic:${string}` {
+    const path = getObjectPathAsString(object);
+    if (!dynamicTypes.get(path)) {
+        dynamicTypes.set(path, new DynamicType(path));
+    }
+    return `dynamic:${path}`;
+}
+
+function getType(object: IEezObject, type: ValueType): ValueType {
+    if (type == "any") {
+        return getDynamicType(object);
+    } else if (type == "array:any") {
+        return `array:${getDynamicType(object)}`;
+    } else if (isObjectType(type)) {
+        const path = `@${type}`;
+        if (!dynamicTypes.get(path)) {
+            dynamicTypes.set(path, new DynamicType(path));
+        }
+        return `dynamic:${path}`;
+    }
+    return type;
+}
+
+function isDynamicType(type: ValueType) {
+    return type.startsWith("dynamic:");
+}
+
+function getDynamicFieldType(type: ValueType, fieldName: string) {
+    const dynamicType = dynamicTypes.get(type.substring("dynamic:".length));
+    return dynamicType!.getFieldType(fieldName);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 export function findValueTypeInExpressionNode(
     project: Project,
@@ -51,14 +110,14 @@ export function findValueTypeInExpressionNode(
                 output => output.name === node.name
             );
             if (output) {
-                node.valueType = output.type;
+                node.valueType = getType(output, output.type);
                 return;
             }
         }
 
         const input = component?.inputs.find(input => input.name == node.name);
         if (input) {
-            node.valueType = input.type;
+            node.valueType = getType(input, input.type);
             return;
         }
 
@@ -68,7 +127,7 @@ export function findValueTypeInExpressionNode(
                 localVariable => localVariable.name == node.name
             );
             if (localVariable) {
-                node.valueType = localVariable.type as ValueType;
+                node.valueType = getType(localVariable, localVariable.type);
                 return;
             }
         }
@@ -77,7 +136,7 @@ export function findValueTypeInExpressionNode(
             globalVariable => globalVariable.name == node.name
         );
         if (globalVariable) {
-            node.valueType = globalVariable.type as ValueType;
+            node.valueType = getType(globalVariable, globalVariable.type);
             return;
         }
 
@@ -284,7 +343,7 @@ export function findValueTypeInExpressionNode(
 
                     if (
                         !isStructType(node.object.valueType) &&
-                        !isObjectType(node.object.valueType)
+                        !isDynamicType(node.object.valueType)
                     ) {
                         throw `Unknown "${node.object.name}.${node.property.name}"`;
                     }
@@ -313,10 +372,15 @@ export function findValueTypeInExpressionNode(
                     }
 
                     node.valueType = field.type as ValueType;
-                } else if (isObjectType(node.object.valueType)) {
-                    node.valueType = "any";
-                } else if (node.object.valueType == "any") {
-                    node.valueType = "any";
+                } else if (isDynamicType(node.object.valueType)) {
+                    if (node.property.type != "Identifier") {
+                        throw `Invalid struct field type: '${node.property.type}'`;
+                    }
+
+                    node.valueType = getDynamicFieldType(
+                        node.object.valueType,
+                        node.property.name
+                    );
                 } else {
                     throw `Struct or object type expected but found '${node.object.valueType}'`;
                 }

@@ -182,78 +182,83 @@ export const RenderVariableStatus = observer(
     }
 );
 
-export class RenderVariableStatusPropertyUI extends React.Component<PropertyProps> {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
+export const RenderVariableStatusPropertyUI = observer(
+    class RenderVariableStatusPropertyUI extends React.Component<PropertyProps> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
 
-    objectVariableValue: IObjectVariableValue | undefined;
+        objectVariableValue: IObjectVariableValue | undefined;
 
-    constructor(props: PropertyProps) {
-        super(props);
+        constructor(props: PropertyProps) {
+            super(props);
 
-        makeObservable(this, {
-            objectVariableValue: observable
-        });
-    }
+            makeObservable(this, {
+                objectVariableValue: observable
+            });
+        }
 
-    async updateObjectVariableValue() {
-        const variable = this.props.objects[0] as Variable;
+        async updateObjectVariableValue() {
+            const variable = this.props.objects[0] as Variable;
 
-        const value = this.context.runtimeSettings.getVariableValue(variable);
+            const value =
+                this.context.runtimeSettings.getVariableValue(variable);
 
-        runInAction(() => (this.objectVariableValue = value));
-    }
+            runInAction(() => (this.objectVariableValue = value));
+        }
 
-    componentDidMount() {
-        this.updateObjectVariableValue();
-    }
-
-    componentDidUpdate(prevProps: PropertyProps) {
-        if (this.props.objects[0] != prevProps.objects[0]) {
+        componentDidMount() {
             this.updateObjectVariableValue();
         }
-    }
 
-    render() {
-        const variable = this.props.objects[0] as Variable;
-
-        const objectVariableType = getObjectVariableTypeFromType(variable.type);
-        if (!objectVariableType) {
-            return null;
+        componentDidUpdate(prevProps: PropertyProps) {
+            if (this.props.objects[0] != prevProps.objects[0]) {
+                this.updateObjectVariableValue();
+            }
         }
 
-        const objectVariableValue = this.objectVariableValue;
+        render() {
+            const variable = this.props.objects[0] as Variable;
 
-        return (
-            <RenderVariableStatus
-                key={variable.name}
-                variable={variable}
-                value={objectVariableValue}
-                onClick={async () => {
-                    const constructorParams =
-                        await objectVariableType.editConstructorParams(
-                            variable,
-                            objectVariableValue?.constructorParams ?? null
-                        );
-                    if (constructorParams !== undefined) {
+            const objectVariableType = getObjectVariableTypeFromType(
+                variable.type
+            );
+            if (!objectVariableType) {
+                return null;
+            }
+
+            const objectVariableValue = this.objectVariableValue;
+
+            return (
+                <RenderVariableStatus
+                    key={variable.name}
+                    variable={variable}
+                    value={objectVariableValue}
+                    onClick={async () => {
+                        const constructorParams =
+                            await objectVariableType.editConstructorParams(
+                                variable,
+                                objectVariableValue?.constructorParams ?? null
+                            );
+                        if (constructorParams !== undefined) {
+                            this.context.runtimeSettings.setVariableValue(
+                                variable,
+                                constructorParams
+                            );
+                            this.updateObjectVariableValue();
+                        }
+                    }}
+                    onClear={async () => {
                         this.context.runtimeSettings.setVariableValue(
                             variable,
-                            constructorParams
+                            undefined
                         );
                         this.updateObjectVariableValue();
-                    }
-                }}
-                onClear={async () => {
-                    this.context.runtimeSettings.setVariableValue(
-                        variable,
-                        undefined
-                    );
-                    this.updateObjectVariableValue();
-                }}
-            />
-        );
+                    }}
+                />
+            );
+        }
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
