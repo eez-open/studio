@@ -2,10 +2,13 @@
 #include <emscripten.h>
 
 #include <eez/gui/gui.h>
+#include <eez/gui/display.h>
 #include <eez/gui/thread.h>
 #include <eez/flow/flow.h>
 #include <eez/flow/hooks.h>
 #include <eez/flow/debugger.h>
+#include <eez/flow/components.h>
+#include <eez/flow/flow_defs_v3.h>
 
 static int g_started = false;
 
@@ -57,19 +60,31 @@ void executeDashboardComponent(uint16_t componentType, void *context) {
 
 void stopScript() {}
 
+namespace eez {
+    namespace flow {
+        void executeScpiComponent(FlowState *flowState, unsigned componentIndex);
+    }
+}
+
 EM_PORT_API(void) init(uint8_t *assets, uint32_t assetsSize) {
     eez::flow::startToDebuggerMessageHook = startToDebuggerMessage;
     eez::flow::writeDebuggerBufferHook = writeDebuggerBuffer;
     eez::flow::finishToDebuggerMessageHook = finishToDebuggerMessage;
     eez::flow::executeDashboardComponentHook = executeDashboardComponent;
     eez::flow::stopScriptHook = stopScript;
+    eez::flow::registerComponent(eez::flow::defs_v3::COMPONENT_TYPE_SCPIACTION, eez::flow::executeScpiComponent);
 
     eez::flow::onDebuggerClientConnected();
 
-    eez::gui::setCompressedMainAssets(assets, assetsSize);
     eez::initAllocHeap(ALLOC_BUFFER, ALLOC_BUFFER_SIZE);
-    eez::gui::display::turnOn();
+    eez::gui::loadMainAssets(assets, assetsSize);
     eez::gui::startThread();
+    eez::gui::display::turnOn();
+    eez::gui::display::init();
+}
+
+EM_PORT_API(void) startFlow() {
+    eez::flow::start(eez::gui::g_mainAssets);
 }
 
 EM_PORT_API(void) mainLoop() {

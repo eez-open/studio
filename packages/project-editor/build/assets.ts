@@ -127,7 +127,8 @@ export class Assets {
         constants: [],
         globalVariables: [],
         dashboardComponentTypeToNameMap: {},
-        valueTypes: []
+        valueTypes: [],
+        dynamicTypes: {}
     };
 
     actionComponentClassNameToActionComponentIdMap: {
@@ -1054,6 +1055,10 @@ export class Assets {
             this.map.dashboardComponentTypeToNameMap =
                 this.dashboardComponentTypeToNameMap;
         }
+
+        dynamicTypes.forEach(dynamicType =>
+            dynamicType.registerInAssetsMap(this.map)
+        );
     }
 }
 
@@ -1427,8 +1432,6 @@ export async function buildGuiAssetsData(assets: Assets) {
 
     dataBuffer.finalize();
 
-    console.log(dynamicTypes);
-
     const decompressedSize = dataBuffer.size;
 
     const { compressedBuffer, compressedSize } = dataBuffer.compress();
@@ -1673,4 +1676,15 @@ export interface AssetsMap {
         [componentType: number]: string;
     };
     valueTypes: ValueType[];
+    dynamicTypes: {
+        [name: string]: DynamicTypeInAssetsMap;
+    };
+}
+
+export interface DynamicTypeInAssetsMap {
+    valueTypeIndex: number;
+    fields: {
+        name: string;
+        dynamicType: DynamicTypeInAssetsMap;
+    }[];
 }

@@ -16,10 +16,12 @@ export type ValueType =
     | `object:${string}`
     | "enum:${string}"
     | `struct:${string}`
+    | `dynamic:${string}`
     | `array:${BasicType}`
     | `array:object:${string}`
     | `array:struct:${string}`
-    | `array:enum:${string}`;
+    | `array:enum:${string}`
+    | `array:dynamic:${string}`;
 
 export interface IVariable {
     name: string;

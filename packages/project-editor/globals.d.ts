@@ -29,11 +29,49 @@ declare const WasmFlowRuntime: {
     _free(ptr: number): void;
 
     _init(assets: number, assetsSize: number);
+    _startFlow();
     _mainLoop();
     _getSyncedBuffer(): number;
     _onMouseWheelEvent(wheelDeltaY: number, wheelClicked: number);
     _onPointerEvent(x: number, y: number, pressed: number);
     _onMessageFromDebugger(messageData: number, messageDataSize: number);
+
+    _onScpiResult(errorMessage: number, result: number, resultLen: number);
+
+    _arrayValueAlloc(arraySize: number, arrayType: number): number;
+    _arrayValueSetElementValue(
+        arrayValuePtr: number,
+        elementIndex: number,
+        value: number
+    ): void;
+    _arrayValueSetElementInt(
+        arrayValuePtr: number,
+        elementIndex: number,
+        value: number
+    ): void;
+    _arrayValueSetElementDouble(
+        arrayValuePtr: number,
+        elementIndex: number,
+        value: number
+    ): void;
+    _arrayValueSetElementBool(
+        arrayValuePtr: number,
+        elementIndex: number,
+        value: boolean
+    ): void;
+    _arrayValueSetElementString(
+        arrayValuePtr: number,
+        elementIndex: number,
+        value: number
+    ): void;
+    _arrayValueSetElementNull(
+        arrayValuePtr: number,
+        elementIndex: number
+    ): void;
+
+    _valueFree(valuePtr: number): void;
+
+    _setGlobalVariable(globalVariableIndex: number, valuePtr: number);
 
     _DashboardContext_getStringParam(context: number, offset: number): number;
 

@@ -2,12 +2,13 @@ require("project-editor/flow/runtime/flow_runtime.js");
 
 import type {
     RendererToWorkerMessage,
+    ScpiCommand,
     WorkerToRenderMessage
 } from "project-editor/flow/runtime/wasm-worker-interfaces";
-
 import { actionConmponentExecuteFunctions } from "project-editor/flow/components/actions/execute";
 import {
     FLOW_VALUE_TYPE_ARRAY,
+    FLOW_VALUE_TYPE_ARRAY_REF,
     FLOW_VALUE_TYPE_BOOLEAN,
     FLOW_VALUE_TYPE_DOUBLE,
     FLOW_VALUE_TYPE_FLOAT,
@@ -17,15 +18,19 @@ import {
     FLOW_VALUE_TYPE_INT8,
     FLOW_VALUE_TYPE_NULL,
     FLOW_VALUE_TYPE_STRING,
+    FLOW_VALUE_TYPE_STRING_REF,
     FLOW_VALUE_TYPE_UINT16,
     FLOW_VALUE_TYPE_UINT32,
     FLOW_VALUE_TYPE_UINT64,
     FLOW_VALUE_TYPE_UINT8,
     FLOW_VALUE_TYPE_UNDEFINED
 } from "project-editor/build/value-types";
+import type { ArrayValue } from "project-editor/flow/expression/type";
+import type { AssetsMap } from "project-editor/build/assets";
 
 let allDebuggerMessages: Uint8Array | undefined;
 let currentDebuggerMessage: Uint8Array | undefined;
+let scpiCommand: ScpiCommand | undefined;
 
 function mergeArray(arrayOne: Uint8Array | undefined, arrayTwo: Uint8Array) {
     if (arrayOne) {
@@ -59,9 +64,7 @@ function finishToDebuggerMessage() {
     }
 }
 
-let dashboardComponentTypeToNameMap: {
-    [actionComponentId: number]: string;
-};
+let assetsMap: AssetsMap;
 
 function getValue(offset: number) {
     const type = WasmFlowRuntime.HEAPU8[offset];
@@ -98,12 +101,82 @@ function getValue(offset: number) {
         const ptr = WasmFlowRuntime.HEAP32[offset >> 2];
         return WasmFlowRuntime.AsciiToString(ptr);
     } else if (type == FLOW_VALUE_TYPE_ARRAY) {
-        // TODO
-        return [];
+        const ptr = WasmFlowRuntime.HEAP32[offset >> 2];
+        return getArrayValue(ptr);
+    } else if (type == FLOW_VALUE_TYPE_STRING_REF) {
+        const refPtr = WasmFlowRuntime.HEAP32[offset >> 2];
+        const ptr = WasmFlowRuntime.HEAP32[(refPtr >> 2) + 2];
+        return WasmFlowRuntime.AsciiToString(ptr);
+    } else if (type == FLOW_VALUE_TYPE_ARRAY_REF) {
+        const refPtr = WasmFlowRuntime.HEAP32[offset >> 2];
+        const ptr = refPtr + 8;
+        return getArrayValue(ptr);
     }
 
     console.error("Unknown type from WASM: ", type);
     return undefined;
+}
+
+function getArrayValue(offset: number): { arrayType: number; fields: any[] } {
+    const arraySize = WasmFlowRuntime.HEAPU32[offset >> 2];
+    const arrayType = WasmFlowRuntime.HEAPU32[(offset >> 2) + 1];
+    const fields = [];
+    for (let i = 0; i < arraySize; i++) {
+        fields.push(getValue(offset + 8 + i * 16));
+    }
+
+    return {
+        arrayType,
+        fields
+    };
+}
+
+function executeScpi(instrumentPtr: number, arr: any) {
+    const instrument = getArrayValue(instrumentPtr);
+
+    if (
+        assetsMap.valueTypes[instrument.arrayType] !=
+        "dynamic:@object:Instrument"
+    ) {
+        WasmFlowRuntime._onScpiResult(
+            WasmFlowRuntime.allocateUTF8("Invalid instrument"),
+            0,
+            0
+        );
+        return;
+    }
+
+    const dynamicType = assetsMap.dynamicTypes["@object:Instrument"];
+    if (!dynamicType) {
+        WasmFlowRuntime._onScpiResult(
+            WasmFlowRuntime.allocateUTF8("Unexpected"),
+            0,
+            0
+        );
+        return;
+    }
+
+    let instrumentId;
+    for (let i = 0; i < dynamicType.fields.length; i++) {
+        if (dynamicType.fields[i].name == "id") {
+            instrumentId = instrument.fields[i];
+            break;
+        }
+    }
+
+    if (typeof instrumentId != "string") {
+        WasmFlowRuntime._onScpiResult(
+            WasmFlowRuntime.allocateUTF8("Instrument id is not string"),
+            0,
+            0
+        );
+        return;
+    }
+
+    scpiCommand = {
+        instrumentId,
+        command: new Uint8Array(arr)
+    };
 }
 
 export class DashboardComponentContext {
@@ -193,7 +266,8 @@ const dashboardComponentContext = new DashboardComponentContext();
 function executeDashboardComponent(componentType: number, context: number) {
     dashboardComponentContext.context = context;
 
-    const componentName = dashboardComponentTypeToNameMap[componentType];
+    const componentName =
+        assetsMap.dashboardComponentTypeToNameMap[componentType];
 
     const executeFunction = actionConmponentExecuteFunctions[componentName];
     if (executeFunction) {
@@ -209,17 +283,86 @@ function executeDashboardComponent(componentType: number, context: number) {
 (global as any).writeDebuggerBuffer = writeDebuggerBuffer;
 (global as any).finishToDebuggerMessage = finishToDebuggerMessage;
 (global as any).executeDashboardComponent = executeDashboardComponent;
+(global as any).executeScpi = executeScpi;
+
+function createArrayValue(arrayValue: ArrayValue) {
+    const arraySize = arrayValue.values.length;
+    const arrayValuePtr = WasmFlowRuntime._arrayValueAlloc(
+        arraySize,
+        arrayValue.valueTypeIndex
+    );
+    for (let i = 0; i < arraySize; i++) {
+        const value = arrayValue.values[i];
+        if (typeof value == "number") {
+            if (Number.isInteger(value)) {
+                WasmFlowRuntime._arrayValueSetElementInt(
+                    arrayValuePtr,
+                    i,
+                    value
+                );
+            } else {
+                WasmFlowRuntime._arrayValueSetElementDouble(
+                    arrayValuePtr,
+                    i,
+                    value
+                );
+            }
+        } else if (typeof value == "boolean") {
+            WasmFlowRuntime._arrayValueSetElementBool(arrayValuePtr, i, value);
+        } else if (typeof value == "string") {
+            const valuePtr = WasmFlowRuntime.allocateUTF8(value);
+            WasmFlowRuntime._arrayValueSetElementString(
+                arrayValuePtr,
+                i,
+                valuePtr
+            );
+            WasmFlowRuntime._free(arrayValuePtr);
+        } else if (value == null) {
+            WasmFlowRuntime._arrayValueSetElementNull(arrayValuePtr, i);
+        } else {
+            const valuePtr = createArrayValue(value);
+            WasmFlowRuntime._arrayValueSetElementValue(
+                arrayValuePtr,
+                i,
+                valuePtr
+            );
+            WasmFlowRuntime._valueFree(valuePtr);
+        }
+    }
+    return arrayValuePtr;
+}
 
 onmessage = function (e: { data: RendererToWorkerMessage }) {
-    if (e.data.assets) {
-        dashboardComponentTypeToNameMap =
-            e.data.assets.map.dashboardComponentTypeToNameMap;
+    if (e.data.init) {
+        console.log(e.data.init);
 
-        const assets = e.data.assets.data;
+        assetsMap = e.data.init.assetsMap;
+
+        //
+        const assets = e.data.init.assetsData;
         var ptr = WasmFlowRuntime._malloc(assets.length);
         WasmFlowRuntime.HEAPU8.set(assets, ptr);
 
         WasmFlowRuntime._init(ptr, assets.length);
+
+        WasmFlowRuntime._free(ptr);
+
+        //
+        const objectGlobalVariableValues =
+            e.data.init.objectGlobalVariableValues;
+        for (let i = 0; i < objectGlobalVariableValues.length; i++) {
+            const objectGlobalVariableValue = objectGlobalVariableValues[i];
+            const valuePtr = createArrayValue(
+                objectGlobalVariableValue.arrayValue
+            );
+            WasmFlowRuntime._setGlobalVariable(
+                objectGlobalVariableValue.globalVariableIndex,
+                valuePtr
+            );
+            WasmFlowRuntime._valueFree(valuePtr);
+        }
+
+        WasmFlowRuntime._startFlow();
     }
 
     if (e.data.wheel) {
@@ -252,6 +395,26 @@ onmessage = function (e: { data: RendererToWorkerMessage }) {
         WasmFlowRuntime._free(ptr);
     }
 
+    if (e.data.scpiResult) {
+        let errorMessagePtr = 0;
+        if (e.data.scpiResult.errorMessage) {
+            errorMessagePtr = WasmFlowRuntime.allocateUTF8(
+                e.data.scpiResult.errorMessage
+            );
+        }
+
+        let resultPtr = 0;
+        let resultLen = 0;
+        if (e.data.scpiResult.result) {
+            const resultArr = new Uint8Array(e.data.scpiResult.result);
+            resultPtr = WasmFlowRuntime._malloc(resultArr.length);
+            WasmFlowRuntime.HEAPU8.set(resultArr, resultPtr);
+            resultLen = resultArr.length;
+        }
+
+        WasmFlowRuntime._onScpiResult(errorMessagePtr, resultPtr, resultLen);
+    }
+
     WasmFlowRuntime._mainLoop();
 
     const WIDTH = 480;
@@ -272,6 +435,11 @@ onmessage = function (e: { data: RendererToWorkerMessage }) {
     if (allDebuggerMessages) {
         data.messageToDebugger = allDebuggerMessages;
         allDebuggerMessages = undefined;
+    }
+
+    if (scpiCommand) {
+        data.scpiCommand = scpiCommand;
+        scpiCommand = undefined;
     }
 
     postMessage(data);

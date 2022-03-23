@@ -398,6 +398,20 @@ export async function build(
                 parts = Object.assign(parts, buildResult);
             }
 
+            OutputSections.write(
+                Section.OUTPUT,
+                MessageType.INFO,
+                `Build duration: ${
+                    (new Date().getTime() - timeStart) / 1000
+                } seconds`
+            );
+
+            OutputSections.write(
+                Section.OUTPUT,
+                MessageType.INFO,
+                `Build successfully finished at ${new Date().toLocaleString()}`
+            );
+
             return parts;
         }
 

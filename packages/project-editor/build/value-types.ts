@@ -13,3 +13,5 @@ export const FLOW_VALUE_TYPE_FLOAT = 11;
 export const FLOW_VALUE_TYPE_DOUBLE = 12;
 export const FLOW_VALUE_TYPE_STRING = 13;
 export const FLOW_VALUE_TYPE_ARRAY = 14;
+export const FLOW_VALUE_TYPE_STRING_REF = 15;
+export const FLOW_VALUE_TYPE_ARRAY_REF = 16;

@@ -27,7 +27,7 @@ Module.onRuntimeInitialized = function () {
 };
 
 Module.print = function (args) {
-    console.log("From WASM flow runtime", args);
+    console.log("From WASM flow runtime:", args);
 };
 
 WasmFlowRuntime = Module;
@@ -1722,12 +1722,13 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  51716: function() {FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; });},  
- 51877: function() {startToDebuggerMessage();},  
- 51907: function($0, $1) {writeDebuggerBuffer(new Uint8Array(Module.HEAPU8.buffer, $0, $1));},  
- 51978: function() {finishToDebuggerMessage();},  
- 52009: function($0, $1) {executeDashboardComponent($0, $1);},  
- 52048: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
+  52132: function($0, $1, $2) {executeScpi($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2));},  
+ 52199: function() {FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; });},  
+ 52360: function() {startToDebuggerMessage();},  
+ 52390: function($0, $1) {writeDebuggerBuffer(new Uint8Array(Module.HEAPU8.buffer, $0, $1));},  
+ 52461: function() {finishToDebuggerMessage();},  
+ 52492: function($0, $1) {executeDashboardComponent($0, $1);},  
+ 52531: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
 };
 
 
@@ -5697,6 +5698,33 @@ var _DashboardContext_propagateValueThroughSeqout = Module["_DashboardContext_pr
 var _DashboardContext_throwError = Module["_DashboardContext_throwError"] = createExportWrapper("DashboardContext_throwError");
 
 /** @type {function(...*):?} */
+var _arrayValueAlloc = Module["_arrayValueAlloc"] = createExportWrapper("arrayValueAlloc");
+
+/** @type {function(...*):?} */
+var _arrayValueSetElementValue = Module["_arrayValueSetElementValue"] = createExportWrapper("arrayValueSetElementValue");
+
+/** @type {function(...*):?} */
+var _arrayValueSetElementInt = Module["_arrayValueSetElementInt"] = createExportWrapper("arrayValueSetElementInt");
+
+/** @type {function(...*):?} */
+var _arrayValueSetElementDouble = Module["_arrayValueSetElementDouble"] = createExportWrapper("arrayValueSetElementDouble");
+
+/** @type {function(...*):?} */
+var _arrayValueSetElementBool = Module["_arrayValueSetElementBool"] = createExportWrapper("arrayValueSetElementBool");
+
+/** @type {function(...*):?} */
+var _arrayValueSetElementString = Module["_arrayValueSetElementString"] = createExportWrapper("arrayValueSetElementString");
+
+/** @type {function(...*):?} */
+var _arrayValueSetElementNull = Module["_arrayValueSetElementNull"] = createExportWrapper("arrayValueSetElementNull");
+
+/** @type {function(...*):?} */
+var _valueFree = Module["_valueFree"] = createExportWrapper("valueFree");
+
+/** @type {function(...*):?} */
+var _setGlobalVariable = Module["_setGlobalVariable"] = createExportWrapper("setGlobalVariable");
+
+/** @type {function(...*):?} */
 var _fflush = Module["_fflush"] = createExportWrapper("fflush");
 
 /** @type {function(...*):?} */
@@ -5709,7 +5737,13 @@ var _onPointerEvent = Module["_onPointerEvent"] = createExportWrapper("onPointer
 var _onMouseWheelEvent = Module["_onMouseWheelEvent"] = createExportWrapper("onMouseWheelEvent");
 
 /** @type {function(...*):?} */
+var _onScpiResult = Module["_onScpiResult"] = createExportWrapper("onScpiResult");
+
+/** @type {function(...*):?} */
 var _init = Module["_init"] = createExportWrapper("init");
+
+/** @type {function(...*):?} */
+var _startFlow = Module["_startFlow"] = createExportWrapper("startFlow");
 
 /** @type {function(...*):?} */
 var _mainLoop = Module["_mainLoop"] = createExportWrapper("mainLoop");

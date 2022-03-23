@@ -435,6 +435,7 @@ export function migrateType(objectJS: any) {
 
 const ENUM_TYPE_REGEXP = /^enum:(.*)/;
 const STRUCT_TYPE_REGEXP = /^struct:(.*)/;
+const DYNAMIC_TYPE_REGEXP = /^dynamic:(.*)/;
 const ARRAY_TYPE_REGEXP = /^array:(.*)/;
 const OBJECT_TYPE_REGEXP = /^object:(.*)/;
 
@@ -448,6 +449,10 @@ export function isEnumType(type: string) {
 
 export function isStructType(type: string) {
     return type && type.match(STRUCT_TYPE_REGEXP) != null;
+}
+
+export function isDynamicType(type: string) {
+    return type && type.match(DYNAMIC_TYPE_REGEXP) != null;
 }
 
 export function isArrayType(type: string) {
@@ -488,6 +493,14 @@ export function getStructureFromType(project: Project, type: string) {
         return undefined;
     }
     return project.variables.structsMap.get(structTypeName);
+}
+
+export function getDynamicTypeNameFromType(type: string) {
+    const result = type.match(DYNAMIC_TYPE_REGEXP);
+    if (result == null) {
+        return null;
+    }
+    return result[1];
 }
 
 export function getEnumTypeNameFromType(type: string) {

@@ -14,8 +14,10 @@ import { Component, Widget } from "project-editor/flow/component";
 import { IFlowContext, LogItemType } from "project-editor/flow/flow-interfaces";
 import {
     getArrayElementTypeFromType,
+    getDynamicTypeNameFromType,
     getStructureFromType,
     isArrayType,
+    isDynamicType,
     isStructType
 } from "project-editor/features/variable/value-type";
 import { getFlow, getProject } from "project-editor/project/project";
@@ -528,7 +530,7 @@ export abstract class DebuggerConnectionBase {
         return parsedStr;
     }
 
-    parseArrayOrStructDebuggerValue(str: string, type: string) {
+    parseArrayOrStructDebuggerValue(str: string) {
         const addresses = str
             .substring(1, str.length - 1)
             .split(",")
@@ -536,7 +538,10 @@ export abstract class DebuggerConnectionBase {
 
         const arrayAddress = addresses[0];
 
-        const arrayElementAddresses = addresses.slice(1);
+        const arrayType = addresses[1];
+        const type = this.runtime.assetsMap.valueTypes[arrayType];
+
+        const arrayElementAddresses = addresses.slice(2);
 
         let value: any = this.runtime.arrayValues.get(arrayAddress);
 
@@ -570,6 +575,26 @@ export abstract class DebuggerConnectionBase {
             }
             if (!value) {
                 value = observable([]);
+                this.runtime.arrayValues.set(arrayAddress, value);
+            }
+        } else if (isDynamicType(type)) {
+            const dynamicTypeName = getDynamicTypeNameFromType(type);
+            if (!dynamicTypeName) {
+                console.error("UNEXPECTED!");
+                return undefined;
+            }
+            const dynamicType =
+                this.runtime.assetsMap.dynamicTypes[dynamicTypeName];
+            if (!dynamicType) {
+                console.error("UNEXPECTED!");
+                return undefined;
+            }
+            sortedStructFields = dynamicType.fields.map(field => ({
+                name: field.name,
+                type: "any"
+            }));
+            if (!value) {
+                value = observable({});
                 this.runtime.arrayValues.set(arrayAddress, value);
             }
         } else {
@@ -611,7 +636,7 @@ export abstract class DebuggerConnectionBase {
         return value;
     }
 
-    parseDebuggerValue(str: string, type: string) {
+    parseDebuggerValue(str: string) {
         if (str == "undefined") {
             return undefined;
         }
@@ -629,11 +654,13 @@ export abstract class DebuggerConnectionBase {
         }
 
         if (str[0] == '"') {
-            return this.parseStringDebuggerValue(str.substr(1, str.length - 2));
+            return this.parseStringDebuggerValue(
+                str.substring(1, str.length - 1)
+            );
         }
 
         if (str[0] == "{") {
-            return this.parseArrayOrStructDebuggerValue(str, type);
+            return this.parseArrayOrStructDebuggerValue(str);
         }
 
         return Number.parseFloat(str);
@@ -863,9 +890,7 @@ export abstract class DebuggerConnectionBase {
                             globalVariable.type
                         );
 
-                        globalVariableValue.set(
-                            this.parseDebuggerValue(value, globalVariable.type)
-                        );
+                        globalVariableValue.set(this.parseDebuggerValue(value));
 
                         runtime.debuggerValues.set(
                             valueAddress,
@@ -929,9 +954,7 @@ export abstract class DebuggerConnectionBase {
                             localVariable.type
                         );
 
-                        localVariableValue.set(
-                            this.parseDebuggerValue(value, localVariable.type)
-                        );
+                        localVariableValue.set(this.parseDebuggerValue(value));
 
                         runtime.debuggerValues.set(
                             valueAddress,
@@ -1007,12 +1030,7 @@ export abstract class DebuggerConnectionBase {
                             componentInputMap.inputType
                         );
 
-                        componentInputValue.set(
-                            this.parseDebuggerValue(
-                                value,
-                                componentInputMap.inputType
-                            )
-                        );
+                        componentInputValue.set(this.parseDebuggerValue(value));
 
                         runtime.debuggerValues.set(
                             valueAddress,
@@ -1038,9 +1056,7 @@ export abstract class DebuggerConnectionBase {
                             return;
                         }
 
-                        debuggerValue.set(
-                            this.parseDebuggerValue(value, debuggerValue.type)
-                        );
+                        debuggerValue.set(this.parseDebuggerValue(value));
                     }
                     break;
 

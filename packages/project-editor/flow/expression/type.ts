@@ -1,7 +1,10 @@
 import type { Project } from "project-editor/project/project";
 import type { Component } from "project-editor/flow/component";
 import type { ExpressionNode } from "project-editor/flow/expression/node";
-import type { ValueType } from "project-editor/features/variable/value-type";
+import {
+    isDynamicType,
+    ValueType
+} from "project-editor/features/variable/value-type";
 
 import {
     getArrayElementTypeFromType,
@@ -28,25 +31,104 @@ import {
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { IEezObject } from "project-editor/core/object";
 import { getObjectPathAsString } from "project-editor/core/store";
+import type {
+    AssetsMap,
+    DynamicTypeInAssetsMap
+} from "project-editor/build/assets";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class DynamicType {
-    fields = new Map<string, DynamicType>();
-    usedAsStruct: boolean = false;
+interface FieldDefinition {
+    name: string;
+    index: number;
+    dynamicType: DynamicType;
+}
+
+export type ArrayValue = {
+    valueTypeIndex: number;
+    values: (null | boolean | number | string | ArrayValue)[];
+};
+
+export class DynamicType {
+    fields: FieldDefinition[] = [];
+    fieldsMap = new Map<string, FieldDefinition>();
 
     constructor(public key: string) {}
 
     getFieldType(fieldName: string): ValueType {
-        this.usedAsStruct = true;
-        let field = this.fields.get(fieldName);
+        let field = this.fieldsMap.get(fieldName);
         if (!field) {
             const path = this.key + "#" + fieldName;
-            field = new DynamicType(path);
-            dynamicTypes.set(path, field);
-            this.fields.set(fieldName, field);
+            field = {
+                name: fieldName,
+                index: this.fieldsMap.size,
+                dynamicType: new DynamicType(path)
+            };
+            dynamicTypes.set(path, field.dynamicType);
+
+            this.fields.push(field);
+            this.fieldsMap.set(fieldName, field);
         }
-        return `dynamic:${field.key}`;
+        return `dynamic:${field.dynamicType.key}`;
+    }
+
+    registerInAssetsMap(assetsMap: AssetsMap): DynamicTypeInAssetsMap {
+        let dynamicTypeInAssetsMap = assetsMap.dynamicTypes[this.key];
+        if (dynamicTypeInAssetsMap == undefined) {
+            const valueTypeIndex = assetsMap.valueTypes.length;
+            assetsMap.valueTypes.push(`dynamic:${this.key}`);
+
+            const fields = this.fields.map(field => ({
+                name: field.name,
+                dynamicType: field.dynamicType.registerInAssetsMap(assetsMap)
+            }));
+
+            dynamicTypeInAssetsMap = {
+                valueTypeIndex,
+                fields
+            };
+
+            assetsMap.dynamicTypes[this.key] = dynamicTypeInAssetsMap;
+        }
+
+        return dynamicTypeInAssetsMap;
+    }
+
+    static mapValue(
+        dynamicTypeInAssetsMap: DynamicTypeInAssetsMap,
+        value: any,
+        assetsMap: AssetsMap
+    ): ArrayValue {
+        if (value == null) {
+            return value;
+        }
+
+        const arrayValue: ArrayValue = {
+            valueTypeIndex: dynamicTypeInAssetsMap.valueTypeIndex,
+            values: []
+        };
+        for (let i = 0; i < dynamicTypeInAssetsMap.fields.length; i++) {
+            const field = dynamicTypeInAssetsMap.fields[i];
+            const fieldValue = value[field.name];
+            if (typeof fieldValue == "object") {
+                arrayValue.values.push(
+                    DynamicType.mapValue(
+                        field.dynamicType,
+                        fieldValue,
+                        assetsMap
+                    )
+                );
+            } else if (typeof fieldValue == "boolean") {
+                arrayValue.values.push(fieldValue);
+            } else if (typeof fieldValue == "number") {
+                arrayValue.values.push(fieldValue);
+            } else if (typeof fieldValue == "string") {
+                arrayValue.values.push(fieldValue);
+            } else {
+                arrayValue.values.push(null);
+            }
+        }
+        return arrayValue;
     }
 }
 
@@ -73,10 +155,6 @@ function getType(object: IEezObject, type: ValueType): ValueType {
         return `dynamic:${path}`;
     }
     return type;
-}
-
-function isDynamicType(type: ValueType) {
-    return type.startsWith("dynamic:");
 }
 
 function getDynamicFieldType(type: ValueType, fieldName: string) {

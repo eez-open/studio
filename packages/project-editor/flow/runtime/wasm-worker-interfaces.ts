@@ -1,11 +1,16 @@
+import type { AssetsMap } from "project-editor/build/assets";
+import type { ArrayValue } from "project-editor/flow/expression/type";
+
+export type ObjectGlobalVariableValues = {
+    globalVariableIndex: number;
+    arrayValue: ArrayValue;
+}[];
+
 export interface RendererToWorkerMessage {
-    assets?: {
-        data: Uint8Array;
-        map: {
-            dashboardComponentTypeToNameMap: {
-                [componentType: number]: string;
-            };
-        };
+    init?: {
+        assetsData: Uint8Array;
+        assetsMap: AssetsMap;
+        objectGlobalVariableValues: ObjectGlobalVariableValues;
     };
     wheel?: {
         deltaY: number;
@@ -17,10 +22,22 @@ export interface RendererToWorkerMessage {
         pressed: number;
     }[];
     messageFromDebugger?: ArrayBuffer;
+    scpiResult?: ScpiResult;
 }
 
 export interface WorkerToRenderMessage {
     init?: any;
     screen?: Uint8ClampedArray;
     messageToDebugger?: Uint8Array;
+    scpiCommand?: ScpiCommand;
+}
+
+export interface ScpiCommand {
+    instrumentId: string;
+    command: Uint8Array;
+}
+
+export interface ScpiResult {
+    errorMessage?: string;
+    result?: ArrayBuffer;
 }

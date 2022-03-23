@@ -5,7 +5,7 @@ Module.onRuntimeInitialized = function () {
 };
 
 Module.print = function (args) {
-    console.log("From WASM flow runtime", args);
+    console.log("From WASM flow runtime:", args);
 };
 
 WasmFlowRuntime = Module;

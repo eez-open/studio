@@ -15,20 +15,25 @@ import {
 } from "./operations";
 import { expressionParser } from "./grammar";
 import {
-    makeArrayElementInstruction,
-    makeEndInstruction,
-    makeOperationInstruction,
     makePushConstantInstruction,
-    makePushGlobalVariableInstruction,
     makePushInputInstruction,
     makePushLocalVariableInstruction,
-    makePushOutputInstruction
+    makePushGlobalVariableInstruction,
+    makePushOutputInstruction,
+    makeArrayElementInstruction,
+    makeOperationInstruction,
+    makeEndInstruction
 } from "./instructions";
 import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
-import { getStructTypeNameFromType } from "project-editor/features/variable/value-type";
+import {
+    getDynamicTypeNameFromType,
+    getStructTypeNameFromType,
+    isDynamicType
+} from "project-editor/features/variable/value-type";
 import {
     findValueTypeInExpressionNode,
-    checkArity
+    checkArity,
+    dynamicTypes
 } from "project-editor/flow/expression/type";
 import { evalConstantExpressionNode } from "project-editor/flow/expression/eval";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -345,24 +350,42 @@ function buildExpressionNode(
                 makeArrayElementInstruction()
             ];
         } else {
-            const structTypeName = getStructTypeNameFromType(
-                node.object.valueType
-            )!;
-            if (!structTypeName) {
-                throw `expected structure type got "${node.object.valueType}"`;
-            }
-            const project = ProjectEditor.getProject(component);
-            const structure = project.variables.structsMap.get(structTypeName)!;
-            if (!structure) {
-                throw `unknown structure "${structTypeName}"`;
-            }
             const fieldName = (node.property as IdentifierExpressionNode).name;
-            const fieldIndex = structure.fields
-                .map(field => field.name)
-                .sort()
-                .indexOf(fieldName);
-            if (fieldIndex == -1) {
-                throw `unknown field "${fieldName}"`;
+
+            let fieldIndex;
+            if (isDynamicType(node.object.valueType)) {
+                const dynamicTypeName = getDynamicTypeNameFromType(
+                    node.object.valueType
+                )!;
+                const dynamicType = dynamicTypes.get(dynamicTypeName);
+                if (!dynamicType) {
+                    throw `dynamicType not found: "${node.object.valueType}"`;
+                }
+                const field = dynamicType.fieldsMap.get(fieldName);
+                if (field == undefined) {
+                    throw `dynamicType field not found: "${node.object.valueType}"."${fieldName}"`;
+                }
+                fieldIndex = field.index;
+            } else {
+                const structTypeName = getStructTypeNameFromType(
+                    node.object.valueType
+                )!;
+                if (!structTypeName) {
+                    throw `expected structure type got "${node.object.valueType}"`;
+                }
+                const project = ProjectEditor.getProject(component);
+                const structure =
+                    project.variables.structsMap.get(structTypeName)!;
+                if (!structure) {
+                    throw `unknown structure "${structTypeName}"`;
+                }
+                fieldIndex = structure.fields
+                    .map(field => field.name)
+                    .sort()
+                    .indexOf(fieldName);
+                if (fieldIndex == -1) {
+                    throw `unknown structure field "${fieldName}"`;
+                }
             }
 
             return [
