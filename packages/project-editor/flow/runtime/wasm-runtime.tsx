@@ -14,7 +14,6 @@ import type {
     ObjectGlobalVariableValues,
     RendererToWorkerMessage,
     ScpiCommand,
-    ScpiResult,
     WorkerToRenderMessage
 } from "project-editor/flow/runtime/wasm-worker-interfaces";
 import {
@@ -48,7 +47,6 @@ export class WasmRuntime extends RemoteRuntime {
     wheelClicked = 0;
     messageFromDebugger: string | undefined;
     screen: any;
-    scpiResult?: ScpiResult;
     requestAnimationFrameId: number | undefined;
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -91,14 +89,15 @@ export class WasmRuntime extends RemoteRuntime {
                     this.resumeAtStart = true;
                 }
             } else {
+                if (e.data.scpiCommand) {
+                    this.executeScpiCommand(e.data.scpiCommand);
+                    return;
+                }
+
                 if (e.data.messageToDebugger) {
                     this.debuggerConnection.onMessageToDebugger(
                         arrayBufferToBinaryString(e.data.messageToDebugger)
                     );
-                }
-
-                if (e.data.scpiCommand) {
-                    this.executeScpiCommand(e.data.scpiCommand);
                 }
 
                 this.screen = e.data.screen;
@@ -144,35 +143,44 @@ export class WasmRuntime extends RemoteRuntime {
                             true
                         );
 
-                        this.objectVariableValues.push(value);
+                        this.DocumentStore.dataContext.set(
+                            variable.name,
+                            value
+                        );
+                    }
+                }
+            }
+        }
 
-                        const dynamicType =
-                            this.assetsMap.dynamicTypes[`@${variable.type}`];
-                        if (dynamicType) {
-                            const arrayValue = DynamicType.mapValue(
-                                dynamicType,
-                                value,
-                                this.assetsMap
-                            );
+        for (const variable of this.DocumentStore.project.allGlobalVariables) {
+            let value = this.DocumentStore.dataContext.get(variable.name);
+            if (value != null) {
+                this.objectVariableValues.push(value);
 
-                            const globalVariableInAssetsMap =
-                                this.assetsMap.globalVariables.find(
-                                    globalVariableInAssetsMap =>
-                                        globalVariableInAssetsMap.name ==
-                                        variable.name
-                                );
-                            if (globalVariableInAssetsMap) {
-                                objectGlobalVariableValues.push({
-                                    globalVariableIndex:
-                                        globalVariableInAssetsMap.index,
-                                    arrayValue
-                                });
-                            } else {
-                                console.error(
-                                    `Can't find globall variable "${variable.name}" in assets map`
-                                );
-                            }
-                        }
+                const dynamicType =
+                    this.assetsMap.dynamicTypes[`@${variable.type}`];
+                if (dynamicType) {
+                    const arrayValue = DynamicType.mapValue(
+                        dynamicType,
+                        value,
+                        this.assetsMap
+                    );
+
+                    const globalVariableInAssetsMap =
+                        this.assetsMap.globalVariables.find(
+                            globalVariableInAssetsMap =>
+                                globalVariableInAssetsMap.name == variable.name
+                        );
+                    if (globalVariableInAssetsMap) {
+                        objectGlobalVariableValues.push({
+                            globalVariableIndex:
+                                globalVariableInAssetsMap.index,
+                            arrayValue
+                        });
+                    } else {
+                        console.error(
+                            `Can't find globall variable "${variable.name}" in assets map`
+                        );
                     }
                 }
             }
@@ -185,8 +193,6 @@ export class WasmRuntime extends RemoteRuntime {
 
     async executeScpiCommand(scpiCommand: ScpiCommand) {
         const command = arrayBufferToBinaryString(scpiCommand.command);
-
-        console.log("executeScpiCommand", scpiCommand.instrumentId, command);
 
         for (let i = 0; i < this.objectVariableValues.length; i++) {
             const instrument = this.objectVariableValues[i];
@@ -207,9 +213,11 @@ export class WasmRuntime extends RemoteRuntime {
                     }
 
                     if (!instrument.isConnected) {
-                        this.scpiResult = {
-                            errorMessage: "instrument not connected"
-                        };
+                        this.worker.postMessage({
+                            scpiResult: {
+                                errorMessage: "instrument not connected"
+                            }
+                        });
                         return;
                     }
 
@@ -219,9 +227,11 @@ export class WasmRuntime extends RemoteRuntime {
 
                     try {
                         let result = await connection.query(command);
-                        this.scpiResult = {
-                            result: binaryStringToArrayBuffer(result)
-                        };
+                        this.worker.postMessage({
+                            scpiResult: {
+                                result: binaryStringToArrayBuffer(result)
+                            }
+                        });
                     } finally {
                         connection.release();
                     }
@@ -249,8 +259,7 @@ export class WasmRuntime extends RemoteRuntime {
             pointerEvents: this.pointerEvents,
             messageFromDebugger: this.messageFromDebugger
                 ? binaryStringToArrayBuffer(this.messageFromDebugger)
-                : undefined,
-            scpiResult: this.scpiResult ? this.scpiResult : undefined
+                : undefined
         };
 
         this.worker.postMessage(message);
@@ -260,7 +269,6 @@ export class WasmRuntime extends RemoteRuntime {
         this.pointerEvents = [];
         this.messageFromDebugger = undefined;
         this.screen = undefined;
-        this.scpiResult = undefined;
     };
 
     renderPage() {

@@ -404,8 +404,7 @@ export function findValueTypeInExpressionNode(
                             node.property.name
                         );
                         if (enumMember) {
-                            // TODO
-                            node.valueType = "any";
+                            node.valueType = "integer";
                             return;
                         }
                     } else {
@@ -413,8 +412,7 @@ export function findValueTypeInExpressionNode(
                         const buildInConstantValue =
                             builtInConstants[builtInConstantName];
                         if (buildInConstantValue != undefined) {
-                            // TODO
-                            node.valueType = "any";
+                            node.valueType = buildInConstantValue.valueType;
                             return;
                         }
                     }

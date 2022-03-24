@@ -69,7 +69,7 @@ export const AppBar = observer(
         }
 
         handleConnectClick = () => {
-            this.connection.openConnectDialog();
+            this.instrument.openConnectDialog();
         };
 
         handleDisconnectClick = () => {

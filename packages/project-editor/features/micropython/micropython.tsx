@@ -167,7 +167,7 @@ export class MicroPython extends EezObject {
             await new Promise<void>((resolve, reject) => {
                 const uploadInstructions = Object.assign(
                     {},
-                    connection.instrument.defaultFileUploadInstructions,
+                    instrument.defaultFileUploadInstructions,
                     {
                         sourceFilePath: resSourceFilePath,
                         destinationFileName: resDestinationFileName,
@@ -181,7 +181,7 @@ export class MicroPython extends EezObject {
             await new Promise<void>((resolve, reject) => {
                 const uploadInstructions = Object.assign(
                     {},
-                    connection.instrument.defaultFileUploadInstructions,
+                    instrument.defaultFileUploadInstructions,
                     {
                         sourceFilePath: pySourceFilePath,
                         destinationFileName: pyDestinationFileName,

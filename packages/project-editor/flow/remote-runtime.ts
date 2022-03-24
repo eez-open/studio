@@ -35,6 +35,7 @@ import { ConnectionBase } from "instrument/connection/connection-base";
 import { IExpressionContext } from "./expression";
 import { webSimulatorMessageDispatcher } from "instrument/connection/connection-renderer";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { ExecuteComponentLogItem } from "project-editor/flow/debugger/logs";
 
 const DEBUGGER_TCP_PORT = 3333;
 
@@ -195,7 +196,7 @@ export class RemoteRuntime extends RuntimeBase {
             await new Promise<void>((resolve, reject) => {
                 const uploadInstructions = Object.assign(
                     {},
-                    connection.instrument.defaultFileUploadInstructions,
+                    instrument.defaultFileUploadInstructions,
                     {
                         sourceFilePath,
                         destinationFileName,
@@ -846,7 +847,19 @@ export abstract class DebuggerConnectionBase {
 
                 case MessagesToDebugger.MESSAGE_TO_DEBUGGER_REMOVE_FROM_QUEUE:
                     {
-                        runInAction(() => runtime.queue.shift());
+                        if (runtime.queue.length > 0) {
+                            runtime.logs.addLogItem(
+                                new ExecuteComponentLogItem(
+                                    runtime.queue[0].flowState,
+                                    runtime.queue[0].component
+                                )
+                            );
+
+                            runInAction(() => runtime.queue.shift());
+                        } else {
+                            console.error("UNEXPECTED!");
+                            return;
+                        }
                     }
                     break;
 

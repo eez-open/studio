@@ -50,7 +50,7 @@ export class Module {
 
                 const uploadInstructions = Object.assign(
                     {},
-                    connection.instrument.defaultFileUploadInstructions,
+                    this.bb3Instrument.instrument.defaultFileUploadInstructions,
                     {
                         sourceData: file.fileData,
                         sourceFileType: "application/octet-stream",

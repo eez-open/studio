@@ -2,7 +2,6 @@ require("project-editor/flow/runtime/flow_runtime.js");
 
 import type {
     RendererToWorkerMessage,
-    ScpiCommand,
     WorkerToRenderMessage
 } from "project-editor/flow/runtime/wasm-worker-interfaces";
 import { actionConmponentExecuteFunctions } from "project-editor/flow/components/actions/execute";
@@ -30,7 +29,6 @@ import type { AssetsMap } from "project-editor/build/assets";
 
 let allDebuggerMessages: Uint8Array | undefined;
 let currentDebuggerMessage: Uint8Array | undefined;
-let scpiCommand: ScpiCommand | undefined;
 
 function mergeArray(arrayOne: Uint8Array | undefined, arrayTwo: Uint8Array) {
     if (arrayOne) {
@@ -173,10 +171,12 @@ function executeScpi(instrumentPtr: number, arr: any) {
         return;
     }
 
-    scpiCommand = {
-        instrumentId,
-        command: new Uint8Array(arr)
-    };
+    postMessage({
+        scpiCommand: {
+            instrumentId,
+            command: new Uint8Array(arr)
+        }
+    });
 }
 
 export class DashboardComponentContext {
@@ -333,8 +333,32 @@ function createArrayValue(arrayValue: ArrayValue) {
 }
 
 onmessage = function (e: { data: RendererToWorkerMessage }) {
+    if (e.data.scpiResult) {
+        let errorMessagePtr = 0;
+        if (e.data.scpiResult.errorMessage) {
+            errorMessagePtr = WasmFlowRuntime.allocateUTF8(
+                e.data.scpiResult.errorMessage
+            );
+        }
+
+        let resultPtr = 0;
+        let resultLen = 0;
+        if (e.data.scpiResult.result) {
+            const resultArr = new Uint8Array(e.data.scpiResult.result);
+            resultPtr = WasmFlowRuntime._malloc(resultArr.length);
+            WasmFlowRuntime.HEAPU8.set(resultArr, resultPtr);
+            resultLen = resultArr.length;
+        }
+
+        WasmFlowRuntime._onScpiResult(errorMessagePtr, resultPtr, resultLen);
+
+        WasmFlowRuntime._mainLoop();
+
+        return;
+    }
+
     if (e.data.init) {
-        console.log(e.data.init);
+        //console.log(e.data.init);
 
         assetsMap = e.data.init.assetsMap;
 
@@ -395,26 +419,6 @@ onmessage = function (e: { data: RendererToWorkerMessage }) {
         WasmFlowRuntime._free(ptr);
     }
 
-    if (e.data.scpiResult) {
-        let errorMessagePtr = 0;
-        if (e.data.scpiResult.errorMessage) {
-            errorMessagePtr = WasmFlowRuntime.allocateUTF8(
-                e.data.scpiResult.errorMessage
-            );
-        }
-
-        let resultPtr = 0;
-        let resultLen = 0;
-        if (e.data.scpiResult.result) {
-            const resultArr = new Uint8Array(e.data.scpiResult.result);
-            resultPtr = WasmFlowRuntime._malloc(resultArr.length);
-            WasmFlowRuntime.HEAPU8.set(resultArr, resultPtr);
-            resultLen = resultArr.length;
-        }
-
-        WasmFlowRuntime._onScpiResult(errorMessagePtr, resultPtr, resultLen);
-    }
-
     WasmFlowRuntime._mainLoop();
 
     const WIDTH = 480;
@@ -435,11 +439,6 @@ onmessage = function (e: { data: RendererToWorkerMessage }) {
     if (allDebuggerMessages) {
         data.messageToDebugger = allDebuggerMessages;
         allDebuggerMessages = undefined;
-    }
-
-    if (scpiCommand) {
-        data.scpiCommand = scpiCommand;
-        scpiCommand = undefined;
     }
 
     postMessage(data);

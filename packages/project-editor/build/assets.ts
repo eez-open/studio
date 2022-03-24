@@ -1168,8 +1168,9 @@ export class DataBuffer {
         if (this.currentOffset % 4) {
             throw "invalid offset";
         }
-        for (let i = 0; i < str.length; i++) {
-            this.writeUint8(str.charCodeAt(i));
+        const buffer = Buffer.from(str, "binary");
+        for (let i = 0; i < buffer.length; i++) {
+            this.writeUint8(buffer[i]);
         }
         this.writeUint8(0);
         this.addPadding();

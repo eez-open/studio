@@ -549,21 +549,30 @@ export const ConnectionProperties = observer(
     }
 );
 
+interface ConnectionDialogProps {
+    connectionParameters: ConnectionParameters;
+    connect: (connectionParameters: ConnectionParameters) => void;
+    availableConnections: (
+        | "ethernet"
+        | "serial"
+        | "usbtmc"
+        | "web-simulator"
+    )[];
+    serialBaudRates: number[];
+}
+
 const ConnectionDialog = observer(
-    class ConnectionDialog extends React.Component<
-        {
-            connectionParameters: ConnectionParameters;
-            connect: (connectionParameters: ConnectionParameters) => void;
-            availableConnections: (
-                | "ethernet"
-                | "serial"
-                | "usbtmc"
-                | "web-simulator"
-            )[];
-            serialBaudRates: number[];
-        },
-        {}
-    > {
+    class ConnectionDialog extends React.Component<ConnectionDialogProps> {
+        constructor(props: ConnectionDialogProps) {
+            super(props);
+
+            makeObservable(this, {
+                connectionParameters: observable
+            });
+
+            this.connectionParameters = this.props.connectionParameters;
+        }
+
         connectionParameters: ConnectionParameters;
 
         onConnectionParametersChanged = action(
@@ -609,24 +618,6 @@ const ConnectionDialog = observer(
             this.props.connect(this.connectionParameters);
             return true;
         };
-
-        constructor(props: {
-            connectionParameters: ConnectionParameters;
-            connect: (connectionParameters: ConnectionParameters) => void;
-            availableConnections: (
-                | "ethernet"
-                | "serial"
-                | "usbtmc"
-                | "web-simulator"
-            )[];
-            serialBaudRates: number[];
-        }) {
-            super(props);
-
-            makeObservable(this, {
-                connectionParameters: observable
-            });
-        }
 
         render() {
             return (

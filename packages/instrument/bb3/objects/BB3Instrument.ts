@@ -764,7 +764,7 @@ export class BB3Instrument {
 
                     const uploadInstructions = Object.assign(
                         {},
-                        connection.instrument.defaultFileUploadInstructions,
+                        this.instrument.defaultFileUploadInstructions,
                         {
                             sourceData: image,
                             sourceFileType: "application/octet-stream",
@@ -822,8 +822,7 @@ export class BB3Instrument {
                         await new Promise<void>((resolve, reject) => {
                             const uploadInstructions = Object.assign(
                                 {},
-                                connection.instrument
-                                    .defaultFileUploadInstructions,
+                                this.instrument.defaultFileUploadInstructions,
                                 {
                                     sourceFilePath: filePaths[0],
                                     destinationFileName: "_o.s",
@@ -938,8 +937,7 @@ export class BB3Instrument {
                         await new Promise<void>((resolve, reject) => {
                             const uploadInstructions = Object.assign(
                                 {},
-                                connection.instrument
-                                    .defaultFileUploadInstructions,
+                                this.instrument.defaultFileUploadInstructions,
                                 {
                                     sourceData: file.fileData,
                                     sourceFileType: "application/octet-stream",

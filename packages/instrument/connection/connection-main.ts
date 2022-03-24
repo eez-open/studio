@@ -666,7 +666,6 @@ export class Connection
     get interfaceInfo() {
         return undefined;
     }
-    openConnectDialog() {}
     async acquire(traceEnabled: boolean) {}
     command(command: string) {}
     async query(query: string) {}

@@ -208,7 +208,8 @@ export class List {
                 await new Promise<void>((resolve, reject) => {
                     const uploadInstructions = Object.assign(
                         {},
-                        connection.instrument.defaultFileUploadInstructions,
+                        this.bb3Instrument.instrument
+                            .defaultFileUploadInstructions,
                         {
                             sourceData,
                             sourceFileType: "application/octet-stream",

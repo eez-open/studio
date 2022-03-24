@@ -248,9 +248,9 @@ export abstract class RuntimeBase {
                 `INVALID TRANSITION: state=${wasState} action=${action}`
             );
         } else {
-            console.info(
-                `Transition: stateBefore=${wasState} action=${action} stateAfter=${this.state}`
-            );
+            // console.info(
+            //     `Transition: stateBefore=${wasState} action=${action} stateAfter=${this.state}`
+            // );
         }
     }
 

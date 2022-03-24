@@ -45,6 +45,7 @@ import { CommandsTree, getCommandsTree } from "./window/terminal/commands-tree";
 
 import type * as ConnectionMainModule from "instrument/connection/connection-main";
 import type * as ConnectionRendererModule from "instrument/connection/connection-renderer";
+import type { IResponseTypeType } from "instrument/scpi";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -65,6 +66,14 @@ export interface IInstrumentObjectProps {
     lastFileUploadInstructions?: IFileUploadInstructions;
     selectedShortcutGroups: string[];
     custom?: any;
+    getQueryResponseType(query: string): IResponseTypeType | undefined;
+    isCommandSendsBackDataBlock(commandName: string): boolean;
+    defaultConnectionParameters: ConnectionParameters;
+    setConnectionParameters(connectionParameters: ConnectionParameters): void;
+    setLastFileUploadInstructions(
+        fileUploadInstructions: IFileUploadInstructions
+    ): void;
+    defaultFileUploadInstructions: any;
 }
 
 const UNKNOWN_INSTRUMENT_EXTENSION: IExtension = {
@@ -780,7 +789,7 @@ export class InstrumentObject {
 
     isCommandSendsBackDataBlock(commandName: string) {
         const command = this.commandsTree.findCommand(commandName);
-        return command && (command as ICommandSyntax).sendsBackDataBlock;
+        return command ? (command as ICommandSyntax).sendsBackDataBlock : false;
     }
 
     get sendFileToInstrumentHandler() {
@@ -845,6 +854,28 @@ export class InstrumentObject {
             color: this.connectionState.color,
             error: this.connectionState.error
         };
+    }
+
+    handleConnect = (connectionParameters: ConnectionParameters) => {
+        if (!connectionParameters && !this.lastConnection) {
+            connectionParameters = this.defaultConnectionParameters;
+        }
+        this.connection.connect(connectionParameters);
+    };
+
+    async openConnectDialog() {
+        const { showConnectionDialog } = await import(
+            "instrument/window/connection-dialog"
+        );
+        showConnectionDialog(
+            this.getConnectionParameters([
+                this.lastConnection,
+                this.defaultConnectionParameters
+            ]),
+            this.handleConnect,
+            this.availableConnections,
+            this.serialBaudRates
+        );
     }
 
     get isBB3() {

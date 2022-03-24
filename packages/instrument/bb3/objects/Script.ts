@@ -20,6 +20,7 @@ import {
     ICatalogScriptItemVersion
 } from "instrument/bb3/objects/ScriptsCatalog";
 import { ConnectionBase } from "instrument/connection/connection-base";
+import type { InstrumentObject } from "instrument/instrument-object";
 
 export interface IScriptOnInstrument {
     name: string;
@@ -88,6 +89,7 @@ function fetchScriptFiles(catalogScriptItemVersion: ICatalogScriptItemVersion) {
 }
 
 async function uploadScriptFilesToInstrument(
+    instrument: InstrumentObject,
     connection: ConnectionBase,
     files: IFetchedFile[]
 ) {
@@ -99,7 +101,7 @@ async function uploadScriptFilesToInstrument(
 
             const uploadInstructions = Object.assign(
                 {},
-                connection.instrument.defaultFileUploadInstructions,
+                instrument.defaultFileUploadInstructions,
                 {
                     sourceData: file.fileData,
                     sourceFileType,
@@ -228,7 +230,11 @@ export class Script {
             async connection => {
                 const files = await fetchScriptFiles(catalogScriptItemVersion);
 
-                await uploadScriptFilesToInstrument(connection, files);
+                await uploadScriptFilesToInstrument(
+                    this.bb3Instrument.instrument,
+                    connection,
+                    files
+                );
 
                 runInAction(() => {
                     this.scriptOnInstrument = {

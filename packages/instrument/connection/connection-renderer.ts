@@ -4,7 +4,7 @@ import { getCurrentWindow } from "@electron/remote";
 
 import { watch } from "eez-studio-shared/notify";
 
-import type { InstrumentObject } from "instrument/instrument-object";
+import type { IInstrumentObjectProps } from "instrument/instrument-object";
 import type { ConnectionParameters } from "instrument/connection/interface";
 import { ConnectionErrorCode } from "instrument/connection/ConnectionErrorCode";
 import type { IFileUploadInstructions } from "instrument/connection/file-upload";
@@ -17,7 +17,6 @@ import {
 } from "instrument/connection/connection-base";
 import { createHistoryItem } from "instrument/window/history/item-factory";
 import { activityLogStore } from "eez-studio-shared/activity-log";
-import { showConnectionDialog } from "instrument/window/connection-dialog";
 import { guid } from "eez-studio-shared/guid";
 
 export class IpcConnection extends ConnectionBase {
@@ -41,7 +40,7 @@ export class IpcConnection extends ConnectionBase {
         reject: (reason?: any) => void;
     }[] = [];
 
-    constructor(instrument: InstrumentObject) {
+    constructor(instrument: IInstrumentObjectProps) {
         super(instrument);
 
         makeObservable(this, {
@@ -306,25 +305,6 @@ export class IpcConnection extends ConnectionBase {
         }
     }
 
-    handleConnect = (connectionParameters: ConnectionParameters) => {
-        if (!connectionParameters && !this.instrument.lastConnection) {
-            connectionParameters = this.instrument.defaultConnectionParameters;
-        }
-        this.connect(connectionParameters);
-    };
-
-    openConnectDialog() {
-        showConnectionDialog(
-            this.instrument.getConnectionParameters([
-                this.instrument.lastConnection,
-                this.instrument.defaultConnectionParameters
-            ]),
-            this.handleConnect,
-            this.instrument.availableConnections,
-            this.instrument.serialBaudRates
-        );
-    }
-
     async acquire(traceEnabled: boolean) {
         await this.doAcquire(
             this.instrument.id,
@@ -544,7 +524,9 @@ export const webSimulatorMessageDispatcher =
 
 export const connections = observable(new Map<string, IConnection>());
 
-export function createRendererProcessConnection(instrument: InstrumentObject) {
+export function createRendererProcessConnection(
+    instrument: IInstrumentObjectProps
+) {
     const connection = new IpcConnection(instrument);
     runInAction(() => connections.set(instrument.id.toString(), connection));
     return connection;
