@@ -38,13 +38,13 @@ import {
     updateObject,
     isDashboardOrAppletOrFirmwareWithFlowSupportProject,
     isNotDashboardOrAppletOrFirmwareWithFlowSupportProject
-} from "project-editor/core/store";
-import { loadObject, objectToJS } from "project-editor/core/store";
+} from "project-editor/store";
+import { loadObject, objectToJS } from "project-editor/store";
 import {
     IContextMenuContext,
     getDocumentStore,
     DocumentStoreClass
-} from "project-editor/core/store";
+} from "project-editor/store";
 
 import type {
     IResizeHandler,
@@ -1218,6 +1218,20 @@ export class Component extends EezObject {
             // check connections to inputs
             component.inputs.forEach(componentInput => {
                 if (
+                    componentInput instanceof CustomInput &&
+                    (componentInput.type === "any" ||
+                        componentInput.type === "array:any")
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Any type used`,
+                            component
+                        )
+                    );
+                }
+
+                if (
                     !ProjectEditor.getFlow(component).connectionLines.find(
                         connectionLine =>
                             connectionLine.targetComponent === component &&
@@ -1237,29 +1251,43 @@ export class Component extends EezObject {
                     );
                 }
 
-                if (
-                    !componentInput.isSequenceInput &&
-                    connectionLines.filter(
-                        connectionLine =>
-                            connectionLine.targetComponent === component &&
-                            connectionLine.input === componentInput.name
-                    ).length > 1
-                ) {
-                    messages.push(
-                        new Message(
-                            MessageType.WARNING,
-                            `Multiple connections lines to data input "${
-                                componentInput.displayName ||
-                                componentInput.name
-                            }"`,
-                            component
-                        )
-                    );
-                }
+                // if (
+                //     !componentInput.isSequenceInput &&
+                //     connectionLines.filter(
+                //         connectionLine =>
+                //             connectionLine.targetComponent === component &&
+                //             connectionLine.input === componentInput.name
+                //     ).length > 1
+                // ) {
+                //     messages.push(
+                //         new Message(
+                //             MessageType.WARNING,
+                //             `Multiple connections lines to data input "${
+                //                 componentInput.displayName ||
+                //                 componentInput.name
+                //             }"`,
+                //             component
+                //         )
+                //     );
+                // }
             });
 
             // check connection from outputs
             component.outputs.forEach(componentOutput => {
+                if (
+                    componentOutput instanceof CustomOutput &&
+                    (componentOutput.type === "any" ||
+                        componentOutput.type === "array:any")
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Any type used`,
+                            component
+                        )
+                    );
+                }
+
                 if (
                     !connectionLines.find(
                         connectionLine =>
@@ -1287,32 +1315,32 @@ export class Component extends EezObject {
                     );
                 }
 
-                if (
-                    componentOutput.isSequenceOutput &&
-                    connectionLines.filter(
-                        connectionLine =>
-                            connectionLine.sourceComponent === component &&
-                            connectionLine.output === componentOutput.name
-                    ).length > 1
-                ) {
-                    messages.push(
-                        new Message(
-                            MessageType.WARNING,
-                            `Multiple connections lines from sequence output "${
-                                componentOutput.displayName
-                                    ? typeof componentOutput.displayName ==
-                                      "string"
-                                        ? componentOutput.displayName
-                                        : componentOutput.displayName(
-                                              component,
-                                              componentOutput
-                                          )
-                                    : componentOutput.name
-                            }"`,
-                            component
-                        )
-                    );
-                }
+                // if (
+                //     componentOutput.isSequenceOutput &&
+                //     connectionLines.filter(
+                //         connectionLine =>
+                //             connectionLine.sourceComponent === component &&
+                //             connectionLine.output === componentOutput.name
+                //     ).length > 1
+                // ) {
+                //     messages.push(
+                //         new Message(
+                //             MessageType.WARNING,
+                //             `Multiple connections lines from sequence output "${
+                //                 componentOutput.displayName
+                //                     ? typeof componentOutput.displayName ==
+                //                       "string"
+                //                         ? componentOutput.displayName
+                //                         : componentOutput.displayName(
+                //                               component,
+                //                               componentOutput
+                //                           )
+                //                     : componentOutput.name
+                //             }"`,
+                //             component
+                //         )
+                //     );
+                // }
             });
 
             const DocumentStore = getDocumentStore(component);

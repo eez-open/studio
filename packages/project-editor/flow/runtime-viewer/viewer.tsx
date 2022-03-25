@@ -19,7 +19,7 @@ import {
 
 import { Draggable } from "eez-studio-ui/draggable";
 
-import { IPanel } from "project-editor/core/store";
+import { IPanel } from "project-editor/store";
 
 import { ProjectContext } from "project-editor/project/context";
 

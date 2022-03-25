@@ -19,7 +19,7 @@ import {
     objectToClipboardData,
     getLabel,
     Message
-} from "project-editor/core/store";
+} from "project-editor/store";
 import {
     ActionComponent,
     Component,
@@ -29,7 +29,7 @@ import {
 } from "project-editor/flow/component";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { Rect } from "eez-studio-shared/geometry";
-import { deleteObject, updateObject } from "project-editor/core/store";
+import { deleteObject, updateObject } from "project-editor/store";
 import {
     ContainerWidget,
     SelectWidget
@@ -44,7 +44,7 @@ import {
 } from "project-editor/flow/components/actions";
 import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { Transform } from "project-editor/flow/editor/transform";
-import { cloneObject } from "project-editor/core/store";
+import { cloneObject } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { IEditorState } from "project-editor/project/EditorComponent";
 import { activateConnectionLine } from "project-editor/flow/editor/real-time-traffic-visualizer";

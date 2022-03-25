@@ -6,7 +6,7 @@ import { SketchPicker } from "react-color";
 import { isDark, isValid } from "eez-studio-shared/color";
 
 import { getProperty } from "project-editor/core/object";
-import { getEezStudioDataFromDragEvent } from "project-editor/core/store";
+import { getEezStudioDataFromDragEvent } from "project-editor/store";
 
 import { getThemedColor } from "project-editor/features/style/theme";
 

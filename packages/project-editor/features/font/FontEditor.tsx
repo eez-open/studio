@@ -14,7 +14,7 @@ import {
     loadObject,
     objectToJS,
     getDocumentStore
-} from "project-editor/core/store";
+} from "project-editor/store";
 
 import { ProjectContext } from "project-editor/project/context";
 import rebuildFont from "font-services/font-rebuild";

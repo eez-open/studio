@@ -10,7 +10,7 @@ import {
     Message as OutputMessage,
     objectToString,
     OutputSection
-} from "project-editor/core/store";
+} from "project-editor/store";
 
 import { ProjectContext } from "project-editor/project/context";
 import {
@@ -20,7 +20,7 @@ import {
 } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
-const MAX_OUTPUT_MESSAGE_TEXT_SIZE = 50;
+const MAX_OUTPUT_MESSAGE_TEXT_SIZE = 100;
 const MAX_OUTPUT_PATH_PART_TEXT_SIZE = 25;
 
 ////////////////////////////////////////////////////////////////////////////////

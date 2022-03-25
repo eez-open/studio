@@ -1,7 +1,7 @@
 import { Point, Rect } from "eez-studio-shared/geometry";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
-import type { DocumentStoreClass } from "project-editor/core/store";
+import type { DocumentStoreClass } from "project-editor/store";
 
 import type { Transform } from "project-editor/flow/editor/transform";
 import type { Component } from "project-editor/flow/component";

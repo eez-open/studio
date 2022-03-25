@@ -11,7 +11,7 @@ import {
 } from "project-editor/core/object";
 import { validators } from "eez-studio-shared/validation";
 
-import { getDocumentStore, Message } from "project-editor/core/store";
+import { getDocumentStore, Message } from "project-editor/store";
 
 import { findStyle } from "project-editor/features/style/style";
 import { getThemedColor } from "project-editor/features/style/theme";

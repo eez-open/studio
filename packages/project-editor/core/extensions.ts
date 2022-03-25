@@ -4,7 +4,7 @@ import {
     PropertyType,
     PropertyInfo
 } from "project-editor/core/object";
-import type { Message } from "project-editor/core/store";
+import type { Message } from "project-editor/store";
 
 import type { Project } from "project-editor/project/project";
 

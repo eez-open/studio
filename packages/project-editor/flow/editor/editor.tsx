@@ -36,7 +36,7 @@ import {
     setParent,
     getId
 } from "project-editor/core/object";
-import { IPanel, isObjectInstanceOf } from "project-editor/core/store";
+import { IPanel, isObjectInstanceOf } from "project-editor/store";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { DragAndDropManager } from "project-editor/core/dd";
 

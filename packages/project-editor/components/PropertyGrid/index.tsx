@@ -16,7 +16,7 @@ import {
     isValue,
     getCommonProperties,
     getClassInfo
-} from "project-editor/core/store";
+} from "project-editor/store";
 
 import { isAnyObjectReadOnly } from "project-editor/project/project";
 

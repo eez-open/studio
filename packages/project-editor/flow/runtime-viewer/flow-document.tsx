@@ -1,7 +1,7 @@
 import { computed, makeObservable } from "mobx";
 import { Point, Rect } from "eez-studio-shared/geometry";
 
-import { getDocumentStore } from "project-editor/core/store";
+import { getDocumentStore } from "project-editor/store";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";

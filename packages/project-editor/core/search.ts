@@ -20,7 +20,7 @@ import {
     DocumentStoreClass,
     getDocumentStore,
     objectToString
-} from "project-editor/core/store";
+} from "project-editor/store";
 
 import type {
     checkObjectReference,

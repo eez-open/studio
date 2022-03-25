@@ -1,18 +1,12 @@
 import type { Project } from "project-editor/project/project";
 import type { Component } from "project-editor/flow/component";
 import type { ExpressionNode } from "project-editor/flow/expression/node";
-import {
-    isDynamicType,
-    ValueType
-} from "project-editor/features/variable/value-type";
+import { ValueType } from "project-editor/features/variable/value-type";
 
 import {
     getArrayElementTypeFromType,
     getEnumTypeNameFromType,
-    getStructTypeNameFromType,
-    isObjectType,
-    isEnumType,
-    isStructType
+    isEnumType
 } from "project-editor/features/variable/value-type";
 
 import {
@@ -29,138 +23,6 @@ import {
 } from "project-editor/features/variable/defs";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { IEezObject } from "project-editor/core/object";
-import { getObjectPathAsString } from "project-editor/core/store";
-import type {
-    AssetsMap,
-    DynamicTypeInAssetsMap
-} from "project-editor/build/assets";
-
-////////////////////////////////////////////////////////////////////////////////
-
-interface FieldDefinition {
-    name: string;
-    index: number;
-    dynamicType: DynamicType;
-}
-
-export type ArrayValue = {
-    valueTypeIndex: number;
-    values: (null | boolean | number | string | ArrayValue)[];
-};
-
-export class DynamicType {
-    fields: FieldDefinition[] = [];
-    fieldsMap = new Map<string, FieldDefinition>();
-
-    constructor(public key: string) {}
-
-    getFieldType(fieldName: string): ValueType {
-        let field = this.fieldsMap.get(fieldName);
-        if (!field) {
-            const path = this.key + "#" + fieldName;
-            field = {
-                name: fieldName,
-                index: this.fieldsMap.size,
-                dynamicType: new DynamicType(path)
-            };
-            dynamicTypes.set(path, field.dynamicType);
-
-            this.fields.push(field);
-            this.fieldsMap.set(fieldName, field);
-        }
-        return `dynamic:${field.dynamicType.key}`;
-    }
-
-    registerInAssetsMap(assetsMap: AssetsMap): DynamicTypeInAssetsMap {
-        let dynamicTypeInAssetsMap = assetsMap.dynamicTypes[this.key];
-        if (dynamicTypeInAssetsMap == undefined) {
-            const valueTypeIndex = assetsMap.valueTypes.length;
-            assetsMap.valueTypes.push(`dynamic:${this.key}`);
-
-            const fields = this.fields.map(field => ({
-                name: field.name,
-                dynamicType: field.dynamicType.registerInAssetsMap(assetsMap)
-            }));
-
-            dynamicTypeInAssetsMap = {
-                valueTypeIndex,
-                fields
-            };
-
-            assetsMap.dynamicTypes[this.key] = dynamicTypeInAssetsMap;
-        }
-
-        return dynamicTypeInAssetsMap;
-    }
-
-    static mapValue(
-        dynamicTypeInAssetsMap: DynamicTypeInAssetsMap,
-        value: any,
-        assetsMap: AssetsMap
-    ): ArrayValue {
-        if (value == null) {
-            return value;
-        }
-
-        const arrayValue: ArrayValue = {
-            valueTypeIndex: dynamicTypeInAssetsMap.valueTypeIndex,
-            values: []
-        };
-        for (let i = 0; i < dynamicTypeInAssetsMap.fields.length; i++) {
-            const field = dynamicTypeInAssetsMap.fields[i];
-            const fieldValue = value[field.name];
-            if (typeof fieldValue == "object") {
-                arrayValue.values.push(
-                    DynamicType.mapValue(
-                        field.dynamicType,
-                        fieldValue,
-                        assetsMap
-                    )
-                );
-            } else if (typeof fieldValue == "boolean") {
-                arrayValue.values.push(fieldValue);
-            } else if (typeof fieldValue == "number") {
-                arrayValue.values.push(fieldValue);
-            } else if (typeof fieldValue == "string") {
-                arrayValue.values.push(fieldValue);
-            } else {
-                arrayValue.values.push(null);
-            }
-        }
-        return arrayValue;
-    }
-}
-
-export const dynamicTypes = new Map<string, DynamicType>();
-
-function getDynamicType(object: IEezObject): `dynamic:${string}` {
-    const path = getObjectPathAsString(object);
-    if (!dynamicTypes.get(path)) {
-        dynamicTypes.set(path, new DynamicType(path));
-    }
-    return `dynamic:${path}`;
-}
-
-function getType(object: IEezObject, type: ValueType): ValueType {
-    if (type == "any") {
-        return getDynamicType(object);
-    } else if (type == "array:any") {
-        return `array:${getDynamicType(object)}`;
-    } else if (isObjectType(type)) {
-        const path = `@${type}`;
-        if (!dynamicTypes.get(path)) {
-            dynamicTypes.set(path, new DynamicType(path));
-        }
-        return `dynamic:${path}`;
-    }
-    return type;
-}
-
-function getDynamicFieldType(type: ValueType, fieldName: string) {
-    const dynamicType = dynamicTypes.get(type.substring("dynamic:".length));
-    return dynamicType!.getFieldType(fieldName);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -188,14 +50,14 @@ export function findValueTypeInExpressionNode(
                 output => output.name === node.name
             );
             if (output) {
-                node.valueType = getType(output, output.type);
+                node.valueType = getType(project, output.type);
                 return;
             }
         }
 
         const input = component?.inputs.find(input => input.name == node.name);
         if (input) {
-            node.valueType = getType(input, input.type);
+            node.valueType = getType(project, input.type);
             return;
         }
 
@@ -205,7 +67,7 @@ export function findValueTypeInExpressionNode(
                 localVariable => localVariable.name == node.name
             );
             if (localVariable) {
-                node.valueType = getType(localVariable, localVariable.type);
+                node.valueType = getType(project, localVariable.type);
                 return;
             }
         }
@@ -214,7 +76,7 @@ export function findValueTypeInExpressionNode(
             globalVariable => globalVariable.name == node.name
         );
         if (globalVariable) {
-            node.valueType = getType(globalVariable, globalVariable.type);
+            node.valueType = getType(project, globalVariable.type);
             return;
         }
 
@@ -387,10 +249,11 @@ export function findValueTypeInExpressionNode(
                     node.valueType = valueType as ValueType;
                 }
             } else {
-                if (
-                    node.object.type == "Identifier" &&
-                    node.property.type == "Identifier"
-                ) {
+                if (node.property.type != "Identifier") {
+                    throw `Invalid field type: '${node.property.type}'`;
+                }
+
+                if (node.object.type == "Identifier") {
                     if (node.object.valueType === "any") {
                         node.valueType = "any";
                         return;
@@ -416,50 +279,17 @@ export function findValueTypeInExpressionNode(
                             return;
                         }
                     }
-
-                    if (
-                        !isStructType(node.object.valueType) &&
-                        !isDynamicType(node.object.valueType)
-                    ) {
-                        throw `Unknown "${node.object.name}.${node.property.name}"`;
-                    }
                 }
 
-                let structTypeName = getStructTypeNameFromType(
-                    node.object.valueType
+                const type = project._DocumentStore.typesStore.getFieldType(
+                    node.object.valueType,
+                    node.property.name
                 );
-                if (!structTypeName) {
-                    structTypeName = node.object.valueType;
+                if (!type) {
+                    throw `Member access ".${node.property.name}" is not allowed`;
                 }
 
-                const structure =
-                    project.variables.structsMap.get(structTypeName);
-                if (structure) {
-                    if (node.property.type != "Identifier") {
-                        throw `Invalid struct field type: '${node.property.type}'`;
-                    }
-
-                    const fieldName = node.property.name;
-
-                    const field = structure.fieldsMap.get(fieldName);
-
-                    if (!field) {
-                        throw `Struct field not found: '${fieldName}'`;
-                    }
-
-                    node.valueType = field.type as ValueType;
-                } else if (isDynamicType(node.object.valueType)) {
-                    if (node.property.type != "Identifier") {
-                        throw `Invalid struct field type: '${node.property.type}'`;
-                    }
-
-                    node.valueType = getDynamicFieldType(
-                        node.object.valueType,
-                        node.property.name
-                    );
-                } else {
-                    throw `Struct or object type expected but found '${node.object.valueType}'`;
-                }
+                node.valueType = type;
             }
         }
     } else if (node.type == "ArrayExpression") {
@@ -508,4 +338,16 @@ export function checkArity(functionName: string, node: ExpressionNode) {
             throw `In function '${functionName}' call expected ${arity} arguments, but got ${node.arguments.length}`;
         }
     }
+}
+
+function getType(project: Project, valueType: ValueType): ValueType {
+    if (valueType == "any") {
+        return project._DocumentStore.typesStore.createOpenType();
+    }
+
+    if (valueType == "array:any") {
+        return `array:${project._DocumentStore.typesStore.createOpenType()}`;
+    }
+
+    return valueType;
 }

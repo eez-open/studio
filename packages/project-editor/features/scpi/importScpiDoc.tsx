@@ -23,7 +23,7 @@ import {
 import { Loader } from "eez-studio-ui/loader";
 
 import { getProperty } from "project-editor/core/object";
-import { objectToJS, DocumentStoreClass } from "project-editor/core/store";
+import { objectToJS, DocumentStoreClass } from "project-editor/store";
 
 import type { IParameter, IParameterType, IEnum } from "instrument/scpi";
 

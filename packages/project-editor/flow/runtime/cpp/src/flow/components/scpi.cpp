@@ -180,9 +180,8 @@ struct ScpiActionComponent : public Component {
 void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
     auto component = (ScpiActionComponent *)flowState->flow->components[componentIndex];
 
-    auto propertyValue = component->propertyValues[defs_v3::SCPIACTION_COMPONENT_PROPERTY_INSTRUMENT];
     Value instrumentValue;
-    if (!evalExpression(flowState, componentIndex, propertyValue->evalInstructions, instrumentValue)) {
+    if (!evalProperty(flowState, componentIndex, defs_v3::SCPIACTION_COMPONENT_PROPERTY_INSTRUMENT, instrumentValue)) {
         throwError(flowState, componentIndex, "Failed to evaluate Instrument in SCPI\n");
         return;
     }

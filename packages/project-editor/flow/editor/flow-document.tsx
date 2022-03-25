@@ -8,7 +8,7 @@ import {
     getSelectedObjectsBoundingRect
 } from "project-editor/flow/editor/bounding-rects";
 import { IEezObject, getParent } from "project-editor/core/object";
-import { getDocumentStore } from "project-editor/core/store";
+import { getDocumentStore } from "project-editor/store";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import type { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { Component } from "project-editor/flow/component";

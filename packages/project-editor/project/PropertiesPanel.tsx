@@ -9,7 +9,7 @@ import {
     getClass,
     EezValueObject,
     isValue
-} from "project-editor/core/store";
+} from "project-editor/store";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
 
 export const PropertiesPanel = observer(

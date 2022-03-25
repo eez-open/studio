@@ -15,7 +15,7 @@ import {
     PropertyInfo
 } from "project-editor/core/object";
 import { ProjectContext } from "project-editor/project/context";
-import { getAncestorOfType, getDocumentStore } from "project-editor/core/store";
+import { getAncestorOfType, getDocumentStore } from "project-editor/store";
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import type { Component } from "project-editor/flow/component";
 import {

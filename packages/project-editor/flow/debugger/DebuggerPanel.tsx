@@ -7,7 +7,7 @@ import { ActiveFlowsPanel } from "project-editor/flow/debugger/ActiveFlowsPanel"
 import { WatchPanel } from "project-editor/flow/debugger/WatchPanel";
 import { QueuePanel } from "project-editor/flow/debugger/QueuePanel";
 import { RuntimeBase } from "project-editor/flow/runtime";
-import { LayoutModels } from "project-editor/core/store";
+import { LayoutModels } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////

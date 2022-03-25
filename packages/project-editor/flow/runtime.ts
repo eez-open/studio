@@ -17,7 +17,7 @@ import {
     getLabel,
     getObjectFromStringPath,
     getObjectPathAsString
-} from "project-editor/core/store";
+} from "project-editor/store";
 import { ConnectionLine, Flow, FlowTabState } from "project-editor/flow/flow";
 import { CatchErrorActionComponent } from "project-editor/flow/components/actions";
 import { Component, Widget } from "project-editor/flow/component";
@@ -125,6 +125,12 @@ export abstract class RuntimeBase {
             (this.isDebuggerActive && !this.isPaused)
         ) {
             this.DocumentStore.editorsStore.openEditor(this.selectedPage);
+        }
+    }
+
+    setActiveConnectionLine(connectionLine: ConnectionLine) {
+        if (!this.DocumentStore.uiStateStore.pageRuntimeFrontFace) {
+            connectionLine.setActive();
         }
     }
 

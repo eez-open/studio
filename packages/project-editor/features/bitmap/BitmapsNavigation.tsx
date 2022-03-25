@@ -3,7 +3,7 @@ import React from "react";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 import { ListNavigation } from "project-editor/components/ListNavigation";
-import { LayoutModels } from "project-editor/core/store";
+import { LayoutModels } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
 import { NavigationComponent } from "project-editor/project/NavigationComponent";
 import { Bitmap } from "./bitmap";

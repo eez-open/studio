@@ -28,7 +28,7 @@ import {
     getDocumentStore,
     Message,
     isNotV1Project
-} from "project-editor/core/store";
+} from "project-editor/store";
 import type { Project } from "project-editor/project/project";
 
 import extractFont from "font-services/font-extract";

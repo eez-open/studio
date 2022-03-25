@@ -5671,6 +5671,9 @@ var _malloc = Module["_malloc"] = createExportWrapper("malloc");
 var _free = Module["_free"] = createExportWrapper("free");
 
 /** @type {function(...*):?} */
+var _DashboardContext_evalProperty = Module["_DashboardContext_evalProperty"] = createExportWrapper("DashboardContext_evalProperty");
+
+/** @type {function(...*):?} */
 var _DashboardContext_getStringParam = Module["_DashboardContext_getStringParam"] = createExportWrapper("DashboardContext_getStringParam");
 
 /** @type {function(...*):?} */

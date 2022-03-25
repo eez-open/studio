@@ -25,7 +25,7 @@ import {
     canDelete,
     IPanel,
     isPartOfNavigation
-} from "project-editor/core/store";
+} from "project-editor/store";
 import { DragAndDropManagerClass } from "project-editor/core/dd";
 import { List } from "project-editor/components/List";
 

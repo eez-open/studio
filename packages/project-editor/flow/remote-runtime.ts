@@ -7,19 +7,10 @@ import * as notification from "eez-studio-ui/notification";
 import type { InstrumentObject } from "instrument/instrument-object";
 import type { ConnectionParameters } from "instrument/connection/interface";
 
-import { AssetsMap } from "project-editor/build/assets";
 import { action, observable, runInAction, makeObservable } from "mobx";
 import { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { Component, Widget } from "project-editor/flow/component";
 import { IFlowContext, LogItemType } from "project-editor/flow/flow-interfaces";
-import {
-    getArrayElementTypeFromType,
-    getDynamicTypeNameFromType,
-    getStructureFromType,
-    isArrayType,
-    isDynamicType,
-    isStructType
-} from "project-editor/features/variable/value-type";
 import { getFlow, getProject } from "project-editor/project/project";
 import {
     StateMachineAction,
@@ -27,10 +18,10 @@ import {
     FlowState,
     RuntimeBase
 } from "project-editor/flow/runtime";
-import { DocumentStoreClass } from "project-editor/core/store";
+import { DocumentStoreClass } from "project-editor/store";
 
 import net from "net";
-import { getObjectFromStringPath } from "project-editor/core/store";
+import { getObjectFromStringPath } from "project-editor/store";
 import { ConnectionBase } from "instrument/connection/connection-base";
 import { IExpressionContext } from "./expression";
 import { webSimulatorMessageDispatcher } from "instrument/connection/connection-renderer";
@@ -540,84 +531,34 @@ export abstract class DebuggerConnectionBase {
         const arrayAddress = addresses[0];
 
         const arrayType = addresses[1];
-        const type = this.runtime.assetsMap.valueTypes[arrayType];
+        const type = this.runtime.assetsMap.types[arrayType];
 
         const arrayElementAddresses = addresses.slice(2);
 
         let value: any = this.runtime.arrayValues.get(arrayAddress);
 
-        let sortedStructFields;
-        let arrayElementType: string | null = null;
+        let arrayElementType: string | null = "any";
 
-        if (isStructType(type)) {
-            const structure = getStructureFromType(
-                this.runtime.DocumentStore.project,
-                type
-            );
-            if (!structure) {
-                console.error("UNEXPECTED!");
-                return undefined;
-            }
-
-            sortedStructFields = structure.fields
-                .slice()
-                .sort((a, b) =>
-                    a.name < b.name ? -1 : a.name > b.name ? 1 : 0
-                );
-            if (!value) {
-                value = observable({});
-                this.runtime.arrayValues.set(arrayAddress, value);
-            }
-        } else if (isArrayType(type)) {
-            arrayElementType = getArrayElementTypeFromType(type);
-            if (!arrayElementType) {
-                console.error("UNEXPECTED!");
-                return undefined;
-            }
-            if (!value) {
-                value = observable([]);
-                this.runtime.arrayValues.set(arrayAddress, value);
-            }
-        } else if (isDynamicType(type)) {
-            const dynamicTypeName = getDynamicTypeNameFromType(type);
-            if (!dynamicTypeName) {
-                console.error("UNEXPECTED!");
-                return undefined;
-            }
-            const dynamicType =
-                this.runtime.assetsMap.dynamicTypes[dynamicTypeName];
-            if (!dynamicType) {
-                console.error("UNEXPECTED!");
-                return undefined;
-            }
-            sortedStructFields = dynamicType.fields.map(field => ({
-                name: field.name,
-                type: "any"
-            }));
-            if (!value) {
-                value = observable({});
-                this.runtime.arrayValues.set(arrayAddress, value);
-            }
-        } else {
-            console.error("UNEXPECTED!");
-            return undefined;
+        if (!value) {
+            value = observable(type ? {} : []);
+            this.runtime.arrayValues.set(arrayAddress, value);
         }
 
         for (let i = 0; i < arrayElementAddresses.length; i++) {
             let propertyName: string | number;
             let propertyType: string;
 
-            if (sortedStructFields) {
-                const field = sortedStructFields[i];
+            if (type) {
+                const field = type.fields[i];
                 if (!field) {
                     console.error("UNEXPECTED!");
                     return undefined;
                 }
                 propertyName = field.name;
-                propertyType = field.type;
+                propertyType = field.valueType;
             } else {
                 propertyName = i;
-                propertyType = arrayElementType!;
+                propertyType = arrayElementType;
             }
 
             runInAction(() => (value[propertyName] = undefined));
@@ -828,7 +769,9 @@ export abstract class DebuggerConnectionBase {
                                 return;
                             }
 
-                            connectionLine.setActive();
+                            this.runtime.setActiveConnectionLine(
+                                connectionLine
+                            );
                         }
 
                         runInAction(() =>

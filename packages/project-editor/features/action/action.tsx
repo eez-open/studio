@@ -14,11 +14,11 @@ import {
     isNotFirmwareWithFlowSupportProject,
     isNotV1Project,
     Message
-} from "project-editor/core/store";
+} from "project-editor/store";
 import type { Project } from "project-editor/project/project";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { metrics } from "project-editor/features/action/metrics";
-import { getDocumentStore } from "project-editor/core/store";
+import { getDocumentStore } from "project-editor/store";
 
 import { Flow } from "project-editor/flow/flow";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";

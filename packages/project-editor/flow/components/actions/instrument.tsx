@@ -38,7 +38,7 @@ import {
     getDocumentStore,
     isAppletOrFirmwareWithFlowSupportProject,
     Message
-} from "project-editor/core/store";
+} from "project-editor/store";
 import {
     buildExpression,
     buildAssignableExpression,
@@ -850,8 +850,15 @@ registerObjectVariableType("Instrument", {
         {
             name: "id",
             valueType: "string",
-            getFieldValue: (value: InstrumentObject) => {
+            getFieldValue: (value: InstrumentObject): string => {
                 return value.id;
+            }
+        },
+        {
+            name: "isConnected",
+            valueType: "boolean",
+            getFieldValue: (value: InstrumentObject): boolean => {
+                return value.isConnected;
             }
         }
     ]

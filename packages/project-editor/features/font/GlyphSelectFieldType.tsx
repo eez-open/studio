@@ -3,7 +3,7 @@ import { observable, action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import extractFont from "font-services/font-extract";
 import { FontProperties as FontValue } from "font-services/interfaces";
-import { loadObject } from "project-editor/core/store";
+import { loadObject } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
 import { Font, Glyph } from "./font";
 import { Loader } from "eez-studio-ui/loader";

@@ -14,7 +14,7 @@ import {
 import { expressionParser } from "./grammar";
 import { ValueType } from "project-editor/features/variable/value-type";
 import type { IDataContext, IFlowState } from "../flow-interfaces";
-import type { DocumentStoreClass } from "project-editor/core/store";
+import type { DocumentStoreClass } from "project-editor/store";
 import {
     findValueTypeInExpressionNode,
     checkArity

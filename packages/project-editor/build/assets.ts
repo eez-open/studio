@@ -56,7 +56,7 @@ import {
     getObjectPathAsString,
     propertyNotFoundMessage,
     Section
-} from "project-editor/core/store";
+} from "project-editor/store";
 import { ValueType } from "project-editor/features/variable/value-type";
 
 import { build as buildV1 } from "project-editor/build/v1";
@@ -68,7 +68,7 @@ import {
     TAB
 } from "project-editor/build/helper";
 import { FIRST_DASHBOARD_COMPONENT_TYPE } from "project-editor/flow/components/component_types";
-import { dynamicTypes } from "project-editor/flow/expression/type";
+import { TYPE_ARRAY } from "project-editor/flow/runtime/wasm-value";
 
 export const PATH_SEPARATOR = "//";
 
@@ -127,8 +127,8 @@ export class Assets {
         constants: [],
         globalVariables: [],
         dashboardComponentTypeToNameMap: {},
-        valueTypes: [],
-        dynamicTypes: {}
+        types: [],
+        typeIndexes: {}
     };
 
     actionComponentClassNameToActionComponentIdMap: {
@@ -746,14 +746,16 @@ export class Assets {
         return colors.length + this.colors.length - 1;
     }
 
-    valueTypeIndexes = new Map<ValueType, number>();
-
     getTypeIndex(valueType: ValueType) {
-        let index = this.valueTypeIndexes.get(valueType);
+        const index =
+            this.DocumentStore.typesStore.getValueTypeIndex(valueType);
         if (index == undefined) {
-            index = this.map.valueTypes.length;
-            this.map.valueTypes.push(valueType);
-            this.valueTypeIndexes.set(valueType, index);
+            this.DocumentStore.outputSectionsStore.write(
+                Section.OUTPUT,
+                MessageType.ERROR,
+                `Value type "${valueType}" not found`
+            );
+            return TYPE_ARRAY;
         }
         return index;
     }
@@ -1056,9 +1058,8 @@ export class Assets {
                 this.dashboardComponentTypeToNameMap;
         }
 
-        dynamicTypes.forEach(dynamicType =>
-            dynamicType.registerInAssetsMap(this.map)
-        );
+        this.map.types = this.DocumentStore.typesStore.types;
+        this.map.typeIndexes = this.DocumentStore.typesStore.typeIndexes;
     }
 }
 
@@ -1420,7 +1421,7 @@ function buildHeaderData(
 export async function buildGuiAssetsData(assets: Assets) {
     const dataBuffer = new DataBuffer();
 
-    dynamicTypes.clear();
+    assets.DocumentStore.typesStore.reset();
 
     buildGuiDocumentData(assets, dataBuffer);
     buildGuiStylesData(assets, dataBuffer);
@@ -1626,66 +1627,4 @@ function buildGuiAssetsDef(data: Buffer) {
     return `// ASSETS DEFINITION\nconst uint8_t assets[${
         data.length
     }] = {${dumpData(data)}};`;
-}
-
-export interface AssetsMap {
-    flows: {
-        flowIndex: number;
-        path: string;
-        pathReadable: string;
-        components: {
-            componentIndex: number;
-            path: string;
-            pathReadable: string;
-            outputs: {
-                outputName: string;
-                connectionLines: {
-                    targetComponentIndex: number;
-                    targetInputIndex: number;
-                }[];
-            }[];
-        }[];
-        componentInputs: {
-            inputIndex: number;
-            componentIndex: number;
-            inputName: string;
-            inputType: string;
-        }[];
-        localVariables: {
-            index: number;
-            name: string;
-        }[];
-        widgetDataItems: {
-            widgetDataItemIndex: number;
-            flowIndex: number;
-            componentIndex: number;
-            propertyValueIndex: number;
-        }[];
-        widgetActions: {
-            widgetActionIndex: number;
-            flowIndex: number;
-            componentIndex: number;
-            outputIndex: number;
-        }[];
-    }[];
-    constants: any[];
-    globalVariables: {
-        index: number;
-        name: string;
-    }[];
-    dashboardComponentTypeToNameMap: {
-        [componentType: number]: string;
-    };
-    valueTypes: ValueType[];
-    dynamicTypes: {
-        [name: string]: DynamicTypeInAssetsMap;
-    };
-}
-
-export interface DynamicTypeInAssetsMap {
-    valueTypeIndex: number;
-    fields: {
-        name: string;
-        dynamicType: DynamicTypeInAssetsMap;
-    }[];
 }

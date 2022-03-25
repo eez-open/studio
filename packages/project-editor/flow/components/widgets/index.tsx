@@ -35,11 +35,8 @@ import {
     propertyNotFoundMessage,
     propertyNotSetMessage,
     propertySetButNotUsedMessage
-} from "project-editor/core/store";
-import {
-    getDocumentStore,
-    IContextMenuContext
-} from "project-editor/core/store";
+} from "project-editor/store";
+import { getDocumentStore, IContextMenuContext } from "project-editor/store";
 
 import {
     checkObjectReference,

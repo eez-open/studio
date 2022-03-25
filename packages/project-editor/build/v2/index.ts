@@ -53,7 +53,7 @@ import {
     ButtonGroupWidget,
     ScrollBarWidget
 } from "project-editor/flow/components/widgets";
-import { propertyNotFoundMessage, Section } from "project-editor/core/store";
+import { propertyNotFoundMessage, Section } from "project-editor/store";
 import { MessageType } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////

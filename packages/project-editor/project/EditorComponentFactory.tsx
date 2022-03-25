@@ -20,7 +20,7 @@ import { SettingsEditor } from "./SettingsNavigation";
 import { Page } from "project-editor/features/page/page";
 import { Font } from "project-editor/features/font/font";
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
-import { getAncestorOfType } from "project-editor/core/store";
+import { getAncestorOfType } from "project-editor/store";
 
 export function getEditorComponent(object: IEezObject):
     | {

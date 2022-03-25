@@ -1,5 +1,4 @@
-import type { AssetsMap } from "project-editor/build/assets";
-import type { ArrayValue } from "project-editor/flow/expression/type";
+import type { ArrayValue } from "project-editor/flow/runtime/wasm-value";
 
 export type ObjectGlobalVariableValues = {
     globalVariableIndex: number;

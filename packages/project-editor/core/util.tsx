@@ -9,7 +9,7 @@ import {
     GenericDialogResult
 } from "eez-studio-ui/generic-dialog";
 
-import type { DocumentStoreClass } from "project-editor/core/store";
+import type { DocumentStoreClass } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
 
 export async function confirm(

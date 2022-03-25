@@ -1,10 +1,7 @@
 import { observable, action, makeObservable } from "mobx";
 
 import type { IEezObject } from "project-editor/core/object";
-import type {
-    DocumentStoreClass,
-    UndoManager
-} from "project-editor/core/store";
+import type { DocumentStoreClass, UndoManager } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 

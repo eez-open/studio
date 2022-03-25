@@ -53,7 +53,7 @@ import {
     isNotV1Project,
     LayoutModels,
     propertyNotUniqueMessage
-} from "project-editor/core/store";
+} from "project-editor/store";
 
 import type { Action } from "project-editor/features/action/action";
 import type {

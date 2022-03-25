@@ -21,7 +21,7 @@ import {
     Message,
     propertyInvalidValueMessage,
     propertyNotFoundMessage
-} from "project-editor/core/store";
+} from "project-editor/store";
 
 import type {
     IResizeHandler,

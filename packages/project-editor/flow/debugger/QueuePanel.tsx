@@ -5,7 +5,7 @@ import { Panel } from "project-editor/components/Panel";
 import { action, computed, makeObservable } from "mobx";
 import { QueueTask, RuntimeBase } from "project-editor/flow/runtime";
 import { IconAction } from "eez-studio-ui/action";
-import { getLabel } from "project-editor/core/store";
+import { getLabel } from "project-editor/store";
 import { DebugInfoRuntime } from "project-editor/flow/debug-info-runtime";
 
 ////////////////////////////////////////////////////////////////////////////////

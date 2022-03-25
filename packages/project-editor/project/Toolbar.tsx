@@ -11,7 +11,7 @@ import {
     IObjectVariableValue
 } from "project-editor/features/variable/value-type";
 import { PageTabState } from "project-editor/features/page/PageEditor";
-import { LayoutModels, objectToString } from "project-editor/core/store";
+import { LayoutModels, objectToString } from "project-editor/store";
 import { RenderVariableStatus } from "project-editor/features/variable/variable";
 import { FlowTabState } from "project-editor/flow/flow";
 

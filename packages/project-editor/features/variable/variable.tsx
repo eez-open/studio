@@ -30,14 +30,14 @@ import {
     Message,
     propertyInvalidValueMessage,
     propertyNotSetMessage
-} from "project-editor/core/store";
+} from "project-editor/store";
 import type { Project } from "project-editor/project/project";
 import { metrics } from "project-editor/features/variable/metrics";
 import type {
     IDataContext,
     IVariable
 } from "project-editor/flow/flow-interfaces";
-import { getDocumentStore } from "project-editor/core/store";
+import { getDocumentStore } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
 import { humanize } from "eez-studio-shared/string";
 import { evalConstantExpression } from "project-editor/flow//expression";
@@ -444,6 +444,12 @@ export class Variable extends EezObject {
 
             if (!variable.type) {
                 messages.push(propertyNotSetMessage(variable, "type"));
+            }
+
+            if (variable.type === "any" || variable.type === "array:any") {
+                messages.push(
+                    new Message(MessageType.ERROR, `Any type used`, variable)
+                );
             }
 
             if (!variable.defaultValue) {
@@ -935,6 +941,19 @@ export class StructureField extends EezObject {
 
             if (!structureField.type) {
                 messages.push(propertyNotSetMessage(structureField, "type"));
+            }
+
+            if (
+                structureField.type === "any" ||
+                structureField.type === "array:any"
+            ) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Any type used`,
+                        structureField
+                    )
+                );
             }
 
             return messages;

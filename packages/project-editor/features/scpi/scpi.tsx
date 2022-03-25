@@ -23,7 +23,7 @@ import {
     Message,
     propertyNotSetMessage,
     propertyNotFoundMessage
-} from "project-editor/core/store";
+} from "project-editor/store";
 
 import type {
     IParameterType,

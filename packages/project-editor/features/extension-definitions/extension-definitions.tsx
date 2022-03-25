@@ -18,7 +18,7 @@ import {
     propertyInvalidValueMessage,
     propertyNotSetMessage,
     propertyNotUniqueMessage
-} from "project-editor/core/store";
+} from "project-editor/store";
 
 import { metrics } from "project-editor/features/extension-definitions/metrics";
 import { ProjectContext } from "project-editor/project/context";

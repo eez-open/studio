@@ -3,7 +3,7 @@ import { computed, observable, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 
-import { LayoutModels } from "project-editor/core/store";
+import { LayoutModels } from "project-editor/store";
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { ProjectContext } from "project-editor/project/context";
 import { NavigationComponent } from "project-editor/project/NavigationComponent";

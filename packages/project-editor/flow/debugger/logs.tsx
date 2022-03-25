@@ -6,7 +6,7 @@ import {
     getLabel,
     getObjectFromStringPath,
     getObjectPathAsString
-} from "project-editor/core/store";
+} from "project-editor/store";
 import type { ConnectionLine } from "project-editor/flow/flow";
 import type { FlowState, RuntimeBase } from "project-editor/flow/runtime";
 import {

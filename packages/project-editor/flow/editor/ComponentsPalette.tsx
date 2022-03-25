@@ -10,7 +10,7 @@ import {
     getClassesDerivedFrom,
     IObjectClassInfo
 } from "project-editor/core/object";
-import { loadObject } from "project-editor/core/store";
+import { loadObject } from "project-editor/store";
 import { DragAndDropManager } from "project-editor/core/dd";
 
 import type { Component } from "project-editor/flow/component";
@@ -23,7 +23,7 @@ import {
     getClass,
     objectToClipboardData,
     setClipboardData
-} from "project-editor/core/store";
+} from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -2,7 +2,7 @@ import { observable, computed, action, makeObservable } from "mobx";
 
 import { BoundingRectBuilder } from "eez-studio-shared/geometry";
 
-import { getDocumentStore } from "project-editor/core/store";
+import { getDocumentStore } from "project-editor/store";
 
 import {
     ITreeObjectAdapter,

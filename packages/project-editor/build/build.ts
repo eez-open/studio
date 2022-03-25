@@ -23,7 +23,7 @@ import {
     getClassInfo,
     Section,
     getJSON
-} from "project-editor/core/store";
+} from "project-editor/store";
 
 import type { BuildConfiguration } from "project-editor/project/project";
 import {

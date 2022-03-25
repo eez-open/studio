@@ -39,7 +39,7 @@ import type * as ProjectEditorModule from "project-editor/project/ProjectEditor"
 
 import { Loader } from "eez-studio-ui/loader";
 
-import { DocumentStoreClass } from "project-editor/core/store";
+import { DocumentStoreClass } from "project-editor/store";
 
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project/ProjectEditor";

@@ -1,10 +1,9 @@
 import React from "react";
 
 import { ProjectContext } from "project-editor/project/context";
-import { DocumentStoreClass } from "project-editor/core/store";
+import { DocumentStoreClass } from "project-editor/store";
 
 import { observer } from "mobx-react";
-import { AssetsMap } from "project-editor/build/assets";
 import {
     RemoteRuntime,
     DebuggerConnectionBase
@@ -20,8 +19,8 @@ import {
     getObjectVariableTypeFromType,
     IObjectVariableValue
 } from "project-editor/features/variable/value-type";
-import { DynamicType } from "project-editor/flow/expression/type";
 import { InstrumentObject } from "instrument/instrument-object";
+import { createJsArrayValue } from "project-editor/flow/runtime/wasm-value";
 
 export class WasmRuntime extends RemoteRuntime {
     debuggerConnection = new WasmDebuggerConnection(this);
@@ -45,7 +44,6 @@ export class WasmRuntime extends RemoteRuntime {
     }[] = [];
     wheelDeltaY = 0;
     wheelClicked = 0;
-    messageFromDebugger: string | undefined;
     screen: any;
     requestAnimationFrameId: number | undefined;
 
@@ -98,6 +96,7 @@ export class WasmRuntime extends RemoteRuntime {
                     this.debuggerConnection.onMessageToDebugger(
                         arrayBufferToBinaryString(e.data.messageToDebugger)
                     );
+                    return;
                 }
 
                 this.screen = e.data.screen;
@@ -123,8 +122,6 @@ export class WasmRuntime extends RemoteRuntime {
     objectVariableValues: IObjectVariableValue[] = [];
 
     async constructObjectGlobalVariables() {
-        let objectGlobalVariableValues: ObjectGlobalVariableValues = [];
-
         for (const variable of this.DocumentStore.project.allGlobalVariables) {
             let value = this.DocumentStore.dataContext.get(variable.name);
             if (value == null) {
@@ -152,34 +149,49 @@ export class WasmRuntime extends RemoteRuntime {
             }
         }
 
+        let objectGlobalVariableValues: ObjectGlobalVariableValues = [];
+
         for (const variable of this.DocumentStore.project.allGlobalVariables) {
             let value = this.DocumentStore.dataContext.get(variable.name);
             if (value != null) {
-                this.objectVariableValues.push(value);
+                const objectVariableType = getObjectVariableTypeFromType(
+                    variable.type
+                );
+                if (objectVariableType) {
+                    this.objectVariableValues.push(value);
 
-                const dynamicType =
-                    this.assetsMap.dynamicTypes[`@${variable.type}`];
-                if (dynamicType) {
-                    const arrayValue = DynamicType.mapValue(
-                        dynamicType,
+                    const arrayValue = createJsArrayValue(
+                        variable.type,
                         value,
-                        this.assetsMap
+                        this.assetsMap,
+                        objectVariableType
                     );
 
-                    const globalVariableInAssetsMap =
-                        this.assetsMap.globalVariables.find(
-                            globalVariableInAssetsMap =>
-                                globalVariableInAssetsMap.name == variable.name
-                        );
-                    if (globalVariableInAssetsMap) {
-                        objectGlobalVariableValues.push({
-                            globalVariableIndex:
-                                globalVariableInAssetsMap.index,
-                            arrayValue
-                        });
+                    if (arrayValue) {
+                        const globalVariableInAssetsMap =
+                            this.assetsMap.globalVariables.find(
+                                globalVariableInAssetsMap =>
+                                    globalVariableInAssetsMap.name ==
+                                    variable.name
+                            );
+
+                        if (globalVariableInAssetsMap) {
+                            objectGlobalVariableValues.push({
+                                globalVariableIndex:
+                                    globalVariableInAssetsMap.index,
+                                arrayValue
+                            });
+                        } else {
+                            console.error(
+                                `Can't find global variable "${variable.name}" in assets map`
+                            );
+                        }
                     } else {
                         console.error(
-                            `Can't find globall variable "${variable.name}" in assets map`
+                            "Can't create array value",
+                            variable.type,
+                            value,
+                            this.assetsMap
                         );
                     }
                 }
@@ -213,11 +225,12 @@ export class WasmRuntime extends RemoteRuntime {
                     }
 
                     if (!instrument.isConnected) {
-                        this.worker.postMessage({
+                        const data: RendererToWorkerMessage = {
                             scpiResult: {
                                 errorMessage: "instrument not connected"
                             }
-                        });
+                        };
+                        this.worker.postMessage(data);
                         return;
                     }
 
@@ -227,11 +240,12 @@ export class WasmRuntime extends RemoteRuntime {
 
                     try {
                         let result = await connection.query(command);
-                        this.worker.postMessage({
+                        const data: RendererToWorkerMessage = {
                             scpiResult: {
                                 result: binaryStringToArrayBuffer(result)
                             }
-                        });
+                        };
+                        this.worker.postMessage(data);
                     } finally {
                         connection.release();
                     }
@@ -256,10 +270,7 @@ export class WasmRuntime extends RemoteRuntime {
                 deltaY: this.wheelDeltaY,
                 clicked: this.wheelClicked
             },
-            pointerEvents: this.pointerEvents,
-            messageFromDebugger: this.messageFromDebugger
-                ? binaryStringToArrayBuffer(this.messageFromDebugger)
-                : undefined
+            pointerEvents: this.pointerEvents
         };
 
         this.worker.postMessage(message);
@@ -267,7 +278,6 @@ export class WasmRuntime extends RemoteRuntime {
         this.wheelDeltaY = 0;
         this.wheelClicked = 0;
         this.pointerEvents = [];
-        this.messageFromDebugger = undefined;
         this.screen = undefined;
     };
 
@@ -383,11 +393,10 @@ class WasmDebuggerConnection extends DebuggerConnectionBase {
     stop() {}
 
     sendMessageFromDebugger(data: string) {
-        if (this.wasmRuntime.messageFromDebugger) {
-            this.wasmRuntime.messageFromDebugger += data;
-        } else {
-            this.wasmRuntime.messageFromDebugger = data;
-        }
+        const message: RendererToWorkerMessage = {
+            messageFromDebugger: binaryStringToArrayBuffer(data)
+        };
+        this.wasmRuntime.worker.postMessage(message);
     }
 }
 

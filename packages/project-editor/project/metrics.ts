@@ -1,5 +1,5 @@
 import { getProperty } from "project-editor/core/object";
-import type { DocumentStoreClass } from "project-editor/core/store";
+import type { DocumentStoreClass } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export function getAllMetrics(DocumentStore: DocumentStoreClass) {

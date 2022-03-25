@@ -7,7 +7,7 @@ import { _find } from "eez-studio-shared/algorithm";
 
 import { IEezObject } from "project-editor/core/object";
 import { TreeAdapter } from "project-editor/core/objectAdapter";
-import { IPanel, LayoutModels } from "project-editor/core/store";
+import { IPanel, LayoutModels } from "project-editor/store";
 
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { Tree } from "project-editor/components/Tree";

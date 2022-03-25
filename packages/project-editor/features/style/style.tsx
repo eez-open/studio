@@ -29,8 +29,8 @@ import {
     propertyNotFoundMessage,
     updateObject,
     propertyNotSetMessage
-} from "project-editor/core/store";
-import { getDocumentStore } from "project-editor/core/store";
+} from "project-editor/store";
+import { getDocumentStore } from "project-editor/store";
 import { validators } from "eez-studio-shared/validation";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 

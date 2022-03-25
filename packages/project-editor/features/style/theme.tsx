@@ -19,7 +19,7 @@ import {
     getDocumentStore,
     LayoutModels,
     Message
-} from "project-editor/core/store";
+} from "project-editor/store";
 import { validators } from "eez-studio-shared/validation";
 import { replaceObjectReference } from "project-editor/core/search";
 

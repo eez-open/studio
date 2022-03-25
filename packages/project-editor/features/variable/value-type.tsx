@@ -21,7 +21,10 @@ import { getPropertyValue } from "project-editor/components/PropertyGrid/utils";
 import type { IVariable } from "project-editor/flow/flow-interfaces";
 import { _difference } from "eez-studio-shared/algorithm";
 
-import type { IObjectVariableType } from "eez-studio-types";
+import type {
+    IObjectVariableType,
+    IObjectVariableValue
+} from "eez-studio-types";
 
 export type {
     IObjectVariableValueConstructorParams,
@@ -652,11 +655,53 @@ export function isValueTypeOf(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const objectVariableTypes = new Map<string, IObjectVariableType>();
+export const objectVariableTypes = new Map<string, IObjectVariableType>();
 
 export function registerObjectVariableType(
     name: string,
     objectVariableType: IObjectVariableType
 ) {
-    objectVariableTypes.set(name, objectVariableType);
+    const temp = Object.assign({}, objectVariableType);
+
+    temp.valueFieldDescriptions = [
+        ...temp.valueFieldDescriptions,
+        {
+            name: "status",
+            valueType: [
+                {
+                    name: "label",
+                    valueType: "string",
+                    getFieldValue: (value: any): string => {
+                        return value.label;
+                    }
+                },
+                {
+                    name: "image",
+                    valueType: "string",
+                    getFieldValue: (value: any): string => {
+                        return value.image;
+                    }
+                },
+                {
+                    name: "color",
+                    valueType: "string",
+                    getFieldValue: (value: any): string => {
+                        return value.color;
+                    }
+                },
+                {
+                    name: "error",
+                    valueType: "string",
+                    getFieldValue: (value: any): string => {
+                        return value.error;
+                    }
+                }
+            ],
+            getFieldValue: (value: IObjectVariableValue) => {
+                return value.status;
+            }
+        }
+    ];
+
+    objectVariableTypes.set(name, temp);
 }

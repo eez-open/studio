@@ -1,6 +1,6 @@
 import { ipcRenderer } from "electron";
 import { action, computed, runInAction, makeObservable } from "mobx";
-import { DocumentStoreClass, getClassInfo } from "project-editor/core/store";
+import { DocumentStoreClass, getClassInfo } from "project-editor/store";
 import { Action, findAction } from "project-editor/features/action/action";
 import { Component, Widget } from "project-editor/flow/component";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
@@ -460,7 +460,7 @@ export class LocalRuntime extends RuntimeBase {
                 connectionLine.output === output &&
                 connectionLine.targetComponent
             ) {
-                connectionLine.setActive();
+                this.setActiveConnectionLine(connectionLine);
 
                 this.logs.addLogItem(
                     new OutputValueLogItem(

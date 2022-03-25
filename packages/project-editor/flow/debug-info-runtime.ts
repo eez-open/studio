@@ -1,4 +1,4 @@
-import { DocumentStoreClass } from "project-editor/core/store";
+import { DocumentStoreClass } from "project-editor/store";
 import { Component, Widget } from "project-editor/flow/component";
 import { FlowState, QueueTask, RuntimeBase } from "project-editor/flow/runtime";
 import type { ConnectionLine } from "project-editor/flow/flow";

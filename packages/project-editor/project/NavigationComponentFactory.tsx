@@ -21,7 +21,7 @@ import {
     getAncestorOfType,
     getDocumentStore,
     LayoutModels
-} from "project-editor/core/store";
+} from "project-editor/store";
 import { Bitmap } from "project-editor/features/bitmap/bitmap";
 import { Font, Glyph } from "project-editor/features/font/font";
 import { Page } from "project-editor/features/page/page";

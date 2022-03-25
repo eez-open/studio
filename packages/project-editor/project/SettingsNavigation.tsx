@@ -8,7 +8,7 @@ import {
     canAdd,
     LayoutModels,
     loadObject
-} from "project-editor/core/store";
+} from "project-editor/store";
 
 import { confirm } from "project-editor/core/util";
 import type { Extension } from "project-editor/core/extensions";

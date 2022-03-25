@@ -8,7 +8,7 @@ import {
     PropertyProps,
     getObjectPropertyDisplayName
 } from "project-editor/core/object";
-import { isAnyPropertyModified } from "project-editor/core/store";
+import { isAnyPropertyModified } from "project-editor/store";
 
 import { propertyCollapsedStore } from "./PropertyCollapsedStore";
 

@@ -26,14 +26,8 @@ import {
 } from "./instructions";
 import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
 import {
-    getDynamicTypeNameFromType,
-    getStructTypeNameFromType,
-    isDynamicType
-} from "project-editor/features/variable/value-type";
-import {
     findValueTypeInExpressionNode,
-    checkArity,
-    dynamicTypes
+    checkArity
 } from "project-editor/flow/expression/type";
 import { evalConstantExpressionNode } from "project-editor/flow/expression/eval";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -351,41 +345,13 @@ function buildExpressionNode(
             ];
         } else {
             const fieldName = (node.property as IdentifierExpressionNode).name;
+            const fieldIndex = assets.DocumentStore.typesStore.getFieldIndex(
+                node.object.valueType,
+                fieldName
+            );
 
-            let fieldIndex;
-            if (isDynamicType(node.object.valueType)) {
-                const dynamicTypeName = getDynamicTypeNameFromType(
-                    node.object.valueType
-                )!;
-                const dynamicType = dynamicTypes.get(dynamicTypeName);
-                if (!dynamicType) {
-                    throw `dynamicType not found: "${node.object.valueType}"`;
-                }
-                const field = dynamicType.fieldsMap.get(fieldName);
-                if (field == undefined) {
-                    throw `dynamicType field not found: "${node.object.valueType}"."${fieldName}"`;
-                }
-                fieldIndex = field.index;
-            } else {
-                const structTypeName = getStructTypeNameFromType(
-                    node.object.valueType
-                )!;
-                if (!structTypeName) {
-                    throw `expected structure type got "${node.object.valueType}"`;
-                }
-                const project = ProjectEditor.getProject(component);
-                const structure =
-                    project.variables.structsMap.get(structTypeName)!;
-                if (!structure) {
-                    throw `unknown structure "${structTypeName}"`;
-                }
-                fieldIndex = structure.fields
-                    .map(field => field.name)
-                    .sort()
-                    .indexOf(fieldName);
-                if (fieldIndex == -1) {
-                    throw `unknown structure field "${fieldName}"`;
-                }
+            if (fieldIndex == undefined) {
+                throw `field not found: "${node.object.valueType}"."${fieldName}"`;
             }
 
             return [

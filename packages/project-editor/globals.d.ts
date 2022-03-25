@@ -11,6 +11,72 @@ declare const ace: {
 
 declare module "jspanel4";
 
+type IIndexes = { [key: string]: number };
+
+interface IField {
+    name: string;
+    valueType: ValueType;
+}
+
+interface IType {
+    valueType: ValueType;
+    fields: IField[];
+    fieldIndexes: IIndexes;
+    open: boolean;
+}
+
+interface AssetsMap {
+    flows: {
+        flowIndex: number;
+        path: string;
+        pathReadable: string;
+        components: {
+            componentIndex: number;
+            path: string;
+            pathReadable: string;
+            outputs: {
+                outputName: string;
+                connectionLines: {
+                    targetComponentIndex: number;
+                    targetInputIndex: number;
+                }[];
+            }[];
+        }[];
+        componentInputs: {
+            inputIndex: number;
+            componentIndex: number;
+            inputName: string;
+            inputType: string;
+        }[];
+        localVariables: {
+            index: number;
+            name: string;
+        }[];
+        widgetDataItems: {
+            widgetDataItemIndex: number;
+            flowIndex: number;
+            componentIndex: number;
+            propertyValueIndex: number;
+        }[];
+        widgetActions: {
+            widgetActionIndex: number;
+            flowIndex: number;
+            componentIndex: number;
+            outputIndex: number;
+        }[];
+    }[];
+    constants: any[];
+    globalVariables: {
+        index: number;
+        name: string;
+    }[];
+    dashboardComponentTypeToNameMap: {
+        [componentType: number]: string;
+    };
+    types: IType[];
+    typeIndexes: IIndexes;
+}
+
 declare const WasmFlowRuntime: {
     allocateUTF8(str: string): number;
     AsciiToString(ptr: number): string;
@@ -73,6 +139,11 @@ declare const WasmFlowRuntime: {
 
     _setGlobalVariable(globalVariableIndex: number, valuePtr: number);
 
+    _DashboardContext_evalProperty(
+        context: number,
+        propertyIndex: number
+    ): number;
+
     _DashboardContext_getStringParam(context: number, offset: number): number;
 
     _DashboardContext_getExpressionListParam(
@@ -106,4 +177,6 @@ declare const WasmFlowRuntime: {
     _DashboardContext_propagateValueThroughSeqout(context: number);
 
     _DashboardContext_throwError(context: number, errorMessage: number);
+
+    assetsMap: AssetsMap;
 };

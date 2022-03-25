@@ -21,8 +21,8 @@ import {
     getLabel,
     Message,
     propertyNotSetMessage
-} from "project-editor/core/store";
-import { DocumentStoreClass } from "project-editor/core/store";
+} from "project-editor/store";
+import { DocumentStoreClass } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -11,9 +11,9 @@ import {
     loadObject,
     propertyNotFoundMessage,
     Section
-} from "project-editor/core/store";
+} from "project-editor/store";
 import type { BuildResult } from "project-editor/core/extensions";
-import { getDocumentStore } from "project-editor/core/store";
+import { getDocumentStore } from "project-editor/store";
 
 import {
     TAB,

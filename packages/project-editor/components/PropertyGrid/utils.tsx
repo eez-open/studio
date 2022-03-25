@@ -13,7 +13,7 @@ import {
     getDocumentStore,
     getInheritedValue,
     getPropertyAsString
-} from "project-editor/core/store";
+} from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 

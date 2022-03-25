@@ -23,7 +23,7 @@ import {
     EezObject,
     PropertyType
 } from "project-editor/core/object";
-import { objectToJS } from "project-editor/core/store";
+import { objectToJS } from "project-editor/store";
 
 import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";
 

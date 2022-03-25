@@ -22,7 +22,7 @@ import {
     deleteObject,
     insertObjectAfter,
     insertObjectBefore
-} from "project-editor/core/store";
+} from "project-editor/store";
 
 import { ProjectContext } from "project-editor/project/context";
 

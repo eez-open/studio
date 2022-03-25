@@ -18,7 +18,7 @@ import {
     getHumanReadableObjectPath,
     getObjectPathAsString,
     Section
-} from "project-editor/core/store";
+} from "project-editor/store";
 import { visitObjects } from "project-editor/core/search";
 import { CommentActionComponent } from "project-editor/flow/components/actions";
 import {

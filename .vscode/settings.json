@@ -20,7 +20,8 @@
         "functional": "cpp",
         "system_error": "cpp",
         "xlocmon": "cpp",
-        "xtr1common": "cpp"
+        "xtr1common": "cpp",
+        "xmemory0": "cpp"
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "workbench.editor.enablePreview": false,

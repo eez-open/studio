@@ -4,7 +4,7 @@ import classNames from "classnames";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
 import { action, computed, makeObservable } from "mobx";
 import { FlowState, RuntimeBase } from "project-editor/flow/runtime";
-import { getLabel } from "project-editor/core/store";
+import { getLabel } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 

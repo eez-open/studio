@@ -10,7 +10,7 @@ import {
 } from "project-editor/flow/editor/draw";
 
 import { getId } from "project-editor/core/object";
-import { getAncestorOfType, getLabel, IPanel } from "project-editor/core/store";
+import { getAncestorOfType, getLabel, IPanel } from "project-editor/store";
 
 import { IconAction, TextAction } from "eez-studio-ui/action";
 import { SearchInput } from "eez-studio-ui/search-input";

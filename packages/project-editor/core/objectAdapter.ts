@@ -60,7 +60,7 @@ import {
     getLabel,
     objectToJson,
     DocumentStoreClass
-} from "project-editor/core/store";
+} from "project-editor/store";
 
 import { DragAndDropManager } from "project-editor/core/dd";
 

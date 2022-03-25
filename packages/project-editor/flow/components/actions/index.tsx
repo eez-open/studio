@@ -28,7 +28,7 @@ import {
     propertyNotFoundMessage,
     propertyNotSetMessage,
     Section
-} from "project-editor/core/store";
+} from "project-editor/store";
 
 import type {
     IFlowContext,

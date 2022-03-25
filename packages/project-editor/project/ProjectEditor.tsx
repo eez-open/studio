@@ -22,7 +22,7 @@ import {
     LayoutModels,
     objectToString,
     Section
-} from "project-editor/core/store";
+} from "project-editor/store";
 import { PropertiesPanel } from "./PropertiesPanel";
 import { ComponentsPalette } from "project-editor/flow/editor/ComponentsPalette";
 import { BreakpointsPanel } from "project-editor/flow/debugger/BreakpointsPanel";

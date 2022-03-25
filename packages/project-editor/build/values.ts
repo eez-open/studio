@@ -9,7 +9,7 @@ import {
     ValueType
 } from "project-editor/features/variable/value-type";
 import { evalConstantExpression } from "project-editor/flow/expression";
-import { Section } from "project-editor/core/store";
+import { Section } from "project-editor/store";
 import { MessageType } from "project-editor/core/object";
 import {
     FLOW_VALUE_TYPE_ARRAY,

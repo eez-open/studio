@@ -6,10 +6,7 @@ import { Menu, MenuItem } from "@electron/remote";
 import { humanize } from "eez-studio-shared/string";
 
 import { PropertyProps } from "project-editor/core/object";
-import {
-    getPropertySourceInfo,
-    objectToString
-} from "project-editor/core/store";
+import { getPropertySourceInfo, objectToString } from "project-editor/store";
 
 export const PropertyMenu = observer(
     class PropertyMenu extends React.Component<PropertyProps> {

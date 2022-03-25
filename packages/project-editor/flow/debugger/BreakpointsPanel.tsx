@@ -7,7 +7,7 @@ import { getId } from "project-editor/core/object";
 import type { Component } from "project-editor/flow/component";
 import { ProjectContext } from "project-editor/project/context";
 import { IconAction } from "eez-studio-ui/action";
-import { getLabel } from "project-editor/core/store";
+import { getLabel } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export const BreakpointsPanel = observer(
