@@ -98,13 +98,12 @@ const GlobalVariableStatuses = observer(
                                 const constructorParams =
                                     await objectVariableType.editConstructorParams(
                                         variable,
-                                        objectVariableValue?.constructorParams ??
-                                            null
+                                        objectVariableValue?.constructorParams
                                     );
                                 if (constructorParams !== undefined) {
                                     this.context.dataContext.set(
                                         variable.name,
-                                        objectVariableType.constructorFunction(
+                                        objectVariableType.createValue(
                                             constructorParams,
                                             !!this.context.runtime
                                         )

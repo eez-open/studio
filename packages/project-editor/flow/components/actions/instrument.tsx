@@ -46,7 +46,8 @@ import {
     checkAssignableExpression
 } from "project-editor/flow/expression";
 import {
-    ConstructorParams,
+    IObjectVariableValue,
+    IObjectVariableValueConstructorParams,
     registerObjectVariableType,
     ValueType
 } from "project-editor/features/variable/value-type";
@@ -791,8 +792,10 @@ async function connectToInstrument(instrument: InstrumentObject) {
     notification.error("Failed to connect to the instrument!");
 }
 
+type InstrumentConstructorParams = "string" | { id: "string" };
+
 function getInstrumentIdFromConstructorParams(
-    constructorParams: ConstructorParams | string | null
+    constructorParams: InstrumentConstructorParams | undefined
 ) {
     return constructorParams == null
         ? null
@@ -802,8 +805,24 @@ function getInstrumentIdFromConstructorParams(
 }
 
 registerObjectVariableType("Instrument", {
-    constructorFunction: (
-        constructorParams: ConstructorParams,
+    editConstructorParams: async (
+        variable: IVariable,
+        constructorParams?: InstrumentConstructorParams
+    ): Promise<IObjectVariableValueConstructorParams | undefined> => {
+        const instrument = await showSelectInstrumentDialog(
+            variable.description || humanize(variable.name),
+            getInstrumentIdFromConstructorParams(constructorParams)
+        );
+
+        return instrument
+            ? {
+                  id: instrument.id
+              }
+            : undefined;
+    },
+
+    createValue: (
+        constructorParams: InstrumentConstructorParams,
         isRuntime: boolean
     ) => {
         const instrumentId =
@@ -825,20 +844,15 @@ registerObjectVariableType("Instrument", {
             }
         };
     },
+    destroyValue: (value: IObjectVariableValue) => {},
 
-    editConstructorParams: async (
-        variable: IVariable,
-        constructorParams: ConstructorParams | null
-    ): Promise<ConstructorParams | undefined> => {
-        const instrument = await showSelectInstrumentDialog(
-            variable.description || humanize(variable.name),
-            getInstrumentIdFromConstructorParams(constructorParams)
-        );
-
-        return instrument
-            ? {
-                  id: instrument.id
-              }
-            : undefined;
-    }
+    valueFieldDescriptions: [
+        {
+            name: "id",
+            valueType: "string",
+            getFieldValue: (value: InstrumentObject) => {
+                return value.id;
+            }
+        }
+    ]
 });

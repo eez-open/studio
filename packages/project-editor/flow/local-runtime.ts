@@ -107,10 +107,10 @@ export class LocalRuntime extends RuntimeBase {
                     const constructorParams =
                         await objectVariableType.editConstructorParams(
                             variable,
-                            null
+                            undefined
                         );
                     if (constructorParams) {
-                        const value = objectVariableType.constructorFunction(
+                        const value = objectVariableType.createValue(
                             constructorParams,
                             true
                         );
@@ -131,8 +131,8 @@ export class LocalRuntime extends RuntimeBase {
                 const objectVariableType = getObjectVariableTypeFromType(
                     variable.type
                 );
-                if (objectVariableType && objectVariableType.destroy) {
-                    objectVariableType.destroy(value);
+                if (objectVariableType) {
+                    objectVariableType.destroyValue(value);
                 }
             }
         }
@@ -145,8 +145,8 @@ export class LocalRuntime extends RuntimeBase {
                 const objectVariableType = getObjectVariableTypeFromType(
                     variable.type
                 );
-                if (objectVariableType && objectVariableType.destroy) {
-                    objectVariableType.destroy(value);
+                if (objectVariableType) {
+                    objectVariableType.destroyValue(value);
                 }
             }
         }
@@ -756,7 +756,7 @@ export class LocalRuntime extends RuntimeBase {
                 result.valueType
             );
             if (objectVariableType) {
-                value = objectVariableType?.constructorFunction(value, true);
+                value = objectVariableType.createValue(value, true);
             }
         }
 

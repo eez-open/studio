@@ -237,7 +237,7 @@ export const RenderVariableStatusPropertyUI = observer(
                         const constructorParams =
                             await objectVariableType.editConstructorParams(
                                 variable,
-                                objectVariableValue?.constructorParams ?? null
+                                objectVariableValue?.constructorParams
                             );
                         if (constructorParams !== undefined) {
                             this.context.runtimeSettings.setVariableValue(
@@ -654,8 +654,8 @@ export class DataContext implements IDataContext {
                 const objectVariableType = getObjectVariableTypeFromType(
                     variable.type
                 );
-                if (objectVariableType && objectVariableType.destroy) {
-                    objectVariableType.destroy(oldValue);
+                if (objectVariableType) {
+                    objectVariableType.destroyValue(oldValue);
                 }
             }
         }

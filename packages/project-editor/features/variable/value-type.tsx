@@ -21,6 +21,14 @@ import { getPropertyValue } from "project-editor/components/PropertyGrid/utils";
 import type { IVariable } from "project-editor/flow/flow-interfaces";
 import { _difference } from "eez-studio-shared/algorithm";
 
+import type { IObjectVariableType } from "eez-studio-types";
+
+export type {
+    IObjectVariableValueConstructorParams,
+    IObjectVariableValue,
+    IObjectVariableType
+} from "eez-studio-types";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const basicTypeNames = [
@@ -643,33 +651,6 @@ export function isValueTypeOf(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// must be serializable
-export type ConstructorParams = any;
-
-export interface IObjectVariableValue {
-    constructorParams: ConstructorParams;
-    status: {
-        label?: string;
-        image?: string;
-        color?: string;
-        error?: string;
-    };
-}
-
-export type ObjectVariableConstructorFunction = (
-    constructorParams: any,
-    isRuntime: boolean
-) => IObjectVariableValue;
-
-export interface IObjectVariableType {
-    constructorFunction: ObjectVariableConstructorFunction;
-    editConstructorParams: (
-        variable: IVariable,
-        constructorParams: ConstructorParams | null
-    ) => Promise<ConstructorParams | undefined>;
-    destroy?: (objectValue: any) => void;
-}
 
 const objectVariableTypes = new Map<string, IObjectVariableType>();
 

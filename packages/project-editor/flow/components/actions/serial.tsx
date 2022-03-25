@@ -396,15 +396,9 @@ registerActionComponents("Serial Port", [
 ////////////////////////////////////////////////////////////////////////////////
 
 registerObjectVariableType("SerialConnection", {
-    constructorFunction: (
-        constructorParams: SerialConnectionConstructorParams
-    ) => {
-        return new SerialConnection(constructorParams);
-    },
-
     editConstructorParams: async (
         variable: IVariable,
-        constructorParams: SerialConnectionConstructorParams | null
+        constructorParams?: SerialConnectionConstructorParams
     ): Promise<SerialConnectionConstructorParams | undefined> => {
         return await showConnectDialog(variable, constructorParams);
         // return {
@@ -416,16 +410,20 @@ registerObjectVariableType("SerialConnection", {
         // };
     },
 
-    destroy: (serialConnection: SerialConnection) => {
+    createValue: (constructorParams: SerialConnectionConstructorParams) => {
+        return new SerialConnection(constructorParams);
+    },
+    destroyValue: (serialConnection: SerialConnection) => {
         serialConnection.disconnect();
-    }
+    },
+    valueFieldDescriptions: []
 });
 
 ////////////////////////////////////////////////////////////////////////////////
 
 async function showConnectDialog(
     variable: IVariable,
-    values: SerialConnectionConstructorParams | null
+    values: SerialConnectionConstructorParams | undefined
 ) {
     try {
         const serialPorts = (await getSerialPorts()).map(port => ({

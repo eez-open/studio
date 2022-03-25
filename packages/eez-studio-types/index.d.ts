@@ -111,29 +111,39 @@ export interface IComponentFlowState {
 ////////////////////////////////////////////////////////////////////////////////
 
 // must be serializable
-export type ConstructorParams = any;
+export type IObjectVariableValueConstructorParams = {};
 
-export interface IObjectVariableValue {
-    constructorParams: ConstructorParams;
-    status: {
-        label?: string;
-        image?: string;
-        color?: string;
-        error?: string;
-    };
+export interface IObjectVariableValueStatus {
+    label?: string;
+    image?: string;
+    color?: string;
+    error?: string;
 }
 
-export type ObjectVariableConstructorFunction = (
-    constructorParams: any,
-    isRuntime: boolean
-) => IObjectVariableValue;
+export type IObjectVariableValue = {
+    constructorParams: IObjectVariableValueConstructorParams;
+    status: IObjectVariableValueStatus;
+};
+
+export interface IObjectVariableValueFieldDescription {
+    name: string;
+    valueType: ValueType | IObjectVariableValueFieldDescription[];
+    getFieldValue(objectVariableValue: IObjectVariableValue): any;
+}
 
 export interface IObjectVariableType {
-    constructorFunction: ObjectVariableConstructorFunction;
-    editConstructorParams: (
+    editConstructorParams(
         variable: IVariable,
-        constructorParams: ConstructorParams | null
-    ) => Promise<ConstructorParams | undefined>;
+        params?: IObjectVariableValueConstructorParams
+    ): Promise<IObjectVariableValueConstructorParams | undefined>;
+
+    createValue(
+        params: IObjectVariableValueConstructorParams,
+        isRuntime: boolean
+    ): IObjectVariableValue;
+    destroyValue(value: IObjectVariableValue): void;
+
+    valueFieldDescriptions: IObjectVariableValueFieldDescription[];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

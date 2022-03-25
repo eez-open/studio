@@ -1587,7 +1587,12 @@ class UIStateStore {
 ////////////////////////////////////////////////////////////////////////////////
 
 class RuntimeSettings {
-    settings: any = {};
+    settings: {
+        __persistentVariables?: {
+            [variableName: string]: any;
+        };
+        [key: string]: any;
+    } = {};
     modified = false;
 
     constructor(public DocumentStore: DocumentStoreClass) {
@@ -1597,23 +1602,29 @@ class RuntimeSettings {
     }
 
     getVariableValue(variable: IVariable) {
-        const persistentVariables: any =
-            this.settings.__persistentVariables || {};
+        const persistentVariables = this.settings.__persistentVariables;
+
+        if (!persistentVariables) {
+            return undefined;
+        }
 
         let value = persistentVariables[variable.name];
+        if (!value) {
+            return undefined;
+        }
 
         const objectVariableType = ProjectEditor.getObjectVariableTypeFromType(
             variable.type
         );
+
         if (objectVariableType) {
             const constructorParams = value;
-            if (value) {
-                return objectVariableType.constructorFunction(
-                    constructorParams,
-                    !!this.DocumentStore.runtime
-                );
-            }
+            return objectVariableType.createValue(
+                constructorParams,
+                this.DocumentStore.runtime ? true : false
+            );
         }
+
         return value;
     }
 
@@ -2970,8 +2981,8 @@ export class DocumentStoreClass {
         let runtime: RuntimeBase;
 
         if (this.project.isDashboardProject) {
-            //runtime = new ProjectEditor.LocalRuntimeClass(this);
-            runtime = new ProjectEditor.WasmRuntimeClass(this);
+            runtime = new ProjectEditor.LocalRuntimeClass(this);
+            //runtime = new ProjectEditor.WasmRuntimeClass(this);
         } else if (this.project.isFirmwareWithFlowSupportProject) {
             runtime = new ProjectEditor.WasmRuntimeClass(this);
         } else {
