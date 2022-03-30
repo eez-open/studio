@@ -161,6 +161,43 @@ export const ObjectReferenceInput = observer(
 
             const objectNames = this.getObjectNames();
 
+            const portal = ReactDOM.createPortal(
+                <div
+                    ref={this.dropDownRef}
+                    className="dropdown-menu dropdown-menu-end EezStudio_ObjectReferenceInput_DropdownContent shadow rounded"
+                    style={{
+                        display: this.dropDownOpen ? "block" : "none",
+                        left: this.dropDownLeft,
+                        top: this.dropDownTop,
+                        width: this.dropDownWidth
+                    }}
+                >
+                    <div>
+                        <SearchInput
+                            searchText={this.searchText}
+                            onChange={this.onSearchChange}
+                            onKeyDown={this.onSearchChange}
+                        />
+                    </div>
+                    <div>
+                        <ul>
+                            {objectNames.map(objectName => (
+                                <li
+                                    key={objectName}
+                                    onClick={action(() => {
+                                        this.props.onChange(objectName);
+                                        this.setDropDownOpen(false);
+                                    })}
+                                >
+                                    {objectName}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>,
+                document.body
+            );
+
             return (
                 <div className="input-group" style={{ position: "relative" }}>
                     <input
@@ -178,48 +215,7 @@ export const ObjectReferenceInput = observer(
                                 type="button"
                                 onClick={this.openDropdown}
                             />
-                            {ReactDOM.createPortal(
-                                <div
-                                    ref={this.dropDownRef}
-                                    className="dropdown-menu dropdown-menu-end EezStudio_ObjectReferenceInput_DropdownContent shadow rounded"
-                                    style={{
-                                        display: this.dropDownOpen
-                                            ? "block"
-                                            : "none",
-                                        left: this.dropDownLeft,
-                                        top: this.dropDownTop,
-                                        width: this.dropDownWidth
-                                    }}
-                                >
-                                    <div>
-                                        <SearchInput
-                                            searchText={this.searchText}
-                                            onChange={this.onSearchChange}
-                                            onKeyDown={this.onSearchChange}
-                                        />
-                                    </div>
-                                    <div>
-                                        <ul>
-                                            {objectNames.map(objectName => (
-                                                <li
-                                                    key={objectName}
-                                                    onClick={action(() => {
-                                                        this.props.onChange(
-                                                            objectName
-                                                        );
-                                                        this.setDropDownOpen(
-                                                            false
-                                                        );
-                                                    })}
-                                                >
-                                                    {objectName}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                </div>,
-                                document.body
-                            )}
+                            {portal}
                         </>
                     )}
                 </div>

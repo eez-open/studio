@@ -466,7 +466,7 @@ const Cell = observer(
         }
 
         static getValue(props: CellProps): string {
-            if (props.value === undefined) {
+            if (props.value == undefined) {
                 return "";
             }
             return props.unit.formatValue(props.value);

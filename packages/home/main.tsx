@@ -2,7 +2,7 @@
 import "bootstrap";
 import { ipcRenderer } from "electron";
 import React from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import { configure } from "mobx";
 import { observer } from "mobx-react";
 import { DndProvider } from "react-dnd";
@@ -150,11 +150,11 @@ async function main() {
 
     loadTabs();
 
-    ReactDOM.render(
+    const root = createRoot(document.getElementById("EezStudio_Content")!);
+    root.render(
         <Main>
             <App />
-        </Main>,
-        document.getElementById("EezStudio_Content")
+        </Main>
     );
 
     handleDragAndDrop();

@@ -3,7 +3,7 @@ import tinycolor from "tinycolor2";
 import { clipboard, SaveDialogOptions } from "electron";
 import bootstrap from "bootstrap";
 import React from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import {
     action,
     computed,
@@ -1898,7 +1898,8 @@ class Cursor implements ICursor {
     showPopover() {
         if (this.cursorElement) {
             let content = document.createElement("div");
-            ReactDOM.render(<CursorPopover cursor={this} />, content);
+            const root = createRoot(content);
+            root.render(<CursorPopover cursor={this} />);
             this.cursorPopover = new bootstrap.Popover(this.cursorElement, {
                 content,
                 html: true,
@@ -3694,12 +3695,12 @@ export const ChartsView = observer(
             factory.registerComponent(
                 "RulersDockView",
                 function (container: any, props: any) {
-                    ReactDOM.render(
+                    const root = createRoot(container.getElement()[0]);
+                    root.render(
                         <RulersDockView
                             chartsController={chartsController}
                             {...props}
-                        />,
-                        container.getElement()[0]
+                        />
                     );
                 }
             );
@@ -3707,14 +3708,14 @@ export const ChartsView = observer(
             factory.registerComponent(
                 "MeasurementsDockView",
                 function (container: any, props: any) {
-                    ReactDOM.render(
+                    const root = createRoot(container.getElement()[0]);
+                    root.render(
                         <MeasurementsDockView
                             measurementsController={
                                 chartsController.measurementsController
                             }
                             {...props}
-                        />,
-                        container.getElement()[0]
+                        />
                     );
                 }
             );
@@ -3722,12 +3723,12 @@ export const ChartsView = observer(
             factory.registerComponent(
                 "ChartViewOptions",
                 function (container: any, props: ChartViewOptionsProps) {
-                    ReactDOM.render(
+                    const root = createRoot(container.getElement()[0]);
+                    root.render(
                         <ChartViewOptions
                             chartsController={chartsController}
                             {...props}
-                        />,
-                        container.getElement()[0]
+                        />
                     );
                 }
             );
@@ -3735,9 +3736,9 @@ export const ChartsView = observer(
             factory.registerComponent(
                 "BookmarksView",
                 function (container: any, props: any) {
-                    ReactDOM.render(
-                        <BookmarksView chartsController={chartsController} />,
-                        container.getElement()[0]
+                    const root = createRoot(container.getElement()[0]);
+                    root.render(
+                        <BookmarksView chartsController={chartsController} />
                     );
                 }
             );
@@ -3745,10 +3746,8 @@ export const ChartsView = observer(
             factory.registerComponent(
                 "HelpView",
                 function (container: any, props: ChartViewOptionsProps) {
-                    ReactDOM.render(
-                        <HelpView {...props} />,
-                        container.getElement()[0]
-                    );
+                    const root = createRoot(container.getElement()[0]);
+                    root.render(<HelpView {...props} />);
                 }
             );
         };
@@ -3985,12 +3984,12 @@ export class ChartMeasurementsComponent extends React.Component<{
                 );
                 if (measurement) {
                     const div: HTMLDivElement = container.getElement()[0];
-                    ReactDOM.render(
+                    const root = createRoot(div);
+                    root.render(
                         <MeasurementValue
                             measurement={measurement}
                             inDockablePanel={true}
-                        />,
-                        div
+                        />
                     );
                 }
             }
@@ -5932,6 +5931,7 @@ const MeasurementComponent = observer(
                             values={this.dialogValues}
                             embedded={true}
                             onValueChange={this.onValueChange}
+                            unmount={() => {}}
                         />
                     </td>
                 );

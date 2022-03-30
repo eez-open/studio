@@ -47,7 +47,7 @@ export const GroupsToolbarButtons = observer(
         }
 
         addGroup() {
-            showDialog(
+            const [, , root] = showDialog(
                 <GroupDialog
                     groupsStore={this.props.groupsStore}
                     group={{
@@ -68,6 +68,7 @@ export const GroupsToolbarButtons = observer(
                             }
                         }, 10);
                     }}
+                    unmount={() => root.unmount()}
                 />
             );
         }
@@ -184,13 +185,14 @@ class GroupRow implements IRow {
     }
 
     editGroup = () => {
-        showDialog(
+        const [, , root] = showDialog(
             <GroupDialog
                 groupsStore={this.props.groupsStore}
                 group={this.props.group}
                 callback={(group: IGroup) => {
                     this.props.groupsStore.updateGroup(group);
                 }}
+                unmount={() => root.unmount()}
             />
         );
     };

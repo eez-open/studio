@@ -1,5 +1,4 @@
 import React from "react";
-import ReactDOM from "react-dom";
 import { computed, observable, action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
@@ -59,7 +58,7 @@ export async function expressionBuilder(
     }>((resolve, reject) => {
         const onDispose = () => {
             if (!disposed) {
-                ReactDOM.unmountComponentAtNode(element);
+                root.unmount(element);
                 if (modalDialog) {
                     modalDialog.close();
                 }
@@ -72,7 +71,7 @@ export async function expressionBuilder(
             onDispose();
         };
 
-        const [modalDialog, element] = showDialog(
+        const [modalDialog, element, root] = showDialog(
             <ProjectContext.Provider value={getDocumentStore(object)}>
                 <SelectItemDialog
                     object={object}
@@ -81,6 +80,7 @@ export async function expressionBuilder(
                     params={params}
                     onOk={onOk}
                     onCancel={onDispose}
+                    unmount={() => root.unmount()}
                 />
             </ProjectContext.Provider>,
             {
@@ -107,6 +107,7 @@ const SelectItemDialog = observer(
         params?: IOnSelectParams;
         onOk: (value: any) => void;
         onCancel: () => void;
+        unmount: () => void;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
@@ -150,14 +151,7 @@ const SelectItemDialog = observer(
             return true;
         };
 
-        constructor(props: {
-            object: IEezObject;
-            propertyInfo: PropertyInfo;
-            assignableExpression: boolean;
-            params?: IOnSelectParams;
-            onOk: (value: any) => void;
-            onCancel: () => void;
-        }) {
+        constructor(props: any) {
             super(props);
 
             makeObservable(this, {
@@ -510,6 +504,7 @@ const SelectItemDialog = observer(
                     okEnabled={this.onOkEnabled}
                     onOk={this.onOk}
                     onCancel={this.props.onCancel}
+                    unmount={this.props.unmount}
                 >
                     <div className="EezStudio_ExpressionBuilder">
                         <Tree

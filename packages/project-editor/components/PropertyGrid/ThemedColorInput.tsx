@@ -168,6 +168,30 @@ export const ThemedColorInput = observer(
                 color = undefined;
             }
 
+            const portal = ReactDOM.createPortal(
+                <div
+                    ref={this.dropDownRef}
+                    className="dropdown-menu dropdown-menu-end EezStudio_ThemedColorInput_DropdownContent shadow rounded"
+                    style={{
+                        display: this.dropDownOpen ? "block" : "none",
+                        left: this.dropDownLeft,
+                        top: this.dropDownTop
+                    }}
+                >
+                    <SketchPicker
+                        width="260px"
+                        color={color}
+                        disableAlpha={true}
+                        presetColors={[]}
+                        onChange={color => this.onChangeColor(color.hex, false)}
+                        onChangeComplete={color => {
+                            this.onChangeColor(color.hex, true);
+                        }}
+                    />
+                </div>,
+                document.body
+            );
+
             return (
                 <div className="input-group">
                     <input
@@ -191,33 +215,7 @@ export const ThemedColorInput = observer(
                                 type="button"
                                 onClick={this.openDropdown}
                             />
-                            {ReactDOM.createPortal(
-                                <div
-                                    ref={this.dropDownRef}
-                                    className="dropdown-menu dropdown-menu-end EezStudio_ThemedColorInput_DropdownContent shadow rounded"
-                                    style={{
-                                        display: this.dropDownOpen
-                                            ? "block"
-                                            : "none",
-                                        left: this.dropDownLeft,
-                                        top: this.dropDownTop
-                                    }}
-                                >
-                                    <SketchPicker
-                                        width="260px"
-                                        color={color}
-                                        disableAlpha={true}
-                                        presetColors={[]}
-                                        onChange={color =>
-                                            this.onChangeColor(color.hex, false)
-                                        }
-                                        onChangeComplete={color => {
-                                            this.onChangeColor(color.hex, true);
-                                        }}
-                                    />
-                                </div>,
-                                document.body
-                            )}
+                            {portal}
                         </>
                     )}
                 </div>

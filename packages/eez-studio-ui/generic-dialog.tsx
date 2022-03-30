@@ -1,5 +1,4 @@
 import React from "react";
-import ReactDOM from "react-dom";
 import {
     action,
     computed,
@@ -172,6 +171,7 @@ interface GenericDialogProps {
     onOk?: (result: GenericDialogResult) => Promise<boolean> | boolean | void;
     onCancel?: () => void;
     onValueChange?: (name: string, value: string) => void;
+    unmount: () => void;
 }
 
 export const GenericDialog = observer(
@@ -647,6 +647,7 @@ export const GenericDialog = observer(
                         }
                         onOk={this.props.onOk && this.onOk}
                         onCancel={this.props.onCancel}
+                        unmount={this.props.unmount}
                     >
                         {this.props.dialogDefinition.error && (
                             <div className="alert alert-danger">
@@ -709,7 +710,7 @@ export function showGenericDialog(conf: {
     dialogContext?: any;
 }) {
     return new Promise<GenericDialogResult>((resolve, reject) => {
-        const [modalDialog, element] = showDialog(
+        const [modalDialog, , root] = showDialog(
             <GenericDialog
                 dialogDefinition={conf.dialogDefinition}
                 dialogContext={conf.dialogContext}
@@ -722,7 +723,7 @@ export function showGenericDialog(conf: {
                         (async result => {
                             if (await conf.onOk!(result)) {
                                 if (modalDialog) {
-                                    ReactDOM.unmountComponentAtNode(element);
+                                    root.unmount();
                                     modalDialog.close();
                                 }
                                 resolve(result);
@@ -734,7 +735,7 @@ export function showGenericDialog(conf: {
                     (conf.showOkButton === undefined || conf.showOkButton
                         ? result => {
                               if (modalDialog) {
-                                  ReactDOM.unmountComponentAtNode(element);
+                                  root.unmount();
                                   modalDialog.close();
                               }
                               resolve(result);
@@ -743,11 +744,12 @@ export function showGenericDialog(conf: {
                 }
                 onCancel={() => {
                     if (modalDialog) {
-                        ReactDOM.unmountComponentAtNode(element);
+                        root.unmount();
                         modalDialog.close();
                     }
                     reject();
                 }}
+                unmount={() => root.unmount()}
             />,
             conf.opts
         );

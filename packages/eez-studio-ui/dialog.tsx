@@ -1,6 +1,6 @@
 import bootstrap from "bootstrap";
 import React from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import { observable, action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
@@ -26,7 +26,8 @@ export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
         element.id = opts.id;
     }
 
-    ReactDOM.render(dialog, element);
+    const root = createRoot(element);
+    root.render(dialog);
 
     if (opts && opts.jsPanel) {
         element.style.position = "absolute";
@@ -61,54 +62,37 @@ export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
             resizeit: {},
             closeOnBackdrop: false
         });
-        return [dialog, element];
+        return [dialog, element, root];
     } else {
         document.body.appendChild(element);
-        return [undefined, element];
+        return [undefined, element, root];
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export const Dialog = observer(
-    class Dialog extends React.Component<
-        {
-            modal?: boolean;
-            open?: boolean;
-            title?: string;
-            titleIcon?: React.ReactNode;
-            size?: "small" | "medium" | "large";
-            okButtonText?: string;
-            cancelButtonText?: string;
-            onOk?: () => Promise<boolean> | boolean | void;
-            okEnabled?: () => boolean;
-            onCancel?: (() => void) | null;
-            cancelDisabled?: boolean;
-            additionalButton?: IDialogButton;
-            additionalFooterControl?: React.ReactNode;
-            backdrop?: "static" | boolean;
-        },
-        {}
-    > {
+    class Dialog extends React.Component<{
+        modal?: boolean;
+        open?: boolean;
+        title?: string;
+        titleIcon?: React.ReactNode;
+        size?: "small" | "medium" | "large";
+        okButtonText?: string;
+        cancelButtonText?: string;
+        onOk?: () => Promise<boolean> | boolean | void;
+        okEnabled?: () => boolean;
+        onCancel?: (() => void) | null;
+        cancelDisabled?: boolean;
+        additionalButton?: IDialogButton;
+        additionalFooterControl?: React.ReactNode;
+        backdrop?: "static" | boolean;
+        unmount: () => void;
+    }> {
         disableButtons = false;
         open = true;
 
-        constructor(props: {
-            modal?: boolean;
-            open?: boolean;
-            title?: string;
-            titleIcon?: React.ReactNode;
-            size?: "small" | "medium" | "large";
-            okButtonText?: string;
-            cancelButtonText?: string;
-            onOk?: () => Promise<boolean> | boolean | void;
-            okEnabled?: () => boolean;
-            onCancel?: (() => void) | null;
-            cancelDisabled?: boolean;
-            additionalButton?: IDialogButton;
-            additionalFooterControl?: React.ReactNode;
-            backdrop?: "static" | boolean;
-        }) {
+        constructor(props: any) {
             super(props);
 
             makeObservable(this, {
@@ -202,6 +186,7 @@ export const Dialog = observer(
                     buttons={buttons}
                     additionalFooterControl={this.props.additionalFooterControl}
                     backdrop={this.props.backdrop}
+                    unmount={this.props.unmount}
                 >
                     {this.props.children}
                 </BootstrapDialog>
@@ -240,6 +225,7 @@ export const BootstrapDialog = observer(
         children: React.ReactNode;
         additionalFooterControl?: React.ReactNode;
         backdrop?: "static" | boolean;
+        unmount: () => void;
     }> {
         div: HTMLDivElement | null = null;
         form: HTMLFormElement | null = null;
@@ -272,7 +258,7 @@ export const BootstrapDialog = observer(
 
                 $(div).on("hidden.bs.modal", () => {
                     const parent = div.parentElement as HTMLElement;
-                    ReactDOM.unmountComponentAtNode(parent);
+                    this.props.unmount();
                     parent.remove();
                     this.props.onCancel();
                 });

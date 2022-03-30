@@ -299,7 +299,9 @@ class SettingsController {
     };
 
     compactDatabase() {
-        showDialog(<CompactDatabaseDialog />);
+        const [, , root] = showDialog(
+            <CompactDatabaseDialog unmount={() => root.unmount()} />
+        );
     }
 }
 
@@ -308,7 +310,10 @@ export const settingsController = new SettingsController();
 ////////////////////////////////////////////////////////////////////////////////
 
 const CompactDatabaseDialog = observer(
-    class CompactDatabaseDialog extends React.Component<{}, {}> {
+    class CompactDatabaseDialog extends React.Component<
+        { unmount: () => void },
+        {}
+    > {
         sizeBefore: number;
         sizeAfter: number | undefined;
         sizeReduced: number | undefined;
@@ -372,6 +377,7 @@ const CompactDatabaseDialog = observer(
                     size="small"
                     cancelButtonText="Close"
                     cancelDisabled={this.sizeAfter === undefined}
+                    unmount={this.props.unmount}
                 >
                     <table className="EezStudio_CompactDatabaseDialogTable">
                         <tbody>

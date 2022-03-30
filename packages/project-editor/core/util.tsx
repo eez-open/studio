@@ -1,6 +1,5 @@
 import { dialog, getCurrentWindow } from "@electron/remote";
 import React from "react";
-import ReactDOM from "react-dom";
 
 import { IDialogOptions, showDialog } from "eez-studio-ui/dialog";
 import {
@@ -56,7 +55,7 @@ export function showGenericDialog(
     }
 ) {
     return new Promise<GenericDialogResult>((resolve, reject) => {
-        const [modalDialog, element] = showDialog(
+        const [modalDialog, , root] = showDialog(
             <ProjectContext.Provider value={DocumentStore}>
                 <GenericDialog
                     dialogDefinition={conf.dialogDefinition}
@@ -69,7 +68,7 @@ export function showGenericDialog(
                         conf.showOkButton === undefined || conf.showOkButton
                             ? values => {
                                   if (modalDialog) {
-                                      ReactDOM.unmountComponentAtNode(element);
+                                      root.unmount();
                                       modalDialog.close();
                                   }
                                   resolve(values);
@@ -78,11 +77,12 @@ export function showGenericDialog(
                     }
                     onCancel={() => {
                         if (modalDialog) {
-                            ReactDOM.unmountComponentAtNode(element);
+                            root.unmount();
                             modalDialog.close();
                         }
                         reject();
                     }}
+                    unmount={() => root.unmount()}
                 />
             </ProjectContext.Provider>,
             conf.opts

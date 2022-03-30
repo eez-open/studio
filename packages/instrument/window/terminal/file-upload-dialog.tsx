@@ -25,13 +25,11 @@ import { FileInputProperty } from "eez-studio-ui/properties-electron";
 import { IFileUploadInstructions } from "instrument/connection/file-upload";
 
 const FileUploadSettingsDialog = observer(
-    class FileUploadSettingsDialog extends React.Component<
-        {
-            instructions: IFileUploadInstructions;
-            callback: (instructions: IFileUploadInstructions) => void;
-        },
-        {}
-    > {
+    class FileUploadSettingsDialog extends React.Component<{
+        instructions: IFileUploadInstructions;
+        callback: (instructions: IFileUploadInstructions) => void;
+        unmount: () => void;
+    }> {
         constructor(props: any) {
             super(props);
 
@@ -60,7 +58,11 @@ const FileUploadSettingsDialog = observer(
 
         render() {
             return (
-                <Dialog onOk={this.handleSubmit} size="medium">
+                <Dialog
+                    onOk={this.handleSubmit}
+                    size="medium"
+                    unmount={this.props.unmount}
+                >
                     <PropertyList>
                         <BooleanProperty
                             name="Use short (8.3) file names"
@@ -149,22 +151,21 @@ function showAdvancedSettingsDialog(
     instructions: IFileUploadInstructions,
     callback: (instructions: IFileUploadInstructions) => void
 ) {
-    showDialog(
+    const [, , root] = showDialog(
         <FileUploadSettingsDialog
             instructions={instructions}
             callback={callback}
+            unmount={() => root.unmount()}
         />
     );
 }
 
 const FileUploadDialog = observer(
-    class FileUploadDialog extends React.Component<
-        {
-            instructions: IFileUploadInstructions;
-            callback: (instructions: IFileUploadInstructions) => void;
-        },
-        {}
-    > {
+    class FileUploadDialog extends React.Component<{
+        instructions: IFileUploadInstructions;
+        callback: (instructions: IFileUploadInstructions) => void;
+        unmount: () => void;
+    }> {
         constructor(props: any) {
             super(props);
 
@@ -313,6 +314,7 @@ const FileUploadDialog = observer(
                         icon: "material:settings",
                         title: "Show advanced settings"
                     }}
+                    unmount={this.props.unmount}
                 >
                     <PropertyList>
                         <FileInputProperty
@@ -383,7 +385,11 @@ export function showFileUploadDialog(
     instructions: IFileUploadInstructions,
     callback: (instructions: IFileUploadInstructions) => void
 ) {
-    showDialog(
-        <FileUploadDialog instructions={instructions} callback={callback} />
+    const [, , root] = showDialog(
+        <FileUploadDialog
+            instructions={instructions}
+            callback={callback}
+            unmount={() => root.unmount()}
+        />
     );
 }

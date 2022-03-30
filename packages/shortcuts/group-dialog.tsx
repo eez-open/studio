@@ -9,14 +9,12 @@ import { Dialog } from "eez-studio-ui/dialog";
 import { IGroup, IGroupsStore } from "shortcuts/interfaces";
 
 export const GroupDialog = observer(
-    class GroupDialog extends React.Component<
-        {
-            groupsStore: IGroupsStore;
-            group: IGroup;
-            callback: (group: IGroup) => void;
-        },
-        {}
-    > {
+    class GroupDialog extends React.Component<{
+        groupsStore: IGroupsStore;
+        group: IGroup;
+        callback: (group: IGroup) => void;
+        unmount: () => void;
+    }> {
         constructor(props: any) {
             super(props);
 
@@ -59,7 +57,7 @@ export const GroupDialog = observer(
 
         render() {
             return (
-                <Dialog onOk={this.handleSubmit}>
+                <Dialog onOk={this.handleSubmit} unmount={this.props.unmount}>
                     <PropertyList>
                         <TextInputProperty
                             name="Name"

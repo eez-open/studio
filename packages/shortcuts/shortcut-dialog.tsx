@@ -47,10 +47,11 @@ interface ShortcutDialogProps {
     codeErrorLineNumber: number | undefined;
     codeErrorColumnNumber: number | undefined;
     hideCodeEditor: boolean | undefined;
+    unmount: () => void;
 }
 
 const ShortcutDialog = observer(
-    class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
+    class ShortcutDialog extends React.Component<ShortcutDialogProps> {
         constructor(props: any) {
             super(props);
 
@@ -322,6 +323,7 @@ const ShortcutDialog = observer(
                     onOk={this.handleSubmit}
                     size="large"
                     additionalButton={resetToDefaultButton}
+                    unmount={this.props.unmount}
                 >
                     <PropertyList>
                         <TextInputProperty
@@ -513,7 +515,7 @@ export function showShortcutDialog(
     codeErrorColumnNumber?: number,
     hideCodeEditor?: boolean
 ) {
-    showDialog(
+    const [, , root] = showDialog(
         <ShortcutDialog
             shortcutsStore={shortcutsStore}
             groupsStore={groupsStore}
@@ -523,6 +525,7 @@ export function showShortcutDialog(
             codeErrorLineNumber={codeErrorLineNumber}
             codeErrorColumnNumber={codeErrorColumnNumber}
             hideCodeEditor={hideCodeEditor}
+            unmount={() => root.unmount()}
         />
     );
 }

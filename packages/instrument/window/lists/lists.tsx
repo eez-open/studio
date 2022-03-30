@@ -322,23 +322,17 @@ export const ListsEditor = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 export const SelectChannelDialog = observer(
-    class SelectChannelDialog extends React.Component<
-        {
-            label: string;
-            numChannels: number;
-            callback: (channelIndex: number) => void;
-        },
-        {}
-    > {
+    class SelectChannelDialog extends React.Component<{
+        label: string;
+        numChannels: number;
+        callback: (channelIndex: number) => void;
+        unmount: () => void;
+    }> {
         static lastChannelIndex = 1;
         channelIndex: number = SelectChannelDialog.lastChannelIndex;
         inputErrors: string[] = [];
 
-        constructor(props: {
-            label: string;
-            numChannels: number;
-            callback: (channelIndex: number) => void;
-        }) {
+        constructor(props: any) {
             super(props);
 
             makeObservable(this, {
@@ -388,7 +382,7 @@ export const SelectChannelDialog = observer(
             );
 
             return (
-                <Dialog onOk={this.handleSubmit}>
+                <Dialog onOk={this.handleSubmit} unmount={this.props.unmount}>
                     <PropertyList>{property}</PropertyList>
                 </Dialog>
             );
@@ -398,11 +392,12 @@ export const SelectChannelDialog = observer(
 
 async function selectChannel(label: string, numChannels: number) {
     return new Promise<number>(resolve => {
-        showDialog(
+        const [, , root] = showDialog(
             <SelectChannelDialog
                 label={label}
                 callback={resolve}
                 numChannels={numChannels}
+                unmount={() => root.unmount()}
             />
         );
     });

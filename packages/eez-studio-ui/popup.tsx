@@ -1,10 +1,11 @@
 import bootstrap from "bootstrap";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 
 export function showPopup(targetElement: Element, popupElement: JSX.Element) {
     let content = document.createElement("div");
     content.tabIndex = 0;
-    ReactDOM.render(popupElement, content);
+    const root = createRoot(content);
+    root.render(popupElement);
 
     const popup = new bootstrap.Popover(targetElement, {
         content,

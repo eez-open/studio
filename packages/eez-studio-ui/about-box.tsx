@@ -73,7 +73,7 @@ async function getLatestVersion() {
 }
 
 const AboutBox = observer(
-    class AboutBox extends React.Component {
+    class AboutBox extends React.Component<{ unmount: () => void }> {
         packageJSON: {
             version: string;
         };
@@ -166,7 +166,7 @@ const AboutBox = observer(
             var buildDate = mtime.toString();
 
             return (
-                <Dialog cancelButtonText="Close">
+                <Dialog cancelButtonText="Close" unmount={this.props.unmount}>
                     <div className="EezStudio_AboutBox">
                         <div className="EezStudio_Logo">
                             <img
@@ -238,5 +238,5 @@ const AboutBox = observer(
 );
 
 export function showAboutBox() {
-    showDialog(<AboutBox />);
+    const [, , root] = showDialog(<AboutBox unmount={() => root.unmount()} />);
 }

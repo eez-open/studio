@@ -371,7 +371,12 @@ export class MultiWaveform extends HistoryItem {
     }
 
     openConfigurationDialog() {
-        showDialog(<MultiWaveformConfigurationDialog multiWaveform={this} />);
+        const [, , root] = showDialog(
+            <MultiWaveformConfigurationDialog
+                multiWaveform={this}
+                unmount={() => root.unmount()}
+            />
+        );
     }
 
     get xAxisDefaultSubdivisionOffset(): number | undefined {
@@ -452,12 +457,11 @@ interface IJoinedWaveformLinkAndDefinitionProperties {
 }
 
 const MultiWaveformConfigurationDialog = observer(
-    class MultiWaveformConfigurationDialog extends React.Component<
-        {
-            multiWaveform: MultiWaveform;
-        },
-        {}
-    > {
+    class MultiWaveformConfigurationDialog extends React.Component<{
+        multiWaveform: MultiWaveform;
+
+        unmount: () => void;
+    }> {
         waveforms: IJoinedWaveformLinkAndDefinitionProperties[] =
             this.props.multiWaveform.linkedWaveforms.map(
                 (linkedWaveform: ILinkedWaveform, i: number) => {
@@ -477,7 +481,7 @@ const MultiWaveformConfigurationDialog = observer(
         selectedWaveform: IJoinedWaveformLinkAndDefinitionProperties =
             this.waveforms[0];
 
-        constructor(props: { multiWaveform: MultiWaveform }) {
+        constructor(props: any) {
             super(props);
 
             makeObservable(this, {
@@ -646,7 +650,11 @@ const MultiWaveformConfigurationDialog = observer(
 
         render() {
             return (
-                <Dialog size="medium" onOk={this.handleSubmit}>
+                <Dialog
+                    size="medium"
+                    onOk={this.handleSubmit}
+                    unmount={this.props.unmount}
+                >
                     <div className="EezStudio_MultiWaveformConfigurationDialogBody">
                         <PropertyList>
                             <SelectFromListProperty

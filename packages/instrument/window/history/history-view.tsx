@@ -1,6 +1,6 @@
 import { dialog } from "@electron/remote";
 import React from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import { observable, computed, action, keys, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
@@ -419,7 +419,8 @@ export class HistoryViewComponent extends React.Component<{
         factory.registerComponent(
             "SearchResults",
             function (container: any, props: any) {
-                ReactDOM.render(
+                const root = createRoot(container.getElement()[0]);
+                root.render(
                     <div
                         style={{
                             position: "absolute",
@@ -429,8 +430,7 @@ export class HistoryViewComponent extends React.Component<{
                         }}
                     >
                         <SearchResults history={appStore.history} />
-                    </div>,
-                    container.getElement()[0]
+                    </div>
                 );
             }
         );
@@ -438,17 +438,16 @@ export class HistoryViewComponent extends React.Component<{
         factory.registerComponent(
             "Filters",
             function (container: any, props: any) {
-                ReactDOM.render(
-                    <FiltersComponent appStore={appStore} />,
-                    container.getElement()[0]
-                );
+                const root = createRoot(container.getElement()[0]);
+                root.render(<FiltersComponent appStore={appStore} />);
             }
         );
 
         factory.registerComponent(
             "Calendar",
             function (container: any, props: any) {
-                ReactDOM.render(
+                const root = createRoot(container.getElement()[0]);
+                root.render(
                     <div
                         style={{
                             height: "100%",
@@ -456,8 +455,7 @@ export class HistoryViewComponent extends React.Component<{
                         }}
                     >
                         <Calendar history={appStore.history} />
-                    </div>,
-                    container.getElement()[0]
+                    </div>
                 );
             }
         );
@@ -465,7 +463,8 @@ export class HistoryViewComponent extends React.Component<{
         factory.registerComponent(
             "Sessions",
             function (container: any, props: any) {
-                ReactDOM.render(
+                const root = createRoot(container.getElement()[0]);
+                root.render(
                     <div
                         style={{
                             position: "absolute",
@@ -478,8 +477,7 @@ export class HistoryViewComponent extends React.Component<{
                             appStore={appStore}
                             history={appStore.history}
                         />
-                    </div>,
-                    container.getElement()[0]
+                    </div>
                 );
             }
         );
@@ -487,12 +485,9 @@ export class HistoryViewComponent extends React.Component<{
         factory.registerComponent(
             "Scrapbook",
             function (container: any, props: any) {
-                ReactDOM.render(
-                    <Scrapbook
-                        appStore={appStore}
-                        history={appStore.history}
-                    />,
-                    container.getElement()[0]
+                const root = createRoot(container.getElement()[0]);
+                root.render(
+                    <Scrapbook appStore={appStore} history={appStore.history} />
                 );
             }
         );

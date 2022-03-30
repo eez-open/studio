@@ -406,23 +406,16 @@ registerClass("SCPIActionComponent", SCPIActionComponent);
 ////////////////////////////////////////////////////////////////////////////////
 
 export const SelectInstrumentDialog = observer(
-    class SelectInstrumentDialog extends React.Component<
-        {
-            name?: string;
-            instruments: ObservableMap<string, InstrumentObject>;
-            instrument?: InstrumentObject;
-            callback: (instrument: InstrumentObject | undefined) => void;
-        },
-        {}
-    > {
+    class SelectInstrumentDialog extends React.Component<{
+        name?: string;
+        instruments: ObservableMap<string, InstrumentObject>;
+        instrument?: InstrumentObject;
+        callback: (instrument: InstrumentObject | undefined) => void;
+        unmount: () => void;
+    }> {
         _selectedInstrument: InstrumentObject | undefined;
 
-        constructor(props: {
-            name?: string;
-            instruments: ObservableMap<string, InstrumentObject>;
-            instrument?: InstrumentObject;
-            callback: (instrument: InstrumentObject | undefined) => void;
-        }) {
+        constructor(props: any) {
             super(props);
 
             makeObservable(this, {
@@ -509,6 +502,7 @@ export const SelectInstrumentDialog = observer(
                     okEnabled={this.isOkEnabled}
                     onOk={this.onOk}
                     onCancel={this.onCancel}
+                    unmount={this.props.unmount}
                 >
                     <PropertyList>
                         <SelectFromListProperty
@@ -528,8 +522,8 @@ export async function showSelectInstrumentDialog(
     name?: string,
     instrumentId?: string | null
 ) {
-    return new Promise<InstrumentObject | undefined>(resolve =>
-        showDialog(
+    return new Promise<InstrumentObject | undefined>(resolve => {
+        const [, , root] = showDialog(
             <SelectInstrumentDialog
                 name={name}
                 instruments={instruments}
@@ -539,9 +533,10 @@ export async function showSelectInstrumentDialog(
                 callback={instrument => {
                     resolve(instrument);
                 }}
+                unmount={() => root.unmount()}
             />
-        )
-    );
+        );
+    });
 }
 
 export class SelectInstrumentActionComponent extends ActionComponent {
@@ -595,7 +590,7 @@ export class SelectInstrumentActionComponent extends ActionComponent {
 
     async execute(flowState: FlowState) {
         await new Promise<void>(resolve => {
-            showDialog(
+            const [, , root] = showDialog(
                 <SelectInstrumentDialog
                     instruments={instruments}
                     callback={instrument => {
@@ -609,6 +604,7 @@ export class SelectInstrumentActionComponent extends ActionComponent {
                         }
                         resolve();
                     }}
+                    unmount={() => root.unmount()}
                 />
             );
         });

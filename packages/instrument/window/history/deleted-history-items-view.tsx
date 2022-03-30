@@ -1,5 +1,5 @@
 import React from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import { observable, computed, action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
@@ -156,7 +156,8 @@ export const DeletedHistoryItemsView = observer(
             factory.registerComponent(
                 "SearchResults",
                 function (container: any, props: any) {
-                    ReactDOM.render(
+                    const root = createRoot(container.getElement()[0]);
+                    root.render(
                         <div
                             style={{
                                 position: "absolute",
@@ -168,8 +169,7 @@ export const DeletedHistoryItemsView = observer(
                             <SearchResults
                                 history={appStore.deletedItemsHistory}
                             />
-                        </div>,
-                        container.getElement()[0]
+                        </div>
                     );
                 }
             );
@@ -177,7 +177,8 @@ export const DeletedHistoryItemsView = observer(
             factory.registerComponent(
                 "Calendar",
                 function (container: any, props: any) {
-                    ReactDOM.render(
+                    const root = createRoot(container.getElement()[0]);
+                    root.render(
                         <div
                             style={{
                                 height: "100%",
@@ -185,8 +186,7 @@ export const DeletedHistoryItemsView = observer(
                             }}
                         >
                             <Calendar history={appStore.deletedItemsHistory} />
-                        </div>,
-                        container.getElement()[0]
+                        </div>
                     );
                 }
             );

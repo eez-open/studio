@@ -3,13 +3,11 @@ import React from "react";
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import { PropertyList, RichTextProperty } from "eez-studio-ui/properties";
 
-class NoteDialog extends React.Component<
-    {
-        note?: string;
-        callback: (note: string) => void;
-    },
-    {}
-> {
+class NoteDialog extends React.Component<{
+    note?: string;
+    callback: (note: string) => void;
+    unmount: () => void;
+}> {
     constructor(props: any) {
         super(props);
 
@@ -32,7 +30,11 @@ class NoteDialog extends React.Component<
 
     render() {
         return (
-            <Dialog onOk={this.handleSubmit} size="large">
+            <Dialog
+                onOk={this.handleSubmit}
+                size="large"
+                unmount={this.props.unmount}
+            >
                 <PropertyList>
                     <RichTextProperty
                         name="text"
@@ -46,9 +48,20 @@ class NoteDialog extends React.Component<
 }
 
 export function showAddNoteDialog(callback: (note: string) => void) {
-    showDialog(<NoteDialog callback={callback} />);
+    const [, , root] = showDialog(
+        <NoteDialog callback={callback} unmount={() => root.unmount()} />
+    );
 }
 
-export function showEditNoteDialog(note: string, callback: (note: string) => void) {
-    showDialog(<NoteDialog callback={callback} note={note} />);
+export function showEditNoteDialog(
+    note: string,
+    callback: (note: string) => void
+) {
+    const [, , root] = showDialog(
+        <NoteDialog
+            callback={callback}
+            note={note}
+            unmount={() => root.unmount()}
+        />
+    );
 }

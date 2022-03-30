@@ -1,7 +1,7 @@
 import fs from "fs";
 import bootstrap from "bootstrap";
 import React from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import {
     observable,
     computed,
@@ -1654,15 +1654,15 @@ export const ImportScpiDocDialog = observer(
 export function showImportScpiDocDialog(DocumentStore: DocumentStoreClass) {
     let el = document.createElement("div");
     document.body.appendChild(el);
-    ReactDOM.render(
+    const root = createRoot(el);
+    root.render(
         <ProjectContext.Provider value={DocumentStore}>
             <ImportScpiDocDialog
                 onHidden={() => {
-                    ReactDOM.unmountComponentAtNode(el);
+                    root.unmount();
                     el.remove();
                 }}
             />
-        </ProjectContext.Provider>,
-        el
+        </ProjectContext.Provider>
     );
 }

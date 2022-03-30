@@ -120,7 +120,7 @@ class FileBrowserInput extends React.Component<{
 const RESOURCE_PROJECT_NAME = "MicroPython resource";
 
 const NewProjectWizard = observer(
-    class NewProjectWizard extends React.Component {
+    class NewProjectWizard extends React.Component<{ unmount: () => void }> {
         open = true;
 
         disableButtons: boolean = false;
@@ -549,6 +549,7 @@ const NewProjectWizard = observer(
                         }
                     ]}
                     additionalFooterControl={this.disableButtons && <Loader />}
+                    unmount={this.props.unmount}
                 >
                     {this.step == 0 && (
                         <>
@@ -847,5 +848,7 @@ const NewProjectWizard = observer(
 );
 
 export function showNewProjectWizard() {
-    showDialog(<NewProjectWizard />);
+    const [, , root] = showDialog(
+        <NewProjectWizard unmount={() => root.unmount()} />
+    );
 }

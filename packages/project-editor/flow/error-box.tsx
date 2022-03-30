@@ -9,7 +9,10 @@ import { Icon } from "eez-studio-ui/icon";
 import { observable, runInAction, makeObservable } from "mobx";
 
 const ErrorBox = observer(
-    class ErrorBox extends React.Component<{ runtime: RuntimeBase }> {
+    class ErrorBox extends React.Component<{
+        runtime: RuntimeBase;
+        unmount: () => void;
+    }> {
         additionalButton: IDialogButton | undefined;
 
         constructor(props: any) {
@@ -67,6 +70,7 @@ const ErrorBox = observer(
                         />
                     }
                     additionalButton={this.additionalButton}
+                    unmount={this.props.unmount}
                 >
                     <h5 className="p-3 text-danger text-center">
                         {this.props.runtime.error?.toString()}
@@ -78,5 +82,7 @@ const ErrorBox = observer(
 );
 
 export function showErrorBox(runtime: RuntimeBase) {
-    showDialog(<ErrorBox runtime={runtime} />);
+    const [, , root] = showDialog(
+        <ErrorBox runtime={runtime} unmount={() => root.unmount()} />
+    );
 }

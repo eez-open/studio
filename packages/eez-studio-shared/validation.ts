@@ -126,7 +126,7 @@ export const validators = {
 
     unit: (unit: keyof typeof UNITS) => {
         return function (object: any, ruleName: string) {
-            let value = UNITS[unit].parseValue(object[ruleName]);
+            let value = UNITS[unit].parseValue(object[ruleName].toString());
             if (typeof value !== "number" || isNaN(value)) {
                 return VALIDATION_MESSAGE_INVALID_VALUE;
             }

@@ -1,6 +1,5 @@
 import { ipcRenderer } from "electron";
 import React from "react";
-import ReactDOM from "react-dom";
 import { observable, action, runInAction, autorun, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 const os = require("os");
@@ -38,6 +37,7 @@ interface ConnectionPropertiesProps {
         | "web-simulator"
     )[];
     serialBaudRates: number[];
+    unmount: () => void;
 }
 
 class Devices {
@@ -66,10 +66,7 @@ class Devices {
 const devices = new Devices();
 
 export const ConnectionProperties = observer(
-    class ConnectionProperties extends React.Component<
-        ConnectionPropertiesProps,
-        {}
-    > {
+    class ConnectionProperties extends React.Component<ConnectionPropertiesProps> {
         constructor(props: any) {
             super(props);
 
@@ -160,7 +157,7 @@ export const ConnectionProperties = observer(
 
             $(this.div).on("hidden.bs.modal", () => {
                 const parent = this.div.parentElement as HTMLElement;
-                ReactDOM.unmountComponentAtNode(parent);
+                this.props.unmount();
                 parent.remove();
             });
 
@@ -559,6 +556,7 @@ interface ConnectionDialogProps {
         | "web-simulator"
     )[];
     serialBaudRates: number[];
+    unmount: () => void;
 }
 
 const ConnectionDialog = observer(
@@ -625,6 +623,7 @@ const ConnectionDialog = observer(
                     okButtonText="Connect"
                     onOk={this.handleSubmit}
                     okEnabled={this.isValidConnectionParameters}
+                    unmount={this.props.unmount}
                 >
                     <ConnectionProperties
                         connectionParameters={this.props.connectionParameters}
@@ -633,6 +632,7 @@ const ConnectionDialog = observer(
                         }
                         availableConnections={this.props.availableConnections}
                         serialBaudRates={this.props.serialBaudRates}
+                        unmount={this.props.unmount}
                     />
                 </Dialog>
             );
@@ -651,12 +651,13 @@ export function showConnectionDialog(
     )[],
     serialBaudRates: number[]
 ) {
-    showDialog(
+    const [, , root] = showDialog(
         <ConnectionDialog
             connectionParameters={connectionParameters}
             connect={connect}
             availableConnections={availableConnections}
             serialBaudRates={serialBaudRates}
+            unmount={() => root.unmount()}
         />
     );
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import { action, computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import update from "immutability-helper";
@@ -188,7 +188,8 @@ class WebSimulatorPanel extends React.Component<{
             ></iframe>
         );
 
-        ReactDOM.render(simulator, element);
+        const root = createRoot(element);
+        root.render(simulator);
 
         const jsPanel: any = (window as any).jsPanel;
 
