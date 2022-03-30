@@ -653,6 +653,12 @@ export abstract class RuntimeBase {
 
         return false;
     }
+
+    abstract evalProperty(
+        flowState: IFlowContext,
+        widget: Widget,
+        propertyName: string
+    ): any;
 }
 
 export class FlowState {

@@ -1,7 +1,11 @@
 import React from "react";
 
 import { ProjectContext } from "project-editor/project/context";
-import { DocumentStoreClass } from "project-editor/store";
+import {
+    DocumentStoreClass,
+    getClassInfo,
+    getObjectPathAsString
+} from "project-editor/store";
 
 import { observer } from "mobx-react";
 import {
@@ -10,9 +14,12 @@ import {
 } from "project-editor/flow/remote-runtime";
 
 import type {
+    IEvalProperty,
+    IPropertyValue,
     ObjectGlobalVariableValues,
     RendererToWorkerMessage,
     ScpiCommand,
+    ValueWithType,
     WorkerToRenderMessage
 } from "project-editor/flow/runtime/wasm-worker-interfaces";
 import {
@@ -21,17 +28,26 @@ import {
 } from "project-editor/features/variable/value-type";
 import { InstrumentObject } from "instrument/instrument-object";
 import { createJsArrayValue } from "project-editor/flow/runtime/wasm-value";
+import {
+    isFlowProperty,
+    Widget as Component,
+    Widget
+} from "project-editor/flow/component";
+import { ProjectEditor } from "project-editor/project-editor-interface";
+import type { IFlowContext } from "project-editor/flow/flow-interfaces";
+import { makeObservable, observable, runInAction } from "mobx";
+import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
 
 export class WasmRuntime extends RemoteRuntime {
     debuggerConnection = new WasmDebuggerConnection(this);
 
-    constructor(public DocumentStore: DocumentStoreClass) {
-        super(DocumentStore);
-    }
-
     worker: Worker;
 
+    assetsData: any;
     assetsDataMapJs: AssetsMap;
+
+    objectGlobalVariableValues: ObjectGlobalVariableValues;
+    objectVariableValues: IObjectVariableValue[] = [];
 
     ctx: CanvasRenderingContext2D | undefined;
     width: number = 480;
@@ -47,6 +63,14 @@ export class WasmRuntime extends RemoteRuntime {
     screen: any;
     requestAnimationFrameId: number | undefined;
 
+    evalProperties = new EvalProperties(this);
+
+    ////////////////////////////////////////////////////////////////////////////////
+
+    constructor(public DocumentStore: DocumentStoreClass) {
+        super(DocumentStore);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////
 
     async doStartRuntime(isDebuggerActive: boolean) {
@@ -58,53 +82,26 @@ export class WasmRuntime extends RemoteRuntime {
             return;
         }
 
-        const assetsData = result.GUI_ASSETS_DATA;
+        this.assetsData = result.GUI_ASSETS_DATA;
+        //console.log(this.assetsMap);
 
-        let objectGlobalVariableValues: ObjectGlobalVariableValues;
         if (this.DocumentStore.project.isDashboardProject) {
             await this.DocumentStore.runtimeSettings.loadPersistentVariables();
-            objectGlobalVariableValues =
+            this.objectGlobalVariableValues =
                 await this.constructObjectGlobalVariables();
         } else {
-            objectGlobalVariableValues = [];
+            this.objectGlobalVariableValues = [];
         }
 
+        if (!isDebuggerActive) {
+            this.resumeAtStart = true;
+        }
+
+        // create WASM worker
         this.worker = new Worker(
             "../project-editor/flow/runtime/wasm-worker-pre.js"
         );
-
-        this.worker.onmessage = (e: { data: WorkerToRenderMessage }) => {
-            if (e.data.init) {
-                const message: RendererToWorkerMessage = {};
-                message.init = {
-                    assetsData: assetsData,
-                    assetsMap: this.assetsMap,
-                    objectGlobalVariableValues
-                };
-                this.worker.postMessage(message);
-
-                if (!isDebuggerActive) {
-                    this.resumeAtStart = true;
-                }
-            } else {
-                if (e.data.scpiCommand) {
-                    this.executeScpiCommand(e.data.scpiCommand);
-                    return;
-                }
-
-                if (e.data.messageToDebugger) {
-                    this.debuggerConnection.onMessageToDebugger(
-                        arrayBufferToBinaryString(e.data.messageToDebugger)
-                    );
-                    return;
-                }
-
-                this.screen = e.data.screen;
-                this.requestAnimationFrameId = window.requestAnimationFrame(
-                    this.tick
-                );
-            }
-        };
+        this.worker.onmessage = this.onWorkerMessage;
     }
 
     async doStopRuntime(notifyUser: boolean) {
@@ -119,7 +116,66 @@ export class WasmRuntime extends RemoteRuntime {
 
     ////////////////////////////////////////////////////////////////////////////////
 
-    objectVariableValues: IObjectVariableValue[] = [];
+    onWorkerMessage = (e: { data: WorkerToRenderMessage }) => {
+        if (e.data.init) {
+            const message: RendererToWorkerMessage = {};
+            message.init = {
+                assetsData: this.assetsData,
+                assetsMap: this.assetsMap,
+                objectGlobalVariableValues: this.objectGlobalVariableValues
+            };
+            this.worker.postMessage(message);
+        } else {
+            if (e.data.scpiCommand) {
+                this.executeScpiCommand(e.data.scpiCommand);
+                return;
+            }
+
+            if (e.data.messageToDebugger) {
+                this.debuggerConnection.onMessageToDebugger(
+                    arrayBufferToBinaryString(e.data.messageToDebugger)
+                );
+                return;
+            }
+
+            if (e.data.propertyValues) {
+                this.evalProperties.valuesFromWorker(e.data.propertyValues);
+            }
+
+            this.screen = e.data.screen;
+            this.requestAnimationFrameId = window.requestAnimationFrame(
+                this.tick
+            );
+        }
+    };
+
+    tick = () => {
+        this.requestAnimationFrameId = undefined;
+
+        if (this.screen && this.ctx) {
+            var imgData = new ImageData(this.screen, this.width, this.height);
+            this.ctx.putImageData(imgData, 0, 0);
+        }
+
+        const message: RendererToWorkerMessage = {
+            wheel: {
+                deltaY: this.wheelDeltaY,
+                clicked: this.wheelClicked
+            },
+            pointerEvents: this.pointerEvents,
+            evalProperties: this.evalProperties.evalPropertiesOnNextTick
+        };
+
+        this.worker.postMessage(message);
+
+        this.wheelDeltaY = 0;
+        this.wheelClicked = 0;
+        this.pointerEvents = [];
+        this.screen = undefined;
+        this.evalProperties.resetEvalPropertiesOnNextTick();
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////
 
     async constructObjectGlobalVariables() {
         for (const variable of this.DocumentStore.project.allGlobalVariables) {
@@ -161,7 +217,7 @@ export class WasmRuntime extends RemoteRuntime {
                     this.objectVariableValues.push(value);
 
                     const arrayValue = createJsArrayValue(
-                        variable.type,
+                        this.assetsMap.typeIndexes[variable.type],
                         value,
                         this.assetsMap,
                         objectVariableType
@@ -238,17 +294,31 @@ export class WasmRuntime extends RemoteRuntime {
 
                     await connection.acquire(false);
 
+                    let result: any = "";
                     try {
-                        let result = await connection.query(command);
-                        const data: RendererToWorkerMessage = {
+                        result = await connection.query(command);
+                    } finally {
+                        connection.release();
+                    }
+
+                    let data: RendererToWorkerMessage;
+                    if (typeof result == "string") {
+                        data = {
                             scpiResult: {
                                 result: binaryStringToArrayBuffer(result)
                             }
                         };
-                        this.worker.postMessage(data);
-                    } finally {
-                        connection.release();
+                    } else {
+                        data = {
+                            scpiResult: {
+                                errorMessage: result.error
+                                    ? result.error
+                                    : "unknown SCPI result"
+                            }
+                        };
                     }
+
+                    this.worker.postMessage(data);
 
                     return;
                 }
@@ -258,33 +328,37 @@ export class WasmRuntime extends RemoteRuntime {
 
     ////////////////////////////////////////////////////////////////////////////////
 
-    tick = () => {
-        this.requestAnimationFrameId = undefined;
-        if (this.screen && this.ctx) {
-            var imgData = new ImageData(this.screen, this.width, this.height);
-            this.ctx.putImageData(imgData, 0, 0);
-        }
+    evalProperty(
+        flowContext: IFlowContext,
+        widget: Component,
+        propertyName: string
+    ) {
+        return this.evalProperties.evalProperty(
+            flowContext,
+            widget,
+            propertyName
+        );
+    }
 
-        const message: RendererToWorkerMessage = {
-            wheel: {
-                deltaY: this.wheelDeltaY,
-                clicked: this.wheelClicked
-            },
-            pointerEvents: this.pointerEvents
-        };
+    executeWidgetAction(
+        flowContext: IFlowContext,
+        widget: Widget,
+        value?: any
+    ) {
+        let indexValue = flowContext.dataContext.get(
+            FLOW_ITERATOR_INDEXES_VARIABLE
+        );
+        console.log(indexValue);
+    }
 
-        this.worker.postMessage(message);
-
-        this.wheelDeltaY = 0;
-        this.wheelClicked = 0;
-        this.pointerEvents = [];
-        this.screen = undefined;
-    };
+    ////////////////////////////////////////////////////////////////////////////////
 
     renderPage() {
         return <WasmCanvas />;
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 export const WasmCanvas = observer(
     class WasmCanvas extends React.Component {
@@ -383,6 +457,8 @@ export const WasmCanvas = observer(
     }
 );
 
+////////////////////////////////////////////////////////////////////////////////
+
 class WasmDebuggerConnection extends DebuggerConnectionBase {
     constructor(private wasmRuntime: WasmRuntime) {
         super(wasmRuntime);
@@ -399,6 +475,196 @@ class WasmDebuggerConnection extends DebuggerConnectionBase {
         this.wasmRuntime.worker.postMessage(message);
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+class EvalProperties {
+    evalFlowStates = new Map<
+        number,
+        {
+            evalComponents: Map<
+                Component,
+                {
+                    componentIndex: number;
+                    evalProperties: {
+                        [propertyName: string]: {
+                            propertyIndex: number;
+                            propertyValueIndexes: {
+                                [indexesPath: string]: number;
+                            };
+                        };
+                    };
+                }
+            >;
+        }
+    >();
+
+    evalPropertiesOnNextTick: IEvalProperty[] = [];
+    evalPropertiesOnNextTickSet = new Set<number>();
+
+    propertyValues: ValueWithType[] = [];
+    nextPropertyValueIndex: number = 0;
+
+    constructor(public wasmRuntime: WasmRuntime) {
+        makeObservable(this, {
+            propertyValues: observable
+        });
+    }
+
+    valuesFromWorker(widgetPropertyValues: IPropertyValue[]) {
+        if (widgetPropertyValues.length > 0) {
+            //console.log(widgetPropertyValues);
+            runInAction(() => {
+                widgetPropertyValues.forEach(propertyValue => {
+                    this.propertyValues[propertyValue.propertyValueIndex] =
+                        propertyValue.valueWithType;
+                });
+            });
+        }
+    }
+
+    evalProperty(
+        flowContext: IFlowContext,
+        component: Component,
+        propertyName: string
+    ) {
+        const flowState = flowContext.flowState!;
+
+        const flowStateIndex =
+            this.wasmRuntime.flowStateToFlowIndexMap.get(flowState);
+        if (flowStateIndex == undefined) {
+            console.error("Unexpected!");
+            return undefined;
+        }
+
+        let evalFlowState = this.evalFlowStates.get(flowStateIndex);
+        if (!evalFlowState) {
+            // add new evalFlowState
+            evalFlowState = {
+                evalComponents: new Map()
+            };
+            this.evalFlowStates.set(flowStateIndex, evalFlowState);
+        }
+
+        let evalComponent = evalFlowState.evalComponents.get(component);
+        if (!evalComponent) {
+            // add new evalComponent
+            const flow = ProjectEditor.getFlow(component);
+            const flowPath = getObjectPathAsString(flow);
+            const flowIndex = this.wasmRuntime.assetsMap.flowIndexes[flowPath];
+            if (flowIndex == undefined) {
+                console.error("Unexpected!");
+                return undefined;
+            }
+
+            const componentPath = getObjectPathAsString(component);
+            const componentIndex =
+                this.wasmRuntime.assetsMap.flows[flowIndex].componentIndexes[
+                    componentPath
+                ];
+            if (componentIndex == undefined) {
+                console.error("Unexpected!");
+                return undefined;
+            }
+
+            evalComponent = {
+                componentIndex,
+                evalProperties: {}
+            };
+
+            evalFlowState.evalComponents.set(component, evalComponent);
+        }
+
+        const indexes = flowContext.dataContext.get(
+            FLOW_ITERATOR_INDEXES_VARIABLE
+        );
+        let indexesPath: string;
+        if (indexes == undefined || indexes.length == 0) {
+            indexesPath = ".";
+        } else {
+            indexesPath = indexes.join("/");
+        }
+
+        let evalProperty = evalComponent.evalProperties[propertyName];
+        if (evalProperty == undefined) {
+            // add new evalProperty
+            const propertyIndex = this.getPropertyIndex(
+                component,
+                propertyName
+            );
+            if (propertyIndex == -1) {
+                console.error("Unexpected!");
+                return undefined;
+            }
+
+            evalProperty = {
+                propertyIndex,
+                propertyValueIndexes: {
+                    [indexesPath]: this.nextPropertyValueIndex
+                }
+            };
+            this.nextPropertyValueIndex++;
+
+            evalComponent.evalProperties[propertyName] = evalProperty;
+        } else {
+            if (evalProperty.propertyValueIndexes[indexesPath] == undefined) {
+                evalProperty.propertyValueIndexes[indexesPath] =
+                    this.nextPropertyValueIndex;
+                this.nextPropertyValueIndex++;
+            }
+        }
+
+        let propertyValueIndex = evalProperty.propertyValueIndexes[indexesPath];
+
+        if (!this.evalPropertiesOnNextTickSet.has(propertyValueIndex)) {
+            // add property to evalute on next tick
+            this.evalPropertiesOnNextTickSet.add(propertyValueIndex);
+
+            this.evalPropertiesOnNextTick.push({
+                flowStateIndex,
+                componentIndex: evalComponent.componentIndex,
+                propertyIndex: evalProperty.propertyIndex,
+                propertyValueIndex,
+                indexes
+            });
+        }
+
+        if (propertyValueIndex < this.propertyValues.length) {
+            // get evaluated value
+            return this.propertyValues[propertyValueIndex].value;
+        }
+
+        // not evaluated yet
+        return undefined;
+    }
+
+    resetEvalPropertiesOnNextTick() {
+        this.evalPropertiesOnNextTick = [];
+        this.evalPropertiesOnNextTickSet.clear();
+    }
+
+    private getPropertyIndex(component: Component, propertyName: string) {
+        const classInfo = getClassInfo(component);
+
+        const properties = classInfo.properties.filter(
+            propertyInfo =>
+                isFlowProperty(
+                    this.wasmRuntime.DocumentStore,
+                    propertyInfo,
+                    "input"
+                ) ||
+                isFlowProperty(
+                    this.wasmRuntime.DocumentStore,
+                    propertyInfo,
+                    "template-literal"
+                )
+        );
+
+        return properties.findIndex(property => property.name == propertyName);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 function arrayBufferToBinaryString(data: ArrayBuffer) {
     const buffer = Buffer.from(data);

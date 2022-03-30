@@ -18,6 +18,7 @@ import {
     checkArity
 } from "project-editor/flow/expression/type";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { templateLiteralToExpression } from "project-editor/flow/expression/helper";
 
 export function checkExpression(component: Component, expression: string) {
     if (typeof expression == "string") {
@@ -38,6 +39,29 @@ export function checkExpression(component: Component, expression: string) {
             component,
             rootNode,
             false
+        );
+        checkExpressionNode(component, rootNode);
+    }
+}
+
+export function checkTemplateLiteralExpression(
+    component: Component,
+    templateLiteral: string
+) {
+    if (templateLiteral != undefined) {
+        const expression = templateLiteralToExpression(templateLiteral.trim());
+
+        let rootNode;
+        try {
+            rootNode = expressionParser.parse(expression);
+        } catch (err) {
+            throw `Expression error: ${err}`;
+        }
+        findValueTypeInExpressionNode(
+            ProjectEditor.getProject(component),
+            component,
+            rootNode,
+            true
         );
         checkExpressionNode(component, rootNode);
     }

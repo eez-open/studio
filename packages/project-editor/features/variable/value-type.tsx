@@ -23,13 +23,16 @@ import { _difference } from "eez-studio-shared/algorithm";
 
 import type {
     IObjectVariableType,
-    IObjectVariableValue
+    IObjectVariableValue,
+    ValueType
 } from "eez-studio-types";
 
 export type {
     IObjectVariableValueConstructorParams,
     IObjectVariableValue,
-    IObjectVariableType
+    IObjectVariableType,
+    BasicType,
+    ValueType
 } from "eez-studio-types";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,29 +46,6 @@ const basicTypeNames = [
     "date",
     "any"
 ];
-
-export type BasicType =
-    | "integer"
-    | "float"
-    | "double"
-    | "boolean"
-    | "string"
-    | "date"
-    | "any";
-
-export type ValueType =
-    | BasicType
-    | "undefined"
-    | "null"
-    | `object:${string}`
-    | "enum:${string}"
-    | `struct:${string}`
-    | `dynamic:${string}`
-    | `array:${BasicType}`
-    | `array:object:${string}`
-    | `array:struct:${string}`
-    | `array:enum:${string}`
-    | `array:dynamic:${string}`;
 
 ////////////////////////////////////////////////////////////////////////////////
 

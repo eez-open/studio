@@ -10,7 +10,11 @@ import type { ConnectionParameters } from "instrument/connection/interface";
 import { action, observable, runInAction, makeObservable } from "mobx";
 import { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { Component, Widget } from "project-editor/flow/component";
-import { IFlowContext, LogItemType } from "project-editor/flow/flow-interfaces";
+import {
+    IFlowContext,
+    IFlowState,
+    LogItemType
+} from "project-editor/flow/flow-interfaces";
 import { getFlow, getProject } from "project-editor/project/project";
 import {
     StateMachineAction,
@@ -23,7 +27,10 @@ import { DocumentStoreClass } from "project-editor/store";
 import net from "net";
 import { getObjectFromStringPath } from "project-editor/store";
 import { ConnectionBase } from "instrument/connection/connection-base";
-import { IExpressionContext } from "./expression";
+import {
+    evalExpression,
+    IExpressionContext
+} from "project-editor/flow/expression";
 import { webSimulatorMessageDispatcher } from "instrument/connection/connection-renderer";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { ExecuteComponentLogItem } from "project-editor/flow/debugger/logs";
@@ -85,6 +92,7 @@ export class RemoteRuntime extends RuntimeBase {
         number,
         { flowIndex: number; flowState: FlowState }
     >();
+    flowStateToFlowIndexMap = new Map<IFlowState, number>();
     transitionToRunningMode: boolean = false;
     resumeAtStart: boolean = false;
 
@@ -486,6 +494,15 @@ export class RemoteRuntime extends RuntimeBase {
     ) {}
 
     destroyObjectLocalVariables(flowState: FlowState): void {}
+
+    evalProperty(
+        flowContext: IFlowContext,
+        widget: Widget,
+        propertyName: string
+    ) {
+        let expr = (widget as any)[propertyName];
+        return evalExpression(flowContext, widget, expr);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -532,47 +549,47 @@ export abstract class DebuggerConnectionBase {
 
         const arrayType = addresses[1];
         const type = this.runtime.assetsMap.types[arrayType];
+        if (!type || type.kind == "basic") {
+            console.error("UNEXPECTED!");
+            return undefined;
+        }
 
         const arrayElementAddresses = addresses.slice(2);
 
         let value: any = this.runtime.arrayValues.get(arrayAddress);
 
-        let arrayElementType: string | null = "any";
-
         if (!value) {
-            value = observable(type ? {} : []);
+            value = observable(type.kind == "array" ? [] : {});
             this.runtime.arrayValues.set(arrayAddress, value);
-        }
 
-        for (let i = 0; i < arrayElementAddresses.length; i++) {
-            let propertyName: string | number;
-            let propertyType: string;
+            for (let i = 0; i < arrayElementAddresses.length; i++) {
+                let propertyName: string | number;
+                let propertyType: string;
 
-            if (type) {
-                const field = type.fields[i];
-                if (!field) {
-                    console.error("UNEXPECTED!");
-                    return undefined;
+                if (type.kind == "array") {
+                    propertyName = i;
+                    propertyType = type.elementType.valueType;
+                } else {
+                    const field = type.fields[i];
+                    if (!field) {
+                        console.error("UNEXPECTED!");
+                        return undefined;
+                    }
+                    propertyName = field.name;
+                    propertyType = field.valueType;
                 }
-                propertyName = field.name;
-                propertyType = field.valueType;
-            } else {
-                propertyName = i;
-                propertyType = arrayElementType;
+
+                const objectMemberValue = new ObjectMemberValue(
+                    value,
+                    propertyName,
+                    propertyType
+                );
+
+                this.runtime.debuggerValues.set(
+                    arrayElementAddresses[i],
+                    objectMemberValue
+                );
             }
-
-            runInAction(() => (value[propertyName] = undefined));
-
-            const objectMemberValue = new ObjectMemberValue(
-                value,
-                propertyName,
-                propertyType
-            );
-
-            this.runtime.debuggerValues.set(
-                arrayElementAddresses[i],
-                objectMemberValue
-            );
         }
 
         return value;
@@ -1012,6 +1029,8 @@ export abstract class DebuggerConnectionBase {
                             return;
                         }
 
+                        //console.log(debuggerValue);
+
                         debuggerValue.set(this.parseDebuggerValue(value));
                     }
                     break;
@@ -1111,6 +1130,11 @@ export abstract class DebuggerConnectionBase {
                             flowState
                         });
 
+                        runtime.flowStateToFlowIndexMap.set(
+                            flowState,
+                            flowStateIndex
+                        );
+
                         runInAction(() =>
                             (parentFlowState || runtime).flowStates.push(
                                 flowState
@@ -1134,6 +1158,9 @@ export abstract class DebuggerConnectionBase {
                             console.error("UNEXPECTED!");
                             return;
                         }
+
+                        runtime.flowStateMap.delete(flowStateIndex);
+                        runtime.flowStateToFlowIndexMap.delete(flowState);
 
                         runInAction(() => (flowState.isFinished = true));
                     }

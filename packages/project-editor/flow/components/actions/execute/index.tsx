@@ -16,9 +16,13 @@ function EvalJSExprActionComponent_execute(context: DashboardComponentContext) {
     try {
         let result = eval(expression);
 
-        context.propagateValue(1, result);
+        context.propagateValue("result", result);
         context.propagateValueThroughSeqout();
     } catch (err) {
+        console.info(
+            "Error in EvalJSExprActionComponent_execute",
+            err.toString()
+        );
         context.throwError(err.toString());
     }
 }
@@ -46,8 +50,13 @@ function PostgresActionComponent_execute(context: DashboardComponentContext) {
         return;
     }
 
-    // TODO:
-    // startAsyncExecution
+    const sql = context.evalProperty<string>(1, ["string"]);
+    if (!sql) {
+        context.throwError(`Invalid SQL`);
+        return;
+    }
+
+    context = context.startAsyncExecution();
 
     (async () => {
         const config: pg.ClientConfig = {
@@ -67,31 +76,17 @@ function PostgresActionComponent_execute(context: DashboardComponentContext) {
         try {
             const client = new pg.Client(config);
             await client.connect();
-            const res = await client.query(
-                "select * from modules where serial = '000000000000000000000079'"
-            );
-            console.log(res);
+            const res = await client.query(sql);
 
-            let rows = res && res.rows;
-            if (!rows) {
-                rows = [];
-            }
-            console.log(rows);
-
-            // TODO:
-            //context.propagateValue(1, rows);
-            //context.propagateValueThroughSeqout();
+            context.propagateValue("result", res?.rows ?? []);
+            context.propagateValueThroughSeqout();
         } catch (err) {
+            console.error(err);
             context.throwError(err.toString());
         }
 
-        // TODO:
-        // endAsyncExecution
+        context.endAsyncExecution();
     })();
-
-    // TODO remove this
-    context.propagateValue(1, 42);
-    context.propagateValueThroughSeqout();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

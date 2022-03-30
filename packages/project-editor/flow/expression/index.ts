@@ -1,13 +1,9 @@
-import type { ExpressionNode } from "project-editor/flow/expression/node";
-import { identifierParser } from "./grammar";
-
-////////////////////////////////////////////////////////////////////////////////
-
 export { operationIndexes } from "project-editor/flow/expression/operations";
 
 export {
     checkExpression,
-    checkAssignableExpression
+    checkAssignableExpression,
+    checkTemplateLiteralExpression
 } from "project-editor/flow/expression/check";
 
 export {
@@ -24,13 +20,7 @@ export {
     ExpressionEvalError
 } from "project-editor/flow/expression/eval";
 
-////////////////////////////////////////////////////////////////////////////////
-
-export function parseIdentifier(identifier: string) {
-    try {
-        const rootNode: ExpressionNode = identifierParser.parse(identifier);
-        return rootNode && rootNode.type === "Identifier";
-    } catch (err) {
-        return false;
-    }
-}
+export {
+    parseIdentifier,
+    templateLiteralToExpression
+} from "project-editor/flow/expression/helper";

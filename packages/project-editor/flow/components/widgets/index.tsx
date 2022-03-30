@@ -135,7 +135,6 @@ import {
 } from "project-editor/flow/components/component_types";
 import {
     evalConstantExpression,
-    evalExpression,
     ExpressionEvalError
 } from "project-editor/flow/expression";
 import { remap } from "eez-studio-shared/util";
@@ -162,19 +161,38 @@ const BAR_GRAPH_DO_NOT_DISPLAY_VALUE = 1 << 4;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function evalProperty(
+    flowContext: IFlowContext,
+    widget: Widget,
+    propertyName: string
+) {
+    let expr = (widget as any)[propertyName];
+    if (!expr) {
+        return undefined;
+    }
+
+    return flowContext.DocumentStore.runtime!.evalProperty(
+        flowContext,
+        widget,
+        propertyName
+    );
+}
+
 function getBooleanValue(
     flowContext: IFlowContext,
     widget: Widget,
-    expr: string | undefined,
+    propertyName: string,
     defaultValue: boolean
 ) {
+    let expr = (widget as any)[propertyName];
+
     if (!expr) {
         return defaultValue;
     }
 
     let value;
     try {
-        value = evalExpression(flowContext, widget, expr);
+        value = evalProperty(flowContext, widget, propertyName);
     } catch (err) {
         // console.error(err);
     }
@@ -185,16 +203,18 @@ function getBooleanValue(
 function getNumberValue(
     flowContext: IFlowContext,
     widget: Widget,
-    expr: string | undefined,
+    propertyName: string,
     defaultValue: number
 ) {
+    let expr = (widget as any)[propertyName];
+
     if (!expr) {
         return defaultValue;
     }
 
     let value;
     try {
-        value = evalExpression(flowContext, widget, expr);
+        value = evalProperty(flowContext, widget, propertyName);
     } catch (err) {
         // console.error(err);
     }
@@ -209,16 +229,17 @@ function getNumberValue(
 function getAnyValue(
     flowContext: IFlowContext,
     widget: Widget,
-    expr: string | undefined,
+    propertyName: string,
     defaultValue: any
 ) {
+    let expr = (widget as any)[propertyName];
     if (!expr) {
         return defaultValue;
     }
 
     let value;
     try {
-        value = evalExpression(flowContext, widget, expr);
+        value = evalProperty(flowContext, widget, propertyName);
     } catch (err) {
         // console.error(err);
     }
@@ -332,7 +353,7 @@ export class ContainerWidget extends Widget {
 
     render(flowContext: IFlowContext): React.ReactNode {
         let visible: boolean = flowContext.flowState
-            ? getBooleanValue(flowContext, this, this.visible, !this.visible)
+            ? getBooleanValue(flowContext, this, "visible", !this.visible)
             : true;
 
         return (
@@ -505,7 +526,7 @@ export class ListWidget extends Widget {
                 flowContext.DocumentStore.project.isDashboardProject
             ) {
                 try {
-                    dataValue = evalExpression(flowContext, this, this.data);
+                    dataValue = evalProperty(flowContext, this, "data");
                 } catch (err) {
                     //console.error(err);
                 }
@@ -937,7 +958,7 @@ export class SelectWidget extends Widget {
 
         if (flowContext.flowState) {
             try {
-                index = evalExpression(flowContext, this, this.data!);
+                index = evalProperty(flowContext, this, "data");
 
                 if (typeof index === "number") {
                     // pass
@@ -976,7 +997,7 @@ export class SelectWidget extends Widget {
             }
 
             try {
-                index = evalExpression(flowContext, this, this.data!);
+                index = evalProperty(flowContext, this, "data");
 
                 if (typeof index === "number") {
                     // pass
@@ -1320,7 +1341,7 @@ export class LayoutViewWidget extends Widget {
             let value: any;
             try {
                 value = this.visible
-                    ? evalExpression(flowContext, this, this.visible)
+                    ? evalProperty(flowContext, this, "visible")
                     : true;
             } catch (err) {
                 //console.error(err);
@@ -1664,11 +1685,7 @@ export class DisplayDataWidget extends Widget {
             if (this.data) {
                 if (flowContext.flowState) {
                     try {
-                        const value = evalExpression(
-                            flowContext,
-                            this,
-                            this.data
-                        );
+                        const value = evalProperty(flowContext, this, "data");
 
                         if (value != null && value != undefined) {
                             return value;
@@ -1969,11 +1986,7 @@ export class TextWidget extends Widget {
             if (this.data) {
                 if (flowContext.flowState) {
                     try {
-                        const value = evalExpression(
-                            flowContext,
-                            this,
-                            this.data
-                        );
+                        const value = evalProperty(flowContext, this, "data");
 
                         if (
                             typeof value == "string" ||
@@ -1997,7 +2010,7 @@ export class TextWidget extends Widget {
                 }
 
                 try {
-                    const result = evalExpression(flowContext, this, this.data);
+                    const result = evalProperty(flowContext, this, "data");
                     if (typeof result === "string") {
                         return result;
                     }
@@ -2452,11 +2465,7 @@ export class MultilineTextWidget extends Widget {
             if (this.data) {
                 if (flowContext.flowState) {
                     try {
-                        const value = evalExpression(
-                            flowContext,
-                            this,
-                            this.data
-                        );
+                        const value = evalProperty(flowContext, this, "data");
 
                         if (
                             typeof value == "string" ||
@@ -2837,7 +2846,7 @@ export class BitmapWidget extends Widget {
             let data;
 
             if (flowContext.flowState) {
-                data = evalExpression(flowContext, this, this.data);
+                data = evalProperty(flowContext, this, "data");
             } else {
                 data = flowContext.dataContext.get(this.data);
             }
@@ -3081,11 +3090,7 @@ export class ButtonWidget extends Widget {
             if (this.data) {
                 if (flowContext.flowState) {
                     try {
-                        const value = evalExpression(
-                            flowContext,
-                            this,
-                            this.data
-                        );
+                        const value = evalProperty(flowContext, this, "data");
 
                         if (value != null && value != undefined) {
                             return value;
@@ -3158,7 +3163,7 @@ export class ButtonWidget extends Widget {
         let buttonEnabled = getBooleanValue(
             flowContext,
             this,
-            this.enabled,
+            "enabled",
             flowContext.flowState ? !this.enabled : true
         );
 
@@ -4554,11 +4559,7 @@ export class ProgressWidget extends Widget {
             if (this.data) {
                 if (flowContext.flowState) {
                     try {
-                        const value = evalExpression(
-                            flowContext,
-                            this,
-                            this.data
-                        );
+                        const value = evalProperty(flowContext, this, "data");
 
                         if (value != null && value != undefined) {
                             return value;
@@ -4900,13 +4901,11 @@ export class GaugeEmbeddedWidget extends Widget {
             let unit;
 
             try {
-                min = evalExpression(flowContext, this, this.min);
-                max = evalExpression(flowContext, this, this.max);
-                value =
-                    this.data && evalExpression(flowContext, this, this.data);
-                threshold = evalExpression(flowContext, this, this.threshold);
-                unit =
-                    this.data && evalExpression(flowContext, this, this.unit);
+                min = evalProperty(flowContext, this, "min");
+                max = evalProperty(flowContext, this, "max");
+                value = evalProperty(flowContext, this, "data");
+                threshold = evalProperty(flowContext, this, "threshold");
+                unit = evalProperty(flowContext, this, "unit");
             } catch (err) {
                 //console.error(err);
             }
@@ -5318,10 +5317,10 @@ export class InputEmbeddedWidget extends Widget {
                             if (flowContext.flowState) {
                                 if (this.data) {
                                     try {
-                                        text = evalExpression(
+                                        text = evalProperty(
                                             flowContext,
                                             this,
-                                            this.data
+                                            "data"
                                         );
                                     } catch (err) {
                                         //console.error(err);
@@ -5339,10 +5338,10 @@ export class InputEmbeddedWidget extends Widget {
                             if (flowContext.flowState) {
                                 if (this.unit) {
                                     try {
-                                        unit = evalExpression(
+                                        unit = evalProperty(
                                             flowContext,
                                             this,
-                                            this.unit
+                                            "unit"
                                         );
                                     } catch (err) {
                                         //console.error(err);
@@ -5640,7 +5639,7 @@ export class CheckboxWidget extends Widget {
         ) {
             if (this.data) {
                 try {
-                    return !!evalExpression(flowContext, this, this.data);
+                    return !!evalProperty(flowContext, this, "data");
                 } catch (err) {
                     //console.error(err);
                 }
@@ -5664,7 +5663,7 @@ export class CheckboxWidget extends Widget {
         ) {
             if (this.label) {
                 try {
-                    const value = evalExpression(flowContext, this, this.label);
+                    const value = evalProperty(flowContext, this, "label");
 
                     if (value != null && value != undefined) {
                         return value;
@@ -5934,7 +5933,7 @@ export class SwitchWidget extends Widget {
     });
 
     render(flowContext: IFlowContext) {
-        const enabled = getBooleanValue(flowContext, this, this.data, false);
+        const enabled = getBooleanValue(flowContext, this, "data", false);
 
         return (
             <>
@@ -6090,19 +6089,19 @@ export class SliderWidget extends Widget {
                             let value = getNumberValue(
                                 flowContext,
                                 this,
-                                this.data,
+                                "data",
                                 0.5
                             );
                             let min = getNumberValue(
                                 flowContext,
                                 this,
-                                this.min,
+                                "min",
                                 0
                             );
                             let max = getNumberValue(
                                 flowContext,
                                 this,
-                                this.max,
+                                "max",
                                 1.0
                             );
                             let knobPosition = (value - min) / (max - min);
@@ -6206,7 +6205,7 @@ export class DropDownListWidget extends Widget {
                             const options = getAnyValue(
                                 flowContext,
                                 this,
-                                this.options,
+                                "options",
                                 []
                             );
 

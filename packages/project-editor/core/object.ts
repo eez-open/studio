@@ -88,6 +88,12 @@ export interface IOnSelectParams {
     };
 }
 
+export type FlowPropertyType =
+    | "input"
+    | "output"
+    | "assignable"
+    | "template-literal";
+
 export interface PropertyInfo {
     name: string;
     type: PropertyType;
@@ -151,12 +157,8 @@ export interface PropertyInfo {
     fileFilters?: any;
 
     flowProperty?:
-        | "input"
-        | "output"
-        | "assignable"
-        | ((
-              DocumentStore: DocumentStoreClass
-          ) => "input" | "output" | "assignable");
+        | FlowPropertyType
+        | ((DocumentStore: DocumentStoreClass) => FlowPropertyType);
     expressionType?: ValueType;
     expressionIsConstant?: boolean;
     isOutputOptional?:

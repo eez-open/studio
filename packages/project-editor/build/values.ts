@@ -200,9 +200,9 @@ function buildFlowValue(
                 }
 
                 dataBuffer.writeUint32(elements.length); // arraySize
-                dataBuffer.writeUint32(
-                    assets.getTypeIndex(flowValue.valueType)
-                ); // reserved
+
+                let arrayType = assets.getTypeIndex(flowValue.valueType);
+                dataBuffer.writeUint32(arrayType);
                 elements.forEach(element =>
                     buildFlowValue(assets, dataBuffer, element)
                 );

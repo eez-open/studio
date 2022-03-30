@@ -18,30 +18,49 @@ interface IField {
     valueType: ValueType;
 }
 
-interface IType {
+interface ITypeBase {
+    kind: "object" | "array";
+    valueType: ValueType;
+}
+
+interface IObjectType {
+    kind: "object";
     valueType: ValueType;
     fields: IField[];
     fieldIndexes: IIndexes;
     open: boolean;
 }
 
+interface IArrayType {
+    kind: "array";
+    valueType: ValueType;
+    elementType: IType;
+}
+
+interface IBasicType {
+    kind: "basic";
+    valueType: ValueType;
+}
+
+type IType = IArrayType | IObjectType | IBasicType;
+
 interface AssetsMap {
     flows: {
         flowIndex: number;
         path: string;
-        pathReadable: string;
         components: {
             componentIndex: number;
             path: string;
-            pathReadable: string;
             outputs: {
                 outputName: string;
+                valueTypeIndex: number;
                 connectionLines: {
                     targetComponentIndex: number;
                     targetInputIndex: number;
                 }[];
             }[];
         }[];
+        componentIndexes: { [path: string]: number };
         componentInputs: {
             inputIndex: number;
             componentIndex: number;
@@ -65,6 +84,7 @@ interface AssetsMap {
             outputIndex: number;
         }[];
     }[];
+    flowIndexes: { [path: string]: number };
     constants: any[];
     globalVariables: {
         index: number;
@@ -135,9 +155,22 @@ declare const WasmFlowRuntime: {
         elementIndex: number
     ): void;
 
+    _evalProperty(
+        flowStateIndex: number,
+        componentIndex: number,
+        propertyIndex: number,
+        iteratorsPtr: number
+    ): number;
+
     _valueFree(valuePtr: number): void;
 
     _setGlobalVariable(globalVariableIndex: number, valuePtr: number);
+
+    _DashboardContext_getFlowIndex(context: number): number;
+    _DashboardContext_getComponentIndex(context: number): number;
+
+    _DashboardContext_startAsyncExecution(context: number): number;
+    _DashboardContext_endAsyncExecution(context: number);
 
     _DashboardContext_evalProperty(
         context: number,
@@ -153,6 +186,11 @@ declare const WasmFlowRuntime: {
 
     _DashboardContext_freeExpressionListParam(context: number, ptr: number);
 
+    _DashboardContext_propagateValue(
+        context: number,
+        outputIndex: number,
+        value: number
+    );
     _DashboardContext_propagateIntValue(
         context: number,
         outputIndex: number,
@@ -173,6 +211,11 @@ declare const WasmFlowRuntime: {
         outputIndex: number,
         value: number
     );
+    _DashboardContext_propagateUndefinedValue(
+        context: number,
+        outputIndex: number
+    );
+    _DashboardContext_propagateNullValue(context: number, outputIndex: number);
 
     _DashboardContext_propagateValueThroughSeqout(context: number);
 

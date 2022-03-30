@@ -5671,6 +5671,18 @@ var _malloc = Module["_malloc"] = createExportWrapper("malloc");
 var _free = Module["_free"] = createExportWrapper("free");
 
 /** @type {function(...*):?} */
+var _DashboardContext_getFlowIndex = Module["_DashboardContext_getFlowIndex"] = createExportWrapper("DashboardContext_getFlowIndex");
+
+/** @type {function(...*):?} */
+var _DashboardContext_getComponentIndex = Module["_DashboardContext_getComponentIndex"] = createExportWrapper("DashboardContext_getComponentIndex");
+
+/** @type {function(...*):?} */
+var _DashboardContext_startAsyncExecution = Module["_DashboardContext_startAsyncExecution"] = createExportWrapper("DashboardContext_startAsyncExecution");
+
+/** @type {function(...*):?} */
+var _DashboardContext_endAsyncExecution = Module["_DashboardContext_endAsyncExecution"] = createExportWrapper("DashboardContext_endAsyncExecution");
+
+/** @type {function(...*):?} */
 var _DashboardContext_evalProperty = Module["_DashboardContext_evalProperty"] = createExportWrapper("DashboardContext_evalProperty");
 
 /** @type {function(...*):?} */
@@ -5683,6 +5695,9 @@ var _DashboardContext_getExpressionListParam = Module["_DashboardContext_getExpr
 var _DashboardContext_freeExpressionListParam = Module["_DashboardContext_freeExpressionListParam"] = createExportWrapper("DashboardContext_freeExpressionListParam");
 
 /** @type {function(...*):?} */
+var _DashboardContext_propagateValue = Module["_DashboardContext_propagateValue"] = createExportWrapper("DashboardContext_propagateValue");
+
+/** @type {function(...*):?} */
 var _DashboardContext_propagateIntValue = Module["_DashboardContext_propagateIntValue"] = createExportWrapper("DashboardContext_propagateIntValue");
 
 /** @type {function(...*):?} */
@@ -5693,6 +5708,12 @@ var _DashboardContext_propagateBooleanValue = Module["_DashboardContext_propagat
 
 /** @type {function(...*):?} */
 var _DashboardContext_propagateStringValue = Module["_DashboardContext_propagateStringValue"] = createExportWrapper("DashboardContext_propagateStringValue");
+
+/** @type {function(...*):?} */
+var _DashboardContext_propagateUndefinedValue = Module["_DashboardContext_propagateUndefinedValue"] = createExportWrapper("DashboardContext_propagateUndefinedValue");
+
+/** @type {function(...*):?} */
+var _DashboardContext_propagateNullValue = Module["_DashboardContext_propagateNullValue"] = createExportWrapper("DashboardContext_propagateNullValue");
 
 /** @type {function(...*):?} */
 var _DashboardContext_propagateValueThroughSeqout = Module["_DashboardContext_propagateValueThroughSeqout"] = createExportWrapper("DashboardContext_propagateValueThroughSeqout");
@@ -5720,6 +5741,9 @@ var _arrayValueSetElementString = Module["_arrayValueSetElementString"] = create
 
 /** @type {function(...*):?} */
 var _arrayValueSetElementNull = Module["_arrayValueSetElementNull"] = createExportWrapper("arrayValueSetElementNull");
+
+/** @type {function(...*):?} */
+var _evalProperty = Module["_evalProperty"] = createExportWrapper("evalProperty");
 
 /** @type {function(...*):?} */
 var _valueFree = Module["_valueFree"] = createExportWrapper("valueFree");

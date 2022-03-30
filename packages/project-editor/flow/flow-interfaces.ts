@@ -56,6 +56,12 @@ export type LogItemType =
     | "debug";
 
 export interface IRuntime {
+    assignValue(
+        flowState: IFlowState,
+        sourceComponent: Component,
+        assignableExpression: string,
+        value: any
+    ): void;
     propagateValue(
         flowState: IFlowState,
         sourceComponent: Component,

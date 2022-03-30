@@ -15,7 +15,6 @@ import {
     getChildOfObject,
     getClass,
     getClassInfo,
-    getHumanReadableObjectPath,
     getObjectPathAsString,
     Section
 } from "project-editor/store";
@@ -23,7 +22,8 @@ import { visitObjects } from "project-editor/core/search";
 import { CommentActionComponent } from "project-editor/flow/components/actions";
 import {
     buildExpression,
-    operationIndexes
+    operationIndexes,
+    templateLiteralToExpression
 } from "project-editor/flow/expression";
 import {
     buildConstantFlowValue,
@@ -113,7 +113,6 @@ function buildComponent(
     assets.map.flows[flowIndex].components[componentIndex] = {
         componentIndex,
         path: getObjectPathAsString(component),
-        pathReadable: getHumanReadableObjectPath(component),
         outputs: []
     };
 
@@ -155,8 +154,14 @@ function buildComponent(
     });
 
     // property values
-    const properties = getClassInfo(component).properties.filter(propertyInfo =>
-        isFlowProperty(assets.DocumentStore, propertyInfo, "input")
+    const properties = getClassInfo(component).properties.filter(
+        propertyInfo =>
+            isFlowProperty(assets.DocumentStore, propertyInfo, "input") ||
+            isFlowProperty(
+                assets.DocumentStore,
+                propertyInfo,
+                "template-literal"
+            )
     );
     properties.forEach((propertyInfo, propertyValueIndex) =>
         assets.registerComponentProperty(
@@ -168,13 +173,11 @@ function buildComponent(
     );
     dataBuffer.writeArray(properties, propertyInfo => {
         try {
-            // as property
-            buildExpression(
-                assets,
-                dataBuffer,
-                component,
-                getProperty(component, propertyInfo.name)
-            );
+            let expression = getProperty(component, propertyInfo.name);
+            if (propertyInfo.flowProperty == "template-literal") {
+                expression = templateLiteralToExpression(expression);
+            }
+            buildExpression(assets, dataBuffer, component, expression);
         } catch (err) {
             assets.DocumentStore.outputSectionsStore.write(
                 Section.OUTPUT,
@@ -235,6 +238,7 @@ function buildComponent(
 
         assets.map.flows[flowIndex].components[componentIndex].outputs.push({
             outputName: output.name,
+            valueTypeIndex: assets.getTypeIndex(output.valueType),
             connectionLines: connectionLinesMap
         });
     });
@@ -271,8 +275,8 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
     assets.map.flows[flowIndex] = {
         flowIndex,
         path: getObjectPathAsString(flow),
-        pathReadable: getHumanReadableObjectPath(flow),
         components: [],
+        componentIndexes: {},
         componentInputs: [],
         localVariables: [],
         widgetDataItems: [],
@@ -450,7 +454,16 @@ export function buildFlowDefs(assets: Assets) {
         const properties =
             componentType.objectClass.classInfo.properties.filter(
                 propertyInfo =>
-                    isFlowProperty(assets.DocumentStore, propertyInfo, "input")
+                    isFlowProperty(
+                        assets.DocumentStore,
+                        propertyInfo,
+                        "input"
+                    ) ||
+                    isFlowProperty(
+                        assets.DocumentStore,
+                        propertyInfo,
+                        "template-literal"
+                    )
             );
 
         let enumItems = properties.map(

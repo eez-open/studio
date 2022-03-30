@@ -33,6 +33,7 @@ import type { ConnectionLine } from "project-editor/flow/flow";
 import { visitObjects } from "project-editor/core/search";
 import {
     evalAssignableExpression,
+    evalExpression,
     IExpressionContext
 } from "project-editor/flow/expression";
 import {
@@ -780,6 +781,15 @@ export class LocalRuntime extends RuntimeBase {
         } else {
             throw "Missing flow state";
         }
+    }
+
+    evalProperty(
+        flowContext: IFlowContext,
+        widget: Widget,
+        propertyName: string
+    ) {
+        let expr = (widget as any)[propertyName];
+        return evalExpression(flowContext, widget, expr);
     }
 }
 

@@ -102,6 +102,8 @@ export interface IComponentFlowState {
     getComponentRunningState<T>(): T | undefined;
     setComponentRunningState<T>(runningState: T): void;
     evalExpression(expression: string): any;
+    evalTemplateLiteral(expression: string): any;
+    assignValue(assignableExpression: string, value: any): any;
     propagateValue(output: string, value: any): void;
     throwError(err: string): void;
     log(type: LogItemType, message: string): void;
@@ -172,6 +174,12 @@ export interface IExpressionComponentProperty extends IComponentPropertyBase {
     valueType: ValueType;
 }
 
+export interface IAssignableExpressionComponentProperty
+    extends IComponentPropertyBase {
+    type: "assignable-expression";
+    valueType: ValueType;
+}
+
 export interface ITemplateLiteralComponentProperty
     extends IComponentPropertyBase {
     type: "template-literal";
@@ -179,11 +187,29 @@ export interface ITemplateLiteralComponentProperty
 
 export type IComponentProperty =
     | IExpressionComponentProperty
+    | IAssignableExpressionComponentProperty
     | ITemplateLiteralComponentProperty;
 
 export type IDisposeComponentState = () => void;
 
 export type IComponentIsRunning = boolean;
+
+export interface ICustomInput {
+    name: string;
+    type: ValueType;
+}
+
+export interface ICustomOutput {
+    name: string;
+    type: ValueType;
+}
+
+export interface IActionComponent {
+    [propertyName: string]: any;
+
+    customInputs: ICustomInput[];
+    customOutputs: ICustomOutput[];
+}
 
 export interface IActionComponentDefinition {
     name: string;
@@ -197,6 +223,10 @@ export interface IActionComponentDefinition {
     outputs: IComponentOutput[];
 
     properties: IComponentProperty[];
+
+    defaults?: any;
+
+    migrateProperties?: (component: IActionComponent) => void;
 
     execute(
         flowState: IComponentFlowState,

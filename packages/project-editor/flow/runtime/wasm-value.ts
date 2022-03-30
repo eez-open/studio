@@ -22,6 +22,11 @@ import {
     FLOW_VALUE_TYPE_UINT8,
     FLOW_VALUE_TYPE_UNDEFINED
 } from "project-editor/build/value-types";
+import type {
+    ObjectOrArrayValueWithType,
+    Value,
+    ValueWithType
+} from "project-editor/flow/runtime/wasm-worker-interfaces";
 
 type Values = (null | boolean | number | string | ArrayValue)[];
 
@@ -33,7 +38,7 @@ export type ArrayValue = {
 };
 
 export function createJsArrayValue(
-    valueType: ValueType,
+    valueTypeIndex: number,
     value: any,
     assetsMap: AssetsMap,
     objectVariableType: IObjectVariableType | undefined
@@ -46,9 +51,29 @@ export function createJsArrayValue(
             | undefined
     ): ArrayValue | undefined {
         const type = assetsMap.types[valueTypeIndex];
-        return {
-            valueTypeIndex,
-            values: type.fields.map((field, i) => {
+
+        let values;
+        if (type.kind == "array") {
+            values = value.map((elementValue: any) => {
+                let fieldValueFieldDescriptions:
+                    | IObjectVariableValueFieldDescription[]
+                    | undefined;
+
+                if (valueFieldDescriptions) {
+                    const temp = valueFieldDescriptions[0];
+                    if (typeof temp.valueType != "string") {
+                        fieldValueFieldDescriptions = temp.valueType;
+                    }
+                }
+
+                return createArrayValue(
+                    assetsMap.typeIndexes[type.elementType.valueType],
+                    elementValue,
+                    fieldValueFieldDescriptions
+                );
+            });
+        } else if (type.kind == "object") {
+            values = type.fields.map((field, i) => {
                 const fieldValue = valueFieldDescriptions
                     ? valueFieldDescriptions[i].getFieldValue(value)
                     : value[field.name];
@@ -67,20 +92,22 @@ export function createJsArrayValue(
                         }
                     }
 
-                    return createArrayValue(
-                        fieldValueTypeIndex,
-                        fieldValue,
-                        fieldValueFieldDescriptions
-                    );
+                    if (fieldValueFieldDescriptions) {
+                        return createArrayValue(
+                            fieldValueTypeIndex,
+                            fieldValue,
+                            fieldValueFieldDescriptions
+                        );
+                    }
                 }
                 return fieldValue;
-            })
-        };
-    }
+            });
+        }
 
-    const valueTypeIndex = assetsMap.typeIndexes[valueType];
-    if (valueTypeIndex == undefined) {
-        return undefined;
+        return {
+            valueTypeIndex,
+            values
+        };
     }
 
     return createArrayValue(
@@ -97,7 +124,12 @@ export function createWasmArrayValue(arrayValue: ArrayValue) {
         arrayValue.valueTypeIndex
     );
     for (let i = 0; i < arraySize; i++) {
-        const value = arrayValue.values[i];
+        let value = arrayValue.values[i];
+
+        if (value instanceof Date) {
+            value = value.toString();
+        }
+
         if (typeof value == "number") {
             if (Number.isInteger(value)) {
                 WasmFlowRuntime._arrayValueSetElementInt(
@@ -138,20 +170,6 @@ export function createWasmArrayValue(arrayValue: ArrayValue) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-type ValueWithType = {
-    value: Value;
-    valueType: ValueType;
-};
-
-type Value = null | undefined | boolean | number | string | ObjectOrArrayValue;
-
-type ObjectOrArrayValueWithType = {
-    value: ObjectOrArrayValue;
-    valueType: ValueType;
-};
-
-type ObjectOrArrayValue = undefined | Value[] | { [fieldName: string]: Value };
 
 export function getValue(offset: number): ValueWithType {
     const type = WasmFlowRuntime.HEAPU8[offset];
@@ -237,7 +255,17 @@ export function getArrayValue(
 ): ObjectOrArrayValueWithType {
     const arraySize = WasmFlowRuntime.HEAPU32[offset >> 2];
     const arrayType = WasmFlowRuntime.HEAPU32[(offset >> 2) + 1];
-    if (arrayType == TYPE_ARRAY) {
+
+    const type = WasmFlowRuntime.assetsMap.types[arrayType];
+    if (!type || type.kind == "basic") {
+        console.error("Invalid array value type");
+        return {
+            value: undefined,
+            valueType: "undefined" as ValueType
+        };
+    }
+
+    if (type.kind == "array") {
         if (
             expectedTypes &&
             !expectedTypes.find(valueType => valueType.startsWith("array:"))
@@ -254,18 +282,9 @@ export function getArrayValue(
         }
         return {
             value,
-            valueType: "array:any" as ValueType
+            valueType: `array:${type.elementType}` as ValueType
         };
     } else {
-        const type = WasmFlowRuntime.assetsMap.types[arrayType];
-        if (!type) {
-            console.error("Invalid array value type");
-            return {
-                value: undefined,
-                valueType: "undefined" as ValueType
-            };
-        }
-
         if (expectedTypes && expectedTypes.indexOf(type.valueType) == -1) {
             return {
                 value: undefined,

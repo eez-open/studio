@@ -2,7 +2,10 @@ import { DocumentStoreClass } from "project-editor/store";
 import { Component, Widget } from "project-editor/flow/component";
 import { FlowState, QueueTask, RuntimeBase } from "project-editor/flow/runtime";
 import type { ConnectionLine } from "project-editor/flow/flow";
-import { IExpressionContext } from "project-editor/flow/expression";
+import {
+    evalExpression,
+    IExpressionContext
+} from "project-editor/flow/expression";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 
 export class DebugInfoRuntime extends RuntimeBase {
@@ -85,5 +88,14 @@ export class DebugInfoRuntime extends RuntimeBase {
 
     toggleDebugger() {
         this.DocumentStore.onRestart();
+    }
+
+    evalProperty(
+        flowContext: IFlowContext,
+        widget: Widget,
+        propertyName: string
+    ) {
+        let expr = (widget as any)[propertyName];
+        return evalExpression(flowContext, widget, expr);
     }
 }

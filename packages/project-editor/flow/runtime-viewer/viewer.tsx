@@ -626,7 +626,8 @@ export const FlowViewer = observer(
                                         position: "absolute"
                                     }}
                                 >
-                                    {flow.renderComponents(this.flowContext)}
+                                    {this.flowContext.flowState &&
+                                        flow.renderComponents(this.flowContext)}
                                 </div>
                                 {!this.props.tabState.frontFace && (
                                     <AllConnectionLines

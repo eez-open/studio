@@ -1,16 +1,36 @@
 import type { ArrayValue } from "project-editor/flow/runtime/wasm-value";
+import type { ValueType } from "project-editor/features/variable/value-type";
 
-export type ObjectGlobalVariableValues = {
-    globalVariableIndex: number;
-    arrayValue: ArrayValue;
-}[];
+////////////////////////////////////////////////////////////////////////////////
 
+// message data sent from WASM worker to renderer
+export interface WorkerToRenderMessage {
+    // sent from worker once at the start
+    init?: any;
+
+    // screen data (to be displayed in Canvas), sent from worker at each tick
+    screen?: Uint8ClampedArray;
+
+    // message from worker to Studio debugger
+    messageToDebugger?: Uint8Array;
+
+    // SCPI command to execute (only renderer is able to execute SCPI commands)
+    scpiCommand?: ScpiCommand;
+
+    // evaluated property values
+    propertyValues?: IPropertyValue[];
+}
+
+// message data sent from renderer to WASM worker
 export interface RendererToWorkerMessage {
+    // response to init message from WASM worker
     init?: {
         assetsData: Uint8Array;
         assetsMap: AssetsMap;
         objectGlobalVariableValues: ObjectGlobalVariableValues;
     };
+
+    // mouse data from Canvas
     wheel?: {
         deltaY: number;
         clicked: number;
@@ -20,16 +40,65 @@ export interface RendererToWorkerMessage {
         y: number;
         pressed: number;
     }[];
+
+    // message from Studio debugger to worker
     messageFromDebugger?: ArrayBuffer;
+
+    // result of SCPI command execution
     scpiResult?: ScpiResult;
+
+    // request to worker to evaluate some property values
+    evalProperties?: IEvalProperty[];
 }
 
-export interface WorkerToRenderMessage {
-    init?: any;
-    screen?: Uint8ClampedArray;
-    messageToDebugger?: Uint8Array;
-    scpiCommand?: ScpiCommand;
+////////////////////////////////////////////////////////////////////////////////
+
+export type ObjectGlobalVariableValues = {
+    globalVariableIndex: number;
+    arrayValue: ArrayValue;
+}[];
+
+////////////////////////////////////////////////////////////////////////////////
+
+export interface IEvalProperty {
+    flowStateIndex: number;
+    componentIndex: number;
+    propertyIndex: number;
+    propertyValueIndex: number;
+    indexes: number[];
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+export interface IPropertyValue {
+    propertyValueIndex: number;
+    valueWithType: ValueWithType;
+}
+
+export type ValueWithType = {
+    value: Value;
+    valueType: ValueType;
+};
+
+export type Value =
+    | null
+    | undefined
+    | boolean
+    | number
+    | string
+    | ObjectOrArrayValue;
+
+export type ObjectOrArrayValueWithType = {
+    value: ObjectOrArrayValue;
+    valueType: ValueType;
+};
+
+export type ObjectOrArrayValue =
+    | undefined
+    | Value[]
+    | { [fieldName: string]: Value };
+
+////////////////////////////////////////////////////////////////////////////////
 
 export interface ScpiCommand {
     instrumentId: string;

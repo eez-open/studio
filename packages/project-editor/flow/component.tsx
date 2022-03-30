@@ -24,7 +24,8 @@ import {
     isPropertyHidden,
     getProperty,
     MessageType,
-    registerClass
+    registerClass,
+    FlowPropertyType
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -73,8 +74,10 @@ import type { Assets, DataBuffer } from "project-editor/build/assets";
 import {
     checkAssignableExpression,
     checkExpression,
+    checkTemplateLiteralExpression,
     evalConstantExpression,
-    parseIdentifier
+    parseIdentifier,
+    templateLiteralToExpression
 } from "project-editor/flow/expression";
 import {
     variableTypeProperty,
@@ -421,6 +424,20 @@ export function makeAssignableExpressionProperty(
     );
 }
 
+export function makeTemplateLiteralProperty(
+    propertyInfo: PropertyInfo
+): PropertyInfo {
+    return Object.assign(
+        {
+            flowProperty: "template-literal",
+            expressionType: "string",
+            monospaceFont: true,
+            disableSpellcheck: true
+        } as Partial<PropertyInfo>,
+        propertyInfo
+    );
+}
+
 export function makeToggablePropertyToOutput(
     propertyInfo: PropertyInfo
 ): PropertyInfo {
@@ -497,7 +514,7 @@ export function makeToggablePropertyToOutput(
 export function isFlowProperty(
     DocumentStore: DocumentStoreClass,
     propertyInfo: PropertyInfo,
-    flowPropertyType: "input" | "output" | "assignable"
+    flowPropertyType: FlowPropertyType
 ) {
     if (!propertyInfo.flowProperty) {
         return false;
@@ -1427,6 +1444,43 @@ export class Component extends EezObject {
                                 )
                             );
                         }
+                    } else if (
+                        isFlowProperty(
+                            DocumentStore,
+                            propertyInfo,
+                            "template-literal"
+                        )
+                    ) {
+                        const value = getProperty(component, propertyInfo.name);
+                        if (value != undefined && value !== "") {
+                            try {
+                                checkTemplateLiteralExpression(
+                                    component,
+                                    value
+                                );
+                            } catch (err) {
+                                messages.push(
+                                    new Message(
+                                        MessageType.ERROR,
+                                        `Invalid template literal: ${err}`,
+                                        getChildOfObject(
+                                            component,
+                                            propertyInfo.name
+                                        )
+                                    )
+                                );
+                            }
+                        } else if (
+                            !(component instanceof ProjectEditor.WidgetClass) &&
+                            !isPropertyHidden(component, propertyInfo)
+                        ) {
+                            messages.push(
+                                propertyNotSetMessage(
+                                    component,
+                                    propertyInfo.name
+                                )
+                            );
+                        }
                     }
                 }
             }
@@ -1601,7 +1655,11 @@ export class Component extends EezObject {
     }
 
     get buildOutputs() {
-        const outputs: { name: string; type: "output" | "property" }[] = [];
+        const outputs: {
+            name: string;
+            type: "output" | "property";
+            valueType: ValueType;
+        }[] = [];
 
         const DocumentStore = getDocumentStore(this);
 
@@ -1613,14 +1671,19 @@ export class Component extends EezObject {
                         !this.asOutputProperties ||
                         this.asOutputProperties.indexOf(propertyInfo.name) == -1
                             ? "property"
-                            : "output"
+                            : "output",
+                    valueType: propertyInfo.expressionType!
                 });
             }
         }
 
         for (const componentOutput of this.outputs) {
             if (!outputs.find(output => output.name == componentOutput.name)) {
-                outputs.push({ name: componentOutput.name, type: "output" });
+                outputs.push({
+                    name: componentOutput.name,
+                    type: "output",
+                    valueType: componentOutput.type
+                });
             }
         }
 
@@ -2648,22 +2711,41 @@ export function registerActionComponent(
                     propertyDefinition.valueType
                 )
             );
+        } else if (propertyDefinition.type === "assignable-expression") {
+            properties.push(
+                makeAssignableExpressionProperty(
+                    {
+                        name: propertyDefinition.name,
+                        displayName: propertyDefinition.displayName,
+                        type: PropertyType.MultilineText,
+                        propertyGridGroup: specificGroup
+                    },
+                    propertyDefinition.valueType
+                )
+            );
         } else {
-            properties.push({
-                name: propertyDefinition.name,
-                displayName: propertyDefinition.displayName,
-                type: PropertyType.MultilineText,
-                propertyGridGroup: specificGroup,
-                monospaceFont: true,
-                disableSpellcheck: true
-            });
+            properties.push(
+                makeTemplateLiteralProperty({
+                    name: propertyDefinition.name,
+                    displayName: propertyDefinition.displayName,
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                })
+            );
         }
     }
+
+    const migrateProperties = actionComponentDefinition.migrateProperties;
 
     const actionComponentClass = class extends ActionComponent {
         static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
             label: () => actionComponentDefinition.name,
             properties,
+            defaultValue: actionComponentDefinition.defaults,
+            beforeLoadHook: migrateProperties
+                ? (object: IEezObject, jsObject: any) =>
+                      migrateProperties(jsObject)
+                : undefined,
             icon:
                 typeof actionComponentDefinition.icon === "string" ? (
                     <img
@@ -2775,6 +2857,20 @@ export function registerActionComponent(
 
                     evalExpression: (expression: string) =>
                         flowState.evalExpression(this, expression),
+
+                    evalTemplateLiteral: (templateLiteral: string) =>
+                        flowState.evalExpression(
+                            this,
+                            templateLiteralToExpression(templateLiteral)
+                        ),
+
+                    assignValue: (assignableExpression: string, value: any) =>
+                        flowState.runtime.assignValue(
+                            flowState,
+                            this,
+                            assignableExpression,
+                            value
+                        ),
 
                     propagateValue: (output: string, value: any) =>
                         flowState.runtime.propagateValue(

@@ -10,7 +10,9 @@ import {
     isObjectType,
     isStructType,
     getObjectVariableTypeFromType,
-    objectVariableTypes
+    objectVariableTypes,
+    isArrayType,
+    getArrayElementTypeFromType
 } from "project-editor/features/variable/value-type";
 
 function getFieldIndexes(fields: IField[]): IIndexes {
@@ -53,6 +55,7 @@ export class TypesStore {
     createOpenType() {
         const valueType: ValueType = `dynamic:${this._numDynamicTypes++}`;
         const type: IType = {
+            kind: "object",
             valueType,
             fields: [],
             fieldIndexes: {},
@@ -63,7 +66,11 @@ export class TypesStore {
     }
 
     getValueTypeIndex(valueType: ValueType): number | undefined {
-        return this._typeIndexes[valueType];
+        const type = this.getTypeFromValueType(valueType);
+        if (!type) {
+            return undefined;
+        }
+        return this._typeIndexes[type.valueType];
     }
 
     getFieldType(
@@ -73,6 +80,14 @@ export class TypesStore {
         const type = this.getTypeFromValueType(valueType);
         if (!type) {
             return undefined;
+        }
+
+        if (type.kind == "basic") {
+            return undefined;
+        }
+
+        if (type.kind == "array") {
+            return type.elementType.valueType;
         }
 
         let field: IField | undefined;
@@ -97,7 +112,10 @@ export class TypesStore {
         if (!type) {
             return undefined;
         }
-        return type.fieldIndexes[fieldName];
+        if (type.kind == "object") {
+            return type.fieldIndexes[fieldName];
+        }
+        return undefined;
     }
 
     private addType(type: IType) {
@@ -109,6 +127,30 @@ export class TypesStore {
         const index = this._typeIndexes[valueType];
         if (index != undefined) {
             return this._types[index];
+        }
+
+        if (isArrayType(valueType)) {
+            const elementValueType = getArrayElementTypeFromType(valueType);
+            if (!elementValueType) {
+                return undefined;
+            }
+
+            const elementType = this.getTypeFromValueType(
+                elementValueType as ValueType
+            );
+            if (!elementType) {
+                return undefined;
+            }
+
+            const type: IType = {
+                kind: "array",
+                valueType,
+                elementType
+            };
+
+            this.addType(type);
+
+            return type;
         }
 
         if (isStructType(valueType)) {
@@ -135,7 +177,13 @@ export class TypesStore {
             }
         }
 
-        return undefined;
+        const type: IType = {
+            kind: "basic",
+            valueType
+        };
+        this.addType(type);
+
+        return type;
     }
 
     private structureToType(structure: Structure): IType {
@@ -145,6 +193,7 @@ export class TypesStore {
         }));
 
         return {
+            kind: "object",
             valueType: `struct:${structure.name}`,
             fields,
             fieldIndexes: getFieldIndexes(fields),
@@ -169,6 +218,7 @@ export class TypesStore {
         );
 
         return {
+            kind: "object",
             valueType,
             fields,
             fieldIndexes: getFieldIndexes(fields),
