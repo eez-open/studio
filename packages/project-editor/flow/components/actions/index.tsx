@@ -185,7 +185,7 @@ export class EndActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
             }
@@ -282,7 +282,7 @@ export class InputActionComponent extends ActionComponent {
             ...super.getOutputs(),
             {
                 name: "@seqout",
-                type: "null" as ValueType,
+                type: this.inputType,
                 isSequenceOutput: true,
                 isOptionalOutput: false
             }
@@ -372,7 +372,7 @@ export class OutputActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
             }
@@ -454,7 +454,7 @@ export class EvalExprActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
             }
@@ -543,7 +543,7 @@ export class WatchVariableActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
             }
@@ -562,7 +562,7 @@ export class WatchVariableActionComponent extends ActionComponent {
             {
                 name: "variable",
                 displayName: "changed",
-                type: "any",
+                type: "any" as ValueType,
                 isSequenceOutput: false,
                 isOptionalOutput: false
             }
@@ -716,7 +716,7 @@ export class EvalJSExprActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
             }
@@ -877,7 +877,7 @@ export class SetVariableActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
             }
@@ -1023,7 +1023,7 @@ export class SwitchActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
             }
@@ -1043,7 +1043,7 @@ export class SwitchActionComponent extends ActionComponent {
                 .filter(test => !!test.outputName)
                 .map(test => ({
                     name: test.outputName,
-                    type: "null" as ValueType,
+                    type: "boolean" as ValueType,
                     isSequenceOutput: true,
                     isOptionalOutput: false
                 }))
@@ -1189,7 +1189,7 @@ export class CompareActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
             }
@@ -1207,13 +1207,13 @@ export class CompareActionComponent extends ActionComponent {
             },
             {
                 name: "True",
-                type: "null",
+                type: "boolean",
                 isSequenceOutput: true,
                 isOptionalOutput: outputIsOptionalIfAtLeastOneOutputExists
             },
             {
                 name: "False",
-                type: "null",
+                type: "boolean",
                 isSequenceOutput: true,
                 isOptionalOutput: outputIsOptionalIfAtLeastOneOutputExists
             }
@@ -1382,7 +1382,7 @@ export class IsTrueActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
             }
@@ -1401,14 +1401,14 @@ export class IsTrueActionComponent extends ActionComponent {
             {
                 name: "True",
                 displayName: "Yes",
-                type: "null",
+                type: "boolean",
                 isSequenceOutput: true,
                 isOptionalOutput: outputIsOptionalIfAtLeastOneOutputExists
             },
             {
                 name: "False",
                 displayName: "No",
-                type: "null",
+                type: "boolean",
                 isSequenceOutput: true,
                 isOptionalOutput: outputIsOptionalIfAtLeastOneOutputExists
             }
@@ -1494,7 +1494,7 @@ export class ConstantActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
             }
@@ -1621,7 +1621,7 @@ export class ReadSettingActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
             }
@@ -1722,7 +1722,7 @@ export class WriteSettingsActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
             }
@@ -1804,7 +1804,7 @@ export class LogActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
             }
@@ -1917,7 +1917,7 @@ export class CallActionActionComponent extends ActionComponent {
                 inputs = [
                     {
                         name: "@seqin",
-                        type: "null" as ValueType,
+                        type: "any" as ValueType,
                         isSequenceInput: true,
                         isOptionalInput: false
                     }
@@ -1938,7 +1938,7 @@ export class CallActionActionComponent extends ActionComponent {
                 if (action.startComponent) {
                     inputs.unshift({
                         name: "@seqin",
-                        type: "null" as ValueType,
+                        type: "any" as ValueType,
                         isSequenceInput: true,
                         isOptionalInput: false
                     });
@@ -2133,7 +2133,7 @@ export class DynamicCallActionActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
             }
@@ -2234,7 +2234,7 @@ export class DelayActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
             }
@@ -2317,7 +2317,7 @@ export class ErrorActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
             }
@@ -2442,7 +2442,7 @@ export class CounterActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
             }
@@ -2599,13 +2599,13 @@ export class LoopActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "start",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
             },
             {
                 name: "next",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
             }
@@ -2746,7 +2746,7 @@ export class ShowPageActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
             }
@@ -2864,7 +2864,7 @@ export class ShowMessageBoxActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
             }
@@ -2995,7 +2995,7 @@ export class ShowKeyboardActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
             }
@@ -3131,7 +3131,7 @@ export class ShowKeypadActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
             }
@@ -3234,7 +3234,7 @@ export class NoopActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
             }

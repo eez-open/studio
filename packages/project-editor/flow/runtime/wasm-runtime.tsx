@@ -37,6 +37,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { makeObservable, observable, runInAction } from "mobx";
 import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
+import type { ValueType } from "eez-studio-types";
 
 export class WasmRuntime extends RemoteRuntime {
     debuggerConnection = new WasmDebuggerConnection(this);
@@ -83,7 +84,7 @@ export class WasmRuntime extends RemoteRuntime {
         }
 
         this.assetsData = result.GUI_ASSETS_DATA;
-        //console.log(this.assetsMap);
+        console.log(this.assetsMap);
 
         if (this.DocumentStore.project.isDashboardProject) {
             await this.DocumentStore.runtimeSettings.loadPersistentVariables();
@@ -128,6 +129,11 @@ export class WasmRuntime extends RemoteRuntime {
         } else {
             if (e.data.scpiCommand) {
                 this.executeScpiCommand(e.data.scpiCommand);
+                return;
+            }
+
+            if (e.data.connectToInstrumentId) {
+                this.connectToInstrument(e.data.connectToInstrumentId);
                 return;
             }
 
@@ -292,20 +298,41 @@ export class WasmRuntime extends RemoteRuntime {
 
                     const connection = instrument.connection;
 
-                    await connection.acquire(false);
+                    try {
+                        await connection.acquire(false);
+                    } catch (err) {
+                        let data: RendererToWorkerMessage;
+                        data = {
+                            scpiResult: {
+                                errorMessage: err.toString()
+                            }
+                        };
+                        this.worker.postMessage(data);
+                        return;
+                    }
 
                     let result: any = "";
                     try {
-                        result = await connection.query(command);
+                        if (scpiCommand.isQuery) {
+                            //console.log("SCPI query", command);
+                            result = await connection.query(command);
+                            //console.log("SCPI result", result);
+                        } else {
+                            //console.log("SCPI command", command);
+                            connection.query(command);
+                            result = "";
+                        }
                     } finally {
                         connection.release();
                     }
 
                     let data: RendererToWorkerMessage;
-                    if (typeof result == "string") {
+                    if (typeof result != "object") {
                         data = {
                             scpiResult: {
-                                result: binaryStringToArrayBuffer(result)
+                                result: binaryStringToArrayBuffer(
+                                    result.toString()
+                                )
                             }
                         };
                     } else {
@@ -322,6 +349,18 @@ export class WasmRuntime extends RemoteRuntime {
 
                     return;
                 }
+            }
+        }
+    }
+
+    connectToInstrument(instrumentId: string) {
+        for (let i = 0; i < this.objectVariableValues.length; i++) {
+            const instrument = this.objectVariableValues[i];
+            if (
+                instrument instanceof InstrumentObject &&
+                instrument.id == instrumentId
+            ) {
+                instrument.connection.connect();
             }
         }
     }
@@ -343,12 +382,67 @@ export class WasmRuntime extends RemoteRuntime {
     executeWidgetAction(
         flowContext: IFlowContext,
         widget: Widget,
-        value?: any
+        value: any,
+        valueType: ValueType
     ) {
-        let indexValue = flowContext.dataContext.get(
-            FLOW_ITERATOR_INDEXES_VARIABLE
+        const flowState = flowContext.flowState!;
+
+        const flowStateIndex = this.flowStateToFlowIndexMap.get(flowState);
+        if (flowStateIndex == undefined) {
+            console.error("Unexpected!");
+            return;
+        }
+
+        const flow = ProjectEditor.getFlow(widget);
+        const flowPath = getObjectPathAsString(flow);
+        const flowIndex = this.assetsMap.flowIndexes[flowPath];
+        if (flowIndex == undefined) {
+            console.error("Unexpected!");
+            return;
+        }
+
+        const componentPath = getObjectPathAsString(widget);
+        const componentIndex =
+            this.assetsMap.flows[flowIndex].componentIndexes[componentPath];
+        if (componentIndex == undefined) {
+            console.error("Unexpected!");
+            return;
+        }
+
+        const outputIndex = this.assetsMap.flows[flowIndex].components[
+            componentIndex
+        ].outputs.findIndex(output => output.outputName == "action");
+        if (outputIndex == -1) {
+            console.error("Unexpected!");
+            return;
+        }
+
+        const valueTypeIndex = this.assetsMap.typeIndexes[valueType];
+        if (valueTypeIndex == undefined) {
+            console.error("Unexpected!");
+            return;
+        }
+
+        const arrayValue = createJsArrayValue(
+            valueTypeIndex,
+            value,
+            this.assetsMap,
+            undefined
         );
-        console.log(indexValue);
+
+        if (arrayValue == undefined) {
+            console.error("Unexpected!");
+            return;
+        }
+
+        const message: RendererToWorkerMessage = {};
+        message.executeWidgetAction = {
+            flowStateIndex,
+            componentIndex,
+            outputIndex,
+            arrayValue
+        };
+        this.worker.postMessage(message);
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -513,7 +607,6 @@ class EvalProperties {
 
     valuesFromWorker(widgetPropertyValues: IPropertyValue[]) {
         if (widgetPropertyValues.length > 0) {
-            //console.log(widgetPropertyValues);
             runInAction(() => {
                 widgetPropertyValues.forEach(propertyValue => {
                     this.propertyValues[propertyValue.propertyValueIndex] =

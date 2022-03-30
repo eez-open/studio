@@ -82,7 +82,8 @@ import {
 import {
     variableTypeProperty,
     ValueType,
-    VariableTypeFieldComponent
+    VariableTypeFieldComponent,
+    ACTION_PARAMS_STRUCT_NAME
 } from "project-editor/features/variable/value-type";
 import { expressionBuilder } from "./expression/ExpressionBuilder";
 import { getComponentName } from "./editor/ComponentsPalette";
@@ -443,7 +444,6 @@ export function makeToggablePropertyToOutput(
 ): PropertyInfo {
     return Object.assign(propertyInfo, {
         flowProperty: "output",
-        expressionType: "null",
         propertyMenu(props: PropertyProps) {
             let menuItems: Electron.MenuItem[] = [];
 
@@ -1241,7 +1241,7 @@ export class Component extends EezObject {
                 ) {
                     messages.push(
                         new Message(
-                            MessageType.ERROR,
+                            MessageType.WARNING,
                             `Any type used`,
                             component
                         )
@@ -1298,7 +1298,7 @@ export class Component extends EezObject {
                 ) {
                     messages.push(
                         new Message(
-                            MessageType.ERROR,
+                            MessageType.WARNING,
                             `Any type used`,
                             component
                         )
@@ -1736,7 +1736,9 @@ export class Widget extends Component {
         properties: [
             resizingProperty,
             makeDataPropertyInfo("data"),
-            makeActionPropertyInfo("action"),
+            makeActionPropertyInfo("action", {
+                expressionType: `struct:${ACTION_PARAMS_STRUCT_NAME}`
+            }),
             makeStylePropertyInfo("style", "Normal style"),
             {
                 name: "allowOutside",
@@ -2780,7 +2782,7 @@ export function registerActionComponent(
                 ...super.getInputs(),
                 {
                     name: "@seqin",
-                    type: "null",
+                    type: "any",
                     isSequenceInput: true,
                     isOptionalInput: true
                 },

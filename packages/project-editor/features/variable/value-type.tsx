@@ -18,7 +18,10 @@ import type { Project } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 import { humanize } from "eez-studio-shared/string";
 import { getPropertyValue } from "project-editor/components/PropertyGrid/utils";
-import type { IVariable } from "project-editor/flow/flow-interfaces";
+import type {
+    IFlowContext,
+    IVariable
+} from "project-editor/flow/flow-interfaces";
 import { _difference } from "eez-studio-shared/algorithm";
 
 import type {
@@ -26,6 +29,8 @@ import type {
     IObjectVariableValue,
     ValueType
 } from "eez-studio-types";
+import type { IStructure } from "project-editor/features/variable/variable";
+import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
 
 export type {
     IObjectVariableValueConstructorParams,
@@ -45,6 +50,46 @@ const basicTypeNames = [
     "string",
     "date",
     "any"
+];
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const ACTION_PARAMS_STRUCT_NAME = "$ActionParams";
+export const CHECKBOX_ACTION_PARAMS_STRUCT_NAME = "$CheckboxActionParams";
+
+export const SYSTEM_STRUCTURES: IStructure[] = [
+    {
+        name: ACTION_PARAMS_STRUCT_NAME,
+        fields: [
+            {
+                name: "index",
+                type: "integer"
+            },
+            {
+                name: "indexes",
+                type: "array:integer"
+            }
+        ],
+        fieldsMap: new Map()
+    },
+    {
+        name: CHECKBOX_ACTION_PARAMS_STRUCT_NAME,
+        fields: [
+            {
+                name: "index",
+                type: "integer"
+            },
+            {
+                name: "indexes",
+                type: "array:integer"
+            },
+            {
+                name: "value",
+                type: "boolean"
+            }
+        ],
+        fieldsMap: new Map()
+    }
 ];
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -192,7 +237,10 @@ const VariableTypeSelect = observer(
             </option>
         ));
 
-        const structures = project.variables.structures.map(struct => (
+        const structures = [
+            ...project.variables.structures,
+            ...SYSTEM_STRUCTURES
+        ].map(struct => (
             <option key={struct.name} value={addType(`struct:${struct.name}`)}>
                 {humanizeVariableType(`struct:${struct.name}`)}
             </option>
@@ -226,7 +274,10 @@ const VariableTypeSelect = observer(
             </option>
         ));
 
-        const arrayOfStructures = project.variables.structures.map(struct => (
+        const arrayOfStructures = [
+            ...project.variables.structures,
+            ...SYSTEM_STRUCTURES
+        ].map(struct => (
             <option
                 key={struct.name}
                 value={addType(`array:struct:${struct.name}`)}
@@ -478,7 +529,10 @@ export function getStructTypeNameFromType(type: string) {
     return result[1];
 }
 
-export function getStructureFromType(project: Project, type: string) {
+export function getStructureFromType(
+    project: Project,
+    type: string
+): IStructure | undefined {
     const structTypeName = getStructTypeNameFromType(type);
     if (!structTypeName) {
         return undefined;
@@ -684,4 +738,45 @@ export function registerObjectVariableType(
     ];
 
     objectVariableTypes.set(name, temp);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+interface ActionParamsValue {
+    index: number;
+    indexes: number[];
+}
+
+export function makeActionParamsValue(
+    flowContext: IFlowContext
+): ActionParamsValue {
+    let actionParamsValue: ActionParamsValue;
+
+    let indexes = flowContext.dataContext.get(FLOW_ITERATOR_INDEXES_VARIABLE);
+    if (indexes) {
+        actionParamsValue = {
+            index: indexes[0],
+            indexes
+        };
+    } else {
+        actionParamsValue = {
+            index: 0,
+            indexes: [0]
+        };
+    }
+
+    return actionParamsValue;
+}
+
+interface CheckboxActionParamsValue {
+    index: number;
+    indexes: number[];
+    value: boolean;
+}
+
+export function makeCheckboxActionParamsValue(
+    flowContext: IFlowContext,
+    value: boolean
+): CheckboxActionParamsValue {
+    return { ...makeActionParamsValue(flowContext), value };
 }

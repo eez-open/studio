@@ -6,7 +6,8 @@ import {
     evalExpression,
     IExpressionContext
 } from "project-editor/flow/expression";
-import { IFlowContext } from "project-editor/flow/flow-interfaces";
+import type { IFlowContext } from "project-editor/flow/flow-interfaces";
+import type { ValueType } from "eez-studio-types";
 
 export class DebugInfoRuntime extends RuntimeBase {
     pumpTimeoutId: any;
@@ -51,7 +52,8 @@ export class DebugInfoRuntime extends RuntimeBase {
     executeWidgetAction(
         flowContext: IFlowContext,
         widget: Widget,
-        value?: any
+        value: any,
+        valueType: ValueType
     ) {}
 
     readSettings(key: string) {}

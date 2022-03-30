@@ -55,7 +55,8 @@ import {
     ValueType,
     getObjectVariableTypeFromType,
     IObjectVariableValue,
-    getObjectType
+    getObjectType,
+    SYSTEM_STRUCTURES
 } from "project-editor/features/variable/value-type";
 import {
     FLOW_ITERATOR_INDEXES_VARIABLE,
@@ -399,6 +400,7 @@ export class Variable extends EezObject {
                             type: "string",
                             validators: [
                                 validators.required,
+                                validators.identifier,
                                 validators.unique({}, parent)
                             ]
                         },
@@ -448,7 +450,7 @@ export class Variable extends EezObject {
 
             if (variable.type === "any" || variable.type === "array:any") {
                 messages.push(
-                    new Message(MessageType.ERROR, `Any type used`, variable)
+                    new Message(MessageType.WARNING, `Any type used`, variable)
                 );
             }
 
@@ -919,7 +921,12 @@ export class DataContext implements IDataContext {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class StructureField extends EezObject {
+export interface IStructureField {
+    name: string;
+    type: ValueType;
+}
+
+export class StructureField extends EezObject implements IStructureField {
     name: string;
     type: ValueType;
 
@@ -949,7 +956,7 @@ export class StructureField extends EezObject {
             ) {
                 messages.push(
                     new Message(
-                        MessageType.ERROR,
+                        MessageType.WARNING,
                         `Any type used`,
                         structureField
                     )
@@ -972,6 +979,7 @@ export class StructureField extends EezObject {
                             type: "string",
                             validators: [
                                 validators.required,
+                                validators.identifier,
                                 validators.unique({}, parent)
                             ]
                         },
@@ -1007,7 +1015,13 @@ registerClass("StructureField", StructureField);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class Structure extends EezObject {
+export interface IStructure {
+    name: string;
+    fields: IStructureField[];
+    fieldsMap: Map<string, IStructureField>;
+}
+
+export class Structure extends EezObject implements IStructure {
     name: string;
     fields: StructureField[];
 
@@ -1039,6 +1053,7 @@ export class Structure extends EezObject {
                             type: "string",
                             validators: [
                                 validators.required,
+                                validators.identifier,
                                 validators.unique({}, parent)
                             ]
                         }
@@ -1064,7 +1079,7 @@ export class Structure extends EezObject {
     }
 
     get fieldsMap() {
-        const fieldsMap = new Map<string, StructureField>();
+        const fieldsMap = new Map<string, IStructureField>();
         this.fields.forEach(field => fieldsMap.set(field.name, field));
         return fieldsMap;
     }
@@ -1114,6 +1129,7 @@ export class EnumMember extends EezObject {
                             type: "string",
                             validators: [
                                 validators.required,
+                                validators.identifier,
                                 validators.unique({}, parent)
                             ]
                         }
@@ -1174,6 +1190,7 @@ export class Enum extends EezObject {
                             type: "string",
                             validators: [
                                 validators.required,
+                                validators.identifier,
                                 validators.unique({}, parent)
                             ]
                         }
@@ -1265,8 +1282,11 @@ export class ProjectVariables extends EezObject {
     }
 
     get structsMap() {
-        const map = new Map<string, Structure>();
+        const map = new Map<string, IStructure>();
         for (const structure of this.structures) {
+            map.set(structure.name, structure);
+        }
+        for (const structure of SYSTEM_STRUCTURES) {
             map.set(structure.name, structure);
         }
         return map;

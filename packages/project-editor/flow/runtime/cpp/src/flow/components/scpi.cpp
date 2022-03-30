@@ -69,6 +69,12 @@ bool parseScpiString(const char *&textArg, size_t &textLenArg) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+enum ScpiResultStatus {
+    SCPI_RESULT_STATUS_NOT_READY = 0,
+    SCPI_RESULT_STATUS_READY = 1,
+    SCPI_RESULT_STATUS_QUEUED = 2
+};
+
 struct ScpiComponentExecutionState : public ComponenentExecutionState {
 	uint8_t op;
 	int instructionIndex;
@@ -96,14 +102,14 @@ struct ScpiComponentExecutionState : public ComponenentExecutionState {
         }
     }
 
-	bool scpi(eez::gui::ArrayValue *instrument) {
+	ScpiResultStatus scpi(eez::gui::ArrayValue *instrument, bool isQuery) {
 		if (g_waitingForScpiResult) {
 			if (g_waitingForScpiResult == this && g_waitingForScpiResult->resultIsReady) {
 				g_waitingForScpiResult = nullptr;
-				return true;
+				return SCPI_RESULT_STATUS_READY;
 			}
 
-			return false;
+			return SCPI_RESULT_STATUS_NOT_READY;
 		}
 
 		g_waitingForScpiResult = this;
@@ -115,11 +121,19 @@ struct ScpiComponentExecutionState : public ComponenentExecutionState {
         resultIsReady = false;
 
 		EM_ASM({
-            executeScpi($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2));
-        }, instrument, commandOrQueryText, strlen(commandOrQueryText));
+            executeScpi($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2), $3);
+        }, instrument, commandOrQueryText, strlen(commandOrQueryText), isQuery ? 1 : 0);
 
-		return false;
+		return SCPI_RESULT_STATUS_QUEUED;
 	}
+
+    ScpiResultStatus scpiCommand(eez::gui::ArrayValue *instrument) {
+        return scpi(instrument, false);
+    }
+
+    ScpiResultStatus scpiQuery(eez::gui::ArrayValue *instrument) {
+        return scpi(instrument, true);
+    }
 
     bool getLatestScpiResult(FlowState *flowState, unsigned componentIndex, const char **resultText, size_t *resultTextLen) {
         if (errorMessage) {
@@ -148,6 +162,8 @@ struct ScpiComponentExecutionState : public ComponenentExecutionState {
             result[j + 1] = '"';
             resultLen -= i - j;
         }
+
+        // printf("%d, %.*s\n", (int)resultLen, (int)resultLen, result);
 
         *resultText = result;
         *resultTextLen = resultLen;
@@ -247,8 +263,9 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 				logScpiQuery(flowState, componentIndex, scpiComponentExecutionState->commandOrQueryText);
 			}
 
-			if (!scpiComponentExecutionState->scpi(instrumentArrayValue)) {
-				if (!addToQueue(flowState, componentIndex)) {
+            auto scpiResultStatus = scpiComponentExecutionState->scpiQuery(instrumentArrayValue);
+			if (scpiResultStatus != SCPI_RESULT_STATUS_READY) {
+				if (!addToQueue(flowState, componentIndex, -1, -1, -1, scpiResultStatus == SCPI_RESULT_STATUS_NOT_READY)) {
 					throwError(flowState, componentIndex, "Execution queue is full\n");
 				}
 				return;
@@ -282,11 +299,11 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 			} else {
 				char *strEnd;
 				long num = strtol(resultText, &strEnd, 10);
-				if (*strEnd == 0) {
+				if (strEnd == resultText + resultTextLen) {
 					srcValue = Value((int)num, VALUE_TYPE_INT32);
 				} else {
 					float fnum = strtof(resultText, &strEnd);
-					if (*strEnd == 0) {
+					if (strEnd == resultText + resultTextLen) {
 						srcValue = Value(fnum, VALUE_TYPE_FLOAT);
 					} else {
 						srcValue = Value::makeStringRef(resultText, resultTextLen, 0x09143fa4);
@@ -300,8 +317,9 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 				logScpiQuery(flowState, componentIndex, scpiComponentExecutionState->commandOrQueryText);
 			}
 
-			if (!scpiComponentExecutionState->scpi(instrumentArrayValue)) {
-				if (!addToQueue(flowState, componentIndex)) {
+            auto scpiResultStatus = scpiComponentExecutionState->scpiQuery(instrumentArrayValue);
+			if (scpiResultStatus != SCPI_RESULT_STATUS_READY) {
+				if (!addToQueue(flowState, componentIndex, -1, -1, -1, scpiResultStatus == SCPI_RESULT_STATUS_NOT_READY)) {
 					throwError(flowState, componentIndex, "Execution queue is full\n");
 				}
 				return;
@@ -319,8 +337,9 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 				logScpiCommand(flowState, componentIndex, scpiComponentExecutionState->commandOrQueryText);
 			}
 
-			if (!scpiComponentExecutionState->scpi(instrumentArrayValue)) {
-				if (!addToQueue(flowState, componentIndex)) {
+            auto scpiResultStatus = scpiComponentExecutionState->scpiCommand(instrumentArrayValue);
+			if (scpiResultStatus != SCPI_RESULT_STATUS_READY) {
+				if (!addToQueue(flowState, componentIndex, -1, -1, -1, scpiResultStatus == SCPI_RESULT_STATUS_NOT_READY)) {
 					throwError(flowState, componentIndex, "Execution queue is full\n");
 				}
 				return;

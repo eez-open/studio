@@ -15,6 +15,7 @@ import {
     getChildOfObject,
     getClass,
     getClassInfo,
+    getHumanReadableObjectPath,
     getObjectPathAsString,
     Section
 } from "project-editor/store";
@@ -113,6 +114,7 @@ function buildComponent(
     assets.map.flows[flowIndex].components[componentIndex] = {
         componentIndex,
         path: getObjectPathAsString(component),
+        readablePath: getHumanReadableObjectPath(component),
         outputs: []
     };
 
@@ -275,6 +277,7 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
     assets.map.flows[flowIndex] = {
         flowIndex,
         path: getObjectPathAsString(flow),
+        readablePath: getHumanReadableObjectPath(flow),
         components: [],
         componentIndexes: {},
         componentInputs: [],

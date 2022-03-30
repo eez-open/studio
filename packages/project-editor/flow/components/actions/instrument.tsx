@@ -227,7 +227,7 @@ export class SCPIActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
             }
@@ -563,7 +563,7 @@ export class SelectInstrumentActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
             }
@@ -645,7 +645,7 @@ export class GetInstrumentActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
             }
@@ -733,7 +733,7 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
             ...super.getInputs(),
             {
                 name: "@seqin",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
             }

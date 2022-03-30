@@ -128,6 +128,7 @@ export class Assets {
     map: AssetsMap = {
         flows: [],
         flowIndexes: {},
+        actionFlowIndexes: {},
         constants: [],
         globalVariables: [],
         dashboardComponentTypeToNameMap: {},
@@ -1062,6 +1063,11 @@ export class Assets {
             flow.components.forEach(
                 (component, i) => (flow.componentIndexes[component.path] = i)
             );
+        });
+
+        this.DocumentStore.project.actions.forEach(action => {
+            this.map.actionFlowIndexes[action.name] =
+                this.map.flowIndexes[getObjectPathAsString(action)];
         });
 
         this.map.types = this.DocumentStore.typesStore.types;

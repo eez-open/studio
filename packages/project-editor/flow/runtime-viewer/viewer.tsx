@@ -541,9 +541,15 @@ export const FlowViewer = observer(
                     const selectionEl = this.divRef.current?.querySelector(
                         ".EezStudio_FlowRuntimeSelection"
                     ) as HTMLDivElement;
+                    if (!selectionEl) {
+                        return;
+                    }
                     const canvasEl = this.divRef.current?.querySelector(
                         ".eez-canvas"
                     ) as HTMLCanvasElement;
+                    if (!canvasEl) {
+                        return;
+                    }
 
                     canvasEl.style.transition = "transform 0.2s";
                     selectionEl.style.display = "none";

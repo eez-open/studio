@@ -26,7 +26,7 @@ function writeDebuggerBuffer(arr: any) {
 
 function finishToDebuggerMessage() {}
 
-function executeScpi(instrumentPtr: number, arr: any) {
+function executeScpi(instrumentPtr: number, arr: any, isQuery: number) {
     const result = getArrayValue(instrumentPtr, ["object:Instrument"]);
     if (!result) {
         WasmFlowRuntime._onScpiResult(
@@ -44,7 +44,8 @@ function executeScpi(instrumentPtr: number, arr: any) {
     const data: WorkerToRenderMessage = {
         scpiCommand: {
             instrumentId: instrument.id,
-            command: new Uint8Array(arr)
+            command: new Uint8Array(arr),
+            isQuery: isQuery ? true : false
         }
     };
 
@@ -221,6 +222,13 @@ export class DashboardComponentContext {
         );
     }
 
+    executeCallAction(flowIndex: number) {
+        WasmFlowRuntime._DashboardContext_executeCallAction(
+            this.context,
+            flowIndex
+        );
+    }
+
     throwError(errorMessage: string) {
         const errorMessagePtr = WasmFlowRuntime.allocateUTF8(errorMessage);
         WasmFlowRuntime._DashboardContext_throwError(
@@ -269,8 +277,9 @@ onmessage = function (e: { data: RendererToWorkerMessage }) {
         let resultLen = 0;
         if (e.data.scpiResult.result) {
             const resultArr = new Uint8Array(e.data.scpiResult.result);
-            resultPtr = WasmFlowRuntime._malloc(resultArr.length);
+            resultPtr = WasmFlowRuntime._malloc(resultArr.length + 1);
             WasmFlowRuntime.HEAPU8.set(resultArr, resultPtr);
+            WasmFlowRuntime.HEAPU8[resultPtr + resultArr.length] = 0;
             resultLen = resultArr.length;
         }
 
@@ -291,6 +300,24 @@ onmessage = function (e: { data: RendererToWorkerMessage }) {
         WasmFlowRuntime._free(ptr);
 
         WasmFlowRuntime._mainLoop();
+
+        return;
+    }
+
+    if (e.data.executeWidgetAction) {
+        const { flowStateIndex, componentIndex, outputIndex, arrayValue } =
+            e.data.executeWidgetAction;
+
+        const valuePtr = createWasmArrayValue(arrayValue);
+
+        WasmFlowRuntime._propagateValue(
+            flowStateIndex,
+            componentIndex,
+            outputIndex,
+            valuePtr
+        );
+
+        WasmFlowRuntime._valueFree(valuePtr);
 
         return;
     }

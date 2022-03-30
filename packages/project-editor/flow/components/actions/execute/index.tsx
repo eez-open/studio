@@ -1,4 +1,5 @@
 import type { DashboardComponentContext } from "project-editor/flow/runtime/wasm-worker";
+import type { WorkerToRenderMessage } from "project-editor/flow/runtime/wasm-worker-interfaces";
 import pg from "pg";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -25,6 +26,61 @@ function EvalJSExprActionComponent_execute(context: DashboardComponentContext) {
         );
         context.throwError(err.toString());
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+function DateNowActionComponent_execute(context: DashboardComponentContext) {
+    context.propagateValue("value", Date.now());
+    context.propagateValueThroughSeqout();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+function DynamicCallActionActionComponent_execute(
+    context: DashboardComponentContext
+) {
+    const actionName = context.evalProperty<string>(0, ["string"]);
+
+    if (actionName == undefined || typeof actionName != "string") {
+        context.throwError(`Invalid action name property`);
+        return;
+    }
+
+    const flowIndex = WasmFlowRuntime.assetsMap.actionFlowIndexes[actionName];
+    if (flowIndex == undefined) {
+        context.throwError(`Invalid action name: ${actionName}`);
+    }
+
+    context.executeCallAction(flowIndex);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+interface InstrumentVariableTypeConstructorParams {
+    id: string;
+}
+
+function ConnectInstrumentActionComponent_execute(
+    context: DashboardComponentContext
+) {
+    const instrument =
+        context.evalProperty<InstrumentVariableTypeConstructorParams>(0, [
+            "object:Instrument"
+        ]);
+
+    if (instrument == undefined || typeof instrument.id != "string") {
+        context.throwError(`Invalid instrument property`);
+        return;
+    }
+
+    const data: WorkerToRenderMessage = {
+        connectToInstrumentId: instrument.id
+    };
+
+    postMessage(data);
+
+    context.propagateValueThroughSeqout();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -95,5 +151,8 @@ export const actionConmponentExecuteFunctions: {
     [name: string]: (context: DashboardComponentContext) => void;
 } = {
     EvalJSExprActionComponent: EvalJSExprActionComponent_execute,
+    DateNowActionComponent: DateNowActionComponent_execute,
+    DynamicCallActionActionComponent: DynamicCallActionActionComponent_execute,
+    ConnectInstrumentActionComponent: ConnectInstrumentActionComponent_execute,
     "eez-flow-ext-postgres/Postgres": PostgresActionComponent_execute
 };

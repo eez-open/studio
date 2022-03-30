@@ -48,6 +48,7 @@ import { cloneObject } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { IEditorState } from "project-editor/project/EditorComponent";
 import { activateConnectionLine } from "project-editor/flow/editor/real-time-traffic-visualizer";
+import { isImplicitConversionPossible } from "project-editor/flow/expression/type";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -121,6 +122,100 @@ export class ConnectionLine extends EezObject {
         deleteObjectFilterHook: (connectionLine: ConnectionLine) => {
             const page = getParent(getParent(connectionLine)) as Flow;
             return page.connectionLines.indexOf(connectionLine) != -1;
+        },
+
+        check: (connectionLine: ConnectionLine) => {
+            let messages: Message[] = [];
+
+            if (
+                !connectionLine.sourceComponent &&
+                !connectionLine.targetComponent
+            ) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Connection line ${getLabel(
+                            connectionLine
+                        )}: no source and target component`,
+                        connectionLine
+                    )
+                );
+            } else if (!connectionLine.sourceComponent) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Connection line ${getLabel(
+                            connectionLine
+                        )}: no source component`,
+                        connectionLine
+                    )
+                );
+            } else if (!connectionLine.targetComponent) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Connection line ${getLabel(
+                            connectionLine
+                        )}: no target component`,
+                        connectionLine
+                    )
+                );
+            } else {
+                const componentOutput =
+                    connectionLine.sourceComponent.outputs.find(
+                        componentOutput =>
+                            componentOutput.name == connectionLine.output
+                    );
+
+                if (!componentOutput) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Connection line ${getLabel(
+                                connectionLine
+                            )}: no source component output`,
+                            connectionLine
+                        )
+                    );
+                }
+
+                const componentInput =
+                    connectionLine.targetComponent.inputs.find(
+                        componentInput =>
+                            componentInput.name == connectionLine.input
+                    );
+
+                if (!componentInput) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Connection line ${getLabel(
+                                connectionLine
+                            )}: no target component input`,
+                            connectionLine
+                        )
+                    );
+                }
+
+                if (componentOutput && componentInput) {
+                    if (
+                        !isImplicitConversionPossible(
+                            componentOutput.type,
+                            componentInput.type
+                        )
+                    ) {
+                        messages.push(
+                            new Message(
+                                MessageType.WARNING,
+                                `Connection line incompatible data types: ${componentOutput.type} -> ${componentInput.type}`,
+                                connectionLine
+                            )
+                        );
+                    }
+                }
+            }
+
+            return messages;
         }
     };
 
@@ -364,83 +459,6 @@ export abstract class Flow extends EezObject {
                     }
                 }
             }
-        },
-
-        check: (flow: Flow) => {
-            let messages: Message[] = [];
-
-            flow.connectionLines.forEach(connectionLine => {
-                if (
-                    !connectionLine.sourceComponent &&
-                    !connectionLine.targetComponent
-                ) {
-                    messages.push(
-                        new Message(
-                            MessageType.ERROR,
-                            `Connection line ${getLabel(
-                                connectionLine
-                            )}: no source and target component`,
-                            connectionLine
-                        )
-                    );
-                } else if (!connectionLine.sourceComponent) {
-                    messages.push(
-                        new Message(
-                            MessageType.ERROR,
-                            `Connection line ${getLabel(
-                                connectionLine
-                            )}: no source component`,
-                            connectionLine
-                        )
-                    );
-                } else if (!connectionLine.targetComponent) {
-                    messages.push(
-                        new Message(
-                            MessageType.ERROR,
-                            `Connection line ${getLabel(
-                                connectionLine
-                            )}: no target component`,
-                            connectionLine
-                        )
-                    );
-                } else {
-                    if (
-                        !connectionLine.sourceComponent.outputs.find(
-                            componentOutput =>
-                                componentOutput.name == connectionLine.output
-                        )
-                    ) {
-                        messages.push(
-                            new Message(
-                                MessageType.ERROR,
-                                `Connection line ${getLabel(
-                                    connectionLine
-                                )}: no source component output`,
-                                connectionLine
-                            )
-                        );
-                    }
-
-                    if (
-                        !connectionLine.targetComponent.inputs.find(
-                            componentInput =>
-                                componentInput.name == connectionLine.input
-                        )
-                    ) {
-                        messages.push(
-                            new Message(
-                                MessageType.ERROR,
-                                `Connection line ${getLabel(
-                                    connectionLine
-                                )}: no target component input`,
-                                connectionLine
-                            )
-                        );
-                    }
-                }
-            });
-
-            return messages;
         }
     };
 

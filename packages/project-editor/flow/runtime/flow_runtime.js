@@ -1722,13 +1722,13 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  52084: function($0, $1, $2) {executeScpi($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2));},  
- 52151: function() {FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; });},  
- 52312: function() {startToDebuggerMessage();},  
- 52342: function($0, $1) {writeDebuggerBuffer(new Uint8Array(Module.HEAPU8.buffer, $0, $1));},  
- 52413: function() {finishToDebuggerMessage();},  
- 52444: function($0, $1) {executeDashboardComponent($0, $1);},  
- 52483: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
+  52396: function($0, $1, $2, $3) {executeScpi($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2), $3);},  
+ 52467: function() {FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; });},  
+ 52628: function() {startToDebuggerMessage();},  
+ 52658: function($0, $1) {writeDebuggerBuffer(new Uint8Array(Module.HEAPU8.buffer, $0, $1));},  
+ 52729: function() {finishToDebuggerMessage();},  
+ 52760: function($0, $1) {executeDashboardComponent($0, $1);},  
+ 52799: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
 };
 
 
@@ -5719,6 +5719,9 @@ var _DashboardContext_propagateNullValue = Module["_DashboardContext_propagateNu
 var _DashboardContext_propagateValueThroughSeqout = Module["_DashboardContext_propagateValueThroughSeqout"] = createExportWrapper("DashboardContext_propagateValueThroughSeqout");
 
 /** @type {function(...*):?} */
+var _DashboardContext_executeCallAction = Module["_DashboardContext_executeCallAction"] = createExportWrapper("DashboardContext_executeCallAction");
+
+/** @type {function(...*):?} */
 var _DashboardContext_throwError = Module["_DashboardContext_throwError"] = createExportWrapper("DashboardContext_throwError");
 
 /** @type {function(...*):?} */
@@ -5744,6 +5747,9 @@ var _arrayValueSetElementNull = Module["_arrayValueSetElementNull"] = createExpo
 
 /** @type {function(...*):?} */
 var _evalProperty = Module["_evalProperty"] = createExportWrapper("evalProperty");
+
+/** @type {function(...*):?} */
+var _propagateValue = Module["_propagateValue"] = createExportWrapper("propagateValue");
 
 /** @type {function(...*):?} */
 var _valueFree = Module["_valueFree"] = createExportWrapper("valueFree");

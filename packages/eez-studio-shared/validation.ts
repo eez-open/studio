@@ -13,8 +13,11 @@ const VALIDATION_MESSAGE_RANGE_EXCLUSIVE =
 const VALIDATION_MESSAGE_RANGE_EXCLUSIVE_WITHOUT_MAX =
     "Please enter value greater than ${min}.";
 const VALIDATION_MESSAGE_NOT_UNIQUE = "This field has no unique value.";
+const VALIDATION_MESSAGE_INVALID_IDENTIFIER =
+    "Not a valid identifier. Identifier starts with a letter or an underscore (_), followed by zero or more letters, digits, or underscores. Spaces are not allowed.";
 
 import { filterInteger } from "eez-studio-shared/validation-filters";
+import { parseIdentifier } from "project-editor/flow/expression/helper";
 
 export {
     filterInteger,
@@ -132,6 +135,14 @@ export const validators = {
             }
             return null;
         };
+    },
+
+    identifier: (object: any, ruleName: string) => {
+        const value = object[ruleName];
+        if (!parseIdentifier(value) || value.startsWith("$")) {
+            return VALIDATION_MESSAGE_INVALID_IDENTIFIER;
+        }
+        return null;
     }
 };
 

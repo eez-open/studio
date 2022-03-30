@@ -34,6 +34,7 @@ import {
 import { webSimulatorMessageDispatcher } from "instrument/connection/connection-renderer";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { ExecuteComponentLogItem } from "project-editor/flow/debugger/logs";
+import type { ValueType } from "eez-studio-types";
 
 const DEBUGGER_TCP_PORT = 3333;
 
@@ -468,7 +469,8 @@ export class RemoteRuntime extends RuntimeBase {
     executeWidgetAction(
         flowContext: IFlowContext,
         widget: Widget,
-        value?: any
+        value: any,
+        valueType: ValueType
     ) {}
 
     readSettings(key: string) {}

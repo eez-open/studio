@@ -63,8 +63,12 @@ import {
     FLOW_ITERATOR_INDEX_VARIABLE
 } from "project-editor/features/variable/defs";
 import {
+    ACTION_PARAMS_STRUCT_NAME,
+    CHECKBOX_ACTION_PARAMS_STRUCT_NAME,
     getEnumTypeNameFromVariable,
     isEnumVariable,
+    makeActionParamsValue,
+    makeCheckboxActionParamsValue,
     ValueType
 } from "project-editor/features/variable/value-type";
 import {
@@ -1367,24 +1371,33 @@ export class LayoutViewWidget extends Widget {
                         );
                 }
 
-                if (
-                    LayoutViewWidget.renderedLayoutPages.indexOf(layoutPage) ===
-                    -1
-                ) {
-                    LayoutViewWidget.renderedLayoutPages.push(layoutPage);
+                let flowStateExists = true;
+                if (flowContext.flowState) {
+                    flowStateExists =
+                        !!flowContext.flowState.getFlowStateByComponent(this);
+                }
 
-                    element = (
-                        <ComponentEnclosure
-                            component={layoutPage}
-                            flowContext={
-                                flowContext.flowState
-                                    ? flowContext.overrideFlowState(this)
-                                    : flowContext
-                            }
-                        />
-                    );
+                if (flowStateExists) {
+                    if (
+                        LayoutViewWidget.renderedLayoutPages.indexOf(
+                            layoutPage
+                        ) === -1
+                    ) {
+                        LayoutViewWidget.renderedLayoutPages.push(layoutPage);
 
-                    LayoutViewWidget.renderedLayoutPages.pop();
+                        element = (
+                            <ComponentEnclosure
+                                component={layoutPage}
+                                flowContext={
+                                    flowContext.flowState
+                                        ? flowContext.overrideFlowState(this)
+                                        : flowContext
+                                }
+                            />
+                        );
+
+                        LayoutViewWidget.renderedLayoutPages.pop();
+                    }
                 }
             }
         }
@@ -3182,7 +3195,9 @@ export class ButtonWidget extends Widget {
                             if (flowContext.DocumentStore.runtime) {
                                 flowContext.DocumentStore.runtime.executeWidgetAction(
                                     flowContext,
-                                    this
+                                    this,
+                                    makeActionParamsValue(flowContext),
+                                    `struct:${ACTION_PARAMS_STRUCT_NAME}`
                                 );
                             }
                         }}
@@ -5597,7 +5612,8 @@ export class CheckboxWidget extends Widget {
                 "string"
             ),
             makeActionPropertyInfo("action", {
-                displayName: "onChange"
+                displayName: "onChange",
+                expressionType: `struct:${CHECKBOX_ACTION_PARAMS_STRUCT_NAME}`
             })
         ],
         defaultValue: {
@@ -5739,7 +5755,11 @@ export class CheckboxWidget extends Widget {
                                     flowState.runtime.executeWidgetAction(
                                         flowContext,
                                         this,
-                                        checked
+                                        makeCheckboxActionParamsValue(
+                                            flowContext,
+                                            checked
+                                        ),
+                                        `struct:${CHECKBOX_ACTION_PARAMS_STRUCT_NAME}`
                                     );
                                 }
                             }
@@ -5826,7 +5846,7 @@ export class RollerWidget extends Widget {
             ...super.getInputs(),
             {
                 name: "clear",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
             }

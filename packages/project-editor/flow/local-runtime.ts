@@ -13,7 +13,6 @@ import {
     OutputValueLogItem,
     WidgetActionNotDefinedLogItem
 } from "project-editor/flow/debugger/logs";
-import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
 import * as notification from "eez-studio-ui/notification";
 import {
     StateMachineAction,
@@ -41,6 +40,7 @@ import {
     isObjectType
 } from "project-editor/features/variable/value-type";
 import { showErrorBox } from "project-editor/flow/error-box";
+import type { ValueType } from "eez-studio-types";
 
 export class LocalRuntime extends RuntimeBase {
     pumpTimeoutId: any;
@@ -324,7 +324,8 @@ export class LocalRuntime extends RuntimeBase {
     executeWidgetAction(
         flowContext: IFlowContext,
         widget: Widget,
-        value?: any
+        value: any,
+        valueType: ValueType
     ) {
         if (this.isStopped) {
             return;
@@ -335,37 +336,8 @@ export class LocalRuntime extends RuntimeBase {
             return;
         }
 
-        let outputValue;
-        let indexValue = flowContext.dataContext.get(
-            FLOW_ITERATOR_INDEXES_VARIABLE
-        );
-        if (indexValue) {
-            if (indexValue.length == 0) {
-                outputValue = value;
-            } else if (indexValue.length == 1) {
-                indexValue = indexValue[0];
-                outputValue =
-                    value !== undefined
-                        ? {
-                              value,
-                              index: indexValue
-                          }
-                        : indexValue;
-            } else {
-                outputValue =
-                    value !== undefined
-                        ? {
-                              value,
-                              indexes: indexValue
-                          }
-                        : indexValue;
-            }
-        } else {
-            outputValue = value;
-        }
-
         if (widget.isOutputProperty("action")) {
-            this.propagateValue(parentFlowState, widget, "action", outputValue);
+            this.propagateValue(parentFlowState, widget, "action", value);
         } else if (widget.action) {
             // execute action given by name
             const action = findAction(
@@ -390,7 +362,7 @@ export class LocalRuntime extends RuntimeBase {
                             newFlowState,
                             component,
                             "@seqout",
-                            outputValue
+                            value
                         );
                         break;
                     }

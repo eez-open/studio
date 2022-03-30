@@ -340,6 +340,17 @@ export function checkArity(functionName: string, node: ExpressionNode) {
     }
 }
 
+export function isImplicitConversionPossible(
+    fromType: ValueType,
+    toType: ValueType
+) {
+    if (toType == "any" || fromType == "any") {
+        return true;
+    }
+
+    return fromType == toType;
+}
+
 function getType(project: Project, valueType: ValueType): ValueType {
     if (valueType == "any") {
         return project._DocumentStore.typesStore.createOpenType();

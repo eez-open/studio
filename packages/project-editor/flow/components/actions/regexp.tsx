@@ -24,7 +24,7 @@ registerActionComponents("Dashboard Specific", [
         inputs: [
             {
                 name: "next",
-                type: "null" as ValueType,
+                type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
             }

@@ -17,6 +17,9 @@ export interface WorkerToRenderMessage {
     // SCPI command to execute (only renderer is able to execute SCPI commands)
     scpiCommand?: ScpiCommand;
 
+    // connect to instrument ID
+    connectToInstrumentId?: string;
+
     // evaluated property values
     propertyValues?: IPropertyValue[];
 }
@@ -49,6 +52,14 @@ export interface RendererToWorkerMessage {
 
     // request to worker to evaluate some property values
     evalProperties?: IEvalProperty[];
+
+    // request to worker to execute widget action
+    executeWidgetAction?: {
+        flowStateIndex: number;
+        componentIndex: number;
+        outputIndex: number;
+        arrayValue: ArrayValue;
+    };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -103,6 +114,7 @@ export type ObjectOrArrayValue =
 export interface ScpiCommand {
     instrumentId: string;
     command: Uint8Array;
+    isQuery: boolean;
 }
 
 export interface ScpiResult {

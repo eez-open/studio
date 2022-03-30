@@ -48,9 +48,11 @@ interface AssetsMap {
     flows: {
         flowIndex: number;
         path: string;
+        readablePath: string;
         components: {
             componentIndex: number;
             path: string;
+            readablePath: string;
             outputs: {
                 outputName: string;
                 valueTypeIndex: number;
@@ -85,6 +87,7 @@ interface AssetsMap {
         }[];
     }[];
     flowIndexes: { [path: string]: number };
+    actionFlowIndexes: { [actionName: string]: number };
     constants: any[];
     globalVariables: {
         index: number;
@@ -162,6 +165,13 @@ declare const WasmFlowRuntime: {
         iteratorsPtr: number
     ): number;
 
+    _propagateValue(
+        flowStateIndex: number,
+        componentIndex: number,
+        outputIndex: number,
+        valuePtr: number
+    );
+
     _valueFree(valuePtr: number): void;
 
     _setGlobalVariable(globalVariableIndex: number, valuePtr: number);
@@ -218,6 +228,8 @@ declare const WasmFlowRuntime: {
     _DashboardContext_propagateNullValue(context: number, outputIndex: number);
 
     _DashboardContext_propagateValueThroughSeqout(context: number);
+
+    _DashboardContext_executeCallAction(context: number, flowIndex: number);
 
     _DashboardContext_throwError(context: number, errorMessage: number);
 

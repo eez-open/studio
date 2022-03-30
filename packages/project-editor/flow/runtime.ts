@@ -38,6 +38,7 @@ import {
     evalExpression,
     IExpressionContext
 } from "project-editor/flow/expression";
+import type { ValueType } from "eez-studio-types";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -413,7 +414,8 @@ export abstract class RuntimeBase {
     abstract executeWidgetAction(
         flowContext: IFlowContext,
         widget: Widget,
-        value?: any
+        value: any,
+        valueType: ValueType
     ): void;
 
     abstract readSettings(key: string): any;
