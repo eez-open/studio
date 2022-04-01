@@ -136,10 +136,10 @@ export class Assets {
         typeIndexes: {}
     };
 
-    actionComponentClassNameToActionComponentIdMap: {
+    dashboardComponentClassNameToComponentIdMap: {
         [name: string]: number;
     } = {};
-    nextActionComponentId = FIRST_DASHBOARD_COMPONENT_TYPE;
+    nextDashboardComponentId = FIRST_DASHBOARD_COMPONENT_TYPE;
     dashboardComponentTypeToNameMap: {
         [componentType: number]: string;
     } = {};

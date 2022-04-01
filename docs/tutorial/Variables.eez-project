@@ -75,7 +75,7 @@
           "type": "LoopActionComponent",
           "left": 204,
           "top": -104,
-          "width": 227,
+          "width": 221,
           "height": 73,
           "wireID": "80cdc215-1206-4b31-c5ca-22b3a2a1e9dd",
           "customInputs": [],
@@ -132,7 +132,7 @@
           "type": "SetVariableActionComponent",
           "left": 0,
           "top": -104,
-          "width": 126,
+          "width": 120,
           "height": 58,
           "wireID": "3bf63e7d-686b-486b-da96-8ab8fe1ab6aa",
           "customInputs": [],
@@ -144,7 +144,7 @@
           "type": "SetVariableActionComponent",
           "left": 565,
           "top": 8,
-          "width": 132,
+          "width": 126,
           "height": 58,
           "wireID": "5f1b5dab-2010-4f6e-cc61-c94bfdcdd91e",
           "customInputs": [],
@@ -223,5 +223,10 @@
     }
   ],
   "colors": [],
-  "themes": []
+  "themes": [
+    {
+      "name": "default",
+      "colors": []
+    }
+  ]
 }

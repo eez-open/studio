@@ -7,6 +7,7 @@ export type BasicType =
     | "boolean"
     | "string"
     | "date"
+    | "blob"
     | "any";
 
 export type ValueType =
@@ -239,8 +240,8 @@ export interface IDashboardComponentContext {
     getComponentIndex: () => number;
     startAsyncExecution: () => IDashboardComponentContext;
     endAsyncExecution: () => void;
-    evalProperty: <T>(
-        propertyIndex: number,
+    evalProperty: <T = any>(
+        propertyName: string,
         expectedTypes?: ValueType[]
     ) => T | undefined;
     getStringParam: (offset: number) => string;

@@ -1,7 +1,7 @@
 {
   "settings": {
     "general": {
-      "projectVersion": "v2",
+      "projectVersion": "v3",
       "projectType": "dashboard",
       "imports": []
     },
@@ -51,7 +51,7 @@
           "customInputs": [
             {
               "name": "enabled",
-              "type": "any"
+              "type": "boolean"
             }
           ],
           "customOutputs": [],
@@ -72,7 +72,7 @@
           "type": "SCPIActionComponent",
           "left": -100,
           "top": 681,
-          "width": 197,
+          "width": 191,
           "height": 73,
           "wireID": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
           "customInputs": [],
@@ -99,7 +99,7 @@
           "customInputs": [
             {
               "name": "enabled",
-              "type": "any"
+              "type": "boolean"
             }
           ],
           "customOutputs": [],
@@ -125,7 +125,7 @@
           "customInputs": [
             {
               "name": "data",
-              "type": "any"
+              "type": "float"
             }
           ],
           "customOutputs": [],
@@ -154,7 +154,7 @@
           "customInputs": [
             {
               "name": "data",
-              "type": "any"
+              "type": "float"
             }
           ],
           "customOutputs": [],
@@ -182,7 +182,7 @@
           "customInputs": [
             {
               "name": "data",
-              "type": "any"
+              "type": "float"
             }
           ],
           "customOutputs": [],
@@ -211,7 +211,7 @@
           "customInputs": [
             {
               "name": "data",
-              "type": "any"
+              "type": "float"
             }
           ],
           "customOutputs": [],
@@ -249,7 +249,7 @@
           "type": "WatchVariableActionComponent",
           "left": -116,
           "top": 865,
-          "width": 129,
+          "width": 123,
           "height": 54,
           "wireID": "3e958be7-9ce1-4645-844c-d3b0380dbcfb",
           "customInputs": [],
@@ -260,7 +260,7 @@
           "type": "SetVariableActionComponent",
           "left": -262,
           "top": 455,
-          "width": 138,
+          "width": 132,
           "height": 58,
           "wireID": "6c7b5504-dba4-41a7-f576-9365c69c92ed",
           "customInputs": [],
@@ -272,7 +272,7 @@
           "type": "SetVariableActionComponent",
           "left": -275,
           "top": 310,
-          "width": 132,
+          "width": 126,
           "height": 58,
           "wireID": "b1c9fde7-e1cd-4a4e-bcf5-14762b1b7d00",
           "customInputs": [],
@@ -284,7 +284,7 @@
           "type": "WatchVariableActionComponent",
           "left": -298,
           "top": 65,
-          "width": 295,
+          "width": 289,
           "height": 54,
           "wireID": "894df5b9-459f-4aae-db8a-8ad0926a4157",
           "customInputs": [],
@@ -295,7 +295,7 @@
           "type": "WatchVariableActionComponent",
           "left": -258,
           "top": 181,
-          "width": 129,
+          "width": 123,
           "height": 54,
           "wireID": "8e014cae-346a-48b2-fbe1-dc1b33607f6f",
           "customInputs": [],

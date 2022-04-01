@@ -1,10 +1,9 @@
 {
   "settings": {
     "general": {
-      "projectVersion": "v2",
+      "projectVersion": "v3",
       "projectType": "dashboard",
-      "imports": [],
-      "css": ".main { background-color: #eee; }"
+      "imports": []
     },
     "build": {
       "configurations": [
@@ -26,115 +25,66 @@
       "components": [
         {
           "type": "TextInputWidget",
-          "left": 43,
-          "top": 34,
+          "left": 81,
+          "top": 74,
           "width": 160,
           "height": 32,
           "wireID": "b7bc81ed-8ab6-4af7-bff0-e167467f921e",
           "customInputs": [],
           "customOutputs": [],
-          "value": "value"
-        },
-        {
-          "type": "TextWidget",
-          "left": 319,
-          "top": 36,
-          "width": 146,
-          "height": 32,
-          "wireID": "35f9e4e2-c8c2-470f-98c1-c0f47d4c5db6",
-          "customInputs": [
-            {
-              "name": "data",
-              "type": "any"
-            }
-          ],
-          "customOutputs": [],
-          "data": "data",
+          "data": "text",
           "style": {
-            "inheritFrom": "default"
-          },
-          "text": ""
-        },
-        {
-          "type": "ConstantActionComponent",
-          "left": 58,
-          "top": -74,
-          "width": 100,
-          "height": 61,
-          "wireID": "fad891f0-6fcd-4f3b-d412-f39d4a282728",
-          "customInputs": [],
-          "customOutputs": [],
-          "value": "\"Hello, world!\""
-        },
-        {
-          "type": "ButtonWidget",
-          "left": 34,
-          "top": 118,
-          "width": 100,
-          "height": 32,
-          "wireID": "5ad6c982-159a-4ff7-f403-cd639e12cde4",
-          "customInputs": [],
-          "customOutputs": [],
-          "asOutputProperties": [
-            "action"
-          ],
-          "data": "\"Trt\"",
-          "style": {
-            "inheritFrom": "default"
-          },
-          "disabledStyle": {
             "inheritFrom": "default"
           }
         },
         {
-          "type": "SetVariableActionComponent",
-          "left": 178,
-          "top": 88,
-          "width": 125,
-          "height": 62,
-          "wireID": "efce97d5-920a-44ea-f54e-ad22aadd4134",
+          "type": "TextWidget",
+          "left": 304,
+          "top": 74,
+          "width": 146,
+          "height": 32,
+          "wireID": "35f9e4e2-c8c2-470f-98c1-c0f47d4c5db6",
           "customInputs": [],
           "customOutputs": [],
-          "variable": "value",
-          "value": "\"mer\""
+          "data": "text",
+          "style": {
+            "inheritFrom": "default"
+          },
+          "text": ""
         }
       ],
-      "connectionLines": [
-        {
-          "source": "b7bc81ed-8ab6-4af7-bff0-e167467f921e",
-          "output": "value",
-          "target": "35f9e4e2-c8c2-470f-98c1-c0f47d4c5db6",
-          "input": "data"
-        },
-        {
-          "source": "fad891f0-6fcd-4f3b-d412-f39d4a282728",
-          "output": "value",
-          "target": "35f9e4e2-c8c2-470f-98c1-c0f47d4c5db6",
-          "input": "data"
-        },
-        {
-          "source": "5ad6c982-159a-4ff7-f403-cd639e12cde4",
-          "output": "action",
-          "target": "efce97d5-920a-44ea-f54e-ad22aadd4134",
-          "input": "@seqin"
-        }
-      ],
+      "connectionLines": [],
       "localVariables": [
         {
-          "name": "value",
+          "name": "text",
           "type": "string",
-          "defaultValue": "\"Trt\"",
+          "defaultValue": "\"Hello, world!\"",
           "persistent": false
         }
       ],
       "name": "Page",
+      "style": "main",
       "left": 0,
       "top": 0,
       "width": 480,
-      "height": 272,
-      "css": "main"
+      "height": 272
+    }
+  ],
+  "styles": [
+    {
+      "name": "default"
+    },
+    {
+      "name": "main",
+      "inheritFrom": "",
+      "css": "background-color: #eee;\n"
     }
   ],
   "colors": [],
-  "themes": []
+  "themes": [
+    {
+      "name": "default",
+      "colors": []
+    }
+  ]
 }

@@ -85,6 +85,7 @@ struct ScpiComponentExecutionState : public ComponenentExecutionState {
     char *errorMessage;
     char *result;
     int resultLen;
+    bool resultIsBlob;
 
 	bool resultIsReady;
 
@@ -117,6 +118,7 @@ struct ScpiComponentExecutionState : public ComponenentExecutionState {
         errorMessage = 0;
         result = 0;
         resultLen = 0;
+        resultIsBlob = 0;
 
         resultIsReady = false;
 
@@ -135,7 +137,7 @@ struct ScpiComponentExecutionState : public ComponenentExecutionState {
         return scpi(instrument, true);
     }
 
-    bool getLatestScpiResult(FlowState *flowState, unsigned componentIndex, const char **resultText, size_t *resultTextLen) {
+    bool getLatestScpiResult(FlowState *flowState, unsigned componentIndex, const char **resultText, size_t *resultTextLen, bool *resultIsBlob) {
         if (errorMessage) {
             throwError(flowState, componentIndex, errorMessage);
             ObjectAllocator<ScpiComponentExecutionState>::deallocate(this);
@@ -167,6 +169,7 @@ struct ScpiComponentExecutionState : public ComponenentExecutionState {
 
         *resultText = result;
         *resultTextLen = resultLen;
+        *resultIsBlob = this->resultIsBlob;
         return true;
     }
 };
@@ -175,7 +178,7 @@ ScpiComponentExecutionState *ScpiComponentExecutionState::g_waitingForScpiResult
 
 ////////////////////////////////////////////////////////////////////////////////
 
-EM_PORT_API(void) onScpiResult(char *errorMessage, char *result, int resultLen) {
+EM_PORT_API(void) onScpiResult(char *errorMessage, char *result, int resultLen, int resultIsBlob) {
 	if (!isFlowRunningHook()) {
 		return;
 	}
@@ -183,6 +186,7 @@ EM_PORT_API(void) onScpiResult(char *errorMessage, char *result, int resultLen) 
     ScpiComponentExecutionState::g_waitingForScpiResult->errorMessage = errorMessage;
 	ScpiComponentExecutionState::g_waitingForScpiResult->result = result;
 	ScpiComponentExecutionState::g_waitingForScpiResult->resultLen = resultLen;
+    ScpiComponentExecutionState::g_waitingForScpiResult->resultIsBlob = resultIsBlob ? true : false;
 
 	ScpiComponentExecutionState::g_waitingForScpiResult->resultIsReady = true;
 }
@@ -273,7 +277,8 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 
 			const char *resultText;
 			size_t resultTextLen;
-			if (!scpiComponentExecutionState->getLatestScpiResult(flowState, componentIndex, &resultText, &resultTextLen)) {
+            bool resultIsBlob;
+			if (!scpiComponentExecutionState->getLatestScpiResult(flowState, componentIndex, &resultText, &resultTextLen, &resultIsBlob)) {
 				return;
 			}
 
@@ -294,7 +299,9 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 			scpiComponentExecutionState->commandOrQueryText[0] = 0;
 
 			Value srcValue;
-			if (parseScpiString(resultText, resultTextLen)) {
+            if (resultIsBlob) {
+				srcValue = Value::makeBlobRef((const uint8_t *)resultText, resultTextLen, 0xe4581c7b);
+            } else if (parseScpiString(resultText, resultTextLen)) {
 				srcValue = Value::makeStringRef(resultText, resultTextLen, 0x09143fa4);
 			} else {
 				char *strEnd;
@@ -327,7 +334,8 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 
 			const char *resultText;
 			size_t resultTextLen;
-			if (!scpiComponentExecutionState->getLatestScpiResult(flowState, componentIndex, &resultText, &resultTextLen)) {
+            bool resultIsBlob;
+			if (!scpiComponentExecutionState->getLatestScpiResult(flowState, componentIndex, &resultText, &resultTextLen, &resultIsBlob)) {
 				return;
 			}
 
@@ -347,7 +355,8 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 
 			const char *resultText;
 			size_t resultTextLen;
-			if (!scpiComponentExecutionState->getLatestScpiResult(flowState, componentIndex, &resultText, &resultTextLen)) {
+            bool resultIsBlob;
+			if (!scpiComponentExecutionState->getLatestScpiResult(flowState, componentIndex, &resultText, &resultTextLen, &resultIsBlob)) {
 				return;
 			}
 
@@ -356,7 +365,7 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 			ObjectAllocator<ScpiComponentExecutionState>::deallocate(scpiComponentExecutionState);
 			flowState->componenentExecutionStates[componentIndex] = nullptr;
 
-			propagateValueThroughSeqout(flowState, componentIndex);
+    		propagateValueThroughSeqout(flowState, componentIndex);
 			return;
 		}
 

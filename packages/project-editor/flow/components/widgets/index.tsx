@@ -158,7 +158,7 @@ const BAR_GRAPH_DO_NOT_DISPLAY_VALUE = 1 << 4;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function evalProperty(
+export function evalProperty(
     flowContext: IFlowContext,
     widget: Widget,
     propertyName: string
@@ -2862,6 +2862,7 @@ export class BitmapWidget extends Widget {
                 if (bitmap) {
                     return bitmap;
                 }
+
                 return undefined;
             }
 

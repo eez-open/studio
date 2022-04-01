@@ -8,7 +8,6 @@ import {
     getClassName,
     getProperty,
     IObjectClassInfo,
-    isProperSubclassOf,
     MessageType
 } from "project-editor/core/object";
 import {
@@ -32,7 +31,6 @@ import {
     buildVariableFlowValue
 } from "project-editor/build/values";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
-import { ProjectEditor } from "project-editor/project-editor-interface";
 import { FIRST_DASHBOARD_COMPONENT_TYPE } from "project-editor/flow/components/component_types";
 
 function getComponentName(componentType: IObjectClassInfo) {
@@ -79,20 +77,16 @@ function getComponentIdOfComponent(assets: Assets, component: Component) {
 
     if (
         flowComponentId == undefined &&
-        assets.DocumentStore.project.isDashboardProject &&
-        isProperSubclassOf(
-            classInfo,
-            ProjectEditor.ActionComponentClass.classInfo
-        )
+        assets.DocumentStore.project.isDashboardProject
     ) {
         const eezClass = getClass(component);
         const name = getClassName(eezClass);
         if (name) {
             flowComponentId =
-                assets.actionComponentClassNameToActionComponentIdMap[name];
+                assets.dashboardComponentClassNameToComponentIdMap[name];
             if (flowComponentId == undefined) {
-                flowComponentId = assets.nextActionComponentId++;
-                assets.actionComponentClassNameToActionComponentIdMap[name] =
+                flowComponentId = assets.nextDashboardComponentId++;
+                assets.dashboardComponentClassNameToComponentIdMap[name] =
                     flowComponentId;
                 assets.dashboardComponentTypeToNameMap[flowComponentId] = name;
             }
@@ -116,7 +110,10 @@ function buildComponent(
         componentIndex,
         path: getObjectPathAsString(component),
         readablePath: getHumanReadableObjectPath(component),
-        outputs: []
+        outputs: [],
+        outputIndexes: {},
+        properties: [],
+        propertyIndexes: {}
     };
 
     // type
@@ -124,14 +121,12 @@ function buildComponent(
     if (flowComponentId != undefined) {
         dataBuffer.writeUint16(flowComponentId);
     } else {
-        if (!assets.DocumentStore.project.isDashboardProject) {
-            assets.DocumentStore.outputSectionsStore.write(
-                Section.OUTPUT,
-                MessageType.WARNING,
-                "Component is not supported for the build target",
-                component
-            );
-        }
+        assets.DocumentStore.outputSectionsStore.write(
+            Section.OUTPUT,
+            MessageType.ERROR,
+            "Component is not supported for the build target",
+            component
+        );
         dataBuffer.writeUint16(0);
     }
 
@@ -174,7 +169,7 @@ function buildComponent(
             propertyValueIndex
         )
     );
-    dataBuffer.writeArray(properties, propertyInfo => {
+    dataBuffer.writeArray(properties, (propertyInfo, propertyIndex) => {
         try {
             let expression = getProperty(component, propertyInfo.name);
             if (propertyInfo.flowProperty == "assignable") {
@@ -200,6 +195,14 @@ function buildComponent(
 
             dataBuffer.writeUint16NonAligned(makeEndInstruction());
         }
+
+        assets.map.flows[flowIndex].components[componentIndex].properties.push({
+            valueTypeIndex: assets.getTypeIndex(propertyInfo.expressionType!)
+        });
+
+        assets.map.flows[flowIndex].components[componentIndex].propertyIndexes[
+            propertyInfo.name
+        ] = propertyIndex;
     });
 
     // outputs
@@ -212,7 +215,7 @@ function buildComponent(
             componentOutputIndex
         )
     );
-    dataBuffer.writeArray(outputs, output => {
+    dataBuffer.writeArray(outputs, (output, outputIndex) => {
         const connectionLines = flow.connectionLines.filter(
             connectionLine =>
                 connectionLine.sourceComponent === component &&
@@ -253,6 +256,10 @@ function buildComponent(
             valueTypeIndex: assets.getTypeIndex(output.valueType),
             connectionLines: connectionLinesMap
         });
+
+        assets.map.flows[flowIndex].components[componentIndex].outputIndexes[
+            output.name
+        ] = outputIndex;
     });
 
     const errorCatchOutputIndex = component.buildOutputs.findIndex(

@@ -22,6 +22,8 @@ export interface WorkerToRenderMessage {
 
     // evaluated property values
     propertyValues?: IPropertyValue[];
+
+    widgetMessages?: IWidgetMessage[];
 }
 
 // message data sent from renderer to WASM worker
@@ -114,6 +116,7 @@ export type Value =
     | boolean
     | number
     | string
+    | Uint8Array
     | ObjectOrArrayValue;
 
 export type ObjectOrArrayValueWithType = {
@@ -138,6 +141,14 @@ export interface IAssignProperty {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export interface IWidgetMessage {
+    flowStateIndex: number;
+    componentIndex: number;
+    message: any;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export interface ScpiCommand {
     instrumentId: string;
     command: Uint8Array;
@@ -146,5 +157,5 @@ export interface ScpiCommand {
 
 export interface ScpiResult {
     errorMessage?: string;
-    result?: ArrayBuffer;
+    result?: ArrayBuffer | Uint8Array;
 }

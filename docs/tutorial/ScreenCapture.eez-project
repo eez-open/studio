@@ -34,14 +34,14 @@
           "type": "SCPIActionComponent",
           "left": 276,
           "top": -186,
-          "width": 245,
+          "width": 239,
           "height": 54,
           "wireID": "d3c0110f-782e-459a-d87e-d8ad6c48c108",
           "customInputs": [],
           "customOutputs": [
             {
               "name": "screenshot",
-              "type": "any"
+              "type": "blob"
             }
           ],
           "description": "Execute SCPI command to capture screenshot",
@@ -58,7 +58,7 @@
           "customInputs": [
             {
               "name": "data",
-              "type": "any"
+              "type": "blob"
             }
           ],
           "customOutputs": [],
@@ -95,7 +95,7 @@
           "type": "FileWrite",
           "left": 1006,
           "top": -175,
-          "width": 146,
+          "width": 140,
           "height": 73,
           "wireID": "c3db390c-86c7-4129-802f-e54874023365",
           "customInputs": [
@@ -105,7 +105,7 @@
             },
             {
               "name": "screenshot",
-              "type": "any"
+              "type": "blob"
             }
           ],
           "customOutputs": [],
@@ -123,7 +123,7 @@
           "customInputs": [
             {
               "name": "enabled",
-              "type": "any"
+              "type": "boolean"
             }
           ],
           "customOutputs": [],

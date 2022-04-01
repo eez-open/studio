@@ -41,7 +41,7 @@ const DEBUGGER_TCP_PORT = 3333;
 enum MessagesToDebugger {
     MESSAGE_TO_DEBUGGER_STATE_CHANGED, // STATE
 
-    MESSAGE_TO_DEBUGGER_ADD_TO_QUEUE, // FLOW_STATE_INDEX, SOURCE_COMPONENT_INDEX, SOURCE_OUTPUT_INDEX, TARGET_COMPONENT_INDEX, TARGET_INPUT_INDEX
+    MESSAGE_TO_DEBUGGER_ADD_TO_QUEUE, // FLOW_STATE_INDEX, SOURCE_COMPONENT_INDEX, SOURCE_OUTPUT_INDEX, TARGET_COMPONENT_INDEX, TARGET_INPUT_INDEX, FREE_MEMORT, TOTAL_MEMORY
     MESSAGE_TO_DEBUGGER_REMOVE_FROM_QUEUE, // no params
 
     MESSAGE_TO_DEBUGGER_GLOBAL_VARIABLE_INIT, // GLOBAL_VARIABLE_INDEX, VALUE_ADDR, VALUE
@@ -712,6 +712,15 @@ export abstract class DebuggerConnectionBase {
                             messageParameters[4]
                         );
                         const targetInputIndex = parseInt(messageParameters[5]);
+
+                        runInAction(() => {
+                            this.runtime.freeMemory = parseInt(
+                                messageParameters[6]
+                            );
+                            this.runtime.totalMemory = parseInt(
+                                messageParameters[7]
+                            );
+                        });
 
                         const { flowIndex, flowState } =
                             this.getFlowState(flowStateIndex);

@@ -6,6 +6,7 @@ import type {
 import {
     FLOW_VALUE_TYPE_ARRAY,
     FLOW_VALUE_TYPE_ARRAY_REF,
+    FLOW_VALUE_TYPE_BLOB_REF,
     FLOW_VALUE_TYPE_BOOLEAN,
     FLOW_VALUE_TYPE_DOUBLE,
     FLOW_VALUE_TYPE_FLOAT,
@@ -290,6 +291,18 @@ export function getValue(offset: number): ValueWithType {
         const refPtr = WasmFlowRuntime.HEAP32[offset >> 2];
         const ptr = refPtr + 8;
         return getArrayValue(ptr);
+    } else if (type == FLOW_VALUE_TYPE_BLOB_REF) {
+        const refPtr = WasmFlowRuntime.HEAP32[offset >> 2];
+        const ptr = WasmFlowRuntime.HEAP32[(refPtr >> 2) + 2];
+        const len = WasmFlowRuntime.HEAP32[(refPtr >> 2) + 3];
+        const value = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            value[i] = WasmFlowRuntime.HEAP8[ptr + i];
+        }
+        return {
+            value,
+            valueType: "blob"
+        };
     }
 
     console.error("Unknown type from WASM: ", type);

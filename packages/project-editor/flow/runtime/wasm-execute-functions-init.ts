@@ -4,6 +4,7 @@ import type { IDashboardComponentContext } from "eez-studio-types";
 import { registerExecuteFunction } from "project-editor/flow/runtime/wasm-execute-functions";
 
 import "project-editor/flow/components/actions/runtime";
+import "project-editor/flow/components/widgets/runtime";
 
 const CONF_EEZ_STUDIO_PROPERTY_NAME = "eez-studio";
 const CONF_NODE_MODULE_PROPERTY_NAME = "node-module";

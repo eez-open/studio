@@ -23,7 +23,14 @@
         "xtr1common": "cpp",
         "xmemory0": "cpp",
         "istream": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "deque": "cpp",
+        "initializer_list": "cpp",
+        "list": "cpp",
+        "queue": "cpp",
+        "type_traits": "cpp",
+        "xhash": "cpp",
+        "xutility": "cpp"
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "workbench.editor.enablePreview": false,

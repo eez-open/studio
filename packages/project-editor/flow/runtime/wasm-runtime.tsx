@@ -4,6 +4,7 @@ import { ProjectContext } from "project-editor/project/context";
 import {
     DocumentStoreClass,
     getClassInfo,
+    getObjectFromStringPath,
     getObjectPathAsString
 } from "project-editor/store";
 
@@ -50,6 +51,7 @@ import type {
 } from "eez-studio-types";
 import { getNodeModuleFolders } from "eez-studio-shared/extensions/yarn";
 import { IExpressionContext } from "project-editor/flow/expression";
+import { FileHistoryItem } from "instrument/window/history/items/file";
 
 interface IGlobalVariableBase {
     variable: IVariable;
@@ -211,6 +213,34 @@ export class WasmRuntime extends RemoteRuntime {
                 this.componentProperties.valuesFromWorker(
                     e.data.propertyValues
                 );
+            }
+
+            if (e.data.widgetMessages) {
+                for (const widgetMessage of e.data.widgetMessages) {
+                    const flowStateAndIndex = this.flowStateMap.get(
+                        widgetMessage.flowStateIndex
+                    );
+                    if (flowStateAndIndex) {
+                        const { flowState, flowIndex } = flowStateAndIndex;
+
+                        const component = getObjectFromStringPath(
+                            this.DocumentStore.project,
+                            this.assetsMap.flows[flowIndex].components[
+                                widgetMessage.componentIndex
+                            ].path
+                        ) as Component;
+                        if (component) {
+                            component.onWasmWorkerMessage(
+                                flowState,
+                                widgetMessage.message
+                            );
+                        } else {
+                            console.error("UNEXPECTED!");
+                        }
+                    } else {
+                        console.error("UNEXPECTED!");
+                    }
+                }
             }
 
             this.screen = e.data.screen;
@@ -471,13 +501,29 @@ export class WasmRuntime extends RemoteRuntime {
                             connection.release();
                         }
 
+                        if (result instanceof FileHistoryItem) {
+                            result = result.data;
+                        }
+
                         let data: RendererToWorkerMessage;
-                        if (typeof result != "object") {
+                        if (result instanceof Uint8Array) {
+                            data = {
+                                scpiResult: {
+                                    result
+                                }
+                            };
+                        } else if (typeof result == "number") {
                             data = {
                                 scpiResult: {
                                     result: binaryStringToArrayBuffer(
                                         result.toString()
                                     )
+                                }
+                            };
+                        } else if (typeof result == "string") {
+                            data = {
+                                scpiResult: {
+                                    result: binaryStringToArrayBuffer(result)
                                 }
                             };
                         } else {
@@ -572,10 +618,10 @@ export class WasmRuntime extends RemoteRuntime {
             return;
         }
 
-        const outputIndex = this.assetsMap.flows[flowIndex].components[
-            componentIndex
-        ].outputs.findIndex(output => output.outputName == "action");
-        if (outputIndex == -1) {
+        const outputIndex =
+            this.assetsMap.flows[flowIndex].components[componentIndex]
+                .outputIndexes["action"];
+        if (outputIndex == undefined) {
             console.error("Unexpected!");
             return;
         }

@@ -1,10 +1,13 @@
 require("project-editor/flow/runtime/flow_runtime.js");
 
+import deepEqual from "deep-equal";
+
 import type {
     RendererToWorkerMessage,
     WorkerToRenderMessage,
     IPropertyValue,
-    IGlobalVariable
+    IGlobalVariable,
+    IWidgetMessage
 } from "project-editor/flow/runtime/wasm-worker-interfaces";
 import { init as initExecuteFunctions } from "project-editor/flow/runtime/wasm-execute-functions-init";
 import { actionConmponentExecuteFunctions } from "project-editor/flow/runtime/wasm-execute-functions";
@@ -35,6 +38,7 @@ function executeScpi(instrumentPtr: number, arr: any, isQuery: number) {
         WasmFlowRuntime._onScpiResult(
             WasmFlowRuntime.allocateUTF8("Invalid instrument"),
             0,
+            0,
             0
         );
         return;
@@ -55,8 +59,16 @@ function executeScpi(instrumentPtr: number, arr: any, isQuery: number) {
     postMessage(data);
 }
 
+let widgetMessages: IWidgetMessage[] = [];
+
 export class DashboardComponentContext implements IDashboardComponentContext {
     context: number = 0;
+
+    getFlowStateIndex(): number {
+        return WasmFlowRuntime._DashboardContext_getFlowStateIndex(
+            this.context
+        );
+    }
 
     getFlowIndex(): number {
         return WasmFlowRuntime._DashboardContext_getFlowIndex(this.context);
@@ -81,7 +93,16 @@ export class DashboardComponentContext implements IDashboardComponentContext {
         WasmFlowRuntime._DashboardContext_endAsyncExecution(this.context);
     }
 
-    evalProperty<T>(propertyIndex: number, expectedTypes?: ValueType[]) {
+    evalProperty<T = any>(propertyName: string, expectedTypes?: ValueType[]) {
+        const flowIndex = this.getFlowIndex();
+        const flow = WasmFlowRuntime.assetsMap.flows[flowIndex];
+        const componentIndex = this.getComponentIndex();
+        const component = flow.components[componentIndex];
+        const propertyIndex = component.propertyIndexes[propertyName];
+        if (propertyIndex == undefined) {
+            this.throwError(`Property "${propertyName}" not found`);
+        }
+
         const valuePtr = WasmFlowRuntime._DashboardContext_evalProperty(
             this.context,
             propertyIndex
@@ -139,10 +160,8 @@ export class DashboardComponentContext implements IDashboardComponentContext {
         const flow = WasmFlowRuntime.assetsMap.flows[flowIndex];
         const componentIndex = this.getComponentIndex();
         const component = flow.components[componentIndex];
-        const outputIndex = component.outputs.findIndex(
-            output => output.outputName == outputName
-        );
-        if (outputIndex == -1) {
+        const outputIndex = component.outputIndexes[outputName];
+        if (outputIndex == undefined) {
             this.throwError(`Output "${outputName}" not found`);
         }
 
@@ -232,6 +251,14 @@ export class DashboardComponentContext implements IDashboardComponentContext {
         );
     }
 
+    sendMessageToWidget(message: any) {
+        widgetMessages.push({
+            flowStateIndex: this.getFlowStateIndex(),
+            componentIndex: this.getComponentIndex(),
+            message
+        });
+    }
+
     throwError(errorMessage: string) {
         const errorMessagePtr = WasmFlowRuntime.allocateUTF8(errorMessage);
         WasmFlowRuntime._DashboardContext_throwError(
@@ -295,26 +322,64 @@ function updateObjectGlobalVariableValues(globalVariables: IGlobalVariable[]) {
     }
 }
 
+const propertyValues = new Map<number, IPropertyValue>();
+
+function isPropertyValueChanged(newPropertyValue: IPropertyValue) {
+    const oldPropertyValue = propertyValues.get(
+        newPropertyValue.propertyValueIndex
+    );
+
+    if (
+        oldPropertyValue &&
+        oldPropertyValue.valueWithType.valueType ==
+            newPropertyValue.valueWithType.valueType &&
+        deepEqual(
+            oldPropertyValue.valueWithType.value,
+            newPropertyValue.valueWithType.value
+        )
+    ) {
+        // not changed
+        //return false;
+    }
+
+    // changed
+    propertyValues.set(newPropertyValue.propertyValueIndex, newPropertyValue);
+    return true;
+}
+
 onmessage = async function (e: { data: RendererToWorkerMessage }) {
     if (e.data.scpiResult) {
         let errorMessagePtr = 0;
+        let resultPtr = 0;
+        let resultLen = 0;
+        let blob = 0;
+
         if (e.data.scpiResult.errorMessage) {
             errorMessagePtr = WasmFlowRuntime.allocateUTF8(
                 e.data.scpiResult.errorMessage
             );
+        } else {
+            let result = e.data.scpiResult.result!;
+            if (result instanceof Uint8Array) {
+                resultPtr = WasmFlowRuntime._malloc(result.length);
+                WasmFlowRuntime.HEAPU8.set(result, resultPtr);
+                resultLen = result.length;
+                blob = 1;
+            } else {
+                const resultArr = new Uint8Array(result);
+                resultPtr = WasmFlowRuntime._malloc(resultArr.length + 1);
+                WasmFlowRuntime.HEAPU8.set(resultArr, resultPtr);
+                WasmFlowRuntime.HEAPU8[resultPtr + resultArr.length] = 0;
+                resultLen = resultArr.length;
+            }
         }
 
-        let resultPtr = 0;
-        let resultLen = 0;
-        if (e.data.scpiResult.result) {
-            const resultArr = new Uint8Array(e.data.scpiResult.result);
-            resultPtr = WasmFlowRuntime._malloc(resultArr.length + 1);
-            WasmFlowRuntime.HEAPU8.set(resultArr, resultPtr);
-            WasmFlowRuntime.HEAPU8[resultPtr + resultArr.length] = 0;
-            resultLen = resultArr.length;
-        }
-
-        WasmFlowRuntime._onScpiResult(errorMessagePtr, resultPtr, resultLen);
+        WasmFlowRuntime._onScpiResult(
+            errorMessagePtr,
+            resultPtr,
+            resultLen,
+            blob
+        );
 
         WasmFlowRuntime._mainLoop();
 
@@ -444,7 +509,7 @@ onmessage = async function (e: { data: RendererToWorkerMessage }) {
 
     let propertyValues: IPropertyValue[] | undefined;
     if (e.data.evalProperties) {
-        propertyValues = e.data.evalProperties.map(evalProperty => {
+        e.data.evalProperties.forEach(evalProperty => {
             const {
                 flowStateIndex,
                 componentIndex,
@@ -476,24 +541,33 @@ onmessage = async function (e: { data: RendererToWorkerMessage }) {
                 WasmFlowRuntime._free(iteratorsPtr);
             }
 
+            let propertyValue: IPropertyValue;
+
             if (!valuePtr) {
-                return {
+                propertyValue = {
                     propertyValueIndex,
                     valueWithType: {
                         valueType: "undefined",
                         value: undefined
                     }
                 };
+            } else {
+                const valueWithType = getValue(valuePtr);
+
+                WasmFlowRuntime._valueFree(valuePtr);
+
+                propertyValue = {
+                    propertyValueIndex,
+                    valueWithType
+                };
             }
 
-            const valueWithType = getValue(valuePtr);
-
-            WasmFlowRuntime._valueFree(valuePtr);
-
-            return {
-                propertyValueIndex,
-                valueWithType
-            };
+            if (isPropertyValueChanged(propertyValue)) {
+                if (!propertyValues) {
+                    propertyValues = [];
+                }
+                propertyValues.push(propertyValue);
+            }
         });
     }
 
@@ -501,8 +575,11 @@ onmessage = async function (e: { data: RendererToWorkerMessage }) {
     const HEIGHT = 272;
 
     const data: WorkerToRenderMessage = {
-        propertyValues
+        propertyValues,
+        widgetMessages
     };
+
+    widgetMessages = [];
 
     var buf_addr = WasmFlowRuntime._getSyncedBuffer();
     if (buf_addr != 0) {

@@ -1724,6 +1724,8 @@ export class Component extends EezObject {
         return undefined;
     }
 
+    onWasmWorkerMessage(flowState: IFlowState, message: any) {}
+
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {}
 }
 

@@ -47,7 +47,7 @@ registerExecuteFunction(
 registerExecuteFunction(
     "DynamicCallActionActionComponent",
     function (context: DashboardComponentContext) {
-        const actionName = context.evalProperty<string>(0, ["string"]);
+        const actionName = context.evalProperty<string>("data");
 
         if (actionName == undefined || typeof actionName != "string") {
             context.throwError(`Invalid action name property`);
@@ -74,9 +74,9 @@ registerExecuteFunction(
         }
 
         const instrument =
-            context.evalProperty<InstrumentVariableTypeConstructorParams>(0, [
-                "object:Instrument"
-            ]);
+            context.evalProperty<InstrumentVariableTypeConstructorParams>(
+                "instrument"
+            );
 
         if (instrument == undefined || typeof instrument.id != "string") {
             context.throwError(`Invalid instrument property`);

@@ -61,6 +61,15 @@ interface AssetsMap {
                     targetInputIndex: number;
                 }[];
             }[];
+            outputIndexes: {
+                [outputName: string]: number;
+            };
+            properties: {
+                valueTypeIndex: number;
+            }[];
+            propertyIndexes: {
+                [propertyName: string]: number;
+            };
         }[];
         componentIndexes: { [path: string]: number };
         componentInputs: {
@@ -125,7 +134,12 @@ declare const WasmFlowRuntime: {
     _onPointerEvent(x: number, y: number, pressed: number);
     _onMessageFromDebugger(messageData: number, messageDataSize: number);
 
-    _onScpiResult(errorMessage: number, result: number, resultLen: number);
+    _onScpiResult(
+        errorMessage: number,
+        result: number,
+        resultLen: number,
+        resultIsBlob: number
+    );
 
     _createUndefinedValue(): number;
     _createNullValue(): number;
@@ -193,6 +207,7 @@ declare const WasmFlowRuntime: {
     _updateGlobalVariable(globalVariableIndex: number, valuePtr: number);
 
     _DashboardContext_getFlowIndex(context: number): number;
+    _DashboardContext_getFlowStateIndex(context: number): number;
     _DashboardContext_getComponentIndex(context: number): number;
 
     _DashboardContext_startAsyncExecution(context: number): number;

@@ -134,7 +134,7 @@
           "type": "WatchVariableActionComponent",
           "left": -369,
           "top": 0,
-          "width": 265,
+          "width": 259,
           "height": 54,
           "wireID": "43f37573-e40c-4eed-c16b-c101cb5de99e",
           "customInputs": [],
@@ -180,7 +180,7 @@
           "type": "WatchVariableActionComponent",
           "left": -362,
           "top": 100,
-          "width": 258,
+          "width": 252,
           "height": 54,
           "wireID": "6611dcfb-d0b1-43c2-f5aa-bf569c120caf",
           "customInputs": [],
@@ -208,7 +208,7 @@
           "type": "IsTrueActionComponent",
           "left": 589,
           "top": 457,
-          "width": 173,
+          "width": 167,
           "height": 73,
           "wireID": "337f1671-d779-4aad-ade5-d3210fe8d568",
           "customInputs": [
@@ -387,5 +387,10 @@
     }
   ],
   "colors": [],
-  "themes": []
+  "themes": [
+    {
+      "name": "default",
+      "colors": []
+    }
+  ]
 }

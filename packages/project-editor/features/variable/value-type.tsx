@@ -49,6 +49,7 @@ export const basicTypeNames = [
     "boolean",
     "string",
     "date",
+    "blob",
     "any"
 ];
 

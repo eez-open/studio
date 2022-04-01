@@ -1722,13 +1722,13 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  52540: function($0, $1, $2, $3) {executeScpi($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2), $3);},  
- 52611: function() {FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; });},  
- 52772: function() {startToDebuggerMessage();},  
- 52802: function($0, $1) {writeDebuggerBuffer(new Uint8Array(Module.HEAPU8.buffer, $0, $1));},  
- 52873: function() {finishToDebuggerMessage();},  
- 52904: function($0, $1) {executeDashboardComponent($0, $1);},  
- 52943: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
+  52588: function($0, $1, $2, $3) {executeScpi($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2), $3);},  
+ 52659: function() {FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; });},  
+ 52820: function() {startToDebuggerMessage();},  
+ 52850: function($0, $1) {writeDebuggerBuffer(new Uint8Array(Module.HEAPU8.buffer, $0, $1));},  
+ 52921: function() {finishToDebuggerMessage();},  
+ 52952: function($0, $1) {executeDashboardComponent($0, $1);},  
+ 52991: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
 };
 
 
@@ -5669,6 +5669,9 @@ var _malloc = Module["_malloc"] = createExportWrapper("malloc");
 
 /** @type {function(...*):?} */
 var _free = Module["_free"] = createExportWrapper("free");
+
+/** @type {function(...*):?} */
+var _DashboardContext_getFlowStateIndex = Module["_DashboardContext_getFlowStateIndex"] = createExportWrapper("DashboardContext_getFlowStateIndex");
 
 /** @type {function(...*):?} */
 var _DashboardContext_getFlowIndex = Module["_DashboardContext_getFlowIndex"] = createExportWrapper("DashboardContext_getFlowIndex");

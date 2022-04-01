@@ -96,6 +96,9 @@ export abstract class RuntimeBase {
 
     logs = new RuntimeLogs();
 
+    freeMemory: number = 0;
+    totalMemory: number = 0;
+
     get isPaused() {
         return this.state == State.PAUSED;
     }
@@ -149,7 +152,9 @@ export abstract class RuntimeBase {
             setState: action,
             transition: action,
             pushTask: action,
-            showNextQueueTask: action
+            showNextQueueTask: action,
+            freeMemory: observable,
+            totalMemory: observable
         });
 
         this.selectedPage = this.DocumentStore.project.pages[0];

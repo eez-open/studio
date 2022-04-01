@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, reaction, makeObservable } from "mobx";
+import { observable, reaction, makeObservable, runInAction } from "mobx";
 
 import {
     registerClass,
@@ -17,174 +17,7 @@ import type * as PlotlyModule from "plotly.js-dist-min";
 import classNames from "classnames";
 import { FlowState } from "project-editor/flow/runtime";
 import { specificGroup } from "project-editor/components/PropertyGrid/groups";
-
-////////////////////////////////////////////////////////////////////////////////
-
-interface InputData {
-    time: number;
-    value: any;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-function Plotly() {
-    return require("plotly.js-dist-min/plotly.min.js") as typeof PlotlyModule;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-// Creating plotly charts is slow, so do it one at the time.
-
-const newPlotQueue: {
-    root: PlotlyModule.Root;
-    data: PlotlyModule.Data[];
-    layout?: Partial<PlotlyModule.Layout>;
-    config?: Partial<PlotlyModule.Config>;
-    resolve: (el: PlotlyModule.PlotlyHTMLElement) => void;
-    createNewPlot: boolean;
-}[] = [];
-let doNewPlotTimeoutId: any = undefined;
-
-export function newPlotOrReact(
-    root: PlotlyModule.Root,
-    data: PlotlyModule.Data[],
-    layout: Partial<PlotlyModule.Layout>,
-    config: Partial<PlotlyModule.Config>,
-    createNewPlot: boolean
-): Promise<PlotlyModule.PlotlyHTMLElement> {
-    return new Promise<PlotlyModule.PlotlyHTMLElement>(resolve => {
-        newPlotQueue.push({
-            root,
-            data,
-            layout,
-            config,
-            resolve,
-            createNewPlot
-        });
-        if (!doNewPlotTimeoutId) {
-            doNewPlotTimeoutId = setTimeout(doNewPlotOrReact);
-        }
-    });
-}
-
-async function doNewPlotOrReact() {
-    const { root, data, layout, config, resolve, createNewPlot } =
-        newPlotQueue.shift()!;
-
-    if (createNewPlot) {
-        resolve(await Plotly().newPlot(root, data, layout, config));
-    } else {
-        resolve(await Plotly().react(root, data, layout, config));
-    }
-
-    if (newPlotQueue.length > 0) {
-        setTimeout(doNewPlotOrReact);
-    } else {
-        doNewPlotTimeoutId = undefined;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-// Updating plotly charts is slow, so do it one at the time.
-
-interface ILineChart {
-    type: "lineChart";
-    data: {
-        x: Date[][];
-        y: number[][];
-    };
-    maxPoints: number;
-}
-
-interface IGauge {
-    type: "gauge";
-    value: number;
-}
-
-type IChart = ILineChart | IGauge;
-
-const charts = new Map<HTMLElement, IChart>();
-const updateQueue: HTMLElement[] = [];
-let doUpdateChartTimeoutId: any = undefined;
-
-function doUpdateChart() {
-    doUpdateChartTimeoutId = undefined;
-
-    const el = updateQueue.shift()!;
-    const chart = charts.get(el)!;
-    charts.delete(el);
-    if (chart.type === "lineChart") {
-        Plotly().extendTraces(el, chart.data, [0], chart.maxPoints);
-    } else {
-        Plotly().update(el, { value: chart.value }, {});
-    }
-
-    if (updateQueue.length > 0) {
-        doUpdateChartTimeoutId = setTimeout(doUpdateChart);
-    }
-}
-
-function updateLineChart(
-    el: HTMLElement,
-    inputValue: InputData,
-    maxPoints: number
-) {
-    let chart = charts.get(el) as ILineChart | undefined;
-    if (!chart) {
-        chart = {
-            type: "lineChart",
-            data: {
-                x: [[new Date(inputValue.time)]],
-                y: [[inputValue.value]]
-            },
-            maxPoints
-        };
-        charts.set(el, chart);
-        updateQueue.push(el);
-
-        if (!doUpdateChartTimeoutId) {
-            doUpdateChartTimeoutId = setTimeout(doUpdateChart);
-        }
-    } else {
-        chart.data.x[0].push(new Date(inputValue.time));
-        chart.data.y[0].push(inputValue.value);
-    }
-}
-
-function updateGauge(el: HTMLElement, value: number) {
-    let chart = charts.get(el) as IGauge | undefined;
-    if (!chart) {
-        chart = {
-            type: "gauge",
-            value
-        };
-        charts.set(el, chart);
-        updateQueue.push(el);
-
-        if (!doUpdateChartTimeoutId) {
-            doUpdateChartTimeoutId = setTimeout(doUpdateChart);
-        }
-    } else {
-        chart.value = value;
-    }
-}
-
-function removeChart(el: HTMLElement) {
-    if (charts.get(el)) {
-        charts.delete(el);
-        updateQueue.splice(updateQueue.indexOf(el), 1);
-    }
-
-    Plotly().purge(el);
-
-    if (charts.size === 0) {
-        if (doUpdateChartTimeoutId) {
-            clearTimeout(doUpdateChartTimeoutId);
-            doUpdateChartTimeoutId = undefined;
-        }
-    }
-}
+import { evalProperty } from "project-editor/flow/components/widgets";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -466,6 +299,29 @@ export class LineChartWidget extends Widget {
 
         return undefined;
     }
+
+    onWasmWorkerMessage(flowState: FlowState, message: any) {
+        runInAction(() => {
+            let runningState =
+                flowState.getComponentRunningState<RunningState>(this);
+
+            if (!runningState) {
+                runningState = new RunningState();
+                flowState.setComponentRunningState(this, runningState);
+            }
+
+            const value = message;
+
+            runningState.values.push({
+                time: Date.now(),
+                value
+            });
+
+            if (runningState.values.length == this.maxPoints) {
+                runningState.values.shift();
+            }
+        });
+    }
 }
 
 registerClass("LineChartWidget", LineChartWidget);
@@ -546,18 +402,9 @@ const GaugeElement = observer(
 
                         disposeReaction = reaction(
                             () => {
-                                if (
-                                    widget.isInputProperty("data") &&
-                                    flowContext.flowState
-                                ) {
-                                    return widget.data
-                                        ? flowContext.flowState.evalExpression(
-                                              widget,
-                                              widget.data
-                                          )
-                                        : undefined;
-                                }
-                                return undefined;
+                                return flowContext.flowState
+                                    ? evalProperty(flowContext, widget, "data")
+                                    : undefined;
                             },
                             inputData => {
                                 updateGauge(el, inputData);
@@ -711,3 +558,171 @@ export class GaugeWidget extends Widget {
 }
 
 registerClass("GaugeWidget", GaugeWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+interface InputData {
+    time: number;
+    value: any;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+function Plotly() {
+    return require("plotly.js-dist-min/plotly.min.js") as typeof PlotlyModule;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Creating plotly charts is slow, so do it one at the time.
+
+const newPlotQueue: {
+    root: PlotlyModule.Root;
+    data: PlotlyModule.Data[];
+    layout?: Partial<PlotlyModule.Layout>;
+    config?: Partial<PlotlyModule.Config>;
+    resolve: (el: PlotlyModule.PlotlyHTMLElement) => void;
+    createNewPlot: boolean;
+}[] = [];
+let doNewPlotTimeoutId: any = undefined;
+
+export function newPlotOrReact(
+    root: PlotlyModule.Root,
+    data: PlotlyModule.Data[],
+    layout: Partial<PlotlyModule.Layout>,
+    config: Partial<PlotlyModule.Config>,
+    createNewPlot: boolean
+): Promise<PlotlyModule.PlotlyHTMLElement> {
+    return new Promise<PlotlyModule.PlotlyHTMLElement>(resolve => {
+        newPlotQueue.push({
+            root,
+            data,
+            layout,
+            config,
+            resolve,
+            createNewPlot
+        });
+        if (!doNewPlotTimeoutId) {
+            doNewPlotTimeoutId = setTimeout(doNewPlotOrReact);
+        }
+    });
+}
+
+async function doNewPlotOrReact() {
+    const { root, data, layout, config, resolve, createNewPlot } =
+        newPlotQueue.shift()!;
+
+    if (createNewPlot) {
+        resolve(await Plotly().newPlot(root, data, layout, config));
+    } else {
+        resolve(await Plotly().react(root, data, layout, config));
+    }
+
+    if (newPlotQueue.length > 0) {
+        setTimeout(doNewPlotOrReact);
+    } else {
+        doNewPlotTimeoutId = undefined;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Updating plotly charts is slow, so do it one at the time.
+
+interface ILineChart {
+    type: "lineChart";
+    data: {
+        x: Date[][];
+        y: number[][];
+    };
+    maxPoints: number;
+}
+
+interface IGauge {
+    type: "gauge";
+    value: number;
+}
+
+type IChart = ILineChart | IGauge;
+
+const charts = new Map<HTMLElement, IChart>();
+const updateQueue: HTMLElement[] = [];
+let doUpdateChartTimeoutId: any = undefined;
+
+function doUpdateChart() {
+    doUpdateChartTimeoutId = undefined;
+
+    const el = updateQueue.shift()!;
+    const chart = charts.get(el)!;
+    charts.delete(el);
+    if (chart.type === "lineChart") {
+        Plotly().extendTraces(el, chart.data, [0], chart.maxPoints);
+    } else {
+        Plotly().update(el, { value: chart.value }, {});
+    }
+
+    if (updateQueue.length > 0) {
+        doUpdateChartTimeoutId = setTimeout(doUpdateChart);
+    }
+}
+
+function updateLineChart(
+    el: HTMLElement,
+    inputValue: InputData,
+    maxPoints: number
+) {
+    let chart = charts.get(el) as ILineChart | undefined;
+    if (!chart) {
+        chart = {
+            type: "lineChart",
+            data: {
+                x: [[new Date(inputValue.time)]],
+                y: [[inputValue.value]]
+            },
+            maxPoints
+        };
+        charts.set(el, chart);
+        updateQueue.push(el);
+
+        if (!doUpdateChartTimeoutId) {
+            doUpdateChartTimeoutId = setTimeout(doUpdateChart);
+        }
+    } else {
+        chart.data.x[0].push(new Date(inputValue.time));
+        chart.data.y[0].push(inputValue.value);
+    }
+}
+
+function updateGauge(el: HTMLElement, value: number) {
+    let chart = charts.get(el) as IGauge | undefined;
+    if (!chart) {
+        chart = {
+            type: "gauge",
+            value
+        };
+        charts.set(el, chart);
+        updateQueue.push(el);
+
+        if (!doUpdateChartTimeoutId) {
+            doUpdateChartTimeoutId = setTimeout(doUpdateChart);
+        }
+    } else {
+        chart.value = value;
+    }
+}
+
+function removeChart(el: HTMLElement) {
+    if (charts.get(el)) {
+        charts.delete(el);
+        updateQueue.splice(updateQueue.indexOf(el), 1);
+    }
+
+    Plotly().purge(el);
+
+    if (charts.size === 0) {
+        if (doUpdateChartTimeoutId) {
+            clearTimeout(doUpdateChartTimeoutId);
+            doUpdateChartTimeoutId = undefined;
+        }
+    }
+}

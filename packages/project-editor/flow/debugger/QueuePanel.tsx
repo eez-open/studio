@@ -18,7 +18,16 @@ export const QueuePanel = observer(
             return (
                 <Panel
                     id="project-editor/debugger/queue"
-                    title=""
+                    title={
+                        this.props.runtime.totalMemory != 0
+                            ? `Free memory: ${
+                                  this.props.runtime.freeMemory
+                              } (${Math.round(
+                                  (this.props.runtime.freeMemory * 100) /
+                                      this.props.runtime.totalMemory
+                              )}%)`
+                            : ""
+                    }
                     buttons={
                         this.props.runtime instanceof DebugInfoRuntime
                             ? []
