@@ -1,7 +1,7 @@
 {
   "settings": {
     "general": {
-      "projectVersion": "v2",
+      "projectVersion": "v3",
       "projectType": "dashboard",
       "imports": []
     },
@@ -25,9 +25,9 @@
       "components": [
         {
           "type": "DelayActionComponent",
-          "left": 26,
-          "top": 622,
-          "width": 191,
+          "left": 10,
+          "top": 637,
+          "width": 185,
           "height": 54,
           "wireID": "1850d6c3-591c-4048-fa03-12860d1d8e9c",
           "customInputs": [
@@ -49,7 +49,7 @@
           "customInputs": [
             {
               "name": "data",
-              "type": "any"
+              "type": "integer"
             }
           ],
           "customOutputs": [],
@@ -70,7 +70,7 @@
           "type": "EvalJSExprActionComponent",
           "left": -339,
           "top": 656,
-          "width": 234,
+          "width": 228,
           "height": 73,
           "wireID": "627f6fc7-02ff-44ba-fffb-447a54342671",
           "customInputs": [
@@ -112,13 +112,13 @@
           "type": "CompareActionComponent",
           "left": 10,
           "top": 851,
-          "width": 138,
+          "width": 132,
           "height": 73,
           "wireID": "a2a4a0fb-a014-4e6e-d899-1f3aa5d3e86b",
           "customInputs": [
             {
               "name": "A",
-              "type": "any"
+              "type": "integer"
             }
           ],
           "customOutputs": [],
@@ -130,7 +130,7 @@
           "type": "EvalJSExprActionComponent",
           "left": 329,
           "top": 656,
-          "width": 173,
+          "width": 167,
           "height": 54,
           "wireID": "3556c3ee-4449-4e5d-c78d-142c3fa69ef6",
           "customInputs": [
@@ -240,6 +240,12 @@
           "output": "result",
           "target": "1850d6c3-591c-4048-fa03-12860d1d8e9c",
           "input": "milliseconds"
+        },
+        {
+          "source": "627f6fc7-02ff-44ba-fffb-447a54342671",
+          "output": "@seqout",
+          "target": "1850d6c3-591c-4048-fa03-12860d1d8e9c",
+          "input": "@seqin"
         }
       ],
       "localVariables": [],
@@ -255,6 +261,17 @@
       "name": "default"
     }
   ],
-  "colors": [],
-  "themes": []
+  "colors": [
+    {
+      "name": "background"
+    }
+  ],
+  "themes": [
+    {
+      "name": "default",
+      "colors": [
+        "#000000"
+      ]
+    }
+  ]
 }

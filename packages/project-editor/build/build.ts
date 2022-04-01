@@ -547,6 +547,8 @@ export async function buildExtensions(DocumentStore: DocumentStoreClass) {
             `Build successfully finished at ${new Date().toLocaleString()}`
         );
     } catch (err) {
+        console.error(err);
+
         if (err instanceof BuildException) {
             OutputSections.write(
                 Section.OUTPUT,

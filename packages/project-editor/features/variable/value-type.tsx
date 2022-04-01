@@ -56,6 +56,7 @@ export const basicTypeNames = [
 
 export const ACTION_PARAMS_STRUCT_NAME = "$ActionParams";
 export const CHECKBOX_ACTION_PARAMS_STRUCT_NAME = "$CheckboxActionParams";
+export const TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME = "$TextInputActionParams";
 
 export const SYSTEM_STRUCTURES: IStructure[] = [
     {
@@ -86,6 +87,24 @@ export const SYSTEM_STRUCTURES: IStructure[] = [
             {
                 name: "value",
                 type: "boolean"
+            }
+        ],
+        fieldsMap: new Map()
+    },
+    {
+        name: TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME,
+        fields: [
+            {
+                name: "index",
+                type: "integer"
+            },
+            {
+                name: "indexes",
+                type: "array:integer"
+            },
+            {
+                name: "value",
+                type: "string"
             }
         ],
         fieldsMap: new Map()
@@ -792,5 +811,18 @@ export function makeCheckboxActionParamsValue(
     flowContext: IFlowContext,
     value: boolean
 ): CheckboxActionParamsValue {
+    return { ...makeActionParamsValue(flowContext), value };
+}
+
+interface TextInputActionParamsValue {
+    index: number;
+    indexes: number[];
+    value: string;
+}
+
+export function makeTextInputActionParamsValue(
+    flowContext: IFlowContext,
+    value: string
+): TextInputActionParamsValue {
     return { ...makeActionParamsValue(flowContext), value };
 }

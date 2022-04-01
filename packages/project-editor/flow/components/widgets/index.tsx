@@ -1,13 +1,7 @@
 import { MenuItem } from "@electron/remote";
 
 import React from "react";
-import {
-    observable,
-    computed,
-    runInAction,
-    reaction,
-    makeObservable
-} from "mobx";
+import { observable, computed, runInAction, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -69,6 +63,8 @@ import {
     isEnumVariable,
     makeActionParamsValue,
     makeCheckboxActionParamsValue,
+    makeTextInputActionParamsValue,
+    TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME,
     ValueType
 } from "project-editor/features/variable/value-type";
 import {
@@ -137,10 +133,7 @@ import {
     WIDGET_TYPE_SLIDER,
     WIDGET_TYPE_DROP_DOWN_LIST
 } from "project-editor/flow/components/component_types";
-import {
-    evalConstantExpression,
-    ExpressionEvalError
-} from "project-editor/flow/expression";
+import { evalConstantExpression } from "project-editor/flow/expression";
 import { remap } from "eez-studio-shared/util";
 import { roundNumber } from "eez-studio-shared/roundNumber";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -5427,28 +5420,20 @@ registerClass("InputEmbeddedWidget", InputEmbeddedWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class TextInputRunningState {
-    constructor(value: string) {
-        makeObservable(this, {
-            value: observable
-        });
-
-        this.value = value;
-    }
-
-    value: string;
-}
-
 export class TextInputWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
+            makeDataPropertyInfo("data", {
+                displayName: "Value"
+            }),
+            makeActionPropertyInfo("action", {
+                displayName: "onChange",
+                expressionType: `struct:${TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME}`
+            }),
             {
                 name: "password",
                 type: PropertyType.Boolean
-            },
-            makeDataPropertyInfo("data", {
-                displayName: "Value"
-            })
+            }
         ],
         defaultValue: {
             left: 0,
@@ -5494,25 +5479,32 @@ export class TextInputWidget extends Widget {
         });
     }
 
-    getOutputs(): ComponentOutput[] {
-        return [
-            ...super.getOutputs(),
-            {
-                name: "value",
-                type: "string",
-                isSequenceOutput: false,
-                isOptionalOutput: false
+    getValue(flowContext: IFlowContext) {
+        if (
+            flowContext.DocumentStore.project.isDashboardProject ||
+            flowContext.DocumentStore.project.isAppletProject ||
+            flowContext.DocumentStore.project.isFirmwareWithFlowSupportProject
+        ) {
+            if (this.data) {
+                try {
+                    return evalProperty(flowContext, this, "data");
+                } catch (err) {
+                    //console.error(err);
+                }
             }
-        ];
+
+            return "";
+        }
+
+        if (this.data) {
+            return flowContext.dataContext.get(this.data) ?? "";
+        }
+
+        return "";
     }
 
     render(flowContext: IFlowContext): React.ReactNode {
-        const runningState =
-            flowContext.flowState?.getComponentRunningState<TextInputRunningState>(
-                this
-            );
-
-        let value = runningState?.value ?? "";
+        let value = this.getValue(flowContext);
 
         return (
             <>
@@ -5520,18 +5512,28 @@ export class TextInputWidget extends Widget {
                     type="text"
                     value={value}
                     onChange={event => {
-                        const value = event.target.value;
-                        if (runningState && runningState.value != value) {
-                            runInAction(() => (runningState.value = value));
+                        const flowState = flowContext.flowState as FlowState;
+                        if (flowState) {
+                            const value = event.target.value;
 
-                            if (flowContext.flowState) {
-                                (
-                                    flowContext.flowState as FlowState
-                                ).runtime.propagateValue(
-                                    flowContext.flowState as FlowState,
+                            if (this.data) {
+                                flowState.runtime.assignProperty(
+                                    flowContext,
                                     this,
-                                    "value",
+                                    "data",
                                     value
+                                );
+                            }
+
+                            if (flowState.runtime) {
+                                flowState.runtime.executeWidgetAction(
+                                    flowContext,
+                                    this,
+                                    makeTextInputActionParamsValue(
+                                        flowContext,
+                                        value
+                                    ),
+                                    `struct:${TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME}`
                                 );
                             }
                         }
@@ -5539,56 +5541,6 @@ export class TextInputWidget extends Widget {
                 ></input>
                 {super.render(flowContext)}
             </>
-        );
-    }
-
-    async execute(
-        flowState: FlowState,
-        dispose: (() => void) | undefined
-    ): Promise<(() => void) | undefined | boolean> {
-        const runningState =
-            flowState.getComponentRunningState<TextInputRunningState>(this);
-
-        let value = this.data ? flowState.evalExpression(this, this.data) : "";
-
-        if (!runningState) {
-            flowState.setComponentRunningState(
-                this,
-                new TextInputRunningState(value)
-            );
-        } else {
-            if (value != runningState.value) {
-                runInAction(() => (runningState.value = value));
-            }
-        }
-
-        if (dispose) {
-            return dispose;
-        }
-
-        return reaction(
-            () => {
-                try {
-                    return this.data
-                        ? flowState.evalExpression(this, this.data)
-                        : "";
-                } catch (err) {
-                    if (err instanceof ExpressionEvalError) {
-                        return undefined;
-                    } else {
-                        throw err;
-                    }
-                }
-            },
-            value => {
-                const runningState =
-                    flowState.getComponentRunningState<TextInputRunningState>(
-                        this
-                    );
-                if (runningState) {
-                    runInAction(() => (runningState.value = value));
-                }
-            }
         );
     }
 }
@@ -5740,14 +5692,14 @@ export class CheckboxWidget extends Widget {
                             const flowState =
                                 flowContext.flowState as FlowState;
                             if (flowState) {
-                                const checked = event.target.checked;
+                                const value = event.target.checked;
 
                                 if (this.data) {
                                     flowState.runtime.assignProperty(
                                         flowContext,
                                         this,
                                         "data",
-                                        checked
+                                        value
                                     );
                                 }
 
@@ -5757,7 +5709,7 @@ export class CheckboxWidget extends Widget {
                                         this,
                                         makeCheckboxActionParamsValue(
                                             flowContext,
-                                            checked
+                                            value
                                         ),
                                         `struct:${CHECKBOX_ACTION_PARAMS_STRUCT_NAME}`
                                     );
