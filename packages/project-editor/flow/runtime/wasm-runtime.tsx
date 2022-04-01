@@ -52,6 +52,7 @@ import type {
 import { getNodeModuleFolders } from "eez-studio-shared/extensions/yarn";
 import { IExpressionContext } from "project-editor/flow/expression";
 import { FileHistoryItem } from "instrument/window/history/items/file";
+import type { Page } from "project-editor/features/page/page";
 
 interface IGlobalVariableBase {
     variable: IVariable;
@@ -251,6 +252,11 @@ export class WasmRuntime extends RemoteRuntime {
     };
 
     tick = () => {
+        if (this.componentProperties.selectedPage != this.selectedPage) {
+            this.componentProperties.selectedPage = this.selectedPage;
+            this.componentProperties.reset();
+        }
+
         this.requestAnimationFrameId = undefined;
 
         if (this.screen && this.ctx) {
@@ -264,7 +270,7 @@ export class WasmRuntime extends RemoteRuntime {
                 clicked: this.wheelClicked
             },
             pointerEvents: this.pointerEvents,
-            evalProperties: this.componentProperties.evalPropertiesOnNextTick,
+            evalProperties: this.componentProperties.evalProperties,
             assignProperties:
                 this.componentProperties.assignPropertiesOnNextTick,
             updateGlobalVariableValues:
@@ -277,7 +283,6 @@ export class WasmRuntime extends RemoteRuntime {
         this.wheelClicked = 0;
         this.pointerEvents = [];
         this.screen = undefined;
-        this.componentProperties.tickReset();
     };
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -782,6 +787,8 @@ class WasmDebuggerConnection extends DebuggerConnectionBase {
 ////////////////////////////////////////////////////////////////////////////////
 
 class ComponentProperties {
+    selectedPage: Page;
+
     // eval
     evalFlowStates = new Map<
         number,
@@ -802,8 +809,7 @@ class ComponentProperties {
             >;
         }
     >();
-    evalPropertiesOnNextTick: IEvalProperty[] = [];
-    evalPropertiesOnNextTickSet = new Set<number>();
+    evalProperties: IEvalProperty[] | undefined;
     propertyValues: ValueWithType[] = [];
     nextPropertyValueIndex: number = 0;
 
@@ -833,6 +839,15 @@ class ComponentProperties {
         makeObservable(this, {
             propertyValues: observable
         });
+    }
+
+    reset() {
+        this.evalFlowStates = new Map();
+        this.evalProperties = undefined;
+        runInAction(() => {
+            this.propertyValues = [];
+        });
+        this.nextPropertyValueIndex = 0;
     }
 
     evalProperty(
@@ -915,31 +930,43 @@ class ComponentProperties {
                     [indexesPath]: this.nextPropertyValueIndex
                 }
             };
-            this.nextPropertyValueIndex++;
 
             evalComponent.evalProperties[propertyName] = evalProperty;
+
+            if (this.evalProperties == undefined) {
+                this.evalProperties = [];
+            }
+
+            this.evalProperties[this.nextPropertyValueIndex] = {
+                flowStateIndex,
+                componentIndex: evalComponent.componentIndex,
+                propertyIndex: evalProperty.propertyIndex,
+                propertyValueIndex: this.nextPropertyValueIndex,
+                indexes
+            };
+            this.nextPropertyValueIndex++;
         } else {
             if (evalProperty.propertyValueIndexes[indexesPath] == undefined) {
                 evalProperty.propertyValueIndexes[indexesPath] =
                     this.nextPropertyValueIndex;
+
+                if (this.evalProperties == undefined) {
+                    this.evalProperties = [];
+                }
+
+                this.evalProperties[this.nextPropertyValueIndex] = {
+                    flowStateIndex,
+                    componentIndex: evalComponent.componentIndex,
+                    propertyIndex: evalProperty.propertyIndex,
+                    propertyValueIndex: this.nextPropertyValueIndex,
+                    indexes
+                };
+
                 this.nextPropertyValueIndex++;
             }
         }
 
         let propertyValueIndex = evalProperty.propertyValueIndexes[indexesPath];
-
-        if (!this.evalPropertiesOnNextTickSet.has(propertyValueIndex)) {
-            // add property to evalute on next tick
-            this.evalPropertiesOnNextTickSet.add(propertyValueIndex);
-
-            this.evalPropertiesOnNextTick.push({
-                flowStateIndex,
-                componentIndex: evalComponent.componentIndex,
-                propertyIndex: evalProperty.propertyIndex,
-                propertyValueIndex,
-                indexes
-            });
-        }
 
         if (propertyValueIndex < this.propertyValues.length) {
             // get evaluated value
@@ -954,6 +981,17 @@ class ComponentProperties {
         if (widgetPropertyValues.length > 0) {
             runInAction(() => {
                 widgetPropertyValues.forEach(propertyValue => {
+                    for (
+                        let i = this.propertyValues.length;
+                        i < propertyValue.propertyValueIndex;
+                        i++
+                    ) {
+                        this.propertyValues[i] = {
+                            value: undefined,
+                            valueType: "undefined"
+                        };
+                    }
+
                     this.propertyValues[propertyValue.propertyValueIndex] =
                         propertyValue.valueWithType;
                 });
@@ -1032,13 +1070,6 @@ class ComponentProperties {
             indexes,
             value
         });
-    }
-
-    tickReset() {
-        this.evalPropertiesOnNextTick = [];
-        this.evalPropertiesOnNextTickSet.clear();
-
-        this.assignPropertiesOnNextTick = [];
     }
 
     private getPropertyIndex(component: Component, propertyName: string) {

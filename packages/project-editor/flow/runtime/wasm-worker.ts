@@ -322,10 +322,10 @@ function updateObjectGlobalVariableValues(globalVariables: IGlobalVariable[]) {
     }
 }
 
-const propertyValues = new Map<number, IPropertyValue>();
+const savedPropertyValues = new Map<number, IPropertyValue>();
 
 function isPropertyValueChanged(newPropertyValue: IPropertyValue) {
-    const oldPropertyValue = propertyValues.get(
+    const oldPropertyValue = savedPropertyValues.get(
         newPropertyValue.propertyValueIndex
     );
 
@@ -339,11 +339,14 @@ function isPropertyValueChanged(newPropertyValue: IPropertyValue) {
         )
     ) {
         // not changed
-        //return false;
+        return false;
     }
 
     // changed
-    propertyValues.set(newPropertyValue.propertyValueIndex, newPropertyValue);
+    savedPropertyValues.set(
+        newPropertyValue.propertyValueIndex,
+        newPropertyValue
+    );
     return true;
 }
 
@@ -569,6 +572,9 @@ onmessage = async function (e: { data: RendererToWorkerMessage }) {
                 propertyValues.push(propertyValue);
             }
         });
+    } else {
+        console.log("cleared savedPropertyValues");
+        savedPropertyValues.clear();
     }
 
     const WIDTH = 480;
