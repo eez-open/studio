@@ -5725,6 +5725,24 @@ var _DashboardContext_executeCallAction = Module["_DashboardContext_executeCallA
 var _DashboardContext_throwError = Module["_DashboardContext_throwError"] = createExportWrapper("DashboardContext_throwError");
 
 /** @type {function(...*):?} */
+var _createUndefinedValue = Module["_createUndefinedValue"] = createExportWrapper("createUndefinedValue");
+
+/** @type {function(...*):?} */
+var _createNullValue = Module["_createNullValue"] = createExportWrapper("createNullValue");
+
+/** @type {function(...*):?} */
+var _createIntValue = Module["_createIntValue"] = createExportWrapper("createIntValue");
+
+/** @type {function(...*):?} */
+var _createDoubleValue = Module["_createDoubleValue"] = createExportWrapper("createDoubleValue");
+
+/** @type {function(...*):?} */
+var _createBooleanValue = Module["_createBooleanValue"] = createExportWrapper("createBooleanValue");
+
+/** @type {function(...*):?} */
+var _createStringValue = Module["_createStringValue"] = createExportWrapper("createStringValue");
+
+/** @type {function(...*):?} */
 var _arrayValueAlloc = Module["_arrayValueAlloc"] = createExportWrapper("arrayValueAlloc");
 
 /** @type {function(...*):?} */
@@ -5747,6 +5765,9 @@ var _arrayValueSetElementNull = Module["_arrayValueSetElementNull"] = createExpo
 
 /** @type {function(...*):?} */
 var _evalProperty = Module["_evalProperty"] = createExportWrapper("evalProperty");
+
+/** @type {function(...*):?} */
+var _assignProperty = Module["_assignProperty"] = createExportWrapper("assignProperty");
 
 /** @type {function(...*):?} */
 var _propagateValue = Module["_propagateValue"] = createExportWrapper("propagateValue");

@@ -42,7 +42,7 @@ export type {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const basicTypeNames = [
+export const basicTypeNames = [
     "integer",
     "float",
     "double",
@@ -696,33 +696,9 @@ export function isValueTypeOf(
 }
 
 export function isValidType(project: Project, valueType: ValueType): boolean {
-    if (isBasicType(valueType)) {
-        return true;
-    }
-
-    if (isObjectType(valueType)) {
-        return getObjectVariableTypeFromType(valueType) ? true : false;
-    }
-
-    if (isStructType(valueType)) {
-        return getStructureFromType(project, valueType) ? true : false;
-    }
-
-    if (isEnumType(valueType)) {
-        const enumName = getEnumTypeNameFromType(valueType);
-        return enumName && project.variables.enumsMap.get(enumName)
-            ? true
-            : false;
-    }
-
-    if (isArrayType(valueType)) {
-        const elementType = getArrayElementTypeFromType(valueType);
-        return elementType && isValidType(project, elementType as ValueType)
-            ? true
-            : false;
-    }
-
-    return false;
+    return (
+        project._DocumentStore.typesStore.allValueTypes.indexOf(valueType) != -1
+    );
 }
 
 ////////////////////////////////////////////////////////////////////////////////

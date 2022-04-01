@@ -31,7 +31,7 @@ export interface RendererToWorkerMessage {
         nodeModuleFolders: string[];
         assetsData: Uint8Array;
         assetsMap: AssetsMap;
-        objectGlobalVariableValues: ObjectGlobalVariableValues;
+        globalVariableValues: IGlobalVariable[];
     };
 
     // mouse data from Canvas
@@ -54,6 +54,9 @@ export interface RendererToWorkerMessage {
     // request to worker to evaluate some property values
     evalProperties?: IEvalProperty[];
 
+    // request to worker to change some property values
+    assignProperties?: IAssignProperty[];
+
     // request to worker to execute widget action
     executeWidgetAction?: {
         flowStateIndex: number;
@@ -62,15 +65,26 @@ export interface RendererToWorkerMessage {
         arrayValue: ArrayValue;
     };
 
-    updateObjectGlobalVariableValues?: ObjectGlobalVariableValues;
+    updateGlobalVariableValues?: IGlobalVariable[];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export type ObjectGlobalVariableValues = {
+interface IGlobalVariableBase {
     globalVariableIndex: number;
-    arrayValue: ArrayValue;
-}[];
+}
+
+interface IBasicGlobalVariable extends IGlobalVariableBase {
+    kind: "basic";
+    value: null | undefined | number | boolean | string;
+}
+
+interface IArrayGlobalVariable extends IGlobalVariableBase {
+    kind: "array";
+    value: ArrayValue;
+}
+
+export type IGlobalVariable = IBasicGlobalVariable | IArrayGlobalVariable;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -111,6 +125,16 @@ export type ObjectOrArrayValue =
     | undefined
     | Value[]
     | { [fieldName: string]: Value };
+
+////////////////////////////////////////////////////////////////////////////////
+
+export interface IAssignProperty {
+    flowStateIndex: number;
+    componentIndex: number;
+    propertyIndex: number;
+    indexes: number[];
+    value: any;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -5743,10 +5743,10 @@ export class CheckboxWidget extends Widget {
                                 const checked = event.target.checked;
 
                                 if (this.data) {
-                                    flowState.runtime.assignValue(
+                                    flowState.runtime.assignProperty(
                                         flowContext,
                                         this,
-                                        this.data!,
+                                        "data",
                                         checked
                                     );
                                 }

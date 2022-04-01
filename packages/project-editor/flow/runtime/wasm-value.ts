@@ -30,8 +30,6 @@ import type {
 
 type Values = (null | boolean | number | string | ArrayValue)[];
 
-export const TYPE_ARRAY = 0xffffffff;
-
 export type ArrayValue = {
     valueTypeIndex: number;
     values: Values;
@@ -98,10 +96,21 @@ export function createJsArrayValue(
                             fieldValue,
                             fieldValueFieldDescriptions
                         );
+                    } else {
+                        const fieldType = assetsMap.types[fieldValueTypeIndex];
+                        if (fieldType.kind != "basic") {
+                            return createArrayValue(
+                                fieldValueTypeIndex,
+                                fieldValue,
+                                undefined
+                            );
+                        }
                     }
                 }
                 return fieldValue;
             });
+        } else {
+            values = value;
         }
 
         return {
@@ -157,7 +166,11 @@ export function createWasmArrayValue(arrayValue: ArrayValue) {
         } else if (value == null) {
             WasmFlowRuntime._arrayValueSetElementNull(arrayValuePtr, i);
         } else {
-            const valuePtr = createWasmArrayValue(value);
+            const type = WasmFlowRuntime.assetsMap.types[value.valueTypeIndex];
+            const valuePtr =
+                type.kind == "basic"
+                    ? createWasmValue(value.values as any)
+                    : createWasmArrayValue(value);
             WasmFlowRuntime._arrayValueSetElementValue(
                 arrayValuePtr,
                 i,
@@ -167,6 +180,40 @@ export function createWasmArrayValue(arrayValue: ArrayValue) {
         }
     }
     return arrayValuePtr;
+}
+
+export function createWasmValue(
+    value: undefined | null | number | boolean | string
+) {
+    if (value == undefined) {
+        return WasmFlowRuntime._createUndefinedValue();
+    }
+
+    if (value === null) {
+        return WasmFlowRuntime._createNullValue();
+    }
+
+    if (typeof value == "number") {
+        if (Number.isInteger(value)) {
+            return WasmFlowRuntime._createIntValue(value);
+        }
+        return WasmFlowRuntime._createDoubleValue(value);
+    }
+
+    if (typeof value == "boolean") {
+        return WasmFlowRuntime._createBooleanValue(value ? 1 : 0);
+    }
+
+    if (typeof value == "string") {
+        const stringPtr = WasmFlowRuntime.allocateUTF8(value);
+        const valuePtr = WasmFlowRuntime._createStringValue(stringPtr);
+        WasmFlowRuntime._free(stringPtr);
+        return valuePtr;
+    }
+
+    console.error("unsupported WASM value");
+
+    return WasmFlowRuntime._createNullValue();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

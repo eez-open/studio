@@ -14,9 +14,10 @@ import {
 } from "project-editor/flow/remote-runtime";
 
 import type {
+    IAssignProperty,
     IEvalProperty,
+    IGlobalVariable,
     IPropertyValue,
-    ObjectGlobalVariableValues,
     RendererToWorkerMessage,
     ScpiCommand,
     ValueWithType,
@@ -24,7 +25,9 @@ import type {
 } from "project-editor/flow/runtime/wasm-worker-interfaces";
 import {
     getObjectVariableTypeFromType,
-    IObjectVariableValue
+    IObjectVariableValue,
+    isArrayType,
+    isStructType
 } from "project-editor/features/variable/value-type";
 import { InstrumentObject } from "instrument/instrument-object";
 import {
@@ -46,6 +49,35 @@ import type {
     ValueType
 } from "eez-studio-types";
 import { getNodeModuleFolders } from "eez-studio-shared/extensions/yarn";
+import { IExpressionContext } from "project-editor/flow/expression";
+
+interface IGlobalVariableBase {
+    variable: IVariable;
+    globalVariableIndex: number;
+}
+
+interface IBasicGlobalVariable extends IGlobalVariableBase {
+    kind: "basic";
+    value: null | undefined | number | boolean | string;
+}
+
+interface IStructGlobalVariable extends IGlobalVariableBase {
+    kind: "struct";
+    value: ArrayValue;
+}
+
+interface IObjectGlobalVariable extends IGlobalVariableBase {
+    kind: "object";
+    value: ArrayValue;
+
+    objectVariableValue: IObjectVariableValue;
+    objectVariableType: IObjectVariableType;
+}
+
+type IRuntimeGlobalVariable =
+    | IBasicGlobalVariable
+    | IStructGlobalVariable
+    | IObjectGlobalVariable;
 
 export class WasmRuntime extends RemoteRuntime {
     debuggerConnection = new WasmDebuggerConnection(this);
@@ -55,13 +87,7 @@ export class WasmRuntime extends RemoteRuntime {
     assetsData: any;
     assetsDataMapJs: AssetsMap;
 
-    objectVariables: {
-        variable: IVariable;
-        value: IObjectVariableValue;
-        objectVariableType: IObjectVariableType;
-        globalVariableIndex: number;
-        arrayValue: ArrayValue;
-    }[] = [];
+    globalVariables: IRuntimeGlobalVariable[] = [];
 
     ctx: CanvasRenderingContext2D | undefined;
     width: number = 480;
@@ -77,7 +103,7 @@ export class WasmRuntime extends RemoteRuntime {
     screen: any;
     requestAnimationFrameId: number | undefined;
 
-    evalProperties = new EvalProperties(this);
+    componentProperties = new ComponentProperties(this);
 
     ////////////////////////////////////////////////////////////////////////////////
 
@@ -99,8 +125,7 @@ export class WasmRuntime extends RemoteRuntime {
         this.assetsData = result.GUI_ASSETS_DATA;
 
         if (this.DocumentStore.project.isDashboardProject) {
-            await this.DocumentStore.runtimeSettings.loadPersistentVariables();
-            await this.constructObjectVariables();
+            await this.loadGlobalVariables();
         }
 
         if (!isDebuggerActive) {
@@ -122,6 +147,8 @@ export class WasmRuntime extends RemoteRuntime {
         if (this.worker) {
             this.worker.terminate();
         }
+
+        this.destroyGlobalVariables();
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -130,23 +157,35 @@ export class WasmRuntime extends RemoteRuntime {
         if (e.data.init) {
             const message: RendererToWorkerMessage = {};
 
-            let objectGlobalVariableValues: ObjectGlobalVariableValues;
+            let globalVariableValues: IGlobalVariable[];
             if (this.DocumentStore.project.isDashboardProject) {
-                objectGlobalVariableValues = this.objectVariables.map(
-                    objectVariable => ({
-                        arrayValue: objectVariable.arrayValue,
-                        globalVariableIndex: objectVariable.globalVariableIndex
-                    })
+                globalVariableValues = this.globalVariables.map(
+                    globalVariable => {
+                        if (globalVariable.kind == "basic") {
+                            return {
+                                kind: "basic",
+                                globalVariableIndex:
+                                    globalVariable.globalVariableIndex,
+                                value: globalVariable.value
+                            };
+                        }
+                        return {
+                            kind: "array",
+                            globalVariableIndex:
+                                globalVariable.globalVariableIndex,
+                            value: globalVariable.value
+                        };
+                    }
                 );
             } else {
-                objectGlobalVariableValues = [];
+                globalVariableValues = [];
             }
 
             message.init = {
                 nodeModuleFolders: await getNodeModuleFolders(),
                 assetsData: this.assetsData,
                 assetsMap: this.assetsMap,
-                objectGlobalVariableValues
+                globalVariableValues
             };
 
             this.worker.postMessage(message);
@@ -169,7 +208,9 @@ export class WasmRuntime extends RemoteRuntime {
             }
 
             if (e.data.propertyValues) {
-                this.evalProperties.valuesFromWorker(e.data.propertyValues);
+                this.componentProperties.valuesFromWorker(
+                    e.data.propertyValues
+                );
             }
 
             this.screen = e.data.screen;
@@ -193,8 +234,10 @@ export class WasmRuntime extends RemoteRuntime {
                 clicked: this.wheelClicked
             },
             pointerEvents: this.pointerEvents,
-            evalProperties: this.evalProperties.evalPropertiesOnNextTick,
-            updateObjectGlobalVariableValues:
+            evalProperties: this.componentProperties.evalPropertiesOnNextTick,
+            assignProperties:
+                this.componentProperties.assignPropertiesOnNextTick,
+            updateGlobalVariableValues:
                 this.getUpdatedObjectGlobalVariableValues()
         };
 
@@ -204,18 +247,29 @@ export class WasmRuntime extends RemoteRuntime {
         this.wheelClicked = 0;
         this.pointerEvents = [];
         this.screen = undefined;
-        this.evalProperties.resetEvalPropertiesOnNextTick();
+        this.componentProperties.tickReset();
     };
 
     ////////////////////////////////////////////////////////////////////////////////
 
-    async constructObjectVariables() {
+    async loadGlobalVariables() {
+        await this.DocumentStore.runtimeSettings.loadPersistentVariables();
+
         for (const variable of this.DocumentStore.project.allGlobalVariables) {
+            const globalVariableInAssetsMap =
+                this.assetsMap.globalVariables.find(
+                    globalVariableInAssetsMap =>
+                        globalVariableInAssetsMap.name == variable.name
+                );
+
+            const globalVariableIndex = globalVariableInAssetsMap!.index;
+
+            let value = this.DocumentStore.dataContext.get(variable.name);
+
             const objectVariableType = getObjectVariableTypeFromType(
                 variable.type
             );
             if (objectVariableType) {
-                let value = this.DocumentStore.dataContext.get(variable.name);
                 if (value == null) {
                     const constructorParams =
                         await objectVariableType.editConstructorParams(
@@ -244,27 +298,45 @@ export class WasmRuntime extends RemoteRuntime {
                         objectVariableType
                     );
 
-                    const globalVariableInAssetsMap =
-                        this.assetsMap.globalVariables.find(
-                            globalVariableInAssetsMap =>
-                                globalVariableInAssetsMap.name == variable.name
-                        );
-
-                    this.objectVariables.push({
+                    this.globalVariables.push({
+                        kind: "object",
+                        globalVariableIndex,
                         variable,
+                        value: arrayValue,
+
+                        objectVariableValue: value,
+                        objectVariableType
+                    });
+                }
+            } else if (variable.persistent) {
+                if (isStructType(variable.type) || isArrayType(variable.type)) {
+                    const arrayValue = createJsArrayValue(
+                        this.assetsMap.typeIndexes[variable.type],
                         value,
-                        objectVariableType,
-                        arrayValue,
-                        globalVariableIndex: globalVariableInAssetsMap!.index
+                        this.assetsMap,
+                        undefined
+                    );
+
+                    this.globalVariables.push({
+                        kind: "struct",
+                        globalVariableIndex,
+                        variable,
+                        value: arrayValue
+                    });
+                } else {
+                    this.globalVariables.push({
+                        kind: "basic",
+                        globalVariableIndex,
+                        variable,
+                        value
                     });
                 }
             }
         }
     }
 
-    getUpdatedObjectGlobalVariableValues(): ObjectGlobalVariableValues {
-        const updatedObjectGlobalVariableValues: ObjectGlobalVariableValues =
-            [];
+    getUpdatedObjectGlobalVariableValues(): IGlobalVariable[] {
+        const updatedGlobalVariableValues: IGlobalVariable[] = [];
 
         function isDifferent(
             oldArrayValue: ArrayValue,
@@ -286,33 +358,52 @@ export class WasmRuntime extends RemoteRuntime {
             return false;
         }
 
-        for (const objectVariable of this.objectVariables) {
-            const oldArrayValue = objectVariable.arrayValue;
+        for (const objectVariable of this.globalVariables) {
+            if (objectVariable.kind == "object") {
+                const oldArrayValue = objectVariable.value;
 
-            const newArrayValue = createJsArrayValue(
-                this.assetsMap.typeIndexes[objectVariable.variable.type],
-                objectVariable.value,
-                this.assetsMap,
-                objectVariable.objectVariableType
-            );
+                const newArrayValue = createJsArrayValue(
+                    this.assetsMap.typeIndexes[objectVariable.variable.type],
+                    objectVariable.objectVariableValue,
+                    this.assetsMap,
+                    objectVariable.objectVariableType
+                );
 
-            if (isDifferent(oldArrayValue, newArrayValue)) {
-                updatedObjectGlobalVariableValues.push({
-                    arrayValue: newArrayValue,
-                    globalVariableIndex: objectVariable.globalVariableIndex
-                });
-                objectVariable.arrayValue = newArrayValue;
+                if (isDifferent(oldArrayValue, newArrayValue)) {
+                    updatedGlobalVariableValues.push({
+                        kind: "array",
+                        globalVariableIndex: objectVariable.globalVariableIndex,
+                        value: newArrayValue
+                    });
+                    objectVariable.value = newArrayValue;
+                }
             }
         }
 
-        if (updatedObjectGlobalVariableValues.length > 0) {
-            console.log(
-                "updatedObjectGlobalVariableValues",
-                updatedObjectGlobalVariableValues
-            );
+        return updatedGlobalVariableValues;
+    }
+
+    async destroyGlobalVariables() {
+        for (let i = 0; i < this.globalVariables.length; i++) {
+            const globalVariable = this.globalVariables[i];
+            if (globalVariable.kind == "object") {
+                this.DocumentStore.dataContext.set(
+                    globalVariable.variable.name,
+                    globalVariable.objectVariableValue
+                );
+            }
         }
 
-        return updatedObjectGlobalVariableValues;
+        await this.DocumentStore.runtimeSettings.savePersistentVariables();
+
+        for (let i = 0; i < this.globalVariables.length; i++) {
+            const globalVariable = this.globalVariables[i];
+            if (globalVariable.kind == "object") {
+                globalVariable.objectVariableType.destroyValue(
+                    globalVariable.objectVariableValue
+                );
+            }
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -320,99 +411,105 @@ export class WasmRuntime extends RemoteRuntime {
     async executeScpiCommand(scpiCommand: ScpiCommand) {
         const command = arrayBufferToBinaryString(scpiCommand.command);
 
-        for (let i = 0; i < this.objectVariables.length; i++) {
-            const instrument = this.objectVariables[i].value;
-            if (instrument instanceof InstrumentObject) {
-                if (scpiCommand.instrumentId == instrument.id) {
-                    const CONNECTION_TIMEOUT = 5000;
-                    const startTime = Date.now();
-                    while (
-                        !instrument.isConnected &&
-                        Date.now() - startTime < CONNECTION_TIMEOUT
-                    ) {
-                        if (!instrument.connection.isTransitionState) {
-                            instrument.connection.connect();
-                        }
-                        await new Promise<boolean>(resolve =>
-                            setTimeout(resolve, 10)
-                        );
-                    }
-
-                    if (!instrument.isConnected) {
-                        const data: RendererToWorkerMessage = {
-                            scpiResult: {
-                                errorMessage: "instrument not connected"
+        for (let i = 0; i < this.globalVariables.length; i++) {
+            const globalVariable = this.globalVariables[i];
+            if (globalVariable.kind == "object") {
+                const instrument = globalVariable.objectVariableValue;
+                if (instrument instanceof InstrumentObject) {
+                    if (scpiCommand.instrumentId == instrument.id) {
+                        const CONNECTION_TIMEOUT = 5000;
+                        const startTime = Date.now();
+                        while (
+                            !instrument.isConnected &&
+                            Date.now() - startTime < CONNECTION_TIMEOUT
+                        ) {
+                            if (!instrument.connection.isTransitionState) {
+                                instrument.connection.connect();
                             }
-                        };
-                        this.worker.postMessage(data);
-                        return;
-                    }
+                            await new Promise<boolean>(resolve =>
+                                setTimeout(resolve, 10)
+                            );
+                        }
 
-                    const connection = instrument.connection;
+                        if (!instrument.isConnected) {
+                            const data: RendererToWorkerMessage = {
+                                scpiResult: {
+                                    errorMessage: "instrument not connected"
+                                }
+                            };
+                            this.worker.postMessage(data);
+                            return;
+                        }
 
-                    try {
-                        await connection.acquire(false);
-                    } catch (err) {
+                        const connection = instrument.connection;
+
+                        try {
+                            await connection.acquire(false);
+                        } catch (err) {
+                            let data: RendererToWorkerMessage;
+                            data = {
+                                scpiResult: {
+                                    errorMessage: err.toString()
+                                }
+                            };
+                            this.worker.postMessage(data);
+                            return;
+                        }
+
+                        let result: any = "";
+                        try {
+                            if (scpiCommand.isQuery) {
+                                //console.log("SCPI query", command);
+                                result = await connection.query(command);
+                                //console.log("SCPI result", result);
+                            } else {
+                                //console.log("SCPI command", command);
+                                connection.query(command);
+                                result = "";
+                            }
+                        } finally {
+                            connection.release();
+                        }
+
                         let data: RendererToWorkerMessage;
-                        data = {
-                            scpiResult: {
-                                errorMessage: err.toString()
-                            }
-                        };
+                        if (typeof result != "object") {
+                            data = {
+                                scpiResult: {
+                                    result: binaryStringToArrayBuffer(
+                                        result.toString()
+                                    )
+                                }
+                            };
+                        } else {
+                            data = {
+                                scpiResult: {
+                                    errorMessage: result.error
+                                        ? result.error
+                                        : "unknown SCPI result"
+                                }
+                            };
+                        }
+
                         this.worker.postMessage(data);
+
                         return;
                     }
-
-                    let result: any = "";
-                    try {
-                        if (scpiCommand.isQuery) {
-                            //console.log("SCPI query", command);
-                            result = await connection.query(command);
-                            //console.log("SCPI result", result);
-                        } else {
-                            //console.log("SCPI command", command);
-                            connection.query(command);
-                            result = "";
-                        }
-                    } finally {
-                        connection.release();
-                    }
-
-                    let data: RendererToWorkerMessage;
-                    if (typeof result != "object") {
-                        data = {
-                            scpiResult: {
-                                result: binaryStringToArrayBuffer(
-                                    result.toString()
-                                )
-                            }
-                        };
-                    } else {
-                        data = {
-                            scpiResult: {
-                                errorMessage: result.error
-                                    ? result.error
-                                    : "unknown SCPI result"
-                            }
-                        };
-                    }
-
-                    this.worker.postMessage(data);
-
-                    return;
                 }
             }
         }
     }
 
     connectToInstrument(instrumentId: string) {
-        for (let i = 0; i < this.objectVariables.length; i++) {
-            const instrument = this.objectVariables[i].value;
-            if (
-                instrument instanceof InstrumentObject &&
-                instrument.id == instrumentId
-            ) {
-                instrument.connection.connect();
+        for (let i = 0; i < this.globalVariables.length; i++) {
+            const globalVariable = this.globalVariables[i];
+            if (globalVariable.kind == "object") {
+                const instrument = globalVariable.objectVariableValue;
+                if (
+                    instrument instanceof InstrumentObject &&
+                    instrument.id == instrumentId
+                ) {
+                    instrument.connection.connect();
+                }
             }
         }
     }
@@ -421,13 +518,27 @@ export class WasmRuntime extends RemoteRuntime {
 
     evalProperty(
         flowContext: IFlowContext,
-        widget: Component,
+        component: Component,
         propertyName: string
     ) {
-        return this.evalProperties.evalProperty(
+        return this.componentProperties.evalProperty(
             flowContext,
-            widget,
+            component,
             propertyName
+        );
+    }
+
+    assignProperty(
+        expressionContext: IExpressionContext,
+        component: Component,
+        propertyName: string,
+        value: any
+    ) {
+        this.componentProperties.assignProperty(
+            expressionContext,
+            component,
+            propertyName,
+            value
         );
     }
 
@@ -624,7 +735,8 @@ class WasmDebuggerConnection extends DebuggerConnectionBase {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class EvalProperties {
+class ComponentProperties {
+    // eval
     evalFlowStates = new Map<
         number,
         {
@@ -644,28 +756,37 @@ class EvalProperties {
             >;
         }
     >();
-
     evalPropertiesOnNextTick: IEvalProperty[] = [];
     evalPropertiesOnNextTickSet = new Set<number>();
-
     propertyValues: ValueWithType[] = [];
     nextPropertyValueIndex: number = 0;
+
+    // assign
+    assignFlowStates = new Map<
+        number,
+        {
+            assignComponents: Map<
+                Component,
+                {
+                    componentIndex: number;
+                    assignProperties: {
+                        [propertyName: string]: {
+                            propertyIndex: number;
+                            propertyValueIndexes: {
+                                [indexesPath: string]: number;
+                            };
+                        };
+                    };
+                }
+            >;
+        }
+    >();
+    assignPropertiesOnNextTick: IAssignProperty[] = [];
 
     constructor(public wasmRuntime: WasmRuntime) {
         makeObservable(this, {
             propertyValues: observable
         });
-    }
-
-    valuesFromWorker(widgetPropertyValues: IPropertyValue[]) {
-        if (widgetPropertyValues.length > 0) {
-            runInAction(() => {
-                widgetPropertyValues.forEach(propertyValue => {
-                    this.propertyValues[propertyValue.propertyValueIndex] =
-                        propertyValue.valueWithType;
-                });
-            });
-        }
     }
 
     evalProperty(
@@ -783,9 +904,95 @@ class EvalProperties {
         return undefined;
     }
 
-    resetEvalPropertiesOnNextTick() {
+    valuesFromWorker(widgetPropertyValues: IPropertyValue[]) {
+        if (widgetPropertyValues.length > 0) {
+            runInAction(() => {
+                widgetPropertyValues.forEach(propertyValue => {
+                    this.propertyValues[propertyValue.propertyValueIndex] =
+                        propertyValue.valueWithType;
+                });
+            });
+        }
+    }
+
+    assignProperty(
+        expressionContext: IExpressionContext,
+        component: Component,
+        propertyName: string,
+        value: any
+    ) {
+        const flowState = expressionContext.flowState!;
+
+        const flowStateIndex =
+            this.wasmRuntime.flowStateToFlowIndexMap.get(flowState);
+        if (flowStateIndex == undefined) {
+            console.error("Unexpected!");
+            return;
+        }
+
+        let assignFlowState = this.assignFlowStates.get(flowStateIndex);
+        if (!assignFlowState) {
+            // add new assignFlowState
+            assignFlowState = {
+                assignComponents: new Map()
+            };
+            this.assignFlowStates.set(flowStateIndex, assignFlowState);
+        }
+
+        let assignComponent = assignFlowState.assignComponents.get(component);
+        if (!assignComponent) {
+            // add new assignComponent
+            const flow = ProjectEditor.getFlow(component);
+            const flowPath = getObjectPathAsString(flow);
+            const flowIndex = this.wasmRuntime.assetsMap.flowIndexes[flowPath];
+            if (flowIndex == undefined) {
+                console.error("Unexpected!");
+                return;
+            }
+
+            const componentPath = getObjectPathAsString(component);
+            const componentIndex =
+                this.wasmRuntime.assetsMap.flows[flowIndex].componentIndexes[
+                    componentPath
+                ];
+            if (componentIndex == undefined) {
+                console.error("Unexpected!");
+                return;
+            }
+
+            assignComponent = {
+                componentIndex,
+                assignProperties: {}
+            };
+
+            assignFlowState.assignComponents.set(component, assignComponent);
+        }
+
+        // add new evalProperty
+        const propertyIndex = this.getPropertyIndex(component, propertyName);
+        if (propertyIndex == -1) {
+            console.error("Unexpected!");
+            return;
+        }
+
+        const indexes = expressionContext.dataContext.get(
+            FLOW_ITERATOR_INDEXES_VARIABLE
+        );
+
+        this.assignPropertiesOnNextTick.push({
+            flowStateIndex,
+            componentIndex: assignComponent.componentIndex,
+            propertyIndex,
+            indexes,
+            value
+        });
+    }
+
+    tickReset() {
         this.evalPropertiesOnNextTick = [];
         this.evalPropertiesOnNextTickSet.clear();
+
+        this.assignPropertiesOnNextTick = [];
     }
 
     private getPropertyIndex(component: Component, propertyName: string) {

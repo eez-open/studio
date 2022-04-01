@@ -127,6 +127,13 @@ declare const WasmFlowRuntime: {
 
     _onScpiResult(errorMessage: number, result: number, resultLen: number);
 
+    _createUndefinedValue(): number;
+    _createNullValue(): number;
+    _createIntValue(value: number): number;
+    _createDoubleValue(value: number): number;
+    _createBooleanValue(value: number): number;
+    _createStringValue(value: number): number;
+
     _arrayValueAlloc(arraySize: number, arrayType: number): number;
     _arrayValueSetElementValue(
         arrayValuePtr: number,
@@ -163,6 +170,14 @@ declare const WasmFlowRuntime: {
         componentIndex: number,
         propertyIndex: number,
         iteratorsPtr: number
+    ): number;
+
+    _assignProperty(
+        flowStateIndex: number,
+        componentIndex: number,
+        propertyIndex: number,
+        iteratorsPtr: number,
+        valuePtr: number
     ): number;
 
     _propagateValue(

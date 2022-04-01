@@ -505,6 +505,20 @@ export class RemoteRuntime extends RuntimeBase {
         let expr = (widget as any)[propertyName];
         return evalExpression(flowContext, widget, expr);
     }
+
+    assignProperty(
+        expressionContext: IExpressionContext,
+        component: Component,
+        propertyName: string,
+        value: any
+    ) {
+        this.assignValue(
+            expressionContext,
+            component,
+            (component as any)[propertyName],
+            value
+        );
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -4,7 +4,7 @@ import type {
     RendererToWorkerMessage,
     WorkerToRenderMessage,
     IPropertyValue,
-    ObjectGlobalVariableValues
+    IGlobalVariable
 } from "project-editor/flow/runtime/wasm-worker-interfaces";
 import { init as initExecuteFunctions } from "project-editor/flow/runtime/wasm-execute-functions-init";
 import { actionConmponentExecuteFunctions } from "project-editor/flow/runtime/wasm-execute-functions";
@@ -12,7 +12,8 @@ import {
     createWasmArrayValue,
     getValue,
     getArrayValue,
-    createJsArrayValue
+    createJsArrayValue,
+    createWasmValue
 } from "project-editor/flow/runtime/wasm-value";
 import type { IDashboardComponentContext, ValueType } from "eez-studio-types";
 
@@ -266,32 +267,28 @@ function executeDashboardComponent(componentType: number, context: number) {
 (global as any).executeDashboardComponent = executeDashboardComponent;
 (global as any).executeScpi = executeScpi;
 
-function initObjectGlobalVariableValues(
-    objectGlobalVariableValues: ObjectGlobalVariableValues
-) {
-    for (let i = 0; i < objectGlobalVariableValues.length; i++) {
-        const objectGlobalVariableValue = objectGlobalVariableValues[i];
-        const valuePtr = createWasmArrayValue(
-            objectGlobalVariableValue.arrayValue
-        );
+function initObjectGlobalVariableValues(globalVariables: IGlobalVariable[]) {
+    for (const globalVariable of globalVariables) {
+        const valuePtr =
+            globalVariable.kind == "basic"
+                ? createWasmValue(globalVariable.value)
+                : createWasmArrayValue(globalVariable.value);
         WasmFlowRuntime._setGlobalVariable(
-            objectGlobalVariableValue.globalVariableIndex,
+            globalVariable.globalVariableIndex,
             valuePtr
         );
         WasmFlowRuntime._valueFree(valuePtr);
     }
 }
 
-function updateObjectGlobalVariableValues(
-    objectGlobalVariableValues: ObjectGlobalVariableValues
-) {
-    for (let i = 0; i < objectGlobalVariableValues.length; i++) {
-        const objectGlobalVariableValue = objectGlobalVariableValues[i];
-        const valuePtr = createWasmArrayValue(
-            objectGlobalVariableValue.arrayValue
-        );
+function updateObjectGlobalVariableValues(globalVariables: IGlobalVariable[]) {
+    for (const globalVariable of globalVariables) {
+        const valuePtr =
+            globalVariable.kind == "basic"
+                ? createWasmValue(globalVariable.value)
+                : createWasmArrayValue(globalVariable.value);
         WasmFlowRuntime._updateGlobalVariable(
-            objectGlobalVariableValue.globalVariableIndex,
+            globalVariable.globalVariableIndex,
             valuePtr
         );
         WasmFlowRuntime._valueFree(valuePtr);
@@ -372,7 +369,7 @@ onmessage = async function (e: { data: RendererToWorkerMessage }) {
 
         WasmFlowRuntime._free(ptr);
 
-        initObjectGlobalVariableValues(e.data.init.objectGlobalVariableValues);
+        initObjectGlobalVariableValues(e.data.init.globalVariableValues);
 
         WasmFlowRuntime._startFlow();
     }
@@ -397,10 +394,50 @@ onmessage = async function (e: { data: RendererToWorkerMessage }) {
         }
     }
 
-    if (e.data.updateObjectGlobalVariableValues) {
-        updateObjectGlobalVariableValues(
-            e.data.updateObjectGlobalVariableValues
-        );
+    if (e.data.updateGlobalVariableValues) {
+        updateObjectGlobalVariableValues(e.data.updateGlobalVariableValues);
+    }
+
+    if (e.data.assignProperties) {
+        e.data.assignProperties.forEach(assignProperty => {
+            const {
+                flowStateIndex,
+                componentIndex,
+                propertyIndex,
+                indexes,
+                value
+            } = assignProperty;
+
+            let iteratorsPtr = 0;
+            if (indexes) {
+                const MAX_ITERATORS = 4;
+
+                const arr = new Uint32Array(MAX_ITERATORS);
+                for (let i = 0; i < MAX_ITERATORS; i++) {
+                    arr[i] = indexes.length < MAX_ITERATORS ? indexes[i] : 0;
+                }
+                iteratorsPtr = WasmFlowRuntime._malloc(MAX_ITERATORS * 4);
+                WasmFlowRuntime.HEAP32.set(arr, iteratorsPtr >> 2);
+            }
+
+            const valuePtr = createWasmValue(value);
+
+            if (valuePtr) {
+                WasmFlowRuntime._assignProperty(
+                    flowStateIndex,
+                    componentIndex,
+                    propertyIndex,
+                    iteratorsPtr,
+                    valuePtr
+                );
+
+                WasmFlowRuntime._valueFree(valuePtr);
+            }
+
+            if (iteratorsPtr) {
+                WasmFlowRuntime._free(iteratorsPtr);
+            }
+        });
     }
 
     WasmFlowRuntime._mainLoop();

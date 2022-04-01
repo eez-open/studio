@@ -14,7 +14,7 @@ export type ValueType =
     | "undefined"
     | "null"
     | `object:${string}`
-    | "enum:${string}"
+    | `enum:${string}`
     | `struct:${string}`
     | `dynamic:${string}`
     | `array:${BasicType}`

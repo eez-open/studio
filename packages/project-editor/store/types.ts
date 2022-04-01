@@ -1,4 +1,5 @@
 import type {
+    BasicType,
     IObjectVariableValueFieldDescription,
     ValueType
 } from "eez-studio-types";
@@ -12,8 +13,10 @@ import {
     getObjectVariableTypeFromType,
     objectVariableTypes,
     isArrayType,
-    getArrayElementTypeFromType
+    getArrayElementTypeFromType,
+    basicTypeNames
 } from "project-editor/features/variable/value-type";
+import { computed, makeObservable } from "mobx";
 
 function getFieldIndexes(fields: IField[]): IIndexes {
     const fieldIndexes: IIndexes = {};
@@ -26,22 +29,49 @@ export class TypesStore {
     private _typeIndexes: IIndexes = {};
     private _numDynamicTypes: number = 0;
 
-    constructor(public DocumentStore: DocumentStoreClass) {}
+    constructor(public DocumentStore: DocumentStoreClass) {
+        makeObservable(this, {
+            allValueTypes: computed({ keepAlive: true })
+        });
+    }
 
     reset() {
         this._types = [];
         this._typeIndexes = {};
         this._numDynamicTypes = 0;
 
-        objectVariableTypes.forEach(
-            (objectVariableType, objectVariableTypeName) =>
-                this.addType(
-                    this.objectVariableFieldDescriptionsToType(
-                        `object:${objectVariableTypeName}`,
-                        objectVariableType.valueFieldDescriptions
-                    )
-                )
+        this.allValueTypes.forEach(valueType =>
+            this.getTypeFromValueType(valueType)
         );
+    }
+
+    get allValueTypes() {
+        const allValueTypes: ValueType[] = [];
+
+        allValueTypes.push(`undefined`);
+        allValueTypes.push(`null`);
+
+        objectVariableTypes.forEach((_, objectVariableTypeName) => {
+            allValueTypes.push(`object:${objectVariableTypeName}`);
+            allValueTypes.push(`array:object:${objectVariableTypeName}`);
+        });
+
+        basicTypeNames.forEach((basicTypeName: BasicType) => {
+            allValueTypes.push(basicTypeName);
+            allValueTypes.push(`array:${basicTypeName}`);
+        });
+
+        this.DocumentStore.project.variables.structsMap.forEach(structure => {
+            allValueTypes.push(`struct:${structure.name}`);
+            allValueTypes.push(`array:struct:${structure.name}`);
+        });
+
+        this.DocumentStore.project.variables.enumsMap.forEach(enumDef => {
+            allValueTypes.push(`enum:${enumDef.name}`);
+            allValueTypes.push(`array:enum:${enumDef.name}`);
+        });
+
+        return allValueTypes;
     }
 
     get types() {

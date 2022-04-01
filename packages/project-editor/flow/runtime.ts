@@ -661,6 +661,13 @@ export abstract class RuntimeBase {
         widget: Widget,
         propertyName: string
     ): any;
+
+    abstract assignProperty(
+        expressionContext: IExpressionContext,
+        component: Component,
+        propertyName: string,
+        value: any
+    ): void;
 }
 
 export class FlowState {

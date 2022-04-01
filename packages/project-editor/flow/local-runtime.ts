@@ -175,9 +175,8 @@ export class LocalRuntime extends RuntimeBase {
 
         this.flowStates.forEach(flowState => flowState.finish());
 
-        this.destroyObjectGlobalVariables();
-
         await this.DocumentStore.runtimeSettings.savePersistentVariables();
+        this.destroyObjectGlobalVariables();
 
         ipcRenderer.send("preventAppSuspension", false);
 
@@ -762,6 +761,20 @@ export class LocalRuntime extends RuntimeBase {
     ) {
         let expr = (widget as any)[propertyName];
         return evalExpression(flowContext, widget, expr);
+    }
+
+    assignProperty(
+        expressionContext: IExpressionContext,
+        component: Component,
+        propertyName: string,
+        value: any
+    ) {
+        this.assignValue(
+            expressionContext,
+            component,
+            (component as any)[propertyName],
+            value
+        );
     }
 }
 
