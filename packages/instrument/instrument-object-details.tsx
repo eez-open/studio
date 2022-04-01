@@ -384,7 +384,6 @@ const Connection = observer(
                             serialBaudRates={
                                 this.props.instrument.serialBaudRates
                             }
-                            unmount={() => {}}
                         />
                     );
 

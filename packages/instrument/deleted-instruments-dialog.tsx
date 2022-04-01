@@ -35,7 +35,6 @@ export const deletedInstruments = deletedInstrumentCollection.objects;
 const DeletedInstrumentsDialog = observer(
     class DeletedInstrumentsDialog extends React.Component<{
         selectedInstrument: IObservableValue<string | undefined>;
-        unmount: () => void;
     }> {
         element: Element;
 
@@ -154,7 +153,6 @@ const DeletedInstrumentsDialog = observer(
                         style: { marginRight: "auto" },
                         text: "Delete All Permanently"
                     }}
-                    unmount={this.props.unmount}
                 >
                     <ListContainer
                         tabIndex={0}
@@ -176,10 +174,7 @@ const DeletedInstrumentsDialog = observer(
 export function showDeletedInstrumentsDialog(
     selectedInstrument: IObservableValue<string | undefined>
 ) {
-    const [, , root] = showDialog(
-        <DeletedInstrumentsDialog
-            selectedInstrument={selectedInstrument}
-            unmount={() => root.unmount()}
-        />
+    showDialog(
+        <DeletedInstrumentsDialog selectedInstrument={selectedInstrument} />
     );
 }

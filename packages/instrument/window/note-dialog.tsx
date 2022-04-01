@@ -6,7 +6,6 @@ import { PropertyList, RichTextProperty } from "eez-studio-ui/properties";
 class NoteDialog extends React.Component<{
     note?: string;
     callback: (note: string) => void;
-    unmount: () => void;
 }> {
     constructor(props: any) {
         super(props);
@@ -30,11 +29,7 @@ class NoteDialog extends React.Component<{
 
     render() {
         return (
-            <Dialog
-                onOk={this.handleSubmit}
-                size="large"
-                unmount={this.props.unmount}
-            >
+            <Dialog onOk={this.handleSubmit} size="large">
                 <PropertyList>
                     <RichTextProperty
                         name="text"
@@ -48,20 +43,12 @@ class NoteDialog extends React.Component<{
 }
 
 export function showAddNoteDialog(callback: (note: string) => void) {
-    const [, , root] = showDialog(
-        <NoteDialog callback={callback} unmount={() => root.unmount()} />
-    );
+    showDialog(<NoteDialog callback={callback} />);
 }
 
 export function showEditNoteDialog(
     note: string,
     callback: (note: string) => void
 ) {
-    const [, , root] = showDialog(
-        <NoteDialog
-            callback={callback}
-            note={note}
-            unmount={() => root.unmount()}
-        />
-    );
+    showDialog(<NoteDialog callback={callback} note={note} />);
 }

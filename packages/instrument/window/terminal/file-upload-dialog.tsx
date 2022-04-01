@@ -28,7 +28,6 @@ const FileUploadSettingsDialog = observer(
     class FileUploadSettingsDialog extends React.Component<{
         instructions: IFileUploadInstructions;
         callback: (instructions: IFileUploadInstructions) => void;
-        unmount: () => void;
     }> {
         constructor(props: any) {
             super(props);
@@ -58,11 +57,7 @@ const FileUploadSettingsDialog = observer(
 
         render() {
             return (
-                <Dialog
-                    onOk={this.handleSubmit}
-                    size="medium"
-                    unmount={this.props.unmount}
-                >
+                <Dialog onOk={this.handleSubmit} size="medium">
                     <PropertyList>
                         <BooleanProperty
                             name="Use short (8.3) file names"
@@ -151,11 +146,10 @@ function showAdvancedSettingsDialog(
     instructions: IFileUploadInstructions,
     callback: (instructions: IFileUploadInstructions) => void
 ) {
-    const [, , root] = showDialog(
+    showDialog(
         <FileUploadSettingsDialog
             instructions={instructions}
             callback={callback}
-            unmount={() => root.unmount()}
         />
     );
 }
@@ -164,7 +158,6 @@ const FileUploadDialog = observer(
     class FileUploadDialog extends React.Component<{
         instructions: IFileUploadInstructions;
         callback: (instructions: IFileUploadInstructions) => void;
-        unmount: () => void;
     }> {
         constructor(props: any) {
             super(props);
@@ -314,7 +307,6 @@ const FileUploadDialog = observer(
                         icon: "material:settings",
                         title: "Show advanced settings"
                     }}
-                    unmount={this.props.unmount}
                 >
                     <PropertyList>
                         <FileInputProperty
@@ -385,11 +377,7 @@ export function showFileUploadDialog(
     instructions: IFileUploadInstructions,
     callback: (instructions: IFileUploadInstructions) => void
 ) {
-    const [, , root] = showDialog(
-        <FileUploadDialog
-            instructions={instructions}
-            callback={callback}
-            unmount={() => root.unmount()}
-        />
+    showDialog(
+        <FileUploadDialog instructions={instructions} callback={callback} />
     );
 }

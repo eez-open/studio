@@ -56,7 +56,8 @@ import {
     getObjectVariableTypeFromType,
     IObjectVariableValue,
     getObjectType,
-    SYSTEM_STRUCTURES
+    SYSTEM_STRUCTURES,
+    isValidType
 } from "project-editor/features/variable/value-type";
 import {
     FLOW_ITERATOR_INDEXES_VARIABLE,
@@ -451,6 +452,12 @@ export class Variable extends EezObject {
             if (variable.type === "any" || variable.type === "array:any") {
                 messages.push(
                     new Message(MessageType.WARNING, `Any type used`, variable)
+                );
+            }
+
+            if (!isValidType(DocumentStore.project, variable.type)) {
+                messages.push(
+                    new Message(MessageType.ERROR, `Invalid type`, variable)
                 );
             }
 
@@ -958,6 +965,17 @@ export class StructureField extends EezObject implements IStructureField {
                     new Message(
                         MessageType.WARNING,
                         `Any type used`,
+                        structureField
+                    )
+                );
+            }
+
+            const DocumentStore = getDocumentStore(structureField);
+            if (!isValidType(DocumentStore.project, structureField.type)) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Invalid type`,
                         structureField
                     )
                 );

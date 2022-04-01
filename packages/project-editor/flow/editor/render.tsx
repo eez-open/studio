@@ -21,7 +21,7 @@ export const ComponentsContainerEnclosure = observer(
     class ComponentsContainerEnclosure extends React.Component<{
         components: Component[];
         flowContext: IFlowContext;
-        visibleComponent?: Component;
+        visibleComponent?: Component | null | undefined;
     }> {
         render() {
             const { components, flowContext, visibleComponent } = this.props;
@@ -31,7 +31,13 @@ export const ComponentsContainerEnclosure = observer(
                     key={getId(component)}
                     component={component}
                     flowContext={flowContext}
-                    visible={!visibleComponent || visibleComponent == component}
+                    visible={
+                        visibleComponent
+                            ? visibleComponent == component
+                            : visibleComponent === null
+                            ? false
+                            : true
+                    }
                 />
             ));
         }
@@ -50,13 +56,7 @@ export const ComponentEnclosure = observer(
     }> {
         elRef = React.createRef<HTMLDivElement>();
 
-        constructor(props: {
-            component: Component | Page;
-            flowContext: IFlowContext;
-            left?: number;
-            top?: number;
-            visible?: boolean;
-        }) {
+        constructor(props: any) {
             super(props);
 
             makeObservable(this, {
@@ -112,17 +112,27 @@ export const ComponentEnclosure = observer(
         render() {
             const { component, flowContext, left, top, visible } = this.props;
 
-            // data-eez-flow-object-id
-            let dataFlowObjectId = getId(component);
-            if (this.listIndex > 0) {
-                dataFlowObjectId = dataFlowObjectId + "-" + this.listIndex;
-            }
-
             // style
             const style: React.CSSProperties = {
                 left: left ?? component.left,
                 top: top ?? component.top
             };
+
+            if (visible === false) {
+                if (this.props.flowContext.flowState) {
+                    return null;
+                    //style.visibility = "hidden";
+                } else {
+                    style.opacity = "0.05";
+                }
+                style.pointerEvents = "none";
+            }
+
+            // data-eez-flow-object-id
+            let dataFlowObjectId = getId(component);
+            if (this.listIndex > 0) {
+                dataFlowObjectId = dataFlowObjectId + "-" + this.listIndex;
+            }
 
             if (
                 !(component.autoSize == "width" || component.autoSize == "both")
@@ -170,15 +180,6 @@ export const ComponentEnclosure = observer(
                         !(runtime.isDebuggerActive && runtime.isPaused)
                 }
             );
-
-            if (visible === false) {
-                if (this.props.flowContext.flowState) {
-                    style.visibility = "hidden";
-                } else {
-                    style.opacity = "0.05";
-                }
-                style.pointerEvents = "none";
-            }
 
             return (
                 <div

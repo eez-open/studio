@@ -5931,7 +5931,6 @@ const MeasurementComponent = observer(
                             values={this.dialogValues}
                             embedded={true}
                             onValueChange={this.onValueChange}
-                            unmount={() => {}}
                         />
                     </td>
                 );

@@ -3,16 +3,18 @@ require("project-editor/flow/runtime/flow_runtime.js");
 import type {
     RendererToWorkerMessage,
     WorkerToRenderMessage,
-    IPropertyValue
+    IPropertyValue,
+    ObjectGlobalVariableValues
 } from "project-editor/flow/runtime/wasm-worker-interfaces";
-import { actionConmponentExecuteFunctions } from "project-editor/flow/components/actions/execute";
+import { init as initExecuteFunctions } from "project-editor/flow/runtime/wasm-execute-functions-init";
+import { actionConmponentExecuteFunctions } from "project-editor/flow/runtime/wasm-execute-functions";
 import {
     createWasmArrayValue,
     getValue,
     getArrayValue,
     createJsArrayValue
 } from "project-editor/flow/runtime/wasm-value";
-import type { ValueType } from "eez-studio-types";
+import type { IDashboardComponentContext, ValueType } from "eez-studio-types";
 
 function startToDebuggerMessage() {}
 
@@ -52,7 +54,7 @@ function executeScpi(instrumentPtr: number, arr: any, isQuery: number) {
     postMessage(data);
 }
 
-export class DashboardComponentContext {
+export class DashboardComponentContext implements IDashboardComponentContext {
     context: number = 0;
 
     getFlowIndex(): number {
@@ -264,7 +266,39 @@ function executeDashboardComponent(componentType: number, context: number) {
 (global as any).executeDashboardComponent = executeDashboardComponent;
 (global as any).executeScpi = executeScpi;
 
-onmessage = function (e: { data: RendererToWorkerMessage }) {
+function initObjectGlobalVariableValues(
+    objectGlobalVariableValues: ObjectGlobalVariableValues
+) {
+    for (let i = 0; i < objectGlobalVariableValues.length; i++) {
+        const objectGlobalVariableValue = objectGlobalVariableValues[i];
+        const valuePtr = createWasmArrayValue(
+            objectGlobalVariableValue.arrayValue
+        );
+        WasmFlowRuntime._setGlobalVariable(
+            objectGlobalVariableValue.globalVariableIndex,
+            valuePtr
+        );
+        WasmFlowRuntime._valueFree(valuePtr);
+    }
+}
+
+function updateObjectGlobalVariableValues(
+    objectGlobalVariableValues: ObjectGlobalVariableValues
+) {
+    for (let i = 0; i < objectGlobalVariableValues.length; i++) {
+        const objectGlobalVariableValue = objectGlobalVariableValues[i];
+        const valuePtr = createWasmArrayValue(
+            objectGlobalVariableValue.arrayValue
+        );
+        WasmFlowRuntime._updateGlobalVariable(
+            objectGlobalVariableValue.globalVariableIndex,
+            valuePtr
+        );
+        WasmFlowRuntime._valueFree(valuePtr);
+    }
+}
+
+onmessage = async function (e: { data: RendererToWorkerMessage }) {
     if (e.data.scpiResult) {
         let errorMessagePtr = 0;
         if (e.data.scpiResult.errorMessage) {
@@ -323,6 +357,10 @@ onmessage = function (e: { data: RendererToWorkerMessage }) {
     }
 
     if (e.data.init) {
+        console.log(e.data.init);
+
+        await initExecuteFunctions(e.data.init.nodeModuleFolders);
+
         WasmFlowRuntime.assetsMap = e.data.init.assetsMap;
 
         //
@@ -334,20 +372,7 @@ onmessage = function (e: { data: RendererToWorkerMessage }) {
 
         WasmFlowRuntime._free(ptr);
 
-        //
-        const objectGlobalVariableValues =
-            e.data.init.objectGlobalVariableValues;
-        for (let i = 0; i < objectGlobalVariableValues.length; i++) {
-            const objectGlobalVariableValue = objectGlobalVariableValues[i];
-            const valuePtr = createWasmArrayValue(
-                objectGlobalVariableValue.arrayValue
-            );
-            WasmFlowRuntime._setGlobalVariable(
-                objectGlobalVariableValue.globalVariableIndex,
-                valuePtr
-            );
-            WasmFlowRuntime._valueFree(valuePtr);
-        }
+        initObjectGlobalVariableValues(e.data.init.objectGlobalVariableValues);
 
         WasmFlowRuntime._startFlow();
     }
@@ -370,6 +395,12 @@ onmessage = function (e: { data: RendererToWorkerMessage }) {
                 pointerEvent.pressed
             );
         }
+    }
+
+    if (e.data.updateObjectGlobalVariableValues) {
+        updateObjectGlobalVariableValues(
+            e.data.updateObjectGlobalVariableValues
+        );
     }
 
     WasmFlowRuntime._mainLoop();

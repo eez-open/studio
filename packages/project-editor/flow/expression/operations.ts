@@ -396,6 +396,32 @@ export const builtInFunctions: {
             return "integer";
         }
     },
+    "Flow.makeValue": {
+        arity: 2,
+        args: ["struct", "value"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => {
+            return args[1];
+        },
+        getValueType: (...args: ValueType[]) => {
+            return args[0];
+        }
+    },
+    "Flow.makeArrayValue": {
+        arity: 1,
+        args: ["value"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => {
+            return args[0];
+        },
+        getValueType: (...args: ValueType[]) => {
+            return args[0];
+        }
+    },
     "Math.sin": {
         arity: 1,
         args: ["value"],

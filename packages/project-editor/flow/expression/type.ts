@@ -36,7 +36,11 @@ export function findValueTypeInExpressionNode(
         if (typeof node.value === "boolean") {
             node.valueType = "boolean";
         } else if (typeof node.value === "number") {
-            node.valueType = "double";
+            if (Number.isInteger(node.value)) {
+                node.valueType = "integer";
+            } else {
+                node.valueType = "double";
+            }
         } else if (typeof node.value === "string") {
             node.valueType = "string";
         } else if (node.value === "null") {

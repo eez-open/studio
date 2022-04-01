@@ -411,7 +411,6 @@ export const SelectInstrumentDialog = observer(
         instruments: ObservableMap<string, InstrumentObject>;
         instrument?: InstrumentObject;
         callback: (instrument: InstrumentObject | undefined) => void;
-        unmount: () => void;
     }> {
         _selectedInstrument: InstrumentObject | undefined;
 
@@ -502,7 +501,6 @@ export const SelectInstrumentDialog = observer(
                     okEnabled={this.isOkEnabled}
                     onOk={this.onOk}
                     onCancel={this.onCancel}
-                    unmount={this.props.unmount}
                 >
                     <PropertyList>
                         <SelectFromListProperty
@@ -523,7 +521,7 @@ export async function showSelectInstrumentDialog(
     instrumentId?: string | null
 ) {
     return new Promise<InstrumentObject | undefined>(resolve => {
-        const [, , root] = showDialog(
+        showDialog(
             <SelectInstrumentDialog
                 name={name}
                 instruments={instruments}
@@ -533,7 +531,6 @@ export async function showSelectInstrumentDialog(
                 callback={instrument => {
                     resolve(instrument);
                 }}
-                unmount={() => root.unmount()}
             />
         );
     });
@@ -590,7 +587,7 @@ export class SelectInstrumentActionComponent extends ActionComponent {
 
     async execute(flowState: FlowState) {
         await new Promise<void>(resolve => {
-            const [, , root] = showDialog(
+            showDialog(
                 <SelectInstrumentDialog
                     instruments={instruments}
                     callback={instrument => {
@@ -604,7 +601,6 @@ export class SelectInstrumentActionComponent extends ActionComponent {
                         }
                         resolve();
                     }}
-                    unmount={() => root.unmount()}
                 />
             );
         });

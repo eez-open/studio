@@ -58,7 +58,6 @@ export async function expressionBuilder(
     }>((resolve, reject) => {
         const onDispose = () => {
             if (!disposed) {
-                root.unmount(element);
                 if (modalDialog) {
                     modalDialog.close();
                 }
@@ -71,7 +70,7 @@ export async function expressionBuilder(
             onDispose();
         };
 
-        const [modalDialog, element, root] = showDialog(
+        const [modalDialog] = showDialog(
             <ProjectContext.Provider value={getDocumentStore(object)}>
                 <SelectItemDialog
                     object={object}
@@ -80,7 +79,6 @@ export async function expressionBuilder(
                     params={params}
                     onOk={onOk}
                     onCancel={onDispose}
-                    unmount={() => root.unmount()}
                 />
             </ProjectContext.Provider>,
             {
@@ -107,7 +105,6 @@ const SelectItemDialog = observer(
         params?: IOnSelectParams;
         onOk: (value: any) => void;
         onCancel: () => void;
-        unmount: () => void;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
@@ -504,7 +501,6 @@ const SelectItemDialog = observer(
                     okEnabled={this.onOkEnabled}
                     onOk={this.onOk}
                     onCancel={this.props.onCancel}
-                    unmount={this.props.unmount}
                 >
                     <div className="EezStudio_ExpressionBuilder">
                         <Tree

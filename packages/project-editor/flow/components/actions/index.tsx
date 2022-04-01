@@ -55,7 +55,6 @@ import { getFlow, getProject } from "project-editor/project/project";
 import { findPage } from "project-editor/features/page/page";
 import { Assets, DataBuffer } from "project-editor/build/assets";
 import {
-    buildAssignableExpression,
     buildExpression,
     checkExpression,
     evalConstantExpression,
@@ -914,10 +913,6 @@ export class SetVariableActionComponent extends ActionComponent {
         flowState.runtime.assignValue(flowState, this, this.variable, value);
 
         return undefined;
-    }
-
-    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        buildAssignableExpression(assets, dataBuffer, this, this.variable);
     }
 }
 
@@ -2401,10 +2396,14 @@ export class CounterActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_COUNTER_ACTION,
         properties: [
-            {
-                name: "countValue",
-                type: PropertyType.String
-            }
+            makeExpressionProperty(
+                {
+                    name: "countValue",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "integer"
+            )
         ],
         icon: (
             <svg
@@ -2687,10 +2686,6 @@ export class LoopActionComponent extends ActionComponent {
         }
 
         return undefined;
-    }
-
-    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        buildAssignableExpression(assets, dataBuffer, this, this.variable);
     }
 }
 

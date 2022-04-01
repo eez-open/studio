@@ -73,6 +73,10 @@ export class TypesStore {
         return this._typeIndexes[type.valueType];
     }
 
+    getType(valueType: ValueType) {
+        return this.getTypeFromValueType(valueType);
+    }
+
     getFieldType(
         valueType: ValueType,
         fieldName: string

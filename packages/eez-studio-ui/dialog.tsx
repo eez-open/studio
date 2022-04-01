@@ -87,7 +87,6 @@ export const Dialog = observer(
         additionalButton?: IDialogButton;
         additionalFooterControl?: React.ReactNode;
         backdrop?: "static" | boolean;
-        unmount: () => void;
     }> {
         disableButtons = false;
         open = true;
@@ -186,7 +185,6 @@ export const Dialog = observer(
                     buttons={buttons}
                     additionalFooterControl={this.props.additionalFooterControl}
                     backdrop={this.props.backdrop}
-                    unmount={this.props.unmount}
                 >
                     {this.props.children}
                 </BootstrapDialog>
@@ -225,7 +223,6 @@ export const BootstrapDialog = observer(
         children: React.ReactNode;
         additionalFooterControl?: React.ReactNode;
         backdrop?: "static" | boolean;
-        unmount: () => void;
     }> {
         div: HTMLDivElement | null = null;
         form: HTMLFormElement | null = null;
@@ -258,7 +255,6 @@ export const BootstrapDialog = observer(
 
                 $(div).on("hidden.bs.modal", () => {
                     const parent = div.parentElement as HTMLElement;
-                    this.props.unmount();
                     parent.remove();
                     this.props.onCancel();
                 });

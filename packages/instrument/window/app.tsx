@@ -24,11 +24,9 @@ import type { InstrumentObject } from "instrument/instrument-object";
 ////////////////////////////////////////////////////////////////////////////////
 
 function EditInstrumentLabelDialog({
-    instrument,
-    unmount
+    instrument
 }: {
     instrument: InstrumentObject;
-    unmount: () => void;
 }) {
     const [label, setLabel] = React.useState(instrument.label || "");
 
@@ -39,7 +37,6 @@ function EditInstrumentLabelDialog({
                 instrument.setLabel(label.trim());
                 return true;
             }}
-            unmount={unmount}
         >
             <PropertyList>
                 <TextInputProperty
@@ -80,10 +77,9 @@ export const AppBar = observer(
         };
 
         onEditInstrumentLabel = () => {
-            const [, , root] = showDialog(
+            showDialog(
                 <EditInstrumentLabelDialog
                     instrument={this.props.appStore.instrument}
-                    unmount={() => root.unmount()}
                 />
             );
         };

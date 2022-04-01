@@ -1659,7 +1659,6 @@ export function showImportScpiDocDialog(DocumentStore: DocumentStoreClass) {
         <ProjectContext.Provider value={DocumentStore}>
             <ImportScpiDocDialog
                 onHidden={() => {
-                    root.unmount();
                     el.remove();
                 }}
             />

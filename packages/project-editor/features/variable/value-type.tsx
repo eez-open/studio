@@ -92,6 +92,10 @@ export const SYSTEM_STRUCTURES: IStructure[] = [
     }
 ];
 
+export function registerSystemStructure(structure: IStructure) {
+    SYSTEM_STRUCTURES.push(structure);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export function humanizeVariableType(type: string): string {
@@ -485,6 +489,10 @@ export function isIntegerType(type: string) {
     return type == "integer";
 }
 
+export function isBasicType(type: string) {
+    return basicTypeNames.indexOf(type) != -1;
+}
+
 export function isEnumType(type: string) {
     return type && type.match(ENUM_TYPE_REGEXP) != null;
 }
@@ -685,6 +693,36 @@ export function isValueTypeOf(
     }
 
     return `not an ${type}`;
+}
+
+export function isValidType(project: Project, valueType: ValueType): boolean {
+    if (isBasicType(valueType)) {
+        return true;
+    }
+
+    if (isObjectType(valueType)) {
+        return getObjectVariableTypeFromType(valueType) ? true : false;
+    }
+
+    if (isStructType(valueType)) {
+        return getStructureFromType(project, valueType) ? true : false;
+    }
+
+    if (isEnumType(valueType)) {
+        const enumName = getEnumTypeNameFromType(valueType);
+        return enumName && project.variables.enumsMap.get(enumName)
+            ? true
+            : false;
+    }
+
+    if (isArrayType(valueType)) {
+        const elementType = getArrayElementTypeFromType(valueType);
+        return elementType && isValidType(project, elementType as ValueType)
+            ? true
+            : false;
+    }
+
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

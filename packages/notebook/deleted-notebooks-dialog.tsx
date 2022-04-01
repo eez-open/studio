@@ -18,9 +18,7 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 
 const DeletedNotebooksDialog = observer(
-    class DeletedNotebooksDialog extends React.Component<{
-        unmount: () => void;
-    }> {
+    class DeletedNotebooksDialog extends React.Component {
         element: Element;
 
         constructor(props: any) {
@@ -137,7 +135,6 @@ const DeletedNotebooksDialog = observer(
                         style: { marginRight: "auto" },
                         text: "Delete All Permanently"
                     }}
-                    unmount={this.props.unmount}
                 >
                     <ListContainer tabIndex={0} minHeight={240} maxHeight={400}>
                         <List
@@ -152,7 +149,5 @@ const DeletedNotebooksDialog = observer(
 );
 
 export function showDeletedNotebooksDialog() {
-    const [, , root] = showDialog(
-        <DeletedNotebooksDialog unmount={() => root.unmount()} />
-    );
+    showDialog(<DeletedNotebooksDialog />);
 }

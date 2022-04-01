@@ -1,7 +1,11 @@
 import React from "react";
 
 import { registerActionComponents } from "project-editor/flow/component";
-import { registerObjectVariableType } from "project-editor/features/variable/value-type";
+import {
+    registerObjectVariableType,
+    registerSystemStructure,
+    ValueType
+} from "project-editor/features/variable/value-type";
 import type { IVariable } from "project-editor/flow/flow-interfaces";
 import {
     GenericDialogResult,
@@ -225,6 +229,27 @@ const listPortsIcon = statusIcon;
 
 const componentHeaderColor = "#cca3ba";
 
+const SERIAL_PORT_STRUCT_NAME = "$SerialPort";
+
+registerSystemStructure({
+    name: SERIAL_PORT_STRUCT_NAME,
+    fields: [
+        {
+            name: "manufacturer",
+            type: "string"
+        },
+        {
+            name: "serialNumber",
+            type: "string"
+        },
+        {
+            name: "path",
+            type: "string"
+        }
+    ],
+    fieldsMap: new Map()
+});
+
 registerActionComponents("Serial Port", [
     {
         name: "SerialConnect",
@@ -376,7 +401,7 @@ registerActionComponents("Serial Port", [
         outputs: [
             {
                 name: "ports",
-                type: "any",
+                type: `array:struct:${SERIAL_PORT_STRUCT_NAME}` as ValueType,
                 isSequenceOutput: false,
                 isOptionalOutput: false
             }
@@ -416,7 +441,43 @@ registerObjectVariableType("SerialConnection", {
     destroyValue: (serialConnection: SerialConnection) => {
         serialConnection.disconnect();
     },
-    valueFieldDescriptions: []
+    valueFieldDescriptions: [
+        {
+            name: "port",
+            valueType: "string",
+            getFieldValue: (value: SerialConnection): string => {
+                return value.constructorParams.port;
+            }
+        },
+        {
+            name: "baudRate",
+            valueType: "integer",
+            getFieldValue: (value: SerialConnection): number => {
+                return value.constructorParams.baudRate;
+            }
+        },
+        {
+            name: "dataBits",
+            valueType: "integer",
+            getFieldValue: (value: SerialConnection): number => {
+                return value.constructorParams.dataBits;
+            }
+        },
+        {
+            name: "stopBits",
+            valueType: "integer",
+            getFieldValue: (value: SerialConnection): number => {
+                return value.constructorParams.stopBits;
+            }
+        },
+        {
+            name: "parity",
+            valueType: "string",
+            getFieldValue: (value: SerialConnection): string => {
+                return value.constructorParams.parity;
+            }
+        }
+    ]
 });
 
 ////////////////////////////////////////////////////////////////////////////////

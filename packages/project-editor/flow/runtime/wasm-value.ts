@@ -42,14 +42,14 @@ export function createJsArrayValue(
     value: any,
     assetsMap: AssetsMap,
     objectVariableType: IObjectVariableType | undefined
-): ArrayValue | undefined {
+): ArrayValue {
     function createArrayValue(
         valueTypeIndex: number,
         value: any,
         valueFieldDescriptions:
             | IObjectVariableValueFieldDescription[]
             | undefined
-    ): ArrayValue | undefined {
+    ): ArrayValue {
         const type = assetsMap.types[valueTypeIndex];
 
         let values;

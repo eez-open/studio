@@ -9,7 +9,6 @@ import { action, observable, makeObservable } from "mobx";
 const AddInstrumentDialog = observer(
     class AddInstrumentDialog extends React.Component<{
         callback: (instrumentId: string) => void;
-        unmount: () => void;
     }> {
         open = true;
 
@@ -42,7 +41,6 @@ const AddInstrumentDialog = observer(
                     disableButtons={true}
                     okEnabled={() => false}
                     backdrop="static"
-                    unmount={this.props.unmount}
                 >
                     <Setup
                         onAddCallback={this.onAdd}
@@ -58,10 +56,5 @@ export function showAddInstrumentDialog(
     callback: (instrumentId: string) => void
 ) {
     setupState.reset();
-    const [, , root] = showDialog(
-        <AddInstrumentDialog
-            callback={callback}
-            unmount={() => root.unmount()}
-        />
-    );
+    showDialog(<AddInstrumentDialog callback={callback} />);
 }

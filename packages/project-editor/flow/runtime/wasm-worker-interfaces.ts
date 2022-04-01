@@ -28,6 +28,7 @@ export interface WorkerToRenderMessage {
 export interface RendererToWorkerMessage {
     // response to init message from WASM worker
     init?: {
+        nodeModuleFolders: string[];
         assetsData: Uint8Array;
         assetsMap: AssetsMap;
         objectGlobalVariableValues: ObjectGlobalVariableValues;
@@ -60,6 +61,8 @@ export interface RendererToWorkerMessage {
         outputIndex: number;
         arrayValue: ArrayValue;
     };
+
+    updateObjectGlobalVariableValues?: ObjectGlobalVariableValues;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

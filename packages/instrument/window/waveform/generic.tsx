@@ -568,12 +568,7 @@ export class Waveform extends FileHistoryItem {
     }
 
     openConfigurationDialog() {
-        const [, , root] = showDialog(
-            <WaveformConfigurationDialog
-                waveform={this}
-                unmount={() => root.unmount()}
-            />
-        );
+        showDialog(<WaveformConfigurationDialog waveform={this} />);
     }
 
     get xAxisDefaultSubdivisionOffset(): number | undefined {
@@ -681,7 +676,6 @@ class WaveformLineController extends LineController {
 const WaveformConfigurationDialog = observer(
     class WaveformConfigurationDialog extends React.Component<{
         waveform: Waveform;
-        unmount: () => void;
     }> {
         waveformProperties: WaveformDefinitionProperties =
             new WaveformDefinitionProperties(
@@ -727,7 +721,7 @@ const WaveformConfigurationDialog = observer(
 
         render() {
             return (
-                <Dialog onOk={this.handleSubmit} unmount={this.props.unmount}>
+                <Dialog onOk={this.handleSubmit}>
                     <PropertyList>
                         {this.waveformProperties.render()}
                     </PropertyList>

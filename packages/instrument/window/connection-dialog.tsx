@@ -37,7 +37,6 @@ interface ConnectionPropertiesProps {
         | "web-simulator"
     )[];
     serialBaudRates: number[];
-    unmount: () => void;
 }
 
 class Devices {
@@ -157,7 +156,6 @@ export const ConnectionProperties = observer(
 
             $(this.div).on("hidden.bs.modal", () => {
                 const parent = this.div.parentElement as HTMLElement;
-                this.props.unmount();
                 parent.remove();
             });
 
@@ -556,7 +554,6 @@ interface ConnectionDialogProps {
         | "web-simulator"
     )[];
     serialBaudRates: number[];
-    unmount: () => void;
 }
 
 const ConnectionDialog = observer(
@@ -623,7 +620,6 @@ const ConnectionDialog = observer(
                     okButtonText="Connect"
                     onOk={this.handleSubmit}
                     okEnabled={this.isValidConnectionParameters}
-                    unmount={this.props.unmount}
                 >
                     <ConnectionProperties
                         connectionParameters={this.props.connectionParameters}
@@ -632,7 +628,6 @@ const ConnectionDialog = observer(
                         }
                         availableConnections={this.props.availableConnections}
                         serialBaudRates={this.props.serialBaudRates}
-                        unmount={this.props.unmount}
                     />
                 </Dialog>
             );
@@ -651,13 +646,12 @@ export function showConnectionDialog(
     )[],
     serialBaudRates: number[]
 ) {
-    const [, , root] = showDialog(
+    showDialog(
         <ConnectionDialog
             connectionParameters={connectionParameters}
             connect={connect}
             availableConnections={availableConnections}
             serialBaudRates={serialBaudRates}
-            unmount={() => root.unmount()}
         />
     );
 }

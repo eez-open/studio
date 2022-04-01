@@ -22,6 +22,7 @@ import {
 import { visitObjects } from "project-editor/core/search";
 import { CommentActionComponent } from "project-editor/flow/components/actions";
 import {
+    buildAssignableExpression,
     buildExpression,
     operationIndexes,
     templateLiteralToExpression
@@ -123,12 +124,14 @@ function buildComponent(
     if (flowComponentId != undefined) {
         dataBuffer.writeUint16(flowComponentId);
     } else {
-        assets.DocumentStore.outputSectionsStore.write(
-            Section.OUTPUT,
-            MessageType.ERROR,
-            "Component is not supported for the build target",
-            component
-        );
+        if (!assets.DocumentStore.project.isDashboardProject) {
+            assets.DocumentStore.outputSectionsStore.write(
+                Section.OUTPUT,
+                MessageType.WARNING,
+                "Component is not supported for the build target",
+                component
+            );
+        }
         dataBuffer.writeUint16(0);
     }
 
@@ -156,14 +159,12 @@ function buildComponent(
     });
 
     // property values
-    const properties = getClassInfo(component).properties.filter(
-        propertyInfo =>
-            isFlowProperty(assets.DocumentStore, propertyInfo, "input") ||
-            isFlowProperty(
-                assets.DocumentStore,
-                propertyInfo,
-                "template-literal"
-            )
+    const properties = getClassInfo(component).properties.filter(propertyInfo =>
+        isFlowProperty(propertyInfo, [
+            "input",
+            "template-literal",
+            "assignable"
+        ])
     );
     properties.forEach((propertyInfo, propertyValueIndex) =>
         assets.registerComponentProperty(
@@ -176,10 +177,19 @@ function buildComponent(
     dataBuffer.writeArray(properties, propertyInfo => {
         try {
             let expression = getProperty(component, propertyInfo.name);
-            if (propertyInfo.flowProperty == "template-literal") {
-                expression = templateLiteralToExpression(expression);
+            if (propertyInfo.flowProperty == "assignable") {
+                buildAssignableExpression(
+                    assets,
+                    dataBuffer,
+                    component,
+                    expression
+                );
+            } else {
+                if (propertyInfo.flowProperty == "template-literal") {
+                    expression = templateLiteralToExpression(expression);
+                }
+                buildExpression(assets, dataBuffer, component, expression);
             }
-            buildExpression(assets, dataBuffer, component, expression);
         } catch (err) {
             assets.DocumentStore.outputSectionsStore.write(
                 Section.OUTPUT,
@@ -457,16 +467,11 @@ export function buildFlowDefs(assets: Assets) {
         const properties =
             componentType.objectClass.classInfo.properties.filter(
                 propertyInfo =>
-                    isFlowProperty(
-                        assets.DocumentStore,
-                        propertyInfo,
-                        "input"
-                    ) ||
-                    isFlowProperty(
-                        assets.DocumentStore,
-                        propertyInfo,
-                        "template-literal"
-                    )
+                    isFlowProperty(propertyInfo, [
+                        "input",
+                        "template-literal",
+                        "assignable"
+                    ])
             );
 
         let enumItems = properties.map(

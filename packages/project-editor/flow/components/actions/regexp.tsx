@@ -32,7 +32,7 @@ registerActionComponents("Dashboard Specific", [
         outputs: [
             {
                 name: "match",
-                type: "string",
+                type: "array:string",
                 isSequenceOutput: false,
                 isOptionalOutput: false
             },

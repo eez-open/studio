@@ -8,7 +8,7 @@ import type { IFieldProperties } from "eez-studio-ui/generic-dialog";
 
 export type { IFieldProperties } from "eez-studio-ui/generic-dialog";
 
-import type { IEezStudio } from "eez-studio-types";
+import type { IEezFlowEditor } from "eez-studio-types";
 import type { IHomeTab } from "home/tabs-store";
 
 export interface IEditor {
@@ -158,7 +158,7 @@ export interface IExtensionDefinition {
 
     measurementFunctions?: IMeasurementFunction[];
 
-    eezFlowExtensionInit?: (eezStudio: IEezStudio) => void;
+    eezFlowExtensionInit?: (eezStudio: IEezFlowEditor) => void;
 
     handleDragAndDropFile?(
         filePath: string,

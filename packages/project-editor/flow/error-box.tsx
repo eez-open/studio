@@ -11,7 +11,6 @@ import { observable, runInAction, makeObservable } from "mobx";
 const ErrorBox = observer(
     class ErrorBox extends React.Component<{
         runtime: RuntimeBase;
-        unmount: () => void;
     }> {
         additionalButton: IDialogButton | undefined;
 
@@ -70,7 +69,6 @@ const ErrorBox = observer(
                         />
                     }
                     additionalButton={this.additionalButton}
-                    unmount={this.props.unmount}
                 >
                     <h5 className="p-3 text-danger text-center">
                         {this.props.runtime.error?.toString()}
@@ -82,7 +80,5 @@ const ErrorBox = observer(
 );
 
 export function showErrorBox(runtime: RuntimeBase) {
-    const [, , root] = showDialog(
-        <ErrorBox runtime={runtime} unmount={() => root.unmount()} />
-    );
+    showDialog(<ErrorBox runtime={runtime} />);
 }

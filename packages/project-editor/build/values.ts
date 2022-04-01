@@ -2,7 +2,6 @@ import type { Assets, DataBuffer } from "project-editor/build/assets";
 import type { Variable } from "project-editor/features/variable/variable";
 import {
     getArrayElementTypeFromType,
-    getStructureFromType,
     isArrayType,
     isEnumType,
     isStructType,
@@ -167,36 +166,17 @@ function buildFlowValue(
                         valueType: elementType
                     }));
                 } else {
-                    const elementType = getStructureFromType(
-                        assets.DocumentStore.project,
+                    const elementType = assets.DocumentStore.typesStore.getType(
                         flowValue.valueType
                     );
-
-                    elements = [];
-                    const sortedKeys = Object.keys(flowValue.value).sort();
-                    for (const key of sortedKeys) {
-                        const element = flowValue.value[key];
-
-                        let fieldValueType: ValueType;
-                        if (elementType) {
-                            const field = elementType.fields.find(
-                                field => field.name == key
-                            );
-                            if (field) {
-                                fieldValueType = field.type;
-                            } else {
-                                fieldValueType = "any";
-                            }
-                        } else {
-                            fieldValueType = "any";
-                        }
-
-                        elements.push({
-                            type: getValueType(fieldValueType),
-                            value: element,
-                            valueType: fieldValueType
-                        });
+                    if (elementType?.kind != "object") {
+                        throw "elementType is not struct type";
                     }
+                    elements = elementType.fields.map(field => ({
+                        type: getValueType(field.valueType),
+                        value: flowValue.value[field.name],
+                        valueType: field.valueType
+                    }));
                 }
 
                 dataBuffer.writeUint32(elements.length); // arraySize

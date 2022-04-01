@@ -27,7 +27,10 @@ import {
     IObjectVariableValue
 } from "project-editor/features/variable/value-type";
 import { InstrumentObject } from "instrument/instrument-object";
-import { createJsArrayValue } from "project-editor/flow/runtime/wasm-value";
+import {
+    ArrayValue,
+    createJsArrayValue
+} from "project-editor/flow/runtime/wasm-value";
 import {
     isFlowProperty,
     Widget as Component,
@@ -37,7 +40,12 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { makeObservable, observable, runInAction } from "mobx";
 import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
-import type { ValueType } from "eez-studio-types";
+import type {
+    IObjectVariableType,
+    IVariable,
+    ValueType
+} from "eez-studio-types";
+import { getNodeModuleFolders } from "eez-studio-shared/extensions/yarn";
 
 export class WasmRuntime extends RemoteRuntime {
     debuggerConnection = new WasmDebuggerConnection(this);
@@ -47,8 +55,13 @@ export class WasmRuntime extends RemoteRuntime {
     assetsData: any;
     assetsDataMapJs: AssetsMap;
 
-    objectGlobalVariableValues: ObjectGlobalVariableValues;
-    objectVariableValues: IObjectVariableValue[] = [];
+    objectVariables: {
+        variable: IVariable;
+        value: IObjectVariableValue;
+        objectVariableType: IObjectVariableType;
+        globalVariableIndex: number;
+        arrayValue: ArrayValue;
+    }[] = [];
 
     ctx: CanvasRenderingContext2D | undefined;
     width: number = 480;
@@ -84,14 +97,10 @@ export class WasmRuntime extends RemoteRuntime {
         }
 
         this.assetsData = result.GUI_ASSETS_DATA;
-        console.log(this.assetsMap);
 
         if (this.DocumentStore.project.isDashboardProject) {
             await this.DocumentStore.runtimeSettings.loadPersistentVariables();
-            this.objectGlobalVariableValues =
-                await this.constructObjectGlobalVariables();
-        } else {
-            this.objectGlobalVariableValues = [];
+            await this.constructObjectVariables();
         }
 
         if (!isDebuggerActive) {
@@ -117,14 +126,29 @@ export class WasmRuntime extends RemoteRuntime {
 
     ////////////////////////////////////////////////////////////////////////////////
 
-    onWorkerMessage = (e: { data: WorkerToRenderMessage }) => {
+    onWorkerMessage = async (e: { data: WorkerToRenderMessage }) => {
         if (e.data.init) {
             const message: RendererToWorkerMessage = {};
+
+            let objectGlobalVariableValues: ObjectGlobalVariableValues;
+            if (this.DocumentStore.project.isDashboardProject) {
+                objectGlobalVariableValues = this.objectVariables.map(
+                    objectVariable => ({
+                        arrayValue: objectVariable.arrayValue,
+                        globalVariableIndex: objectVariable.globalVariableIndex
+                    })
+                );
+            } else {
+                objectGlobalVariableValues = [];
+            }
+
             message.init = {
+                nodeModuleFolders: await getNodeModuleFolders(),
                 assetsData: this.assetsData,
                 assetsMap: this.assetsMap,
-                objectGlobalVariableValues: this.objectGlobalVariableValues
+                objectGlobalVariableValues
             };
+
             this.worker.postMessage(message);
         } else {
             if (e.data.scpiCommand) {
@@ -169,7 +193,9 @@ export class WasmRuntime extends RemoteRuntime {
                 clicked: this.wheelClicked
             },
             pointerEvents: this.pointerEvents,
-            evalProperties: this.evalProperties.evalPropertiesOnNextTick
+            evalProperties: this.evalProperties.evalPropertiesOnNextTick,
+            updateObjectGlobalVariableValues:
+                this.getUpdatedObjectGlobalVariableValues()
         };
 
         this.worker.postMessage(message);
@@ -183,21 +209,22 @@ export class WasmRuntime extends RemoteRuntime {
 
     ////////////////////////////////////////////////////////////////////////////////
 
-    async constructObjectGlobalVariables() {
+    async constructObjectVariables() {
         for (const variable of this.DocumentStore.project.allGlobalVariables) {
-            let value = this.DocumentStore.dataContext.get(variable.name);
-            if (value == null) {
-                const objectVariableType = getObjectVariableTypeFromType(
-                    variable.type
-                );
-                if (objectVariableType) {
+            const objectVariableType = getObjectVariableTypeFromType(
+                variable.type
+            );
+            if (objectVariableType) {
+                let value = this.DocumentStore.dataContext.get(variable.name);
+                if (value == null) {
                     const constructorParams =
                         await objectVariableType.editConstructorParams(
                             variable,
                             undefined
                         );
+
                     if (constructorParams) {
-                        const value = objectVariableType.createValue(
+                        value = objectVariableType.createValue(
                             constructorParams,
                             true
                         );
@@ -208,20 +235,8 @@ export class WasmRuntime extends RemoteRuntime {
                         );
                     }
                 }
-            }
-        }
 
-        let objectGlobalVariableValues: ObjectGlobalVariableValues = [];
-
-        for (const variable of this.DocumentStore.project.allGlobalVariables) {
-            let value = this.DocumentStore.dataContext.get(variable.name);
-            if (value != null) {
-                const objectVariableType = getObjectVariableTypeFromType(
-                    variable.type
-                );
-                if (objectVariableType) {
-                    this.objectVariableValues.push(value);
-
+                if (value != null) {
                     const arrayValue = createJsArrayValue(
                         this.assetsMap.typeIndexes[variable.type],
                         value,
@@ -229,38 +244,75 @@ export class WasmRuntime extends RemoteRuntime {
                         objectVariableType
                     );
 
-                    if (arrayValue) {
-                        const globalVariableInAssetsMap =
-                            this.assetsMap.globalVariables.find(
-                                globalVariableInAssetsMap =>
-                                    globalVariableInAssetsMap.name ==
-                                    variable.name
-                            );
-
-                        if (globalVariableInAssetsMap) {
-                            objectGlobalVariableValues.push({
-                                globalVariableIndex:
-                                    globalVariableInAssetsMap.index,
-                                arrayValue
-                            });
-                        } else {
-                            console.error(
-                                `Can't find global variable "${variable.name}" in assets map`
-                            );
-                        }
-                    } else {
-                        console.error(
-                            "Can't create array value",
-                            variable.type,
-                            value,
-                            this.assetsMap
+                    const globalVariableInAssetsMap =
+                        this.assetsMap.globalVariables.find(
+                            globalVariableInAssetsMap =>
+                                globalVariableInAssetsMap.name == variable.name
                         );
-                    }
+
+                    this.objectVariables.push({
+                        variable,
+                        value,
+                        objectVariableType,
+                        arrayValue,
+                        globalVariableIndex: globalVariableInAssetsMap!.index
+                    });
                 }
             }
         }
+    }
 
-        return objectGlobalVariableValues;
+    getUpdatedObjectGlobalVariableValues(): ObjectGlobalVariableValues {
+        const updatedObjectGlobalVariableValues: ObjectGlobalVariableValues =
+            [];
+
+        function isDifferent(
+            oldArrayValue: ArrayValue,
+            newArrayValue: ArrayValue
+        ) {
+            for (let i = 0; i < oldArrayValue.values.length; i++) {
+                const oldValue = oldArrayValue.values[i];
+                const newValue = newArrayValue.values[i];
+                if (oldValue != null && typeof oldValue == "object") {
+                    if (isDifferent(oldValue, newValue as ArrayValue)) {
+                        return true;
+                    }
+                } else {
+                    if (oldValue != newValue) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        for (const objectVariable of this.objectVariables) {
+            const oldArrayValue = objectVariable.arrayValue;
+
+            const newArrayValue = createJsArrayValue(
+                this.assetsMap.typeIndexes[objectVariable.variable.type],
+                objectVariable.value,
+                this.assetsMap,
+                objectVariable.objectVariableType
+            );
+
+            if (isDifferent(oldArrayValue, newArrayValue)) {
+                updatedObjectGlobalVariableValues.push({
+                    arrayValue: newArrayValue,
+                    globalVariableIndex: objectVariable.globalVariableIndex
+                });
+                objectVariable.arrayValue = newArrayValue;
+            }
+        }
+
+        if (updatedObjectGlobalVariableValues.length > 0) {
+            console.log(
+                "updatedObjectGlobalVariableValues",
+                updatedObjectGlobalVariableValues
+            );
+        }
+
+        return updatedObjectGlobalVariableValues;
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -268,8 +320,8 @@ export class WasmRuntime extends RemoteRuntime {
     async executeScpiCommand(scpiCommand: ScpiCommand) {
         const command = arrayBufferToBinaryString(scpiCommand.command);
 
-        for (let i = 0; i < this.objectVariableValues.length; i++) {
-            const instrument = this.objectVariableValues[i];
+        for (let i = 0; i < this.objectVariables.length; i++) {
+            const instrument = this.objectVariables[i].value;
             if (instrument instanceof InstrumentObject) {
                 if (scpiCommand.instrumentId == instrument.id) {
                     const CONNECTION_TIMEOUT = 5000;
@@ -354,8 +406,8 @@ export class WasmRuntime extends RemoteRuntime {
     }
 
     connectToInstrument(instrumentId: string) {
-        for (let i = 0; i < this.objectVariableValues.length; i++) {
-            const instrument = this.objectVariableValues[i];
+        for (let i = 0; i < this.objectVariables.length; i++) {
+            const instrument = this.objectVariables[i].value;
             if (
                 instrument instanceof InstrumentObject &&
                 instrument.id == instrumentId
@@ -739,18 +791,12 @@ class EvalProperties {
     private getPropertyIndex(component: Component, propertyName: string) {
         const classInfo = getClassInfo(component);
 
-        const properties = classInfo.properties.filter(
-            propertyInfo =>
-                isFlowProperty(
-                    this.wasmRuntime.DocumentStore,
-                    propertyInfo,
-                    "input"
-                ) ||
-                isFlowProperty(
-                    this.wasmRuntime.DocumentStore,
-                    propertyInfo,
-                    "template-literal"
-                )
+        const properties = classInfo.properties.filter(propertyInfo =>
+            isFlowProperty(propertyInfo, [
+                "input",
+                "template-literal",
+                "assignable"
+            ])
         );
 
         return properties.findIndex(property => property.name == propertyName);

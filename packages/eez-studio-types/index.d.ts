@@ -234,9 +234,26 @@ export interface IActionComponentDefinition {
     ): Promise<IDisposeComponentState | IComponentIsRunning | undefined>;
 }
 
+export interface IDashboardComponentContext {
+    getFlowIndex: () => number;
+    getComponentIndex: () => number;
+    startAsyncExecution: () => IDashboardComponentContext;
+    endAsyncExecution: () => void;
+    evalProperty: <T>(
+        propertyIndex: number,
+        expectedTypes?: ValueType[]
+    ) => T | undefined;
+    getStringParam: (offset: number) => string;
+    getExpressionListParam: (offset: number) => any[];
+    propagateValue: (outputName: string, value: any) => void;
+    propagateValueThroughSeqout: () => void;
+    executeCallAction: (flowIndex: number) => void;
+    throwError: (errorMessage: string) => void;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IEezStudio {
+export interface IEezFlowEditor {
     registerActionComponent(definition: IActionComponentDefinition): void;
 
     registerObjectVariableType(
@@ -252,4 +269,11 @@ export interface IEezStudio {
         required: Rule;
         rangeInclusive: (min: number, max?: number) => Rule;
     };
+}
+
+export interface IEezFlowRuntime {
+    registerExecuteFunction(
+        name: string,
+        func: (context: IDashboardComponentContext) => void
+    ): void;
 }

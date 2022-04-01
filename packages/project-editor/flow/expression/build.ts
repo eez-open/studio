@@ -29,7 +29,6 @@ import {
     findValueTypeInExpressionNode,
     checkArity
 } from "project-editor/flow/expression/type";
-import { evalConstantExpressionNode } from "project-editor/flow/expression/eval";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export function buildExpression(
@@ -280,6 +279,20 @@ function buildExpressionNode(
 
         checkArity(functionName, node);
 
+        if (functionName == "Flow.makeValue") {
+            if (node.arguments[0].type == "Literal") {
+                node.valueType = node.arguments[0].value;
+            }
+
+            node.arguments[0] = {
+                type: "Literal",
+                value: assets.getTypeIndex(node.valueType),
+                valueType: "integer"
+            };
+
+            node.arguments[1].valueType = node.valueType;
+        }
+
         return [
             ...node.arguments.reduce(
                 (instructions, node) => [
@@ -369,21 +382,68 @@ function buildExpressionNode(
 
     if (node.type == "ArrayExpression") {
         return [
+            // array type
             makePushConstantInstruction(
                 assets,
-                evalConstantExpressionNode(assets.rootProject, node),
-                node.valueType
-            )
+                assets.getTypeIndex(node.valueType),
+                "integer"
+            ),
+            // no. of elements
+            makePushConstantInstruction(
+                assets,
+                node.elements.length,
+                "integer"
+            ),
+            // elements
+            ...node.elements.reduce(
+                (instructions, node) => [
+                    ...instructions,
+                    ...buildExpressionNode(assets, component, node, assignable)
+                ],
+                []
+            ),
+            makeOperationInstruction(operationIndexes["Flow.makeArrayValue"])
         ];
     }
 
     if (node.type == "ObjectExpression") {
+        const type = assets.DocumentStore.typesStore.getType(node.valueType);
+        if (!type || type.kind != "object") {
+            throw `Can't build ObjectExpression for type: ${node.valueType}`;
+        }
+
+        const fieldValues: ExpressionNode[] = [];
+
+        node.properties.forEach(property => {
+            const fieldIndex = type.fieldIndexes[property.key.name];
+            if (fieldIndex == undefined) {
+                throw `Field ${property.key.name} not in ${node.valueType}`;
+            }
+            fieldValues[fieldIndex] = property.value;
+        });
+
+        for (let i = 0; i < type.fields.length; i++) {
+            if (fieldValues[i] == undefined) {
+                fieldValues[i] = {
+                    type: "Literal",
+                    value: undefined,
+                    valueType: "undefined"
+                };
+            }
+        }
+
         return [
-            makePushConstantInstruction(
-                assets,
-                evalConstantExpressionNode(assets.rootProject, node),
-                node.valueType
-            )
+            // no. of fields
+            makePushConstantInstruction(assets, type.fields.length, "integer"),
+            // fields
+            ...fieldValues.reduce(
+                (instructions, node) => [
+                    ...instructions,
+                    ...buildExpressionNode(assets, component, node, assignable)
+                ],
+                []
+            ),
+            makeOperationInstruction(operationIndexes["Flow.makeArrayValue"])
         ];
     }
 

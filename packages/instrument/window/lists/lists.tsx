@@ -326,7 +326,6 @@ export const SelectChannelDialog = observer(
         label: string;
         numChannels: number;
         callback: (channelIndex: number) => void;
-        unmount: () => void;
     }> {
         static lastChannelIndex = 1;
         channelIndex: number = SelectChannelDialog.lastChannelIndex;
@@ -382,7 +381,7 @@ export const SelectChannelDialog = observer(
             );
 
             return (
-                <Dialog onOk={this.handleSubmit} unmount={this.props.unmount}>
+                <Dialog onOk={this.handleSubmit}>
                     <PropertyList>{property}</PropertyList>
                 </Dialog>
             );
@@ -392,12 +391,11 @@ export const SelectChannelDialog = observer(
 
 async function selectChannel(label: string, numChannels: number) {
     return new Promise<number>(resolve => {
-        const [, , root] = showDialog(
+        showDialog(
             <SelectChannelDialog
                 label={label}
                 callback={resolve}
                 numChannels={numChannels}
-                unmount={() => root.unmount()}
             />
         );
     });

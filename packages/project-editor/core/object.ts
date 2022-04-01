@@ -5,10 +5,7 @@ import { _uniqWith } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
 import { Rect } from "eez-studio-shared/geometry";
 
-import type {
-    DocumentStoreClass,
-    IContextMenuContext
-} from "project-editor/store";
+import type { IContextMenuContext } from "project-editor/store";
 
 import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
 
@@ -156,9 +153,7 @@ export interface PropertyInfo {
     partOfNavigation?: boolean;
     fileFilters?: any;
 
-    flowProperty?:
-        | FlowPropertyType
-        | ((DocumentStore: DocumentStoreClass) => FlowPropertyType);
+    flowProperty?: FlowPropertyType;
     expressionType?: ValueType;
     expressionIsConstant?: boolean;
     isOutputOptional?:

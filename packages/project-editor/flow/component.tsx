@@ -41,11 +41,7 @@ import {
     isNotDashboardOrAppletOrFirmwareWithFlowSupportProject
 } from "project-editor/store";
 import { loadObject, objectToJS } from "project-editor/store";
-import {
-    IContextMenuContext,
-    getDocumentStore,
-    DocumentStoreClass
-} from "project-editor/store";
+import { IContextMenuContext, getDocumentStore } from "project-editor/store";
 
 import type {
     IResizeHandler,
@@ -83,7 +79,8 @@ import {
     variableTypeProperty,
     ValueType,
     VariableTypeFieldComponent,
-    ACTION_PARAMS_STRUCT_NAME
+    ACTION_PARAMS_STRUCT_NAME,
+    isValidType
 } from "project-editor/features/variable/value-type";
 import { expressionBuilder } from "./expression/ExpressionBuilder";
 import { getComponentName } from "./editor/ComponentsPalette";
@@ -512,26 +509,22 @@ export function makeToggablePropertyToOutput(
 }
 
 export function isFlowProperty(
-    DocumentStore: DocumentStoreClass,
     propertyInfo: PropertyInfo,
-    flowPropertyType: FlowPropertyType
+    flowPropertyTypes: FlowPropertyType[]
 ) {
     if (!propertyInfo.flowProperty) {
         return false;
     }
 
-    if (typeof propertyInfo.flowProperty === "string") {
-        if (
-            flowPropertyType == "input" &&
-            propertyInfo.type == PropertyType.ObjectReference &&
-            propertyInfo.referencedObjectCollectionPath == "actions"
-        ) {
-            return false;
-        }
-        return propertyInfo.flowProperty === flowPropertyType;
+    if (
+        propertyInfo.flowProperty == "input" &&
+        propertyInfo.type == PropertyType.ObjectReference &&
+        propertyInfo.referencedObjectCollectionPath == "actions"
+    ) {
+        return false;
     }
 
-    return propertyInfo.flowProperty(DocumentStore) === flowPropertyType;
+    return flowPropertyTypes.indexOf(propertyInfo.flowProperty) != -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1234,18 +1227,30 @@ export class Component extends EezObject {
 
             // check connections to inputs
             component.inputs.forEach(componentInput => {
-                if (
-                    componentInput instanceof CustomInput &&
-                    (componentInput.type === "any" ||
-                        componentInput.type === "array:any")
-                ) {
-                    messages.push(
-                        new Message(
-                            MessageType.WARNING,
-                            `Any type used`,
-                            component
-                        )
-                    );
+                if (componentInput instanceof CustomInput) {
+                    if (
+                        componentInput.type === "any" ||
+                        componentInput.type === "array:any"
+                    ) {
+                        messages.push(
+                            new Message(
+                                MessageType.WARNING,
+                                `Any type used`,
+                                componentInput
+                            )
+                        );
+                    }
+
+                    const project = ProjectEditor.getProject(component);
+                    if (!isValidType(project, componentInput.type)) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `Invalid type`,
+                                componentInput
+                            )
+                        );
+                    }
                 }
 
                 if (
@@ -1291,18 +1296,30 @@ export class Component extends EezObject {
 
             // check connection from outputs
             component.outputs.forEach(componentOutput => {
-                if (
-                    componentOutput instanceof CustomOutput &&
-                    (componentOutput.type === "any" ||
-                        componentOutput.type === "array:any")
-                ) {
-                    messages.push(
-                        new Message(
-                            MessageType.WARNING,
-                            `Any type used`,
-                            component
-                        )
-                    );
+                if (componentOutput instanceof CustomOutput) {
+                    if (
+                        componentOutput.type === "any" ||
+                        componentOutput.type === "array:any"
+                    ) {
+                        messages.push(
+                            new Message(
+                                MessageType.WARNING,
+                                `Any type used`,
+                                componentOutput
+                            )
+                        );
+                    }
+
+                    const project = ProjectEditor.getProject(componentOutput);
+                    if (!isValidType(project, componentOutput.type)) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `Invalid type`,
+                                componentOutput
+                            )
+                        );
+                    }
                 }
 
                 if (
@@ -1373,7 +1390,7 @@ export class Component extends EezObject {
                         continue;
                     }
 
-                    if (isFlowProperty(DocumentStore, propertyInfo, "input")) {
+                    if (isFlowProperty(propertyInfo, ["input"])) {
                         const value = getProperty(component, propertyInfo.name);
                         if (value != undefined && value !== "") {
                             try {
@@ -1410,13 +1427,7 @@ export class Component extends EezObject {
                                 )
                             );
                         }
-                    } else if (
-                        isFlowProperty(
-                            DocumentStore,
-                            propertyInfo,
-                            "assignable"
-                        )
-                    ) {
+                    } else if (isFlowProperty(propertyInfo, ["assignable"])) {
                         const value = getProperty(component, propertyInfo.name);
                         if (value != undefined && value !== "") {
                             try {
@@ -1445,11 +1456,7 @@ export class Component extends EezObject {
                             );
                         }
                     } else if (
-                        isFlowProperty(
-                            DocumentStore,
-                            propertyInfo,
-                            "template-literal"
-                        )
+                        isFlowProperty(propertyInfo, ["template-literal"])
                     ) {
                         const value = getProperty(component, propertyInfo.name);
                         if (value != undefined && value !== "") {
@@ -1661,10 +1668,8 @@ export class Component extends EezObject {
             valueType: ValueType;
         }[] = [];
 
-        const DocumentStore = getDocumentStore(this);
-
         for (const propertyInfo of getClassInfo(this).properties) {
-            if (isFlowProperty(DocumentStore, propertyInfo, "output")) {
+            if (isFlowProperty(propertyInfo, ["output"])) {
                 outputs.push({
                     name: propertyInfo.name,
                     type:

@@ -175,6 +175,7 @@ declare const WasmFlowRuntime: {
     _valueFree(valuePtr: number): void;
 
     _setGlobalVariable(globalVariableIndex: number, valuePtr: number);
+    _updateGlobalVariable(globalVariableIndex: number, valuePtr: number);
 
     _DashboardContext_getFlowIndex(context: number): number;
     _DashboardContext_getComponentIndex(context: number): number;

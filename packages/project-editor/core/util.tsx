@@ -55,7 +55,7 @@ export function showGenericDialog(
     }
 ) {
     return new Promise<GenericDialogResult>((resolve, reject) => {
-        const [modalDialog, , root] = showDialog(
+        const [modalDialog] = showDialog(
             <ProjectContext.Provider value={DocumentStore}>
                 <GenericDialog
                     dialogDefinition={conf.dialogDefinition}
@@ -68,7 +68,6 @@ export function showGenericDialog(
                         conf.showOkButton === undefined || conf.showOkButton
                             ? values => {
                                   if (modalDialog) {
-                                      root.unmount();
                                       modalDialog.close();
                                   }
                                   resolve(values);
@@ -77,12 +76,10 @@ export function showGenericDialog(
                     }
                     onCancel={() => {
                         if (modalDialog) {
-                            root.unmount();
                             modalDialog.close();
                         }
                         reject();
                     }}
-                    unmount={() => root.unmount()}
                 />
             </ProjectContext.Provider>,
             conf.opts

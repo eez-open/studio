@@ -13,7 +13,6 @@ export const GroupDialog = observer(
         groupsStore: IGroupsStore;
         group: IGroup;
         callback: (group: IGroup) => void;
-        unmount: () => void;
     }> {
         constructor(props: any) {
             super(props);
@@ -57,7 +56,7 @@ export const GroupDialog = observer(
 
         render() {
             return (
-                <Dialog onOk={this.handleSubmit} unmount={this.props.unmount}>
+                <Dialog onOk={this.handleSubmit}>
                     <PropertyList>
                         <TextInputProperty
                             name="Name"

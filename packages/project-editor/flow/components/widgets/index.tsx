@@ -969,10 +969,8 @@ export class SelectWidget extends Widget {
                 } else if (typeof index === "boolean") {
                     index = index ? 1 : 0;
                 } else {
-                    index = 0;
+                    index = -1;
                 }
-
-                return index;
 
                 return index;
             } catch (err) {
@@ -1031,6 +1029,8 @@ export class SelectWidget extends Widget {
         let selectedWidget =
             index >= 0 && index < this.widgets.length
                 ? this.widgets[index]
+                : index == -1
+                ? null
                 : undefined;
 
         return (
