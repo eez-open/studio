@@ -216,10 +216,10 @@ export class WasmRuntime extends RemoteRuntime {
                 );
             }
 
-            if (e.data.widgetMessages) {
-                for (const widgetMessage of e.data.widgetMessages) {
+            if (e.data.componentMessages) {
+                for (const componentMessage of e.data.componentMessages) {
                     const flowStateAndIndex = this.flowStateMap.get(
-                        widgetMessage.flowStateIndex
+                        componentMessage.flowStateIndex
                     );
                     if (flowStateAndIndex) {
                         const { flowState, flowIndex } = flowStateAndIndex;
@@ -227,13 +227,14 @@ export class WasmRuntime extends RemoteRuntime {
                         const component = getObjectFromStringPath(
                             this.DocumentStore.project,
                             this.assetsMap.flows[flowIndex].components[
-                                widgetMessage.componentIndex
+                                componentMessage.componentIndex
                             ].path
                         ) as Component;
                         if (component) {
                             component.onWasmWorkerMessage(
                                 flowState,
-                                widgetMessage.message
+                                componentMessage.message,
+                                componentMessage.id
                             );
                         } else {
                             console.error("UNEXPECTED!");
@@ -655,6 +656,15 @@ export class WasmRuntime extends RemoteRuntime {
             componentIndex,
             outputIndex,
             arrayValue
+        };
+        this.worker.postMessage(message);
+    }
+
+    sendResultToWorker(messageId: number, result: any) {
+        const message: RendererToWorkerMessage = {};
+        message.resultToWorker = {
+            messageId,
+            result
         };
         this.worker.postMessage(message);
     }

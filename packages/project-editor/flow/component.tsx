@@ -86,7 +86,11 @@ import { expressionBuilder } from "./expression/ExpressionBuilder";
 import { getComponentName } from "./editor/ComponentsPalette";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
-import type { IActionComponentDefinition, LogItemType } from "eez-studio-types";
+import type {
+    IActionComponentDefinition,
+    IComponentFlowState,
+    LogItemType
+} from "eez-studio-types";
 import {
     flowGroup,
     generalGroup,
@@ -1724,7 +1728,11 @@ export class Component extends EezObject {
         return undefined;
     }
 
-    onWasmWorkerMessage(flowState: IFlowState, message: any) {}
+    onWasmWorkerMessage(
+        flowState: IFlowState,
+        message: any,
+        messageId: number
+    ) {}
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {}
 }
@@ -2700,6 +2708,57 @@ export class NotFoundComponent extends ActionComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function getComponentFlowState(
+    flowState: IFlowState,
+    component: Component,
+    dispose?: () => void
+): IComponentFlowState {
+    return {
+        getComponentRunningState: () =>
+            flowState.getComponentRunningState(component),
+
+        setComponentRunningState: runningState =>
+            flowState.setComponentRunningState(component, runningState),
+
+        evalExpression: (expression: string) =>
+            flowState.evalExpression(component, expression),
+
+        evalTemplateLiteral: (templateLiteral: string) =>
+            flowState.evalExpression(
+                component,
+                templateLiteralToExpression(templateLiteral)
+            ),
+
+        assignValue: (assignableExpression: string, value: any) =>
+            flowState.runtime.assignValue(
+                flowState,
+                component,
+                assignableExpression,
+                value
+            ),
+
+        propagateValue: (output: string, value: any) =>
+            flowState.runtime.propagateValue(
+                flowState,
+                component,
+                output,
+                value
+            ),
+
+        sendResultToWorker: (messageId: number, result: any) => {
+            flowState.runtime.sendResultToWorker(messageId, result);
+        },
+
+        throwError: (message: string) =>
+            flowState.runtime.throwError(flowState, component, message),
+
+        log: (type: LogItemType, message: string) =>
+            flowState.log(type, message, component),
+
+        dispose
+    };
+}
+
 export function registerActionComponent(
     actionComponentDefinition: IActionComponentDefinition,
     name?: string,
@@ -2857,48 +2916,23 @@ export function registerActionComponent(
             }
 
             return actionComponentDefinition.execute(
-                {
-                    getComponentRunningState: () =>
-                        flowState.getComponentRunningState(this),
-
-                    setComponentRunningState: runningState =>
-                        flowState.setComponentRunningState(this, runningState),
-
-                    evalExpression: (expression: string) =>
-                        flowState.evalExpression(this, expression),
-
-                    evalTemplateLiteral: (templateLiteral: string) =>
-                        flowState.evalExpression(
-                            this,
-                            templateLiteralToExpression(templateLiteral)
-                        ),
-
-                    assignValue: (assignableExpression: string, value: any) =>
-                        flowState.runtime.assignValue(
-                            flowState,
-                            this,
-                            assignableExpression,
-                            value
-                        ),
-
-                    propagateValue: (output: string, value: any) =>
-                        flowState.runtime.propagateValue(
-                            flowState,
-                            this,
-                            output,
-                            value
-                        ),
-
-                    throwError: (message: string) =>
-                        flowState.runtime.throwError(flowState, this, message),
-
-                    log: (type: LogItemType, message: string) =>
-                        flowState.log(type, message, this),
-
-                    dispose
-                },
+                getComponentFlowState(flowState, this, dispose),
                 ...this._props
             );
+        }
+
+        override onWasmWorkerMessage(
+            flowState: IFlowState,
+            message: any,
+            messageId: number
+        ): void {
+            if (actionComponentDefinition.onWasmWorkerMessage) {
+                actionComponentDefinition.onWasmWorkerMessage(
+                    getComponentFlowState(flowState, this),
+                    message,
+                    messageId
+                );
+            }
         }
     };
 

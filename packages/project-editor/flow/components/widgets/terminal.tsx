@@ -12,9 +12,8 @@ import {
     makeDataPropertyInfo,
     Widget
 } from "project-editor/flow/component";
-import { IFlowContext } from "project-editor/flow/flow-interfaces";
+import { IFlowContext, IFlowState } from "project-editor/flow/flow-interfaces";
 import { addCssStylesheet } from "eez-studio-shared/dom";
-import { FlowState } from "project-editor/flow/runtime";
 import { observer } from "mobx-react";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,7 +89,7 @@ export class TerminalWidget extends Widget {
         );
     }
 
-    async execute(flowState: FlowState, dispose: (() => void) | undefined) {
+    async execute(flowState: IFlowState, dispose: (() => void) | undefined) {
         const { Readable, Duplex } = await import("stream");
 
         let runningState =

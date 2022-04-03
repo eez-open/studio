@@ -6,8 +6,7 @@ import type {
     RendererToWorkerMessage,
     WorkerToRenderMessage,
     IPropertyValue,
-    IGlobalVariable,
-    IWidgetMessage
+    IGlobalVariable
 } from "project-editor/flow/runtime/wasm-worker-interfaces";
 import { init as initExecuteFunctions } from "project-editor/flow/runtime/wasm-execute-functions-init";
 import { actionConmponentExecuteFunctions } from "project-editor/flow/runtime/wasm-execute-functions";
@@ -15,10 +14,9 @@ import {
     createWasmArrayValue,
     getValue,
     getArrayValue,
-    createJsArrayValue,
     createWasmValue
 } from "project-editor/flow/runtime/wasm-value";
-import type { IDashboardComponentContext, ValueType } from "eez-studio-types";
+import { DashboardComponentContext } from "project-editor/flow/runtime/worker-dashboard-component-context";
 
 function startToDebuggerMessage() {}
 
@@ -59,219 +57,15 @@ function executeScpi(instrumentPtr: number, arr: any, isQuery: number) {
     postMessage(data);
 }
 
-let widgetMessages: IWidgetMessage[] = [];
-
-export class DashboardComponentContext implements IDashboardComponentContext {
-    context: number = 0;
-
-    getFlowStateIndex(): number {
-        return WasmFlowRuntime._DashboardContext_getFlowStateIndex(
-            this.context
-        );
-    }
-
-    getFlowIndex(): number {
-        return WasmFlowRuntime._DashboardContext_getFlowIndex(this.context);
-    }
-
-    getComponentIndex(): number {
-        return WasmFlowRuntime._DashboardContext_getComponentIndex(
-            this.context
-        );
-    }
-
-    startAsyncExecution() {
-        const dashboardComponentContext = new DashboardComponentContext();
-
-        dashboardComponentContext.context =
-            WasmFlowRuntime._DashboardContext_startAsyncExecution(this.context);
-
-        return dashboardComponentContext;
-    }
-
-    endAsyncExecution() {
-        WasmFlowRuntime._DashboardContext_endAsyncExecution(this.context);
-    }
-
-    evalProperty<T = any>(propertyName: string, expectedTypes?: ValueType[]) {
-        const flowIndex = this.getFlowIndex();
-        const flow = WasmFlowRuntime.assetsMap.flows[flowIndex];
-        const componentIndex = this.getComponentIndex();
-        const component = flow.components[componentIndex];
-        const propertyIndex = component.propertyIndexes[propertyName];
-        if (propertyIndex == undefined) {
-            this.throwError(`Property "${propertyName}" not found`);
-        }
-
-        const valuePtr = WasmFlowRuntime._DashboardContext_evalProperty(
-            this.context,
-            propertyIndex
-        );
-
-        if (!valuePtr) {
-            return undefined;
-        }
-
-        const result = getValue(valuePtr);
-
-        WasmFlowRuntime._valueFree(valuePtr);
-
-        if (expectedTypes && expectedTypes.indexOf(result.valueType) == -1) {
-            return undefined;
-        }
-
-        return result.value as any as T;
-    }
-
-    getStringParam(offset: number) {
-        const ptr = WasmFlowRuntime._DashboardContext_getStringParam(
-            this.context,
-            offset
-        );
-        return WasmFlowRuntime.AsciiToString(ptr);
-    }
-
-    getExpressionListParam(offset: number) {
-        const ptr = WasmFlowRuntime._DashboardContext_getExpressionListParam(
-            this.context,
-            offset
-        );
-
-        const values: any[] = [];
-
-        if (ptr) {
-            const count = WasmFlowRuntime.HEAPU32[(ptr >> 2) + 0];
-            for (let i = 0; i < count; i++) {
-                let offset = ptr + 8 + 16 * i;
-                values.push(getValue(offset).value);
-            }
-
-            WasmFlowRuntime._DashboardContext_freeExpressionListParam(
-                this.context,
-                ptr
-            );
-        }
-
-        return values;
-    }
-
-    propagateValue(outputName: string, value: any) {
-        const flowIndex = this.getFlowIndex();
-        const flow = WasmFlowRuntime.assetsMap.flows[flowIndex];
-        const componentIndex = this.getComponentIndex();
-        const component = flow.components[componentIndex];
-        const outputIndex = component.outputIndexes[outputName];
-        if (outputIndex == undefined) {
-            this.throwError(`Output "${outputName}" not found`);
-        }
-
-        if (typeof value == "number") {
-            if (Number.isInteger(value)) {
-                WasmFlowRuntime._DashboardContext_propagateIntValue(
-                    this.context,
-                    outputIndex,
-                    value
-                );
-            } else {
-                WasmFlowRuntime._DashboardContext_propagateDoubleValue(
-                    this.context,
-                    outputIndex,
-                    value
-                );
-            }
-        } else if (typeof value == "boolean") {
-            WasmFlowRuntime._DashboardContext_propagateBooleanValue(
-                this.context,
-                outputIndex,
-                value
-            );
-        } else if (typeof value == "string") {
-            const valuePtr = WasmFlowRuntime.allocateUTF8(value);
-            WasmFlowRuntime._DashboardContext_propagateStringValue(
-                this.context,
-                outputIndex,
-                valuePtr
-            );
-            WasmFlowRuntime._free(valuePtr);
-        } else if (value === undefined) {
-            WasmFlowRuntime._DashboardContext_propagateUndefinedValue(
-                this.context,
-                outputIndex
-            );
-        } else if (value === null) {
-            WasmFlowRuntime._DashboardContext_propagateNullValue(
-                this.context,
-                outputIndex
-            );
-        } else {
-            const flowIndex = this.getFlowIndex();
-            const flow = WasmFlowRuntime.assetsMap.flows[flowIndex];
-
-            const componentIndex = this.getComponentIndex();
-            const component = flow.components[componentIndex];
-
-            const output = component.outputs[outputIndex];
-
-            const valueTypeIndex = output.valueTypeIndex;
-            if (valueTypeIndex == -1) {
-                this.throwError("Invalid value");
-            } else {
-                const arrayValue = createJsArrayValue(
-                    valueTypeIndex,
-                    value,
-                    WasmFlowRuntime.assetsMap,
-                    undefined
-                );
-
-                if (arrayValue) {
-                    const valuePtr = createWasmArrayValue(arrayValue);
-                    WasmFlowRuntime._DashboardContext_propagateValue(
-                        this.context,
-                        outputIndex,
-                        valuePtr
-                    );
-                    WasmFlowRuntime._valueFree(valuePtr);
-                } else {
-                    this.throwError("Invalid value");
-                }
-            }
-        }
-    }
-
-    propagateValueThroughSeqout(): void {
-        WasmFlowRuntime._DashboardContext_propagateValueThroughSeqout(
-            this.context
-        );
-    }
-
-    executeCallAction(flowIndex: number) {
-        WasmFlowRuntime._DashboardContext_executeCallAction(
-            this.context,
-            flowIndex
-        );
-    }
-
-    sendMessageToWidget(message: any) {
-        widgetMessages.push({
-            flowStateIndex: this.getFlowStateIndex(),
-            componentIndex: this.getComponentIndex(),
-            message
-        });
-    }
-
-    throwError(errorMessage: string) {
-        const errorMessagePtr = WasmFlowRuntime.allocateUTF8(errorMessage);
-        WasmFlowRuntime._DashboardContext_throwError(
-            this.context,
-            errorMessagePtr
-        );
-        WasmFlowRuntime._free(errorMessagePtr);
-    }
-}
-const dashboardComponentContext = new DashboardComponentContext();
-
-function executeDashboardComponent(componentType: number, context: number) {
-    dashboardComponentContext.context = context;
+function executeDashboardComponent(
+    componentType: number,
+    flowStateIndex: number,
+    componentIndex: number
+) {
+    const dashboardComponentContext = new DashboardComponentContext(
+        flowStateIndex,
+        componentIndex
+    );
 
     const componentName =
         WasmFlowRuntime.assetsMap.dashboardComponentTypeToNameMap[
@@ -350,6 +144,8 @@ function isPropertyValueChanged(newPropertyValue: IPropertyValue) {
     return true;
 }
 
+const componentMessageCallbacks = new Map<number, (result: any) => void>();
+
 onmessage = async function (e: { data: RendererToWorkerMessage }) {
     if (e.data.scpiResult) {
         let errorMessagePtr = 0;
@@ -418,6 +214,17 @@ onmessage = async function (e: { data: RendererToWorkerMessage }) {
 
         WasmFlowRuntime._valueFree(valuePtr);
 
+        return;
+    }
+
+    if (e.data.resultToWorker) {
+        const callback = componentMessageCallbacks.get(
+            e.data.resultToWorker.messageId
+        );
+        if (callback) {
+            componentMessageCallbacks.delete(e.data.resultToWorker.messageId);
+            callback(e.data.resultToWorker.result);
+        }
         return;
     }
 
@@ -573,7 +380,6 @@ onmessage = async function (e: { data: RendererToWorkerMessage }) {
             }
         });
     } else {
-        console.log("cleared savedPropertyValues");
         savedPropertyValues.clear();
     }
 
@@ -581,11 +387,26 @@ onmessage = async function (e: { data: RendererToWorkerMessage }) {
     const HEIGHT = 272;
 
     const data: WorkerToRenderMessage = {
-        propertyValues,
-        widgetMessages
+        propertyValues
     };
 
-    widgetMessages = [];
+    if (WasmFlowRuntime.componentMessages) {
+        const componentMessages: IMessageFromWorker[] = [];
+        data.componentMessages = componentMessages;
+
+        WasmFlowRuntime.componentMessages.forEach(componentMessage => {
+            if (componentMessage.callback) {
+                componentMessageCallbacks.set(
+                    componentMessage.id,
+                    componentMessage.callback
+                );
+                componentMessage.callback = undefined;
+            }
+            componentMessages?.push(componentMessage);
+        });
+
+        WasmFlowRuntime.componentMessages = undefined;
+    }
 
     var buf_addr = WasmFlowRuntime._getSyncedBuffer();
     if (buf_addr != 0) {

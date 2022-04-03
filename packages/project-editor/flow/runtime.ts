@@ -23,9 +23,10 @@ import { CatchErrorActionComponent } from "project-editor/flow/components/action
 import { Component, Widget } from "project-editor/flow/component";
 import { IEezObject } from "project-editor/core/object";
 import type {
+    IComponentState,
     IDataContext,
     IFlowContext
-} from "project-editor/flow//flow-interfaces";
+} from "project-editor/flow/flow-interfaces";
 import { Page } from "project-editor/features/page/page";
 import {
     ActionEndLogItem,
@@ -394,6 +395,8 @@ export abstract class RuntimeBase {
             false
         );
     }
+
+    sendResultToWorker(messageId: number, result: any) {}
 
     onBreakpointAdded(component: Component) {}
 
@@ -910,7 +913,7 @@ export class FlowState {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ComponentState {
+export class ComponentState implements IComponentState {
     inputsData = new Map<string, any>();
     unreadInputsData = new Set<string>();
     isRunning: boolean = false;

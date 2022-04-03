@@ -69,6 +69,7 @@ export interface IRuntime {
         value: any,
         outputName?: string
     ): void;
+    sendResultToWorker(messageId: number, result: any): void;
     throwError(
         flowState: IFlowState,
         sourceComponent: Component,
@@ -79,11 +80,18 @@ export interface IRuntime {
 
 export interface IFlow {}
 
+export interface IComponentState {
+    inputsData: Map<string, any>;
+    unreadInputsData: Set<string>;
+}
+
 export interface IFlowState {
     getFlowStateByComponent(component: Component): IFlowState | undefined;
 
     getInputValue(component: Component, input: string): any;
     evalExpression(component: Component, expression: string): any;
+
+    getComponentState(component: Component): IComponentState;
 
     getComponentRunningState<T>(component: Component): T | undefined;
     setComponentRunningState<T>(component: Component, runningState: T): void;

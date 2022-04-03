@@ -23,7 +23,7 @@ export interface WorkerToRenderMessage {
     // evaluated property values
     propertyValues?: IPropertyValue[];
 
-    widgetMessages?: IWidgetMessage[];
+    componentMessages?: IMessageFromWorker[];
 }
 
 // message data sent from renderer to WASM worker
@@ -68,6 +68,11 @@ export interface RendererToWorkerMessage {
     };
 
     updateGlobalVariableValues?: IGlobalVariable[];
+
+    resultToWorker?: {
+        messageId: number;
+        result: any;
+    };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -137,14 +142,6 @@ export interface IAssignProperty {
     propertyIndex: number;
     indexes: number[];
     value: any;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export interface IWidgetMessage {
-    flowStateIndex: number;
-    componentIndex: number;
-    message: any;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

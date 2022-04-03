@@ -1,4 +1,4 @@
-import type { DashboardComponentContext } from "project-editor/flow/runtime/wasm-worker";
+import type { IDashboardComponentContext } from "eez-studio-types";
 
 import { registerExecuteFunction } from "project-editor/flow/runtime/wasm-execute-functions";
 
@@ -6,9 +6,9 @@ import { registerExecuteFunction } from "project-editor/flow/runtime/wasm-execut
 
 registerExecuteFunction(
     "LineChartWidget",
-    function (context: DashboardComponentContext) {
+    function (context: IDashboardComponentContext) {
         const data = context.evalProperty("data");
-        context.sendMessageToWidget(data);
+        context.sendMessageToComponent(data);
     }
 );
 
@@ -16,12 +16,12 @@ registerExecuteFunction(
 
 registerExecuteFunction(
     "GaugeWidget",
-    function (context: DashboardComponentContext) {}
+    function (context: IDashboardComponentContext) {}
 );
 
 ////////////////////////////////////////////////////////////////////////////////
 
 registerExecuteFunction(
     "CheckboxWidget",
-    function (context: DashboardComponentContext) {}
+    function (context: IDashboardComponentContext) {}
 );

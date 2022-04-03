@@ -10,12 +10,11 @@ import {
 } from "project-editor/core/object";
 
 import { Widget } from "project-editor/flow/component";
-import { IFlowContext } from "project-editor/flow/flow-interfaces";
+import { IFlowContext, IFlowState } from "project-editor/flow/flow-interfaces";
 import { observer } from "mobx-react";
 
 import type * as PlotlyModule from "plotly.js-dist-min";
 import classNames from "classnames";
-import { FlowState } from "project-editor/flow/runtime";
 import { specificGroup } from "project-editor/components/PropertyGrid/groups";
 import { evalProperty } from "project-editor/flow/components/widgets";
 
@@ -273,7 +272,7 @@ export class LineChartWidget extends Widget {
         );
     }
 
-    async execute(flowState: FlowState, dispose: (() => void) | undefined) {
+    async execute(flowState: IFlowState, dispose: (() => void) | undefined) {
         let runningState =
             flowState.getComponentRunningState<RunningState>(this);
 
@@ -300,7 +299,7 @@ export class LineChartWidget extends Widget {
         return undefined;
     }
 
-    onWasmWorkerMessage(flowState: FlowState, message: any) {
+    onWasmWorkerMessage(flowState: IFlowState, message: any) {
         runInAction(() => {
             let runningState =
                 flowState.getComponentRunningState<RunningState>(this);

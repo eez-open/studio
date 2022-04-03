@@ -638,6 +638,10 @@ export abstract class DebuggerConnectionBase {
             return this.parseArrayOrStructDebuggerValue(str);
         }
 
+        if (str[0] == "@") {
+            return `blob (size=${Number.parseInt(str.substring(1))})`;
+        }
+
         return Number.parseFloat(str);
     }
 
@@ -1053,8 +1057,6 @@ export abstract class DebuggerConnectionBase {
                             console.error("UNEXPECTED!");
                             return;
                         }
-
-                        //console.log(debuggerValue);
 
                         debuggerValue.set(this.parseDebuggerValue(value));
                     }

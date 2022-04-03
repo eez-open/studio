@@ -129,7 +129,7 @@ export function createJsArrayValue(
 
 export function createWasmArrayValue(arrayValue: ArrayValue) {
     const arraySize = arrayValue.values.length;
-    const arrayValuePtr = WasmFlowRuntime._arrayValueAlloc(
+    const arrayValuePtr = WasmFlowRuntime._createArrayValue(
         arraySize,
         arrayValue.valueTypeIndex
     );

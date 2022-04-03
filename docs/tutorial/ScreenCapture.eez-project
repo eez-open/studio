@@ -93,8 +93,8 @@
         },
         {
           "type": "FileWrite",
-          "left": 1006,
-          "top": -175,
+          "left": 1072,
+          "top": -186,
           "width": 140,
           "height": 73,
           "wireID": "c3db390c-86c7-4129-802f-e54874023365",
@@ -152,7 +152,7 @@
         },
         {
           "type": "ShowFileInFolder",
-          "left": 1200,
+          "left": 1275,
           "top": -83,
           "width": 130,
           "height": 54,
@@ -231,6 +231,12 @@
           "source": "67d16612-110b-49ea-edeb-2c22f9724dc8",
           "output": "@seqout",
           "target": "d3c0110f-782e-459a-d87e-d8ad6c48c108",
+          "input": "@seqin"
+        },
+        {
+          "source": "926238d5-6828-4a7b-e769-0ee455b903b1",
+          "output": "@seqout",
+          "target": "c3db390c-86c7-4129-802f-e54874023365",
           "input": "@seqin"
         }
       ],

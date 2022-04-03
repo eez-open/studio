@@ -106,6 +106,7 @@ export interface IComponentFlowState {
     evalTemplateLiteral(expression: string): any;
     assignValue(assignableExpression: string, value: any): any;
     propagateValue(output: string, value: any): void;
+    sendResultToWorker(messageId: number, result: any): void;
     throwError(err: string): void;
     log(type: LogItemType, message: string): void;
     dispose: (() => void) | undefined;
@@ -233,22 +234,38 @@ export interface IActionComponentDefinition {
         flowState: IComponentFlowState,
         ...props: string[]
     ): Promise<IDisposeComponentState | IComponentIsRunning | undefined>;
+
+    onWasmWorkerMessage?(
+        flowState: IComponentFlowState,
+        message: any,
+        messageId: number
+    ): void;
 }
 
 export interface IDashboardComponentContext {
     getFlowIndex: () => number;
     getComponentIndex: () => number;
-    startAsyncExecution: () => IDashboardComponentContext;
-    endAsyncExecution: () => void;
+
+    getStringParam: (offset: number) => string;
+    getExpressionListParam: (offset: number) => any[];
+
     evalProperty: <T = any>(
         propertyName: string,
         expectedTypes?: ValueType[]
     ) => T | undefined;
-    getStringParam: (offset: number) => string;
-    getExpressionListParam: (offset: number) => any[];
     propagateValue: (outputName: string, value: any) => void;
     propagateValueThroughSeqout: () => void;
+
+    startAsyncExecution: () => IDashboardComponentContext;
+    endAsyncExecution: () => void;
+
     executeCallAction: (flowIndex: number) => void;
+
+    sendMessageToComponent: (
+        message: any,
+        callback?: (result: any) => void
+    ) => void;
+
     throwError: (errorMessage: string) => void;
 }
 

@@ -52,10 +52,10 @@ void finishToDebuggerMessage() {
     }, 0);
 }
 
-void executeDashboardComponent(uint16_t componentType, void *context) {
+void executeDashboardComponent(uint16_t componentType, int flowStateIndex, int componentIndex) {
     EM_ASM({
-        executeDashboardComponent($0, $1);
-    }, componentType, context);
+        executeDashboardComponent($0, $1, $2);
+    }, componentType, flowStateIndex, componentIndex);
 }
 
 void stopScript() {}

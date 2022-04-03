@@ -11,6 +11,8 @@ declare const ace: {
 
 declare module "jspanel4";
 
+//
+
 type IIndexes = { [key: string]: number };
 
 interface IField {
@@ -109,10 +111,17 @@ interface AssetsMap {
     typeIndexes: IIndexes;
 }
 
-declare const WasmFlowRuntime: {
-    allocateUTF8(str: string): number;
-    AsciiToString(ptr: number): string;
+interface IMessageFromWorker {
+    id: number;
+    flowStateIndex: number;
+    componentIndex: number;
+    message: any;
+    callback?: (result: any) => void;
+}
 
+// prettier-ignore
+declare const WasmFlowRuntime: {
+    // emscripten API
     HEAP8: Uint8Array;
     HEAPU8: Uint8Array;
     HEAP16: Uint8Array;
@@ -123,9 +132,17 @@ declare const WasmFlowRuntime: {
     HEAPF32: Float32Array;
     HEAPF64: Float64Array;
 
+    allocateUTF8(str: string): number;
+    AsciiToString(ptr: number): string;
+
     _malloc(size: number): number;
     _free(ptr: number): void;
 
+    //
+    assetsMap: AssetsMap;
+    componentMessages: IMessageFromWorker[] | undefined;
+
+    // eez framework API
     _init(assets: number, assetsSize: number);
     _startFlow();
     _mainLoop();
@@ -134,12 +151,7 @@ declare const WasmFlowRuntime: {
     _onPointerEvent(x: number, y: number, pressed: number);
     _onMessageFromDebugger(messageData: number, messageDataSize: number);
 
-    _onScpiResult(
-        errorMessage: number,
-        result: number,
-        resultLen: number,
-        resultIsBlob: number
-    );
+    // eez flow API for Dashboard projects
 
     _createUndefinedValue(): number;
     _createNullValue(): number;
@@ -147,122 +159,45 @@ declare const WasmFlowRuntime: {
     _createDoubleValue(value: number): number;
     _createBooleanValue(value: number): number;
     _createStringValue(value: number): number;
+    _createArrayValue(arraySize: number, arrayType: number): number;
 
-    _arrayValueAlloc(arraySize: number, arrayType: number): number;
-    _arrayValueSetElementValue(
-        arrayValuePtr: number,
-        elementIndex: number,
-        value: number
-    ): void;
-    _arrayValueSetElementInt(
-        arrayValuePtr: number,
-        elementIndex: number,
-        value: number
-    ): void;
-    _arrayValueSetElementDouble(
-        arrayValuePtr: number,
-        elementIndex: number,
-        value: number
-    ): void;
-    _arrayValueSetElementBool(
-        arrayValuePtr: number,
-        elementIndex: number,
-        value: boolean
-    ): void;
-    _arrayValueSetElementString(
-        arrayValuePtr: number,
-        elementIndex: number,
-        value: number
-    ): void;
-    _arrayValueSetElementNull(
-        arrayValuePtr: number,
-        elementIndex: number
-    ): void;
-
-    _evalProperty(
-        flowStateIndex: number,
-        componentIndex: number,
-        propertyIndex: number,
-        iteratorsPtr: number
-    ): number;
-
-    _assignProperty(
-        flowStateIndex: number,
-        componentIndex: number,
-        propertyIndex: number,
-        iteratorsPtr: number,
-        valuePtr: number
-    ): number;
-
-    _propagateValue(
-        flowStateIndex: number,
-        componentIndex: number,
-        outputIndex: number,
-        valuePtr: number
-    );
+    _arrayValueSetElementValue(arrayValuePtr: number, elementIndex: number, value: number): void;
+    _arrayValueSetElementInt(arrayValuePtr: number, elementIndex: number, value: number): void;
+    _arrayValueSetElementDouble(arrayValuePtr: number, elementIndex: number, value: number): void;
+    _arrayValueSetElementBool(arrayValuePtr: number, elementIndex: number, value: boolean): void;
+    _arrayValueSetElementString(arrayValuePtr: number, elementIndex: number, value: number): void;
+    _arrayValueSetElementNull(arrayValuePtr: number, elementIndex: number): void;
 
     _valueFree(valuePtr: number): void;
 
     _setGlobalVariable(globalVariableIndex: number, valuePtr: number);
     _updateGlobalVariable(globalVariableIndex: number, valuePtr: number);
 
-    _DashboardContext_getFlowIndex(context: number): number;
-    _DashboardContext_getFlowStateIndex(context: number): number;
-    _DashboardContext_getComponentIndex(context: number): number;
+    _getFlowIndex(flowStateIndex: number): number;
 
-    _DashboardContext_startAsyncExecution(context: number): number;
-    _DashboardContext_endAsyncExecution(context: number);
+    _getStringParam(flowStateIndex: number, componentIndex: number, offset: number): number;
+    _getExpressionListParam(flowStateIndex: number, componentIndex: number, offset: number): number;
+    _freeExpressionListParam(ptr: number);
 
-    _DashboardContext_evalProperty(
-        context: number,
-        propertyIndex: number
-    ): number;
+    _evalProperty(flowStateIndex: number, componentIndex: number, propertyIndex: number, iteratorsPtr: number): number;
+    _assignProperty(flowStateIndex: number, componentIndex: number, propertyIndex: number, iteratorsPtr: number, valuePtr: number): number;
 
-    _DashboardContext_getStringParam(context: number, offset: number): number;
+    _propagateValue(flowStateIndex: number, componentIndex: number, outputIndex: number, valuePtr: number);
+    _propagateIntValue(flowStateIndex: number, componentIndex: number, outputIndex: number, value: number);
+    _propagateDoubleValue(flowStateIndex: number, componentIndex: number, outputIndex: number, value: number);
+    _propagateBooleanValue(flowStateIndex: number, componentIndex: number, outputIndex: number, value: boolean);
+    _propagateStringValue(flowStateIndex: number, componentIndex: number, outputIndex: number, value: number);
+    _propagateUndefinedValue(flowStateIndex: number, componentIndex: number, outputIndex: number);
+    _propagateNullValue(flowStateIndex: number, componentIndex: number, outputIndex: number);
 
-    _DashboardContext_getExpressionListParam(
-        context: number,
-        offset: number
-    ): number;
+    _propagateValueThroughSeqout(flowStateIndex: number, componentIndex: number);
 
-    _DashboardContext_freeExpressionListParam(context: number, ptr: number);
+    _startAsyncExecution(flowStateIndex: number, componentIndex: number): number;
+    _endAsyncExecution(flowStateIndex: number, componentIndex: number);
 
-    _DashboardContext_propagateValue(
-        context: number,
-        outputIndex: number,
-        value: number
-    );
-    _DashboardContext_propagateIntValue(
-        context: number,
-        outputIndex: number,
-        value: number
-    );
-    _DashboardContext_propagateDoubleValue(
-        context: number,
-        outputIndex: number,
-        value: number
-    );
-    _DashboardContext_propagateBooleanValue(
-        context: number,
-        outputIndex: number,
-        value: boolean
-    );
-    _DashboardContext_propagateStringValue(
-        context: number,
-        outputIndex: number,
-        value: number
-    );
-    _DashboardContext_propagateUndefinedValue(
-        context: number,
-        outputIndex: number
-    );
-    _DashboardContext_propagateNullValue(context: number, outputIndex: number);
+    _executeCallAction(flowStateIndex: number, componentIndex: number, flowIndex: number);
 
-    _DashboardContext_propagateValueThroughSeqout(context: number);
+    _throwError(flowStateIndex: number, componentIndex: number, errorMessage: number);
 
-    _DashboardContext_executeCallAction(context: number, flowIndex: number);
-
-    _DashboardContext_throwError(context: number, errorMessage: number);
-
-    assetsMap: AssetsMap;
+    _onScpiResult(errorMessage: number, result: number, resultLen: number, resultIsBlob: number);
 };

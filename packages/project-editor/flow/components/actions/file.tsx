@@ -1,3 +1,4 @@
+import path from "path";
 import { shell } from "electron";
 import { dialog } from "@electron/remote";
 import React from "react";
@@ -203,6 +204,21 @@ registerActionComponents("File", [
             }
 
             return undefined;
+        },
+        onWasmWorkerMessage: async (flowState, message, messageId) => {
+            const result = await dialog.showSaveDialog({
+                defaultPath: message
+            });
+
+            // workaround: for some reason electron returs "\\" as path separator on windows, probably bug
+            const filePath = result.filePath
+                ? result.filePath.replace(/\\/g, "/")
+                : undefined;
+
+            flowState.sendResultToWorker(messageId, {
+                cancelled: result.canceled,
+                filePath
+            });
         }
     },
     {
@@ -227,6 +243,12 @@ registerActionComponents("File", [
             shell.showItemInFolder(filePathValue);
 
             return undefined;
+        },
+        onWasmWorkerMessage: (flowState, message) => {
+            // workaround: on windows, showItemInFolder will not work if path.sep is /
+            const filePath = message.replace(/\//g, path.sep);
+
+            shell.showItemInFolder(filePath);
         }
     }
 ]);

@@ -1,12 +1,12 @@
-import { DashboardComponentContext } from "./wasm-worker";
+import type { IDashboardComponentContext } from "eez-studio-types";
 
 export const actionConmponentExecuteFunctions: {
-    [name: string]: (context: DashboardComponentContext) => void;
+    [name: string]: (context: IDashboardComponentContext) => void;
 } = {};
 
 export function registerExecuteFunction(
     name: string,
-    func: (context: DashboardComponentContext) => void
+    func: (context: IDashboardComponentContext) => void
 ) {
     actionConmponentExecuteFunctions[name] = func;
 }
