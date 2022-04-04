@@ -5711,6 +5711,9 @@ var _getComponentExecutionState = Module["_getComponentExecutionState"] = create
 var _setComponentExecutionState = Module["_setComponentExecutionState"] = createExportWrapper("setComponentExecutionState");
 
 /** @type {function(...*):?} */
+var _getStringParam = Module["_getStringParam"] = createExportWrapper("getStringParam");
+
+/** @type {function(...*):?} */
 var _getExpressionListParam = Module["_getExpressionListParam"] = createExportWrapper("getExpressionListParam");
 
 /** @type {function(...*):?} */

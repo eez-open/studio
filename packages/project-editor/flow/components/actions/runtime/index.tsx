@@ -48,7 +48,7 @@ registerExecuteFunction(
 registerExecuteFunction(
     "DynamicCallActionActionComponent",
     function (context: IDashboardComponentContext) {
-        const actionName = context.evalProperty<string>("data");
+        const actionName = context.evalProperty<string>("action");
 
         if (actionName == undefined || typeof actionName != "string") {
             context.throwError(`Invalid action name property`);
