@@ -376,7 +376,7 @@ registerExecuteFunction(
             const { spawn } = await import("child_process");
 
             let process = spawn(commandValue, argsValue);
-            let processFinished = false;
+            //let processFinished = false;
 
             context.propagateValue("stdout", process.stdout);
             context.propagateValue("stderr", process.stderr);
@@ -384,13 +384,13 @@ registerExecuteFunction(
             process.on("close", code => {
                 context.propagateValue("finished", code);
                 context.endAsyncExecution();
-                processFinished = true;
+                //processFinished = true;
             });
 
             process.on("error", err => {
                 context.throwError(err.toString());
                 context.endAsyncExecution();
-                processFinished = true;
+                //processFinished = true;
             });
 
             // return () => {
