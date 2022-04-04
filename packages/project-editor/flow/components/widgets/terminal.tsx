@@ -6,15 +6,12 @@ import {
     ProjectType
 } from "project-editor/core/object";
 
-import {
-    ComponentInput,
-    ComponentOutput,
-    makeDataPropertyInfo,
-    Widget
-} from "project-editor/flow/component";
+import { ComponentOutput, Widget } from "project-editor/flow/component";
 import { IFlowContext, IFlowState } from "project-editor/flow/flow-interfaces";
 import { addCssStylesheet } from "eez-studio-shared/dom";
 import { observer } from "mobx-react";
+import { registerSystemStructure } from "project-editor/features/variable/value-type";
+import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -24,11 +21,6 @@ class RunningState {
 
 export class TerminalWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: [
-            makeDataPropertyInfo("data", {
-                hideInPropertyGrid: true
-            })
-        ],
         defaultValue: {
             left: 0,
             top: 0,
@@ -56,24 +48,12 @@ export class TerminalWidget extends Widget {
             projectType === ProjectType.DASHBOARD
     });
 
-    getInputs(): ComponentInput[] {
-        return [
-            ...super.getInputs(),
-            {
-                name: "data",
-                type: "string",
-                isOptionalInput: false,
-                isSequenceInput: false
-            }
-        ];
-    }
-
     getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
                 name: "onData",
-                type: "string",
+                type: `struct:${ON_DATA_PARAMS_STRUCT_NAME}`,
                 isOptionalOutput: false,
                 isSequenceOutput: false
             }
@@ -126,9 +106,78 @@ export class TerminalWidget extends Widget {
 
         return undefined;
     }
+
+    async onWasmWorkerMessage(flowState: IFlowState, message: any) {
+        let runningState =
+            flowState.getComponentRunningState<RunningState>(this);
+
+        if (!runningState) {
+            runningState = new RunningState();
+            flowState.setComponentRunningState(this, runningState);
+        }
+
+        const value = message;
+
+        if (runningState.onData && value) {
+            runningState.onData(value);
+        }
+    }
 }
 
 registerClass("TerminalWidget", TerminalWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const ON_DATA_PARAMS_STRUCT_NAME = "$TerminalWidgetOnDataParams";
+
+registerSystemStructure({
+    name: ON_DATA_PARAMS_STRUCT_NAME,
+    fields: [
+        {
+            name: "index",
+            type: "integer"
+        },
+        {
+            name: "indexes",
+            type: "array:integer"
+        },
+        {
+            name: "data",
+            type: "string"
+        }
+    ],
+    fieldsMap: new Map()
+});
+
+interface OnDataParamsValue {
+    index: number;
+    indexes: number[];
+    data: string;
+}
+
+function makeOnDataParamsValue(
+    flowContext: IFlowContext,
+    data: string
+): OnDataParamsValue {
+    let onDataParamsValue: OnDataParamsValue;
+
+    let indexes = flowContext.dataContext.get(FLOW_ITERATOR_INDEXES_VARIABLE);
+    if (indexes) {
+        onDataParamsValue = {
+            index: indexes[0],
+            indexes,
+            data
+        };
+    } else {
+        onDataParamsValue = {
+            index: 0,
+            indexes: [0],
+            data
+        };
+    }
+
+    return onDataParamsValue;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -169,11 +218,12 @@ const TerminalElement = observer(
                 this.terminal.write(data);
 
                 if (this.props.flowContext.flowState) {
-                    this.props.flowContext.flowState.runtime.propagateValue(
-                        this.props.flowContext.flowState,
+                    this.props.flowContext.flowState.runtime.executeWidgetAction(
+                        this.props.flowContext,
                         this.props.widget,
                         "onData",
-                        data
+                        makeOnDataParamsValue(this.props.flowContext, data),
+                        `struct:${ON_DATA_PARAMS_STRUCT_NAME}`
                     );
                 }
             });

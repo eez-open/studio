@@ -1,3 +1,5 @@
+import { Stream } from "stream";
+
 import type {
     IObjectVariableType,
     IObjectVariableValueFieldDescription,
@@ -15,6 +17,7 @@ import {
     FLOW_VALUE_TYPE_INT64,
     FLOW_VALUE_TYPE_INT8,
     FLOW_VALUE_TYPE_NULL,
+    FLOW_VALUE_TYPE_STREAM,
     FLOW_VALUE_TYPE_STRING,
     FLOW_VALUE_TYPE_STRING_REF,
     FLOW_VALUE_TYPE_UINT16,
@@ -140,51 +143,32 @@ export function createWasmArrayValue(arrayValue: ArrayValue) {
             value = value.toString();
         }
 
-        if (typeof value == "number") {
-            if (Number.isInteger(value)) {
-                WasmFlowRuntime._arrayValueSetElementInt(
-                    arrayValuePtr,
-                    i,
-                    value
-                );
-            } else {
-                WasmFlowRuntime._arrayValueSetElementDouble(
-                    arrayValuePtr,
-                    i,
-                    value
-                );
-            }
-        } else if (typeof value == "boolean") {
-            WasmFlowRuntime._arrayValueSetElementBool(arrayValuePtr, i, value);
-        } else if (typeof value == "string") {
-            const valuePtr = WasmFlowRuntime.allocateUTF8(value);
-            WasmFlowRuntime._arrayValueSetElementString(
-                arrayValuePtr,
-                i,
-                valuePtr
-            );
-            WasmFlowRuntime._free(arrayValuePtr);
-        } else if (value == null) {
-            WasmFlowRuntime._arrayValueSetElementNull(arrayValuePtr, i);
+        let valuePtr;
+        if (
+            value === null ||
+            value === undefined ||
+            typeof value == "number" ||
+            typeof value == "boolean" ||
+            typeof value == "string"
+        ) {
+            valuePtr = createWasmValue(value);
         } else {
             const type = WasmFlowRuntime.assetsMap.types[value.valueTypeIndex];
-            const valuePtr =
+            valuePtr =
                 type.kind == "basic"
                     ? createWasmValue(value.values as any)
                     : createWasmArrayValue(value);
-            WasmFlowRuntime._arrayValueSetElementValue(
-                arrayValuePtr,
-                i,
-                valuePtr
-            );
-            WasmFlowRuntime._valueFree(valuePtr);
         }
+
+        WasmFlowRuntime._arrayValueSetElementValue(arrayValuePtr, i, valuePtr);
+        WasmFlowRuntime._valueFree(valuePtr);
     }
     return arrayValuePtr;
 }
 
 export function createWasmValue(
-    value: undefined | null | number | boolean | string
+    value: undefined | null | number | boolean | string | ArrayValue,
+    valueTypeIndex?: number
 ) {
     if (value == undefined) {
         return WasmFlowRuntime._createUndefinedValue();
@@ -210,6 +194,24 @@ export function createWasmValue(
         const valuePtr = WasmFlowRuntime._createStringValue(stringPtr);
         WasmFlowRuntime._free(stringPtr);
         return valuePtr;
+    }
+
+    if (value instanceof Stream) {
+        return WasmFlowRuntime._createStreamValue(getStreamID(value));
+    }
+
+    if (value.valueTypeIndex) {
+        return createWasmArrayValue(value);
+    }
+
+    if (valueTypeIndex != undefined) {
+        const arrayValue = createJsArrayValue(
+            valueTypeIndex,
+            value,
+            WasmFlowRuntime.assetsMap,
+            undefined
+        );
+        return createWasmArrayValue(arrayValue);
     }
 
     console.error("unsupported WASM value");
@@ -303,6 +305,11 @@ export function getValue(offset: number): ValueWithType {
             value,
             valueType: "blob"
         };
+    } else if (type == FLOW_VALUE_TYPE_STREAM) {
+        return {
+            value: getStreamFromID(WasmFlowRuntime.HEAPU32[offset >> 2]),
+            valueType: "stream"
+        };
     }
 
     console.error("Unknown type from WASM: ", type);
@@ -368,4 +375,23 @@ export function getArrayValue(
             valueType: type.valueType
         };
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+const streams: Stream[] = [];
+const streamIDs = new Map<Stream, number>();
+
+function getStreamID(stream: Stream) {
+    let streamID = streamIDs.get(stream);
+    if (streamID == undefined) {
+        streamID = streams.length;
+        streams.push(stream);
+        streamIDs.set(stream, streamID);
+    }
+    return streamID;
+}
+
+function getStreamFromID(streamID: number) {
+    return streams[streamID];
 }

@@ -4,7 +4,8 @@ import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import type { DocumentStoreClass } from "project-editor/store";
 
 import type { Transform } from "project-editor/flow/editor/transform";
-import type { Component } from "project-editor/flow/component";
+import type { Component, Widget } from "project-editor/flow/component";
+import type { ValueType } from "eez-studio-types";
 
 export interface IFlowContext {
     dataContext: IDataContext;
@@ -68,6 +69,13 @@ export interface IRuntime {
         output: string,
         value: any,
         outputName?: string
+    ): void;
+    executeWidgetAction(
+        flowContext: IFlowContext,
+        widget: Widget,
+        actionName: string,
+        value: any,
+        valueType: ValueType
     ): void;
     sendResultToWorker(messageId: number, result: any): void;
     throwError(

@@ -1722,13 +1722,14 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  52620: function($0, $1, $2, $3) {executeScpi($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2), $3);},  
- 52691: function() {FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; });},  
- 52852: function() {startToDebuggerMessage();},  
- 52882: function($0, $1) {writeDebuggerBuffer(new Uint8Array(Module.HEAPU8.buffer, $0, $1));},  
- 52953: function() {finishToDebuggerMessage();},  
- 52984: function($0, $1, $2) {executeDashboardComponent($0, $1, $2);},  
- 53027: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
+  52764: function($0) {freeComponentExecutionState($0);},  
+ 52801: function($0, $1, $2, $3) {executeScpi($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2), $3);},  
+ 52872: function() {FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; });},  
+ 53033: function() {startToDebuggerMessage();},  
+ 53063: function($0, $1) {writeDebuggerBuffer(new Uint8Array(Module.HEAPU8.buffer, $0, $1));},  
+ 53134: function() {finishToDebuggerMessage();},  
+ 53165: function($0, $1, $2) {executeDashboardComponent($0, $1, $2);},  
+ 53208: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
 };
 
 
@@ -5686,22 +5687,10 @@ var _createStringValue = Module["_createStringValue"] = createExportWrapper("cre
 var _createArrayValue = Module["_createArrayValue"] = createExportWrapper("createArrayValue");
 
 /** @type {function(...*):?} */
+var _createStreamValue = Module["_createStreamValue"] = createExportWrapper("createStreamValue");
+
+/** @type {function(...*):?} */
 var _arrayValueSetElementValue = Module["_arrayValueSetElementValue"] = createExportWrapper("arrayValueSetElementValue");
-
-/** @type {function(...*):?} */
-var _arrayValueSetElementInt = Module["_arrayValueSetElementInt"] = createExportWrapper("arrayValueSetElementInt");
-
-/** @type {function(...*):?} */
-var _arrayValueSetElementDouble = Module["_arrayValueSetElementDouble"] = createExportWrapper("arrayValueSetElementDouble");
-
-/** @type {function(...*):?} */
-var _arrayValueSetElementBool = Module["_arrayValueSetElementBool"] = createExportWrapper("arrayValueSetElementBool");
-
-/** @type {function(...*):?} */
-var _arrayValueSetElementString = Module["_arrayValueSetElementString"] = createExportWrapper("arrayValueSetElementString");
-
-/** @type {function(...*):?} */
-var _arrayValueSetElementNull = Module["_arrayValueSetElementNull"] = createExportWrapper("arrayValueSetElementNull");
 
 /** @type {function(...*):?} */
 var _valueFree = Module["_valueFree"] = createExportWrapper("valueFree");
@@ -5716,7 +5705,10 @@ var _updateGlobalVariable = Module["_updateGlobalVariable"] = createExportWrappe
 var _getFlowIndex = Module["_getFlowIndex"] = createExportWrapper("getFlowIndex");
 
 /** @type {function(...*):?} */
-var _getStringParam = Module["_getStringParam"] = createExportWrapper("getStringParam");
+var _getComponentExecutionState = Module["_getComponentExecutionState"] = createExportWrapper("getComponentExecutionState");
+
+/** @type {function(...*):?} */
+var _setComponentExecutionState = Module["_setComponentExecutionState"] = createExportWrapper("setComponentExecutionState");
 
 /** @type {function(...*):?} */
 var _getExpressionListParam = Module["_getExpressionListParam"] = createExportWrapper("getExpressionListParam");
@@ -5738,24 +5730,6 @@ var _assignProperty = Module["_assignProperty"] = createExportWrapper("assignPro
 
 /** @type {function(...*):?} */
 var _propagateValue = Module["_propagateValue"] = createExportWrapper("propagateValue");
-
-/** @type {function(...*):?} */
-var _propagateIntValue = Module["_propagateIntValue"] = createExportWrapper("propagateIntValue");
-
-/** @type {function(...*):?} */
-var _propagateDoubleValue = Module["_propagateDoubleValue"] = createExportWrapper("propagateDoubleValue");
-
-/** @type {function(...*):?} */
-var _propagateBooleanValue = Module["_propagateBooleanValue"] = createExportWrapper("propagateBooleanValue");
-
-/** @type {function(...*):?} */
-var _propagateStringValue = Module["_propagateStringValue"] = createExportWrapper("propagateStringValue");
-
-/** @type {function(...*):?} */
-var _propagateUndefinedValue = Module["_propagateUndefinedValue"] = createExportWrapper("propagateUndefinedValue");
-
-/** @type {function(...*):?} */
-var _propagateNullValue = Module["_propagateNullValue"] = createExportWrapper("propagateNullValue");
 
 /** @type {function(...*):?} */
 var _propagateValueThroughSeqout = Module["_propagateValueThroughSeqout"] = createExportWrapper("propagateValueThroughSeqout");

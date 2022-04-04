@@ -3190,6 +3190,7 @@ export class ButtonWidget extends Widget {
                                 flowContext.DocumentStore.runtime.executeWidgetAction(
                                     flowContext,
                                     this,
+                                    "action",
                                     makeActionParamsValue(flowContext),
                                     `struct:${ACTION_PARAMS_STRUCT_NAME}`
                                 );
@@ -5530,6 +5531,7 @@ export class TextInputWidget extends Widget {
                                 flowState.runtime.executeWidgetAction(
                                     flowContext,
                                     this,
+                                    "action",
                                     makeTextInputActionParamsValue(
                                         flowContext,
                                         value
@@ -5708,6 +5710,7 @@ export class CheckboxWidget extends Widget {
                                     flowState.runtime.executeWidgetAction(
                                         flowContext,
                                         this,
+                                        "action",
                                         makeCheckboxActionParamsValue(
                                             flowContext,
                                             value

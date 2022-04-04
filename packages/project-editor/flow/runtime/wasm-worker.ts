@@ -11,7 +11,6 @@ import type {
 import { init as initExecuteFunctions } from "project-editor/flow/runtime/wasm-execute-functions-init";
 import { actionConmponentExecuteFunctions } from "project-editor/flow/runtime/wasm-execute-functions";
 import {
-    createWasmArrayValue,
     getValue,
     getArrayValue,
     createWasmValue
@@ -90,10 +89,7 @@ function executeDashboardComponent(
 
 function initObjectGlobalVariableValues(globalVariables: IGlobalVariable[]) {
     for (const globalVariable of globalVariables) {
-        const valuePtr =
-            globalVariable.kind == "basic"
-                ? createWasmValue(globalVariable.value)
-                : createWasmArrayValue(globalVariable.value);
+        const valuePtr = createWasmValue(globalVariable.value);
         WasmFlowRuntime._setGlobalVariable(
             globalVariable.globalVariableIndex,
             valuePtr
@@ -104,10 +100,7 @@ function initObjectGlobalVariableValues(globalVariables: IGlobalVariable[]) {
 
 function updateObjectGlobalVariableValues(globalVariables: IGlobalVariable[]) {
     for (const globalVariable of globalVariables) {
-        const valuePtr =
-            globalVariable.kind == "basic"
-                ? createWasmValue(globalVariable.value)
-                : createWasmArrayValue(globalVariable.value);
+        const valuePtr = createWasmValue(globalVariable.value);
         WasmFlowRuntime._updateGlobalVariable(
             globalVariable.globalVariableIndex,
             valuePtr
@@ -203,7 +196,7 @@ onmessage = async function (e: { data: RendererToWorkerMessage }) {
         const { flowStateIndex, componentIndex, outputIndex, arrayValue } =
             e.data.executeWidgetAction;
 
-        const valuePtr = createWasmArrayValue(arrayValue);
+        const valuePtr = createWasmValue(arrayValue);
 
         WasmFlowRuntime._propagateValue(
             flowStateIndex,

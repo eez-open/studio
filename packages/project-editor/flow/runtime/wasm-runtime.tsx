@@ -597,6 +597,7 @@ export class WasmRuntime extends RemoteRuntime {
     executeWidgetAction(
         flowContext: IFlowContext,
         widget: Widget,
+        actionName: string,
         value: any,
         valueType: ValueType
     ) {
@@ -626,7 +627,7 @@ export class WasmRuntime extends RemoteRuntime {
 
         const outputIndex =
             this.assetsMap.flows[flowIndex].components[componentIndex]
-                .outputIndexes["action"];
+                .outputIndexes[actionName];
         if (outputIndex == undefined) {
             console.error("Unexpected!");
             return;

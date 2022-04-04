@@ -160,13 +160,9 @@ declare const WasmFlowRuntime: {
     _createBooleanValue(value: number): number;
     _createStringValue(value: number): number;
     _createArrayValue(arraySize: number, arrayType: number): number;
+    _createStreamValue(value: number): number;
 
     _arrayValueSetElementValue(arrayValuePtr: number, elementIndex: number, value: number): void;
-    _arrayValueSetElementInt(arrayValuePtr: number, elementIndex: number, value: number): void;
-    _arrayValueSetElementDouble(arrayValuePtr: number, elementIndex: number, value: number): void;
-    _arrayValueSetElementBool(arrayValuePtr: number, elementIndex: number, value: boolean): void;
-    _arrayValueSetElementString(arrayValuePtr: number, elementIndex: number, value: number): void;
-    _arrayValueSetElementNull(arrayValuePtr: number, elementIndex: number): void;
 
     _valueFree(valuePtr: number): void;
 
@@ -174,6 +170,9 @@ declare const WasmFlowRuntime: {
     _updateGlobalVariable(globalVariableIndex: number, valuePtr: number);
 
     _getFlowIndex(flowStateIndex: number): number;
+
+    _getComponentExecutionState(flowStateIndex: number, componentIndex: number): number;
+    _setComponentExecutionState(flowStateIndex: number, componentIndex: number, state: number): void;
 
     _getStringParam(flowStateIndex: number, componentIndex: number, offset: number): number;
     _getExpressionListParam(flowStateIndex: number, componentIndex: number, offset: number): number;
@@ -183,13 +182,6 @@ declare const WasmFlowRuntime: {
     _assignProperty(flowStateIndex: number, componentIndex: number, propertyIndex: number, iteratorsPtr: number, valuePtr: number): number;
 
     _propagateValue(flowStateIndex: number, componentIndex: number, outputIndex: number, valuePtr: number);
-    _propagateIntValue(flowStateIndex: number, componentIndex: number, outputIndex: number, value: number);
-    _propagateDoubleValue(flowStateIndex: number, componentIndex: number, outputIndex: number, value: number);
-    _propagateBooleanValue(flowStateIndex: number, componentIndex: number, outputIndex: number, value: boolean);
-    _propagateStringValue(flowStateIndex: number, componentIndex: number, outputIndex: number, value: number);
-    _propagateUndefinedValue(flowStateIndex: number, componentIndex: number, outputIndex: number);
-    _propagateNullValue(flowStateIndex: number, componentIndex: number, outputIndex: number);
-
     _propagateValueThroughSeqout(flowStateIndex: number, componentIndex: number);
 
     _startAsyncExecution(flowStateIndex: number, componentIndex: number): number;

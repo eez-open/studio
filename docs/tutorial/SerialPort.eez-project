@@ -75,7 +75,7 @@
               "customInputs": [
                 {
                   "name": "enabled",
-                  "type": "any"
+                  "type": "boolean"
                 }
               ],
               "customOutputs": [],
@@ -101,7 +101,7 @@
               "customInputs": [
                 {
                   "name": "enabled",
-                  "type": "any"
+                  "type": "boolean"
                 }
               ],
               "customOutputs": [],
@@ -151,7 +151,7 @@
           "customInputs": [
             {
               "name": "visible",
-              "type": "any"
+              "type": "blob"
             }
           ],
           "customOutputs": [],
@@ -166,9 +166,14 @@
               "width": 750,
               "height": 324,
               "wireID": "e62b2334-9dac-446f-d1a3-14fb6cd03c6e",
-              "customInputs": [],
+              "customInputs": [
+                {
+                  "name": "data",
+                  "type": "any"
+                }
+              ],
               "customOutputs": [],
-              "data": "",
+              "data": "data",
               "style": {
                 "inheritFrom": "default"
               }
@@ -191,34 +196,34 @@
           "type": "SerialWrite",
           "left": 893,
           "top": 134,
-          "width": 111,
+          "width": 135,
           "height": 54,
           "wireID": "f730c72c-9293-4d54-f7ab-1d6da1184511",
           "customInputs": [
             {
-              "name": "data",
-              "type": "string"
+              "name": "params",
+              "type": "struct:$TerminalWidgetOnDataParams"
             }
           ],
           "customOutputs": [],
           "connection": "serial_connection",
-          "data": "data"
+          "data": "params.data"
         },
         {
           "type": "IsTrueActionComponent",
-          "left": 589,
+          "left": 532,
           "top": 457,
-          "width": 167,
+          "width": 198,
           "height": 73,
           "wireID": "337f1671-d779-4aad-ade5-d3210fe8d568",
           "customInputs": [
             {
               "name": "value",
-              "type": "any"
+              "type": "struct:$TerminalWidgetOnDataParams"
             }
           ],
           "customOutputs": [],
-          "value": "value == '\\r'"
+          "value": "value.data == '\\r'"
         },
         {
           "type": "ConstantActionComponent",
@@ -241,7 +246,7 @@
           "customInputs": [
             {
               "name": "value",
-              "type": "any"
+              "type": "boolean"
             }
           ],
           "customOutputs": [],
@@ -260,8 +265,8 @@
         },
         {
           "type": "StartActionComponent",
-          "left": -658,
-          "top": 72,
+          "left": -524,
+          "top": 0,
           "width": 87,
           "height": 25,
           "wireID": "3f26e94d-4e81-43f5-ed62-96df0e73dcfd",
@@ -364,7 +369,7 @@
           "source": "e62b2334-9dac-446f-d1a3-14fb6cd03c6e",
           "output": "onData",
           "target": "f730c72c-9293-4d54-f7ab-1d6da1184511",
-          "input": "data"
+          "input": "params"
         }
       ],
       "localVariables": [],

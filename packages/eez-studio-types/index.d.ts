@@ -8,6 +8,7 @@ export type BasicType =
     | "string"
     | "date"
     | "blob"
+    | "stream"
     | "any";
 
 export type ValueType =
@@ -245,6 +246,9 @@ export interface IActionComponentDefinition {
 export interface IDashboardComponentContext {
     getFlowIndex: () => number;
     getComponentIndex: () => number;
+
+    getComponentExecutionState: <T>() => T | undefined;
+    setComponentExecutionState: <T>(runningState: T) => void;
 
     getStringParam: (offset: number) => string;
     getExpressionListParam: (offset: number) => any[];

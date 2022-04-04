@@ -469,6 +469,7 @@ export class RemoteRuntime extends RuntimeBase {
     executeWidgetAction(
         flowContext: IFlowContext,
         widget: Widget,
+        actionName: string,
         value: any,
         valueType: ValueType
     ) {}
@@ -640,6 +641,10 @@ export abstract class DebuggerConnectionBase {
 
         if (str[0] == "@") {
             return `blob (size=${Number.parseInt(str.substring(1))})`;
+        }
+
+        if (str[0] == ">") {
+            return `stream (id=${Number.parseInt(str.substring(1))})`;
         }
 
         return Number.parseFloat(str);

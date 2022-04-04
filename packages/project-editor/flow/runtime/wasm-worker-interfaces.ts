@@ -1,3 +1,4 @@
+import type { Stream } from "stream";
 import type { ArrayValue } from "project-editor/flow/runtime/wasm-value";
 import type { ValueType } from "project-editor/features/variable/value-type";
 
@@ -122,6 +123,7 @@ export type Value =
     | number
     | string
     | Uint8Array
+    | Stream
     | ObjectOrArrayValue;
 
 export type ObjectOrArrayValueWithType = {

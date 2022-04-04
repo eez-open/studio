@@ -1,7 +1,9 @@
 import React from "react";
+import { action, observable, runInAction, makeObservable, toJS } from "mobx";
 
 import { registerActionComponents } from "project-editor/flow/component";
 import {
+    IObjectVariableValue,
     registerObjectVariableType,
     registerSystemStructure,
     ValueType
@@ -12,7 +14,6 @@ import {
     showGenericDialog
 } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
-import { action, observable, runInAction, makeObservable, toJS } from "mobx";
 import {
     connect,
     disconnect,
@@ -278,6 +279,22 @@ registerActionComponents("Serial Port", [
             await serialConnection.connect();
 
             return undefined;
+        },
+        onWasmWorkerMessage: async (flowState, message, messageId) => {
+            const serialConnection = serialConnections.get(message.id);
+            if (serialConnection) {
+                try {
+                    await serialConnection.connect();
+                    flowState.sendResultToWorker(messageId, null);
+                } catch (err) {
+                    flowState.sendResultToWorker(messageId, err.toString());
+                }
+            } else {
+                flowState.sendResultToWorker(
+                    messageId,
+                    "serial connection not found"
+                );
+            }
         }
     },
     {
@@ -307,6 +324,18 @@ registerActionComponents("Serial Port", [
             serialConnection.disconnect();
 
             return undefined;
+        },
+        onWasmWorkerMessage: async (flowState, message, messageId) => {
+            const serialConnection = serialConnections.get(message.id);
+            if (serialConnection) {
+                serialConnection.disconnect();
+                flowState.sendResultToWorker(messageId, null);
+            } else {
+                flowState.sendResultToWorker(
+                    messageId,
+                    "serial connection not found"
+                );
+            }
         }
     },
     {
@@ -353,6 +382,29 @@ registerActionComponents("Serial Port", [
             }
 
             return undefined;
+        },
+        onWasmWorkerMessage: async (flowState, message, messageId) => {
+            const serialConnection = serialConnections.get(message.id);
+            if (serialConnection) {
+                if (serialConnection.isConnected) {
+                    const data = serialConnection.read();
+                    if (data) {
+                        flowState.sendResultToWorker(messageId, {
+                            data
+                        });
+                    } else {
+                        flowState.sendResultToWorker(messageId, undefined);
+                    }
+                } else {
+                    flowState.sendResultToWorker(messageId, {
+                        error: "not connected"
+                    });
+                }
+            } else {
+                flowState.sendResultToWorker(messageId, {
+                    error: "serial connection not found"
+                });
+            }
         }
     },
     {
@@ -391,6 +443,24 @@ registerActionComponents("Serial Port", [
             }
 
             return undefined;
+        },
+        onWasmWorkerMessage: async (flowState, message, messageId) => {
+            const serialConnection = serialConnections.get(
+                message.serialConnection.id
+            );
+            if (serialConnection) {
+                const data = message.data;
+                if (data) {
+                    serialConnection.write(data.toString());
+                }
+                flowState.sendResultToWorker(messageId, null);
+            } else {
+                flowState.sendResultToWorker(
+                    messageId,
+                    "serial connection not found"
+                );
+                return;
+            }
         }
     },
     {
@@ -407,18 +477,27 @@ registerActionComponents("Serial Port", [
             }
         ],
         properties: [],
-        execute: async (flowState, ...[connection, data]) => {
+        execute: async flowState => {
             flowState.propagateValue(
                 "ports",
                 await SerialConnection.listPorts()
             );
 
             return undefined;
+        },
+        onWasmWorkerMessage: async (flowState, message, messageId) => {
+            flowState.sendResultToWorker(
+                messageId,
+                await SerialConnection.listPorts()
+            );
         }
     }
 ]);
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const serialConnections = new Map<number, SerialConnection>();
+let nextSerialConnectionId = 0;
 
 registerObjectVariableType("SerialConnection", {
     editConstructorParams: async (
@@ -436,10 +515,17 @@ registerObjectVariableType("SerialConnection", {
     },
 
     createValue: (constructorParams: SerialConnectionConstructorParams) => {
-        return new SerialConnection(constructorParams);
+        const id = nextSerialConnectionId++;
+        const serialConnection = new SerialConnection(id, constructorParams);
+        serialConnections.set(id, serialConnection);
+        return serialConnection;
     },
-    destroyValue: (serialConnection: SerialConnection) => {
-        serialConnection.disconnect();
+    destroyValue: (objectVariable: IObjectVariableValue & { id: number }) => {
+        const serialConnection = serialConnections.get(objectVariable.id);
+        if (serialConnection) {
+            serialConnection.disconnect();
+            serialConnections.set(serialConnection.id, serialConnection);
+        }
     },
     valueFieldDescriptions: [
         {
@@ -475,6 +561,20 @@ registerObjectVariableType("SerialConnection", {
             valueType: "string",
             getFieldValue: (value: SerialConnection): string => {
                 return value.constructorParams.parity;
+            }
+        },
+        {
+            name: "isConnected",
+            valueType: "boolean",
+            getFieldValue: (value: SerialConnection): boolean => {
+                return value.isConnected;
+            }
+        },
+        {
+            name: "id",
+            valueType: "integer",
+            getFieldValue: (value: SerialConnection): number => {
+                return value.id;
             }
         }
     ]
@@ -542,6 +642,7 @@ async function showConnectDialog(
             onOk: async (result: GenericDialogResult) => {
                 return new Promise<boolean>(async resolve => {
                     const serialConnection = new SerialConnection(
+                        0,
                         result.values
                     );
                     result.onProgress("info", "Connecting...");
@@ -566,7 +667,10 @@ async function showConnectDialog(
 ////////////////////////////////////////////////////////////////////////////////
 
 class SerialConnection {
-    constructor(public constructorParams: SerialConnectionConstructorParams) {
+    constructor(
+        public id: number,
+        public constructorParams: SerialConnectionConstructorParams
+    ) {
         makeObservable(this, {
             receivedData: observable,
             isConnected: observable,
@@ -589,7 +693,10 @@ class SerialConnection {
     get status() {
         return {
             label: `Port: ${this.constructorParams.port}, Baud rate: ${this.constructorParams.baudRate}, Data bits: ${this.constructorParams.dataBits}, Stop bits: ${this.constructorParams.stopBits}, Parity: ${this.constructorParams.parity}`,
-            image: statusIcon,
+            image: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68.792 34.396">
+                <g transform="translate(-21.422 -163.072)" fill="none"><circle stroke="black" cx="43.765" cy="180.27" r="7.955"/><circle stroke="black" cx="67.686" cy="180.27" r="7.955"/></g>
+                <path stroke="black" transform="translate(-21.422 -163.072)" d="M31.674 171.406v17.728M55.726 171.406v17.728M79.96 171.406v17.728"/>
+            </svg>`,
             color: this.error ? "red" : this.isConnected ? "green" : "gray",
             error: this.error
         };

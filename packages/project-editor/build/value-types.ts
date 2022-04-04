@@ -16,3 +16,4 @@ export const FLOW_VALUE_TYPE_ARRAY = 14;
 export const FLOW_VALUE_TYPE_STRING_REF = 15;
 export const FLOW_VALUE_TYPE_ARRAY_REF = 16;
 export const FLOW_VALUE_TYPE_BLOB_REF = 17;
+export const FLOW_VALUE_TYPE_STREAM = 18;

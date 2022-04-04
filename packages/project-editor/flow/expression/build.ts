@@ -296,8 +296,8 @@ function buildExpressionNode(
         return [
             ...node.arguments.reduce(
                 (instructions, node) => [
-                    ...instructions,
-                    ...buildExpressionNode(assets, component, node, assignable)
+                    ...buildExpressionNode(assets, component, node, assignable),
+                    ...instructions
                 ],
                 []
             ),
@@ -381,12 +381,22 @@ function buildExpressionNode(
     }
 
     if (node.type == "ArrayExpression") {
+        console.log(
+            node,
+            node.elements,
+            node.elements.length,
+            assets.getTypeIndex(node.valueType),
+            operationIndexes["Flow.makeArrayValue"]
+        );
+
         return [
-            // array type
-            makePushConstantInstruction(
-                assets,
-                assets.getTypeIndex(node.valueType),
-                "integer"
+            // elements
+            ...node.elements.reduce(
+                (instructions, node) => [
+                    ...buildExpressionNode(assets, component, node, assignable),
+                    ...instructions
+                ],
+                []
             ),
             // no. of elements
             makePushConstantInstruction(
@@ -394,13 +404,11 @@ function buildExpressionNode(
                 node.elements.length,
                 "integer"
             ),
-            // elements
-            ...node.elements.reduce(
-                (instructions, node) => [
-                    ...instructions,
-                    ...buildExpressionNode(assets, component, node, assignable)
-                ],
-                []
+            // array type
+            makePushConstantInstruction(
+                assets,
+                assets.getTypeIndex(node.valueType),
+                "integer"
             ),
             makeOperationInstruction(operationIndexes["Flow.makeArrayValue"])
         ];
@@ -433,15 +441,21 @@ function buildExpressionNode(
         }
 
         return [
-            // no. of fields
-            makePushConstantInstruction(assets, type.fields.length, "integer"),
             // fields
             ...fieldValues.reduce(
                 (instructions, node) => [
-                    ...instructions,
-                    ...buildExpressionNode(assets, component, node, assignable)
+                    ...buildExpressionNode(assets, component, node, assignable),
+                    ...instructions
                 ],
                 []
+            ),
+            // no. of fields
+            makePushConstantInstruction(assets, type.fields.length, "integer"),
+            // array type
+            makePushConstantInstruction(
+                assets,
+                assets.getTypeIndex(node.valueType),
+                "integer"
             ),
             makeOperationInstruction(operationIndexes["Flow.makeArrayValue"])
         ];

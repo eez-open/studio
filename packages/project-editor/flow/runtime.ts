@@ -422,6 +422,7 @@ export abstract class RuntimeBase {
     abstract executeWidgetAction(
         flowContext: IFlowContext,
         widget: Widget,
+        actionName: string,
         value: any,
         valueType: ValueType
     ): void;

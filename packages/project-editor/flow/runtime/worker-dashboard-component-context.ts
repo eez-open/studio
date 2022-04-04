@@ -1,7 +1,6 @@
 import type { IDashboardComponentContext, ValueType } from "eez-studio-types";
 import {
-    createJsArrayValue,
-    createWasmArrayValue,
+    createWasmValue,
     getValue
 } from "project-editor/flow/runtime/wasm-value";
 
@@ -16,6 +15,23 @@ export class DashboardComponentContext implements IDashboardComponentContext {
 
     getComponentIndex(): number {
         return this.componentIndex;
+    }
+
+    getComponentExecutionState<T>() {
+        const wasmState = WasmFlowRuntime._getComponentExecutionState(
+            this.flowStateIndex,
+            this.componentIndex
+        );
+        return wasmToComponentExecutionState<T>(wasmState);
+    }
+
+    setComponentExecutionState<T>(state: T | undefined) {
+        const wasmState = componentExecutionStateToWasm<T>(state);
+        WasmFlowRuntime._setComponentExecutionState(
+            this.flowStateIndex,
+            this.componentIndex,
+            wasmState
+        );
     }
 
     getStringParam(offset: number) {
@@ -90,85 +106,28 @@ export class DashboardComponentContext implements IDashboardComponentContext {
         if (outputIndex == undefined) {
             this.throwError(`Output "${outputName}" not found`);
         }
+        const output = component.outputs[outputIndex];
 
-        if (typeof value == "number") {
-            if (Number.isInteger(value)) {
-                WasmFlowRuntime._propagateIntValue(
-                    this.flowStateIndex,
-                    this.componentIndex,
-                    outputIndex,
-                    value
-                );
-            } else {
-                WasmFlowRuntime._propagateDoubleValue(
-                    this.flowStateIndex,
-                    this.componentIndex,
-                    outputIndex,
-                    value
-                );
-            }
-        } else if (typeof value == "boolean") {
-            WasmFlowRuntime._propagateBooleanValue(
-                this.flowStateIndex,
-                this.componentIndex,
-                outputIndex,
-                value
-            );
-        } else if (typeof value == "string") {
-            const valuePtr = WasmFlowRuntime.allocateUTF8(value);
-            WasmFlowRuntime._propagateStringValue(
-                this.flowStateIndex,
-                this.componentIndex,
-                outputIndex,
-                valuePtr
-            );
-            WasmFlowRuntime._free(valuePtr);
-        } else if (value === undefined) {
-            WasmFlowRuntime._propagateUndefinedValue(
-                this.flowStateIndex,
-                this.componentIndex,
-                outputIndex
-            );
-        } else if (value === null) {
-            WasmFlowRuntime._propagateNullValue(
-                this.flowStateIndex,
-                this.componentIndex,
-                outputIndex
-            );
-        } else {
-            const flowIndex = this.getFlowIndex();
-            const flow = WasmFlowRuntime.assetsMap.flows[flowIndex];
-
-            const componentIndex = this.getComponentIndex();
-            const component = flow.components[componentIndex];
-
-            const output = component.outputs[outputIndex];
-
-            const valueTypeIndex = output.valueTypeIndex;
-            if (valueTypeIndex == -1) {
-                this.throwError("Invalid value");
-            } else {
-                const arrayValue = createJsArrayValue(
-                    valueTypeIndex,
-                    value,
-                    WasmFlowRuntime.assetsMap,
-                    undefined
-                );
-
-                if (arrayValue) {
-                    const valuePtr = createWasmArrayValue(arrayValue);
-                    WasmFlowRuntime._propagateValue(
-                        this.flowStateIndex,
-                        this.componentIndex,
-                        outputIndex,
-                        valuePtr
-                    );
-                    WasmFlowRuntime._valueFree(valuePtr);
-                } else {
-                    this.throwError("Invalid value");
-                }
-            }
+        const valueTypeIndex = output.valueTypeIndex;
+        if (valueTypeIndex == -1) {
+            this.throwError("Invalid value");
+            return;
         }
+
+        let valuePtr = createWasmValue(value, valueTypeIndex);
+
+        if (!valuePtr) {
+            this.throwError("Out of memory");
+            return;
+        }
+
+        WasmFlowRuntime._propagateValue(
+            this.flowStateIndex,
+            this.componentIndex,
+            outputIndex,
+            valuePtr
+        );
+        WasmFlowRuntime._valueFree(valuePtr);
     }
 
     propagateValueThroughSeqout(): void {
@@ -228,3 +187,39 @@ export class DashboardComponentContext implements IDashboardComponentContext {
         WasmFlowRuntime._free(errorMessagePtr);
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+const wasmStates = new Map<any, number>();
+let nextWasmState = 0;
+const states = new Map<number, any>();
+
+function componentExecutionStateToWasm<T>(state: T | undefined) {
+    if (state == undefined) {
+        return -1;
+    }
+    let wasmState = wasmStates.get(state);
+    if (wasmState == undefined) {
+        wasmState = nextWasmState++;
+        wasmStates.set(state, wasmState);
+        states.set(wasmState, state);
+    }
+    return wasmState;
+}
+
+function wasmToComponentExecutionState<T>(wasmState: number) {
+    if (wasmState == -1) {
+        return undefined;
+    }
+    return states.get(wasmState);
+}
+
+function freeComponentExecutionState(wasmState: number) {
+    const state = states.has(wasmState);
+    if (state) {
+        wasmStates.delete(state);
+        states.delete(wasmState);
+    }
+}
+
+(global as any).freeComponentExecutionState = freeComponentExecutionState;

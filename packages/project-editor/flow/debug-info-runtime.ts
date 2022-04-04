@@ -52,6 +52,7 @@ export class DebugInfoRuntime extends RuntimeBase {
     executeWidgetAction(
         flowContext: IFlowContext,
         widget: Widget,
+        actionName: string,
         value: any,
         valueType: ValueType
     ) {}

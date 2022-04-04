@@ -323,6 +323,7 @@ export class LocalRuntime extends RuntimeBase {
     executeWidgetAction(
         flowContext: IFlowContext,
         widget: Widget,
+        actionName: string,
         value: any,
         valueType: ValueType
     ) {
@@ -335,13 +336,13 @@ export class LocalRuntime extends RuntimeBase {
             return;
         }
 
-        if (widget.isOutputProperty("action")) {
-            this.propagateValue(parentFlowState, widget, "action", value);
-        } else if (widget.action) {
+        if (widget.isOutputProperty(actionName)) {
+            this.propagateValue(parentFlowState, widget, actionName, value);
+        } else if ((widget as any)[actionName]) {
             // execute action given by name
             const action = findAction(
                 this.DocumentStore.project,
-                widget.action
+                (widget as any)[actionName]
             );
 
             if (action) {
@@ -371,7 +372,9 @@ export class LocalRuntime extends RuntimeBase {
 
                 this.executeStartAction(newFlowState);
             } else {
-                throw `Widget action "${widget.action}" not found`;
+                throw `Widget action "${
+                    (widget as any)[actionName]
+                }" not found`;
             }
         } else {
             this.logs.addLogItem(

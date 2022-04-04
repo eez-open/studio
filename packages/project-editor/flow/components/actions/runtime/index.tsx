@@ -2,6 +2,7 @@ import type { IDashboardComponentContext } from "eez-studio-types";
 import type { WorkerToRenderMessage } from "project-editor/flow/runtime/wasm-worker-interfaces";
 
 import { registerExecuteFunction } from "project-editor/flow/runtime/wasm-execute-functions";
+import { Duplex, Readable, Writable } from "stream";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -90,15 +91,6 @@ registerExecuteFunction(
         postMessage(data);
 
         context.propagateValueThroughSeqout();
-    }
-);
-
-////////////////////////////////////////////////////////////////////////////////
-
-registerExecuteFunction(
-    "ExecuteCommand",
-    function (context: IDashboardComponentContext) {
-        context.propagateValue("finished", null);
     }
 );
 
@@ -250,3 +242,329 @@ registerExecuteFunction(
 );
 
 ////////////////////////////////////////////////////////////////////////////////
+
+registerExecuteFunction(
+    "SerialConnect",
+    function (context: IDashboardComponentContext) {
+        const serialConnection = context.evalProperty("connection");
+        if (!serialConnection) {
+            context.throwError(`invalid connection`);
+        }
+
+        context = context.startAsyncExecution();
+
+        context.sendMessageToComponent(serialConnection, result => {
+            if (result) {
+                context.throwError(result);
+            } else {
+                context.propagateValueThroughSeqout();
+            }
+            context.endAsyncExecution();
+        });
+    }
+);
+
+registerExecuteFunction(
+    "SerialDisconnect",
+    function (context: IDashboardComponentContext) {
+        const serialConnection = context.evalProperty("connection");
+        if (!serialConnection) {
+            context.throwError(`invalid connection`);
+        }
+
+        context = context.startAsyncExecution();
+
+        context.sendMessageToComponent(serialConnection, result => {
+            if (result) {
+                context.throwError(result);
+            } else {
+                context.propagateValueThroughSeqout();
+            }
+            context.endAsyncExecution();
+        });
+    }
+);
+
+registerExecuteFunction(
+    "SerialRead",
+    function (context: IDashboardComponentContext) {
+        const serialConnection = context.evalProperty("connection");
+        if (!serialConnection) {
+            context.throwError(`invalid connection`);
+        }
+
+        context = context.startAsyncExecution();
+
+        context.sendMessageToComponent(serialConnection, result => {
+            if (result && result.error) {
+                context.throwError(result.error);
+            } else {
+                if (result) {
+                    context.propagateValue("data", result.data);
+                }
+                context.propagateValueThroughSeqout();
+            }
+            context.endAsyncExecution();
+        });
+    }
+);
+
+registerExecuteFunction(
+    "SerialWrite",
+    function (context: IDashboardComponentContext) {
+        const serialConnection = context.evalProperty("connection");
+        if (!serialConnection) {
+            context.throwError(`invalid connection`);
+        }
+
+        const data = context.evalProperty("data");
+
+        context = context.startAsyncExecution();
+
+        context.sendMessageToComponent(
+            {
+                serialConnection,
+                data
+            },
+            result => {
+                if (result) {
+                    context.throwError(result);
+                } else {
+                    context.propagateValueThroughSeqout();
+                }
+                context.endAsyncExecution();
+            }
+        );
+    }
+);
+
+registerExecuteFunction(
+    "SerialListPorts",
+    function (context: IDashboardComponentContext) {
+        context = context.startAsyncExecution();
+
+        context.sendMessageToComponent(undefined, result => {
+            context.propagateValue("ports", result);
+            context.propagateValueThroughSeqout();
+            context.endAsyncExecution();
+        });
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+registerExecuteFunction(
+    "ExecuteCommand",
+    async function (context: IDashboardComponentContext) {
+        const commandValue: any = context.evalProperty("command");
+        if (typeof commandValue != "string") {
+            context.throwError("command is not a string");
+        }
+        const argsValue: any = context.evalProperty("arguments");
+        if (!Array.isArray(argsValue)) {
+            context.throwError("arguments is not an array");
+        }
+
+        const i = argsValue.findIndex((arg: any) => typeof arg != "string");
+        if (i != -1) {
+            context.throwError(`argument at position ${i + 1} is not a string`);
+        }
+
+        context = context.startAsyncExecution();
+
+        try {
+            const { spawn } = await import("child_process");
+
+            let process = spawn(commandValue, argsValue);
+            let processFinished = false;
+
+            context.propagateValue("stdout", process.stdout);
+            context.propagateValue("stderr", process.stderr);
+
+            process.on("close", code => {
+                context.propagateValue("finished", code);
+                context.endAsyncExecution();
+                processFinished = true;
+            });
+
+            process.on("error", err => {
+                context.throwError(err.toString());
+                context.endAsyncExecution();
+                processFinished = true;
+            });
+
+            // return () => {
+            //     if (!processFinished) {
+            //         process.kill();
+            //     }
+            // };
+        } catch (err) {
+            context.throwError(`argument at position ${i + 1} is not a string`);
+        } finally {
+            context.endAsyncExecution();
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+registerExecuteFunction(
+    "CollectStream",
+    function (context: IDashboardComponentContext) {
+        const streamValue = context.evalProperty("stream");
+
+        if (streamValue) {
+            if (
+                streamValue instanceof Readable ||
+                streamValue instanceof Duplex
+            ) {
+                let accData = "";
+
+                streamValue.on("data", (data: Buffer) => {
+                    accData += data.toString();
+                    context.propagateValue("data", accData);
+                });
+            } else {
+                context.throwError("not a readable stream");
+            }
+        }
+
+        return undefined;
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+registerExecuteFunction(
+    "Regexp",
+    function (context: IDashboardComponentContext) {
+        const runningState =
+            context.getComponentExecutionState<RegexpExecutionState>();
+
+        if (!runningState) {
+            const patternValue: any = context.evalProperty("pattern");
+            if (typeof patternValue != "string") {
+                context.throwError("pattern is not a string");
+                return;
+            }
+
+            const re = new RegExp(patternValue, "gm");
+
+            const dataValue: any = context.evalProperty("data");
+            if (typeof dataValue == "string") {
+                const m = re.exec(dataValue);
+                if (m) {
+                    context.propagateValue("match", m);
+                }
+                context.propagateValue("done", null);
+            } else if (
+                dataValue instanceof Readable ||
+                dataValue instanceof Duplex
+            ) {
+                context.setComponentExecutionState(
+                    new RegexpExecutionState(context, re, dataValue)
+                );
+            } else {
+                context.throwError("data is not a string or stream");
+            }
+        } else {
+            runningState.getNext();
+        }
+    }
+);
+
+class RegexpExecutionState {
+    propagate = true;
+    isDone = false;
+    matches: RegExpMatchArray[] = [];
+
+    constructor(
+        private context: IDashboardComponentContext,
+        re: RegExp,
+        dataValue: any
+    ) {
+        const streamSnitch = new StreamSnitch(
+            re,
+            (m: RegExpMatchArray) => {
+                if (this.propagate) {
+                    context.propagateValue("match", m);
+                    this.propagate = false;
+                } else {
+                    this.matches.push(m);
+                }
+            },
+            () => {
+                if (this.propagate) {
+                    context.propagateValue("done", null);
+                    this.propagate = false;
+                }
+                this.isDone = true;
+            }
+        );
+
+        dataValue.pipe(streamSnitch);
+    }
+
+    getNext() {
+        if (this.matches.length > 0) {
+            this.context.propagateValue("match", this.matches.shift());
+        } else if (this.isDone) {
+            this.context.propagateValue("done", null);
+        } else {
+            this.propagate = true;
+        }
+    }
+}
+
+class StreamSnitch extends Writable {
+    _buffer = "";
+    bufferCap = 1048576;
+
+    constructor(
+        public regex: RegExp,
+        private onDataCallback: (m: RegExpMatchArray) => void,
+        onCloseCallback: () => void
+    ) {
+        super({
+            decodeStrings: false
+        });
+
+        this.on("close", onCloseCallback);
+    }
+
+    async _write(chunk: any, encoding: any, cb: any) {
+        let match;
+        let lastMatch;
+
+        if (Buffer.byteLength(this._buffer) > this.bufferCap)
+            this.clearBuffer();
+
+        this._buffer += chunk;
+
+        while ((match = this.regex.exec(this._buffer))) {
+            this.onDataCallback(match);
+
+            lastMatch = match;
+
+            if (!this.regex.global) {
+                break;
+            }
+        }
+
+        if (lastMatch) {
+            this._buffer = this._buffer.slice(
+                lastMatch.index + lastMatch[0].length
+            );
+        }
+
+        // if (this.regex.multiline) {
+        //     this._buffer = this._buffer.slice(this._buffer.lastIndexOf("\n"));
+        // }
+
+        cb();
+    }
+
+    clearBuffer() {
+        this._buffer = "";
+    }
+}
