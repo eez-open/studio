@@ -2,8 +2,6 @@ import React from "react";
 
 import { registerActionComponents } from "project-editor/flow/component";
 
-import { Readable, Duplex } from "stream";
-
 ////////////////////////////////////////////////////////////////////////////////
 
 const regexpIcon: any = (
@@ -35,34 +33,7 @@ registerActionComponents("Dashboard Specific", [
                 type: "expression",
                 valueType: "any"
             }
-        ],
-        execute: async (flowState, stream) => {
-            const streamValue: any = flowState.evalExpression(stream);
-
-            if (streamValue) {
-                if (
-                    streamValue instanceof Readable ||
-                    streamValue instanceof Duplex
-                ) {
-                    let accData = "";
-
-                    const collect = (data: Buffer) => {
-                        accData += data.toString();
-                        flowState.propagateValue("data", accData);
-                    };
-
-                    streamValue.on("data", collect);
-
-                    return () => {
-                        streamValue.off("data", collect);
-                    };
-                } else {
-                    throw "not a readable stream";
-                }
-            }
-
-            return undefined;
-        }
+        ]
     }
 ]);
 

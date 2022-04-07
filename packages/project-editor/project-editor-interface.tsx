@@ -2,7 +2,6 @@ import type { Tabs } from "home/tabs-store";
 import type { Extension } from "project-editor/core/extensions";
 import type { IDocumentSearch } from "project-editor/core/search";
 import type { DataContext } from "project-editor/features/variable/variable";
-import type { LocalRuntime } from "project-editor/flow/local-runtime";
 import type { RemoteRuntime } from "project-editor/flow/remote-runtime";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
 import type { DebugInfoRuntime } from "project-editor/flow/debug-info-runtime";
@@ -59,7 +58,6 @@ export interface IProjectEditor {
     DataContextClass: typeof DataContext;
     extensions: Extension[];
     documentSearch: IDocumentSearch;
-    LocalRuntimeClass: typeof LocalRuntime;
     RemoteRuntimeClass: typeof RemoteRuntime;
     WasmRuntimeClass: typeof WasmRuntime;
     DebugInfoRuntimeClass: typeof DebugInfoRuntime;

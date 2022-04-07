@@ -1720,14 +1720,6 @@ export class Component extends EezObject {
         // }
     }
 
-    // return false if you don't want to propagete through "@seqout" output
-    async execute(
-        flowState: IFlowState,
-        dispose: (() => void) | undefined
-    ): Promise<(() => void) | undefined | boolean> {
-        return undefined;
-    }
-
     onWasmWorkerMessage(
         flowState: IFlowState,
         message: any,
@@ -2926,22 +2918,6 @@ export function registerActionComponent(
             }
 
             return null;
-        }
-
-        override async execute(
-            flowState: IFlowState,
-            dispose: (() => void) | undefined
-        ): Promise<(() => void) | undefined | boolean> {
-            const props = [];
-
-            for (const propertyDefinition of actionComponentDefinition.properties) {
-                props.push((this as any)[propertyDefinition.name]);
-            }
-
-            return actionComponentDefinition.execute(
-                getComponentFlowState(flowState, this, dispose),
-                ...this._props
-            );
         }
 
         override onWasmWorkerMessage(

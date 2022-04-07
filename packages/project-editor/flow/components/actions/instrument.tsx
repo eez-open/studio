@@ -30,7 +30,6 @@ import {
     ComponentOutput,
     makeExpressionProperty
 } from "project-editor/flow/component";
-import { FlowState } from "project-editor/flow//runtime";
 import type { IFlowContext } from "project-editor/flow//flow-interfaces";
 import { Assets, DataBuffer } from "project-editor/build/assets";
 import {
@@ -57,15 +56,11 @@ import { humanize } from "eez-studio-shared/string";
 
 import {
     parseScpi,
-    parseScpiString,
-    SCPI_PART_COMMAND,
     SCPI_PART_EXPR,
-    SCPI_PART_QUERY,
     SCPI_PART_QUERY_WITH_ASSIGNMENT,
     SCPI_PART_STRING
 } from "eez-studio-shared/scpi-parser";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { FileHistoryItem } from "instrument/window/history/items/file";
 import { specificGroup } from "project-editor/components/PropertyGrid/groups";
 import { COMPONENT_TYPE_SCPIACTION } from "project-editor/flow/components/component_types";
 
@@ -244,124 +239,6 @@ export class SCPIActionComponent extends ActionComponent {
                 isOptionalOutput: true
             }
         ];
-    }
-
-    async execute(flowState: FlowState) {
-        const instrument: InstrumentObject | undefined =
-            flowState.evalExpression(this, this.instrument);
-
-        if (!instrument) {
-            throw "instrument not found";
-        }
-
-        const CONNECTION_TIMEOUT = 5000;
-        const startTime = Date.now();
-        while (
-            !instrument.isConnected &&
-            Date.now() - startTime < CONNECTION_TIMEOUT
-        ) {
-            if (!instrument.connection.isTransitionState) {
-                instrument.connection.connect();
-            }
-            await new Promise<boolean>(resolve => setTimeout(resolve, 10));
-        }
-
-        if (!instrument.isConnected) {
-            throw "instrument not connected";
-        }
-
-        const connection = instrument.connection;
-
-        await connection.acquire(false);
-
-        try {
-            let command = "";
-
-            const parts = parseScpi(this.scpi);
-            for (const part of parts) {
-                const tag = part.tag;
-                const str = part.value!;
-
-                if (tag == SCPI_PART_STRING) {
-                    command += str;
-                } else if (tag == SCPI_PART_EXPR) {
-                    const expr = str.substring(1, str.length - 1);
-
-                    const value = flowState.evalExpression(this, expr);
-
-                    command += value.toString();
-                } else if (
-                    tag == SCPI_PART_QUERY_WITH_ASSIGNMENT ||
-                    tag == SCPI_PART_QUERY
-                ) {
-                    flowState.logScpi(
-                        `SCPI QUERY [${instrument.name}]: ${command}`,
-                        this
-                    );
-                    let result = await connection.query(command);
-                    command = "";
-
-                    if (result instanceof FileHistoryItem) {
-                        flowState.logScpi(
-                            `SCPI QUERY RESULT [${instrument.name}]: file, size: ${result.fileLength})`,
-                            this
-                        );
-                        result = result.data;
-                    } else {
-                        let resultStr;
-                        try {
-                            resultStr =
-                                result != undefined
-                                    ? JSON.stringify(result)
-                                    : "";
-                        } catch (err) {
-                            resultStr = "unknown";
-                        }
-
-                        flowState.logScpi(
-                            `SCPI QUERY RESULT [${instrument.name}]: ${resultStr}`,
-                            this
-                        );
-                    }
-
-                    if (typeof result === "object" && result.error) {
-                        throw result.error;
-                    }
-
-                    if (tag == SCPI_PART_QUERY_WITH_ASSIGNMENT) {
-                        if (typeof result == "string") {
-                            const resultStr = parseScpiString(result);
-                            if (resultStr) {
-                                result = resultStr;
-                            }
-                        }
-
-                        const assignableExpression =
-                            str[0] == "{"
-                                ? str.substring(1, str.length - 1)
-                                : str;
-
-                        flowState.runtime.assignValue(
-                            flowState,
-                            this,
-                            assignableExpression,
-                            result
-                        );
-                    }
-                } else if (tag == SCPI_PART_COMMAND) {
-                    flowState.logScpi(
-                        `SCPI COMMAND [${instrument.name}]: ${command}`,
-                        this
-                    );
-                    connection.command(command);
-                    command = "";
-                }
-            }
-        } finally {
-            connection.release();
-        }
-
-        return undefined;
     }
 
     getBody(flowContext: IFlowContext): React.ReactNode {
@@ -584,28 +461,6 @@ export class SelectInstrumentActionComponent extends ActionComponent {
             }
         ];
     }
-
-    async execute(flowState: FlowState) {
-        await new Promise<void>(resolve => {
-            showDialog(
-                <SelectInstrumentDialog
-                    instruments={instruments}
-                    callback={instrument => {
-                        if (instrument) {
-                            flowState.runtime.propagateValue(
-                                flowState,
-                                this,
-                                "instrument",
-                                instrument
-                            );
-                        }
-                        resolve();
-                    }}
-                />
-            );
-        });
-        return undefined;
-    }
 }
 
 registerClass(
@@ -664,18 +519,6 @@ export class GetInstrumentActionComponent extends ActionComponent {
                 isOptionalOutput: false
             }
         ];
-    }
-
-    async execute(flowState: FlowState) {
-        const id = flowState.evalExpression(this, "id");
-        const instrument = instruments.get(id);
-        flowState.runtime.propagateValue(
-            flowState,
-            this,
-            "instrument",
-            instrument
-        );
-        return undefined;
     }
 }
 
@@ -746,19 +589,6 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
                 isOptionalOutput: true
             }
         ];
-    }
-
-    async execute(flowState: FlowState) {
-        const instrument: InstrumentObject | undefined =
-            flowState.evalExpression(this, this.instrument);
-
-        if (!instrument) {
-            throw "instrument not found";
-        }
-
-        instrument.connection.connect();
-
-        return undefined;
     }
 }
 

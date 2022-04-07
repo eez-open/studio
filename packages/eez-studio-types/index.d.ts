@@ -235,11 +235,6 @@ export interface IActionComponentDefinition {
 
     migrateProperties?: (component: IActionComponent) => void;
 
-    execute(
-        flowState: IComponentFlowState,
-        ...props: string[]
-    ): Promise<IDisposeComponentState | IComponentIsRunning | undefined>;
-
     onWasmWorkerMessage?(
         flowState: IComponentFlowState,
         message: any,

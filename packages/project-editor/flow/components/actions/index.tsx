@@ -1,11 +1,5 @@
 import React from "react";
-import {
-    observable,
-    action,
-    runInAction,
-    reaction,
-    makeObservable
-} from "mobx";
+import { observable, action, runInAction, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -49,7 +43,6 @@ import {
     outputIsOptionalIfAtLeastOneOutputExists
 } from "project-editor/flow/component";
 
-import { FlowState } from "project-editor/flow/runtime";
 import { findAction } from "project-editor/features/action/action";
 import { getFlow, getProject } from "project-editor/project/project";
 import { findPage } from "project-editor/features/page/page";
@@ -57,16 +50,13 @@ import { Assets, DataBuffer } from "project-editor/build/assets";
 import {
     buildExpression,
     checkExpression,
-    evalConstantExpression,
-    evalExpression,
-    ExpressionEvalError
+    evalConstantExpression
 } from "project-editor/flow/expression";
 import { calcComponentGeometry } from "project-editor/flow/editor/render";
 import {
     ValueType,
     VariableTypeUI
 } from "project-editor/features/variable/value-type";
-import { ProjectEditor } from "project-editor/project-editor-interface";
 import { specificGroup } from "project-editor/components/PropertyGrid/groups";
 import {
     COMPONENT_TYPE_START_ACTION,
@@ -189,18 +179,6 @@ export class EndActionComponent extends ActionComponent {
                 isOptionalInput: false
             }
         ];
-    }
-
-    async execute(flowState: FlowState) {
-        if (flowState.parentFlowState && flowState.component) {
-            flowState.parentFlowState.runtime.propagateValue(
-                flowState.parentFlowState,
-                flowState.component,
-                "@seqout",
-                null
-            );
-        }
-        return undefined;
     }
 }
 
@@ -378,33 +356,6 @@ export class OutputActionComponent extends ActionComponent {
         ];
     }
 
-    async execute(flowState: FlowState) {
-        const componentState = flowState.getComponentState(this);
-        const value = componentState.getInputValue("@seqin");
-        if (flowState.parentFlowState && flowState.component && this.name) {
-            if (
-                flowState.component instanceof DynamicCallActionActionComponent
-            ) {
-                flowState.parentFlowState.runtime.propagateValue(
-                    flowState.parentFlowState,
-                    flowState.component,
-                    this.name,
-                    value,
-                    this.name
-                );
-            } else {
-                flowState.parentFlowState.runtime.propagateValue(
-                    flowState.parentFlowState,
-                    flowState.component,
-                    this.wireID,
-                    value,
-                    this.name
-                );
-            }
-        }
-        return undefined;
-    }
-
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
         const flow = getFlow(this);
         dataBuffer.writeUint8(flow.outputComponents.indexOf(this));
@@ -484,12 +435,6 @@ export class EvalExprActionComponent extends ActionComponent {
                 <pre>{this.expression}</pre>
             </div>
         );
-    }
-
-    async execute(flowState: FlowState) {
-        const value = evalExpression(flowState, this, this.expression);
-        flowState.runtime.propagateValue(flowState, this, "result", value);
-        return undefined;
     }
 }
 
@@ -573,58 +518,6 @@ export class WatchVariableActionComponent extends ActionComponent {
             <div className="body">
                 <pre>{this.variable}</pre>
             </div>
-        );
-    }
-
-    async execute(
-        flowState: FlowState,
-        dispose: (() => void) | undefined
-    ): Promise<(() => void) | undefined> {
-        let lastValue: any;
-        try {
-            lastValue = flowState.evalExpression(this, this.variable);
-        } catch (err) {
-            if (err instanceof ExpressionEvalError) {
-                lastValue = undefined;
-            } else {
-                throw err;
-            }
-        }
-
-        flowState.runtime.propagateValue(
-            flowState,
-            this,
-            "variable",
-            lastValue
-        );
-
-        if (dispose) {
-            return dispose;
-        }
-
-        return reaction(
-            () => {
-                try {
-                    return flowState.evalExpression(this, this.variable);
-                } catch (err) {
-                    if (err instanceof ExpressionEvalError) {
-                        return undefined;
-                    } else {
-                        throw err;
-                    }
-                }
-            },
-            value => {
-                if (value !== lastValue) {
-                    lastValue = value;
-                    flowState.runtime.propagateValue(
-                        flowState,
-                        this,
-                        "variable",
-                        value
-                    );
-                }
-            }
         );
     }
 }
@@ -746,33 +639,6 @@ export class EvalJSExprActionComponent extends ActionComponent {
                 <pre>{this.expression}</pre>
             </div>
         );
-    }
-
-    expandExpression(flowState: FlowState) {
-        let jsEvalExpression = this.expression;
-        let values: any = {};
-
-        EvalJSExprActionComponent.parse(jsEvalExpression).forEach(
-            (expression, i) => {
-                const value = flowState.evalExpression(this, expression);
-                const name = `_val${i}`;
-                values[name] = value;
-                jsEvalExpression = jsEvalExpression.replace(
-                    new RegExp(`\{${expression}\}`, "g"),
-                    `values.${name}`
-                );
-            }
-        );
-
-        return { jsEvalExpression, values };
-    }
-
-    async execute(flowState: FlowState) {
-        const { jsEvalExpression, values } = this.expandExpression(flowState);
-        values;
-        let result = eval(jsEvalExpression);
-        flowState.runtime.propagateValue(flowState, this, "result", result);
-        return undefined;
     }
 
     expandExpressionForBuild() {
@@ -905,14 +771,6 @@ export class SetVariableActionComponent extends ActionComponent {
                 </pre>
             </div>
         );
-    }
-
-    async execute(flowState: FlowState) {
-        let value = flowState.evalExpression(this, this.value);
-
-        flowState.runtime.assignValue(flowState, this, this.variable, value);
-
-        return undefined;
     }
 }
 
@@ -1053,22 +911,6 @@ export class SwitchActionComponent extends ActionComponent {
                 ))}
             </div>
         );
-    }
-
-    async execute(flowState: FlowState) {
-        for (const test of this.tests) {
-            let value = flowState.evalExpression(this, test.condition);
-            if (value) {
-                flowState.runtime.propagateValue(
-                    flowState,
-                    this,
-                    test.outputName,
-                    null
-                );
-                break;
-            }
-        }
-        return undefined;
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
@@ -1249,46 +1091,6 @@ export class CompareActionComponent extends ActionComponent {
         );
     }
 
-    async execute(flowState: FlowState) {
-        let result;
-        let A = flowState.evalExpression(this, this.A);
-
-        if (this.operator == "NOT") {
-            result = !A;
-        } else {
-            let B = flowState.evalExpression(this, this.B);
-            if (this.operator === "=") {
-                result = A === B;
-            } else if (this.operator === "<") {
-                result = A < B;
-            } else if (this.operator === ">") {
-                result = A > B;
-            } else if (this.operator === "<=") {
-                result = A <= B;
-            } else if (this.operator === ">=") {
-                result = A >= B;
-            } else if (this.operator === "<>") {
-                result = A !== B;
-            } else if (this.operator === "AND") {
-                result = A && B;
-            } else if (this.operator === "OR") {
-                result = A || B;
-            } else if (this.operator === "XOR") {
-                result = A ? !B : B;
-            } else if (this.operator === "BETWEEN") {
-                let C = flowState.evalExpression(this, this.C);
-                result = A >= B && A <= C;
-            }
-        }
-
-        if (result) {
-            flowState.runtime.propagateValue(flowState, this, "True", true);
-        } else {
-            flowState.runtime.propagateValue(flowState, this, "False", false);
-        }
-        return undefined;
-    }
-
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
         let condition;
 
@@ -1424,17 +1226,6 @@ export class IsTrueActionComponent extends ActionComponent {
             </div>
         );
     }
-
-    async execute(flowState: FlowState) {
-        let value = flowState.evalExpression(this, this.value);
-
-        if (value) {
-            flowState.runtime.propagateValue(flowState, this, "True", true);
-        } else {
-            flowState.runtime.propagateValue(flowState, this, "False", false);
-        }
-        return undefined;
-    }
 }
 
 registerClass("IsTrueActionComponent", IsTrueActionComponent);
@@ -1515,17 +1306,6 @@ export class ConstantActionComponent extends ActionComponent {
         ];
     }
 
-    async execute(flowState: FlowState) {
-        flowState.runtime.propagateValue(
-            flowState,
-            this,
-            "value",
-            evalConstantExpression(ProjectEditor.getProject(this), this.value)
-                .value
-        );
-        return undefined;
-    }
-
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
         try {
             const { value, valueType } = evalConstantExpression(
@@ -1569,11 +1349,6 @@ export class DateNowActionComponent extends ActionComponent {
                 isOptionalOutput: false
             }
         ];
-    }
-
-    async execute(flowState: FlowState) {
-        flowState.runtime.propagateValue(flowState, this, "value", Date.now());
-        return undefined;
     }
 }
 
@@ -1655,17 +1430,6 @@ export class ReadSettingActionComponent extends ActionComponent {
             </div>
         ) : null;
     }
-
-    async execute(flowState: FlowState) {
-        let key = flowState.evalExpression(this, this.key);
-        flowState.runtime.propagateValue(
-            flowState,
-            this,
-            "value",
-            flowState.runtime.readSettings(key)
-        );
-        return undefined;
-    }
 }
 
 registerClass("ReadSettingActionComponent", ReadSettingActionComponent);
@@ -1734,13 +1498,6 @@ export class WriteSettingsActionComponent extends ActionComponent {
                 isOptionalOutput: false
             }
         ];
-    }
-
-    async execute(flowState: FlowState) {
-        let key = flowState.evalExpression(this, this.key);
-        let value = flowState.evalExpression(this, this.value);
-        flowState.runtime.writeSettings(key, value);
-        return undefined;
     }
 }
 
@@ -1816,12 +1573,6 @@ export class LogActionComponent extends ActionComponent {
                 isOptionalOutput: true
             }
         ];
-    }
-
-    async execute(flowState: FlowState) {
-        const value = flowState.evalExpression(this, this.value);
-        flowState.logInfo(value, this);
-        return undefined;
     }
 }
 
@@ -1988,41 +1739,6 @@ export class CallActionActionComponent extends ActionComponent {
         return [...super.getOutputs(), ...outputs];
     }
 
-    async execute(flowState: FlowState) {
-        const action = findAction(getProject(this), this.action);
-        if (!action) {
-            return;
-        }
-
-        const actionFlowState = new FlowState(
-            flowState.runtime,
-            action,
-            flowState,
-            this
-        );
-        flowState.flowStates.push(actionFlowState);
-
-        actionFlowState.runtime.startFlow(actionFlowState);
-
-        const componentState = flowState.getComponentState(this);
-        for (let [input, inputData] of componentState.inputsData) {
-            for (let component of action.components) {
-                if (component instanceof InputActionComponent) {
-                    if (component.wireID === input) {
-                        actionFlowState.runtime.propagateValue(
-                            actionFlowState,
-                            component,
-                            "@seqout",
-                            inputData
-                        );
-                    }
-                }
-            }
-        }
-
-        return false;
-    }
-
     open() {
         const action = findAction(getProject(this), this.action);
         if (action) {
@@ -2146,44 +1862,6 @@ export class DynamicCallActionActionComponent extends ActionComponent {
             }
         ];
     }
-
-    async execute(flowState: FlowState) {
-        const actionName = evalExpression(flowState, this, this.action);
-        const action = findAction(getProject(this), actionName);
-        if (!action) {
-            return;
-        }
-
-        const componentState = flowState.getComponentState(this);
-
-        const actionFlowState = new FlowState(
-            flowState.runtime,
-            action,
-            flowState,
-            this
-        );
-        flowState.flowStates.push(actionFlowState);
-
-        actionFlowState.runtime.startFlow(actionFlowState);
-
-        for (const customInput of this.customInputs) {
-            for (let component of action.components) {
-                if (component instanceof InputActionComponent) {
-                    if (component.name === customInput.name) {
-                        actionFlowState.runtime.propagateValue(
-                            actionFlowState,
-                            component,
-                            "@seqout",
-                            componentState.inputsData.get(customInput.name)
-                        );
-                        break;
-                    }
-                }
-            }
-        }
-
-        return false;
-    }
 }
 
 registerClass(
@@ -2255,21 +1933,6 @@ export class DelayActionComponent extends ActionComponent {
             </div>
         );
     }
-
-    async execute(flowState: FlowState) {
-        const milliseconds = flowState.evalExpression(this, this.milliseconds);
-        setTimeout(
-            () =>
-                flowState.runtime.propagateValue(
-                    flowState,
-                    this,
-                    "@seqout",
-                    null
-                ),
-            milliseconds ?? 0
-        );
-        return false;
-    }
 }
 
 registerClass("DelayActionComponent", DelayActionComponent);
@@ -2329,12 +1992,6 @@ export class ErrorActionComponent extends ActionComponent {
             </div>
         );
     }
-
-    async execute(flowState: FlowState) {
-        const message = flowState.evalExpression(this, this.message);
-        throw message;
-        return undefined;
-    }
 }
 
 registerClass("ErrorActionComponent", ErrorActionComponent);
@@ -2370,27 +2027,11 @@ export class CatchErrorActionComponent extends ActionComponent {
             }
         ];
     }
-
-    async execute(flowState: FlowState) {
-        const messageInputValue = flowState.getInputValue(this, "message");
-        flowState.runtime.propagateValue(
-            flowState,
-            this,
-            "Message",
-            messageInputValue ?? "unknow error"
-        );
-
-        return undefined;
-    }
 }
 
 registerClass("CatchErrorActionComponent", CatchErrorActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
-
-class CounterRunningState {
-    constructor(public value: number) {}
-}
 
 export class CounterActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
@@ -2473,34 +2114,11 @@ export class CounterActionComponent extends ActionComponent {
             </div>
         );
     }
-
-    async execute(flowState: FlowState) {
-        let counterRunningState =
-            flowState.getComponentRunningState<CounterRunningState>(this);
-
-        if (!counterRunningState) {
-            counterRunningState = new CounterRunningState(this.countValue);
-            flowState.setComponentRunningState(this, counterRunningState);
-        }
-
-        if (counterRunningState.value == 0) {
-            flowState.runtime.propagateValue(flowState, this, "done", null);
-            flowState.setComponentRunningState(this, undefined);
-        } else {
-            counterRunningState.value--;
-        }
-
-        return undefined;
-    }
 }
 
 registerClass("CounterActionComponent", CounterActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
-
-class LoopRunningState {
-    constructor(public value: number, public to: number, public step: number) {}
-}
 
 export class LoopActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
@@ -2639,54 +2257,6 @@ export class LoopActionComponent extends ActionComponent {
             </div>
         );
     }
-
-    async execute(flowState: FlowState) {
-        let runningState =
-            flowState.getComponentRunningState<LoopRunningState>(this);
-
-        const componentState = flowState.getComponentState(this);
-        if (componentState.inputsData.has("start")) {
-            runningState = undefined;
-        } else {
-            runningState = componentState.runningState;
-        }
-
-        if (!runningState) {
-            runningState = new LoopRunningState(
-                flowState.evalExpression(this, this.from),
-                flowState.evalExpression(this, this.to),
-                flowState.evalExpression(this, this.step)
-            );
-            flowState.setComponentRunningState(this, runningState);
-            flowState.runtime.assignValue(
-                flowState,
-                this,
-                this.variable,
-                runningState.value
-            );
-        } else {
-            runningState.value += runningState.step;
-
-            if (
-                (runningState.step > 0 &&
-                    runningState.value > runningState.to) ||
-                (runningState.step < 0 && runningState.value < runningState.to)
-            ) {
-                flowState.runtime.propagateValue(flowState, this, "done", null);
-                flowState.setComponentRunningState(this, undefined);
-                return false;
-            } else {
-                flowState.runtime.assignValue(
-                    flowState,
-                    this,
-                    this.variable,
-                    runningState.value
-                );
-            }
-        }
-
-        return undefined;
-    }
 }
 
 registerClass("LoopActionComponent", LoopActionComponent);
@@ -2766,25 +2336,6 @@ export class ShowPageActionComponent extends ActionComponent {
                 <pre>{this.page}</pre>
             </div>
         );
-    }
-
-    async execute(flowState: FlowState) {
-        if (!this.page) {
-            throw "page not specified";
-        }
-        const page = findPage(
-            flowState.runtime.DocumentStore.project,
-            this.page
-        );
-        if (!page) {
-            throw "page not found";
-        }
-
-        runInAction(() => {
-            flowState.runtime.selectedPage = page;
-        });
-
-        return undefined;
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
@@ -2891,11 +2442,6 @@ export class ShowMessageBoxActionComponent extends ActionComponent {
                 </pre>
             </div>
         );
-    }
-
-    async execute(flowState: FlowState) {
-        // TODO
-        return undefined;
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
@@ -3023,11 +2569,6 @@ export class ShowKeyboardActionComponent extends ActionComponent {
                 </pre>
             </div>
         );
-    }
-
-    async execute(flowState: FlowState) {
-        // TODO
-        return undefined;
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
@@ -3160,11 +2701,6 @@ export class ShowKeypadActionComponent extends ActionComponent {
                 </pre>
             </div>
         );
-    }
-
-    async execute(flowState: FlowState) {
-        // TODO
-        return undefined;
     }
 }
 

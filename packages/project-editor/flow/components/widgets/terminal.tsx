@@ -69,44 +69,6 @@ export class TerminalWidget extends Widget {
         );
     }
 
-    async execute(flowState: IFlowState, dispose: (() => void) | undefined) {
-        const { Readable, Duplex } = await import("stream");
-
-        let runningState =
-            flowState.getComponentRunningState<RunningState>(this);
-
-        if (!runningState) {
-            runningState = new RunningState();
-            flowState.setComponentRunningState(this, runningState);
-        }
-
-        const componentState = flowState.getComponentState(this);
-
-        if (componentState.unreadInputsData.has("data")) {
-            const value = componentState.inputsData.get("data");
-            if (runningState.onData && value) {
-                if (typeof value === "string" && value.length > 0) {
-                    runningState.onData(value);
-                } else if (
-                    value instanceof Readable ||
-                    value instanceof Duplex
-                ) {
-                    const onData = (chunk: Buffer) => {
-                        if (runningState && runningState.onData) {
-                            runningState.onData(chunk.toString());
-                        }
-                    };
-                    value.on("data", onData);
-                    return () => {
-                        value.off("data", onData);
-                    };
-                }
-            }
-        }
-
-        return undefined;
-    }
-
     async onWasmWorkerMessage(flowState: IFlowState, message: any) {
         let runningState =
             flowState.getComponentRunningState<RunningState>(this);

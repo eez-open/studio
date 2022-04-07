@@ -267,20 +267,6 @@ registerActionComponents("Serial Port", [
                 valueType: "object:SerialConnection"
             }
         ],
-        execute: async (flowState, ...[connection]) => {
-            const serialConnection = flowState.evalExpression(connection);
-            if (!serialConnection) {
-                throw `connection "${connection}" not found`;
-            }
-
-            if (!(serialConnection instanceof SerialConnection)) {
-                throw `"${connection}" is not SerialConnection`;
-            }
-
-            await serialConnection.connect();
-
-            return undefined;
-        },
         onWasmWorkerMessage: async (flowState, message, messageId) => {
             let serialConnection = serialConnections.get(message.id);
             if (message.id == undefined) {
@@ -321,20 +307,6 @@ registerActionComponents("Serial Port", [
                 valueType: "object:SerialConnection"
             }
         ],
-        execute: async (flowState, ...[connection]) => {
-            const serialConnection = flowState.evalExpression(connection);
-            if (!serialConnection) {
-                throw `connection "${connection}" not found`;
-            }
-
-            if (!(serialConnection instanceof SerialConnection)) {
-                throw `"${connection}" is not SerialConnection`;
-            }
-
-            serialConnection.disconnect();
-
-            return undefined;
-        },
         onWasmWorkerMessage: async (flowState, message, messageId) => {
             const serialConnection = serialConnections.get(message.id);
             if (serialConnection) {
@@ -368,31 +340,6 @@ registerActionComponents("Serial Port", [
                 valueType: "object:SerialConnection"
             }
         ],
-        execute: async (flowState, ...[connection]) => {
-            if (flowState.dispose) {
-                return flowState.dispose;
-            }
-
-            let serialConnection: SerialConnection;
-            try {
-                serialConnection = flowState.evalExpression(connection);
-            } catch (err) {
-                return undefined;
-            }
-
-            if (!(serialConnection instanceof SerialConnection)) {
-                return undefined;
-            }
-
-            if (serialConnection.isConnected) {
-                const data = serialConnection.read();
-                if (data) {
-                    flowState.propagateValue("data", data);
-                }
-            }
-
-            return undefined;
-        },
         onWasmWorkerMessage: async (flowState, message, messageId) => {
             const serialConnection = serialConnections.get(message.id);
             if (serialConnection) {
@@ -437,24 +384,6 @@ registerActionComponents("Serial Port", [
                 valueType: "string"
             }
         ],
-        execute: async (flowState, ...[connection, data]) => {
-            const serialConnection = flowState.evalExpression(connection);
-            if (!serialConnection) {
-                throw `connection "${connection}" not found`;
-            }
-
-            if (!(serialConnection instanceof SerialConnection)) {
-                throw `"${connection}" is not SerialConnection`;
-            }
-
-            const dataValue = flowState.evalExpression(data);
-
-            if (dataValue) {
-                serialConnection.write(dataValue.toString());
-            }
-
-            return undefined;
-        },
         onWasmWorkerMessage: async (flowState, message, messageId) => {
             const serialConnection = serialConnections.get(
                 message.serialConnection.id
@@ -488,14 +417,6 @@ registerActionComponents("Serial Port", [
             }
         ],
         properties: [],
-        execute: async flowState => {
-            flowState.propagateValue(
-                "ports",
-                await SerialConnection.listPorts()
-            );
-
-            return undefined;
-        },
         onWasmWorkerMessage: async (flowState, message, messageId) => {
             try {
                 const ports = await SerialConnection.listPorts();

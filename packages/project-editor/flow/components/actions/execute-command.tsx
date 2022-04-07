@@ -61,45 +61,6 @@ registerActionComponents("Dashboard Specific", [
         ],
         bodyPropertyCallback: (command, args) => {
             return `${command}\n${args}`;
-        },
-        execute: async (flowState, command, args) => {
-            const commandValue: any = flowState.evalExpression(command);
-            if (typeof commandValue != "string") {
-                throw "command is not a string";
-            }
-            const argsValue: any = flowState.evalExpression(args);
-            if (!Array.isArray(argsValue)) {
-                throw "arguments is not an array";
-            }
-
-            const i = argsValue.findIndex((arg: any) => typeof arg != "string");
-            if (i != -1) {
-                throw `argument at position ${i + 1} is not a string`;
-            }
-
-            const { spawn } = await import("child_process");
-
-            let process = spawn(commandValue, argsValue);
-            let processFinished = false;
-
-            flowState.propagateValue("stdout", process.stdout);
-            flowState.propagateValue("stderr", process.stderr);
-
-            process.on("close", code => {
-                flowState.propagateValue("finished", code);
-                processFinished = true;
-            });
-
-            process.on("error", err => {
-                flowState.throwError(err.toString());
-                processFinished = true;
-            });
-
-            return () => {
-                if (!processFinished) {
-                    process.kill();
-                }
-            };
         }
     }
 ]);

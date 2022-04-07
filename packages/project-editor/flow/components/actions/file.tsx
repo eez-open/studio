@@ -61,47 +61,7 @@ registerActionComponents("File", [
                 type: "expression",
                 valueType: "string"
             }
-        ],
-        execute: async (flowState, ...[filePath, encoding]) => {
-            const filePathValue = flowState.evalExpression(filePath);
-            if (typeof filePathValue != "string") {
-                throw `"${filePath}" is not a string`;
-            }
-
-            const encodingValue = flowState.evalExpression(encoding);
-            if (typeof encodingValue != "string") {
-                throw `"${encoding}" is not a string`;
-            }
-
-            const encodings = [
-                "ascii",
-                "base64",
-                "hex",
-                "ucs2",
-                "ucs-2",
-                "utf16le",
-                "utf-16le",
-                "utf8",
-                "utf-8",
-                "binary",
-                "latin1"
-            ];
-            if (encodings.indexOf(encodingValue) == -1) {
-                throw `Unsupported encoding value ${encodingValue}, supported: ${encodings.join(
-                    ", "
-                )}`;
-            }
-
-            const fs = await import("fs");
-            const content = await fs.promises.readFile(
-                filePathValue,
-                encodingValue as any
-            );
-
-            flowState.propagateValue("content", content);
-
-            return undefined;
-        }
+        ]
     },
     {
         name: "FileWrite",
@@ -126,48 +86,7 @@ registerActionComponents("File", [
                 type: "expression",
                 valueType: "string"
             }
-        ],
-        execute: async (flowState, ...[filePath, content, encoding]) => {
-            const filePathValue = flowState.evalExpression(filePath);
-            if (typeof filePathValue != "string") {
-                throw `"${filePath}" is not a string`;
-            }
-
-            const encodingValue = flowState.evalExpression(encoding);
-            if (typeof encodingValue != "string") {
-                throw `"${encoding}" is not a string`;
-            }
-
-            const encodings = [
-                "ascii",
-                "base64",
-                "hex",
-                "ucs2",
-                "ucs-2",
-                "utf16le",
-                "utf-16le",
-                "utf8",
-                "utf-8",
-                "binary",
-                "latin1"
-            ];
-            if (encodings.indexOf(encodingValue) == -1) {
-                throw `Unsupported encoding value ${encodingValue}, supported: ${encodings.join(
-                    ", "
-                )}`;
-            }
-
-            const contentValue = flowState.evalExpression(content);
-
-            const fs = await import("fs");
-            await fs.promises.writeFile(
-                filePathValue,
-                contentValue,
-                encodingValue as any
-            );
-
-            return undefined;
-        }
+        ]
     },
     {
         name: "FileSaveDialog",
@@ -189,22 +108,6 @@ registerActionComponents("File", [
                 valueType: "string"
             }
         ],
-        execute: async (flowState, ...[fileName]) => {
-            const fileNameValue = flowState.evalExpression(fileName);
-            if (fileNameValue && typeof fileNameValue != "string") {
-                throw `"${fileName}" is not a string`;
-            }
-
-            const result = await dialog.showSaveDialog({
-                defaultPath: fileNameValue
-            });
-
-            if (!result.canceled) {
-                flowState.propagateValue("file_path", result.filePath);
-            }
-
-            return undefined;
-        },
         onWasmWorkerMessage: async (flowState, message, messageId) => {
             const result = await dialog.showSaveDialog({
                 defaultPath: message
@@ -234,16 +137,6 @@ registerActionComponents("File", [
                 valueType: "string"
             }
         ],
-        execute: async (flowState, ...[filePath]) => {
-            const filePathValue = flowState.evalExpression(filePath);
-            if (typeof filePathValue != "string") {
-                throw `"${filePathValue}" is not a string`;
-            }
-
-            shell.showItemInFolder(filePathValue);
-
-            return undefined;
-        },
         onWasmWorkerMessage: (flowState, message) => {
             // workaround: on windows, showItemInFolder will not work if path.sep is /
             const filePath = message.replace(/\//g, path.sep);

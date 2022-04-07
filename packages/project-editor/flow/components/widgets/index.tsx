@@ -1,7 +1,7 @@
 import { MenuItem } from "@electron/remote";
 
 import React from "react";
-import { observable, computed, runInAction, makeObservable } from "mobx";
+import { observable, computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -1418,69 +1418,6 @@ export class LayoutViewWidget extends Widget {
                 {super.render(flowContext)}
             </>
         );
-    }
-
-    async execute(flowState: FlowState) {
-        const page = this.getLayoutPage(
-            flowState.runtime.DocumentStore.dataContext
-        );
-
-        if (page) {
-            const runtime = flowState.runtime;
-
-            let layoutFlowState = flowState.getFlowStateByComponent(this);
-
-            if (!layoutFlowState) {
-                runInAction(() => {
-                    layoutFlowState = new FlowState(
-                        flowState.runtime,
-                        page,
-                        flowState,
-                        this
-                    );
-
-                    flowState.flowStates.push(layoutFlowState);
-
-                    runtime.startFlow(layoutFlowState);
-                });
-            }
-
-            const componentState = flowState.getComponentState(this);
-            for (let input of componentState.unreadInputsData) {
-                const inputData = componentState.inputsData.get(input);
-                if (input === "@seqin") {
-                    for (let component of page.components) {
-                        if (component instanceof StartActionComponent) {
-                            if (layoutFlowState) {
-                                runtime.propagateValue(
-                                    layoutFlowState,
-                                    component,
-                                    "@seqout",
-                                    inputData
-                                );
-                            }
-                        }
-                    }
-                } else {
-                    for (let component of page.components) {
-                        if (component instanceof InputActionComponent) {
-                            if (component.wireID === input) {
-                                if (layoutFlowState) {
-                                    runtime.propagateValue(
-                                        layoutFlowState,
-                                        component,
-                                        "@seqout",
-                                        inputData
-                                    );
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return false;
     }
 
     open() {

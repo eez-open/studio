@@ -272,33 +272,6 @@ export class LineChartWidget extends Widget {
         );
     }
 
-    async execute(flowState: IFlowState, dispose: (() => void) | undefined) {
-        let runningState =
-            flowState.getComponentRunningState<RunningState>(this);
-
-        if (!runningState) {
-            runningState = new RunningState();
-            flowState.setComponentRunningState(this, runningState);
-        }
-
-        if (this.isInputProperty("data")) {
-            const value = this.data
-                ? flowState.evalExpression(this, this.data)
-                : undefined;
-
-            runningState.values.push({
-                time: Date.now(),
-                value
-            });
-
-            if (runningState.values.length == this.maxPoints) {
-                runningState.values.shift();
-            }
-        }
-
-        return undefined;
-    }
-
     onWasmWorkerMessage(flowState: IFlowState, message: any) {
         runInAction(() => {
             let runningState =
