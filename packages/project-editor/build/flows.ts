@@ -32,6 +32,11 @@ import {
 } from "project-editor/build/values";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 import { FIRST_DASHBOARD_COMPONENT_TYPE } from "project-editor/flow/components/component_types";
+import {
+    basicTypeNames,
+    SYSTEM_STRUCTURES,
+    ValueType
+} from "project-editor/features/variable/value-type";
 
 function getComponentName(componentType: IObjectClassInfo) {
     if (componentType.name.endsWith("Component")) {
@@ -522,6 +527,84 @@ export function buildFlowDefs(assets: Assets) {
     }
 
     defs.push(`enum OperationTypes {\n${operationEnumItems.join(",\n")}\n};`);
+
+    // enum SystemStructures
+    const systemStructureEnumItems = [];
+    for (const structure of SYSTEM_STRUCTURES) {
+        systemStructureEnumItems.push(
+            `${TAB}${getName(
+                "SYSTEM_STRUCTURE_",
+                {
+                    name: structure.name
+                },
+                NamingConvention.UnderscoreUpperCase
+            )} = ${assets.DocumentStore.typesStore.getValueTypeIndex(
+                `struct:${structure.name}`
+            )}`
+        );
+    }
+
+    defs.push(
+        `enum SystemStructures {\n${systemStructureEnumItems.join(",\n")}\n};`
+    );
+
+    for (const structure of SYSTEM_STRUCTURES) {
+        const fieldEnumItems = [];
+        for (const field of structure.fields) {
+            fieldEnumItems.push(
+                `${TAB}${getName(
+                    "SYSTEM_STRUCTURE_",
+                    {
+                        name: structure.name
+                    },
+                    NamingConvention.UnderscoreUpperCase
+                )}_${getName(
+                    "FIELD_",
+                    {
+                        name: field.name
+                    },
+                    NamingConvention.UnderscoreUpperCase
+                )} = ${assets.DocumentStore.typesStore.getFieldIndex(
+                    `struct:${structure.name}`,
+                    field.name
+                )}`
+            );
+        }
+
+        fieldEnumItems.push(
+            `${TAB}${getName(
+                "SYSTEM_STRUCTURE_",
+                {
+                    name: structure.name
+                },
+                NamingConvention.UnderscoreUpperCase
+            )}_NUM_FIELDS`
+        );
+
+        defs.push(
+            `enum ${structure.name.substring(
+                1
+            )}SystemStructureFields {\n${fieldEnumItems.join(",\n")}\n};`
+        );
+    }
+
+    // enum ArrayType
+    const arrayTypeEnumItems = [];
+    for (const basicType of basicTypeNames) {
+        arrayTypeEnumItems.push(
+            `${TAB}${getName(
+                "ARRAY_TYPE_",
+                {
+                    name: basicType
+                },
+                NamingConvention.UnderscoreUpperCase
+            )} = ${assets.DocumentStore.typesStore.getValueTypeIndex(
+                `array:${basicType}` as ValueType
+            )}`
+        );
+    }
+
+    defs.push(`enum ArrayTypes {\n${arrayTypeEnumItems.join(",\n")}\n};`);
 
     return defs.join("\n\n");
 }

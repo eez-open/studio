@@ -542,16 +542,15 @@ export abstract class DebuggerConnectionBase {
         let parsedStr = "";
         for (let i = 0; i < str.length; i++) {
             if (str[i] == "\\") {
+                i++;
                 if (str[i] == "t") {
                     parsedStr += "\t";
-                    i++;
                 } else if (str[i] == "n") {
                     parsedStr += "\n";
-                    i++;
                 } else if (str[i] == '"') {
                     parsedStr += '"';
-                    i++;
                 } else {
+                    i--;
                     parsedStr += str[i];
                 }
             } else {

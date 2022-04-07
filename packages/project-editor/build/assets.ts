@@ -179,6 +179,8 @@ export class Assets {
         buildConfiguration: BuildConfiguration | undefined,
         public option: "check" | "buildAssets" | "buildFiles"
     ) {
+        this.DocumentStore.typesStore.reset();
+
         this.getConstantIndex(undefined, "undefined"); // undefined has value index 0
         this.getConstantIndex(null, "null"); // null has value index 1
 
@@ -1119,8 +1121,6 @@ function buildHeaderData(
 
 export async function buildGuiAssetsData(assets: Assets) {
     const dataBuffer = new DataBuffer();
-
-    assets.DocumentStore.typesStore.reset();
 
     buildGuiDocumentData(assets, dataBuffer);
     buildGuiStylesData(assets, dataBuffer);

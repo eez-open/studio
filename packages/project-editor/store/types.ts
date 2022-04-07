@@ -14,7 +14,8 @@ import {
     objectVariableTypes,
     isArrayType,
     getArrayElementTypeFromType,
-    basicTypeNames
+    basicTypeNames,
+    SYSTEM_STRUCTURES
 } from "project-editor/features/variable/value-type";
 import { computed, makeObservable } from "mobx";
 
@@ -39,6 +40,14 @@ export class TypesStore {
         this._types = [];
         this._typeIndexes = {};
         this._numDynamicTypes = 0;
+
+        SYSTEM_STRUCTURES.forEach(structure =>
+            this.getTypeFromValueType(`struct:${structure.name}`)
+        );
+
+        basicTypeNames.forEach((basicTypeName: BasicType) => {
+            this.getTypeFromValueType(`array:${basicTypeName}`);
+        });
 
         this.allValueTypes.forEach(valueType =>
             this.getTypeFromValueType(valueType)
