@@ -854,6 +854,10 @@ export abstract class DebuggerConnectionBase {
                             );
 
                             runInAction(() => runtime.queue.shift());
+
+                            if (runtime.isPaused) {
+                                runtime.showNextQueueTask();
+                            }
                         } else {
                             console.error("UNEXPECTED!");
                             return;

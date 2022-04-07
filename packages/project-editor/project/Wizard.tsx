@@ -127,7 +127,7 @@ const NewProjectWizard = observer(
 
         step: number = 0;
 
-        type: string = "dashboard";
+        type: string = "firmware";
 
         name: string | undefined;
         nameError: string | undefined;
@@ -232,6 +232,12 @@ const NewProjectWizard = observer(
         get projectTypes(): IListNode[] {
             return [
                 {
+                    id: "firmware",
+                    label: "Firmware",
+                    selected: this.type === "firmware",
+                    data: undefined
+                },
+                {
                     id: "dashboard",
                     label: "Dashboard",
                     selected: this.type === "dashboard",
@@ -280,6 +286,41 @@ const NewProjectWizard = observer(
 
         get uiStateDst() {
             return `${this.projectDirPath}/${this.name}.eez-project-ui-state`;
+        }
+
+        async loadGuiProjectTemplate() {
+            const relativePath = `project-templates/gui.eez-project`;
+
+            const json = await fs.promises.readFile(
+                isDev
+                    ? resolve(`${sourceRootDir()}/../resources/${relativePath}`)
+                    : `${process.resourcesPath!}/${relativePath}`,
+                "utf8"
+            );
+
+            return JSON.parse(json);
+        }
+
+        get guiProjectSrc() {
+            const relativePath = `project-templates/gui.eez-project`;
+            return isDev
+                ? resolve(`${sourceRootDir()}/../resources/${relativePath}`)
+                : `${process.resourcesPath!}/${relativePath}`;
+        }
+
+        get guiProjectDst() {
+            return `${this.projectDirPath}/gui.eez-project`;
+        }
+
+        get guiProjectStateSrc() {
+            const relativePath = `project-templates/gui.eez-project-ui-state`;
+            return isDev
+                ? resolve(`${sourceRootDir()}/../resources/${relativePath}`)
+                : `${process.resourcesPath!}/${relativePath}`;
+        }
+
+        get guiProjectStateDst() {
+            return `${this.projectDirPath}/gui.eez-project-ui-state`;
         }
 
         get projectDirPath() {
@@ -488,6 +529,45 @@ const NewProjectWizard = observer(
                         this.nameError = err.toString();
                     });
                     return;
+                }
+
+                if (this.type == "firmware") {
+                    try {
+                        const guiProjectTemplate =
+                            await this.loadGuiProjectTemplate();
+
+                        await fs.promises.writeFile(
+                            projectFilePath,
+                            JSON.stringify(projectTemplate, undefined, 2),
+                            "utf8"
+                        );
+                        guiProjectTemplate.settings.general.imports[0].projectFilePath = `${this.name}.eez-project`;
+
+                        await fs.promises.writeFile(
+                            this.guiProjectDst,
+                            JSON.stringify(guiProjectTemplate, undefined, 2),
+                            "utf8"
+                        );
+                    } catch (err) {
+                        runInAction(() => {
+                            this.step = 0;
+                            this.nameError = err.toString();
+                        });
+                        return;
+                    }
+
+                    try {
+                        fs.promises.copyFile(
+                            this.guiProjectStateSrc,
+                            this.guiProjectStateDst
+                        );
+                    } catch (err) {
+                        runInAction(() => {
+                            this.step = 0;
+                            this.nameError = err.toString();
+                        });
+                        return;
+                    }
                 }
 
                 runInAction(() => (this.open = false));
