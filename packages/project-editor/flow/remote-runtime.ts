@@ -57,7 +57,10 @@ enum MessagesToDebugger {
 
     MESSAGE_TO_DEBUGGER_LOG, // LOG_ITEM_TYPE, FLOW_STATE_INDEX, COMPONENT_INDEX, MESSAGE
 
-    MESSAGE_TO_DEBUGGER_PAGE_CHANGED // PAGE_ID
+    MESSAGE_TO_DEBUGGER_PAGE_CHANGED, // PAGE_ID
+
+    MESSAGE_TO_DEBUGGER_COMPONENT_EXECUTION_STATE_CHANGED, // FLOW_STATE_INDEX, COMPONENT_INDEX, STATE
+    MESSAGE_TO_DEBUGGER_COMPONENT_ASYNC_STATE_CHANGED // FLOW_STATE_INDEX, COMPONENT_INDEX, STATE
 }
 
 enum MessagesFromDebugger {
@@ -539,15 +542,17 @@ export abstract class DebuggerConnectionBase {
         let parsedStr = "";
         for (let i = 0; i < str.length; i++) {
             if (str[i] == "\\") {
-                i++;
                 if (str[i] == "t") {
                     parsedStr += "\t";
+                    i++;
                 } else if (str[i] == "n") {
                     parsedStr += "\n";
+                    i++;
                 } else if (str[i] == '"') {
                     parsedStr += '"';
+                    i++;
                 } else {
-                    console.error("UNEXPECTED!");
+                    parsedStr += str[i];
                 }
             } else {
                 parsedStr += str[i];
@@ -1338,6 +1343,94 @@ export abstract class DebuggerConnectionBase {
                         }
 
                         this.runtime.selectedPage = page;
+                    }
+                    break;
+
+                case MessagesToDebugger.MESSAGE_TO_DEBUGGER_COMPONENT_EXECUTION_STATE_CHANGED:
+                    {
+                        const flowStateIndex = parseInt(messageParameters[1]);
+                        const componentIndex = parseInt(messageParameters[2]);
+                        const executionState = parseInt(messageParameters[3]);
+
+                        const { flowIndex, flowState } =
+                            this.getFlowState(flowStateIndex);
+                        if (!flowState) {
+                            console.error("UNEXPECTED!");
+                            return;
+                        }
+
+                        const flowInAssetsMap =
+                            runtime.assetsMap.flows[flowIndex];
+                        if (!flowInAssetsMap) {
+                            console.error("UNEXPECTED!");
+                            return;
+                        }
+
+                        let component;
+
+                        const componentInAssetsMap =
+                            flowInAssetsMap.components[componentIndex];
+                        if (!componentInAssetsMap) {
+                            console.error("UNEXPECTED!");
+                            return;
+                        }
+                        component = getObjectFromStringPath(
+                            runtime.DocumentStore.project,
+                            componentInAssetsMap.path
+                        ) as Component;
+                        if (!component) {
+                            console.error("UNEXPECTED!");
+                            return;
+                        }
+
+                        flowState.setComponentRunningState(
+                            component,
+                            executionState
+                        );
+                    }
+                    break;
+
+                case MessagesToDebugger.MESSAGE_TO_DEBUGGER_COMPONENT_ASYNC_STATE_CHANGED:
+                    {
+                        const flowStateIndex = parseInt(messageParameters[1]);
+                        const componentIndex = parseInt(messageParameters[2]);
+                        const asyncState = parseInt(messageParameters[3]);
+
+                        const { flowIndex, flowState } =
+                            this.getFlowState(flowStateIndex);
+                        if (!flowState) {
+                            console.error("UNEXPECTED!");
+                            return;
+                        }
+
+                        const flowInAssetsMap =
+                            runtime.assetsMap.flows[flowIndex];
+                        if (!flowInAssetsMap) {
+                            console.error("UNEXPECTED!");
+                            return;
+                        }
+
+                        let component;
+
+                        const componentInAssetsMap =
+                            flowInAssetsMap.components[componentIndex];
+                        if (!componentInAssetsMap) {
+                            console.error("UNEXPECTED!");
+                            return;
+                        }
+                        component = getObjectFromStringPath(
+                            runtime.DocumentStore.project,
+                            componentInAssetsMap.path
+                        ) as Component;
+                        if (!component) {
+                            console.error("UNEXPECTED!");
+                            return;
+                        }
+
+                        flowState.setComponentAsyncState(
+                            component,
+                            asyncState ? true : false
+                        );
                     }
                     break;
             }

@@ -2523,6 +2523,19 @@ function renderActionComponent(
 
     const emptyContent = !body && !inputs.length && !outputs.length;
 
+    let executionStateInfo: React.ReactNode = null;
+    let asyncStateInfo: React.ReactNode = null;
+    if (flowContext.flowState) {
+        const componentState =
+            flowContext.flowState.getComponentState(actionNode);
+        if (componentState.runningState) {
+            executionStateInfo = <span className="title-info">[S]</span>;
+        }
+        if (componentState.asyncState) {
+            asyncStateInfo = <span className="title-info">[A]</span>;
+        }
+    }
+
     return (
         <>
             <div className="title-enclosure">
@@ -2538,6 +2551,8 @@ function renderActionComponent(
                     style={titleStyle}
                 >
                     <span className="title-image">{classInfo.icon}</span>
+                    {executionStateInfo}
+                    {asyncStateInfo}
                     <span className="title-text">{getLabel(actionNode)}</span>
                 </div>
                 {seqOutputIndex != -1 && (
@@ -2745,8 +2760,16 @@ function getComponentFlowState(
                 value
             ),
 
-        sendResultToWorker: (messageId: number, result: any) => {
-            flowState.runtime.sendResultToWorker(messageId, result);
+        sendResultToWorker: (
+            messageId: number,
+            result: any,
+            finalResult?: boolean
+        ) => {
+            flowState.runtime.sendResultToWorker(
+                messageId,
+                result,
+                finalResult
+            );
         },
 
         throwError: (message: string) =>

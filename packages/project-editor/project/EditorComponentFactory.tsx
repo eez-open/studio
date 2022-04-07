@@ -32,9 +32,7 @@ export function getEditorComponent(object: IEezObject):
     const project = getProject(object);
 
     if (object instanceof Action) {
-        if (object.implementationType === "flow") {
-            return { object, EditorComponent: ActionEditor };
-        }
+        return { object, EditorComponent: ActionEditor };
     }
 
     if (object instanceof Font) {
@@ -95,9 +93,7 @@ export function createEditorState(object: IEezObject) {
 
     if (isAncestor(object, project.actions)) {
         const action = object as Action;
-        if (action.implementationType === "flow") {
-            state = new ActionFlowTabState(action);
-        }
+        state = new ActionFlowTabState(action);
     } else if (isAncestor(object, project.pages)) {
         state = new PageTabState(object as Page);
     }

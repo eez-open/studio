@@ -333,7 +333,7 @@ function buildExpressionNode(
                 return [
                     makePushConstantInstruction(
                         assets,
-                        buildInConstantValue.value(),
+                        buildInConstantValue.value(assets.DocumentStore),
                         buildInConstantValue.valueType
                     )
                 ];
@@ -381,14 +381,6 @@ function buildExpressionNode(
     }
 
     if (node.type == "ArrayExpression") {
-        console.log(
-            node,
-            node.elements,
-            node.elements.length,
-            assets.getTypeIndex(node.valueType),
-            operationIndexes["Flow.makeArrayValue"]
-        );
-
         return [
             // elements
             ...node.elements.reduce(
@@ -450,14 +442,7 @@ function buildExpressionNode(
                 []
             ),
             // no. of fields
-            makePushConstantInstruction(assets, type.fields.length, "integer"),
-            // array type
-            makePushConstantInstruction(
-                assets,
-                assets.getTypeIndex(node.valueType),
-                "integer"
-            ),
-            makeOperationInstruction(operationIndexes["Flow.makeArrayValue"])
+            makePushConstantInstruction(assets, type.fields.length, "integer")
         ];
     }
 

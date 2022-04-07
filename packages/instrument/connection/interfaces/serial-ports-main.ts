@@ -103,6 +103,10 @@ class Connection {
             }
         });
 
+        this.port.on("close", (err: any) => {
+            this.disconnect();
+        });
+
         this.port.on("error", (err: any) => {
             webContents.send("serialPortError", {
                 connectionId,

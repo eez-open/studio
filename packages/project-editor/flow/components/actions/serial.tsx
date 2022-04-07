@@ -18,6 +18,7 @@ import {
     connect,
     disconnect,
     getSerialPorts,
+    SerialConnectionCallbacks,
     SerialConnectionConstructorParams,
     write
 } from "instrument/connection/interfaces/serial-ports-renderer";
@@ -281,18 +282,27 @@ registerActionComponents("Serial Port", [
             return undefined;
         },
         onWasmWorkerMessage: async (flowState, message, messageId) => {
-            const serialConnection = serialConnections.get(message.id);
+            let serialConnection = serialConnections.get(message.id);
+            if (message.id == undefined) {
+                const id = nextSerialConnectionId++;
+                serialConnection = new SerialConnection(id, message);
+                serialConnections.set(id, serialConnection);
+            }
             if (serialConnection) {
                 try {
                     await serialConnection.connect();
-                    flowState.sendResultToWorker(messageId, null);
+                    flowState.sendResultToWorker(messageId, {
+                        serialConnectionId: serialConnection.id
+                    });
                 } catch (err) {
-                    flowState.sendResultToWorker(messageId, err.toString());
+                    flowState.sendResultToWorker(messageId, {
+                        error: err.toString()
+                    });
                 }
             } else {
                 flowState.sendResultToWorker(
                     messageId,
-                    "serial connection not found"
+                    `serial connection ${message.id} not found`
                 );
             }
         }
@@ -387,14 +397,15 @@ registerActionComponents("Serial Port", [
             const serialConnection = serialConnections.get(message.id);
             if (serialConnection) {
                 if (serialConnection.isConnected) {
-                    const data = serialConnection.read();
-                    if (data) {
-                        flowState.sendResultToWorker(messageId, {
-                            data
-                        });
-                    } else {
-                        flowState.sendResultToWorker(messageId, undefined);
-                    }
+                    serialConnection.onRead = data => {
+                        flowState.sendResultToWorker(
+                            messageId,
+                            {
+                                data
+                            },
+                            data == undefined
+                        );
+                    };
                 } else {
                     flowState.sendResultToWorker(messageId, {
                         error: "not connected"
@@ -486,10 +497,16 @@ registerActionComponents("Serial Port", [
             return undefined;
         },
         onWasmWorkerMessage: async (flowState, message, messageId) => {
-            flowState.sendResultToWorker(
-                messageId,
-                await SerialConnection.listPorts()
-            );
+            try {
+                const ports = await SerialConnection.listPorts();
+                flowState.sendResultToWorker(messageId, {
+                    ports
+                });
+            } catch (err) {
+                flowState.sendResultToWorker(messageId, {
+                    error: err.toString()
+                });
+            }
         }
     }
 ]);
@@ -666,7 +683,7 @@ async function showConnectDialog(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class SerialConnection {
+class SerialConnection implements SerialConnectionCallbacks {
     constructor(
         public id: number,
         public constructorParams: SerialConnectionConstructorParams
@@ -687,16 +704,15 @@ class SerialConnection {
 
     isConnected: boolean = false;
 
+    onRead: ((data: any) => void) | undefined;
+
     connectResolve: (() => void) | undefined;
     connectReject: ((err: any) => void) | undefined;
 
     get status() {
         return {
             label: `Port: ${this.constructorParams.port}, Baud rate: ${this.constructorParams.baudRate}, Data bits: ${this.constructorParams.dataBits}, Stop bits: ${this.constructorParams.stopBits}, Parity: ${this.constructorParams.parity}`,
-            image: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68.792 34.396">
-                <g transform="translate(-21.422 -163.072)" fill="none"><circle stroke="black" cx="43.765" cy="180.27" r="7.955"/><circle stroke="black" cx="67.686" cy="180.27" r="7.955"/></g>
-                <path stroke="black" transform="translate(-21.422 -163.072)" d="M31.674 171.406v17.728M55.726 171.406v17.728M79.96 171.406v17.728"/>
-            </svg>`,
+            image: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68.792 34.396"><g transform="translate(-21.422 -163.072)" fill="none"><circle stroke="black" cx="43.765" cy="180.27" r="7.955"/><circle stroke="black" cx="67.686" cy="180.27" r="7.955"/></g><path stroke="black" transform="translate(-21.422 -163.072)" d="M31.674 171.406v17.728M55.726 171.406v17.728M79.96 171.406v17.728"/></svg>`,
             color: this.error ? "red" : this.isConnected ? "green" : "gray",
             error: this.error
         };
@@ -726,6 +742,10 @@ class SerialConnection {
         } else {
             this.receivedData += data;
         }
+
+        if (this.onRead) {
+            this.onRead(this.read());
+        }
     }
 
     onError(err: any) {
@@ -740,6 +760,11 @@ class SerialConnection {
     }
 
     onDisconnected() {
+        if (this.onRead) {
+            this.onRead(undefined);
+            this.onRead = undefined;
+        }
+
         this.isConnected = false;
 
         if (this.connectReject) {

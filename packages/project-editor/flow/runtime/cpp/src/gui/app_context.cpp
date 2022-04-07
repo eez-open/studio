@@ -26,7 +26,7 @@ namespace eez {
             }
         } g_myAppContext;
 
-        AppContext *getAppContextFromId(int16_t id) { return &g_myAppContext; }
+        AppContext *getAppContextFromId(int16_t id) { return id == APP_CONTEXT_ID_DEVICE || id == APP_CONTEXT_ID_SIMULATOR_FRONT_PANEL ? &g_myAppContext : nullptr; }
         void executeNumericKeypadOptionHook(int optionActionIndex) { }
         Keypad *getActiveKeypad() { return nullptr; }
         NumericKeypad *getActiveNumericKeypad() { return nullptr; }

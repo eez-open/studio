@@ -69,7 +69,7 @@ export function buildVariables(
         if (assets.DocumentStore.project.isFirmwareWithFlowSupportProject) {
             // only native
             projectVariables = projectVariables.filter(
-                variable => variable.native
+                variable => assets.option == "buildFiles" && variable.native
             );
         }
 

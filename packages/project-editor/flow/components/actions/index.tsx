@@ -2595,7 +2595,6 @@ export class LoopActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "start",
                 type: "any" as ValueType,
@@ -2607,7 +2606,8 @@ export class LoopActionComponent extends ActionComponent {
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
@@ -3138,7 +3138,7 @@ export class ShowKeypadActionComponent extends ActionComponent {
             ...super.getOutputs(),
             {
                 name: "result",
-                type: "string" as ValueType,
+                type: "float" as ValueType,
                 isSequenceOutput: false,
                 isOptionalOutput: false
             },

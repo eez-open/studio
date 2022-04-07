@@ -121,8 +121,8 @@
         },
         {
           "type": "SerialRead",
-          "left": -213,
-          "top": 188,
+          "left": -187,
+          "top": 285,
           "width": 109,
           "height": 54,
           "wireID": "57b36dba-b0f9-4916-facf-64367b571a6d",
@@ -183,8 +183,8 @@
         },
         {
           "type": "WatchVariableActionComponent",
-          "left": -362,
-          "top": 100,
+          "left": -369,
+          "top": 122,
           "width": 252,
           "height": 54,
           "wireID": "6611dcfb-d0b1-43c2-f5aa-bf569c120caf",
@@ -194,8 +194,8 @@
         },
         {
           "type": "SerialWrite",
-          "left": 893,
-          "top": 134,
+          "left": 983,
+          "top": 322,
           "width": 135,
           "height": 54,
           "wireID": "f730c72c-9293-4d54-f7ab-1d6da1184511",
@@ -211,8 +211,8 @@
         },
         {
           "type": "IsTrueActionComponent",
-          "left": 532,
-          "top": 457,
+          "left": 836,
+          "top": 142,
           "width": 198,
           "height": 73,
           "wireID": "337f1671-d779-4aad-ade5-d3210fe8d568",
@@ -227,8 +227,8 @@
         },
         {
           "type": "ConstantActionComponent",
-          "left": 806,
-          "top": 457,
+          "left": 1098,
+          "top": 142,
           "width": 87,
           "height": 54,
           "wireID": "1d1977c3-6f3d-40eb-fb87-cac61a507e11",
@@ -238,8 +238,8 @@
         },
         {
           "type": "IsTrueActionComponent",
-          "left": -369,
-          "top": 188,
+          "left": -325,
+          "top": 285,
           "width": 87,
           "height": 73,
           "wireID": "9292571a-c7ea-493f-ec16-a8ba216524a5",
@@ -251,27 +251,6 @@
           ],
           "customOutputs": [],
           "value": "value"
-        },
-        {
-          "type": "DelayActionComponent",
-          "left": -244,
-          "top": 292,
-          "width": 87,
-          "height": 53,
-          "wireID": "5ef30ea0-25c5-41e8-d38e-e90d6d5dd3d1",
-          "customInputs": [],
-          "customOutputs": [],
-          "milliseconds": "10"
-        },
-        {
-          "type": "StartActionComponent",
-          "left": -524,
-          "top": 0,
-          "width": 87,
-          "height": 25,
-          "wireID": "3f26e94d-4e81-43f5-ed62-96df0e73dcfd",
-          "customInputs": [],
-          "customOutputs": []
         }
       ],
       "connectionLines": [
@@ -342,34 +321,22 @@
           "input": "value"
         },
         {
-          "source": "57b36dba-b0f9-4916-facf-64367b571a6d",
-          "output": "@seqout",
-          "target": "5ef30ea0-25c5-41e8-d38e-e90d6d5dd3d1",
-          "input": "@seqin"
-        },
-        {
-          "source": "5ef30ea0-25c5-41e8-d38e-e90d6d5dd3d1",
-          "output": "@seqout",
-          "target": "9292571a-c7ea-493f-ec16-a8ba216524a5",
-          "input": "@seqin"
-        },
-        {
-          "source": "3f26e94d-4e81-43f5-ed62-96df0e73dcfd",
-          "output": "@seqout",
-          "target": "9292571a-c7ea-493f-ec16-a8ba216524a5",
-          "input": "@seqin"
-        },
-        {
-          "source": "9292571a-c7ea-493f-ec16-a8ba216524a5",
-          "output": "False",
-          "target": "5ef30ea0-25c5-41e8-d38e-e90d6d5dd3d1",
-          "input": "@seqin"
-        },
-        {
           "source": "e62b2334-9dac-446f-d1a3-14fb6cd03c6e",
           "output": "onData",
           "target": "f730c72c-9293-4d54-f7ab-1d6da1184511",
           "input": "params"
+        },
+        {
+          "source": "1d1977c3-6f3d-40eb-fb87-cac61a507e11",
+          "output": "@seqout",
+          "target": "f730c72c-9293-4d54-f7ab-1d6da1184511",
+          "input": "@seqin"
+        },
+        {
+          "source": "337f1671-d779-4aad-ade5-d3210fe8d568",
+          "output": "False",
+          "target": "f730c72c-9293-4d54-f7ab-1d6da1184511",
+          "input": "@seqin"
         }
       ],
       "localVariables": [],

@@ -170,9 +170,8 @@ const QueueList = observer(
         selectNode(node?: ITreeNode<QueueTask>) {
             const queueTask = node && node.data;
 
-            this.props.runtime.selectQueueTask(queueTask);
-
             if (queueTask) {
+                this.props.runtime.selectQueueTask(queueTask);
                 this.props.runtime.showQueueTask(queueTask);
             }
         }

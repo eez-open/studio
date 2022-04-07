@@ -181,6 +181,8 @@ declare const WasmFlowRuntime: {
     _evalProperty(flowStateIndex: number, componentIndex: number, propertyIndex: number, iteratorsPtr: number): number;
     _assignProperty(flowStateIndex: number, componentIndex: number, propertyIndex: number, iteratorsPtr: number, valuePtr: number): number;
 
+    _setPropertyField(flowStateIndex: number, componentIndex: number, propertyIndex: number, fieldIndex: number, valuePtr: number);
+
     _propagateValue(flowStateIndex: number, componentIndex: number, outputIndex: number, valuePtr: number);
     _propagateValueThroughSeqout(flowStateIndex: number, componentIndex: number);
 

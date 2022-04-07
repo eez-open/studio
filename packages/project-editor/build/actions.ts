@@ -86,7 +86,10 @@ export function buildActions(
 
         let projectActions = assets.actions;
 
-        if (assets.DocumentStore.project.isFirmwareWithFlowSupportProject) {
+        if (
+            assets.option == "buildFiles" &&
+            assets.DocumentStore.project.isFirmwareWithFlowSupportProject
+        ) {
             // only native
             projectActions = projectActions.filter(
                 action => action.implementationType == "native"

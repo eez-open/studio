@@ -825,7 +825,12 @@ export class DocumentStoreClass {
 
         runInAction(() => (this.runtime = runtime));
 
-        runtime.startRuntime(isDebuggerActive);
+        try {
+            runtime.startRuntime(isDebuggerActive);
+        } catch (err) {
+            notification.error(err.toString());
+            runInAction(() => (this.runtime = undefined));
+        }
     }
 
     setEditorMode() {

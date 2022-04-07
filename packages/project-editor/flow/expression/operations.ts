@@ -1,6 +1,7 @@
 import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
 import type { ValueType } from "project-editor/features/variable/value-type";
 import type { IExpressionContext } from "project-editor/flow/expression";
+import type { DocumentStoreClass } from "project-editor/store";
 
 export const binaryOperators: {
     [operator: string]: {
@@ -657,18 +658,17 @@ export const builtInFunctions: {
 
 export const builtInConstants: {
     [name: string]: {
-        value: (expressionContext?: IExpressionContext) => any;
+        value: (DocumentStore: DocumentStoreClass) => any;
         valueType: ValueType;
     };
 } = {
     "System.ProjectFolder": {
-        value: (expressionContext?: IExpressionContext) =>
-            expressionContext?.DocumentStore.getAbsoluteProjectFolderPath(),
+        value: (DocumentStore: DocumentStoreClass) =>
+            DocumentStore.getAbsoluteProjectFolderPath(),
         valueType: "string"
     },
     "System.ProjectFile": {
-        value: (expressionContext?: IExpressionContext) =>
-            expressionContext?.DocumentStore.filePath,
+        value: (DocumentStore: DocumentStoreClass) => DocumentStore.filePath,
         valueType: "string"
     },
     "Math.PI": {

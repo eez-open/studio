@@ -107,7 +107,11 @@ export interface IComponentFlowState {
     evalTemplateLiteral(expression: string): any;
     assignValue(assignableExpression: string, value: any): any;
     propagateValue(output: string, value: any): void;
-    sendResultToWorker(messageId: number, result: any): void;
+    sendResultToWorker(
+        messageId: number,
+        result: any,
+        finalResult?: boolean
+    ): void;
     throwError(err: string): void;
     log(type: LogItemType, message: string): void;
     dispose: (() => void) | undefined;
@@ -257,6 +261,13 @@ export interface IDashboardComponentContext {
         propertyName: string,
         expectedTypes?: ValueType[]
     ) => T | undefined;
+
+    setPropertyField: <T = any>(
+        propertyName: string,
+        fieldName: string,
+        value: any
+    ) => void;
+
     propagateValue: (outputName: string, value: any) => void;
     propagateValueThroughSeqout: () => void;
 

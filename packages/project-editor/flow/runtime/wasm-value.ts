@@ -170,7 +170,7 @@ export function createWasmValue(
     value: undefined | null | number | boolean | string | ArrayValue,
     valueTypeIndex?: number
 ) {
-    if (value == undefined) {
+    if (value === undefined) {
         return WasmFlowRuntime._createUndefinedValue();
     }
 

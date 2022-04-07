@@ -422,7 +422,11 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
             );
             dataBuffer.writeArray(
                 assets.globalVariables.filter(
-                    globalVariable => !globalVariable.native // only non-native variables
+                    globalVariable =>
+                        !(
+                            assets.option == "buildFiles" &&
+                            globalVariable.native
+                        ) // only non-native variables
                 ),
                 globalVariable =>
                     buildVariableFlowValue(assets, dataBuffer, globalVariable),

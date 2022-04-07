@@ -215,7 +215,11 @@ const TerminalElement = observer(
             this.fitAddon.fit();
 
             this.terminal.onData((data: string) => {
-                this.terminal.write(data);
+                try {
+                    this.terminal.write(data);
+                } catch (err) {
+                    console.error(err);
+                }
 
                 if (this.props.flowContext.flowState) {
                     this.props.flowContext.flowState.runtime.executeWidgetAction(

@@ -931,7 +931,7 @@ export abstract class FlowTabState implements IEditorState {
                 this.selectObjects(state.objects);
             }
 
-            const TIMEOUT = 100;
+            const TIMEOUT = 250;
             if (Date.now() - state.startTime >= TIMEOUT) {
                 clearInterval(state.intervalId);
                 FlowTabState.ensureSelectionVisibleState = undefined;

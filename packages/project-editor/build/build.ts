@@ -76,14 +76,15 @@ class BuildException {
 async function getBuildResults(
     DocumentStore: DocumentStoreClass,
     sectionNames: string[] | undefined,
-    buildConfiguration: BuildConfiguration | undefined
+    buildConfiguration: BuildConfiguration | undefined,
+    option: "check" | "buildAssets" | "buildFiles"
 ) {
     const project = DocumentStore.project;
 
     let buildResults: BuildResult[] = [];
 
     buildResults.push(
-        await buildAssets(project, sectionNames, buildConfiguration)
+        await buildAssets(project, sectionNames, buildConfiguration, option)
     );
 
     if (project.scpi) {
@@ -351,7 +352,8 @@ export async function build(
                         await getBuildResults(
                             DocumentStore,
                             sectionNames,
-                            configuration
+                            configuration,
+                            option
                         );
                 }
             } else {
@@ -368,14 +370,16 @@ export async function build(
                         await getBuildResults(
                             DocumentStore,
                             sectionNames,
-                            selectedBuildConfiguration
+                            selectedBuildConfiguration,
+                            option
                         );
                 } else {
                     configurationBuildResults["default"] =
                         await getBuildResults(
                             DocumentStore,
                             sectionNames,
-                            undefined
+                            undefined,
+                            option
                         );
                 }
             }

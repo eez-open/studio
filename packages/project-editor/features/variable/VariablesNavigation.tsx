@@ -101,11 +101,7 @@ export const LocalVariables = observer(
             const editor = this.context.editorsStore.activeEditor;
             if (editor) {
                 const object = editor.object;
-                if (
-                    object instanceof Page ||
-                    (object instanceof Action &&
-                        object.implementationType == "flow")
-                ) {
+                if (object instanceof Page || object instanceof Action) {
                     return object.localVariables;
                 }
             }

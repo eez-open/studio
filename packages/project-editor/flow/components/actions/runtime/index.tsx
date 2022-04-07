@@ -2,7 +2,7 @@ import type { IDashboardComponentContext } from "eez-studio-types";
 import type { WorkerToRenderMessage } from "project-editor/flow/runtime/wasm-worker-interfaces";
 
 import { registerExecuteFunction } from "project-editor/flow/runtime/wasm-execute-functions";
-import { Duplex, Readable, Writable } from "stream";
+import { Duplex, Readable, Stream, Writable } from "stream";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -254,10 +254,21 @@ registerExecuteFunction(
         context = context.startAsyncExecution();
 
         context.sendMessageToComponent(serialConnection, result => {
-            if (result) {
-                context.throwError(result);
+            if (result.serialConnectionId != undefined) {
+                if (result.serialConnectionId != serialConnection.id) {
+                    try {
+                        context.setPropertyField(
+                            "connection",
+                            "id",
+                            result.serialConnectionId
+                        );
+                        context.propagateValueThroughSeqout();
+                    } catch (err) {
+                        context.throwError(err.toString());
+                    }
+                }
             } else {
-                context.propagateValueThroughSeqout();
+                context.throwError(result.error);
             }
             context.endAsyncExecution();
         });
@@ -295,16 +306,23 @@ registerExecuteFunction(
 
         context = context.startAsyncExecution();
 
+        const readableStream = new Stream.Readable();
+        readableStream._read = () => {};
+
+        context.propagateValue("data", readableStream);
+
         context.sendMessageToComponent(serialConnection, result => {
             if (result && result.error) {
                 context.throwError(result.error);
+                context.endAsyncExecution();
             } else {
-                if (result) {
-                    context.propagateValue("data", result.data);
+                if (result.data) {
+                    readableStream.push(result.data);
+                } else {
+                    readableStream.destroy();
+                    context.endAsyncExecution();
                 }
-                context.propagateValueThroughSeqout();
             }
-            context.endAsyncExecution();
         });
     }
 );
@@ -344,8 +362,12 @@ registerExecuteFunction(
         context = context.startAsyncExecution();
 
         context.sendMessageToComponent(undefined, result => {
-            context.propagateValue("ports", result);
-            context.propagateValueThroughSeqout();
+            if (result.ports) {
+                context.propagateValue("ports", result.ports);
+                context.propagateValueThroughSeqout();
+            } else {
+                context.throwError(result.error);
+            }
             context.endAsyncExecution();
         });
     }
@@ -393,6 +415,8 @@ registerExecuteFunction(
                 //processFinished = true;
             });
 
+            context.propagateValueThroughSeqout();
+
             // return () => {
             //     if (!processFinished) {
             //         process.kill();
@@ -420,12 +444,19 @@ registerExecuteFunction(
             ) {
                 let accData = "";
 
+                context.startAsyncExecution();
+
                 streamValue.on("data", (data: Buffer) => {
                     accData += data.toString();
                     context.propagateValue("data", accData);
                 });
+
+                streamValue.on("close", (data: Buffer) => {
+                    context.propagateValueThroughSeqout();
+                    context.endAsyncExecution();
+                });
             } else {
-                context.throwError("not a readable stream");
+                //context.throwError("not a readable stream");
             }
         }
 
@@ -474,14 +505,14 @@ registerExecuteFunction(
 );
 
 class RegexpExecutionState {
-    propagate = true;
-    isDone = false;
-    matches: RegExpMatchArray[] = [];
+    private propagate = true;
+    private isDone = false;
+    private matches: RegExpMatchArray[] = [];
 
     constructor(
         private context: IDashboardComponentContext,
         re: RegExp,
-        dataValue: any
+        dataValue: Readable
     ) {
         const streamSnitch = new StreamSnitch(
             re,
@@ -496,6 +527,7 @@ class RegexpExecutionState {
             () => {
                 if (this.propagate) {
                     context.propagateValue("done", null);
+                    this.context.setComponentExecutionState(undefined);
                     this.propagate = false;
                 }
                 this.isDone = true;
@@ -503,6 +535,9 @@ class RegexpExecutionState {
         );
 
         dataValue.pipe(streamSnitch);
+        dataValue.on("close", () => {
+            streamSnitch.destroy();
+        });
     }
 
     getNext() {
@@ -510,6 +545,7 @@ class RegexpExecutionState {
             this.context.propagateValue("match", this.matches.shift());
         } else if (this.isDone) {
             this.context.propagateValue("done", null);
+            this.context.setComponentExecutionState(undefined);
         } else {
             this.propagate = true;
         }

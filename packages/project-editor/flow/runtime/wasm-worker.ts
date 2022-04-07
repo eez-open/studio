@@ -215,8 +215,14 @@ onmessage = async function (e: { data: RendererToWorkerMessage }) {
             e.data.resultToWorker.messageId
         );
         if (callback) {
-            componentMessageCallbacks.delete(e.data.resultToWorker.messageId);
             callback(e.data.resultToWorker.result);
+            if (e.data.resultToWorker.finalResult) {
+                componentMessageCallbacks.delete(
+                    e.data.resultToWorker.messageId
+                );
+            }
+        } else {
+            console.error("Unexpected: there is no worker callback");
         }
         return;
     }

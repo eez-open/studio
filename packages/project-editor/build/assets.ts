@@ -176,7 +176,8 @@ export class Assets {
 
     constructor(
         public rootProject: Project,
-        buildConfiguration: BuildConfiguration | undefined
+        buildConfiguration: BuildConfiguration | undefined,
+        public option: "check" | "buildAssets" | "buildFiles"
     ) {
         this.getConstantIndex(undefined, "undefined"); // undefined has value index 0
         this.getConstantIndex(null, "null"); // null has value index 1
@@ -223,7 +224,9 @@ export class Assets {
             ...this.getAssets<Action>(
                 project =>
                     project.actions.filter(
-                        action => action.implementationType == "flow"
+                        action =>
+                            this.option == "buildAssets" ||
+                            action.implementationType == "flow"
                     ),
                 assetIncludePredicate
             )
@@ -238,7 +241,8 @@ export class Assets {
             project =>
                 project.variables ? project.variables.globalVariables : [],
             globalVariable =>
-                assetIncludePredicate(globalVariable) && !globalVariable.native
+                assetIncludePredicate(globalVariable) &&
+                !(this.option == "buildFiles" && globalVariable.native)
         );
 
         const nativeVariables: Variable[] = [];
@@ -247,6 +251,7 @@ export class Assets {
                 project.variables ? project.variables.globalVariables : [],
             globalVariable =>
                 assetIncludePredicate(globalVariable) &&
+                this.option == "buildFiles" &&
                 globalVariable.native &&
                 globalVariable.id != undefined
         ).forEach(
@@ -259,6 +264,7 @@ export class Assets {
                 project.variables ? project.variables.globalVariables : [],
             globalVariable =>
                 assetIncludePredicate(globalVariable) &&
+                this.option == "buildFiles" &&
                 globalVariable.native &&
                 globalVariable.id == undefined
         ).forEach(globalVariable => nativeVariables.push(globalVariable));
@@ -294,7 +300,8 @@ export class Assets {
             project => project.actions,
             action =>
                 assetIncludePredicate(action) &&
-                action.implementationType != "native"
+                (this.option != "buildFiles" ||
+                    action.implementationType != "native")
         );
 
         const nativeActions: Action[] = [];
@@ -302,6 +309,7 @@ export class Assets {
             project => project.actions,
             action =>
                 assetIncludePredicate(action) &&
+                this.option == "buildFiles" &&
                 action.implementationType == "native" &&
                 action.id != undefined
         ).forEach(action => (nativeActions[action.id! - 1] = action));
@@ -310,6 +318,7 @@ export class Assets {
             project => project.actions,
             action =>
                 assetIncludePredicate(action) &&
+                this.option == "buildFiles" &&
                 action.implementationType == "native" &&
                 action.id == undefined
         ).forEach(action => nativeActions.push(action));
@@ -949,10 +958,15 @@ export class Assets {
                     return 0;
                 }
 
-                if (action.implementationType === "native") {
+                if (
+                    this.option == "buildFiles" &&
+                    action.implementationType === "native"
+                ) {
                     const actionIndex = this.actions
                         .filter(
-                            action => action.implementationType === "native"
+                            action =>
+                                this.option == "buildFiles" &&
+                                action.implementationType === "native"
                         )
                         .findIndex(action => action.name == actionName);
                     return actionIndex + 1;
@@ -1148,7 +1162,8 @@ export async function buildGuiAssetsData(assets: Assets) {
 export async function buildAssets(
     project: Project,
     sectionNames: string[] | undefined,
-    buildConfiguration: BuildConfiguration | undefined
+    buildConfiguration: BuildConfiguration | undefined,
+    option: "check" | "buildAssets" | "buildFiles"
 ): Promise<BuildResult> {
     if (project.settings.general.projectVersion === "v1") {
         return buildV1(project, sectionNames, buildConfiguration);
@@ -1160,7 +1175,7 @@ export async function buildAssets(
 
     const result: any = {};
 
-    const assets = new Assets(project, buildConfiguration);
+    const assets = new Assets(project, buildConfiguration, option);
 
     assets.reportUnusedAssets();
 

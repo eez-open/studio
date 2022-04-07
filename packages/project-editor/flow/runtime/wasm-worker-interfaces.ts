@@ -48,17 +48,19 @@ export interface RendererToWorkerMessage {
         pressed: number;
     }[];
 
-    // message from Studio debugger to worker
-    messageFromDebugger?: ArrayBuffer;
+    updateGlobalVariableValues?: IGlobalVariable[];
 
-    // result of SCPI command execution
-    scpiResult?: ScpiResult;
+    // request to worker to change some property values
+    assignProperties?: IAssignProperty[];
 
     // request to worker to evaluate some property values
     evalProperties?: IEvalProperty[];
 
-    // request to worker to change some property values
-    assignProperties?: IAssignProperty[];
+    // result of SCPI command execution
+    scpiResult?: ScpiResult;
+
+    // message from Studio debugger to worker
+    messageFromDebugger?: ArrayBuffer;
 
     // request to worker to execute widget action
     executeWidgetAction?: {
@@ -68,11 +70,10 @@ export interface RendererToWorkerMessage {
         arrayValue: ArrayValue;
     };
 
-    updateGlobalVariableValues?: IGlobalVariable[];
-
     resultToWorker?: {
         messageId: number;
         result: any;
+        finalResult: boolean;
     };
 }
 

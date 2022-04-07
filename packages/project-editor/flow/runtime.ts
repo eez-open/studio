@@ -396,7 +396,7 @@ export abstract class RuntimeBase {
         );
     }
 
-    sendResultToWorker(messageId: number, result: any) {}
+    sendResultToWorker(messageId: number, result: any, finalResult?: boolean) {}
 
     onBreakpointAdded(component: Component) {}
 
@@ -699,6 +699,7 @@ export class FlowState {
             error: observable,
             isFinished: observable,
             setComponentRunningState: action,
+            setComponentAsyncState: action,
             isRunning: computed({ keepAlive: true }),
             hasAnyDiposableComponent: computed({ keepAlive: true }),
             finish: action
@@ -786,6 +787,10 @@ export class FlowState {
 
     setComponentRunningState<T>(component: Component, runningState: T) {
         this.getComponentState(component).runningState = runningState;
+    }
+
+    setComponentAsyncState(component: Component, asyncState: boolean) {
+        this.getComponentState(component).asyncState = asyncState;
     }
 
     getVariable(component: Component, variableName: string): any {
@@ -918,6 +923,7 @@ export class ComponentState implements IComponentState {
     inputsData = new Map<string, any>();
     unreadInputsData = new Set<string>();
     isRunning: boolean = false;
+    asyncState: boolean = false;
     runningState: any;
     dispose: (() => void) | undefined = undefined;
 
@@ -926,6 +932,7 @@ export class ComponentState implements IComponentState {
             inputsData: observable,
             unreadInputsData: observable,
             isRunning: observable,
+            asyncState: observable,
             runningState: observable,
             dispose: observable,
             setInputData: action,

@@ -246,6 +246,7 @@ export class WasmRuntime extends RemoteRuntime {
             }
 
             this.screen = e.data.screen;
+
             this.requestAnimationFrameId = window.requestAnimationFrame(
                 this.tick
             );
@@ -271,11 +272,11 @@ export class WasmRuntime extends RemoteRuntime {
                 clicked: this.wheelClicked
             },
             pointerEvents: this.pointerEvents,
-            evalProperties: this.componentProperties.evalProperties,
+            updateGlobalVariableValues:
+                this.getUpdatedObjectGlobalVariableValues(),
             assignProperties:
                 this.componentProperties.assignPropertiesOnNextTick,
-            updateGlobalVariableValues:
-                this.getUpdatedObjectGlobalVariableValues()
+            evalProperties: this.componentProperties.evalProperties
         };
 
         this.worker.postMessage(message);
@@ -661,11 +662,12 @@ export class WasmRuntime extends RemoteRuntime {
         this.worker.postMessage(message);
     }
 
-    sendResultToWorker(messageId: number, result: any) {
+    sendResultToWorker(messageId: number, result: any, finalResult: boolean) {
         const message: RendererToWorkerMessage = {};
         message.resultToWorker = {
             messageId,
-            result
+            result,
+            finalResult: finalResult == undefined ? true : finalResult
         };
         this.worker.postMessage(message);
     }
@@ -913,15 +915,13 @@ class ComponentProperties {
             evalFlowState.evalComponents.set(component, evalComponent);
         }
 
-        const indexes = flowContext.dataContext.get(
+        let indexes = flowContext.dataContext.get(
             FLOW_ITERATOR_INDEXES_VARIABLE
         );
-        let indexesPath: string;
-        if (indexes == undefined || indexes.length == 0) {
-            indexesPath = ".";
-        } else {
-            indexesPath = indexes.join("/");
+        if (indexes == undefined) {
+            indexes = [0];
         }
+        let indexesPath = indexes.join("/");
 
         let evalProperty = evalComponent.evalProperties[propertyName];
         if (evalProperty == undefined) {

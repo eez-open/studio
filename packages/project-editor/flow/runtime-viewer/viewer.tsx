@@ -40,6 +40,7 @@ import {
 
 import { Selection } from "project-editor/flow/runtime-viewer/selection";
 import classNames from "classnames";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 const CONF_DOUBLE_CLICK_TIME = 350; // ms
 const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
@@ -632,7 +633,9 @@ export const FlowViewer = observer(
                                         position: "absolute"
                                     }}
                                 >
-                                    {this.flowContext.flowState &&
+                                    {(this.flowContext.flowState ||
+                                        this.flowContext.flow instanceof
+                                            ProjectEditor.ActionClass) &&
                                         flow.renderComponents(this.flowContext)}
                                 </div>
                                 {!this.props.tabState.frontFace && (

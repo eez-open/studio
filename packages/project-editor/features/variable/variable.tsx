@@ -315,7 +315,7 @@ export class Variable extends EezObject {
                 unique: true,
                 propertyGridGroup: generalGroup,
                 hideInPropertyGrid: (variable: Variable) =>
-                    !(variable.native && isGlobalVariable(variable))
+                    !isGlobalVariable(variable)
             },
             {
                 name: "name",
@@ -466,8 +466,7 @@ export class Variable extends EezObject {
             } else {
                 if (
                     DocumentStore.project.isAppletProject ||
-                    (DocumentStore.project.isFirmwareWithFlowSupportProject &&
-                        !variable.native) ||
+                    DocumentStore.project.isFirmwareWithFlowSupportProject ||
                     DocumentStore.project.isDashboardProject
                 ) {
                     try {
@@ -572,10 +571,7 @@ export class DataContext implements IDataContext {
                     }
                     if (
                         !this.project.isAppletProject &&
-                        !(
-                            this.project.isFirmwareWithFlowSupportProject &&
-                            !variable.native
-                        ) &&
+                        !this.project.isFirmwareWithFlowSupportProject &&
                         !this.project.isDashboardProject
                     ) {
                         const value = this.project._assetsMap[

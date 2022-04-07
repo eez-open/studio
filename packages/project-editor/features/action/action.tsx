@@ -56,9 +56,7 @@ export class Action extends Flow {
                 type: PropertyType.Number,
                 isOptional: true,
                 unique: true,
-                propertyGridGroup: generalGroup,
-                hideInPropertyGrid: (action: Action) =>
-                    !(action.implementationType == "native")
+                propertyGridGroup: generalGroup
             },
             {
                 name: "name",

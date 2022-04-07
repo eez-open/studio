@@ -20,7 +20,7 @@ export interface SerialConnectionConstructorParams {
     parity: "none" | "even" | "mark" | "odd" | "space";
 }
 
-interface SerialConnectionCallbacks {
+export interface SerialConnectionCallbacks {
     onConnected(): void;
     onData(data: string): void;
     onError(err: any): void;

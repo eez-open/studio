@@ -271,7 +271,7 @@ export function evalConstantExpressionNode(
                 const buildInConstantValue =
                     builtInConstants[builtInConstantName];
                 if (buildInConstantValue != undefined) {
-                    return buildInConstantValue.value();
+                    return buildInConstantValue.value(project._DocumentStore);
                 }
 
                 throw `Unknown constant '${builtInConstantName}'`;
@@ -430,7 +430,9 @@ function evalExpressionWithContext(
                 const buildInConstantValue =
                     builtInConstants[builtInConstantName];
                 if (buildInConstantValue != undefined) {
-                    return buildInConstantValue.value(expressionContext);
+                    return buildInConstantValue.value(
+                        expressionContext.DocumentStore
+                    );
                 }
             }
 
