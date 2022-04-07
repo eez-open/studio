@@ -8,7 +8,9 @@
           "projectFilePath": "gui.eez-project"
         }
       ],
-      "flowSupport": true
+      "flowSupport": true,
+      "displayWidth": 480,
+      "displayHeight": 272
     },
     "build": {
       "configurations": [

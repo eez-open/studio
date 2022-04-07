@@ -641,6 +641,8 @@ export class General extends EezObject {
     masterProject: string;
     imports: ImportDirective[];
     flowSupport: boolean;
+    displayWidth: number;
+    displayHeight: number;
     //css: string;
 
     static classInfo: ClassInfo = {
@@ -719,7 +721,21 @@ export class General extends EezObject {
             {
                 name: "css",
                 type: PropertyType.CSS
-            }*/
+            }*/,
+            {
+                name: "displayWidth",
+                type: PropertyType.Number,
+                hideInPropertyGrid: (general: General) => {
+                    return general.projectType != ProjectType.FIRMWARE;
+                }
+            },
+            {
+                name: "displayHeight",
+                type: PropertyType.Number,
+                hideInPropertyGrid: (general: General) => {
+                    return general.projectType != ProjectType.FIRMWARE;
+                }
+            }
         ],
         check: (object: General) => {
             let messages: Message[] = [];
@@ -765,6 +781,16 @@ export class General extends EezObject {
                     jsObject.projectType = ProjectType.FIRMWARE;
                 }
             }
+
+            if (jsObject.projectType == "firmware") {
+                if (jsObject.displayWidth == undefined) {
+                    jsObject.displayWidth = 480;
+                }
+
+                if (jsObject.displayHeight == undefined) {
+                    jsObject.displayHeight = 272;
+                }
+            }
         }
     };
 
@@ -778,7 +804,9 @@ export class General extends EezObject {
             namespace: observable,
             masterProject: observable,
             imports: observable,
-            flowSupport: observable
+            flowSupport: observable,
+            displayWidth: observable,
+            displayHeight: observable
         });
     }
 
@@ -831,6 +859,12 @@ export class Settings extends EezObject {
                         !DocumentStore.masterProjectEnabled
                     );
                 }
+            },
+            {
+                name: "general",
+                type: PropertyType.Object,
+                typeClass: General,
+                hideInPropertyGrid: true
             }
         ],
         hideInProperties: true,

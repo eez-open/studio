@@ -93,8 +93,8 @@ export class WasmRuntime extends RemoteRuntime {
     globalVariables: IRuntimeGlobalVariable[] = [];
 
     ctx: CanvasRenderingContext2D | undefined;
-    width: number = 480;
-    height: number = 272;
+    displayWidth: number;
+    displayHeight: number;
 
     pointerEvents: {
         x: number;
@@ -118,6 +118,16 @@ export class WasmRuntime extends RemoteRuntime {
 
     async doStartRuntime(isDebuggerActive: boolean) {
         const result = await this.DocumentStore.buildAssets();
+
+        this.displayWidth = this.DocumentStore.project
+            .isFirmwareWithFlowSupportProject
+            ? this.DocumentStore.project.settings.general.displayWidth
+            : 1;
+
+        this.displayHeight = this.DocumentStore.project
+            .isFirmwareWithFlowSupportProject
+            ? this.DocumentStore.project.settings.general.displayHeight
+            : 1;
 
         this.assetsMap = result.GUI_ASSETS_DATA_MAP_JS as AssetsMap;
         if (!this.assetsMap) {
@@ -188,7 +198,9 @@ export class WasmRuntime extends RemoteRuntime {
                 nodeModuleFolders: await getNodeModuleFolders(),
                 assetsData: this.assetsData,
                 assetsMap: this.assetsMap,
-                globalVariableValues
+                globalVariableValues,
+                displayWidth: this.displayWidth,
+                displayHeight: this.displayHeight
             };
 
             this.worker.postMessage(message);
@@ -262,7 +274,11 @@ export class WasmRuntime extends RemoteRuntime {
         this.requestAnimationFrameId = undefined;
 
         if (this.screen && this.ctx) {
-            var imgData = new ImageData(this.screen, this.width, this.height);
+            var imgData = new ImageData(
+                this.screen,
+                this.displayWidth,
+                this.displayHeight
+            );
             this.ctx.putImageData(imgData, 0, 0);
         }
 
@@ -697,8 +713,8 @@ export const WasmCanvas = observer(
 
             const wasmRuntime = this.context.runtime as WasmRuntime;
 
-            canvas.width = wasmRuntime.width;
-            canvas.height = wasmRuntime.height;
+            canvas.width = wasmRuntime.displayWidth;
+            canvas.height = wasmRuntime.displayHeight;
             wasmRuntime.ctx = canvas.getContext("2d")!;
 
             function sendPointerEvent(event: PointerEvent) {
@@ -773,7 +789,14 @@ export const WasmCanvas = observer(
         }
 
         render() {
-            return <canvas ref={this.canvasRef} width="480" height="272" />;
+            const wasmRuntime = this.context.runtime as WasmRuntime;
+            return (
+                <canvas
+                    ref={this.canvasRef}
+                    width={wasmRuntime.displayWidth}
+                    height={wasmRuntime.displayHeight}
+                />
+            );
         }
     }
 );

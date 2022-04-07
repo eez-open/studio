@@ -35,6 +35,8 @@ export interface RendererToWorkerMessage {
         assetsData: Uint8Array;
         assetsMap: AssetsMap;
         globalVariableValues: IGlobalVariable[];
+        displayWidth: number;
+        displayHeight: number;
     };
 
     // mouse data from Canvas

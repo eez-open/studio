@@ -12,6 +12,9 @@
 
 static int g_started = false;
 
+uint32_t DISPLAY_WIDTH;
+uint32_t DISPLAY_HEIGHT;
+
 extern void eez_system_tick();
 
 // clang-format off
@@ -66,7 +69,10 @@ namespace eez {
     }
 }
 
-EM_PORT_API(void) init(uint8_t *assets, uint32_t assetsSize) {
+EM_PORT_API(void) init(uint8_t *assets, uint32_t assetsSize, uint32_t displayWidth, uint32_t displayHeight) {
+    DISPLAY_WIDTH = displayWidth;
+    DISPLAY_HEIGHT = displayHeight;
+
     eez::flow::startToDebuggerMessageHook = startToDebuggerMessage;
     eez::flow::writeDebuggerBufferHook = writeDebuggerBuffer;
     eez::flow::finishToDebuggerMessageHook = finishToDebuggerMessage;
@@ -76,7 +82,8 @@ EM_PORT_API(void) init(uint8_t *assets, uint32_t assetsSize) {
 
     eez::flow::onDebuggerClientConnected();
 
-    eez::initAllocHeap(ALLOC_BUFFER, ALLOC_BUFFER_SIZE);
+    eez::initMemory();
+    eez::initAllocHeap(eez::ALLOC_BUFFER, eez::ALLOC_BUFFER_SIZE);
     eez::gui::loadMainAssets(assets, assetsSize);
     eez::gui::startThread();
     eez::gui::display::turnOn();

@@ -12,9 +12,11 @@ import {
     PropertyType,
     getParent,
     getId,
-    makeDerivedClassInfo
+    makeDerivedClassInfo,
+    MessageType
 } from "project-editor/core/object";
 import {
+    getChildOfObject,
     getDocumentStore,
     getLabel,
     isDashboardProject,
@@ -375,6 +377,34 @@ export class Page extends Flow {
 
             if (page.style && !findStyle(DocumentStore.project, page.style)) {
                 messages.push(propertyNotFoundMessage(page, "style"));
+            }
+
+            if (DocumentStore.project.isFirmwareWithFlowSupportProject) {
+                if (
+                    page.width !=
+                    DocumentStore.project.settings.general.displayWidth
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Width (${page.width}) is different from display width (${DocumentStore.project.settings.general.displayWidth})`,
+                            getChildOfObject(page, "width")
+                        )
+                    );
+                }
+
+                if (
+                    page.height !=
+                    DocumentStore.project.settings.general.displayHeight
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Height (${page.height}) is different from display height (${DocumentStore.project.settings.general.displayHeight})`,
+                            getChildOfObject(page, "height")
+                        )
+                    );
+                }
             }
 
             return messages;

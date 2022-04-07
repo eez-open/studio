@@ -143,7 +143,7 @@ declare const WasmFlowRuntime: {
     componentMessages: IMessageFromWorker[] | undefined;
 
     // eez framework API
-    _init(assets: number, assetsSize: number);
+    _init(assets: number, assetsSize: number, displayWidth: number, displayHeight: number);
     _startFlow();
     _mainLoop();
     _getSyncedBuffer(): number;

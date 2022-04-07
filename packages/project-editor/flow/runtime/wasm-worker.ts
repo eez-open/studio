@@ -139,6 +139,9 @@ function isPropertyValueChanged(newPropertyValue: IPropertyValue) {
 
 const componentMessageCallbacks = new Map<number, (result: any) => void>();
 
+let displayWidth = 480;
+let displayHeight = 272;
+
 onmessage = async function (e: { data: RendererToWorkerMessage }) {
     if (e.data.scpiResult) {
         let errorMessagePtr = 0;
@@ -239,7 +242,15 @@ onmessage = async function (e: { data: RendererToWorkerMessage }) {
         var ptr = WasmFlowRuntime._malloc(assets.length);
         WasmFlowRuntime.HEAPU8.set(assets, ptr);
 
-        WasmFlowRuntime._init(ptr, assets.length);
+        displayWidth = e.data.init.displayWidth;
+        displayHeight = e.data.init.displayHeight;
+
+        WasmFlowRuntime._init(
+            ptr,
+            assets.length,
+            e.data.init.displayWidth,
+            e.data.init.displayHeight
+        );
 
         WasmFlowRuntime._free(ptr);
 
@@ -382,9 +393,6 @@ onmessage = async function (e: { data: RendererToWorkerMessage }) {
         savedPropertyValues.clear();
     }
 
-    const WIDTH = 480;
-    const HEIGHT = 272;
-
     const data: WorkerToRenderMessage = {
         propertyValues
     };
@@ -412,7 +420,7 @@ onmessage = async function (e: { data: RendererToWorkerMessage }) {
         data.screen = new Uint8ClampedArray(
             WasmFlowRuntime.HEAPU8.subarray(
                 buf_addr,
-                buf_addr + WIDTH * HEIGHT * 4
+                buf_addr + displayWidth * displayHeight * 4
             )
         );
     }

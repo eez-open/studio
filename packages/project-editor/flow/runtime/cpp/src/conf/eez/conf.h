@@ -2,8 +2,8 @@
 
 #include <stdint.h>
 
-static const uint32_t DISPLAY_WIDTH = 480;
-static const uint32_t DISPLAY_HEIGHT = 272;
+extern uint32_t DISPLAY_WIDTH;
+extern uint32_t DISPLAY_HEIGHT;
 static const uint32_t DISPLAY_BPP = 32; // RGBA8888
 
 static const char *TITLE = "Min EEZ Sample";
