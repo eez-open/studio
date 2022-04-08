@@ -1219,12 +1219,22 @@ export abstract class DebuggerConnectionBase {
                             )
                         );
 
+                        runInAction(() => {
+                            runtime.error = errorMessage;
+                        });
+
+                        runtime.stopRuntime(true);
+
                         const { flowIndex, flowState } =
                             this.getFlowState(flowStateIndex);
                         if (!flowState) {
                             console.error("UNEXPECTED!");
                             return;
                         }
+
+                        runInAction(() => {
+                            flowState.error = errorMessage;
+                        });
 
                         const flowInAssetsMap =
                             runtime.assetsMap.flows[flowIndex];
@@ -1251,12 +1261,6 @@ export abstract class DebuggerConnectionBase {
                         }
 
                         flowState.log("error", errorMessage, component);
-
-                        runInAction(() => {
-                            flowState.runtime.error = flowState.error =
-                                errorMessage;
-                        });
-                        flowState.runtime.stopRuntime(true);
                     }
                     break;
 

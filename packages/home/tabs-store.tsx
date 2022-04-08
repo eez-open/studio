@@ -42,7 +42,7 @@ import { Loader } from "eez-studio-ui/loader";
 import { DocumentStoreClass } from "project-editor/store";
 
 import { ProjectContext } from "project-editor/project/context";
-import { ProjectEditor } from "project-editor/project/ProjectEditor";
+import { ProjectEditorView } from "project-editor/project/ProjectEditor";
 import { firstTime } from "./first-time";
 import { initProjectEditor } from "project-editor/project-editor-bootstrap";
 import { PROJECT_TAB_ID_PREFIX } from "home/tabs-store-conf";
@@ -453,7 +453,7 @@ export class ProjectEditorTab implements IHomeTab {
     error: string | undefined;
 
     ProjectContext: React.Context<DocumentStoreClass>;
-    ProjectEditor: typeof ProjectEditorModule.ProjectEditor;
+    ProjectEditor: typeof ProjectEditorModule.ProjectEditorView;
 
     closed: boolean = false;
 
@@ -461,9 +461,9 @@ export class ProjectEditorTab implements IHomeTab {
         try {
             this.ProjectContext = ProjectContext;
 
-            this.ProjectEditor = ProjectEditor;
+            this.ProjectEditor = ProjectEditorView;
 
-            await initProjectEditor(tabs);
+            await initProjectEditor(tabs, ProjectEditorTab);
             const DocumentStore = await DocumentStoreClass.create();
 
             if (this._filePath) {

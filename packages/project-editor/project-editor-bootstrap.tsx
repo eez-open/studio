@@ -4,7 +4,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import "project-editor/project/builtInFeatures";
 
-import type { Tabs } from "home/tabs-store";
+import type { ProjectEditorTab, Tabs } from "home/tabs-store";
 
 import { getProjectFeatures } from "project-editor/core/extensions";
 import {
@@ -133,7 +133,10 @@ export async function initExtensions() {
     }
 }
 
-export async function initProjectEditor(homeTabs: Tabs) {
+export async function initProjectEditor(
+    homeTabs: Tabs,
+    ProjectEditorTabClass: typeof ProjectEditorTab
+) {
     if (ProjectEditor.DataContextClass) {
         return;
     }
@@ -142,6 +145,7 @@ export async function initProjectEditor(homeTabs: Tabs) {
 
     const projectEditor: IProjectEditor = {
         homeTabs,
+        ProjectEditorTabClass,
         DataContextClass: DataContext,
         extensions: getProjectFeatures(),
         documentSearch: {

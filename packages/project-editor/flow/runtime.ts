@@ -16,7 +16,8 @@ import {
     DocumentStoreClass,
     getLabel,
     getObjectFromStringPath,
-    getObjectPathAsString
+    getObjectPathAsString,
+    LayoutModels
 } from "project-editor/store";
 import { ConnectionLine, Flow, FlowTabState } from "project-editor/flow/flow";
 import { CatchErrorActionComponent } from "project-editor/flow/components/actions";
@@ -207,6 +208,20 @@ export abstract class RuntimeBase {
                 this.DocumentStore.onSetDebuggerMode();
             }
             this.showNextQueueTask();
+        }
+
+        if (this.state == State.STOPPED) {
+            if (this.error) {
+                if (!this.isDebuggerActive) {
+                    this.DocumentStore.onSetDebuggerMode();
+                    this.DocumentStore.layoutModels.selectTab(
+                        this.DocumentStore.layoutModels.root,
+                        LayoutModels.DEBUGGER_TAB_ID
+                    );
+                }
+            } else {
+                this.DocumentStore.setEditorMode();
+            }
         }
     }
 

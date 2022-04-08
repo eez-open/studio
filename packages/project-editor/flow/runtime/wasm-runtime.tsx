@@ -1,4 +1,7 @@
 import React from "react";
+import { observer } from "mobx-react";
+
+import * as notification from "eez-studio-ui/notification";
 
 import { ProjectContext } from "project-editor/project/context";
 import {
@@ -8,7 +11,6 @@ import {
     getObjectPathAsString
 } from "project-editor/store";
 
-import { observer } from "mobx-react";
 import {
     RemoteRuntime,
     DebuggerConnectionBase
@@ -172,6 +174,14 @@ export class WasmRuntime extends RemoteRuntime {
         }
 
         this.destroyGlobalVariables();
+
+        if (this.error) {
+            if (notifyUser) {
+                notification.error(
+                    `Flow stopped with error: ${this.error.toString()}`
+                );
+            }
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////////

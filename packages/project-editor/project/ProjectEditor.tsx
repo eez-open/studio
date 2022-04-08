@@ -36,19 +36,19 @@ import { getEditorComponent } from "project-editor/project/EditorComponentFactor
 import { Icon } from "eez-studio-ui/icon";
 import { Loader } from "eez-studio-ui/loader";
 import { SingleStepMode } from "project-editor/flow/runtime";
-import { ProjectEditorTab, tabs } from "home/tabs-store";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const ProjectEditor = observer(
-    class ProjectEditor extends React.Component {
+export const ProjectEditorView = observer(
+    class ProjectEditorView extends React.Component {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
         onKeyDown = (e: KeyboardEvent) => {
-            const activeTab = tabs.activeTab;
+            const activeTab = ProjectEditor.homeTabs.activeTab;
             if (
-                activeTab instanceof ProjectEditorTab &&
+                activeTab instanceof ProjectEditor.ProjectEditorTabClass &&
                 activeTab.DocumentStore == this.context &&
                 this.context.runtime &&
                 this.context.runtime.isDebuggerActive &&
