@@ -409,6 +409,56 @@
         }
       }
     },
+    "actions": {
+      "version": 2,
+      "json": {
+        "global": {
+          "splitterSize": 4,
+          "splitterExtra": 4,
+          "tabEnableRename": false,
+          "borderEnableAutoHide": true
+        },
+        "borders": [],
+        "layout": {
+          "type": "row",
+          "id": "#70816e7a-f2c3-41a4-9275-c70387e9be82",
+          "children": [
+            {
+              "type": "row",
+              "id": "#3bf19d2c-1493-455d-804f-6f6612dfd36e",
+              "children": [
+                {
+                  "type": "tabset",
+                  "id": "#eeae3a5b-4015-4fe5-8b17-30861479b5ad",
+                  "children": [
+                    {
+                      "type": "tab",
+                      "id": "#39b52116-26c3-4376-9e30-c3df85478506",
+                      "name": "Actions",
+                      "component": "actions",
+                      "enableClose": false
+                    }
+                  ]
+                },
+                {
+                  "type": "tabset",
+                  "id": "#c5a5de3a-257b-41f0-b6aa-473ef7e8570d",
+                  "children": [
+                    {
+                      "type": "tab",
+                      "id": "#107f6d70-0c40-45b5-a236-48ae83d45f6b",
+                      "name": "Local Vars",
+                      "component": "local-vars",
+                      "enableClose": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
     "scpi": {
       "version": 3,
       "json": {

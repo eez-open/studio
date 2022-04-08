@@ -73,6 +73,9 @@ EM_PORT_API(void) init(uint8_t *assets, uint32_t assetsSize, uint32_t displayWid
     DISPLAY_WIDTH = displayWidth;
     DISPLAY_HEIGHT = displayHeight;
 
+    eez::initMemory();
+    eez::initAllocHeap(eez::ALLOC_BUFFER, eez::ALLOC_BUFFER_SIZE);
+
     eez::flow::startToDebuggerMessageHook = startToDebuggerMessage;
     eez::flow::writeDebuggerBufferHook = writeDebuggerBuffer;
     eez::flow::finishToDebuggerMessageHook = finishToDebuggerMessage;
@@ -82,8 +85,6 @@ EM_PORT_API(void) init(uint8_t *assets, uint32_t assetsSize, uint32_t displayWid
 
     eez::flow::onDebuggerClientConnected();
 
-    eez::initMemory();
-    eez::initAllocHeap(eez::ALLOC_BUFFER, eez::ALLOC_BUFFER_SIZE);
     eez::gui::loadMainAssets(assets, assetsSize);
     eez::gui::startThread();
     eez::gui::display::turnOn();

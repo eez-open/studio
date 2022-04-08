@@ -1089,7 +1089,7 @@ export abstract class DebuggerConnectionBase {
                         );
 
                         // console.log(
-                        //     MessagesToDebugger.MESSAGE_TO_DEBUGGER_FLOW_STATE_CREATED,
+                        //     "MESSAGE_TO_DEBUGGER_FLOW_STATE_CREATED",
                         //     "flowStateIndex",
                         //     flowStateIndex,
                         //     "flowIndex",
@@ -1190,7 +1190,7 @@ export abstract class DebuggerConnectionBase {
                         const flowStateIndex = parseInt(messageParameters[1]);
 
                         // console.log(
-                        //     MessagesToDebugger.MESSAGE_TO_DEBUGGER_FLOW_STATE_DESTROYED,
+                        //     "MESSAGE_TO_DEBUGGER_FLOW_STATE_DESTROYED",
                         //     "flowStateIndex",
                         //     flowStateIndex
                         // );

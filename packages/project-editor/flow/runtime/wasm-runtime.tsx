@@ -121,21 +121,35 @@ export class WasmRuntime extends RemoteRuntime {
     async doStartRuntime(isDebuggerActive: boolean) {
         const result = await this.DocumentStore.buildAssets();
 
-        this.displayWidth = Math.min(
-            Math.max(
-                this.DocumentStore.project.isFirmwareWithFlowSupportProject
-                    ? this.DocumentStore.project.settings.general.displayWidth
-                    : 1,
-                1
-            ),
-            1280
+        const maxPageWidth = Math.max(
+            ...this.DocumentStore.project.pages.map(page => page.width)
         );
+        if (this.DocumentStore.project.isFirmwareWithFlowSupportProject) {
+            this.displayWidth = Math.max(
+                maxPageWidth,
+                this.DocumentStore.project.settings.general.displayWidth
+            );
+        } else {
+            this.displayWidth = maxPageWidth;
+        }
+
+        const maxPageHeight = Math.max(
+            ...this.DocumentStore.project.pages.map(page => page.height)
+        );
+        if (this.DocumentStore.project.isFirmwareWithFlowSupportProject) {
+            this.displayHeight = Math.max(
+                maxPageHeight,
+                this.DocumentStore.project.settings.general.displayHeight
+            );
+        } else {
+            this.displayHeight = maxPageHeight;
+        }
 
         this.displayHeight = Math.min(
             Math.max(
                 this.DocumentStore.project.isFirmwareWithFlowSupportProject
                     ? this.DocumentStore.project.settings.general.displayHeight
-                    : 1,
+                    : maxPageHeight,
                 1
             ),
             1280

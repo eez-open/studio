@@ -59,6 +59,7 @@ registerExecuteFunction(
             WasmFlowRuntime.assetsMap.actionFlowIndexes[actionName];
         if (flowIndex == undefined) {
             context.throwError(`Invalid action name: ${actionName}`);
+            return;
         }
 
         context.executeCallAction(flowIndex);
@@ -102,11 +103,13 @@ registerExecuteFunction(
         const filePathValue = context.evalProperty<string>("filePath");
         if (typeof filePathValue != "string") {
             context.throwError("filePath is not a string");
+            return;
         }
 
         const encodingValue = context.evalProperty("encoding");
         if (typeof encodingValue != "string") {
             context.throwError("encoding is not a string");
+            return;
         }
 
         const encodings = [
@@ -128,6 +131,7 @@ registerExecuteFunction(
                     ", "
                 )}`
             );
+            return;
         }
 
         context = context.startAsyncExecution();
@@ -156,11 +160,13 @@ registerExecuteFunction(
         const filePathValue = context.evalProperty("filePath");
         if (typeof filePathValue != "string") {
             context.throwError("filePath is not a string");
+            return;
         }
 
         const encodingValue = context.evalProperty("encoding");
         if (typeof encodingValue != "string") {
             context.throwError("${encoding} is not a string");
+            return;
         }
 
         const encodings = [
@@ -182,6 +188,7 @@ registerExecuteFunction(
                     ", "
                 )}`
             );
+            return;
         }
 
         const contentValue = context.evalProperty("content");
@@ -214,6 +221,7 @@ registerExecuteFunction(
         const fileNameValue = context.evalProperty("fileName");
         if (fileNameValue && typeof fileNameValue != "string") {
             context.throwError("fileName is not a string");
+            return;
         }
 
         context = context.startAsyncExecution();
@@ -234,6 +242,7 @@ registerExecuteFunction(
         const filePathValue = context.evalProperty("filePath");
         if (typeof filePathValue != "string") {
             context.throwError("filePathValue is not a string");
+            return;
         }
 
         context.sendMessageToComponent(filePathValue);
@@ -249,6 +258,7 @@ registerExecuteFunction(
         const serialConnection = context.evalProperty("connection");
         if (!serialConnection) {
             context.throwError(`invalid connection`);
+            return;
         }
 
         context = context.startAsyncExecution();
@@ -281,6 +291,7 @@ registerExecuteFunction(
         const serialConnection = context.evalProperty("connection");
         if (!serialConnection) {
             context.throwError(`invalid connection`);
+            return;
         }
 
         context = context.startAsyncExecution();
@@ -302,6 +313,7 @@ registerExecuteFunction(
         const serialConnection = context.evalProperty("connection");
         if (!serialConnection) {
             context.throwError(`invalid connection`);
+            return;
         }
 
         context = context.startAsyncExecution();
@@ -333,6 +345,7 @@ registerExecuteFunction(
         const serialConnection = context.evalProperty("connection");
         if (!serialConnection) {
             context.throwError(`invalid connection`);
+            return;
         }
 
         const data = context.evalProperty("data");
@@ -381,15 +394,18 @@ registerExecuteFunction(
         const commandValue: any = context.evalProperty("command");
         if (typeof commandValue != "string") {
             context.throwError("command is not a string");
+            return;
         }
         const argsValue: any = context.evalProperty("arguments");
         if (!Array.isArray(argsValue)) {
             context.throwError("arguments is not an array");
+            return;
         }
 
         const i = argsValue.findIndex((arg: any) => typeof arg != "string");
         if (i != -1) {
             context.throwError(`argument at position ${i + 1} is not a string`);
+            return;
         }
 
         context = context.startAsyncExecution();
@@ -398,30 +414,27 @@ registerExecuteFunction(
             const { spawn } = await import("child_process");
 
             let process = spawn(commandValue, argsValue);
-            //let processFinished = false;
+            let processFinished = false;
 
             context.propagateValue("stdout", process.stdout);
             context.propagateValue("stderr", process.stderr);
 
-            process.on("close", code => {
-                context.propagateValue("finished", code);
-                context.endAsyncExecution();
-                //processFinished = true;
+            process.on("exit", code => {
+                if (!processFinished) {
+                    context.propagateValue("finished", code);
+                    context.endAsyncExecution();
+                    processFinished = true;
+                }
             });
 
             process.on("error", err => {
-                context.throwError(err.toString());
-                context.endAsyncExecution();
-                //processFinished = true;
+                if (!processFinished) {
+                    context.throwError(err.toString());
+                    context.endAsyncExecution();
+                }
             });
 
             context.propagateValueThroughSeqout();
-
-            // return () => {
-            //     if (!processFinished) {
-            //         process.kill();
-            //     }
-            // };
         } catch (err) {
             context.throwError(`argument at position ${i + 1} is not a string`);
         } finally {
