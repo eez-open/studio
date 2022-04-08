@@ -119,15 +119,25 @@ export class WasmRuntime extends RemoteRuntime {
     async doStartRuntime(isDebuggerActive: boolean) {
         const result = await this.DocumentStore.buildAssets();
 
-        this.displayWidth = this.DocumentStore.project
-            .isFirmwareWithFlowSupportProject
-            ? this.DocumentStore.project.settings.general.displayWidth
-            : 1;
+        this.displayWidth = Math.min(
+            Math.max(
+                this.DocumentStore.project.isFirmwareWithFlowSupportProject
+                    ? this.DocumentStore.project.settings.general.displayWidth
+                    : 1,
+                1
+            ),
+            1280
+        );
 
-        this.displayHeight = this.DocumentStore.project
-            .isFirmwareWithFlowSupportProject
-            ? this.DocumentStore.project.settings.general.displayHeight
-            : 1;
+        this.displayHeight = Math.min(
+            Math.max(
+                this.DocumentStore.project.isFirmwareWithFlowSupportProject
+                    ? this.DocumentStore.project.settings.general.displayHeight
+                    : 1,
+                1
+            ),
+            1280
+        );
 
         this.assetsMap = result.GUI_ASSETS_DATA_MAP_JS as AssetsMap;
         if (!this.assetsMap) {

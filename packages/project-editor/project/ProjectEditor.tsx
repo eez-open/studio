@@ -35,13 +35,52 @@ import {
 import { getEditorComponent } from "project-editor/project/EditorComponentFactory";
 import { Icon } from "eez-studio-ui/icon";
 import { Loader } from "eez-studio-ui/loader";
+import { SingleStepMode } from "project-editor/flow/runtime";
+import { ProjectEditorTab, tabs } from "home/tabs-store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export const ProjectEditor = observer(
-    class ProjectEditor extends React.Component<{}, {}> {
+    class ProjectEditor extends React.Component {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
+
+        onKeyDown = (e: KeyboardEvent) => {
+            const activeTab = tabs.activeTab;
+            if (
+                activeTab instanceof ProjectEditorTab &&
+                activeTab.DocumentStore == this.context &&
+                this.context.runtime &&
+                this.context.runtime.isDebuggerActive &&
+                this.context.runtime.isPaused
+            ) {
+                let singleStepMode: SingleStepMode | undefined;
+                if (e.key == "F10") {
+                    singleStepMode = "step-over";
+                } else if (e.key == "F11") {
+                    if (e.shiftKey) {
+                        singleStepMode = "step-out";
+                    } else {
+                        singleStepMode = "step-into";
+                    }
+                }
+
+                if (singleStepMode) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    this.context.runtime.runSingleStep(singleStepMode);
+                }
+            }
+        };
+
+        componentDidMount() {
+            document.addEventListener("keydown", this.onKeyDown);
+        }
+
+        componentWillUnmount() {
+            document.removeEventListener("keydown", this.onKeyDown);
+        }
 
         render() {
             if (!this.context.project || !this.context.project._fullyLoaded) {

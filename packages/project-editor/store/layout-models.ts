@@ -88,6 +88,7 @@ export class LayoutModels {
     bitmaps: FlexLayout.Model;
     fonts: FlexLayout.Model;
     pages: FlexLayout.Model;
+    actions: FlexLayout.Model;
     scpi: FlexLayout.Model;
     styles: FlexLayout.Model;
     themes: FlexLayout.Model;
@@ -414,6 +415,48 @@ export class LayoutModels {
                 },
                 get: () => this.pages,
                 set: model => (this.pages = model)
+            },
+            {
+                name: "actions",
+                version: 2,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "row",
+                                children: [
+                                    {
+                                        type: "tabset",
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Actions",
+                                                component: "actions"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Local Vars",
+                                                component: "local-vars"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.actions,
+                set: model => (this.actions = model)
             },
             {
                 name: "scpi",

@@ -451,7 +451,7 @@ registerExecuteFunction(
                     context.propagateValue("data", accData);
                 });
 
-                streamValue.on("close", (data: Buffer) => {
+                streamValue.on("end", (data: Buffer) => {
                     context.propagateValueThroughSeqout();
                     context.endAsyncExecution();
                 });

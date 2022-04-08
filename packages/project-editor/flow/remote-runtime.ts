@@ -20,7 +20,8 @@ import {
     StateMachineAction,
     ComponentState,
     FlowState,
-    RuntimeBase
+    RuntimeBase,
+    SingleStepMode
 } from "project-editor/flow/runtime";
 import { DocumentStoreClass } from "project-editor/store";
 
@@ -347,6 +348,8 @@ export class RemoteRuntime extends RuntimeBase {
 
     resume() {
         if (this.debuggerConnection) {
+            this.singleStepQueueTask = undefined;
+            this.singleStepLastSkippedTask = undefined;
             this.debuggerConnection.sendMessageFromDebugger(
                 `${MessagesFromDebugger.MESSAGE_FROM_DEBUGGER_RESUME}\n`
             );
@@ -354,10 +357,12 @@ export class RemoteRuntime extends RuntimeBase {
     }
 
     pause() {
-        if (this.debuggerConnection) {
-            this.debuggerConnection.sendMessageFromDebugger(
-                `${MessagesFromDebugger.MESSAGE_FROM_DEBUGGER_PAUSE}\n`
-            );
+        if (!this.isPaused) {
+            if (this.debuggerConnection) {
+                this.debuggerConnection.sendMessageFromDebugger(
+                    `${MessagesFromDebugger.MESSAGE_FROM_DEBUGGER_PAUSE}\n`
+                );
+            }
         }
 
         runInAction(() => {
@@ -366,8 +371,13 @@ export class RemoteRuntime extends RuntimeBase {
         });
     }
 
-    runSingleStep() {
+    runSingleStep(singleStepMode?: SingleStepMode) {
         if (this.debuggerConnection) {
+            if (singleStepMode != undefined) {
+                this.singleStepMode = singleStepMode;
+                this.singleStepQueueTask = this.queue[0];
+                this.singleStepLastSkippedTask = undefined;
+            }
             this.debuggerConnection.sendMessageFromDebugger(
                 `${MessagesFromDebugger.MESSAGE_FROM_DEBUGGER_SINGLE_STEP}\n`
             );
@@ -836,10 +846,6 @@ export abstract class DebuggerConnectionBase {
                                 connectionLine
                             })
                         );
-
-                        if (runtime.isPaused) {
-                            runtime.showNextQueueTask();
-                        }
                     }
                     break;
 
@@ -853,11 +859,7 @@ export abstract class DebuggerConnectionBase {
                                 )
                             );
 
-                            runInAction(() => runtime.queue.shift());
-
-                            if (runtime.isPaused) {
-                                runtime.showNextQueueTask();
-                            }
+                            runtime.popTask();
                         } else {
                             console.error("UNEXPECTED!");
                             return;

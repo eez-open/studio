@@ -80,6 +80,8 @@ export enum StateMachineAction {
     STOP = "STOP"
 }
 
+export type SingleStepMode = "step-into" | "step-over" | "step-out";
+
 export abstract class RuntimeBase {
     state: State = State.STARTING;
     isDebuggerActive = false;
@@ -94,6 +96,10 @@ export abstract class RuntimeBase {
     queue: QueueTask[] = [];
 
     flowStates: FlowState[] = [];
+
+    singleStepMode: SingleStepMode;
+    singleStepQueueTask: QueueTask | undefined;
+    singleStepLastSkippedTask: QueueTask | undefined;
 
     logs = new RuntimeLogs();
 
@@ -153,6 +159,7 @@ export abstract class RuntimeBase {
             setState: action,
             transition: action,
             pushTask: action,
+            popTask: action,
             showNextQueueTask: action,
             freeMemory: observable,
             totalMemory: observable
@@ -196,6 +203,9 @@ export abstract class RuntimeBase {
         this.state = state;
 
         if (this.state == State.PAUSED) {
+            if (!this.isDebuggerActive) {
+                this.DocumentStore.onSetDebuggerMode();
+            }
             this.showNextQueueTask();
         }
     }
@@ -312,6 +322,14 @@ export abstract class RuntimeBase {
         }
     }
 
+    popTask() {
+        this.queue.shift();
+
+        if (this.state == State.PAUSED) {
+            this.showNextQueueTask();
+        }
+    }
+
     removeQueueTasksForFlowState(flowState: FlowState) {
         runInAction(() => {
             const queueTasksBefore = flowState.runtime.queue.length;
@@ -323,21 +341,65 @@ export abstract class RuntimeBase {
         });
     }
 
+    skipNextQueueTask(nextQueueTask: QueueTask) {
+        if (this.state != State.PAUSED) {
+            return;
+        }
+
+        if (!this.singleStepQueueTask) {
+            return;
+        }
+
+        if (
+            nextQueueTask == this.singleStepQueueTask ||
+            nextQueueTask == this.singleStepLastSkippedTask
+        ) {
+            return;
+        }
+
+        if (
+            this.singleStepQueueTask &&
+            this.singleStepQueueTask.flowState.isFinished
+        ) {
+            this.singleStepQueueTask = undefined;
+            this.singleStepLastSkippedTask = undefined;
+            return;
+        }
+
+        let doSkip: boolean = false;
+
+        if (this.singleStepMode == "step-over") {
+            doSkip =
+                nextQueueTask.flowState != this.singleStepQueueTask.flowState &&
+                nextQueueTask.flowState !=
+                    this.singleStepQueueTask.flowState.parentFlowState;
+        } else if (this.singleStepMode == "step-into") {
+            doSkip =
+                nextQueueTask.flowState != this.singleStepQueueTask.flowState &&
+                nextQueueTask.flowState !=
+                    this.singleStepQueueTask.flowState.parentFlowState &&
+                nextQueueTask.flowState.parentFlowState !=
+                    this.singleStepQueueTask.flowState;
+        } else if (this.singleStepMode == "step-out") {
+            doSkip = !this.singleStepQueueTask.flowState.isFinished;
+        }
+
+        if (doSkip) {
+            this.singleStepLastSkippedTask = nextQueueTask;
+            this.runSingleStep();
+        } else {
+            this.singleStepQueueTask = nextQueueTask;
+        }
+    }
+
     showNextQueueTask() {
         const nextQueueTask = this.queue.length > 0 ? this.queue[0] : undefined;
 
-        this.selectQueueTask(nextQueueTask);
-
         if (nextQueueTask) {
-            setTimeout(() => this.showQueueTask(nextQueueTask), 10);
-        } else {
-            // deselect all objects
-            const editorState =
-                this.DocumentStore.editorsStore.activeEditor?.state;
-            if (editorState instanceof FlowTabState) {
-                editorState.selectObjects([]);
-            }
+            this.skipNextQueueTask(nextQueueTask);
         }
+
+        this.selectQueueTask(nextQueueTask);
     }
 
     selectFlowStateForFlow(flow: Flow) {
@@ -345,10 +407,24 @@ export abstract class RuntimeBase {
     }
 
     selectQueueTask(queueTask: QueueTask | undefined) {
+        if (
+            this.singleStepQueueTask &&
+            queueTask?.flowState != this.singleStepQueueTask.flowState
+        ) {
+            return;
+        }
+
         this.selectedQueueTask = queueTask;
         if (queueTask) {
             this.selectedFlowState = queueTask.flowState;
-            this.showSelectedFlowState();
+            this.showQueueTask(queueTask);
+        } else {
+            // deselect all objects
+            const editorState =
+                this.DocumentStore.editorsStore.activeEditor?.state;
+            if (editorState instanceof FlowTabState) {
+                editorState.selectObjects([]);
+            }
         }
     }
 
@@ -417,7 +493,7 @@ export abstract class RuntimeBase {
 
     abstract pause(): void;
 
-    abstract runSingleStep(): void;
+    abstract runSingleStep(singleStepMode?: SingleStepMode): void;
 
     abstract executeWidgetAction(
         flowContext: IFlowContext,

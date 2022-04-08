@@ -200,7 +200,7 @@ export function createWasmValue(
         return WasmFlowRuntime._createStreamValue(getStreamID(value));
     }
 
-    if (value.valueTypeIndex) {
+    if (value.valueTypeIndex != undefined) {
         return createWasmArrayValue(value);
     }
 

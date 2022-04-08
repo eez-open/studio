@@ -737,21 +737,45 @@ export class General extends EezObject {
                 }
             }
         ],
-        check: (object: General) => {
+        check: (general: General) => {
             let messages: Message[] = [];
 
-            if (object.masterProject) {
-                const DocumentStore = getDocumentStore(object);
+            if (general.masterProject) {
+                const DocumentStore = getDocumentStore(general);
                 if (
                     !fileExistsSync(
-                        DocumentStore.getAbsoluteFilePath(object.masterProject)
+                        DocumentStore.getAbsoluteFilePath(general.masterProject)
                     )
                 ) {
                     messages.push(
                         new Message(
                             MessageType.ERROR,
                             "File doesn't exists",
-                            getChildOfObject(object, "masterProject")
+                            getChildOfObject(general, "masterProject")
+                        )
+                    );
+                }
+            }
+
+            const DocumentStore = getDocumentStore(general);
+
+            if (DocumentStore.project.isFirmwareWithFlowSupportProject) {
+                if (general.displayWidth < 1 || general.displayWidth > 1280) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Display width must be between 1 and 1280 `,
+                            getChildOfObject(general, "displayWidth")
+                        )
+                    );
+                }
+
+                if (general.displayHeight < 1 || general.displayHeight > 1280) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Display height must be between 1 and 1280 `,
+                            getChildOfObject(general, "displayHeight")
                         )
                     );
                 }

@@ -393,6 +393,16 @@ export class Page extends Flow {
                     );
                 }
 
+                if (page.width < 1 || page.width > 1280) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Width must be between 1 and 1280 `,
+                            getChildOfObject(page, "width")
+                        )
+                    );
+                }
+
                 if (
                     page.height !=
                     DocumentStore.project.settings.general.displayHeight
@@ -401,6 +411,16 @@ export class Page extends Flow {
                         new Message(
                             MessageType.ERROR,
                             `Height (${page.height}) is different from display height (${DocumentStore.project.settings.general.displayHeight})`,
+                            getChildOfObject(page, "height")
+                        )
+                    );
+                }
+
+                if (page.height < 1 || page.height > 1280) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Height must be between 1 and 1280 `,
                             getChildOfObject(page, "height")
                         )
                     );

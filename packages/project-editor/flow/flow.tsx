@@ -911,7 +911,7 @@ export abstract class FlowTabState implements IEditorState {
                 objectsAreSelected = false;
             } else {
                 for (let i = 0; i < state.objects.length; i++) {
-                    if (state.objects[i] != this.selectedObjects[i]) {
+                    if (this.selectedObjects.indexOf(state.objects[i]) == -1) {
                         objectsAreSelected = false;
                         break;
                     }

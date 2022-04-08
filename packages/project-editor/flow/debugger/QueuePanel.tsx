@@ -65,7 +65,7 @@ export const QueuePanel = observer(
                                       }
                                   />,
                                   <IconAction
-                                      key="single-step"
+                                      key="step-over"
                                       icon={
                                           <svg viewBox="0 0 43 38">
                                               <path d="M10 0h1v5h-1a5 5 0 0 0-5 5v14a5 5 0 0 0 5 5h1v-4l6.75 6.5L11 38v-4h-1C4.477 34 0 29.523 0 24V10C0 4.477 4.477 0 10 0zm7 5h26v5H17V5zm3 8h23v5H20v-5zm-3 8h26v5H17v-5z" />
@@ -73,13 +73,58 @@ export const QueuePanel = observer(
                                       }
                                       iconSize={18}
                                       style={{ marginTop: 4 }}
-                                      title="Single step"
-                                      onClick={() =>
-                                          this.props.runtime.runSingleStep()
-                                      }
+                                      title="Step over (F10)"
+                                      onClick={() => {
+                                          this.props.runtime.runSingleStep(
+                                              "step-over"
+                                          );
+                                      }}
                                       enabled={
                                           !this.props.runtime.isStopped &&
-                                          this.props.runtime.isPaused
+                                          this.props.runtime.isPaused &&
+                                          this.props.runtime.queue.length > 0
+                                      }
+                                  />,
+                                  <IconAction
+                                      key="step-into"
+                                      icon={
+                                          <svg viewBox="0 0 43 29">
+                                              <path d="M17 0h26v5H17V0zm3 8h23v5H20V8zm0 8h23v5H20v-5zm-3 8h26v5H17v-5zM5 12a4 4 0 0 0 4 4h2v-4l6.75 6.5L11 25v-4H9a9 9 0 0 1-9-9V9a9 9 0 0 1 9-9h2v5H9a4 4 0 0 0-4 4v3z" />
+                                          </svg>
+                                      }
+                                      iconSize={18}
+                                      style={{ marginTop: 4 }}
+                                      title="Step into (F11)"
+                                      onClick={() => {
+                                          this.props.runtime.runSingleStep(
+                                              "step-into"
+                                          );
+                                      }}
+                                      enabled={
+                                          !this.props.runtime.isStopped &&
+                                          this.props.runtime.isPaused &&
+                                          this.props.runtime.queue.length > 0
+                                      }
+                                  />,
+                                  <IconAction
+                                      key="step-out"
+                                      icon={
+                                          <svg viewBox="0 0 45 30">
+                                              <path d="M19 9h26v5H19V9zm3 8h23v5H22v-5zm-3 8h26v5H19v-5zM9 22A9 9 0 1 1 9 4h3V0l6.75 6.5L12 13V9H9a4 4 0 0 0 0 8h7v5H9z" />
+                                          </svg>
+                                      }
+                                      iconSize={18}
+                                      style={{ marginTop: 4 }}
+                                      title="Step out (Shift + F11)"
+                                      onClick={() => {
+                                          this.props.runtime.runSingleStep(
+                                              "step-out"
+                                          );
+                                      }}
+                                      enabled={
+                                          !this.props.runtime.isStopped &&
+                                          this.props.runtime.isPaused &&
+                                          this.props.runtime.queue.length > 0
                                       }
                                   />,
                                   <IconAction
@@ -169,10 +214,8 @@ const QueueList = observer(
 
         selectNode(node?: ITreeNode<QueueTask>) {
             const queueTask = node && node.data;
-
             if (queueTask) {
                 this.props.runtime.selectQueueTask(queueTask);
-                this.props.runtime.showQueueTask(queueTask);
             }
         }
 
