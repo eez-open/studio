@@ -835,15 +835,15 @@ export class DocumentStoreClass {
 
     setEditorMode() {
         if (this.runtime) {
-            this.runtime.stopRuntime(false);
-            this.dataContext.clear();
-
             if (this.runtime.isDebuggerActive) {
                 const editorState = this.editorsStore.activeEditor?.state;
                 if (editorState) {
                     editorState.selectObjects([]);
                 }
             }
+
+            this.runtime.stopRuntime(false);
+            this.dataContext.clear();
 
             this.runtime = undefined;
         }

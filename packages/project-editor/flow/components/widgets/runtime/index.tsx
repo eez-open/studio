@@ -47,6 +47,6 @@ registerExecuteFunction(
 ////////////////////////////////////////////////////////////////////////////////
 
 registerExecuteFunction(
-    "MarkdownWidget ",
+    "MarkdownWidget",
     function (context: IDashboardComponentContext) {}
 );
