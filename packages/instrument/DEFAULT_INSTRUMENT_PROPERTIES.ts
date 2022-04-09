@@ -8,7 +8,11 @@ export const DEFAULT_INSTRUMENT_PROPERTIES: IInstrumentExtensionProperties = {
             },
             serial: {
                 baudRates: [4800, 9600, 19200, 38400, 57600, 74880, 115200],
-                defaultBaudRate: 9600
+                defaultBaudRate: 9600,
+                defaultDataBits: 8,
+                defaultStopBits: 1,
+                defaultParity: "none",
+                defaultFlowControl: "none"
             }
         },
         channels: [
