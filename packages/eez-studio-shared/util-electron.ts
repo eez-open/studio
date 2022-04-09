@@ -49,16 +49,21 @@ export function localPathToFileUrl(localPath: string) {
     return "file://" + localPath.replace(/(\\|\/)/g, "/");
 }
 
-export function zipExtract(zipFilePath: string, destFolderPath: string) {
-    return new Promise<void>((resolve, reject) => {
-        const extract = require("extract-zip");
-        extract(zipFilePath, { dir: destFolderPath }, function (err: any) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
-            }
-        });
+export async function zipExtract(zipFilePath: string, destFolderPath: string) {
+    return new Promise<void>(async (resolve, reject) => {
+        try {
+            const { default: AdmZip } = await import("adm-zip");
+            var zip = new AdmZip(zipFilePath);
+            zip.extractAllToAsync(destFolderPath, true, true, err => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        } catch (err) {
+            reject(err);
+        }
     });
 }
 

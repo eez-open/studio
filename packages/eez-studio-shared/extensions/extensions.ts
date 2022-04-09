@@ -31,6 +31,7 @@ import {
 } from "eez-studio-shared/extensions/extension-folder";
 
 import type * as ShortcutsStoreModule from "shortcuts/shortcuts-store";
+import path from "path";
 
 export const CONF_EEZ_STUDIO_PROPERTY_NAME = "eez-studio";
 const CONF_MAIN_SCRIPT_PROPERTY_NAME = "main";
@@ -219,7 +220,8 @@ export async function importExtensionToFolder(
 }
 
 export async function importExtensionToTempFolder(extensionFilePath: string) {
-    const tmpExtensionFolderPath = extensionsFolderPath + "/" + guid() + "_tmp";
+    const tmpExtensionFolderPath =
+        extensionsFolderPath + path.sep + guid() + "_tmp";
     try {
         const extension = await importExtensionToFolder(
             extensionFilePath,
