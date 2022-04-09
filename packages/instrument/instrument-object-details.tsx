@@ -153,6 +153,28 @@ const ConnectionParametersDetails = observer(
                                 name="Baud rate"
                                 value={instrument.lastConnection.serialParameters.baudRate.toString()}
                             />
+                            <StaticProperty
+                                name="Data bits"
+                                value={instrument.lastConnection.serialParameters.dataBits.toString()}
+                            />
+                            <StaticProperty
+                                name="Stop bits"
+                                value={instrument.lastConnection.serialParameters.stopBits.toString()}
+                            />
+                            <StaticProperty
+                                name="Parity"
+                                value={
+                                    instrument.lastConnection.serialParameters
+                                        .parity
+                                }
+                            />
+                            <StaticProperty
+                                name="Flow control"
+                                value={
+                                    instrument.lastConnection.serialParameters
+                                        .flowControl
+                                }
+                            />
                         </PropertyList>
                     );
                 } else if (instrument.lastConnection.type === "usbtmc") {
