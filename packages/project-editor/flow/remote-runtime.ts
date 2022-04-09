@@ -36,6 +36,7 @@ import { webSimulatorMessageDispatcher } from "instrument/connection/connection-
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { ExecuteComponentLogItem } from "project-editor/flow/debugger/logs";
 import type { ValueType } from "eez-studio-types";
+import { InputActionComponent } from "project-editor/flow/components/actions";
 
 const DEBUGGER_TCP_PORT = 3333;
 
@@ -92,7 +93,13 @@ export class RemoteRuntime extends RuntimeBase {
     instrument: InstrumentObject | undefined;
     assetsMap: AssetsMap;
     debuggerValues = new Map<number, DebuggerValue>();
-    arrayValues = new Map<number, any>();
+    arrayValues = new Map<
+        number,
+        {
+            arrayElementAddresses: number[];
+            value: any;
+        }
+    >();
     flowStateMap = new Map<
         number,
         { flowIndex: number; flowState: FlowState }
@@ -587,40 +594,48 @@ export abstract class DebuggerConnectionBase {
 
         const arrayElementAddresses = addresses.slice(2);
 
-        let value: any = this.runtime.arrayValues.get(arrayAddress);
-
-        if (!value) {
-            value = observable(type.kind == "array" ? [] : {});
-            this.runtime.arrayValues.set(arrayAddress, value);
-
+        let arrayValue: any = this.runtime.arrayValues.get(arrayAddress);
+        if (arrayValue) {
+            const { arrayElementAddresses } = arrayValue;
             for (let i = 0; i < arrayElementAddresses.length; i++) {
-                let propertyName: string | number;
-                let propertyType: string;
-
-                if (type.kind == "array") {
-                    propertyName = i;
-                    propertyType = type.elementType.valueType;
-                } else {
-                    const field = type.fields[i];
-                    if (!field) {
-                        console.error("UNEXPECTED!");
-                        return undefined;
-                    }
-                    propertyName = field.name;
-                    propertyType = field.valueType;
-                }
-
-                const objectMemberValue = new ObjectMemberValue(
-                    value,
-                    propertyName,
-                    propertyType
-                );
-
-                this.runtime.debuggerValues.set(
-                    arrayElementAddresses[i],
-                    objectMemberValue
-                );
+                this.runtime.debuggerValues.delete(arrayElementAddresses[i]);
             }
+        }
+
+        const value = observable(type.kind == "array" ? [] : {});
+
+        this.runtime.arrayValues.set(arrayAddress, {
+            arrayElementAddresses,
+            value
+        });
+
+        for (let i = 0; i < arrayElementAddresses.length; i++) {
+            let propertyName: string | number;
+            let propertyType: string;
+
+            if (type.kind == "array") {
+                propertyName = i;
+                propertyType = type.elementType.valueType;
+            } else {
+                const field = type.fields[i];
+                if (!field) {
+                    console.error("UNEXPECTED!");
+                    return undefined;
+                }
+                propertyName = field.name;
+                propertyType = field.valueType;
+            }
+
+            const objectMemberValue = new ObjectMemberValue(
+                value,
+                propertyName,
+                propertyType
+            );
+
+            this.runtime.debuggerValues.set(
+                arrayElementAddresses[i],
+                objectMemberValue
+            );
         }
 
         return value;
@@ -871,7 +886,7 @@ export abstract class DebuggerConnectionBase {
                     {
                         // console.log(
                         //     "MESSAGE_TO_DEBUGGER_GLOBAL_VARIABLE_INIT",
-                        //     messageParameters.slice(1)
+                        //     messageParameters
                         // );
 
                         const globalVariableIndex = parseInt(
@@ -920,7 +935,7 @@ export abstract class DebuggerConnectionBase {
                     {
                         // console.log(
                         //     "MESSAGE_TO_DEBUGGER_LOCAL_VARIABLE_INIT",
-                        //     messageParameters.slice(1)
+                        //     messageParameters
                         // );
 
                         const flowStateIndex = parseInt(messageParameters[1]);
@@ -984,7 +999,7 @@ export abstract class DebuggerConnectionBase {
                     {
                         // console.log(
                         //     "MESSAGE_TO_DEBUGGER_COMPONENT_INPUT_INIT",
-                        //     messageParameters.slice(1)
+                        //     messageParameters
                         // );
 
                         const flowStateIndex = parseInt(messageParameters[1]);
@@ -1058,17 +1073,16 @@ export abstract class DebuggerConnectionBase {
 
                 case MessagesToDebugger.MESSAGE_TO_DEBUGGER_VALUE_CHANGED:
                     {
-                        // console.log(
-                        //     "MESSAGE_TO_DEBUGGER_VALUE_CHANGED",
-                        //     messageParameters.slice(1)
-                        // );
-
                         const valueAddress = parseInt(messageParameters[1], 16);
                         const value = messageParameters[2];
 
                         const debuggerValue =
                             runtime.debuggerValues.get(valueAddress);
                         if (!debuggerValue) {
+                            console.log(
+                                "MESSAGE_TO_DEBUGGER_VALUE_CHANGED",
+                                messageParameters
+                            );
                             console.error("UNEXPECTED!");
                             return;
                         }
@@ -1392,10 +1406,12 @@ export abstract class DebuggerConnectionBase {
                             return;
                         }
 
-                        flowState.setComponentRunningState(
-                            component,
-                            executionState
-                        );
+                        if (!(component instanceof InputActionComponent)) {
+                            flowState.setComponentRunningState(
+                                component,
+                                executionState
+                            );
+                        }
                     }
                     break;
 

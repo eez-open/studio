@@ -20,13 +20,46 @@ export class SerialInterface implements CommunicationInterface {
     connect() {
         try {
             const SerialPort = require("serialport") as typeof SerialPortModule;
+
+            const flowControl =
+                this.host.connectionParameters.serialParameters.flowControl ??
+                "none";
+
+            console.log({
+                baudRate:
+                    this.host.connectionParameters.serialParameters.baudRate,
+                dataBits:
+                    this.host.connectionParameters.serialParameters.dataBits ??
+                    8,
+                stopBits:
+                    this.host.connectionParameters.serialParameters.stopBits ??
+                    1,
+                parity:
+                    this.host.connectionParameters.serialParameters.parity ??
+                    "none",
+                rtscts: flowControl == "rts/cts" ? true : false,
+                xon: flowControl == "xon/xoff" ? true : false,
+                xoff: flowControl == "xon/xoff" ? true : false
+            });
+
             this.port = new SerialPort(
                 this.host.connectionParameters.serialParameters.port,
                 {
                     baudRate:
                         this.host.connectionParameters.serialParameters
                             .baudRate,
-                    rtscts: false
+                    dataBits:
+                        this.host.connectionParameters.serialParameters
+                            .dataBits ?? 8,
+                    stopBits:
+                        this.host.connectionParameters.serialParameters
+                            .stopBits ?? 1,
+                    parity:
+                        this.host.connectionParameters.serialParameters
+                            .parity ?? "none",
+                    rtscts: flowControl == "rts/cts" ? true : false,
+                    xon: flowControl == "xon/xoff" ? true : false,
+                    xoff: flowControl == "xon/xoff" ? true : false
                 },
                 (err: any) => {
                     if (err) {

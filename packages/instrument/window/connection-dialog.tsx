@@ -14,7 +14,10 @@ import {
 } from "eez-studio-ui/properties";
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 
-import type { ConnectionParameters } from "instrument/connection/interface";
+import type {
+    ConnectionParameters,
+    SerialConnectionParameters
+} from "instrument/connection/interface";
 import type * as UsbTmcModule from "instrument/connection/interfaces/usbtmc";
 import { guid } from "eez-studio-shared/guid";
 import { getSerialPorts } from "instrument/connection/interfaces/serial-ports-renderer";
@@ -73,8 +76,7 @@ export const ConnectionProperties = observer(
                 iface: observable,
                 ethernetAddress: observable,
                 ethernetPort: observable,
-                serialPortPath: observable,
-                serialPortBaudRate: observable,
+                serialParameters: observable,
                 selectedUsbDeviceIndex: observable,
                 idVendor: observable,
                 idProduct: observable,
@@ -86,6 +88,10 @@ export const ConnectionProperties = observer(
                 onEthernetPortChange: action.bound,
                 onSerialPortPathChange: action.bound,
                 onSerialPortBaudRateChange: action.bound,
+                onSerialPortDataBitsChange: action.bound,
+                onSerialPortStopBitsChange: action.bound,
+                onSerialPortParityChange: action.bound,
+                onSerialPortFlowControlChange: action.bound,
                 onUsbDeviceChange: action.bound,
                 initUsbDevices: action,
                 onVisaResourceChange: action.bound
@@ -101,8 +107,7 @@ export const ConnectionProperties = observer(
         ethernetAddress: string;
         ethernetPort: number;
 
-        serialPortPath: string;
-        serialPortBaudRate: number;
+        serialParameters: SerialConnectionParameters;
 
         selectedUsbDeviceIndex: number | undefined;
         idVendor: number;
@@ -125,9 +130,22 @@ export const ConnectionProperties = observer(
                 connectionParameters.ethernetParameters.address;
             this.ethernetPort = connectionParameters.ethernetParameters.port;
 
-            this.serialPortPath = connectionParameters.serialParameters.port;
-            this.serialPortBaudRate =
-                connectionParameters.serialParameters.baudRate;
+            this.serialParameters = Object.assign(
+                {},
+                connectionParameters.serialParameters
+            );
+            if (this.serialParameters.dataBits == undefined) {
+                this.serialParameters.dataBits = 8;
+            }
+            if (this.serialParameters.stopBits == undefined) {
+                this.serialParameters.stopBits = 1;
+            }
+            if (this.serialParameters.parity == undefined) {
+                this.serialParameters.parity = "none";
+            }
+            if (this.serialParameters.flowControl == undefined) {
+                this.serialParameters.flowControl = "none";
+            }
 
             this.idVendor = connectionParameters.usbtmcParameters.idVendor;
             this.idProduct = connectionParameters.usbtmcParameters.idProduct;
@@ -172,10 +190,10 @@ export const ConnectionProperties = observer(
                         this.ethernetPort;
                 } else if (this.iface === "serial") {
                     connectionParameters.type = "serial";
-                    connectionParameters.serialParameters.port =
-                        this.serialPortPath;
-                    connectionParameters.serialParameters.baudRate =
-                        this.serialPortBaudRate;
+                    connectionParameters.serialParameters = Object.assign(
+                        {},
+                        this.serialParameters
+                    );
                 } else if (this.iface === "usbtmc") {
                     connectionParameters.type = "usbtmc";
                     connectionParameters.usbtmcParameters.idVendor = this
@@ -220,11 +238,27 @@ export const ConnectionProperties = observer(
         }
 
         onSerialPortPathChange(value: string) {
-            this.serialPortPath = value;
+            this.serialParameters.port = value;
         }
 
         onSerialPortBaudRateChange(value: string) {
-            this.serialPortBaudRate = parseInt(value);
+            this.serialParameters.baudRate = parseInt(value);
+        }
+
+        onSerialPortDataBitsChange(value: string) {
+            this.serialParameters.dataBits = parseInt(value) as any;
+        }
+
+        onSerialPortStopBitsChange(value: string) {
+            this.serialParameters.stopBits = parseInt(value) as any;
+        }
+
+        onSerialPortParityChange(value: string) {
+            this.serialParameters.parity = value as any;
+        }
+
+        onSerialPortFlowControlChange(value: string) {
+            this.serialParameters.flowControl = value as any;
         }
 
         async refreshSerialPortPaths() {
@@ -242,7 +276,7 @@ export const ConnectionProperties = observer(
                         }
                     ].concat(
                         serialPorts.map(port => {
-                            if (this.serialPortPath === port.path) {
+                            if (this.serialParameters.port === port.path) {
                                 found = true;
                             }
                             return {
@@ -261,7 +295,7 @@ export const ConnectionProperties = observer(
                     );
 
                     if (!found) {
-                        this.serialPortPath = "";
+                        this.serialParameters.port = "";
                     }
                 });
             } catch (err) {
@@ -364,7 +398,7 @@ export const ConnectionProperties = observer(
                     <SelectProperty
                         key="serialPort"
                         name="Port"
-                        value={this.serialPortPath}
+                        value={this.serialParameters.port}
                         onChange={this.onSerialPortPathChange}
                         inputGroupButton={
                             <button
@@ -388,7 +422,7 @@ export const ConnectionProperties = observer(
                     <SelectProperty
                         key="serialPortBaudRate"
                         name="Baud rate"
-                        value={this.serialPortBaudRate.toString()}
+                        value={this.serialParameters.baudRate.toString()}
                         onChange={this.onSerialPortBaudRateChange}
                     >
                         {this.props.serialBaudRates.map(baudRate => (
@@ -396,6 +430,48 @@ export const ConnectionProperties = observer(
                                 {baudRate}
                             </option>
                         ))}
+                    </SelectProperty>,
+                    <SelectProperty
+                        key="serialPortDataBits"
+                        name="Data bits"
+                        value={this.serialParameters.dataBits.toString()}
+                        onChange={this.onSerialPortDataBitsChange}
+                    >
+                        <option value="8">8</option>
+                        <option value="7">7</option>
+                        <option value="6">6</option>
+                        <option value="5">5</option>
+                    </SelectProperty>,
+                    <SelectProperty
+                        key="serialPortStopBits"
+                        name="Stop bits"
+                        value={this.serialParameters.stopBits.toString()}
+                        onChange={this.onSerialPortStopBitsChange}
+                    >
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                    </SelectProperty>,
+                    <SelectProperty
+                        key="serialPortParity"
+                        name="Parity"
+                        value={this.serialParameters.parity}
+                        onChange={this.onSerialPortParityChange}
+                    >
+                        <option value="none">None</option>
+                        <option value="even">Even</option>
+                        <option value="odd">Odd</option>
+                        <option value="mark">Mark</option>
+                        <option value="space">Space</option>
+                    </SelectProperty>,
+                    <SelectProperty
+                        key="serialPortFlowControl"
+                        name="Flow control"
+                        value={this.serialParameters.flowControl}
+                        onChange={this.onSerialPortFlowControlChange}
+                    >
+                        <option value="none">None</option>
+                        <option value="xon/xoff">XON/XOFF</option>
+                        <option value="rts/cts">RTS/CTS</option>
                     </SelectProperty>
                 ];
             } else if (this.iface === "usbtmc") {

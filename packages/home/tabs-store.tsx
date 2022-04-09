@@ -676,7 +676,9 @@ export class ProjectEditorTab implements IHomeTab {
                 this.tabs.removeTab(this);
                 this.DocumentStore.unmount();
             }
-            this.DocumentStore = undefined;
+            runInAction(() => {
+                this.DocumentStore = undefined;
+            });
         } else {
             this.tabs.removeTab(this);
         }

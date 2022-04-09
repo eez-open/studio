@@ -2516,15 +2516,27 @@ function renderActionComponent(
     const emptyContent = !body && !inputs.length && !outputs.length;
 
     let executionStateInfo: React.ReactNode = null;
-    let asyncStateInfo: React.ReactNode = null;
     if (flowContext.flowState) {
         const componentState =
             flowContext.flowState.getComponentState(actionNode);
-        if (componentState.runningState) {
-            executionStateInfo = <span className="title-info">[S]</span>;
-        }
-        if (componentState.asyncState) {
-            asyncStateInfo = <span className="title-info">[A]</span>;
+        if (componentState.runningState || componentState.asyncState) {
+            executionStateInfo = (
+                <span className="title-info-execution">
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        strokeWidth="2"
+                        stroke="currentColor"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    >
+                        <path d="M0 0h24v24H0z" stroke="none" />
+                        <path d="M12 6V3M16.25 7.75 18.4 5.6M18 12h3M16.25 16.25l2.15 2.15M12 18v3M7.75 16.25 5.6 18.4M6 12H3M7.75 7.75 5.6 5.6" />
+                    </svg>
+                </span>
+            );
         }
     }
 
@@ -2544,7 +2556,6 @@ function renderActionComponent(
                 >
                     <span className="title-image">{classInfo.icon}</span>
                     {executionStateInfo}
-                    {asyncStateInfo}
                     <span className="title-text">{getLabel(actionNode)}</span>
                 </div>
                 {seqOutputIndex != -1 && (

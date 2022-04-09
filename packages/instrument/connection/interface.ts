@@ -8,6 +8,10 @@ export interface EthernetConnectionParameters {
 export interface SerialConnectionParameters {
     port: string;
     baudRate: number;
+    dataBits: 8 | 7 | 6 | 5;
+    stopBits: 1 | 2;
+    parity: "none" | "even" | "mark" | "odd" | "space";
+    flowControl: "none" | "xon/xoff" | "rts/cts";
 }
 
 export interface UsbtmcConnectionParameters {

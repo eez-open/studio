@@ -32,6 +32,10 @@ export interface IInstrumentProperties {
         serial?: {
             baudRates: number[];
             defaultBaudRate: number;
+            defaultDataBits: 8 | 7 | 6 | 5;
+            defaultStopBits: 1 | 2;
+            defaultParity: "none" | "even" | "mark" | "odd" | "space";
+            defaultFlowControl: "none" | "xon/xoff" | "rts/cts";
         };
         usbtmc?: {
             idVendor: number | string | undefined;

@@ -213,7 +213,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         makeObservable(this, {
             selected: observable,
             expanded: observable,
-            children: computed,
+            children: computed({ keepAlive: true }),
             rect: computed,
             hasChildren: computed,
             selectedItems: computed,

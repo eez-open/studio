@@ -366,6 +366,10 @@ export class InstrumentObject {
         let type: "ethernet" | "serial" | "usbtmc" | undefined;
         let ethernetPort: number | undefined;
         let baudRate: number | undefined;
+        let dataBits: 8 | 7 | 6 | 5 | undefined;
+        let stopBits: 1 | 2 | undefined;
+        let parity: "none" | "even" | "mark" | "odd" | "space" | undefined;
+        let flowControl: "none" | "xon/xoff" | "rts/cts" | undefined;
         let idVendor: number | undefined;
         let idProduct: number | undefined;
 
@@ -422,6 +426,30 @@ export class InstrumentObject {
                     .defaultBaudRate;
         }
 
+        if (dataBits === undefined) {
+            dataBits =
+                DEFAULT_INSTRUMENT_PROPERTIES.properties.connection!.serial!
+                    .defaultDataBits;
+        }
+
+        if (stopBits === undefined) {
+            stopBits =
+                DEFAULT_INSTRUMENT_PROPERTIES.properties.connection!.serial!
+                    .defaultStopBits;
+        }
+
+        if (parity === undefined) {
+            parity =
+                DEFAULT_INSTRUMENT_PROPERTIES.properties.connection!.serial!
+                    .defaultParity;
+        }
+
+        if (flowControl === undefined) {
+            flowControl =
+                DEFAULT_INSTRUMENT_PROPERTIES.properties.connection!.serial!
+                    .defaultFlowControl;
+        }
+
         if (idVendor === undefined) {
             idVendor = 0;
         }
@@ -438,7 +466,11 @@ export class InstrumentObject {
             },
             serialParameters: {
                 port: "",
-                baudRate
+                baudRate,
+                dataBits,
+                stopBits,
+                parity,
+                flowControl
             },
             usbtmcParameters: {
                 idVendor: idVendor,
