@@ -93,6 +93,7 @@ import {
     PageStructure
 } from "project-editor/features/page/PagesNavigation";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { Texts } from "project-editor/features/texts";
 
 export { ProjectType } from "project-editor/core/object";
 
@@ -1448,6 +1449,7 @@ export class Project extends EezObject {
     pages: Page[];
     styles: Style[];
     fonts: Font[];
+    texts: Texts;
     bitmaps: Bitmap[];
     scpi: Scpi;
     shortcuts: Shortcuts;
@@ -1467,6 +1469,7 @@ export class Project extends EezObject {
             pages: observable,
             styles: observable,
             fonts: observable,
+            texts: observable,
             bitmaps: observable,
             scpi: observable,
             shortcuts: observable,
@@ -1665,15 +1668,17 @@ export class Project extends EezObject {
                         addNextToTabId
                     ) as FlexLayout.TabNode;
 
-                    layoutModel.doAction(
-                        FlexLayout.Actions.addNode(
-                            tabJson,
-                            addNexToTab.getParent()!.getId(),
-                            FlexLayout.DockLocation.CENTER,
-                            -1,
-                            false
-                        )
-                    );
+                    if (addNexToTab) {
+                        layoutModel.doAction(
+                            FlexLayout.Actions.addNode(
+                                tabJson,
+                                addNexToTab.getParent()!.getId(),
+                                FlexLayout.DockLocation.CENTER,
+                                -1,
+                                false
+                            )
+                        );
+                    }
                 }
             } else {
                 layoutModel.doAction(FlexLayout.Actions.deleteTab(tabId));

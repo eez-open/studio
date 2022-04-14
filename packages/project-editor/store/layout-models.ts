@@ -43,6 +43,9 @@ export class LayoutModels {
     static SCPI_ENUMS_TAB_ID = "SCPI_ENUMS";
     static SCPI_COMMANDS_TAB_ID = "SCPI_COMMANDS";
 
+    static LANGUAGES_TAB_ID = "LANGUAGES";
+    static TEXT_RESOURCES_TAB_ID = "TEXT_RESOURCES";
+
     static DEBUGGER_TAB: FlexLayout.IJsonTabNode = {
         type: "tab",
         enableClose: false,
@@ -93,6 +96,7 @@ export class LayoutModels {
     styles: FlexLayout.Model;
     themes: FlexLayout.Model;
     debugger: FlexLayout.Model;
+    texts: FlexLayout.Model;
 
     constructor(public DocumentStore: DocumentStoreClass) {
         makeObservable(this, {
@@ -657,6 +661,50 @@ export class LayoutModels {
                 },
                 get: () => this.debugger,
                 set: model => (this.debugger = model)
+            },
+            {
+                name: "texts",
+                version: 4,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "row",
+                                children: [
+                                    {
+                                        type: "tabset",
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Text resources",
+                                                id: LayoutModels.TEXT_RESOURCES_TAB_ID,
+                                                component: "resources"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Languages",
+                                                id: LayoutModels.LANGUAGES_TAB_ID,
+                                                component: "languages"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.texts,
+                set: model => (this.texts = model)
             }
         ];
     }

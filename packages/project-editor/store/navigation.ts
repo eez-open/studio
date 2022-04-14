@@ -37,6 +37,8 @@ export class NavigationStore {
     selectedScpiSubsystemObject = observable.box<IEezObject>();
     selectedScpiCommandObject = observable.box<IEezObject>();
     selectedScpiEnumObject = observable.box<IEezObject>();
+    selectedTextResourceObject = observable.box<IEezObject>();
+    selectedLanguageObject = observable.box<IEezObject>();
 
     editable = true;
 
@@ -180,6 +182,22 @@ export class NavigationStore {
                     )
                 );
             }
+
+            if (state.selectedTextResourceObject) {
+                this.selectedTextResourceObject.set(
+                    this.DocumentStore.getObjectFromStringPath(
+                        state.selectedTextResourceObject
+                    )
+                );
+            }
+
+            if (state.selectedLanguageObject) {
+                this.selectedLanguageObject.set(
+                    this.DocumentStore.getObjectFromStringPath(
+                        state.selectedLanguageObject
+                    )
+                );
+            }
         }
     }
 
@@ -238,6 +256,12 @@ export class NavigationStore {
                 : undefined,
             selectedScpiEnumObject: this.selectedScpiEnumObject.get()
                 ? getObjectPathAsString(this.selectedScpiEnumObject.get())
+                : undefined,
+            selectedTextResourceObject: this.selectedTextResourceObject.get()
+                ? getObjectPathAsString(this.selectedTextResourceObject.get())
+                : undefined,
+            selectedLanguageObject: this.selectedLanguageObject.get()
+                ? getObjectPathAsString(this.selectedLanguageObject.get())
                 : undefined
         };
     }

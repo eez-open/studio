@@ -22,7 +22,6 @@ import { showGenericDialog, TableField } from "eez-studio-ui/generic-dialog";
 import {
     IEezObject,
     PropertyType,
-    getProperty,
     getParent,
     getKey,
     isEezObject
@@ -673,17 +672,8 @@ export class DocumentStoreClass {
         // make sure that plain JavaScript objects to EezObject's
         let values: any = {};
 
-        let oldValues: any;
-        if (getClassInfo(object).afterUpdateObjectHook) {
-            oldValues = {};
-        }
-
         for (let propertyName in inputValues) {
             if (inputValues.hasOwnProperty(propertyName)) {
-                if (getClassInfo(object).afterUpdateObjectHook) {
-                    oldValues[propertyName] = getProperty(object, propertyName);
-                }
-
                 let propertyInfo = findPropertyByNameInObject(
                     object,
                     propertyName
@@ -719,12 +709,6 @@ export class DocumentStoreClass {
         }
 
         updateObject(object, values);
-
-        const afterUpdateObjectHook =
-            getClassInfo(object).afterUpdateObjectHook;
-        if (afterUpdateObjectHook) {
-            afterUpdateObjectHook(object, inputValues, oldValues);
-        }
     }
 
     deleteObject(object: IEezObject, options?: { dropPlace?: IEezObject }) {

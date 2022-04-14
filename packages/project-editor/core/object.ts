@@ -220,12 +220,6 @@ export interface ClassInfo {
 
     updateObjectValueHook?: (object: IEezObject, values: any) => void;
 
-    afterUpdateObjectHook?: (
-        object: IEezObject,
-        changedProperties: any,
-        oldValues: any
-    ) => void;
-
     extendContextMenu?: (
         object: IEezObject,
         context: IContextMenuContext,

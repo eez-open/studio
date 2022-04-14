@@ -39,6 +39,8 @@ import {
 import { Component } from "project-editor/flow/component";
 import { ScpiEnum } from "project-editor/features/scpi/enum";
 import { ConnectionLine } from "project-editor/flow/flow";
+import { TextsNavigation } from "project-editor/features/texts/navigation";
+import { Language, TextResource } from "project-editor/features/texts";
 
 export function getNavigationComponentId(object: IEezObject) {
     const project = getProject(object);
@@ -107,6 +109,10 @@ export function getNavigationComponent(
         if (!(project.isDashboardProject || project.isAppletProject)) {
             return SettingsNavigation;
         }
+    }
+
+    if (object == project.texts) {
+        return TextsNavigation;
     }
 
     return undefined;
@@ -406,6 +412,26 @@ export function selectObject(object: IEezObject) {
         DocumentStore.layoutModels.selectTab(
             DocumentStore.layoutModels.variables,
             LayoutModels.ENUMS_TAB_ID
+        );
+        return;
+    }
+
+    ancestor = getAncestorOfType(object, Language.classInfo);
+    if (ancestor) {
+        DocumentStore.navigationStore.selectedEnumObject.set(ancestor);
+        DocumentStore.layoutModels.selectTab(
+            DocumentStore.layoutModels.texts,
+            LayoutModels.LANGUAGES_TAB_ID
+        );
+        return;
+    }
+
+    ancestor = getAncestorOfType(object, TextResource.classInfo);
+    if (ancestor) {
+        DocumentStore.navigationStore.selectedEnumObject.set(ancestor);
+        DocumentStore.layoutModels.selectTab(
+            DocumentStore.layoutModels.texts,
+            LayoutModels.TEXT_RESOURCES_TAB_ID
         );
         return;
     }
