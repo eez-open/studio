@@ -6,9 +6,9 @@ import { ProjectContext } from "project-editor/project/context";
 import { getParent, IEezObject } from "project-editor/core/object";
 import {
     findPropertyByChildObject,
-    getClass,
     EezValueObject,
-    isValue
+    isValue,
+    getLabel
 } from "project-editor/store";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
 
@@ -78,12 +78,8 @@ export const PropertiesPanel = observer(
                 if (object instanceof EezValueObject) {
                     object = getParent(object);
                 }
-                const name = (object as any).name;
-                if (typeof name == "string") {
-                    title = `${getClass(object).name}: ${name}`;
-                } else {
-                    title = `${getClass(object).name}`;
-                }
+
+                title = getLabel(object);
             } else {
                 title = "Multiple objects selected";
             }

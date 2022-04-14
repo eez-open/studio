@@ -179,7 +179,11 @@ export function createWasmValue(
     }
 
     if (typeof value == "number") {
-        if (Number.isInteger(value)) {
+        if (
+            Number.isInteger(value) &&
+            value >= -2147483648 &&
+            value <= 2147483647
+        ) {
             return WasmFlowRuntime._createIntValue(value);
         }
         return WasmFlowRuntime._createDoubleValue(value);
