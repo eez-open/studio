@@ -1339,6 +1339,18 @@ export class DateNowActionComponent extends ActionComponent {
         componentHeaderColor: "#C0C0C0"
     });
 
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
     getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
