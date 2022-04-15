@@ -1355,6 +1355,12 @@ export class DateNowActionComponent extends ActionComponent {
         return [
             ...super.getOutputs(),
             {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            {
                 name: "value",
                 type: "date",
                 isSequenceOutput: false,
