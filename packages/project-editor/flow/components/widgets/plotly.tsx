@@ -28,7 +28,8 @@ import { evalProperty } from "project-editor/flow/components/widgets";
 import { getChildOfObject, Message, Section } from "project-editor/store";
 import {
     buildExpression,
-    checkExpression
+    checkExpression,
+    evalConstantExpression
 } from "project-editor/flow/expression";
 import { humanize } from "eez-studio-shared/string";
 import { Assets, DataBuffer } from "project-editor/build/assets";
@@ -55,27 +56,51 @@ const LineChartElement = observer(
         >();
 
         function getData(): PlotlyModule.Data[] {
-            return widget.lines.map((line, i) => ({
-                x: runningState
-                    ? runningState.values.map(
-                          inputValue => new Date(inputValue.time)
-                      )
-                    : [1, 2, 3, 4],
-                y: runningState
-                    ? runningState.values.map(
-                          inputValue => inputValue.lineValues[i]
-                      )
-                    : [i + 1, (i + 1) * 2, (i + 1) * 3, (i + 1) * 4],
-                type: "scatter",
-                line: {
-                    color: widget.color
+            return widget.lines.map((line, i) => {
+                let name;
+
+                if (runningState) {
+                    name = runningState.labels[i];
+                } else {
+                    try {
+                        name = evalConstantExpression(
+                            flowContext.DocumentStore.project,
+                            line.label
+                        ).value;
+                    } catch (err) {
+                        name = undefined;
+                    }
                 }
-            }));
+
+                return {
+                    x: runningState
+                        ? runningState.values.map(
+                              inputValue => new Date(inputValue.time)
+                          )
+                        : [1, 2, 3, 4],
+                    y: runningState
+                        ? runningState.values.map(
+                              inputValue => inputValue.lineValues[i]
+                          )
+                        : [i + 1, (i + 1) * 2, (i + 1) * 3, (i + 1) * 4],
+                    type: "scatter",
+                    name,
+                    line: {
+                        color: line.color
+                    }
+                };
+            });
         }
 
         function getLayout(): Partial<PlotlyModule.Layout> {
             return {
                 title: widget.title,
+                yaxis: {
+                    range:
+                        widget.yAxisRangeOption == "fixed"
+                            ? [widget.yAxisRangeFrom, widget.yAxisRangeTo]
+                            : undefined
+                },
                 margin: {
                     t: widget.margin.top,
                     r: widget.margin.right,
@@ -170,11 +195,16 @@ const LineChartElement = observer(
         }, [
             plotly,
             widget.title,
-            widget.color,
+            widget.yAxisRangeOption,
+            widget.yAxisRangeFrom,
+            widget.yAxisRangeTo,
             widget.margin.top,
             widget.margin.right,
             widget.margin.bottom,
             widget.margin.left,
+            widget.lines
+                .map(line => `${line.label},${line.value},${line.color}`)
+                .join("/"),
             runningState
         ]);
 
@@ -195,16 +225,19 @@ const LineChartElement = observer(
 
 class RunningState {
     values: InputData[] = [];
+    labels: string[] = [];
 
     constructor() {
         makeObservable(this, {
-            values: observable
+            values: observable,
+            labels: observable
         });
     }
 }
 
 class LineChartLine extends EezObject {
     label: string;
+    color: string;
     value: string;
 
     static classInfo: ClassInfo = {
@@ -216,6 +249,11 @@ class LineChartLine extends EezObject {
                 },
                 "string"
             ),
+            {
+                name: "color",
+                type: PropertyType.Color,
+                propertyGridGroup: specificGroup
+            },
             makeExpressionProperty(
                 {
                     name: "value",
@@ -267,6 +305,7 @@ class LineChartLine extends EezObject {
 
         makeObservable(this, {
             label: observable,
+            color: observable,
             value: observable
         });
     }
@@ -293,13 +332,37 @@ export class LineChartWidget extends Widget {
                 propertyGridGroup: specificGroup
             },
             {
-                name: "maxPoints",
-                type: PropertyType.Number,
+                name: "yAxisRangeOption",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "floating",
+                        label: "Floating"
+                    },
+                    {
+                        id: "fixed",
+                        label: "Fixed"
+                    }
+                ],
                 propertyGridGroup: specificGroup
             },
             {
-                name: "color",
-                type: PropertyType.Color,
+                name: "yAxisRangeFrom",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: (widget: LineChartWidget) =>
+                    widget.yAxisRangeOption != "fixed"
+            },
+            {
+                name: "yAxisRangeTo",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: (widget: LineChartWidget) =>
+                    widget.yAxisRangeOption != "fixed"
+            },
+            {
+                name: "maxPoints",
+                type: PropertyType.Number,
                 propertyGridGroup: specificGroup
             },
             {
@@ -320,6 +383,12 @@ export class LineChartWidget extends Widget {
                 ];
                 delete jsObject.data;
             }
+
+            if (jsObject.yAxisRangeOption == undefined) {
+                jsObject.yAxisRangeOption = "floating";
+                jsObject.yAxisRangeFrom = 0;
+                jsObject.yAxisRangeTo = 10;
+            }
         },
 
         defaultValue: {
@@ -328,6 +397,9 @@ export class LineChartWidget extends Widget {
             width: 320,
             height: 160,
             title: "",
+            yAxisRangeOption: "floating",
+            yAxisRangeFrom: 0,
+            yAxisRangeTo: 10,
             maxPoints: 40,
             minRange: 0,
             maxRange: 1,
@@ -354,8 +426,10 @@ export class LineChartWidget extends Widget {
 
     lines: LineChartLine[];
     title: string;
+    yAxisRangeOption: "floating" | "fixed";
+    yAxisRangeFrom: number;
+    yAxisRangeTo: number;
     maxPoints: number;
-    color: string;
     margin: RectObject;
 
     constructor() {
@@ -363,8 +437,10 @@ export class LineChartWidget extends Widget {
 
         makeObservable(this, {
             title: observable,
+            yAxisRangeOption: observable,
+            yAxisRangeFrom: observable,
+            yAxisRangeTo: observable,
             maxPoints: observable,
-            color: observable,
             margin: observable
         });
     }
@@ -380,6 +456,24 @@ export class LineChartWidget extends Widget {
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeArray(this.lines, line => {
+            buildExpression(assets, dataBuffer, this, line.label);
+
+            try {
+                // as property
+                buildExpression(assets, dataBuffer, this, line.label);
+            } catch (err) {
+                assets.DocumentStore.outputSectionsStore.write(
+                    Section.OUTPUT,
+                    MessageType.ERROR,
+                    err,
+                    getChildOfObject(this, "label")
+                );
+
+                dataBuffer.writeUint16NonAligned(makeEndInstruction());
+            }
+        });
+
+        dataBuffer.writeArray(this.lines, line => {
             buildExpression(assets, dataBuffer, this, line.value);
 
             try {
@@ -390,7 +484,7 @@ export class LineChartWidget extends Widget {
                     Section.OUTPUT,
                     MessageType.ERROR,
                     err,
-                    getChildOfObject(this, "expression")
+                    getChildOfObject(this, "value")
                 );
 
                 dataBuffer.writeUint16NonAligned(makeEndInstruction());
@@ -408,11 +502,13 @@ export class LineChartWidget extends Widget {
                 flowState.setComponentRunningState(this, runningState);
             }
 
-            const lineValues = message;
+            const { labels, values } = message;
+
+            runningState.labels = labels;
 
             runningState.values.push({
                 time: Date.now(),
-                lineValues
+                lineValues: values
             });
 
             if (runningState.values.length == this.maxPoints) {
