@@ -222,9 +222,10 @@ export interface IActionComponentDefinition {
     name: string;
     icon: string;
     componentHeaderColor: string;
+    componentPaletteLabel?: string;
 
     bodyPropertyName?: string;
-    bodyPropertyCallback?: (...props: string[]) => string;
+    bodyPropertyCallback?: (...props: string[]) => React.ReactNode;
 
     inputs: IComponentInput[];
     outputs: IComponentOutput[];

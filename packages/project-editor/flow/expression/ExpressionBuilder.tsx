@@ -286,7 +286,10 @@ const SelectItemDialog = observer(
                                 type={componentInput.type}
                             />
                         ),
-                        children: [],
+                        children: this.getTypeChildren(
+                            componentInput.type,
+                            componentInput.name
+                        ),
                         selected: this.selection == componentInput.name,
                         expanded: false,
                         data: componentInput.name

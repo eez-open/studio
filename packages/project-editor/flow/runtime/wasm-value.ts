@@ -76,7 +76,7 @@ export function createJsArrayValue(
             });
         } else if (type.kind == "object") {
             values = type.fields.map((field, i) => {
-                const fieldValue = valueFieldDescriptions
+                let fieldValue = valueFieldDescriptions
                     ? valueFieldDescriptions[i].getFieldValue(value)
                     : value[field.name];
 
@@ -108,6 +108,17 @@ export function createJsArrayValue(
                                 fieldValue,
                                 undefined
                             );
+                        } else {
+                            if (typeof fieldValue == "string") {
+                                if (
+                                    fieldType.valueType == "float" ||
+                                    fieldType.valueType == "double"
+                                ) {
+                                    fieldValue = Number.parseFloat(fieldValue);
+                                } else if (fieldType.valueType == "integer") {
+                                    fieldValue = Number.parseInt(fieldValue);
+                                }
+                            }
                         }
                     }
                 }
@@ -204,10 +215,6 @@ export function createWasmValue(
         return WasmFlowRuntime._createStreamValue(getStreamID(value));
     }
 
-    if (value.valueTypeIndex != undefined) {
-        return createWasmArrayValue(value);
-    }
-
     if (valueTypeIndex != undefined) {
         const arrayValue = createJsArrayValue(
             valueTypeIndex,
@@ -216,6 +223,10 @@ export function createWasmValue(
             undefined
         );
         return createWasmArrayValue(arrayValue);
+    }
+
+    if (value.valueTypeIndex != undefined) {
+        return createWasmArrayValue(value);
     }
 
     console.error("unsupported WASM value");

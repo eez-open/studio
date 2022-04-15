@@ -617,3 +617,52 @@ class StreamSnitch extends Writable {
         this._buffer = "";
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+registerExecuteFunction(
+    "HTTPGet",
+    function (context: IDashboardComponentContext) {
+        const url = context.evalProperty<string>("url");
+        if (url == undefined || typeof url != "string") {
+            context.throwError(`Invalid URL property`);
+            return;
+        }
+
+        context = context.startAsyncExecution();
+
+        (async function () {
+            try {
+                const response = await fetch(url);
+                const result = await response.text();
+                context.propagateValue("result", result);
+                context.propagateValueThroughSeqout();
+            } catch (err) {
+                context.throwError(err.toString());
+            } finally {
+                context.endAsyncExecution();
+            }
+        })();
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+registerExecuteFunction(
+    "JSONParse",
+    function (context: IDashboardComponentContext) {
+        const value = context.evalProperty<string>("value");
+        if (value == undefined || typeof value != "string") {
+            context.throwError(`Invalid URL property`);
+            return;
+        }
+
+        try {
+            const result = JSON.parse(value);
+            context.propagateValue("result", result);
+            context.propagateValueThroughSeqout();
+        } catch (err) {
+            context.throwError(err.toString());
+        }
+    }
+);

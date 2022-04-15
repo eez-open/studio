@@ -250,7 +250,7 @@ const WatchTable = observer(
                                         type
                                     ),
                                     selected: false,
-                                    expanded: false
+                                    expanded: true
                                 })
                             );
                         }
@@ -302,7 +302,7 @@ const WatchTable = observer(
                                         fieldType
                                     ),
                                     selected: false,
-                                    expanded: false
+                                    expanded: true
                                 })
                             );
 
@@ -368,7 +368,7 @@ const WatchTable = observer(
                                 children: this.getValueChildren(value, type),
                                 selected:
                                     i == this.props.selectedExpression.get(),
-                                expanded: false,
+                                expanded: true,
                                 className,
                                 data: i
                             });
@@ -407,7 +407,7 @@ const WatchTable = observer(
 
                     children: this.getValueChildren(value, variable.type),
                     selected: false,
-                    expanded: false
+                    expanded: true
                 });
             });
         };
@@ -472,7 +472,7 @@ const WatchTable = observer(
 
                     children: this.getValueChildren(value, null),
                     selected: false,
-                    expanded: false
+                    expanded: true
                 });
             });
         };
