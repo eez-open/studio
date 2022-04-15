@@ -297,7 +297,9 @@ class LineChartLine extends EezObject {
 
             return messages;
         },
-        defaultValue: {}
+        defaultValue: {
+            color: "black"
+        }
     };
 
     constructor() {
