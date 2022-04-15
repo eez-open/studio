@@ -27,6 +27,13 @@ registerExecuteFunction(
 ////////////////////////////////////////////////////////////////////////////////
 
 registerExecuteFunction(
+    "TextInputWidget",
+    function (context: IDashboardComponentContext) {}
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+registerExecuteFunction(
     "CheckboxWidget",
     function (context: IDashboardComponentContext) {}
 );

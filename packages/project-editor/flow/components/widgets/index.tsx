@@ -168,11 +168,16 @@ export function evalProperty(
         return undefined;
     }
 
-    return flowContext.DocumentStore.runtime!.evalProperty(
-        flowContext,
-        widget,
-        propertyName
-    );
+    if (flowContext.flowState) {
+        return flowContext.DocumentStore.runtime!.evalProperty(
+            flowContext,
+            widget,
+            propertyName
+        );
+    } else {
+        return evalConstantExpression(flowContext.DocumentStore.project, expr)
+            .value;
+    }
 }
 
 function getBooleanValue(
@@ -197,7 +202,7 @@ function getBooleanValue(
     return !!value;
 }
 
-function getNumberValue(
+export function getNumberValue(
     flowContext: IFlowContext,
     widget: Widget,
     propertyName: string,

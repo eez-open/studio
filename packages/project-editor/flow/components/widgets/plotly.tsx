@@ -24,7 +24,10 @@ import { observer } from "mobx-react";
 import type * as PlotlyModule from "plotly.js-dist-min";
 import classNames from "classnames";
 import { specificGroup } from "project-editor/components/PropertyGrid/groups";
-import { evalProperty } from "project-editor/flow/components/widgets";
+import {
+    evalProperty,
+    getNumberValue
+} from "project-editor/flow/components/widgets";
 import { getChildOfObject, Message, Section } from "project-editor/store";
 import {
     buildExpression,
@@ -93,13 +96,27 @@ const LineChartElement = observer(
         }
 
         function getLayout(): Partial<PlotlyModule.Layout> {
+            let range;
+            if (widget.yAxisRangeOption == "fixed") {
+                const yAxisRangeFrom = getNumberValue(
+                    flowContext,
+                    widget,
+                    "yAxisRangeFrom",
+                    0
+                );
+                const yAxisRangeTo = getNumberValue(
+                    flowContext,
+                    widget,
+                    "yAxisRangeTo",
+                    10
+                );
+                range = [yAxisRangeFrom, yAxisRangeTo];
+            }
+
             return {
                 title: widget.title,
                 yaxis: {
-                    range:
-                        widget.yAxisRangeOption == "fixed"
-                            ? [widget.yAxisRangeFrom, widget.yAxisRangeTo]
-                            : undefined
+                    range
                 },
                 margin: {
                     t: widget.margin.top,
@@ -298,7 +315,7 @@ class LineChartLine extends EezObject {
             return messages;
         },
         defaultValue: {
-            color: "black"
+            color: "#333333"
         }
     };
 
@@ -348,20 +365,26 @@ export class LineChartWidget extends Widget {
                 ],
                 propertyGridGroup: specificGroup
             },
-            {
-                name: "yAxisRangeFrom",
-                type: PropertyType.Number,
-                propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (widget: LineChartWidget) =>
-                    widget.yAxisRangeOption != "fixed"
-            },
-            {
-                name: "yAxisRangeTo",
-                type: PropertyType.Number,
-                propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (widget: LineChartWidget) =>
-                    widget.yAxisRangeOption != "fixed"
-            },
+            makeExpressionProperty(
+                {
+                    name: "yAxisRangeFrom",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (widget: LineChartWidget) =>
+                        widget.yAxisRangeOption != "fixed"
+                },
+                "double"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "yAxisRangeTo",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (widget: LineChartWidget) =>
+                        widget.yAxisRangeOption != "fixed"
+                },
+                "double"
+            ),
             {
                 name: "maxPoints",
                 type: PropertyType.Number,
