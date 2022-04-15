@@ -6,10 +6,18 @@ import {
     makeDerivedClassInfo,
     PropertyType,
     RectObject,
-    ProjectType
+    ProjectType,
+    EezObject,
+    ClassInfo,
+    getParent,
+    MessageType
 } from "project-editor/core/object";
 
-import { Widget } from "project-editor/flow/component";
+import {
+    makeDataPropertyInfo,
+    makeExpressionProperty,
+    Widget
+} from "project-editor/flow/component";
 import { IFlowContext, IFlowState } from "project-editor/flow/flow-interfaces";
 import { observer } from "mobx-react";
 
@@ -17,6 +25,14 @@ import type * as PlotlyModule from "plotly.js-dist-min";
 import classNames from "classnames";
 import { specificGroup } from "project-editor/components/PropertyGrid/groups";
 import { evalProperty } from "project-editor/flow/components/widgets";
+import { getChildOfObject, Message, Section } from "project-editor/store";
+import {
+    buildExpression,
+    checkExpression
+} from "project-editor/flow/expression";
+import { humanize } from "eez-studio-shared/string";
+import { Assets, DataBuffer } from "project-editor/build/assets";
+import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -39,24 +55,22 @@ const LineChartElement = observer(
         >();
 
         function getData(): PlotlyModule.Data[] {
-            return [
-                {
-                    x: runningState
-                        ? runningState.values.map(
-                              inputValue => new Date(inputValue.time)
-                          )
-                        : [1, 2, 3, 4],
-                    y: runningState
-                        ? runningState.values.map(
-                              inputValue => inputValue.value
-                          )
-                        : [2, 6, 4, 8],
-                    type: "scatter",
-                    line: {
-                        color: widget.color
-                    }
+            return widget.lines.map((line, i) => ({
+                x: runningState
+                    ? runningState.values.map(
+                          inputValue => new Date(inputValue.time)
+                      )
+                    : [1, 2, 3, 4],
+                y: runningState
+                    ? runningState.values.map(
+                          inputValue => inputValue.lineValues[i]
+                      )
+                    : [i + 1, (i + 1) * 2, (i + 1) * 3, (i + 1) * 4],
+                type: "scatter",
+                line: {
+                    color: widget.color
                 }
-            ];
+            }));
         }
 
         function getLayout(): Partial<PlotlyModule.Layout> {
@@ -98,10 +112,7 @@ const LineChartElement = observer(
                         disposeReaction = reaction(
                             () => {
                                 let runningState;
-                                if (
-                                    widget.isInputProperty("data") &&
-                                    flowContext.flowState
-                                ) {
+                                if (flowContext.flowState) {
                                     runningState =
                                         flowContext.flowState.getComponentRunningState<RunningState>(
                                             widget
@@ -192,9 +203,90 @@ class RunningState {
     }
 }
 
+class LineChartLine extends EezObject {
+    label: string;
+    value: string;
+
+    static classInfo: ClassInfo = {
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "label",
+                    type: PropertyType.MultilineText
+                },
+                "string"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "value",
+                    type: PropertyType.MultilineText
+                },
+                "double"
+            )
+        ],
+        check: (lineChartTrace: LineChartLine) => {
+            let messages: Message[] = [];
+
+            try {
+                checkExpression(
+                    getParent(getParent(lineChartTrace)!)! as LineChartWidget,
+                    lineChartTrace.label
+                );
+            } catch (err) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Invalid expression: ${err}`,
+                        getChildOfObject(lineChartTrace, "label")
+                    )
+                );
+            }
+
+            try {
+                checkExpression(
+                    getParent(getParent(lineChartTrace)!)! as LineChartWidget,
+                    lineChartTrace.value
+                );
+            } catch (err) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Invalid expression: ${err}`,
+                        getChildOfObject(lineChartTrace, "value")
+                    )
+                );
+            }
+
+            return messages;
+        },
+        defaultValue: {}
+    };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            label: observable,
+            value: observable
+        });
+    }
+}
+
 export class LineChartWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
+            Object.assign(makeDataPropertyInfo("data"), {
+                hideInPropertyGrid: true
+            }),
+            {
+                name: "lines",
+                type: PropertyType.Array,
+                typeClass: LineChartLine,
+                propertyGridGroup: specificGroup,
+                partOfNavigation: false,
+                enumerable: false,
+                defaultValue: []
+            },
             {
                 name: "title",
                 type: PropertyType.String,
@@ -217,6 +309,19 @@ export class LineChartWidget extends Widget {
                 propertyGridGroup: specificGroup
             }
         ],
+
+        beforeLoadHook: (object: LineChartWidget, jsObject: any) => {
+            if (jsObject.lines == undefined) {
+                jsObject.lines = [
+                    {
+                        label: `"${humanize(jsObject.data)}"`,
+                        value: jsObject.data
+                    }
+                ];
+                delete jsObject.data;
+            }
+        },
+
         defaultValue: {
             left: 0,
             top: 0,
@@ -247,6 +352,7 @@ export class LineChartWidget extends Widget {
             projectType === ProjectType.DASHBOARD
     });
 
+    lines: LineChartLine[];
     title: string;
     maxPoints: number;
     color: string;
@@ -272,6 +378,26 @@ export class LineChartWidget extends Widget {
         );
     }
 
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        dataBuffer.writeArray(this.lines, line => {
+            buildExpression(assets, dataBuffer, this, line.value);
+
+            try {
+                // as property
+                buildExpression(assets, dataBuffer, this, line.value);
+            } catch (err) {
+                assets.DocumentStore.outputSectionsStore.write(
+                    Section.OUTPUT,
+                    MessageType.ERROR,
+                    err,
+                    getChildOfObject(this, "expression")
+                );
+
+                dataBuffer.writeUint16NonAligned(makeEndInstruction());
+            }
+        });
+    }
+
     onWasmWorkerMessage(flowState: IFlowState, message: any) {
         runInAction(() => {
             let runningState =
@@ -282,11 +408,11 @@ export class LineChartWidget extends Widget {
                 flowState.setComponentRunningState(this, runningState);
             }
 
-            const value = message;
+            const lineValues = message;
 
             runningState.values.push({
                 time: Date.now(),
-                value
+                lineValues
             });
 
             if (runningState.values.length == this.maxPoints) {
@@ -535,7 +661,7 @@ registerClass("GaugeWidget", GaugeWidget);
 
 interface InputData {
     time: number;
-    value: any;
+    lineValues: any[];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -628,7 +754,12 @@ function doUpdateChart() {
     const chart = charts.get(el)!;
     charts.delete(el);
     if (chart.type === "lineChart") {
-        Plotly().extendTraces(el, chart.data, [0], chart.maxPoints);
+        Plotly().extendTraces(
+            el,
+            chart.data,
+            chart.data.x.map((_, i) => i),
+            chart.maxPoints
+        );
     } else {
         Plotly().update(el, { value: chart.value }, {});
     }
@@ -648,8 +779,8 @@ function updateLineChart(
         chart = {
             type: "lineChart",
             data: {
-                x: [[new Date(inputValue.time)]],
-                y: [[inputValue.value]]
+                x: inputValue.lineValues.map(() => [new Date(inputValue.time)]),
+                y: inputValue.lineValues.map(value => [value])
             },
             maxPoints
         };
@@ -660,8 +791,10 @@ function updateLineChart(
             doUpdateChartTimeoutId = setTimeout(doUpdateChart);
         }
     } else {
-        chart.data.x[0].push(new Date(inputValue.time));
-        chart.data.y[0].push(inputValue.value);
+        for (let i = 0; i < inputValue.lineValues.length; i++) {
+            chart.data.x[i].push(new Date(inputValue.time));
+            chart.data.y[i].push(inputValue.lineValues[i]);
+        }
     }
 }
 

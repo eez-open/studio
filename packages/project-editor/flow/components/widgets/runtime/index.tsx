@@ -8,8 +8,8 @@ import { Duplex, Readable } from "stream";
 registerExecuteFunction(
     "LineChartWidget",
     function (context: IDashboardComponentContext) {
-        const data = context.evalProperty("data");
-        context.sendMessageToComponent(data);
+        const expressionValues = context.getExpressionListParam(0);
+        context.sendMessageToComponent(expressionValues);
     }
 );
 
