@@ -845,8 +845,8 @@ export class SetVariableActionComponent extends ActionComponent {
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
             <div className="body">
-                {this.entries.map(entry => (
-                    <pre key={`${entry.variable} => ${entry.value}`}>
+                {this.entries.map((entry, i) => (
+                    <pre key={i}>
                         {entry.variable}
                         <LeftArrow />
                         {entry.value}
