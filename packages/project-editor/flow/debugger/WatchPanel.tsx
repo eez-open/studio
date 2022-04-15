@@ -250,7 +250,7 @@ const WatchTable = observer(
                                         type
                                     ),
                                     selected: false,
-                                    expanded: true
+                                    expanded: false
                                 })
                             );
                         }
@@ -302,7 +302,7 @@ const WatchTable = observer(
                                         fieldType
                                     ),
                                     selected: false,
-                                    expanded: true
+                                    expanded: false
                                 })
                             );
 

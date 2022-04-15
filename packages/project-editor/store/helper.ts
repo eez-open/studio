@@ -1,5 +1,5 @@
 import { toJS } from "mobx";
-import { Menu, MenuItem } from "electron";
+import { Menu, MenuItem } from "@electron/remote";
 
 import { humanize } from "eez-studio-shared/string";
 import * as notification from "eez-studio-ui/notification";

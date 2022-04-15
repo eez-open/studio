@@ -48,7 +48,9 @@ import { getFlow, getProject } from "project-editor/project/project";
 import { findPage } from "project-editor/features/page/page";
 import { Assets, DataBuffer } from "project-editor/build/assets";
 import {
+    buildAssignableExpression,
     buildExpression,
+    checkAssignableExpression,
     checkExpression,
     evalConstantExpression
 } from "project-editor/flow/expression";
@@ -687,10 +689,11 @@ registerClass("EvalJSExprActionComponent", EvalJSExprActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class SetVariableActionComponent extends ActionComponent {
-    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: COMPONENT_TYPE_SET_VARIABLE_ACTION,
+class SetVariableEntry extends EezObject {
+    variable: string;
+    value: string;
 
+    static classInfo: ClassInfo = {
         properties: [
             makeAssignableExpressionProperty(
                 {
@@ -709,6 +712,83 @@ export class SetVariableActionComponent extends ActionComponent {
                 "any"
             )
         ],
+        check: (setVariableItem: SetVariableEntry) => {
+            let messages: Message[] = [];
+
+            try {
+                checkAssignableExpression(
+                    getParent(getParent(setVariableItem)!)! as Component,
+                    setVariableItem.variable
+                );
+            } catch (err) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Invalid assignable expression: ${err}`,
+                        getChildOfObject(setVariableItem, "variable")
+                    )
+                );
+            }
+
+            try {
+                checkExpression(
+                    getParent(getParent(setVariableItem)!)! as Component,
+                    setVariableItem.value
+                );
+            } catch (err) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Invalid expression: ${err}`,
+                        getChildOfObject(setVariableItem, "value")
+                    )
+                );
+            }
+
+            return messages;
+        },
+        defaultValue: {}
+    };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            variable: observable,
+            value: observable
+        });
+    }
+}
+
+export class SetVariableActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: COMPONENT_TYPE_SET_VARIABLE_ACTION,
+        properties: [
+            {
+                name: "entries",
+                type: PropertyType.Array,
+                typeClass: SetVariableEntry,
+                propertyGridGroup: specificGroup,
+                partOfNavigation: false,
+                enumerable: false,
+                defaultValue: []
+            }
+        ],
+        beforeLoadHook: (
+            component: SetVariableActionComponent,
+            objectJS: any
+        ) => {
+            if (objectJS.entries == undefined) {
+                objectJS.entries = [
+                    {
+                        variable: objectJS.variable,
+                        value: objectJS.value
+                    }
+                ];
+                delete objectJS.variable;
+                delete objectJS.value;
+            }
+        },
         icon: (
             <svg
                 viewBox="0 0 24 24"
@@ -722,18 +802,19 @@ export class SetVariableActionComponent extends ActionComponent {
                 <path d="M5 9h14m-14 6h14"></path>
             </svg>
         ),
-        componentHeaderColor: "#A6BBCF"
+        componentHeaderColor: "#A6BBCF",
+        defaultValue: {
+            entries: []
+        }
     });
 
-    variable: string;
-    value: string;
+    entries: SetVariableEntry[];
 
     constructor() {
         super();
 
         makeObservable(this, {
-            variable: observable,
-            value: observable
+            entries: observable
         });
     }
 
@@ -764,13 +845,31 @@ export class SetVariableActionComponent extends ActionComponent {
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
             <div className="body">
-                <pre>
-                    {this.variable}
-                    <LeftArrow />
-                    {this.value}
-                </pre>
+                {this.entries.map(entry => (
+                    <pre key={`${entry.variable} => ${entry.value}`}>
+                        {entry.variable}
+                        <LeftArrow />
+                        {entry.value}
+                    </pre>
+                ))}
             </div>
         );
+    }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        dataBuffer.writeArray(this.entries, entry => {
+            dataBuffer.writeObjectOffset(() =>
+                buildAssignableExpression(
+                    assets,
+                    dataBuffer,
+                    this,
+                    entry.variable
+                )
+            );
+            dataBuffer.writeObjectOffset(() =>
+                buildExpression(assets, dataBuffer, this, entry.value)
+            );
+        });
     }
 }
 
