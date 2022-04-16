@@ -117,6 +117,7 @@ export class DocumentStoreClass {
     dispose3: mobx.IReactionDisposer;
     dispose4: mobx.IReactionDisposer;
     dispose5: mobx.IReactionDisposer;
+    dispose6: mobx.IReactionDisposer;
 
     watcher: FSWatcher | undefined = undefined;
 
@@ -229,6 +230,9 @@ export class DocumentStoreClass {
         if (this.dispose5) {
             this.dispose5();
         }
+        if (this.dispose6) {
+            this.dispose6();
+        }
     }
 
     async loadMasterProject() {
@@ -271,6 +275,8 @@ export class DocumentStoreClass {
     }
 
     startBackgroundCheck() {
+        this.dispose6 = autorun(() => this.typesStore.reset());
+
         this.dispose4 = autorun(
             () => {
                 // check the project in the background

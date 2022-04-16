@@ -691,6 +691,56 @@
           ]
         }
       }
+    },
+    "texts": {
+      "version": 4,
+      "json": {
+        "global": {
+          "splitterSize": 4,
+          "splitterExtra": 4,
+          "tabEnableRename": false,
+          "borderEnableAutoHide": true
+        },
+        "borders": [],
+        "layout": {
+          "type": "row",
+          "id": "#264b4cd6-8898-4b36-9b2d-4f5361b232ef",
+          "children": [
+            {
+              "type": "row",
+              "id": "#7c4a9002-7117-4ada-b3df-9a7c2a6b13e5",
+              "children": [
+                {
+                  "type": "tabset",
+                  "id": "#8c002525-2181-4493-a890-30517c6a41ed",
+                  "children": [
+                    {
+                      "type": "tab",
+                      "id": "TEXT_RESOURCES",
+                      "name": "Text resources",
+                      "component": "resources",
+                      "enableClose": false
+                    }
+                  ]
+                },
+                {
+                  "type": "tabset",
+                  "id": "#36b54964-133a-4a2d-a7ff-ff81d8c6167e",
+                  "children": [
+                    {
+                      "type": "tab",
+                      "id": "LANGUAGES",
+                      "name": "Languages",
+                      "component": "languages",
+                      "enableClose": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
     }
   },
   "selectedBuildConfiguration": "Default",

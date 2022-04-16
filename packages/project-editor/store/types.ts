@@ -17,7 +17,7 @@ import {
     basicTypeNames,
     SYSTEM_STRUCTURES
 } from "project-editor/features/variable/value-type";
-import { computed, makeObservable } from "mobx";
+import { computed, makeObservable, observable, runInAction } from "mobx";
 
 function getFieldIndexes(fields: IField[]): IIndexes {
     const fieldIndexes: IIndexes = {};
@@ -26,13 +26,15 @@ function getFieldIndexes(fields: IField[]): IIndexes {
 }
 
 export class TypesStore {
-    private _types: IType[] = [];
-    private _typeIndexes: IIndexes = {};
-    private _numDynamicTypes: number = 0;
+    _types: IType[] = [];
+    _typeIndexes: IIndexes = {};
+    _numDynamicTypes: number = 0;
+    lastChangeTime: number;
 
     constructor(public DocumentStore: DocumentStoreClass) {
         makeObservable(this, {
-            allValueTypes: computed({ keepAlive: true })
+            allValueTypes: computed,
+            lastChangeTime: observable
         });
     }
 
@@ -52,9 +54,15 @@ export class TypesStore {
         this.allValueTypes.forEach(valueType =>
             this.getTypeFromValueType(valueType)
         );
+
+        runInAction(() => {
+            this.lastChangeTime = Date.now();
+        });
     }
 
     get allValueTypes() {
+        this.lastChangeTime;
+
         const allValueTypes: ValueType[] = [];
 
         allValueTypes.push(`undefined`);
@@ -100,11 +108,13 @@ export class TypesStore {
             fieldIndexes: {},
             open: true
         };
-        this.addType(type);
+        this._addType(type);
         return valueType;
     }
 
     getValueTypeIndex(valueType: ValueType): number | undefined {
+        this.lastChangeTime;
+
         const type = this.getTypeFromValueType(valueType);
         if (!type) {
             return undefined;
@@ -113,6 +123,7 @@ export class TypesStore {
     }
 
     getType(valueType: ValueType) {
+        this.lastChangeTime;
         return this.getTypeFromValueType(valueType);
     }
 
@@ -120,6 +131,8 @@ export class TypesStore {
         valueType: ValueType,
         fieldName: string
     ): ValueType | undefined {
+        this.lastChangeTime;
+
         const type = this.getTypeFromValueType(valueType);
         if (!type) {
             return undefined;
@@ -151,6 +164,8 @@ export class TypesStore {
     }
 
     getFieldIndex(valueType: ValueType, fieldName: string): number | undefined {
+        this.lastChangeTime;
+
         const type = this.getTypeFromValueType(valueType);
         if (!type) {
             return undefined;
@@ -161,7 +176,7 @@ export class TypesStore {
         return undefined;
     }
 
-    private addType(type: IType) {
+    _addType(type: IType) {
         this._typeIndexes[type.valueType] = this._types.length;
         this._types.push(type);
     }
@@ -191,7 +206,7 @@ export class TypesStore {
                 elementType
             };
 
-            this.addType(type);
+            this._addType(type);
 
             return type;
         }
@@ -203,7 +218,7 @@ export class TypesStore {
             );
             if (structure) {
                 const type = this.structureToType(structure);
-                this.addType(type);
+                this._addType(type);
                 return type;
             }
         }
@@ -215,7 +230,7 @@ export class TypesStore {
                     valueType,
                     objectVariableType.valueFieldDescriptions
                 );
-                this.addType(type);
+                this._addType(type);
                 return type;
             }
         }
@@ -224,7 +239,7 @@ export class TypesStore {
             kind: "basic",
             valueType
         };
-        this.addType(type);
+        this._addType(type);
 
         return type;
     }
@@ -254,7 +269,7 @@ export class TypesStore {
                 valueType:
                     typeof valueFieldDescription.valueType == "string"
                         ? valueFieldDescription.valueType
-                        : this.createDynamicTypeForObjectVariableValueFieldDescription(
+                        : this._createDynamicTypeForObjectVariableValueFieldDescription(
                               valueFieldDescription.valueType
                           )
             })
@@ -269,7 +284,7 @@ export class TypesStore {
         };
     }
 
-    private createDynamicTypeForObjectVariableValueFieldDescription(
+    _createDynamicTypeForObjectVariableValueFieldDescription(
         valueFieldDescriptions: IObjectVariableValueFieldDescription[]
     ): ValueType {
         const valueType: ValueType = `dynamic:${this._numDynamicTypes++}`;
@@ -277,7 +292,7 @@ export class TypesStore {
             valueType,
             valueFieldDescriptions
         );
-        this.addType(type);
+        this._addType(type);
         return valueType;
     }
 }
