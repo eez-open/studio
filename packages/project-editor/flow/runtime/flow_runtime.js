@@ -1722,14 +1722,14 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  53004: function($0) {freeComponentExecutionState($0);},  
- 53041: function($0, $1, $2, $3) {executeScpi($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2), $3);},  
- 53112: function() {FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; });},  
- 53273: function() {startToDebuggerMessage();},  
- 53303: function($0, $1) {writeDebuggerBuffer(new Uint8Array(Module.HEAPU8.buffer, $0, $1));},  
- 53374: function() {finishToDebuggerMessage();},  
- 53405: function($0, $1, $2) {executeDashboardComponent($0, $1, $2);},  
- 53448: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
+  53052: function($0) {freeComponentExecutionState($0);},  
+ 53089: function($0, $1, $2, $3) {executeScpi($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2), $3);},  
+ 53160: function() {FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; });},  
+ 53321: function() {startToDebuggerMessage();},  
+ 53351: function($0, $1) {writeDebuggerBuffer(new Uint8Array(Module.HEAPU8.buffer, $0, $1));},  
+ 53422: function() {finishToDebuggerMessage();},  
+ 53453: function($0, $1, $2) {executeDashboardComponent($0, $1, $2);},  
+ 53496: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
 };
 
 
@@ -5688,6 +5688,9 @@ var _createArrayValue = Module["_createArrayValue"] = createExportWrapper("creat
 
 /** @type {function(...*):?} */
 var _createStreamValue = Module["_createStreamValue"] = createExportWrapper("createStreamValue");
+
+/** @type {function(...*):?} */
+var _createDateValue = Module["_createDateValue"] = createExportWrapper("createDateValue");
 
 /** @type {function(...*):?} */
 var _arrayValueSetElementValue = Module["_arrayValueSetElementValue"] = createExportWrapper("arrayValueSetElementValue");

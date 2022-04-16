@@ -24,7 +24,8 @@ import {
     FLOW_VALUE_TYPE_UINT32,
     FLOW_VALUE_TYPE_UINT64,
     FLOW_VALUE_TYPE_UINT8,
-    FLOW_VALUE_TYPE_UNDEFINED
+    FLOW_VALUE_TYPE_UNDEFINED,
+    FLOW_VALUE_TYPE_DATE
 } from "project-editor/build/value-types";
 import type {
     ObjectOrArrayValueWithType,
@@ -215,6 +216,10 @@ export function createWasmValue(
         return WasmFlowRuntime._createStreamValue(getStreamID(value));
     }
 
+    if (value instanceof Date) {
+        return WasmFlowRuntime._createDateValue(value.getTime());
+    }
+
     if (valueTypeIndex != undefined) {
         const arrayValue = createJsArrayValue(
             valueTypeIndex,
@@ -324,6 +329,11 @@ export function getValue(offset: number): ValueWithType {
         return {
             value: getStreamFromID(WasmFlowRuntime.HEAPU32[offset >> 2]),
             valueType: "stream"
+        };
+    } else if (type == FLOW_VALUE_TYPE_DATE) {
+        return {
+            value: new Date(WasmFlowRuntime.HEAPF64[offset >> 3]),
+            valueType: "date"
         };
     }
 

@@ -8,9 +8,11 @@ import { Duplex, Readable } from "stream";
 registerExecuteFunction(
     "LineChartWidget",
     function (context: IDashboardComponentContext) {
+        const xValue = context.evalProperty("xValue");
         const labels = context.getExpressionListParam(0);
         const values = context.getExpressionListParam(8);
         context.sendMessageToComponent({
+            xValue,
             labels,
             values
         });

@@ -32,6 +32,9 @@
           "wireID": "b7bc81ed-8ab6-4af7-bff0-e167467f921e",
           "customInputs": [],
           "customOutputs": [],
+          "asOutputProperties": [
+            "action"
+          ],
           "data": "text",
           "style": {
             "inheritFrom": "default"
@@ -51,14 +54,96 @@
             "inheritFrom": "default"
           },
           "text": ""
+        },
+        {
+          "type": "LogActionComponent",
+          "left": 344,
+          "top": -90,
+          "width": 87,
+          "height": 54,
+          "wireID": "89fe7605-acd7-4f0d-821f-4543fd2ef067",
+          "customInputs": [
+            {
+              "name": "value",
+              "type": "struct:$TextInputActionParams"
+            }
+          ],
+          "customOutputs": [],
+          "value": "value.value"
+        },
+        {
+          "type": "ButtonWidget",
+          "left": 271,
+          "top": 145,
+          "width": 64,
+          "height": 32,
+          "wireID": "8f116f13-38e7-40fa-f81b-854a9620be92",
+          "customInputs": [],
+          "customOutputs": [],
+          "asOutputProperties": [
+            "action"
+          ],
+          "data": "\"Set\"",
+          "style": {
+            "inheritFrom": "default"
+          },
+          "disabledStyle": {
+            "inheritFrom": "default"
+          }
+        },
+        {
+          "type": "SetVariableActionComponent",
+          "left": 500,
+          "top": 69,
+          "width": 222,
+          "height": 58,
+          "wireID": "6553ccc5-5b2c-4219-86c1-4d327f9e0cd8",
+          "customInputs": [
+            {
+              "name": "param",
+              "type": "struct:$TextInputActionParams"
+            }
+          ],
+          "customOutputs": [],
+          "entries": [
+            {
+              "variable": "num_value",
+              "value": "param.value"
+            }
+          ]
         }
       ],
-      "connectionLines": [],
+      "connectionLines": [
+        {
+          "source": "b7bc81ed-8ab6-4af7-bff0-e167467f921e",
+          "output": "action",
+          "target": "89fe7605-acd7-4f0d-821f-4543fd2ef067",
+          "input": "value"
+        },
+        {
+          "source": "8f116f13-38e7-40fa-f81b-854a9620be92",
+          "output": "action",
+          "target": "6553ccc5-5b2c-4219-86c1-4d327f9e0cd8",
+          "input": "@seqin"
+        },
+        {
+          "source": "b7bc81ed-8ab6-4af7-bff0-e167467f921e",
+          "output": "action",
+          "target": "6553ccc5-5b2c-4219-86c1-4d327f9e0cd8",
+          "input": "param"
+        }
+      ],
       "localVariables": [
         {
           "name": "text",
           "type": "string",
           "defaultValue": "\"Hello, world!\"",
+          "persistent": false
+        },
+        {
+          "name": "num_value",
+          "type": "double",
+          "defaultValue": "0",
           "persistent": false
         }
       ],

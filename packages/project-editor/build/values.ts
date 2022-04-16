@@ -13,6 +13,7 @@ import { MessageType } from "project-editor/core/object";
 import {
     FLOW_VALUE_TYPE_ARRAY,
     FLOW_VALUE_TYPE_BOOLEAN,
+    FLOW_VALUE_TYPE_DATE,
     FLOW_VALUE_TYPE_DOUBLE,
     FLOW_VALUE_TYPE_FLOAT,
     FLOW_VALUE_TYPE_INT32,
@@ -43,6 +44,8 @@ export function getValueType(valueType: ValueType) {
         return FLOW_VALUE_TYPE_BOOLEAN;
     } else if (valueType == "string") {
         return FLOW_VALUE_TYPE_STRING;
+    } else if (valueType == "date") {
+        return FLOW_VALUE_TYPE_DATE;
     } else if (isEnumType(valueType)) {
         return FLOW_VALUE_TYPE_INT32;
     } else if (isArrayType(valueType) || isStructType(valueType)) {
@@ -151,6 +154,8 @@ function buildFlowValue(
                 dataBuffer.writeString(flowValue.value);
             });
             dataBuffer.writeUint32(0);
+        } else if (flowValue.type == FLOW_VALUE_TYPE_DATE) {
+            dataBuffer.writeDouble((flowValue.value as Date).getTime());
         } else if (flowValue.type == FLOW_VALUE_TYPE_ARRAY) {
             dataBuffer.writeObjectOffset(() => {
                 let elements: FlowValue[];

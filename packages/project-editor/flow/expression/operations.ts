@@ -423,6 +423,17 @@ export const builtInFunctions: {
             return args[0];
         }
     },
+    "Date.now": {
+        arity: 0,
+        args: [],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => new Date(),
+        getValueType: (...args: ValueType[]) => {
+            return "date";
+        }
+    },
     "Math.sin": {
         arity: 1,
         args: ["value"],

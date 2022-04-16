@@ -161,6 +161,7 @@ declare const WasmFlowRuntime: {
     _createStringValue(value: number): number;
     _createArrayValue(arraySize: number, arrayType: number): number;
     _createStreamValue(value: number): number;
+    _createDateValue(value: number): number;
 
     _arrayValueSetElementValue(arrayValuePtr: number, elementIndex: number, value: number): void;
 

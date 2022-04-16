@@ -78,7 +78,7 @@ const LineChartElement = observer(
                 return {
                     x: runningState
                         ? runningState.values.map(
-                              inputValue => new Date(inputValue.time)
+                              inputValue => inputValue.xValue
                           )
                         : [1, 2, 3, 4],
                     y: runningState
@@ -336,6 +336,15 @@ export class LineChartWidget extends Widget {
             Object.assign(makeDataPropertyInfo("data"), {
                 hideInPropertyGrid: true
             }),
+            makeExpressionProperty(
+                {
+                    name: "xValue",
+                    displayName: "X value",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "any"
+            ),
             {
                 name: "lines",
                 type: PropertyType.Array,
@@ -449,6 +458,7 @@ export class LineChartWidget extends Widget {
             projectType === ProjectType.DASHBOARD
     });
 
+    xValue: string;
     lines: LineChartLine[];
     title: string;
     yAxisRangeOption: "floating" | "fixed";
@@ -461,6 +471,8 @@ export class LineChartWidget extends Widget {
         super();
 
         makeObservable(this, {
+            xValue: observable,
+            lines: observable,
             title: observable,
             yAxisRangeOption: observable,
             yAxisRangeFrom: observable,
@@ -527,12 +539,12 @@ export class LineChartWidget extends Widget {
                 flowState.setComponentRunningState(this, runningState);
             }
 
-            const { labels, values } = message;
+            const { xValue, labels, values } = message;
 
             runningState.labels = labels;
 
             runningState.values.push({
-                time: Date.now(),
+                xValue,
                 lineValues: values
             });
 
@@ -781,7 +793,7 @@ registerClass("GaugeWidget", GaugeWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 interface InputData {
-    time: number;
+    xValue: number;
     lineValues: any[];
 }
 
@@ -851,7 +863,7 @@ async function doNewPlotOrReact() {
 interface ILineChart {
     type: "lineChart";
     data: {
-        x: Date[][];
+        x: number[][];
         y: number[][];
     };
     maxPoints: number;
@@ -900,7 +912,7 @@ function updateLineChart(
         chart = {
             type: "lineChart",
             data: {
-                x: inputValue.lineValues.map(() => [new Date(inputValue.time)]),
+                x: inputValue.lineValues.map(() => [inputValue.xValue]),
                 y: inputValue.lineValues.map(value => [value])
             },
             maxPoints
@@ -913,7 +925,7 @@ function updateLineChart(
         }
     } else {
         for (let i = 0; i < inputValue.lineValues.length; i++) {
-            chart.data.x[i].push(new Date(inputValue.time));
+            chart.data.x[i].push(inputValue.xValue);
             chart.data.y[i].push(inputValue.lineValues[i]);
         }
     }

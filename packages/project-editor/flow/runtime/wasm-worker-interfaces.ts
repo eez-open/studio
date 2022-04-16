@@ -127,6 +127,7 @@ export type Value =
     | string
     | Uint8Array
     | Stream
+    | Date
     | ObjectOrArrayValue;
 
 export type ObjectOrArrayValueWithType = {
