@@ -408,6 +408,10 @@ export class LineChartWidget extends Widget {
         ],
 
         beforeLoadHook: (object: LineChartWidget, jsObject: any) => {
+            if (jsObject.xValue == undefined) {
+                jsObject.xValue = "Date.now()";
+            }
+
             if (jsObject.lines == undefined) {
                 jsObject.lines = [
                     {
