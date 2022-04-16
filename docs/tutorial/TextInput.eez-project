@@ -57,8 +57,8 @@
         },
         {
           "type": "LogActionComponent",
-          "left": 344,
-          "top": -90,
+          "left": 450,
+          "top": -122,
           "width": 87,
           "height": 54,
           "wireID": "89fe7605-acd7-4f0d-821f-4543fd2ef067",
@@ -73,8 +73,8 @@
         },
         {
           "type": "ButtonWidget",
-          "left": 271,
-          "top": 145,
+          "left": 81,
+          "top": 127,
           "width": 64,
           "height": 32,
           "wireID": "8f116f13-38e7-40fa-f81b-854a9620be92",

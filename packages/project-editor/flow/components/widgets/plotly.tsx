@@ -434,6 +434,8 @@ export class LineChartWidget extends Widget {
             top: 0,
             width: 320,
             height: 160,
+            xValue: "Date.now()",
+            lines: [],
             title: "",
             yAxisRangeOption: "floating",
             yAxisRangeFrom: 0,
@@ -444,8 +446,8 @@ export class LineChartWidget extends Widget {
             margin: {
                 top: 50,
                 right: 0,
-                bottom: 0,
-                left: 0
+                bottom: 50,
+                left: 50
             }
         },
 
