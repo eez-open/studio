@@ -16,6 +16,7 @@ import {
     MessageType
 } from "project-editor/core/object";
 import {
+    getAncestorOfType,
     getChildOfObject,
     getDocumentStore,
     Message,
@@ -87,6 +88,7 @@ import {
     COMPONENT_TYPE_COMMENT_ACTION
 } from "project-editor/flow/components/component_types";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 const NOT_NAMED_LABEL = "<not named>";
 
@@ -896,6 +898,7 @@ class SwitchTest extends EezObject {
                 unique: componentOutputUnique
             }
         ],
+
         check: (switchTest: SwitchTest) => {
             let messages: Message[] = [];
             try {
@@ -914,6 +917,40 @@ class SwitchTest extends EezObject {
             }
             return messages;
         },
+
+        updateObjectValueHook: (switchTest: SwitchTest, values: any) => {
+            if (
+                values.outputName != undefined &&
+                switchTest.outputName != values.outputName
+            ) {
+                const component = getAncestorOfType<Component>(
+                    switchTest,
+                    Component.classInfo
+                );
+                if (component) {
+                    ProjectEditor.getFlow(
+                        component
+                    ).rerouteConnectionLinesOutput(
+                        component,
+                        switchTest.outputName,
+                        values.outputName
+                    );
+                }
+            }
+        },
+
+        deleteObjectRefHook: (switchTest: SwitchTest) => {
+            const component = getAncestorOfType<Component>(
+                switchTest,
+                Component.classInfo
+            ) as Component;
+
+            ProjectEditor.getFlow(component).deleteConnectionLinesFromOutput(
+                component,
+                switchTest.outputName
+            );
+        },
+
         defaultValue: {}
     };
 
