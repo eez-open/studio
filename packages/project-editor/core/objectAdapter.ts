@@ -4,8 +4,6 @@ import {
     action,
     computed,
     runInAction,
-    autorun,
-    IReactionDisposer,
     IObservableValue,
     makeObservable
 } from "mobx";
@@ -40,11 +38,8 @@ import {
     canDelete,
     extendContextMenu,
     cutItem,
-    copyItem,
     pasteItem,
-    deleteItem,
     deleteItems,
-    showContextMenu,
     canContainChildren,
     getDocumentStore,
     copyToClipboard,
@@ -58,8 +53,7 @@ import {
     isObjectInstanceOf,
     getClassInfo,
     getLabel,
-    objectToJson,
-    DocumentStoreClass
+    objectToJson
 } from "project-editor/store";
 
 import { DragAndDropManager } from "project-editor/core/dd";
@@ -131,7 +125,7 @@ export interface DisplayItemSelection extends DisplayItem {
     canDelete(): boolean;
     deleteSelection(): void;
 
-    showSelectionContextMenu(position: Electron.PopupOptions): void;
+    showSelectionContextMenu(editable: boolean): void;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -196,7 +190,7 @@ export interface ITreeObjectAdapter
         pasteSelection: () => void;
         duplicateSelection: () => void;
     }): Electron.Menu | undefined;
-    showSelectionContextMenu(): void;
+    showSelectionContextMenu(editable: boolean): void;
 }
 
 export class TreeObjectAdapter implements ITreeObjectAdapter {
@@ -726,13 +720,20 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         }
     }
 
-    createSelectionContextMenu(actions?: {
-        pasteSelection: () => void;
-        duplicateSelection: () => void;
-    }) {
+    createSelectionContextMenu(
+        actions?: {
+            pasteSelection: () => void;
+            duplicateSelection: () => void;
+        },
+        editable?: boolean
+    ) {
         let menuItems: Electron.MenuItem[] = [];
 
-        if (this.canDuplicate()) {
+        if (editable == undefined) {
+            editable = true;
+        }
+
+        if (editable && this.canDuplicate()) {
             menuItems.push(
                 new MenuItem({
                     label: "Duplicate",
@@ -749,7 +750,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
 
         let clipboardMenuItems: Electron.MenuItem[] = [];
 
-        if (this.canCut()) {
+        if (editable && this.canCut()) {
             clipboardMenuItems.push(
                 new MenuItem({
                     label: "Cut",
@@ -760,7 +761,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             );
         }
 
-        if (this.canCopy()) {
+        if (editable && this.canCopy()) {
             clipboardMenuItems.push(
                 new MenuItem({
                     label: "Copy",
@@ -771,7 +772,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             );
         }
 
-        if (this.canPaste()) {
+        if (editable && this.canPaste()) {
             clipboardMenuItems.push(
                 new MenuItem({
                     label: "Paste",
@@ -797,7 +798,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             menuItems = menuItems.concat(clipboardMenuItems);
         }
 
-        if (this.canDelete()) {
+        if (editable && this.canDelete()) {
             if (menuItems.length > 0) {
                 menuItems.push(
                     new MenuItem({
@@ -833,7 +834,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
                     selectedObjects[0],
                     selectedObjects,
                     menuItems,
-                    true
+                    editable
                 );
             }
         }
@@ -847,8 +848,8 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         return undefined;
     }
 
-    showSelectionContextMenu() {
-        let menu = this.createSelectionContextMenu();
+    showSelectionContextMenu(editable: boolean) {
+        let menu = this.createSelectionContextMenu(undefined, editable);
 
         if (menu) {
             menu.popup({});
@@ -935,23 +936,33 @@ export enum DropPosition {
 export class TreeAdapter implements ITreeAdapter {
     constructor(
         private rootItem: ITreeObjectAdapter,
-        private item?: ITreeObjectAdapter,
+        protected selectedObject?: IObservableValue<IEezObject | undefined>,
         private filter?: (object: IEezObject) => boolean,
         private collapsable?: boolean,
         public sortDirection?: SortDirectionType,
         public maxLevel?: number,
         onClick?: (object: IEezObject) => void,
-        onDoubleClick?: (object: IEezObject) => void
+        onDoubleClick?: (object: IEezObject) => void,
+        protected searchText?: string,
+        protected editable?: boolean
     ) {
         this.onClickCallback = onClick;
         this.onDoubleClickCallback = onDoubleClick;
+
+        if (this.selectedObject) {
+            const object = this.selectedObject.get();
+            if (object) {
+                this.rootItem.selectItem(new TreeObjectAdapter(object));
+            }
+        }
     }
 
     onClickCallback: ((object: IEezObject) => void) | undefined;
     onDoubleClickCallback: ((object: IEezObject) => void) | undefined;
 
     get allRows() {
-        const { filter, collapsable, sortDirection, maxLevel } = this;
+        const { filter, collapsable, sortDirection, maxLevel, searchText } =
+            this;
 
         const draggable = true;
 
@@ -962,6 +973,16 @@ export class TreeAdapter implements ITreeAdapter {
                 item.children,
                 childItem => childItem
             ) as ITreeObjectAdapter[];
+
+            if (searchText) {
+                itemChildren = itemChildren.filter(item => {
+                    return (
+                        objectToString(item.object)
+                            .toLowerCase()
+                            .indexOf(searchText) != -1
+                    );
+                });
+            }
 
             if (sortDirection === "asc") {
                 itemChildren = itemChildren.sort((a, b) =>
@@ -1019,7 +1040,7 @@ export class TreeAdapter implements ITreeAdapter {
             });
         }
 
-        enumChildren(getChildren(this.item || this.rootItem), 0);
+        enumChildren(getChildren(this.rootItem), 0);
 
         return children;
     }
@@ -1052,6 +1073,12 @@ export class TreeAdapter implements ITreeAdapter {
     }
 
     selectItem(item: ITreeObjectAdapter) {
+        runInAction(() => {
+            if (this.selectedObject) {
+                this.selectedObject.set(item.object);
+            }
+        });
+
         this.rootItem.selectItems([item]);
     }
 
@@ -1080,7 +1107,7 @@ export class TreeAdapter implements ITreeAdapter {
     }
 
     showSelectionContextMenu() {
-        this.rootItem.showSelectionContextMenu();
+        this.rootItem.showSelectionContextMenu(this.editable ?? true);
     }
 
     cutSelection() {
@@ -1304,405 +1331,6 @@ export class TreeAdapter implements ITreeAdapter {
     }
 
     set dropItem(value: ITreeObjectAdapter | undefined) {
-        if (value) {
-            DragAndDropManager.setDropObject(value);
-        } else {
-            DragAndDropManager.unsetDropObject();
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-class ListItem {
-    constructor(public object: IEezObject) {
-        makeObservable(this, {
-            selected: observable
-        });
-    }
-
-    selected: boolean = false;
-
-    get item() {
-        return this;
-    }
-
-    get level() {
-        return 0;
-    }
-
-    get draggable() {
-        return true;
-    }
-
-    get collapsable() {
-        return false;
-    }
-}
-
-export class ListAdapter implements ITreeAdapter {
-    DocumentStore: DocumentStoreClass;
-    dispose: IReactionDisposer;
-
-    constructor(
-        protected object: IEezObject,
-        protected selectedObject: IObservableValue<IEezObject | undefined>,
-        public sortDirection: SortDirectionType,
-        onClick: (object: IEezObject) => void,
-        onDoubleClick: (object: IEezObject) => void,
-        protected searchText: string,
-        protected editable: boolean
-    ) {
-        makeObservable(this, {
-            items: computed,
-            selectedItem: computed,
-            selectItem: action,
-            selectItems: action
-        });
-
-        this.parentItem = new ListItem(this.object);
-
-        this.onClickCallback = onClick;
-        this.onDoubleClickCallback = onDoubleClick;
-
-        this.DocumentStore = getDocumentStore(this.object);
-
-        this.dispose = autorun(() => {
-            const selectedItem = this.selectedItem;
-            if (selectedItem && !selectedItem.selected) {
-                runInAction(() => {
-                    this.items.forEach(item => {
-                        if (item.selected) {
-                            item.selected = false;
-                        }
-                    });
-
-                    selectedItem.selected = true;
-                });
-            }
-        });
-    }
-
-    unmount() {
-        this.dispose();
-    }
-
-    onClickCallback: ((object: IEezObject) => void) | undefined;
-    onDoubleClickCallback: ((object: IEezObject) => void) | undefined;
-
-    parentItem: ListItem;
-
-    get items() {
-        let objects = this.object as IEezObject[];
-
-        if (this.searchText) {
-            const searchText = this.searchText.toLowerCase();
-            objects = objects.filter(object => {
-                return (
-                    objectToString(object).toLowerCase().indexOf(searchText) !=
-                    -1
-                );
-            });
-        }
-
-        let items = objects.map(object => new ListItem(object));
-
-        if (this.sortDirection === "asc") {
-            return items.sort((a, b) =>
-                stringCompare(getLabel(a.object), getLabel(b.object))
-            );
-        }
-
-        if (this.sortDirection === "desc") {
-            return items.sort((a, b) =>
-                stringCompare(getLabel(b.object), getLabel(a.object))
-            );
-        }
-
-        return items;
-    }
-
-    get allRows() {
-        return this.items;
-    }
-
-    maxLevel = 0;
-
-    getItemId(item: ListItem) {
-        return getId(item.object);
-    }
-
-    getItemFromId(id: string) {
-        return this.items.find(item => getId(item.object) === id);
-    }
-
-    getItemParent(item: ListItem) {
-        if (item === this.parentItem) {
-            return undefined;
-        }
-        return this.parentItem;
-    }
-
-    itemToString(item: ListItem) {
-        const listLabel = getClassInfo(item.object).listLabel;
-        if (listLabel) {
-            return listLabel(item.object);
-        }
-        return objectToString(item.object);
-    }
-
-    isAncestor(item: ListItem, ancestor: ListItem): boolean {
-        return isAncestor(item.object, ancestor.object);
-    }
-
-    isSelected(item: ListItem): boolean {
-        return item.selected;
-    }
-
-    get selectedItem(): ListItem | undefined {
-        const selectedObject = this.selectedObject.get();
-
-        if (selectedObject) {
-            return this.getItemFromId(getId(selectedObject));
-        }
-
-        return undefined;
-    }
-
-    selectItem(item: ListItem): void {
-        let selectedItem = this.selectedItem;
-        if (selectedItem) {
-            selectedItem.selected = false;
-        }
-
-        this.selectedObject.set(item.object);
-
-        selectedItem = this.selectedItem;
-        if (selectedItem) {
-            selectedItem.selected = true;
-        }
-    }
-
-    selectItems(items: ListItem[]): void {
-        if (items[0]) {
-            this.selectItem(items[0]);
-        }
-    }
-
-    selectObject(object: IEezObject): void {
-        const item = this.getItemFromId(getId(object));
-        if (item) {
-            this.selectItem(item);
-        }
-    }
-
-    selectObjects(objects: IEezObject[]): void {
-        objects.forEach(object => {
-            const item = this.getItemFromId(getId(object));
-            if (item) {
-                this.selectItem(item);
-            }
-        });
-    }
-
-    toggleSelected(item: ListItem): void {
-        this.selectItem(item);
-    }
-
-    showSelectionContextMenu(): void {
-        showContextMenu(
-            this,
-            this.selectedItem ? this.selectedItem.object : this.object,
-            this.editable
-        );
-    }
-
-    cutSelection() {
-        if (this.selectedItem) {
-            cutItem(this.selectedItem.object);
-        }
-    }
-
-    copySelection() {
-        if (this.selectedItem) {
-            copyItem(this.selectedItem.object);
-        }
-    }
-
-    pasteSelection() {
-        const aNewObject = pasteItem(this.selectedItem?.object ?? this.object);
-        if (aNewObject) {
-            if (Array.isArray(aNewObject)) {
-                this.selectObjects(aNewObject);
-            } else {
-                this.selectObject(aNewObject);
-            }
-        }
-    }
-
-    deleteSelection() {
-        if (this.selectedItem) {
-            deleteItem(this.selectedItem.object);
-        }
-    }
-
-    onClick(item: ListItem) {
-        if (this.onClickCallback) {
-            this.onClickCallback(item.object);
-        }
-    }
-
-    onDoubleClick(item: ListItem) {
-        if (this.onDoubleClickCallback) {
-            this.onDoubleClickCallback(item.object);
-        }
-    }
-
-    collapsableAdapter = undefined;
-
-    get draggableAdapter() {
-        return this;
-    }
-
-    get isDragging() {
-        return !!DragAndDropManager.dragObject;
-    }
-
-    isDragSource(item: ListItem) {
-        return DragAndDropManager.dragObject === item.object;
-    }
-
-    onDragStart(item: ListItem, event: any) {
-        event.dataTransfer.effectAllowed = "copyMove";
-        setClipboardData(event, objectToClipboardData(item.object));
-        event.dataTransfer.setDragImage(
-            DragAndDropManager.blankDragImage,
-            0,
-            0
-        );
-        // postpone render, otherwise we can receive onDragEnd immediatelly
-        const DocumentStore = getDocumentStore(this.object);
-        setTimeout(() => {
-            DragAndDropManager.start(event, item.object, DocumentStore);
-        });
-    }
-
-    onDrag(event: any) {
-        DragAndDropManager.drag(event);
-    }
-
-    onDragEnd(event: any) {
-        DragAndDropManager.end(event);
-    }
-
-    onDragOver(dropItem: ListItem | undefined, event: any) {
-        if (dropItem) {
-            event.preventDefault();
-            event.stopPropagation();
-            DragAndDropManager.setDropEffect(event);
-        }
-
-        if (this.dropItem !== dropItem) {
-            this.dropItem = dropItem;
-        }
-    }
-
-    onDragLeave(event: any) {
-        if (this.dropItem) {
-            this.dropItem = undefined;
-        }
-    }
-
-    onDrop(dropPosition: DropPosition, event: any) {
-        event.stopPropagation();
-        event.preventDefault();
-
-        DragAndDropManager.deleteDragItem();
-
-        if (DragAndDropManager.dragObject) {
-            let object = objectToJson(DragAndDropManager.dragObject);
-
-            let dropItem = DragAndDropManager.dropObject as ListItem;
-
-            const DocumentStore = getDocumentStore(this.object);
-
-            let aNewObject: IEezObject | undefined;
-
-            if (dropPosition == DropPosition.DROP_POSITION_BEFORE) {
-                aNewObject = DocumentStore.insertObjectBefore(
-                    dropItem.object,
-                    object
-                );
-            } else if (dropPosition == DropPosition.DROP_POSITION_AFTER) {
-                aNewObject = DocumentStore.insertObjectAfter(
-                    dropItem.object,
-                    object
-                );
-            }
-
-            if (aNewObject) {
-                this.selectObject(aNewObject);
-            }
-        }
-
-        DragAndDropManager.end(event);
-    }
-
-    isAncestorOfDragObject(dropItem: ListItem) {
-        return isAncestor(dropItem.object, DragAndDropManager.dragObject!);
-    }
-
-    canDrop(
-        dropItem: ListItem,
-        dropPosition: DropPosition,
-        prevObjectId: string | undefined,
-        nextObjectId: string | undefined
-    ): boolean {
-        if (!this.DocumentStore.navigationStore.editable) {
-            return false;
-        }
-
-        const dragObject = DragAndDropManager.dragObject!;
-        if (!dragObject) {
-            return false;
-        }
-
-        // check: can't drop object if parent can't accept it
-        if (!isObjectInstanceOf(dragObject, getClassInfo(this.object))) {
-            return false;
-        }
-
-        // check: it makes no sense to drop dragObject before or after itself
-        if (dropItem.object === dragObject) {
-            return false;
-        }
-
-        if (getParent(dropItem.object) === getParent(dragObject)) {
-            if (dropPosition === DropPosition.DROP_POSITION_BEFORE) {
-                if (prevObjectId !== getId(dragObject)) {
-                    return true;
-                }
-            } else if (dropPosition === DropPosition.DROP_POSITION_AFTER) {
-                if (nextObjectId !== getId(dragObject)) {
-                    return true;
-                }
-            }
-        } else {
-            return true;
-        }
-
-        return false;
-    }
-
-    canDropInside(dropItem: ListItem) {
-        return false;
-    }
-
-    get dropItem(): ListItem | undefined {
-        return DragAndDropManager.dropObject as ListItem | undefined;
-    }
-
-    set dropItem(value: ListItem | undefined) {
         if (value) {
             DragAndDropManager.setDropObject(value);
         } else {

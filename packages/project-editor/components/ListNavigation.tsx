@@ -13,10 +13,12 @@ import { observer } from "mobx-react";
 import { IconAction } from "eez-studio-ui/action";
 import { SearchInput } from "eez-studio-ui/search-input";
 
-import { IEezObject } from "project-editor/core/object";
+import { getId, IEezObject } from "project-editor/core/object";
 import {
-    ListAdapter,
-    SortDirectionType
+    ITreeAdapter,
+    SortDirectionType,
+    TreeAdapter,
+    TreeObjectAdapter
 } from "project-editor/core/objectAdapter";
 import {
     addItem,
@@ -70,7 +72,7 @@ export const SortControl = observer(
 
 const AddButton = observer(
     class AddButton extends React.Component<{
-        listAdapter: ListAdapter;
+        listAdapter: ITreeAdapter;
         navigationObject: IEezObject | undefined;
     }> {
         static contextType = ProjectContext;
@@ -80,7 +82,9 @@ const AddButton = observer(
             if (this.props.navigationObject) {
                 const aNewItem = await addItem(this.props.navigationObject);
                 if (aNewItem) {
-                    this.props.listAdapter.selectObject(aNewItem);
+                    this.props.listAdapter.selectItem(
+                        this.props.listAdapter.getItemFromId(getId(aNewItem))!
+                    );
 
                     const result = ProjectEditor.getEditorComponent(aNewItem);
                     if (result) {
@@ -147,24 +151,22 @@ const DeleteButton = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface ListNavigationProps {
-    id: string;
-    title?: string;
-    navigationObject: IEezObject;
-    selectedObject: IObservableValue<IEezObject | undefined>;
-    onClickItem?: (item: IEezObject) => void;
-    onDoubleClickItem?: (item: IEezObject) => void;
-    additionalButtons?: JSX.Element[];
-    onEditItem?: (itemId: string) => void;
-    renderItem?: (itemId: string) => React.ReactNode;
-    dragAndDropManager?: DragAndDropManagerClass;
-    searchInput?: boolean;
-    editable?: boolean;
-}
-
 export const ListNavigation = observer(
     class ListNavigation
-        extends React.Component<ListNavigationProps>
+        extends React.Component<{
+            id: string;
+            title?: string;
+            navigationObject: IEezObject;
+            selectedObject: IObservableValue<IEezObject | undefined>;
+            onClickItem?: (item: IEezObject) => void;
+            onDoubleClickItem?: (item: IEezObject) => void;
+            additionalButtons?: JSX.Element[];
+            onEditItem?: (itemId: string) => void;
+            renderItem?: (itemId: string) => React.ReactNode;
+            dragAndDropManager?: DragAndDropManagerClass;
+            searchInput?: boolean;
+            editable?: boolean;
+        }>
         implements IPanel
     {
         static contextType = ProjectContext;
@@ -175,6 +177,8 @@ export const ListNavigation = observer(
 
         dispose: IReactionDisposer;
 
+        listAdapter: TreeAdapter;
+
         constructor(props: any) {
             super(props);
 
@@ -183,7 +187,6 @@ export const ListNavigation = observer(
                 searchText: observable,
                 editable: computed,
                 selectedObject: computed,
-                listAdapter: computed,
                 onSearchChange: action.bound
             });
 
@@ -201,6 +204,19 @@ export const ListNavigation = observer(
                         "ListNavigationSortDirection" + this.props.id,
                         sortDirection
                     )
+            );
+
+            this.listAdapter = new TreeAdapter(
+                new TreeObjectAdapter(this.props.navigationObject),
+                this.props.selectedObject,
+                undefined,
+                undefined,
+                this.sortDirection,
+                1,
+                this.onClickItem,
+                this.onDoubleClickItem,
+                this.searchText,
+                this.props.editable ?? true
             );
         }
 
@@ -260,20 +276,7 @@ export const ListNavigation = observer(
             }
         }
 
-        get listAdapter() {
-            return new ListAdapter(
-                this.props.navigationObject,
-                this.props.selectedObject,
-                this.sortDirection,
-                this.onClickItem,
-                this.onDoubleClickItem,
-                this.searchText,
-                this.props.editable ?? true
-            );
-        }
-
         componentWillUnmount() {
-            this.listAdapter.unmount();
             this.dispose();
         }
 

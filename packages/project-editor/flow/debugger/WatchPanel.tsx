@@ -27,6 +27,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getValueLabel } from "project-editor/features/variable/value-type";
+import { stringCompare } from "eez-studio-shared/string";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -380,6 +381,8 @@ const WatchTable = observer(
         }
 
         getVariableTreeNodes = (variables: Variable[]) => {
+            variables = variables.slice();
+            variables.sort((a, b) => stringCompare(a.name, b.name));
             return variables.map(variable => {
                 const flowState = this.props.runtime.selectedFlowState;
 
@@ -407,7 +410,7 @@ const WatchTable = observer(
 
                     children: this.getValueChildren(value, variable.type),
                     selected: false,
-                    expanded: true
+                    expanded: false
                 });
             });
         };

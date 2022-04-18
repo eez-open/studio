@@ -1,13 +1,13 @@
 import React from "react";
 import { observer } from "mobx-react";
 
-import { ListAdapter } from "project-editor/core/objectAdapter";
+import { ITreeAdapter } from "project-editor/core/objectAdapter";
 import { Tree } from "project-editor/components/Tree";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 interface ListProps {
-    listAdapter: ListAdapter;
+    listAdapter: ITreeAdapter;
     tabIndex?: number;
     onFocus?: () => void;
     onEditItem?: (itemId: string) => void;

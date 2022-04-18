@@ -61,7 +61,9 @@ void executeDashboardComponent(uint16_t componentType, int flowStateIndex, int c
     }, componentType, flowStateIndex, componentIndex);
 }
 
-void stopScript() {}
+void stopScript() {
+    eez::flow::stop();
+}
 
 namespace eez {
     namespace flow {

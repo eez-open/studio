@@ -79,6 +79,7 @@ enum MessagesFromDebugger {
 const DEBUGGER_STATE_RESUMED = 0;
 const DEBUGGER_STATE_PAUSED = 1;
 const DEBUGGER_STATE_SINGLE_STEP = 2;
+const DEBUGGER_STATE_STOPPED = 3;
 
 const LOG_ITEM_TYPE_FATAL = 0;
 const LOG_ITEM_TYPE_ERROR = 1;
@@ -733,6 +734,8 @@ export abstract class DebuggerConnectionBase {
                             }
                         } else if (state == DEBUGGER_STATE_SINGLE_STEP) {
                             runtime.transition(StateMachineAction.SINGLE_STEP);
+                        } else if (state == DEBUGGER_STATE_STOPPED) {
+                            runtime.DocumentStore.setEditorMode();
                         }
                     }
                     break;
