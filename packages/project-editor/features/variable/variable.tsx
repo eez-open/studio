@@ -1040,11 +1040,6 @@ export class Structure extends EezObject implements IStructure {
     fields: StructureField[];
 
     static classInfo: ClassInfo = {
-        label: (structure: Structure) => {
-            return `${structure.name} (${structure.fields
-                .map(field => field.name)
-                .join(" | ")})`;
-        },
         properties: [
             {
                 name: "name",
@@ -1177,11 +1172,6 @@ export class Enum extends EezObject {
     members: EnumMember[];
 
     static classInfo: ClassInfo = {
-        label: (enumDef: Enum) => {
-            return `${enumDef.name} (${enumDef.members
-                .map(member => member.name)
-                .join(" | ")})`;
-        },
         properties: [
             {
                 name: "name",
