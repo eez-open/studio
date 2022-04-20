@@ -55,6 +55,9 @@ interface AssetsMap {
             componentIndex: number;
             path: string;
             readablePath: string;
+            inputIndexes: {
+                [inputName: string]: number;
+            };
             outputs: {
                 outputName: string;
                 valueTypeIndex: number;
@@ -178,6 +181,9 @@ declare const WasmFlowRuntime: {
     _getStringParam(flowStateIndex: number, componentIndex: number, offset: number): number;
     _getExpressionListParam(flowStateIndex: number, componentIndex: number, offset: number): number;
     _freeExpressionListParam(ptr: number);
+
+    _getInputValue(flowStateIndex: number, inputIndex: number): number;
+    _clearInputValue(flowStateIndex: number, inputIndex: number);
 
     _evalProperty(flowStateIndex: number, componentIndex: number, propertyIndex: number, iteratorsPtr: number): number;
     _assignProperty(flowStateIndex: number, componentIndex: number, propertyIndex: number, iteratorsPtr: number, valuePtr: number): number;

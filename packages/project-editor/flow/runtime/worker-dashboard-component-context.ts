@@ -65,6 +65,45 @@ export class DashboardComponentContext implements IDashboardComponentContext {
         return values;
     }
 
+    getInputValue<T = any>(inputName: string, expectedTypes?: ValueType[]) {
+        const flowIndex = this.getFlowIndex();
+        const flow = WasmFlowRuntime.assetsMap.flows[flowIndex];
+        const componentIndex = this.getComponentIndex();
+        const component = flow.components[componentIndex];
+        const inputIndex = component.inputIndexes[inputName];
+        if (inputIndex == undefined) {
+            this.throwError(`Input "${inputName}" not found`);
+            return undefined;
+        }
+
+        const valuePtr = WasmFlowRuntime._getInputValue(
+            this.flowStateIndex,
+            inputIndex
+        );
+        if (!valuePtr) {
+            return undefined;
+        }
+        const result = getValue(valuePtr);
+        if (expectedTypes && expectedTypes.indexOf(result.valueType) == -1) {
+            return undefined;
+        }
+        return result.value as any as T;
+    }
+
+    clearInputValue(inputName: string) {
+        const flowIndex = this.getFlowIndex();
+        const flow = WasmFlowRuntime.assetsMap.flows[flowIndex];
+        const componentIndex = this.getComponentIndex();
+        const component = flow.components[componentIndex];
+        const inputIndex = component.inputIndexes[inputName];
+        if (inputIndex == undefined) {
+            this.throwError(`Input "${inputName}" not found`);
+            return;
+        }
+
+        WasmFlowRuntime._clearInputValue(this.flowStateIndex, inputIndex);
+    }
+
     evalProperty<T = any>(propertyName: string, expectedTypes?: ValueType[]) {
         const flowIndex = this.getFlowIndex();
         const flow = WasmFlowRuntime.assetsMap.flows[flowIndex];

@@ -5729,6 +5729,12 @@ var _freeExpressionListParam = Module["_freeExpressionListParam"] = createExport
 var _free = Module["_free"] = createExportWrapper("free");
 
 /** @type {function(...*):?} */
+var _getInputValue = Module["_getInputValue"] = createExportWrapper("getInputValue");
+
+/** @type {function(...*):?} */
+var _clearInputValue = Module["_clearInputValue"] = createExportWrapper("clearInputValue");
+
+/** @type {function(...*):?} */
 var _evalProperty = Module["_evalProperty"] = createExportWrapper("evalProperty");
 
 /** @type {function(...*):?} */

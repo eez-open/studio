@@ -253,6 +253,13 @@ export interface IDashboardComponentContext {
     getStringParam: (offset: number) => string;
     getExpressionListParam: (offset: number) => any[];
 
+    getInputValue: <T = any>(
+        inputName: string,
+        expectedTypes?: ValueType[]
+    ) => T | undefined;
+
+    clearInputValue(inputName: string);
+
     evalProperty: <T = any>(
         propertyName: string,
         expectedTypes?: ValueType[]

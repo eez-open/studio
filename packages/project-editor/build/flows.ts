@@ -116,6 +116,7 @@ function buildComponent(
         componentIndex,
         path: getObjectPathAsString(component),
         readablePath: getHumanReadableObjectPath(component),
+        inputIndexes: {},
         outputs: [],
         outputIndexes: {},
         properties: [],
@@ -150,6 +151,10 @@ function buildComponent(
         const inputIndex = assets.getComponentInputIndex(component, input.name);
 
         dataBuffer.writeUint16(inputIndex);
+
+        assets.map.flows[flowIndex].components[componentIndex].inputIndexes[
+            input.name
+        ] = inputIndex;
 
         assets.map.flows[flowIndex].componentInputs.push({
             inputIndex,

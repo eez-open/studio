@@ -37,6 +37,7 @@ import {
 import { humanize } from "eez-studio-shared/string";
 import { Assets, DataBuffer } from "project-editor/build/assets";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
+import { ValueType } from "eez-studio-types";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -452,7 +453,13 @@ export class LineChartWidget extends Widget {
                 right: 0,
                 bottom: 50,
                 left: 50
-            }
+            },
+            customInputs: [
+                {
+                    name: "value",
+                    type: "any"
+                }
+            ]
         },
 
         icon: (
@@ -490,6 +497,18 @@ export class LineChartWidget extends Widget {
             maxPoints: observable,
             margin: observable
         });
+    }
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "reset",
+                type: "any" as ValueType,
+                isSequenceInput: false,
+                isOptionalInput: true
+            }
+        ];
     }
 
     render(flowContext: IFlowContext): React.ReactNode {
@@ -549,17 +568,23 @@ export class LineChartWidget extends Widget {
                 flowState.setComponentRunningState(this, runningState);
             }
 
-            const { xValue, labels, values } = message;
+            if (message.reset) {
+                const newRunningState = new RunningState();
+                newRunningState.labels = runningState.labels;
+                flowState.setComponentRunningState(this, newRunningState);
+            } else {
+                const { xValue, labels, values } = message;
 
-            runningState.labels = labels;
+                runningState.labels = labels;
 
-            runningState.values.push({
-                xValue,
-                lineValues: values
-            });
+                runningState.values.push({
+                    xValue,
+                    lineValues: values
+                });
 
-            if (runningState.values.length == this.maxPoints) {
-                runningState.values.shift();
+                if (runningState.values.length == this.maxPoints) {
+                    runningState.values.shift();
+                }
             }
         });
     }
