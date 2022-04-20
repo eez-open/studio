@@ -8,7 +8,9 @@ import {
     DocumentStoreClass,
     getClassInfo,
     getObjectFromStringPath,
-    getObjectPathAsString
+    getObjectPathAsString,
+    LayoutModels,
+    Section
 } from "project-editor/store";
 
 import {
@@ -120,6 +122,19 @@ export class WasmRuntime extends RemoteRuntime {
 
     async doStartRuntime(isDebuggerActive: boolean) {
         const result = await this.DocumentStore.buildAssets();
+
+        const outputSection = this.DocumentStore.outputSectionsStore.getSection(
+            Section.OUTPUT
+        );
+        if (outputSection.numErrors > 0 || outputSection.numWarnings > 0) {
+            this.DocumentStore.layoutModels.selectTab(
+                this.DocumentStore.layoutModels.root,
+                LayoutModels.OUTPUT_TAB_ID
+            );
+            if (outputSection.numErrors > 0) {
+                return;
+            }
+        }
 
         const maxPageWidth = Math.max(
             ...this.DocumentStore.project.pages.map(page => page.width)

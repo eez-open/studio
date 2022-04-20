@@ -521,10 +521,6 @@ export class DocumentStoreClass {
     }
 
     buildAssets() {
-        this.layoutModels.selectTab(
-            this.layoutModels.root,
-            LayoutModels.OUTPUT_TAB_ID
-        );
         return ProjectEditor.build.buildProject(this, "buildAssets");
     }
 
