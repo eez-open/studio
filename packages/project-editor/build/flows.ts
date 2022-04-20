@@ -8,6 +8,7 @@ import {
     getClassName,
     getProperty,
     IObjectClassInfo,
+    isPropertyHidden,
     MessageType
 } from "project-editor/core/object";
 import {
@@ -175,29 +176,33 @@ function buildComponent(
         )
     );
     dataBuffer.writeArray(properties, (propertyInfo, propertyIndex) => {
-        try {
-            let expression = getProperty(component, propertyInfo.name);
-            if (propertyInfo.flowProperty == "assignable") {
-                buildAssignableExpression(
-                    assets,
-                    dataBuffer,
-                    component,
-                    expression
-                );
-            } else {
-                if (propertyInfo.flowProperty == "template-literal") {
-                    expression = templateLiteralToExpression(expression);
+        if (!isPropertyHidden(component, propertyInfo)) {
+            try {
+                let expression = getProperty(component, propertyInfo.name);
+                if (propertyInfo.flowProperty == "assignable") {
+                    buildAssignableExpression(
+                        assets,
+                        dataBuffer,
+                        component,
+                        expression
+                    );
+                } else {
+                    if (propertyInfo.flowProperty == "template-literal") {
+                        expression = templateLiteralToExpression(expression);
+                    }
+                    buildExpression(assets, dataBuffer, component, expression);
                 }
-                buildExpression(assets, dataBuffer, component, expression);
-            }
-        } catch (err) {
-            assets.DocumentStore.outputSectionsStore.write(
-                Section.OUTPUT,
-                MessageType.ERROR,
-                err,
-                getChildOfObject(component, propertyInfo.name)
-            );
+            } catch (err) {
+                assets.DocumentStore.outputSectionsStore.write(
+                    Section.OUTPUT,
+                    MessageType.ERROR,
+                    err,
+                    getChildOfObject(component, propertyInfo.name)
+                );
 
+                dataBuffer.writeUint16NonAligned(makeEndInstruction());
+            }
+        } else {
             dataBuffer.writeUint16NonAligned(makeEndInstruction());
         }
 

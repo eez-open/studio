@@ -22,9 +22,7 @@ import {
 } from "project-editor/core/objectAdapter";
 import {
     addItem,
-    deleteItem,
     canAdd,
-    canDelete,
     IPanel,
     isPartOfNavigation
 } from "project-editor/store";
@@ -118,31 +116,20 @@ const AddButton = observer(
 
 const DeleteButton = observer(
     class DeleteButton extends React.Component<{
-        navigationObject: IEezObject | undefined;
-        selectedObject: IObservableValue<IEezObject | undefined>;
+        listAdapter: ITreeAdapter;
     }> {
-        static contextType = ProjectContext;
-        declare context: React.ContextType<typeof ProjectContext>;
-
         onDelete = () => {
-            let selectedItem = this.props.selectedObject.get();
-            if (selectedItem) {
-                deleteItem(selectedItem);
-            }
+            this.props.listAdapter.deleteSelection();
         };
 
         render() {
-            let selectedItem = this.props.selectedObject.get();
-
             return (
                 <IconAction
                     title="Delete Selected Item"
                     icon="material:delete"
                     iconSize={16}
                     onClick={this.onDelete}
-                    enabled={
-                        selectedItem != undefined && canDelete(selectedItem)
-                    }
+                    enabled={this.props.listAdapter.anySelected()}
                 />
             );
         }
@@ -303,11 +290,7 @@ export const ListNavigation = observer(
                 );
 
                 buttons.push(
-                    <DeleteButton
-                        key="delete"
-                        navigationObject={this.props.navigationObject}
-                        selectedObject={this.props.selectedObject}
-                    />
+                    <DeleteButton key="delete" listAdapter={this.listAdapter} />
                 );
             }
 

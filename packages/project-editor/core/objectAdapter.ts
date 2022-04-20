@@ -907,6 +907,8 @@ export interface ITreeAdapter {
     itemToString(item: ITreeItem): React.ReactNode;
     isAncestor(item: ITreeItem, ancestor: ITreeItem): boolean;
 
+    anySelected(): boolean;
+
     isSelected(item: ITreeItem): boolean;
     selectItem(item: ITreeItem): void;
     selectItems(items: ITreeItem[]): void;
@@ -1066,6 +1068,10 @@ export class TreeAdapter implements ITreeAdapter {
         ancestor: ITreeObjectAdapter
     ): boolean {
         return isAncestor(item.object, ancestor.object);
+    }
+
+    anySelected() {
+        return this.rootItem.selectedItems.length > 0;
     }
 
     isSelected(item: ITreeObjectAdapter) {
