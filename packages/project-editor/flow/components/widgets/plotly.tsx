@@ -213,8 +213,12 @@ const LineChartElement = observer(
             plotly,
             widget.title,
             widget.yAxisRangeOption,
-            getNumberValue(flowContext, widget, "yAxisRangeFrom", 0),
-            getNumberValue(flowContext, widget, "yAxisRangeTo", 10),
+            widget.yAxisRangeOption == "fixed"
+                ? getNumberValue(flowContext, widget, "yAxisRangeFrom", 0)
+                : undefined,
+            widget.yAxisRangeOption == "fixed"
+                ? getNumberValue(flowContext, widget, "yAxisRangeTo", 10)
+                : undefined,
             widget.margin.top,
             widget.margin.right,
             widget.margin.bottom,
