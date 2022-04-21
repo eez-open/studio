@@ -834,8 +834,14 @@ interface InputData {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+let plotlyModule: typeof PlotlyModule;
+
 function Plotly() {
-    return require("plotly.js-dist-min/plotly.min.js") as typeof PlotlyModule;
+    if (!plotlyModule) {
+        plotlyModule =
+            require("plotly.js-dist-min/plotly.min.js") as typeof PlotlyModule;
+    }
+    return plotlyModule;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
