@@ -150,6 +150,12 @@ function buildExpressionNode(
         ];
     }
 
+    if (node.type == "TextResource") {
+        return [
+            makePushConstantInstruction(assets, node.value, node.valueType)
+        ];
+    }
+
     if (node.type == "Identifier") {
         if (assignable) {
             const outputIndex = component.buildOutputs.findIndex(

@@ -218,7 +218,7 @@ input::-webkitcalendar-picker-indicator {
         transform-origin: 50% 50%;
 
         &.EezStudio_Expanded {
-            transform: translate(5px, 3px) rotate(90deg);
+            transform: translate(3px, 1px) rotate(90deg);
         }
     }
 
@@ -3977,9 +3977,38 @@ button.EezStudio_Action {
 }
 
 .EezStudio_ExpressionBuilder {
-    border: 1px solid @borderColor;
-    overflow: auto;
+    background-color: @panelHeaderColor;
     width: 100%;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    textarea {
+        margin-bottom: 10px;
+        font-family: var(--bs-font-monospace);
+        font-size: 0.875em;
+    }
+
+    .EezStudio_ExpressionBuilder_Panels {
+        flex: 1;
+        overflow: auto;
+
+        display: flex;
+        flex-direction: row;
+
+        .EezStudio_SimpleTree {
+            flex: 1;
+            height: 100%;
+            background-color: @backgroundColor;
+            border: 1px solid @borderColor;
+            overflow: auto;
+            margin-right: 10px;
+            &:last-child {
+                margin-right: 0;
+            }
+        }
+    }
 
     .name {
         font-weight: bold;
@@ -3994,6 +4023,14 @@ button.EezStudio_Action {
         }
         margin-left: 10px;
         font-style: italic;
+    }
+
+    .EezStudio_ExpressionBuilder_OperatorSign {
+        margin-left: 5px;
+        padding: 0px 6px;
+        background-color: @panelHeaderColor;
+        border: 1px solid @borderColor;
+        border-radius: 6px;
     }
 }
 

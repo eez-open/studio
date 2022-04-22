@@ -145,7 +145,13 @@ export const TreeRow = observer(
             return (
                 <div
                     className={rowEnclosureClassName}
-                    onDoubleClick={this.props.onDoubleClick}
+                    onDoubleClick={event => {
+                        if (this.props.onDoubleClick) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            this.props.onDoubleClick();
+                        }
+                    }}
                 >
                     {row}
                     {childrenRows}

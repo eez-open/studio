@@ -82,6 +82,7 @@ export interface IOnSelectParams {
     textInputSelection?: {
         start: number | null;
         end: number | null;
+        direction: "forward" | "backward" | "none" | null | undefined;
     };
 }
 

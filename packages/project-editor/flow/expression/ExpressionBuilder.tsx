@@ -36,6 +36,7 @@ import {
     FLOW_ITERATOR_INDEXES_VARIABLE,
     FLOW_ITERATOR_INDEX_VARIABLE
 } from "project-editor/features/variable/defs";
+import { parseIdentifier } from "project-editor/flow/expression";
 
 export const EXPR_MARK_START = "{<";
 export const EXPR_MARK_END = ">}";
@@ -46,8 +47,6 @@ export async function expressionBuilder(
     opts: {
         assignableExpression: boolean;
         title: string;
-        width: number;
-        height?: number;
     },
     params?: IOnSelectParams
 ) {
@@ -82,7 +81,7 @@ export async function expressionBuilder(
                 />
             </ProjectContext.Provider>,
             {
-                jsPanel: Object.assign({}, opts)
+                jsPanel: Object.assign({ width: 1024, height: 600 }, opts)
             }
         );
     });
@@ -109,58 +108,90 @@ const SelectItemDialog = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
+        textarea: HTMLTextAreaElement;
+        value: string;
         selection: string | undefined;
-
-        onOkEnabled = () => {
-            return this.selection != undefined;
-        };
-
-        onOk = () => {
-            const { object, propertyInfo, params } = this.props;
-
-            if (!this.selection) {
-                return;
-            }
-
-            let value = this.selection;
-
-            if (
-                params &&
-                params.textInputSelection &&
-                params.textInputSelection.start != null &&
-                params.textInputSelection.end != null
-            ) {
-                const existingValue: string =
-                    getProperty(object, propertyInfo.name) || "";
-                value =
-                    existingValue.substring(
-                        0,
-                        params.textInputSelection.start
-                    ) +
-                    value +
-                    existingValue.substring(params.textInputSelection.end);
-            }
-
-            this.props.onOk({
-                [propertyInfo.name]: value
-            });
-
-            return true;
-        };
 
         constructor(props: any) {
             super(props);
 
+            this.value =
+                getProperty(this.props.object, this.props.propertyInfo.name) ||
+                "";
+
             makeObservable(this, {
+                value: observable,
                 selection: observable,
                 component: computed,
                 flow: computed,
                 componentInputs: computed,
                 localVariables: computed,
                 globalVariables: computed,
-                rootNode: computed
+                rootNodeVariables: computed,
+                rootNodeSystemVariables: computed,
+                rootNodeOperations: computed,
+                rootNodeFunctions: computed,
+                rootNodeTextResources: computed
             });
         }
+
+        componentDidMount() {
+            let textInputSelection = this.props.params?.textInputSelection;
+            if (
+                !textInputSelection ||
+                (textInputSelection.start == this.value.length &&
+                    textInputSelection.end == this.value.length &&
+                    textInputSelection.direction == "forward")
+            ) {
+                textInputSelection = {
+                    start: 0,
+                    end: this.value.length,
+                    direction: "forward"
+                };
+            }
+
+            this.textarea.focus();
+
+            this.textarea.setSelectionRange(
+                textInputSelection.start,
+                textInputSelection.end,
+                textInputSelection.direction === null
+                    ? undefined
+                    : textInputSelection.direction
+            );
+        }
+
+        onOkEnabled = () => {
+            return true;
+        };
+
+        onOk = () => {
+            this.props.onOk({
+                [this.props.propertyInfo.name]: this.value
+            });
+
+            return true;
+        };
+
+        onDoubleClick = action(() => {
+            if (!this.selection) {
+                return;
+            }
+
+            let value = this.selection;
+
+            const start = this.textarea.selectionStart;
+            const end = this.textarea.selectionEnd;
+
+            if (start != null && end != null) {
+                value =
+                    this.value.substring(0, start) +
+                    value +
+                    this.value.substring(end);
+            }
+
+            this.value = value;
+        });
 
         get component() {
             return getAncestorOfType(
@@ -239,7 +270,14 @@ const SelectItemDialog = observer(
                 const data = `${operatorSign}${EXPR_MARK_START}expr${EXPR_MARK_END}`;
                 return {
                     id: operator.name,
-                    label: `${humanize(operator.name)} (${operatorSign})`,
+                    label: (
+                        <>
+                            <span>{humanize(operator.name)}</span>
+                            <span className="EezStudio_ExpressionBuilder_OperatorSign">
+                                {operatorSign}
+                            </span>
+                        </>
+                    ),
                     children: [],
                     selected: this.selection == data,
                     expanded: false,
@@ -259,7 +297,14 @@ const SelectItemDialog = observer(
                 const data = `${EXPR_MARK_START}expr${EXPR_MARK_END} ${operatorSign} ${EXPR_MARK_START}expr${EXPR_MARK_END}`;
                 return {
                     id: operator.name,
-                    label: `${humanize(operator.name)} (${operatorSign})`,
+                    label: (
+                        <>
+                            <span>{humanize(operator.name)}</span>
+                            <span className="EezStudio_ExpressionBuilder_OperatorSign">
+                                {operatorSign}
+                            </span>
+                        </>
+                    ),
                     children: [],
                     selected: this.selection == data,
                     expanded: false,
@@ -268,7 +313,7 @@ const SelectItemDialog = observer(
             });
         }
 
-        get rootNode(): ITreeNode<string> {
+        get rootNodeVariables(): ITreeNode<string> {
             const children: ITreeNode<string>[] = [];
 
             if (
@@ -349,6 +394,18 @@ const SelectItemDialog = observer(
                 });
             }
 
+            return observable({
+                id: "all",
+                label: "All",
+                children,
+                selected: false,
+                expanded: true
+            });
+        }
+
+        get rootNodeSystemVariables(): ITreeNode<string> {
+            const children: ITreeNode<string>[] = [];
+
             if (!this.props.assignableExpression) {
                 children.push({
                     id: "system-variables",
@@ -408,63 +465,6 @@ const SelectItemDialog = observer(
                 }
 
                 children.push({
-                    id: "binary-operators",
-                    label: "Binary operators",
-                    children: this.getBinaryOperators(binaryOperators),
-                    selected: false,
-                    expanded: true
-                });
-
-                children.push({
-                    id: "logical-operators",
-                    label: "Logical operators",
-                    children: this.getBinaryOperators(logicalOperators),
-                    selected: false,
-                    expanded: true
-                });
-
-                const conditionalOperatorData = `${EXPR_MARK_START}condition${EXPR_MARK_END} ? ${EXPR_MARK_START}exprIfTrue${EXPR_MARK_END} : ${EXPR_MARK_START}exprIfFalse${EXPR_MARK_END}`;
-                children.push({
-                    id: "conditional-operator",
-                    label: "Conditional operator (condition ? exprIfTrue : exprIfFalse)",
-                    children: [],
-                    selected: this.selection == conditionalOperatorData,
-                    expanded: false,
-                    data: conditionalOperatorData
-                });
-
-                children.push({
-                    id: "unary-operators",
-                    label: "Unary operators",
-                    children: this.getUnaryOperators(unaryOperators),
-                    selected: false,
-                    expanded: true
-                });
-
-                children.push({
-                    id: "built-in-functions",
-                    label: "Built-in Functions",
-                    children: _map(builtInFunctions, (func, functionName) => {
-                        const data = `${functionName}(${func.args
-                            .map(
-                                arg =>
-                                    `${EXPR_MARK_START}${arg}${EXPR_MARK_END}`
-                            )
-                            .join(", ")})`;
-                        return {
-                            id: functionName,
-                            label: functionName,
-                            children: [],
-                            selected: this.selection == data,
-                            expanded: false,
-                            data
-                        };
-                    }),
-                    selected: false,
-                    expanded: true
-                });
-
-                children.push({
                     id: "built-in-constants",
                     label: "Built-in Constants",
                     children: _map(
@@ -492,26 +492,273 @@ const SelectItemDialog = observer(
             });
         }
 
+        get rootNodeOperations(): ITreeNode<string> {
+            const children: ITreeNode<string>[] = [];
+
+            if (!this.props.assignableExpression) {
+                children.push({
+                    id: "binary-operators",
+                    label: "Binary operators",
+                    children: this.getBinaryOperators(binaryOperators),
+                    selected: false,
+                    expanded: true
+                });
+
+                children.push({
+                    id: "logical-operators",
+                    label: "Logical operators",
+                    children: this.getBinaryOperators(logicalOperators),
+                    selected: false,
+                    expanded: true
+                });
+
+                const conditionalOperatorData = `${EXPR_MARK_START}condition${EXPR_MARK_END} ? ${EXPR_MARK_START}exprIfTrue${EXPR_MARK_END} : ${EXPR_MARK_START}exprIfFalse${EXPR_MARK_END}`;
+                children.push({
+                    id: "conditional-operator",
+                    label: (
+                        <>
+                            <span>Conditional operator</span>
+                            <span className="EezStudio_ExpressionBuilder_OperatorSign">
+                                A ? B : C
+                            </span>
+                        </>
+                    ),
+                    children: [],
+                    selected: this.selection == conditionalOperatorData,
+                    expanded: false,
+                    data: conditionalOperatorData
+                });
+
+                children.push({
+                    id: "unary-operators",
+                    label: "Unary operators",
+                    children: this.getUnaryOperators(unaryOperators),
+                    selected: false,
+                    expanded: true
+                });
+            }
+
+            return observable({
+                id: "all",
+                label: "All",
+                children,
+                selected: false,
+                expanded: true
+            });
+        }
+
+        get rootNodeFunctions(): ITreeNode<string> {
+            const children: ITreeNode<string>[] = [];
+
+            if (!this.props.assignableExpression) {
+                children.push({
+                    id: "built-in-functions",
+                    label: "Built-in Functions",
+                    children: _map(builtInFunctions, (func, functionName) => {
+                        const data = `${functionName}(${func.args
+                            .map(
+                                arg =>
+                                    `${EXPR_MARK_START}${arg}${EXPR_MARK_END}`
+                            )
+                            .join(", ")})`;
+                        return {
+                            id: functionName,
+                            label: functionName,
+                            children: [],
+                            selected: this.selection == data,
+                            expanded: false,
+                            data
+                        };
+                    }),
+                    selected: false,
+                    expanded: true
+                });
+            }
+
+            return observable({
+                id: "all",
+                label: "All",
+                children,
+                selected: false,
+                expanded: true
+            });
+        }
+
+        get rootNodeTextResources(): ITreeNode<string> {
+            const children: ITreeNode<string>[] = [];
+
+            if (!this.props.assignableExpression) {
+                children.push({
+                    id: "text-resources",
+                    label: "Text resources",
+                    children: _map(
+                        this.context.project.texts.resources,
+                        text => {
+                            const data = `T"${text.resourceID}"`;
+                            return {
+                                id: text.resourceID,
+                                label: text.resourceID,
+                                children: [],
+                                selected: this.selection == data,
+                                expanded: false,
+                                data
+                            };
+                        }
+                    ),
+                    selected: false,
+                    expanded: true
+                });
+            }
+
+            return observable({
+                id: "all",
+                label: "All",
+                children,
+                selected: false,
+                expanded: true
+            });
+        }
+
         selectNode = action((node?: ITreeNode<string>) => {
             this.selection = node && node.data;
         });
+
+        onSelectionChange = (
+            event: React.SyntheticEvent<
+                HTMLTextAreaElement | HTMLInputElement,
+                Event
+            >
+        ) => {
+            const start = event.currentTarget.selectionStart;
+            const end = event.currentTarget.selectionEnd;
+            if (!(typeof start == "number") || !(typeof end == "number")) {
+                return;
+            }
+
+            const value = event.currentTarget.value;
+
+            let expressionStart: number | undefined;
+            for (let i = start; i >= 0; i--) {
+                if (
+                    value[i] == EXPR_MARK_START[0] &&
+                    value[i + 1] == EXPR_MARK_START[1]
+                ) {
+                    expressionStart = i;
+                    break;
+                }
+            }
+
+            if (expressionStart === undefined) {
+                return;
+            }
+
+            let expressionEnd: number | undefined;
+            for (let i = end; i < value.length; i++) {
+                if (
+                    value[i] == EXPR_MARK_END[1] &&
+                    value[i - 1] == EXPR_MARK_END[0]
+                ) {
+                    expressionEnd = i + 1;
+                    break;
+                }
+            }
+
+            if (expressionEnd === undefined) {
+                return;
+            }
+
+            const identifier = value.substring(
+                expressionStart + 2,
+                expressionEnd - 2
+            );
+
+            if (identifier.length == 0) {
+                return;
+            }
+
+            let isIdentifier = false;
+            try {
+                isIdentifier = parseIdentifier(identifier);
+            } catch (err) {
+                return;
+            }
+
+            if (!isIdentifier) {
+                return;
+            }
+
+            event.currentTarget.setSelectionRange(
+                expressionStart,
+                expressionEnd,
+                event.currentTarget.selectionDirection ?? undefined
+            );
+        };
 
         render() {
             return (
                 <Dialog
                     modal={false}
-                    okButtonText="Select"
+                    okButtonText="Ok"
                     okEnabled={this.onOkEnabled}
                     onOk={this.onOk}
                     onCancel={this.props.onCancel}
                 >
                     <div className="EezStudio_ExpressionBuilder">
-                        <Tree
-                            showOnlyChildren={true}
-                            rootNode={this.rootNode}
-                            selectNode={this.selectNode}
-                            onDoubleClick={this.onOk}
+                        <textarea
+                            ref={(ref: any) => (this.textarea = ref)}
+                            className="form-control pre"
+                            value={this.value}
+                            onChange={action(
+                                event => (this.value = event.target.value)
+                            )}
+                            onSelect={this.onSelectionChange}
+                            style={{ resize: "none" }}
+                            spellCheck={false}
                         />
+
+                        <div className="EezStudio_ExpressionBuilder_Panels">
+                            {this.rootNodeVariables.children.length > 0 && (
+                                <Tree
+                                    showOnlyChildren={true}
+                                    rootNode={this.rootNodeVariables}
+                                    selectNode={this.selectNode}
+                                    onDoubleClick={this.onDoubleClick}
+                                />
+                            )}
+                            {this.rootNodeSystemVariables.children.length >
+                                0 && (
+                                <Tree
+                                    showOnlyChildren={true}
+                                    rootNode={this.rootNodeSystemVariables}
+                                    selectNode={this.selectNode}
+                                    onDoubleClick={this.onDoubleClick}
+                                />
+                            )}
+                            {this.rootNodeOperations.children.length > 0 && (
+                                <Tree
+                                    showOnlyChildren={true}
+                                    rootNode={this.rootNodeOperations}
+                                    selectNode={this.selectNode}
+                                    onDoubleClick={this.onDoubleClick}
+                                />
+                            )}
+                            {this.rootNodeFunctions.children.length > 0 && (
+                                <Tree
+                                    showOnlyChildren={true}
+                                    rootNode={this.rootNodeFunctions}
+                                    selectNode={this.selectNode}
+                                    onDoubleClick={this.onDoubleClick}
+                                />
+                            )}
+                            {this.rootNodeTextResources.children.length > 0 && (
+                                <Tree
+                                    showOnlyChildren={true}
+                                    rootNode={this.rootNodeTextResources}
+                                    selectNode={this.selectNode}
+                                    onDoubleClick={this.onDoubleClick}
+                                />
+                            )}
+                        </div>
                     </div>
                 </Dialog>
             );

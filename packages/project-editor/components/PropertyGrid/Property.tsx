@@ -137,7 +137,8 @@ export const Property = observer(
                         params = {
                             textInputSelection: {
                                 start: input.selectionStart,
-                                end: input.selectionEnd
+                                end: input.selectionEnd,
+                                direction: input.selectionDirection
                             }
                         };
                     }

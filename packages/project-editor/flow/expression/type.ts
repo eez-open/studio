@@ -48,6 +48,8 @@ export function findValueTypeInExpressionNode(
         } else {
             node.valueType = "undefined";
         }
+    } else if (node.type == "TextResource") {
+        node.valueType = "string";
     } else if (node.type == "Identifier") {
         if (assignable) {
             const output = component?.outputs.find(

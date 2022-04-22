@@ -100,6 +100,20 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
             return;
         }
 
+        if (node.type == "TextResource") {
+            const project = ProjectEditor.getProject(component);
+
+            if (
+                !project.texts.resources.find(
+                    textResource => textResource.resourceID == node.value
+                )
+            ) {
+                throw `text resource ID '${node.value}' not found`;
+            }
+
+            return;
+        }
+
         if (node.type == "Identifier") {
             const input = component.inputs.find(
                 input => input.name == node.name

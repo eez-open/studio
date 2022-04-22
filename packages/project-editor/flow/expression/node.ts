@@ -12,6 +12,11 @@ export type ExpressionNode =
           value: any;
           valueType: ValueType;
       }
+    | {
+          type: "TextResource";
+          value: string;
+          valueType: ValueType;
+      }
     | IdentifierExpressionNode
     | {
           type: "BinaryExpression";

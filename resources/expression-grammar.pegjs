@@ -203,6 +203,11 @@ StringLiteral "string"
       return { type: "Literal", value: chars.join("") };
     }
 
+TextResource
+  = 'T' str:StringLiteral {
+      return { type: "TextResource", value: str.value };
+    }
+
 DoubleStringCharacter
   = !('"' / "\\" / LineTerminator) SourceCharacter { return text(); }
   / "\\" sequence:EscapeSequence { return sequence; }
@@ -386,7 +391,8 @@ EOF
 // ----- A.3 Expressions -----
 
 PrimaryExpression
-  = Identifier
+  = TextResource
+  / Identifier
   / Literal
   / ArrayLiteral
   / ObjectLiteral

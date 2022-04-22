@@ -142,9 +142,7 @@ export function makeDataPropertyInfo(
                         propertyInfo,
                         {
                             assignableExpression: false,
-                            title: "Expression Builder",
-                            width: 400,
-                            height: 600
+                            title: "Expression Builder"
                         },
                         params
                     );
@@ -382,9 +380,7 @@ export function makeExpressionProperty(
                     propertyInfo,
                     {
                         assignableExpression: false,
-                        title: "Expression Builder",
-                        width: 400,
-                        height: 600
+                        title: "Expression Builder"
                     },
                     params
                 ),
@@ -413,9 +409,7 @@ export function makeAssignableExpressionProperty(
                     propertyInfo,
                     {
                         assignableExpression: true,
-                        title: "Expression Builder",
-                        width: 400,
-                        height: 600
+                        title: "Expression Builder"
                     },
                     params
                 ),
