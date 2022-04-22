@@ -151,15 +151,20 @@ function buildExpressionNode(
     }
 
     if (node.type == "TextResource") {
-        return [
-            makePushConstantInstruction(
-                assets,
-                assets.DocumentStore.project.texts.resources.findIndex(
-                    textResource => textResource.resourceID == node.value
+        if (assets.DocumentStore.project.texts) {
+            return [
+                makePushConstantInstruction(
+                    assets,
+                    assets.DocumentStore.project.texts.resources.findIndex(
+                        textResource => textResource.resourceID == node.value
+                    ),
+                    "integer"
                 ),
-                "integer"
-            ),
-            makeOperationInstruction(operationIndexes["Flow.translate"])
+                makeOperationInstruction(operationIndexes["Flow.translate"])
+            ];
+        }
+        return [
+            makePushConstantInstruction(assets, node.value, node.valueType)
         ];
     }
 

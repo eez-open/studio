@@ -136,6 +136,7 @@ declare const WasmFlowRuntime: {
     HEAPF64: Float64Array;
 
     allocateUTF8(str: string): number;
+    UTF8ToString(ptr: number): string;
     AsciiToString(ptr: number): string;
 
     _malloc(size: number): number;

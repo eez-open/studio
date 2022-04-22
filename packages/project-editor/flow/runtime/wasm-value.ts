@@ -296,7 +296,7 @@ export function getValue(offset: number): ValueWithType {
     } else if (type == FLOW_VALUE_TYPE_STRING) {
         const ptr = WasmFlowRuntime.HEAP32[offset >> 2];
         return {
-            value: WasmFlowRuntime.AsciiToString(ptr),
+            value: WasmFlowRuntime.UTF8ToString(ptr),
             valueType: "string"
         };
     } else if (type == FLOW_VALUE_TYPE_ARRAY) {
@@ -306,7 +306,7 @@ export function getValue(offset: number): ValueWithType {
         const refPtr = WasmFlowRuntime.HEAP32[offset >> 2];
         const ptr = WasmFlowRuntime.HEAP32[(refPtr >> 2) + 2];
         return {
-            value: WasmFlowRuntime.AsciiToString(ptr),
+            value: WasmFlowRuntime.UTF8ToString(ptr),
             valueType: "string"
         };
     } else if (type == FLOW_VALUE_TYPE_ARRAY_REF) {

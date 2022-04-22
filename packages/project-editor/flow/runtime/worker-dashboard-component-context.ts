@@ -40,7 +40,7 @@ export class DashboardComponentContext implements IDashboardComponentContext {
             this.componentIndex,
             offset
         );
-        return WasmFlowRuntime.AsciiToString(ptr);
+        return WasmFlowRuntime.UTF8ToString(ptr);
     }
 
     getExpressionListParam(offset: number) {

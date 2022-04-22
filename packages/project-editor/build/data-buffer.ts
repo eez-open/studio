@@ -104,7 +104,7 @@ export class DataBuffer {
         if (this.currentOffset % 4) {
             throw "invalid offset";
         }
-        const buffer = Buffer.from(str, "binary");
+        const buffer = Buffer.from(str, "utf8");
         for (let i = 0; i < buffer.length; i++) {
             this.writeUint8(buffer[i]);
         }

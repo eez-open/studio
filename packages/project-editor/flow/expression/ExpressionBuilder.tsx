@@ -588,26 +588,28 @@ const SelectItemDialog = observer(
             const children: ITreeNode<string>[] = [];
 
             if (!this.props.assignableExpression) {
-                children.push({
-                    id: "text-resources",
-                    label: "Text resources",
-                    children: _map(
-                        this.context.project.texts.resources,
-                        text => {
-                            const data = `T"${text.resourceID}"`;
-                            return {
-                                id: text.resourceID,
-                                label: text.resourceID,
-                                children: [],
-                                selected: this.selection == data,
-                                expanded: false,
-                                data
-                            };
-                        }
-                    ),
-                    selected: false,
-                    expanded: true
-                });
+                if (this.context.project.texts) {
+                    children.push({
+                        id: "text-resources",
+                        label: "Text resources",
+                        children: _map(
+                            this.context.project.texts.resources,
+                            text => {
+                                const data = `T"${text.resourceID}"`;
+                                return {
+                                    id: text.resourceID,
+                                    label: text.resourceID,
+                                    children: [],
+                                    selected: this.selection == data,
+                                    expanded: false,
+                                    data
+                                };
+                            }
+                        ),
+                        selected: false,
+                        expanded: true
+                    });
+                }
             }
 
             return observable({

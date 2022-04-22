@@ -104,6 +104,7 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
             const project = ProjectEditor.getProject(component);
 
             if (
+                !project.texts ||
                 !project.texts.resources.find(
                     textResource => textResource.resourceID == node.value
                 )
