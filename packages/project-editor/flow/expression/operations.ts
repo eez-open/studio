@@ -423,6 +423,50 @@ export const builtInFunctions: {
             return args[0];
         }
     },
+    "Flow.languages": {
+        arity: 0,
+        args: [],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => {
+            const texts = expressionContext?.DocumentStore.project.texts;
+            if (texts) {
+                return texts.languages.map(language => language.languageID);
+            }
+            return [];
+        },
+        getValueType: (...args: ValueType[]) => {
+            return "array:string";
+        }
+    },
+    "Flow.translate": {
+        arity: 1,
+        args: ["textResourceID"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => {
+            const texts = expressionContext?.DocumentStore.project.texts;
+            if (texts) {
+                const textResource = texts.resources[args[0]];
+                if (textResource) {
+                    const translation = textResource.translations.find(
+                        translation =>
+                            translation.languageID ==
+                            texts.languages[0].languageID
+                    );
+                    if (translation) {
+                        return translation.text;
+                    }
+                }
+            }
+            return "";
+        },
+        getValueType: (...args: ValueType[]) => {
+            return "string";
+        }
+    },
     "Date.now": {
         arity: 0,
         args: [],

@@ -85,10 +85,12 @@ import {
     COMPONENT_TYPE_SHOW_KEYBOARD_ACTION,
     COMPONENT_TYPE_SHOW_KEYPAD_ACTION,
     COMPONENT_TYPE_NOOP_ACTION,
-    COMPONENT_TYPE_COMMENT_ACTION
+    COMPONENT_TYPE_COMMENT_ACTION,
+    COMPONENT_TYPE_SELECT_LANGUAGE_ACTION
 } from "project-editor/flow/components/component_types";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { LANGUAGE_ICON } from "project-editor/features/texts";
 
 const NOT_NAMED_LABEL = "<not named>";
 
@@ -2940,6 +2942,63 @@ export class NoopActionComponent extends ActionComponent {
 }
 
 registerClass("NoopActionComponent", NoopActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class SelectLanguageActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: COMPONENT_TYPE_SELECT_LANGUAGE_ACTION,
+
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "language",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "any"
+            )
+        ],
+        icon: LANGUAGE_ICON,
+        componentHeaderColor: "#fff5c2"
+    });
+
+    language: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            language: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            }
+        ];
+    }
+}
+
+registerClass("SelectLanguageActionComponent", SelectLanguageActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 

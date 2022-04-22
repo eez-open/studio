@@ -1119,6 +1119,33 @@ function buildHeaderData(
     dataBuffer.finalize();
 }
 
+function buildLanguages(assets: Assets, dataBuffer: DataBuffer) {
+    dataBuffer.writeArray(
+        assets.DocumentStore.project.texts?.languages ?? [],
+        language => {
+            dataBuffer.writeObjectOffset(() => {
+                dataBuffer.writeString(language.languageID);
+            });
+
+            dataBuffer.writeArray(
+                assets.DocumentStore.project.texts.resources,
+                textResource => {
+                    const translation = textResource.translations.find(
+                        translation =>
+                            translation.languageID == language.languageID
+                    );
+                    if (translation) {
+                        dataBuffer.writeString(translation.text);
+                    } else {
+                        dataBuffer.writeString("");
+                    }
+                }
+            );
+        },
+        8
+    );
+}
+
 export async function buildGuiAssetsData(assets: Assets) {
     const dataBuffer = new DataBuffer();
 
@@ -1130,6 +1157,7 @@ export async function buildGuiAssetsData(assets: Assets) {
     buildActionNames(assets, dataBuffer);
     buildVariableNames(assets, dataBuffer);
     buildFlowData(assets, dataBuffer);
+    buildLanguages(assets, dataBuffer);
 
     dataBuffer.finalize();
 

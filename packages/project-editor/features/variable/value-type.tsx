@@ -58,6 +58,8 @@ export const basicTypeNames = [
 export const ACTION_PARAMS_STRUCT_NAME = "$ActionParams";
 export const CHECKBOX_ACTION_PARAMS_STRUCT_NAME = "$CheckboxActionParams";
 export const TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME = "$TextInputActionParams";
+export const DROP_DOWN_LIST_ACTION_PARAMS_STRUCT_NAME =
+    "$DropDownListActionParams";
 
 export const SYSTEM_STRUCTURES: IStructure[] = [
     {
@@ -94,6 +96,24 @@ export const SYSTEM_STRUCTURES: IStructure[] = [
     },
     {
         name: TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME,
+        fields: [
+            {
+                name: "index",
+                type: "integer"
+            },
+            {
+                name: "indexes",
+                type: "array:integer"
+            },
+            {
+                name: "value",
+                type: "string"
+            }
+        ],
+        fieldsMap: new Map()
+    },
+    {
+        name: DROP_DOWN_LIST_ACTION_PARAMS_STRUCT_NAME,
         fields: [
             {
                 name: "index",
@@ -822,6 +842,13 @@ interface TextInputActionParamsValue {
 }
 
 export function makeTextInputActionParamsValue(
+    flowContext: IFlowContext,
+    value: string
+): TextInputActionParamsValue {
+    return { ...makeActionParamsValue(flowContext), value };
+}
+
+export function makeDropDownListActionParamsValue(
     flowContext: IFlowContext,
     value: string
 ): TextInputActionParamsValue {

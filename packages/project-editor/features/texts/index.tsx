@@ -2,18 +2,23 @@ import { makeObservable, observable } from "mobx";
 import React from "react";
 
 import {
+    ClassInfo,
     EezObject,
     IEezObject,
+    PropertyProps,
     PropertyType
 } from "project-editor/core/object";
 import { Project } from "project-editor/project/project";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { observer } from "mobx-react";
+import { ProjectContext } from "project-editor/project/context";
+import { addObject, deleteObject, updateObject } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ICON = (
+export const LANGUAGE_ICON = (
     <svg
         width="24"
         height="24"
@@ -34,7 +39,7 @@ const ICON = (
 export class Language extends EezObject {
     languageID: string;
 
-    static classInfo = {
+    static classInfo: ClassInfo = {
         properties: [
             {
                 name: "languageID",
@@ -66,6 +71,39 @@ export class Language extends EezObject {
                     languageID: result.values.name
                 });
             });
+        },
+        updateObjectValueHook: (
+            language: Language,
+            values: Partial<Language>
+        ) => {
+            if (values.languageID != undefined) {
+                const project = ProjectEditor.getProject(language);
+                for (const textResource of project.texts.resources) {
+                    for (const translation of textResource.translations) {
+                        if (translation.languageID == language.languageID) {
+                            updateObject(translation, {
+                                languageID: values.languageID
+                            });
+                        }
+                    }
+                }
+            }
+        },
+        deleteObjectRefHook: (
+            language: Language,
+            options?: { dropPlace?: IEezObject }
+        ) => {
+            if (options?.dropPlace) {
+                return;
+            }
+            const project = ProjectEditor.getProject(language);
+            for (const textResource of project.texts.resources) {
+                for (const translation of textResource.translations) {
+                    if (translation.languageID == language.languageID) {
+                        deleteObject(translation);
+                    }
+                }
+            }
         }
     };
 
@@ -79,33 +117,76 @@ export class Language extends EezObject {
 }
 
 class Translation extends EezObject {
+    languageID: string;
     text: string;
 
-    static classInfo = {
+    static classInfo: ClassInfo = {
         properties: [
+            {
+                name: "languageID",
+                type: PropertyType.String
+            },
             {
                 name: "text",
                 type: PropertyType.String
             }
-        ]
+        ],
+        defaultValue: {
+            languageID: "",
+            text: ""
+        }
     };
 
     constructor() {
         super();
 
         makeObservable(this, {
+            languageID: observable,
             text: observable
         });
     }
 }
 
+const TranslationsEditorPropertyUI = observer(
+    class TextResourceEditorPropertyUI extends React.Component<PropertyProps> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        render() {
+            const textResource = this.props.objects[0] as TextResource;
+
+            return (
+                <table className="EezStudio_TextResource_Translations">
+                    <tbody>
+                        {textResource.translations.map(translation => (
+                            <tr key={translation.languageID}>
+                                <td>{translation.languageID}</td>
+                                <td>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        value={translation.text}
+                                        onChange={event => {
+                                            updateObject(translation, {
+                                                text: event.target.value
+                                            });
+                                        }}
+                                    ></input>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            );
+        }
+    }
+);
+
 export class TextResource extends EezObject {
     resourceID: string;
-    translations: {
-        [languageID: string]: Translation;
-    };
+    translations: Translation[];
 
-    static classInfo = {
+    static classInfo: ClassInfo = {
         properties: [
             {
                 name: "resourceID",
@@ -114,8 +195,9 @@ export class TextResource extends EezObject {
             },
             {
                 name: "translations",
-                type: PropertyType.Any,
-                typeClass: Translation
+                type: PropertyType.Array,
+                typeClass: Translation,
+                propertyGridRowComponent: TranslationsEditorPropertyUI
             }
         ],
         label: (textResource: TextResource) => textResource.resourceID,
@@ -138,8 +220,19 @@ export class TextResource extends EezObject {
                 values: {},
                 dialogContext: ProjectEditor.getProject(parent)
             }).then(result => {
+                const project = ProjectEditor.getProject(parent);
+
+                const translations = [];
+                for (const language of project.texts.languages) {
+                    translations.push({
+                        languageID: language.languageID,
+                        text: ""
+                    });
+                }
+
                 return Promise.resolve({
-                    resourceID: result.values.name
+                    resourceID: result.values.name,
+                    translations
                 });
             });
         }
@@ -159,12 +252,24 @@ export class Texts extends EezObject {
     languages: Language[];
     resources: TextResource[];
 
-    static classInfo = {
+    static classInfo: ClassInfo = {
         properties: [
             {
                 name: "languages",
                 type: PropertyType.Array,
-                typeClass: Language
+                typeClass: Language,
+                interceptAddObject: (
+                    languages: Language[],
+                    language: Language
+                ) => {
+                    const project = ProjectEditor.getProject(languages);
+                    for (const textResource of project.texts.resources) {
+                        addObject(textResource.translations, {
+                            languageID: language.languageID
+                        });
+                    }
+                    return language;
+                }
             },
             {
                 name: "resources",
@@ -172,7 +277,11 @@ export class Texts extends EezObject {
                 typeClass: TextResource
             }
         ],
-        icon: ICON
+        icon: LANGUAGE_ICON,
+        defaultValue: {
+            languages: [],
+            resources: []
+        }
     };
 
     constructor() {
@@ -202,7 +311,7 @@ export default {
                 key: "texts",
                 type: PropertyType.Object,
                 typeClass: Texts,
-                icon: ICON,
+                icon: LANGUAGE_ICON,
                 create: () => ({
                     languages: [],
                     texts: []

@@ -481,7 +481,7 @@ export const SelectProperty = observer(
                                 <>
                                     <input
                                         type="text"
-                                        className="form-control "
+                                        className="form-control"
                                         value={this.props.value}
                                         onChange={event =>
                                             this.props.onChange(

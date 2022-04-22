@@ -152,7 +152,14 @@ function buildExpressionNode(
 
     if (node.type == "TextResource") {
         return [
-            makePushConstantInstruction(assets, node.value, node.valueType)
+            makePushConstantInstruction(
+                assets,
+                assets.DocumentStore.project.texts.resources.findIndex(
+                    textResource => textResource.resourceID == node.value
+                ),
+                "integer"
+            ),
+            makeOperationInstruction(operationIndexes["Flow.translate"])
         ];
     }
 

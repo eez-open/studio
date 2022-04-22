@@ -4558,6 +4558,14 @@ button.EezStudio_Action {
             }
         }
 
+        &.DropDownListWidget {
+            select {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+        }
+
         &.MarkdownWidget {
             overflow: auto !important;
         }
@@ -5060,5 +5068,20 @@ button.EezStudio_Action {
         padding: 5px;
         border-radius: 4px;
         box-shadow: @componentShadow;
+    }
+}
+
+.EezStudio_TextResource_Translations {
+    margin: 10px 0;
+
+    td:first-child {
+        padding-right: 10px;
+    }
+
+    td:last-child {
+        width: 100%;
+        input {
+            width: 100%;
+        }
     }
 }

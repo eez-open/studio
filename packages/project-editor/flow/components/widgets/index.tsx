@@ -59,13 +59,15 @@ import {
 import {
     ACTION_PARAMS_STRUCT_NAME,
     CHECKBOX_ACTION_PARAMS_STRUCT_NAME,
+    TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME,
     getEnumTypeNameFromVariable,
     isEnumVariable,
     makeActionParamsValue,
     makeCheckboxActionParamsValue,
     makeTextInputActionParamsValue,
-    TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME,
-    ValueType
+    makeDropDownListActionParamsValue,
+    ValueType,
+    DROP_DOWN_LIST_ACTION_PARAMS_STRUCT_NAME
 } from "project-editor/features/variable/value-type";
 import {
     drawText,
@@ -175,8 +177,14 @@ export function evalProperty(
             propertyName
         );
     } else {
-        return evalConstantExpression(flowContext.DocumentStore.project, expr)
-            .value;
+        try {
+            return evalConstantExpression(
+                flowContext.DocumentStore.project,
+                expr
+            ).value;
+        } catch (err) {
+            return undefined;
+        }
     }
 }
 
@@ -6076,7 +6084,13 @@ export class DropDownListWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_DROP_DOWN_LIST,
 
-        properties: [makeDataPropertyInfo("options")],
+        properties: [
+            makeDataPropertyInfo("options"),
+            makeActionPropertyInfo("action", {
+                displayName: "onChange",
+                expressionType: `struct:${DROP_DOWN_LIST_ACTION_PARAMS_STRUCT_NAME}`
+            })
+        ],
 
         defaultValue: {
             left: 0,
@@ -6089,10 +6103,7 @@ export class DropDownListWidget extends Widget {
             <svg viewBox="0 0 1000 1000">
                 <path d="M258.8 402.9v157.4H990V402.9H258.8zm685.5 111.7H304.5v-66h639.8v66zM258.8 743.1H990V585.7H258.8v157.4zm45.7-111.7h639.8v66H304.5v-66zm-45.7 293.2H990V767.2H258.8v157.4zm45.7-111.7h639.8v66H304.5v-66zm436.7-463.3h198V75.4H10v274.2h731.2zm0-228.5h152.3v182.8H741.2V121.1zM55.7 303.9V121.1h639.8v182.8H55.7zm714.7-113.5h100.1l-50 63.6-50.1-63.6z" />
             </svg>
-        ),
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        )
     });
 
     constructor() {
@@ -6103,10 +6114,62 @@ export class DropDownListWidget extends Widget {
         });
     }
 
+    renderDashboard(flowContext: IFlowContext) {
+        let options: string[] = evalProperty(flowContext, this, "options");
+        if (options == undefined && !Array.isArray(options)) {
+            options = [];
+        }
+
+        let value: string = evalProperty(flowContext, this, "data");
+        if (value == undefined) {
+            value = "";
+        }
+
+        return (
+            <select
+                value={value}
+                onChange={event => {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    if (flowContext.DocumentStore.runtime) {
+                        flowContext.DocumentStore.runtime.assignProperty(
+                            flowContext,
+                            this,
+                            "data",
+                            event.target.value
+                        );
+
+                        flowContext.DocumentStore.runtime.executeWidgetAction(
+                            flowContext,
+                            this,
+                            "action",
+                            makeDropDownListActionParamsValue(
+                                flowContext,
+                                event.target.value
+                            ),
+                            `struct:${DROP_DOWN_LIST_ACTION_PARAMS_STRUCT_NAME}`
+                        );
+                    }
+                }}
+            >
+                {options
+                    .filter(option => typeof option === "string")
+                    .map(option => (
+                        <option key={option} value={option}>
+                            {option}
+                        </option>
+                    ))}
+            </select>
+        );
+    }
+
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? (
+                    this.renderDashboard(flowContext)
+                ) : (
                     <ComponentCanvas
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {

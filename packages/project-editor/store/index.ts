@@ -649,17 +649,32 @@ export class DocumentStoreClass {
     }
 
     addObject(parentObject: IEezObject, object: any) {
+        const undoManager = getDocumentStore(parentObject).undoManager;
+
+        let closeCombineCommands = false;
+
         if (getParent(parentObject) && getKey(parentObject)) {
             const propertyInfo = findPropertyByNameInObject(
                 getParent(parentObject),
                 getKey(parentObject)
             );
             if (propertyInfo && propertyInfo.interceptAddObject) {
+                if (!undoManager.combineCommands) {
+                    undoManager.setCombineCommands(true);
+                    closeCombineCommands = true;
+                }
+
                 object = propertyInfo.interceptAddObject(parentObject, object);
             }
         }
 
-        return addObject(parentObject, object);
+        const eezObject = addObject(parentObject, object);
+
+        if (closeCombineCommands) {
+            undoManager.setCombineCommands(false);
+        }
+
+        return eezObject;
     }
 
     addObjects(parentObject: IEezObject, objects: any[]) {
@@ -819,7 +834,7 @@ export class DocumentStoreClass {
         }
     }
 
-    setEditorMode() {
+    async setEditorMode() {
         if (this.runtime) {
             if (this.runtime.isDebuggerActive) {
                 const editorState = this.editorsStore.activeEditor?.state;
@@ -828,7 +843,7 @@ export class DocumentStoreClass {
                 }
             }
 
-            this.runtime.stopRuntime(false);
+            await this.runtime.stopRuntime(false);
             this.dataContext.clear();
 
             this.runtime = undefined;

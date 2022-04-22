@@ -18,6 +18,7 @@ import {
     SYSTEM_STRUCTURES
 } from "project-editor/features/variable/value-type";
 import { computed, makeObservable, observable, runInAction } from "mobx";
+import { basicFlowValueTypes } from "project-editor/build/value-types";
 
 function getFieldIndexes(fields: IField[]): IIndexes {
     const fieldIndexes: IIndexes = {};
@@ -42,6 +43,13 @@ export class TypesStore {
         this._types = [];
         this._typeIndexes = {};
         this._numDynamicTypes = 0;
+
+        basicFlowValueTypes.forEach(valueType =>
+            this._addType({
+                kind: "basic",
+                valueType
+            })
+        );
 
         SYSTEM_STRUCTURES.forEach(structure =>
             this.getTypeFromValueType(`struct:${structure.name}`)
@@ -177,7 +185,9 @@ export class TypesStore {
     }
 
     _addType(type: IType) {
-        this._typeIndexes[type.valueType] = this._types.length;
+        if (!this._typeIndexes[type.valueType]) {
+            this._typeIndexes[type.valueType] = this._types.length;
+        }
         this._types.push(type);
     }
 

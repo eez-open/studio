@@ -350,6 +350,7 @@ export class WasmRuntime extends RemoteRuntime {
         this.wheelClicked = 0;
         this.pointerEvents = [];
         this.screen = undefined;
+        this.componentProperties.assignPropertiesOnNextTick = [];
     };
 
     ////////////////////////////////////////////////////////////////////////////////

@@ -349,15 +349,7 @@ export function getArrayValue(
     const arrayType = WasmFlowRuntime.HEAPU32[(offset >> 2) + 1];
 
     const type = WasmFlowRuntime.assetsMap.types[arrayType];
-    if (!type || type.kind == "basic") {
-        console.error("Invalid array value type");
-        return {
-            value: undefined,
-            valueType: "undefined" as ValueType
-        };
-    }
-
-    if (type.kind == "array") {
+    if (type.kind == "basic" || type.kind == "array") {
         if (
             expectedTypes &&
             !expectedTypes.find(valueType => valueType.startsWith("array:"))
@@ -374,7 +366,9 @@ export function getArrayValue(
         }
         return {
             value,
-            valueType: `array:${type.elementType}` as ValueType
+            valueType: `array:${
+                type.kind == "basic" ? type.valueType : type.elementType
+            }` as ValueType
         };
     } else {
         if (expectedTypes && expectedTypes.indexOf(type.valueType) == -1) {
