@@ -5762,6 +5762,18 @@ var _executeCallAction = Module["_executeCallAction"] = createExportWrapper("exe
 var _throwError = Module["_throwError"] = createExportWrapper("throwError");
 
 /** @type {function(...*):?} */
+var _getFirstRootFlowState = Module["_getFirstRootFlowState"] = createExportWrapper("getFirstRootFlowState");
+
+/** @type {function(...*):?} */
+var _getFirstChildFlowState = Module["_getFirstChildFlowState"] = createExportWrapper("getFirstChildFlowState");
+
+/** @type {function(...*):?} */
+var _getNextSiblingFlowState = Module["_getNextSiblingFlowState"] = createExportWrapper("getNextSiblingFlowState");
+
+/** @type {function(...*):?} */
+var _getFlowStateFlowIndex = Module["_getFlowStateFlowIndex"] = createExportWrapper("getFlowStateFlowIndex");
+
+/** @type {function(...*):?} */
 var _fflush = Module["_fflush"] = createExportWrapper("fflush");
 
 /** @type {function(...*):?} */

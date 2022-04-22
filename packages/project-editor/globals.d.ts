@@ -201,4 +201,10 @@ declare const WasmFlowRuntime: {
     _throwError(flowStateIndex: number, componentIndex: number, errorMessage: number);
 
     _onScpiResult(errorMessage: number, result: number, resultLen: number, resultIsBlob: number);
+
+    _getFirstRootFlowState(): number;
+    _getFirstChildFlowState(flowStateIndex: number): number;
+    _getNextSiblingFlowState(flowStateIndex: number): number;
+
+    _getFlowStateFlowIndex(flowStateIndex: number): number;
 };
