@@ -954,7 +954,10 @@ export class TreeAdapter implements ITreeAdapter {
         if (this.selectedObject) {
             const object = this.selectedObject.get();
             if (object) {
-                this.rootItem.selectItem(new TreeObjectAdapter(object));
+                const childItem = this.rootItem.getObjectAdapter(object);
+                if (childItem) {
+                    this.rootItem.selectItem(childItem);
+                }
             }
         }
     }
