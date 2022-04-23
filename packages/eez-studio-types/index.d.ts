@@ -262,7 +262,7 @@ export interface IDashboardComponentContext {
 
     evalProperty: <T = any>(
         propertyName: string,
-        expectedTypes?: ValueType[]
+        expectedTypes?: ValueType | ValueType[]
     ) => T | undefined;
 
     setPropertyField: <T = any>(

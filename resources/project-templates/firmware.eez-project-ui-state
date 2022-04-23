@@ -3,7 +3,7 @@
     "selectedRootObject": "/pages",
     "selectedPageObject": "/pages/0",
     "selectedThemeObject": "/themes/0",
-    "selectedThemeColorObject": "/colors/20",
+    "selectedThemeColorObject": "/colors/26",
     "selectedFontObject": "/fonts/0"
   },
   "layoutModel": {
@@ -24,7 +24,8 @@
           },
           {
             "type": "border",
-            "size": 199.1875,
+            "selected": 0,
+            "size": 304.1875,
             "location": "right",
             "children": [
               {
@@ -86,7 +87,8 @@
                   "component": "navigation",
                   "enableClose": false
                 }
-              ]
+              ],
+              "active": true
             },
             {
               "type": "tabset",
@@ -132,8 +134,7 @@
                     }
                   }
                 }
-              ],
-              "active": true
+              ]
             },
             {
               "type": "tabset",
@@ -411,6 +412,56 @@
         }
       }
     },
+    "actions": {
+      "version": 2,
+      "json": {
+        "global": {
+          "splitterSize": 4,
+          "splitterExtra": 4,
+          "tabEnableRename": false,
+          "borderEnableAutoHide": true
+        },
+        "borders": [],
+        "layout": {
+          "type": "row",
+          "id": "#21270432-2963-4aa7-9aff-4d63f681d88b",
+          "children": [
+            {
+              "type": "row",
+              "id": "#130a10b5-0aca-4574-a883-089ce5d4f034",
+              "children": [
+                {
+                  "type": "tabset",
+                  "id": "#017612d2-1789-4504-afcd-e5961c8b0994",
+                  "children": [
+                    {
+                      "type": "tab",
+                      "id": "#d1483f83-513a-46e1-a5d2-7820a29e988c",
+                      "name": "Actions",
+                      "component": "actions",
+                      "enableClose": false
+                    }
+                  ]
+                },
+                {
+                  "type": "tabset",
+                  "id": "#02fde64e-da11-4daf-9c8b-1924eb6c3f1d",
+                  "children": [
+                    {
+                      "type": "tab",
+                      "id": "#a0674375-784f-4317-9303-0d0ef3a8f9a9",
+                      "name": "Local Vars",
+                      "component": "local-vars",
+                      "enableClose": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
     "scpi": {
       "version": 3,
       "json": {
@@ -637,6 +688,56 @@
                       "id": "DEBUGGER_LOGS",
                       "name": "Logs",
                       "component": "logs",
+                      "enableClose": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "texts": {
+      "version": 4,
+      "json": {
+        "global": {
+          "splitterSize": 4,
+          "splitterExtra": 4,
+          "tabEnableRename": false,
+          "borderEnableAutoHide": true
+        },
+        "borders": [],
+        "layout": {
+          "type": "row",
+          "id": "#abc3fb8d-edef-4606-9733-f2998e111cc2",
+          "children": [
+            {
+              "type": "row",
+              "id": "#825d39cd-bc80-46ed-956e-9ecc07425e87",
+              "children": [
+                {
+                  "type": "tabset",
+                  "id": "#45b1ccf1-c0b7-4463-9bed-88c9b4bb6b43",
+                  "children": [
+                    {
+                      "type": "tab",
+                      "id": "TEXT_RESOURCES",
+                      "name": "Text resources",
+                      "component": "resources",
+                      "enableClose": false
+                    }
+                  ]
+                },
+                {
+                  "type": "tabset",
+                  "id": "#2deb0745-026f-4e54-85db-7ff84755d382",
+                  "children": [
+                    {
+                      "type": "tab",
+                      "id": "LANGUAGES",
+                      "name": "Languages",
+                      "component": "languages",
                       "enableClose": false
                     }
                   ]

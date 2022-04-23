@@ -4,8 +4,7 @@
     "selectedPageObject": "/pages/0",
     "selectedActionObject": "/actions/16",
     "selectedGlobalVariableObject": "/variables/globalVariables/1",
-    "selectedStyleObject": "/styles/14",
-    "selectedThemeColorObject": "/colors/0",
+    "selectedStyleObject": "/styles/21",
     "selectedFontObject": "/fonts/0"
   },
   "layoutModel": {
@@ -88,12 +87,13 @@
                   "component": "navigation",
                   "enableClose": false
                 }
-              ]
+              ],
+              "active": true
             },
             {
               "type": "tabset",
               "id": "EDITORS",
-              "weight": 59.10503932859136,
+              "weight": 37.15476509755805,
               "enableDrop": false,
               "enableDrag": false,
               "enableTabStrip": false,
@@ -118,7 +118,15 @@
                           {
                             "type": "tabset",
                             "id": "#1f48ea02-e7cb-4697-958a-1d9806fd6d3e",
+                            "selected": 1,
                             "children": [
+                              {
+                                "type": "tab",
+                                "id": "#719e6058-f898-4b94-b3ea-5539dbcdd8c9",
+                                "name": "touch_calibration_yes_no",
+                                "component": "editor",
+                                "config": "/pages/1"
+                              },
                               {
                                 "type": "tab",
                                 "id": "#bec140db-fef1-4882-9372-a7367800961b",
@@ -139,7 +147,7 @@
             {
               "type": "tabset",
               "id": "#bd06810b-5340-47e3-9447-204c057207f4",
-              "weight": 14.546071823363997,
+              "weight": 30.870427974232207,
               "children": [
                 {
                   "type": "tab",
@@ -153,7 +161,7 @@
             {
               "type": "tabset",
               "id": "#d7e6c4f9-f28d-4690-9d09-28164fc4723a",
-              "weight": 9.14639364650918,
+              "weight": 14.772311726674324,
               "children": [
                 {
                   "type": "tab",
@@ -162,8 +170,7 @@
                   "component": "componentsPalette",
                   "enableClose": false
                 }
-              ],
-              "active": true
+              ]
             }
           ]
         }
@@ -386,6 +393,56 @@
                     {
                       "type": "tab",
                       "id": "#c6614110-39e2-4404-9dd1-540d19d30b6a",
+                      "name": "Local Vars",
+                      "component": "local-vars",
+                      "enableClose": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "actions": {
+      "version": 2,
+      "json": {
+        "global": {
+          "splitterSize": 4,
+          "splitterExtra": 4,
+          "tabEnableRename": false,
+          "borderEnableAutoHide": true
+        },
+        "borders": [],
+        "layout": {
+          "type": "row",
+          "id": "#36783035-9e88-410e-9a1d-739917c92acb",
+          "children": [
+            {
+              "type": "row",
+              "id": "#86e986a0-0d70-4199-9d67-395580b12fc3",
+              "children": [
+                {
+                  "type": "tabset",
+                  "id": "#e6957b3a-0a9c-4a1d-8b96-1b8276ef123e",
+                  "children": [
+                    {
+                      "type": "tab",
+                      "id": "#0cdf1b53-b89b-4fe1-a94b-f830534526c6",
+                      "name": "Actions",
+                      "component": "actions",
+                      "enableClose": false
+                    }
+                  ]
+                },
+                {
+                  "type": "tabset",
+                  "id": "#cf5a7fa4-654d-4c85-a563-ff4717379865",
+                  "children": [
+                    {
+                      "type": "tab",
+                      "id": "#87527596-57f7-4d02-b47d-5efbde25777c",
                       "name": "Local Vars",
                       "component": "local-vars",
                       "enableClose": false
@@ -632,6 +689,56 @@
           ]
         }
       }
+    },
+    "texts": {
+      "version": 4,
+      "json": {
+        "global": {
+          "splitterSize": 4,
+          "splitterExtra": 4,
+          "tabEnableRename": false,
+          "borderEnableAutoHide": true
+        },
+        "borders": [],
+        "layout": {
+          "type": "row",
+          "id": "#09d616d4-ece9-44d6-804a-926543a67d64",
+          "children": [
+            {
+              "type": "row",
+              "id": "#019f9b8b-6154-4dad-827f-38a58be40ae3",
+              "children": [
+                {
+                  "type": "tabset",
+                  "id": "#4be8ac47-8fd5-4c71-acf0-d8cb6c7096f4",
+                  "children": [
+                    {
+                      "type": "tab",
+                      "id": "TEXT_RESOURCES",
+                      "name": "Text resources",
+                      "component": "resources",
+                      "enableClose": false
+                    }
+                  ]
+                },
+                {
+                  "type": "tabset",
+                  "id": "#cb7d7cde-6eec-468f-8103-463b374f3fb5",
+                  "children": [
+                    {
+                      "type": "tab",
+                      "id": "LANGUAGES",
+                      "name": "Languages",
+                      "component": "languages",
+                      "enableClose": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
     }
   },
   "selectedBuildConfiguration": "Default",
@@ -648,7 +755,9 @@
       }
     },
     "/pages/1[flow-state]": {
-      "selection": {},
+      "selection": {
+        "$selected": true
+      },
       "transform": {
         "translate": {
           "x": -240,

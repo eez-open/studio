@@ -309,7 +309,7 @@ const NewProjectWizard = observer(
         }
 
         get guiProjectDst() {
-            return `${this.projectDirPath}/gui.eez-project`;
+            return `${this.projectDirPath}/${this.name}-gui.eez-project`;
         }
 
         get guiProjectStateSrc() {
@@ -320,7 +320,7 @@ const NewProjectWizard = observer(
         }
 
         get guiProjectStateDst() {
-            return `${this.projectDirPath}/gui.eez-project-ui-state`;
+            return `${this.projectDirPath}/${this.name}-gui.eez-project-ui-state`;
         }
 
         get projectDirPath() {
@@ -513,6 +513,8 @@ const NewProjectWizard = observer(
                                 `Scripts/${this.name}.res`
                             );
                     }
+                } else if (this.type == "firmware") {
+                    projectTemplate.settings.general.imports[0].projectFilePath = `${this.name}-gui.eez-project`;
                 }
 
                 try {

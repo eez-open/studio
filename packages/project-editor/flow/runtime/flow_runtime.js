@@ -1722,14 +1722,14 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  53116: function($0) {freeComponentExecutionState($0);},  
- 53153: function($0, $1, $2, $3) {executeScpi($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2), $3);},  
- 53224: function() {FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; });},  
- 53385: function() {startToDebuggerMessage();},  
- 53415: function($0, $1) {writeDebuggerBuffer(new Uint8Array(Module.HEAPU8.buffer, $0, $1));},  
- 53486: function() {finishToDebuggerMessage();},  
- 53517: function($0, $1, $2) {executeDashboardComponent($0, $1, $2);},  
- 53560: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
+  53180: function($0) {freeComponentExecutionState($0);},  
+ 53217: function($0, $1, $2, $3) {executeScpi($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2), $3);},  
+ 53288: function() {FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; });},  
+ 53449: function() {startToDebuggerMessage();},  
+ 53479: function($0, $1) {writeDebuggerBuffer(new Uint8Array(Module.HEAPU8.buffer, $0, $1));},  
+ 53550: function() {finishToDebuggerMessage();},  
+ 53581: function($0, $1, $2) {executeDashboardComponent($0, $1, $2);},  
+ 53624: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
 };
 
 

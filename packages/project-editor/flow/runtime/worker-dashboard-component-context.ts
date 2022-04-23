@@ -104,7 +104,10 @@ export class DashboardComponentContext implements IDashboardComponentContext {
         WasmFlowRuntime._clearInputValue(this.flowStateIndex, inputIndex);
     }
 
-    evalProperty<T = any>(propertyName: string, expectedTypes?: ValueType[]) {
+    evalProperty<T = any>(
+        propertyName: string,
+        expectedTypes?: ValueType | ValueType[]
+    ) {
         const flowIndex = this.getFlowIndex();
         const flow = WasmFlowRuntime.assetsMap.flows[flowIndex];
         const componentIndex = this.getComponentIndex();
@@ -129,7 +132,12 @@ export class DashboardComponentContext implements IDashboardComponentContext {
 
         WasmFlowRuntime._valueFree(valuePtr);
 
-        if (expectedTypes && expectedTypes.indexOf(result.valueType) == -1) {
+        if (
+            expectedTypes &&
+            (Array.isArray(expectedTypes)
+                ? expectedTypes.indexOf(result.valueType) == -1
+                : expectedTypes != result.valueType)
+        ) {
             return undefined;
         }
 

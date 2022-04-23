@@ -124,8 +124,8 @@ export const SYSTEM_STRUCTURES: IStructure[] = [
                 type: "array:integer"
             },
             {
-                name: "value",
-                type: "string"
+                name: "selectedIndex",
+                type: "integer"
             }
         ],
         fieldsMap: new Map()
@@ -848,9 +848,15 @@ export function makeTextInputActionParamsValue(
     return { ...makeActionParamsValue(flowContext), value };
 }
 
+interface DropDownListActionParamsValue {
+    index: number;
+    indexes: number[];
+    selectedIndex: number;
+}
+
 export function makeDropDownListActionParamsValue(
     flowContext: IFlowContext,
-    value: string
-): TextInputActionParamsValue {
-    return { ...makeActionParamsValue(flowContext), value };
+    selectedIndex: number
+): DropDownListActionParamsValue {
+    return { ...makeActionParamsValue(flowContext), selectedIndex };
 }

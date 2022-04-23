@@ -81,11 +81,15 @@ const LineChartElement = observer(
                         ? runningState.values.map(
                               inputValue => inputValue.xValue
                           )
+                        : flowContext.flowState
+                        ? []
                         : [1, 2, 3, 4],
                     y: runningState
                         ? runningState.values.map(
                               inputValue => inputValue.lineValues[i]
                           )
+                        : flowContext.flowState
+                        ? []
                         : [i + 1, (i + 1) * 2, (i + 1) * 3, (i + 1) * 4],
                     type: "scatter",
                     name,

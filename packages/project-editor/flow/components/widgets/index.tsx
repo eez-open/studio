@@ -6120,14 +6120,11 @@ export class DropDownListWidget extends Widget {
             options = [];
         }
 
-        let value: string = evalProperty(flowContext, this, "data");
-        if (value == undefined) {
-            value = "";
-        }
+        let selectedIndex: number = evalProperty(flowContext, this, "data");
 
         return (
             <select
-                value={value}
+                value={options[selectedIndex] || ""}
                 onChange={event => {
                     event.preventDefault();
                     event.stopPropagation();
@@ -6137,7 +6134,7 @@ export class DropDownListWidget extends Widget {
                             flowContext,
                             this,
                             "data",
-                            event.target.value
+                            event.target.selectedIndex
                         );
 
                         flowContext.DocumentStore.runtime.executeWidgetAction(
@@ -6146,7 +6143,7 @@ export class DropDownListWidget extends Widget {
                             "action",
                             makeDropDownListActionParamsValue(
                                 flowContext,
-                                event.target.value
+                                event.target.selectedIndex
                             ),
                             `struct:${DROP_DOWN_LIST_ACTION_PARAMS_STRUCT_NAME}`
                         );

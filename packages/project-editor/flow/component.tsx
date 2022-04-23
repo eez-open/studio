@@ -2366,7 +2366,8 @@ export class Widget extends Component {
                             key={output.name}
                             data-connection-output-id={output.name}
                             className={classNames({
-                                seq: output.name === "@seqout"
+                                seq: output.name === "@seqout",
+                                error: output.name === "@error"
                             })}
                             title={getOutputDisplayName(this, output)}
                         ></div>
@@ -2414,7 +2415,8 @@ function ComponentOutputSpan({
         "output",
         componentOutput.isSequenceOutput ? "seq-connection" : "data-connection",
         {
-            optional: componentOutput.isOptionalOutput
+            optional: componentOutput.isOptionalOutput,
+            error: componentOutput.name === "@error"
         }
     );
     return (

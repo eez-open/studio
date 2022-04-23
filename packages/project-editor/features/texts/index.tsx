@@ -58,7 +58,6 @@ export class Language extends EezObject {
                             type: "string",
                             validators: [
                                 validators.required,
-                                validators.identifier,
                                 validators.unique({}, parent)
                             ]
                         }
@@ -211,7 +210,6 @@ export class TextResource extends EezObject {
                             type: "string",
                             validators: [
                                 validators.required,
-                                validators.identifier,
                                 validators.unique({}, parent)
                             ]
                         }

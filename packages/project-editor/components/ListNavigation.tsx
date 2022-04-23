@@ -164,8 +164,6 @@ export const ListNavigation = observer(
 
         dispose: IReactionDisposer;
 
-        listAdapter: TreeAdapter;
-
         constructor(props: any) {
             super(props);
 
@@ -174,7 +172,8 @@ export const ListNavigation = observer(
                 searchText: observable,
                 editable: computed,
                 selectedObject: computed,
-                onSearchChange: action.bound
+                onSearchChange: action.bound,
+                listAdapter: computed
             });
 
             const sortDirectionStr = localStorage.getItem(
@@ -192,8 +191,10 @@ export const ListNavigation = observer(
                         sortDirection
                     )
             );
+        }
 
-            this.listAdapter = new TreeAdapter(
+        get listAdapter() {
+            return new TreeAdapter(
                 new TreeObjectAdapter(this.props.navigationObject),
                 this.props.selectedObject,
                 undefined,

@@ -8,7 +8,9 @@
           "projectFilePath": "firmware.eez-project"
         }
       ],
-      "flowSupport": true
+      "flowSupport": true,
+      "displayWidth": 480,
+      "displayHeight": 272
     },
     "build": {
       "configurations": [
@@ -706,6 +708,17 @@
       "inheritFrom": "default",
       "color": "dark_text",
       "backgroundColor": "note"
+    },
+    {
+      "name": "drop_down_list",
+      "inheritFrom": "default",
+      "color": "drop_down_list_color",
+      "backgroundColor": "drop_down_list_background",
+      "activeColor": "drop_down_list_color",
+      "activeBackgroundColor": "drop_down_list_active_background",
+      "borderSize": "2",
+      "borderRadius": "8",
+      "borderColor": "drop_down_list_border"
     }
   ],
   "fonts": [
