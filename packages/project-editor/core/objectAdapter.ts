@@ -984,7 +984,7 @@ export class TreeAdapter implements ITreeAdapter {
                     return (
                         objectToString(item.object)
                             .toLowerCase()
-                            .indexOf(searchText) != -1
+                            .indexOf(searchText.toLowerCase()) != -1
                     );
                 });
             }

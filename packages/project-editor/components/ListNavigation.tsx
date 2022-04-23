@@ -200,7 +200,7 @@ export const ListNavigation = observer(
                 undefined,
                 undefined,
                 this.sortDirection,
-                1,
+                0,
                 this.onClickItem,
                 this.onDoubleClickItem,
                 this.searchText,

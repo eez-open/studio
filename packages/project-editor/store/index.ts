@@ -846,7 +846,9 @@ export class DocumentStoreClass {
             await this.runtime.stopRuntime(false);
             this.dataContext.clear();
 
-            this.runtime = undefined;
+            runInAction(() => {
+                this.runtime = undefined;
+            });
         }
     }
 
