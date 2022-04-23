@@ -532,8 +532,12 @@ export function getPropertySourceInfo(
 export function isAnyPropertyModified(props: PropertyProps) {
     const properties = getCommonProperties(props.objects);
     for (let propertyInfo of properties) {
+        if (propertyInfo.computed) {
+            continue;
+        }
         const sourceInfo = getPropertySourceInfo({ ...props, propertyInfo });
         if (sourceInfo.source === "modified") {
+            console.log("modified", propertyInfo);
             return true;
         }
     }
