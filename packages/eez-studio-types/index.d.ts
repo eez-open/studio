@@ -258,7 +258,7 @@ export interface IDashboardComponentContext {
         expectedTypes?: ValueType[]
     ) => T | undefined;
 
-    clearInputValue(inputName: string);
+    clearInputValue: (inputName: string) => void;
 
     evalProperty: <T = any>(
         propertyName: string,
