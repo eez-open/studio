@@ -433,9 +433,10 @@ function buildExpressionNode(
         const fieldValues: ExpressionNode[] = [];
 
         node.properties.forEach(property => {
-            const fieldIndex = type.fieldIndexes[property.key.name];
+            console.log(property.key);
+            const fieldIndex = type.fieldIndexes[property.key.value];
             if (fieldIndex == undefined) {
-                throw `Field ${property.key.name} not in ${node.valueType}`;
+                throw `Field ${property.key.value} not in ${node.valueType}`;
             }
             fieldValues[fieldIndex] = property.value;
         });
