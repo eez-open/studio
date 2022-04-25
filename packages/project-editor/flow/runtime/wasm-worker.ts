@@ -325,7 +325,10 @@ onmessage = async function (e: { data: RendererToWorkerMessage }) {
         });
     }
 
-    WasmFlowRuntime._mainLoop();
+    if (!WasmFlowRuntime._mainLoop()) {
+        // flow is stopped
+        return;
+    }
 
     let propertyValues: IPropertyValue[] | undefined;
     if (e.data.evalProperties) {

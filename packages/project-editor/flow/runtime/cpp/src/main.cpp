@@ -97,13 +97,17 @@ EM_PORT_API(void) startFlow() {
     eez::flow::start(eez::gui::g_mainAssets);
 }
 
-EM_PORT_API(void) mainLoop() {
+EM_PORT_API(bool) mainLoop() {
     if (!g_started) {
         mountFileSystem();
         g_started = true;
     } else {
         if (emscripten_run_script_int("Module.syncdone") == 1) {
             eez_system_tick();
+
+            if (eez::flow::isFlowStopped()) {
+                return false;
+            }
 
             // clang-format off
             EM_ASM(
@@ -121,6 +125,8 @@ EM_PORT_API(void) mainLoop() {
             // clang-format on
         }
     }
+
+    return true;
 }
 
 EM_PORT_API(void) onMessageFromDebugger(char *messageData, uint32_t messageDataSize) {
