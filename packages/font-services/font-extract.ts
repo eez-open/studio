@@ -5,7 +5,7 @@ import { service } from "eez-studio-shared/service";
 import type * as BdfModule from "font-services/bdf";
 import type * as FreeTypeModule from "font-services/freetype";
 
-interface Params {
+export interface Params {
     name?: string;
     absoluteFilePath: string;
     relativeFilePath: string;

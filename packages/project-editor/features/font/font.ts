@@ -31,7 +31,7 @@ import {
 } from "project-editor/store";
 import type { Project } from "project-editor/project/project";
 
-import extractFont from "font-services/font-extract";
+import { extractFontWithOpentype } from "font-services/font-extract-opentype";
 
 import { showGenericDialog } from "project-editor/core/util";
 
@@ -1084,7 +1084,7 @@ export class Font extends EezObject {
                 }
             })
                 .then(result => {
-                    return extractFont({
+                    return extractFontWithOpentype({
                         name: result.values.name,
                         absoluteFilePath: getDocumentStore(
                             parent

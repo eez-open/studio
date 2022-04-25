@@ -537,7 +537,6 @@ export function isAnyPropertyModified(props: PropertyProps) {
         }
         const sourceInfo = getPropertySourceInfo({ ...props, propertyInfo });
         if (sourceInfo.source === "modified") {
-            console.log("modified", propertyInfo);
             return true;
         }
     }
