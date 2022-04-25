@@ -699,14 +699,14 @@ export function isValueTypeOf(
                 keys.push(key);
             }
 
-            const result = _difference(
-                structure.fields.map(field => field.name),
-                keys
-            );
+            // const result = _difference(
+            //     structure.fields.map(field => field.name),
+            //     keys
+            // );
 
-            if (result.length > 0) {
-                return `missing field(s): ${result.join(",")}`;
-            }
+            // if (result.length > 0) {
+            //     return `missing field(s): ${result.join(",")}`;
+            // }
 
             return null;
         }

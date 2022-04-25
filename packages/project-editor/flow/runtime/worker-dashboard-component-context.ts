@@ -258,6 +258,16 @@ export class DashboardComponentContext implements IDashboardComponentContext {
         });
     }
 
+    logInfo(infoMessage: string) {
+        const infoMessagePtr = WasmFlowRuntime.allocateUTF8(infoMessage);
+        WasmFlowRuntime._logInfo(
+            this.flowStateIndex,
+            this.componentIndex,
+            infoMessagePtr
+        );
+        WasmFlowRuntime._free(infoMessagePtr);
+    }
+
     throwError(errorMessage: string) {
         const errorMessagePtr = WasmFlowRuntime.allocateUTF8(errorMessage);
         WasmFlowRuntime._throwError(

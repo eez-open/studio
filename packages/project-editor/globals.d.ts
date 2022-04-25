@@ -199,6 +199,7 @@ declare const WasmFlowRuntime: {
 
     _executeCallAction(flowStateIndex: number, componentIndex: number, flowIndex: number);
 
+    _logInfo(flowStateIndex: number, componentIndex: number, infoMessage: number);
     _throwError(flowStateIndex: number, componentIndex: number, errorMessage: number);
 
     _onScpiResult(errorMessage: number, result: number, resultLen: number, resultIsBlob: number);

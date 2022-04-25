@@ -851,6 +851,7 @@ export class SetVariableActionComponent extends ActionComponent {
             <div className="body">
                 {this.entries.map((entry, i) => (
                     <pre key={i}>
+                        {`${i + 1}: `}
                         {entry.variable}
                         <LeftArrow />
                         {entry.value}

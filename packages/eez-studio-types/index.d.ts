@@ -284,6 +284,8 @@ export interface IDashboardComponentContext {
         callback?: (result: any) => void
     ) => void;
 
+    logInfo: (infoMessage: string) => void;
+
     throwError: (errorMessage: string) => void;
 }
 
