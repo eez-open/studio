@@ -155,7 +155,13 @@ function buildFlowValue(
             });
             dataBuffer.writeUint32(0);
         } else if (flowValue.type == FLOW_VALUE_TYPE_DATE) {
-            dataBuffer.writeDouble((flowValue.value as Date).getTime());
+            if (flowValue.value instanceof Date) {
+                dataBuffer.writeDouble(flowValue.value.getTime());
+            } else if (typeof flowValue.value == "number") {
+                dataBuffer.writeDouble(flowValue.value);
+            } else {
+                dataBuffer.writeDouble(0);
+            }
         } else if (flowValue.type == FLOW_VALUE_TYPE_ARRAY) {
             dataBuffer.writeObjectOffset(() => {
                 let elements: FlowValue[];

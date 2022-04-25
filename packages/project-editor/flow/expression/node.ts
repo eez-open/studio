@@ -42,7 +42,7 @@ export type ExpressionNode =
           properties: {
               key: {
                   type: "Identifier";
-                  name: string;
+                  value: string;
               };
               value: ExpressionNode;
               kind: "init";

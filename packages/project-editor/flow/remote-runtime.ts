@@ -673,8 +673,8 @@ export abstract class DebuggerConnectionBase {
             return `blob (size=${Number.parseInt(str.substring(1))})`;
         }
 
-        if (str[0] == ">") {
-            return `stream (id=${Number.parseInt(str.substring(1))})`;
+        if (str[0] == "!") {
+            return new Date(Number.parseFloat(str.substring(1)));
         }
 
         return Number.parseFloat(str);
