@@ -412,7 +412,7 @@ export const GenericDialog = observer(
                         .filter(fieldProperties => {
                             return (
                                 !fieldProperties.visible ||
-                                fieldProperties.visible(this.fieldValues)
+                                fieldProperties.visible(this.values)
                             );
                         })
                         .map(fieldProperties => {

@@ -12,7 +12,7 @@ import {
 import { getId } from "project-editor/core/object";
 import { getAncestorOfType, getLabel, IPanel } from "project-editor/store";
 
-import { IconAction, TextAction } from "eez-studio-ui/action";
+import { IconAction } from "eez-studio-ui/action";
 import { SearchInput } from "eez-studio-ui/search-input";
 
 import { Font, Glyph } from "project-editor/features/font/font";
@@ -25,7 +25,6 @@ export const Glyphs = observer(
             selectedGlyph: IObservableValue<Glyph | undefined>;
             onSelectGlyph: (glyph: Glyph) => void;
             onDoubleClickGlyph: (glyph: Glyph) => void;
-            onRebuildGlyphs?: () => void;
             onAddGlyph?: () => void;
             onDeleteGlyph?: () => void;
             onCreateShadow?: () => void;
@@ -45,7 +44,6 @@ export const Glyphs = observer(
             selectedGlyph: IObservableValue<Glyph | undefined>;
             onSelectGlyph: (glyph: Glyph) => void;
             onDoubleClickGlyph: (glyph: Glyph) => void;
-            onRebuildGlyphs?: () => void;
             onAddGlyph?: () => void;
             onDeleteGlyph?: () => void;
             onCreateShadow?: () => void;
@@ -121,17 +119,6 @@ export const Glyphs = observer(
                 />
             ));
 
-            let rebuildGlyphsButton: JSX.Element | undefined;
-            if (!this.props.dialog && this.props.onRebuildGlyphs) {
-                rebuildGlyphsButton = (
-                    <TextAction
-                        text="Rebuild"
-                        title="Rebuild Glyphs"
-                        onClick={this.props.onRebuildGlyphs}
-                    />
-                );
-            }
-
             let addGlyphButton: JSX.Element | undefined;
             if (!this.props.dialog && this.props.onAddGlyph) {
                 addGlyphButton = (
@@ -152,11 +139,7 @@ export const Glyphs = observer(
                         glyph,
                         Font.classInfo
                     ) as Font;
-                    if (
-                        font &&
-                        font.glyphs[font.glyphs.length - 1] ==
-                            this.props.selectedGlyph.get()
-                    ) {
+                    if (font) {
                         deleteGlyphButton = (
                             <IconAction
                                 title="Delete Glyph"
@@ -194,7 +177,6 @@ export const Glyphs = observer(
                                 onChange={this.onSearchChange}
                                 onKeyDown={this.onSearchChange}
                             />
-                            {rebuildGlyphsButton}
                             {addGlyphButton}
                             {deleteGlyphButton}
                             {createShadowButton}

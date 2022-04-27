@@ -1,8 +1,11 @@
 import React from "react";
 import { observable, action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
-import extractFont from "font-services/font-extract";
-import { FontProperties as FontValue } from "font-services/interfaces";
+import {
+    extractFont,
+    FontProperties as FontValue,
+    FontRenderingEngine
+} from "project-editor/features/font/font-extract";
 import { loadObject } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
 import { Font, Glyph } from "./font";
@@ -19,6 +22,7 @@ export const GlyphSelectFieldType = observer(
         declare context: React.ContextType<typeof ProjectContext>;
 
         fontFilePath: string;
+        fontRenderingEngine: FontRenderingEngine;
         fontBpp: number;
         fontSize: number;
         fontThreshold: number;
@@ -38,6 +42,7 @@ export const GlyphSelectFieldType = observer(
         static fontsCache: {
             font: Font;
             fontFilePath: string;
+            fontRenderingEngine: FontRenderingEngine;
             fontBpp: number;
             fontSize: number;
             fontThreshold: number;
@@ -55,6 +60,7 @@ export const GlyphSelectFieldType = observer(
 
         static getFontFromCache(
             fontFilePath: string,
+            fontRenderingEngine: FontRenderingEngine,
             fontBpp: number,
             fontSize: number,
             fontThreshold: number
@@ -62,6 +68,7 @@ export const GlyphSelectFieldType = observer(
             for (let cachedFont of GlyphSelectFieldType.fontsCache) {
                 if (
                     cachedFont.fontFilePath === fontFilePath &&
+                    cachedFont.fontRenderingEngine === fontRenderingEngine &&
                     cachedFont.fontBpp === fontBpp &&
                     cachedFont.fontSize === fontSize &&
                     cachedFont.fontThreshold === fontThreshold
@@ -75,6 +82,7 @@ export const GlyphSelectFieldType = observer(
         static putFontInCache(
             font: Font,
             fontFilePath: string,
+            fontRenderingEngine: FontRenderingEngine,
             fontBpp: number,
             fontSize: number,
             fontThreshold: number
@@ -82,6 +90,7 @@ export const GlyphSelectFieldType = observer(
             GlyphSelectFieldType.fontsCache.push({
                 font,
                 fontFilePath,
+                fontRenderingEngine,
                 fontBpp,
                 fontSize,
                 fontThreshold
@@ -115,6 +124,14 @@ export const GlyphSelectFieldType = observer(
                     this.props.fieldProperties.options.fontFilePathField
                 ];
             if (!fontFilePath) {
+                return;
+            }
+
+            let fontRenderingEngine: FontRenderingEngine =
+                this.props.values[
+                    this.props.fieldProperties.options.fontRenderingEngine
+                ];
+            if (!fontRenderingEngine) {
                 return;
             }
 
@@ -155,21 +172,25 @@ export const GlyphSelectFieldType = observer(
             } else {
                 fontSize = this.fontSize;
                 fontThreshold = this.fontThreshold;
+                fontRenderingEngine = "bdf";
             }
 
             if (
                 fontFilePath != this.fontFilePath ||
+                fontRenderingEngine != this.fontRenderingEngine ||
                 fontBpp != this.fontBpp ||
                 fontSize != this.fontSize ||
                 fontThreshold != this.fontThreshold
             ) {
                 this.fontFilePath = fontFilePath;
+                this.fontRenderingEngine = fontRenderingEngine;
                 this.fontBpp = fontBpp;
                 this.fontSize = fontSize;
                 this.fontThreshold = fontThreshold;
 
                 const font = GlyphSelectFieldType.getFontFromCache(
                     fontFilePath,
+                    fontRenderingEngine,
                     fontBpp,
                     fontSize,
                     fontThreshold
@@ -190,6 +211,7 @@ export const GlyphSelectFieldType = observer(
                         absoluteFilePath:
                             this.context.getAbsoluteFilePath(fontFilePath),
                         relativeFilePath: fontFilePath,
+                        renderingEngine: fontRenderingEngine,
                         bpp: fontBpp,
                         size: fontSize,
                         threshold: fontThreshold,
@@ -206,6 +228,7 @@ export const GlyphSelectFieldType = observer(
                             GlyphSelectFieldType.putFontInCache(
                                 font,
                                 fontFilePath,
+                                fontRenderingEngine,
                                 fontBpp,
                                 fontSize,
                                 fontThreshold

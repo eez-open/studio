@@ -1,35 +1,46 @@
 import { dialog, getCurrentWindow } from "@electron/remote";
 import path from "path";
 import React from "react";
-import { observable, action, IObservableValue, makeObservable } from "mobx";
+import {
+    observable,
+    action,
+    IObservableValue,
+    makeObservable,
+    runInAction
+} from "mobx";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
-import * as notification from "eez-studio-ui/notification";
 
-import { getParent } from "project-editor/core/object";
+import { getParent, getProperty, IEezObject } from "project-editor/core/object";
 import {
     IPanel,
     LayoutModels,
-    cloneObject,
     loadObject,
     objectToJS,
     getDocumentStore
 } from "project-editor/store";
+import { validators } from "eez-studio-shared/validation";
+import * as notification from "eez-studio-ui/notification";
 
 import { ProjectContext } from "project-editor/project/context";
-import rebuildFont from "font-services/font-rebuild";
 import { EditorComponent } from "project-editor/project/EditorComponent";
 
 import {
     EditorImageHitTestResult,
+    getMissingEncodings,
     setPixel
-} from "project-editor/features/font/font-utils";
+} from "project-editor/features/font/utils";
 import { Glyphs } from "./Glyphs";
 
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 import { showGenericDialog } from "project-editor/core/util";
 import { GlyphSelectFieldType } from "project-editor/features/font/GlyphSelectFieldType";
 import { Font, Glyph, GlyphSource } from "project-editor/features/font/font";
+
+import {
+    EncodingRange,
+    extractFont
+} from "project-editor/features/font/font-extract";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -43,7 +54,6 @@ export const FontEditor = observer(
 
             makeObservable(this, {
                 onSelectGlyph: action.bound,
-                onRebuildGlyphs: action.bound,
                 onAddGlyph: action.bound,
                 onDeleteGlyph: action.bound
             });
@@ -55,7 +65,7 @@ export const FontEditor = observer(
 
         get glyphs() {
             let font = this.font;
-            return font.glyphs;
+            return font.glyphs.sort((a, b) => a.encoding - b.encoding);
         }
 
         get selectedGlyph() {
@@ -114,69 +124,237 @@ export const FontEditor = observer(
             this.context.navigationStore.setSelectedPanel(this);
         };
 
-        async onRebuildGlyphs() {
-            try {
-                const font = this.font;
-
-                const newFont = await rebuildFont({
-                    font: objectToJS(font),
-                    projectFilePath: this.context.filePath!
-                });
-
-                this.context.replaceObject(
-                    font,
-                    loadObject(this.context, getParent(font), newFont, Font)
-                );
-
-                notification.info(`Font rebuilded.`);
-            } catch (err) {
-                notification.error(`Rebuild failed (${err})!`);
-            }
-        }
-
         onAddGlyph() {
-            const font = this.font;
-
-            let newGlyph: Glyph;
-
-            if (font.glyphs.length > 0) {
-                newGlyph = cloneObject(
-                    this.context,
-                    font.glyphs[font.glyphs.length - 1]
-                ) as Glyph;
-
-                newGlyph.encoding = newGlyph.encoding + 1;
-            } else {
-                newGlyph = loadObject(
-                    this.context,
-                    undefined,
-                    {
-                        encoding: 128,
-                        x: 0,
-                        y: 0,
-                        width: 1,
-                        height: 1,
-                        dx: 1,
-                        glyphBitmap: {
-                            width: 1,
-                            height: 1,
-                            pixelArray: [0]
-                        },
-                        source: font.source
-                    },
-                    Glyph
-                ) as Glyph;
+            function isFont(obj: IEezObject) {
+                return getProperty(obj, "filePath");
             }
 
-            newGlyph = this.context.addObject(font.glyphs, newGlyph) as Glyph;
+            function isNonBdfFont(obj: IEezObject) {
+                return (
+                    isFont(obj) &&
+                    path.extname(getProperty(obj, "filePath")) != ".bdf"
+                );
+            }
 
-            this.context.navigationStore.selectedGlyphObject.set(newGlyph);
+            function isNonBdfFontAnd1BitPerPixel(obj: IEezObject) {
+                return isNonBdfFont(obj) && getProperty(obj, "bpp") === 1;
+            }
+
+            function isAddOptionRange(obj: IEezObject) {
+                return isFont(obj) && getProperty(obj, "addOption") == "range";
+            }
+
+            const missingEncodings = getMissingEncodings(this.font);
+
+            const addOptionEnumItems = [
+                {
+                    id: "append",
+                    label: "Add single glyph at the end"
+                },
+                {
+                    id: "range",
+                    label: "Add glpyhs from range"
+                }
+            ];
+
+            if (missingEncodings.length > 0) {
+                addOptionEnumItems.push({
+                    id: "missing",
+                    label: "Add missing glyphs"
+                });
+            }
+
+            return showGenericDialog(getDocumentStore(parent), {
+                dialogDefinition: {
+                    title: "Add Glyphs",
+                    fields: [
+                        {
+                            name: "filePath",
+                            type: RelativeFileInput,
+                            validators: [validators.required],
+                            options: {
+                                filters: [
+                                    {
+                                        name: "Font files",
+                                        extensions: ["bdf", "ttf", "otf"]
+                                    },
+                                    { name: "All Files", extensions: ["*"] }
+                                ]
+                            }
+                        },
+                        {
+                            name: "renderingEngine",
+                            displayName: "Rendering engine",
+                            type: "enum",
+                            enumItems: [
+                                { id: "freetype", label: "FreeType" },
+                                { id: "opentype", label: "OpenType" }
+                            ],
+                            visible: isNonBdfFont
+                        },
+                        {
+                            name: "bpp",
+                            displayName: "Bits per pixel",
+                            type: "enum",
+                            enumItems: [1, 8]
+                        },
+                        {
+                            name: "size",
+                            type: "number",
+                            visible: isNonBdfFont
+                        },
+                        {
+                            name: "threshold",
+                            type: "number",
+                            visible: isNonBdfFontAnd1BitPerPixel
+                        },
+                        {
+                            name: "addOption",
+                            type: "radio",
+                            enumItems: addOptionEnumItems,
+                            visible: isFont
+                        },
+                        {
+                            name: "fromGlyph",
+                            type: "number",
+                            visible: isAddOptionRange
+                        },
+                        {
+                            name: "toGlyph",
+                            type: "number",
+                            visible: isAddOptionRange
+                        },
+                        {
+                            name: "overwriteExisting",
+                            type: "boolean",
+                            visible: isAddOptionRange
+                        },
+                        {
+                            name: "createBlankGlyphs",
+                            type: "boolean",
+                            visible: isFont
+                        }
+                    ]
+                },
+                values: {
+                    filePath: this.font.source?.filePath ?? "",
+                    renderingEngine: this.font.renderingEngine,
+                    size: this.font.source?.size ?? 14,
+                    bpp: this.font.bpp,
+                    threshold: this.font.threshold ?? 128,
+                    fromGlyph: 32,
+                    toGlyph: 127,
+                    addOption: "append",
+                    createGlyphs: true,
+                    createBlankGlyphs: false
+                }
+            })
+                .then(result => {
+                    let encodings: EncodingRange[];
+
+                    if (result.values.addOption === "append") {
+                        let encoding = this.font.getMaxEncoding();
+                        if (encoding < 0) {
+                            encoding = 32;
+                        } else {
+                            encoding++;
+                        }
+                        encodings = [
+                            {
+                                from: encoding,
+                                to: encoding
+                            }
+                        ];
+                    } else if (result.values.addOption === "range") {
+                        encodings = [
+                            {
+                                from: result.values.fromGlyph,
+                                to: result.values.toGlyph
+                            }
+                        ];
+                    } else {
+                        encodings = missingEncodings;
+                    }
+
+                    return extractFont({
+                        absoluteFilePath: this.context.getAbsoluteFilePath(
+                            result.values.filePath
+                        ),
+                        relativeFilePath: result.values.filePath,
+                        renderingEngine: result.values.renderingEngine,
+                        bpp: result.values.bpp,
+                        size: result.values.size,
+                        threshold: result.values.threshold,
+                        createGlyphs: true,
+                        encodings,
+                        createBlankGlyphs: result.values.createBlankGlyphs
+                    })
+                        .then(font => {
+                            this.context.undoManager.setCombineCommands(true);
+
+                            let newGlyph: IEezObject | undefined;
+
+                            for (const glyph of font.glyphs) {
+                                const existingGlyph = this.font.glyphs.find(
+                                    existingGlyph =>
+                                        existingGlyph.encoding == glyph.encoding
+                                );
+                                if (existingGlyph) {
+                                    if (result.values.overwriteExisting) {
+                                        this.context.deleteObject(
+                                            existingGlyph
+                                        );
+                                    } else {
+                                        continue;
+                                    }
+                                }
+
+                                newGlyph = this.context.addObject(
+                                    this.font.glyphs,
+                                    glyph
+                                ) as Glyph;
+                            }
+
+                            this.context.undoManager.setCombineCommands(false);
+
+                            if (newGlyph) {
+                                runInAction(() => {
+                                    this.context.navigationStore.selectedGlyphObject.set(
+                                        newGlyph!
+                                    );
+                                });
+                            }
+                        })
+                        .catch(err => {
+                            let errorMessage;
+                            if (err) {
+                                if (err.message) {
+                                    errorMessage = err.message;
+                                } else {
+                                    errorMessage = err.toString();
+                                }
+                            }
+
+                            if (errorMessage) {
+                                notification.error(
+                                    `Adding glyphs failed: ${errorMessage}!`
+                                );
+                            } else {
+                                notification.error(`Adding glyphs failed!`);
+                            }
+
+                            return false;
+                        });
+                })
+                .catch(() => {
+                    // canceled
+                    return false;
+                });
         }
 
         onDeleteGlyph() {
-            const font = this.font;
             const glyph = this.selectedGlyph;
-            if (glyph && font.glyphs[font.glyphs.length - 1] == glyph) {
+            if (glyph) {
                 this.context.deleteObject(glyph);
             }
         }
@@ -338,9 +516,6 @@ export const FontEditor = observer(
             var component = node.getComponent();
 
             if (component === "glyphs") {
-                //const onRebuildGlyphs = !isDialog ? this.onRebuildGlyphs : undefined
-                const onRebuildGlyphs = undefined;
-
                 return (
                     <Glyphs
                         glyphs={this.glyphs}
@@ -352,7 +527,6 @@ export const FontEditor = observer(
                         }
                         onSelectGlyph={this.onSelectGlyph}
                         onDoubleClickGlyph={this.onBrowseGlyph}
-                        onRebuildGlyphs={onRebuildGlyphs}
                         onAddGlyph={this.onAddGlyph}
                         onDeleteGlyph={this.onDeleteGlyph}
                         onCreateShadow={this.onCreateShadow}
@@ -595,6 +769,16 @@ export function browseGlyph(glyph: Glyph) {
                     }
                 },
                 {
+                    name: "renderingEngine",
+                    displayName: "Rendering engine",
+                    type: "enum",
+                    enumItems: [
+                        { id: "freetype", label: "FreeType" },
+                        { id: "opentype", label: "OpenType" }
+                    ],
+                    visible: isNonBdfFont
+                },
+                {
                     name: "bpp",
                     type: "number",
                     visible: () => false
@@ -612,8 +796,10 @@ export function browseGlyph(glyph: Glyph) {
                 {
                     name: "encoding",
                     type: GlyphSelectFieldType,
+                    enclosureClassName: "encoding",
                     options: {
                         fontFilePathField: "filePath",
+                        fontRenderingEngine: "renderingEngine",
                         fontBppField: "bpp",
                         fontSizeField: "size",
                         fontThresholdField: "threshold"
@@ -622,7 +808,9 @@ export function browseGlyph(glyph: Glyph) {
             ]
         },
         values: Object.assign({}, glyph.source && objectToJS(glyph.source), {
-            bpp: glyph.font.bpp
+            bpp: glyph.font.bpp,
+            renderingEngine: glyph.font.renderingEngine,
+            threshold: glyph.font.threshold ?? 128
         }),
         opts: {
             jsPanel: {

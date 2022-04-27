@@ -31,7 +31,10 @@ import {
 } from "project-editor/store";
 import type { Project } from "project-editor/project/project";
 
-import { extractFontWithOpentype } from "font-services/font-extract-opentype";
+import {
+    extractFont,
+    FontRenderingEngine
+} from "project-editor/features/font/font-extract";
 
 import { showGenericDialog } from "project-editor/core/util";
 
@@ -44,7 +47,7 @@ import {
     IGlyphBitmap,
     resizeGlyphBitmap,
     serializePixelArray
-} from "project-editor/features/font/font-utils";
+} from "project-editor/features/font/utils";
 import { generalGroup } from "project-editor/components/PropertyGrid/groups";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -880,8 +883,10 @@ export class Font extends EezObject {
     id: number | undefined;
     name: string;
     description?: string;
+    renderingEngine: FontRenderingEngine;
     source?: FontSource;
     bpp: number;
+    threshold: number;
     height: number;
     ascent: number;
     descent: number;
@@ -896,8 +901,10 @@ export class Font extends EezObject {
             id: observable,
             name: observable,
             description: observable,
+            renderingEngine: observable,
             source: observable,
             bpp: observable,
+            threshold: observable,
             height: observable,
             ascent: observable,
             descent: observable,
@@ -928,6 +935,22 @@ export class Font extends EezObject {
                 type: PropertyType.MultilineText
             },
             {
+                name: "renderingEngine",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "freetype",
+                        label: "FreeType"
+                    },
+                    {
+                        id: "opentype",
+                        label: "OpenType"
+                    }
+                ],
+                hideInPropertyGrid: (font: Font) =>
+                    font.renderingEngine == "bdf"
+            },
+            {
                 name: "source",
                 type: PropertyType.Object,
                 typeClass: FontSource,
@@ -939,6 +962,11 @@ export class Font extends EezObject {
                 enumItems: [{ id: 1 }, { id: 8 }],
                 defaultValue: 1,
                 readOnlyInPropertyGrid: true
+            },
+            {
+                name: "threshold",
+                type: PropertyType.Number,
+                defaultValue: 128
             },
             {
                 name: "height",
@@ -979,6 +1007,13 @@ export class Font extends EezObject {
                 type: PropertyType.Boolean
             }
         ],
+        beforeLoadHook: (font: Font, fontJs: Partial<Font>) => {
+            if ((fontJs as any).renderEngine != undefined) {
+                fontJs.renderingEngine = (fontJs as any).renderEngine;
+            } else if (fontJs.renderingEngine == undefined) {
+                fontJs.renderingEngine = "freetype";
+            }
+        },
         check: (font: Font) => {
             let messages: Message[] = [];
 
@@ -1036,6 +1071,16 @@ export class Font extends EezObject {
                             }
                         },
                         {
+                            name: "renderingEngine",
+                            displayName: "Rendering engine",
+                            type: "enum",
+                            enumItems: [
+                                { id: "freetype", label: "FreeType" },
+                                { id: "opentype", label: "OpenType" }
+                            ],
+                            visible: isNonBdfFont
+                        },
+                        {
                             name: "bpp",
                             displayName: "Bits per pixel",
                             type: "enum",
@@ -1074,6 +1119,7 @@ export class Font extends EezObject {
                     ]
                 },
                 values: {
+                    renderingEngine: "opentype",
                     size: 14,
                     bpp: 8,
                     threshold: 128,
@@ -1084,18 +1130,25 @@ export class Font extends EezObject {
                 }
             })
                 .then(result => {
-                    return extractFontWithOpentype({
+                    return extractFont({
                         name: result.values.name,
                         absoluteFilePath: getDocumentStore(
                             parent
                         ).getAbsoluteFilePath(result.values.filePath),
                         relativeFilePath: result.values.filePath,
+                        renderingEngine: result.values.renderingEngine,
                         bpp: result.values.bpp,
                         size: result.values.size,
                         threshold: result.values.threshold,
                         createGlyphs: result.values.createGlyphs,
-                        fromEncoding: result.values.fromGlyph,
-                        toEncoding: result.values.toGlyph,
+                        encodings: result.values.createGlyphs
+                            ? [
+                                  {
+                                      from: result.values.fromGlyph,
+                                      to: result.values.toGlyph
+                                  }
+                              ]
+                            : [],
                         createBlankGlyphs: result.values.createBlankGlyphs
                     })
                         .then(font => {
@@ -1143,6 +1196,10 @@ export class Font extends EezObject {
 
     get maxDx() {
         return Math.max(...this.glyphs.map(glyph => glyph.dx)) || 0;
+    }
+
+    getMaxEncoding() {
+        return Math.max(...this.glyphs.map(glyph => glyph.encoding));
     }
 }
 

@@ -8,7 +8,7 @@ import type {
 } from "project-editor/features/style/style";
 import type { Font } from "project-editor/features/font/font";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { getPixelByteIndex } from "project-editor/features/font/font-utils";
+import { getPixelByteIndex } from "project-editor/features/font/utils";
 
 ////////////////////////////////////////////////////////////////////////////////
 

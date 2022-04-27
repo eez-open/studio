@@ -16,7 +16,8 @@
 // after the generated code, you will need to define   var Module = {};
 // before the code. Then that object will be used in the code, and you
 // can continue to use Module afterwards as well.
-var Module = typeof Module !== "undefined" ? Module : {};
+var Module =
+    typeof FreeTypeWasmModule !== "undefined" ? FreeTypeWasmModule : {};
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
@@ -48,17 +49,17 @@ Module["postRun"] = [];
 
 var ENVIRONMENT_IS_WEB = false;
 var ENVIRONMENT_IS_WORKER = false;
-var ENVIRONMENT_IS_NODE = false;
+var ENVIRONMENT_IS_NODE = true;
 var ENVIRONMENT_IS_SHELL = false;
-ENVIRONMENT_IS_WEB = typeof window === "object";
-ENVIRONMENT_IS_WORKER = typeof importScripts === "function";
-ENVIRONMENT_IS_NODE =
-    typeof process === "object" &&
-    typeof require === "function" &&
-    !ENVIRONMENT_IS_WEB &&
-    !ENVIRONMENT_IS_WORKER;
-ENVIRONMENT_IS_SHELL =
-    !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIRONMENT_IS_WORKER;
+// ENVIRONMENT_IS_WEB = typeof window === "object";
+// ENVIRONMENT_IS_WORKER = typeof importScripts === "function";
+// ENVIRONMENT_IS_NODE =
+//     typeof process === "object" &&
+//     typeof require === "function" &&
+//     !ENVIRONMENT_IS_WEB &&
+//     !ENVIRONMENT_IS_WORKER;
+// ENVIRONMENT_IS_SHELL =
+//     !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIRONMENT_IS_WORKER;
 
 if (Module["ENVIRONMENT"]) {
     throw new Error(
@@ -1762,7 +1763,7 @@ function isDataURI(filename) {
         : filename.indexOf(dataURIPrefix) === 0;
 }
 
-var wasmBinaryFile = "freetype-tools.wasm";
+var wasmBinaryFile = "../../libs/freetype-tools-wasm/freetype-tools.wasm";
 if (!isDataURI(wasmBinaryFile)) {
     wasmBinaryFile = locateFile(wasmBinaryFile);
 }
