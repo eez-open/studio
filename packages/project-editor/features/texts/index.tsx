@@ -6,7 +6,8 @@ import {
     EezObject,
     IEezObject,
     PropertyProps,
-    PropertyType
+    PropertyType,
+    registerClass
 } from "project-editor/core/object";
 import { Project } from "project-editor/project/project";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
@@ -114,6 +115,8 @@ export class Language extends EezObject {
         });
     }
 }
+
+registerClass("Language", Language);
 
 class Translation extends EezObject {
     languageID: string;
@@ -245,6 +248,8 @@ export class TextResource extends EezObject {
         });
     }
 }
+
+registerClass("TextResource", TextResource);
 
 export class Texts extends EezObject {
     languages: Language[];

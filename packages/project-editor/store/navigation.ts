@@ -58,7 +58,9 @@ export class NavigationStore {
             );
         }
         if (!selectedRootObject) {
-            selectedRootObject = this.DocumentStore.project.settings;
+            selectedRootObject =
+                this.DocumentStore.project.pages ||
+                this.DocumentStore.project.settings;
         }
         this.selectedRootObject.set(selectedRootObject);
 
