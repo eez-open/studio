@@ -1,32 +1,18 @@
-import { _range } from "eez-studio-shared/algorithm";
-import { getAllGlyphEncodings } from "project-editor/features/font/font-extract/opentype";
 import type {
     Params,
     FontProperties,
-    GlyphProperties
+    GlyphProperties,
+    IFontExtract
 } from "project-editor/features/font/font-extract";
-
-const path = require("path");
 
 const RESOLUTION = 100;
 const HINTING = 1;
 const GAMMA = 1.0;
 
-////////////////////////////////////////////////////////////////////////////////
-
-const wasmModule: any = {};
-
+let wasmModule: any;
 let wasmModuleReady = false;
-wasmModule["onRuntimeInitialized"] = () => {
-    wasmModuleReady = true;
-};
 
-(window as any).FreeTypeWasmModule = wasmModule;
-require("../../libs/freetype-tools-wasm/freetype-tools");
-
-////////////////////////////////////////////////////////////////////////////////
-
-class FreeTypeFile {
+export class ExtractFont implements IFontExtract {
     private create_font_extract_state: any;
     private extract_glyph: any;
     private free_font_extract_state: any;
@@ -46,22 +32,30 @@ class FreeTypeFile {
     private glyphInfoLength: number;
     private glyphInfoPtr: any;
 
-    private font: FontProperties;
+    allEncodings: number[];
+
+    fontProperties: FontProperties;
 
     // size is in pt's
-    constructor(
-        public name: string | undefined,
-        public absoluteFilePath: string,
-        public relativeFilePath: string,
-        public bpp: number,
-        public size: number,
-        public threshold: number,
-        public resolution: number,
-        public hinting: number,
-        public gamma: number
-    ) {}
+    constructor(private params: Params) {}
 
-    load(): boolean {
+    async start() {
+        if (!wasmModule) {
+            wasmModule = {};
+
+            wasmModule["onRuntimeInitialized"] = () => {
+                wasmModuleReady = true;
+            };
+
+            (window as any).FreeTypeWasmModule = wasmModule;
+            require("../../../../../libs/freetype-tools-wasm/freetype-tools");
+        }
+
+        // wait until fontExtract module is ready
+        while (!wasmModuleReady) {
+            await new Promise(resolve => setTimeout(resolve));
+        }
+
         // functions from fontExtract that we use
         this.create_font_extract_state = wasmModule.cwrap(
             "create_font_extract_state",
@@ -87,22 +81,22 @@ class FreeTypeFile {
         );
 
         this.fontExtractState = this.create_font_extract_state(
-            this.absoluteFilePath,
-            this.resolution,
-            this.size,
-            this.hinting,
-            this.gamma
+            this.params.absoluteFilePath,
+            RESOLUTION,
+            this.params.size,
+            HINTING,
+            GAMMA
         );
 
         if (!this.fontExtractState) {
-            return false;
+            throw "Font is not supported!";
         }
 
-        this.canvasWidth = this.size * 10;
-        this.canvasHeight = this.size * 10;
+        this.canvasWidth = this.params.size * 10;
+        this.canvasHeight = this.params.size * 10;
         this.glyphPosition = {
-            x: 3 * this.size,
-            y: 3 * this.size
+            x: 3 * this.params.size,
+            y: 3 * this.params.size
         };
 
         this.glyphPixelsArrayLength = this.canvasWidth * this.canvasHeight * 4;
@@ -132,46 +126,38 @@ class FreeTypeFile {
         const descender = fontExtractStateDataView.getFloat64(8, true);
 
         // 1 pt = 1.333(3) px if resolution is 72
-        const scale = ((4 / 3) * this.resolution) / 72;
+        const scale = ((4 / 3) * RESOLUTION) / 72;
         const ascent = Math.round(ascender * scale);
         const descent = Math.round(-descender * scale);
 
         const height = ascent + descent;
 
-        this.font = {
-            name: this.name || "",
+        this.fontProperties = {
+            name: this.params.name || "",
             renderingEngine: "freetype",
             source: {
-                filePath: this.relativeFilePath,
-                size: this.size,
-                threshold: this.threshold
+                filePath: this.params.relativeFilePath,
+                size: this.params.size,
+                threshold: this.params.threshold
             },
-            bpp: this.bpp,
-            threshold: this.threshold,
+            bpp: this.params.bpp,
+            threshold: this.params.threshold,
             height,
             ascent,
             descent,
             glyphs: []
         };
 
-        return true;
+        const { getAllGlyphEncodings } = await import(
+            "project-editor/features/font/font-extract/opentype"
+        );
+
+        this.allEncodings = await getAllGlyphEncodings(
+            this.params.absoluteFilePath
+        );
     }
 
-    freeResources() {
-        if (this.glyphPixelsDataPtr) {
-            wasmModule._free(this.glyphPixelsDataPtr);
-        }
-
-        if (this.glyphInfoPtr) {
-            wasmModule._free(this.glyphInfoPtr);
-        }
-
-        if (this.fontExtractState) {
-            this.free_font_extract_state(this.fontExtractState);
-        }
-    }
-
-    addGlyph(encoding: number, createBlankGlyphs: boolean) {
+    getGlyph(encoding: number) {
         let glyphProperties: GlyphProperties = <any>{};
 
         glyphProperties.encoding = encoding;
@@ -189,7 +175,7 @@ class FreeTypeFile {
             pixelArray: []
         };
 
-        if (!createBlankGlyphs) {
+        if (!this.params.createBlankGlyphs) {
             for (let i = 0; i < this.glyphPixelsArrayLength; ++i) {
                 this.glyphPixelsArray[i] = 0;
             }
@@ -239,17 +225,17 @@ class FreeTypeFile {
                     glyphProperties.width = glyphWidth;
                     glyphProperties.height = glyphHeight;
 
-                    if (this.font.ascent < -glyphInfoY1) {
-                        this.font.ascent = -glyphInfoY1;
+                    if (this.fontProperties.ascent < -glyphInfoY1) {
+                        this.fontProperties.ascent = -glyphInfoY1;
                     }
 
-                    if (this.font.descent < glyphInfoY2) {
-                        this.font.descent = glyphInfoY2;
+                    if (this.fontProperties.descent < glyphInfoY2) {
+                        this.fontProperties.descent = glyphInfoY2;
                     }
 
                     let pixelArray: Array<number>;
 
-                    if (this.bpp === 8) {
+                    if (this.params.bpp === 8) {
                         pixelArray = new Array<number>(
                             glyphWidth * glyphHeight
                         );
@@ -300,7 +286,7 @@ class FreeTypeFile {
                                     if (
                                         this.glyphPixelsArray[
                                             (y * this.canvasWidth + x) * 4 + 3
-                                        ] > this.threshold
+                                        ] > this.params.threshold
                                     ) {
                                         byteData |= 0x80 >> iBit;
                                     }
@@ -317,160 +303,37 @@ class FreeTypeFile {
                         pixelArray: pixelArray
                     };
                 }
+            } else {
+                if (this.params.doNotAddGlyphIfNotFound) {
+                    return undefined;
+                }
             }
         }
 
-        this.font.height = this.font.ascent + this.font.descent;
+        this.fontProperties.height =
+            this.fontProperties.ascent + this.fontProperties.descent;
 
         glyphProperties.source = <any>{
-            filePath: this.relativeFilePath,
-            size: this.size,
-            threshold: this.threshold,
+            filePath: this.params.relativeFilePath,
+            size: this.params.size,
+            threshold: this.params.threshold,
             encoding: encoding
         };
-
-        this.font.glyphs.push(glyphProperties);
 
         return glyphProperties;
     }
 
-    getFontProperties() {
-        return this.font;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export async function extractFont(params: Params) {
-    // wait until fontExtract module is ready
-    while (!wasmModuleReady) {
-        await new Promise(resolve => setTimeout(resolve));
-    }
-
-    const freeTypeFile = new FreeTypeFile(
-        params.name,
-        params.absoluteFilePath,
-        params.relativeFilePath,
-        params.bpp,
-        params.size,
-        params.threshold,
-        RESOLUTION,
-        HINTING,
-        GAMMA
-    );
-
-    try {
-        if (!freeTypeFile.load()) {
-            throw "failed to load font file";
+    freeResources() {
+        if (this.glyphPixelsDataPtr) {
+            wasmModule._free(this.glyphPixelsDataPtr);
         }
 
-        if (params.createGlyphs) {
-            let encodings: number[];
-
-            if (params.encodings) {
-                encodings = [];
-                for (const range of params.encodings) {
-                    for (
-                        let encoding = range.from;
-                        encoding <= range.to;
-                        encoding++
-                    ) {
-                        encodings.push(encoding);
-                    }
-                }
-            } else {
-                encodings = await getAllGlyphEncodings(params.absoluteFilePath);
-            }
-
-            for (let i = 0; i < encodings.length; i++) {
-                // give control to JavaScript engine, we don't want to block the main thread
-                await new Promise(resolve => setTimeout(resolve));
-                freeTypeFile.addGlyph(
-                    encodings[i],
-                    params.createBlankGlyphs || false
-                );
-            }
+        if (this.glyphInfoPtr) {
+            wasmModule._free(this.glyphInfoPtr);
         }
 
-        return freeTypeFile.getFontProperties();
-    } finally {
-        freeTypeFile.freeResources();
-    }
-}
-
-export async function rebuildFont(
-    font: FontProperties,
-    projectFilePath: string
-) {
-    // wait until fontExtract module is ready
-    while (!wasmModuleReady) {
-        await new Promise(resolve => setTimeout(resolve));
-    }
-
-    const freeTypeFileMap = new Map<string, FreeTypeFile>();
-
-    try {
-        const glyphs = [];
-        for (let i = 0; i < font.glyphs.length; ++i) {
-            const glyph = font.glyphs[i];
-
-            if (
-                !glyph.glyphBitmap ||
-                glyph.glyphBitmap.pixelArray.length == 0
-            ) {
-                glyphs.push(glyph);
-                continue;
-            }
-
-            if (!glyph.source || !glyph.source.filePath || !glyph.source.size) {
-                glyphs.push(glyph);
-                continue;
-            }
-
-            // give control to JavaScript engine, we don't want to block main thread
-            await new Promise(resolve => setTimeout(resolve));
-
-            let freeTypeFile = freeTypeFileMap.get(
-                glyph.source.filePath + ":" + glyph.source.size
-            );
-            if (!freeTypeFile) {
-                freeTypeFile = new FreeTypeFile(
-                    font.name,
-                    path.resolve(
-                        path.dirname(projectFilePath),
-                        glyph.source.filePath.replace(/(\\|\/)/g, path.sep)
-                    ),
-                    glyph.source.filePath,
-                    font.bpp,
-                    glyph.source.size,
-                    (font.source && font.source.threshold) || 128,
-                    RESOLUTION,
-                    HINTING,
-                    GAMMA
-                );
-
-                freeTypeFile.load();
-
-                freeTypeFileMap.set(
-                    glyph.source.filePath + ":" + glyph.source.size,
-                    freeTypeFile
-                );
-            }
-
-            const newGlyph = freeTypeFile.addGlyph(
-                glyph.source.encoding || glyph.encoding,
-                false
-            );
-            newGlyph.encoding = glyph.encoding;
-            glyphs.push(newGlyph);
-        }
-
-        return Object.assign({}, font, {
-            glyphs
-        });
-    } finally {
-        for (const freeTypeFile of freeTypeFileMap.values()) {
-            freeTypeFile.freeResources();
+        if (this.fontExtractState) {
+            this.free_font_extract_state(this.fontExtractState);
         }
     }
 }

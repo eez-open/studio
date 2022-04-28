@@ -1,18 +1,33 @@
 import React from "react";
-import { observable, action, makeObservable } from "mobx";
-import { observer } from "mobx-react";
 import {
-    extractFont,
-    FontProperties as FontValue,
-    FontRenderingEngine
-} from "project-editor/features/font/font-extract";
-import { loadObject } from "project-editor/store";
-import { ProjectContext } from "project-editor/project/context";
-import { Font, Glyph } from "./font";
-import { Loader } from "eez-studio-ui/loader";
-import { IFieldComponentProps } from "eez-studio-ui/generic-dialog";
+    observable,
+    makeObservable,
+    runInAction,
+    IObservableValue,
+    action
+} from "mobx";
+import { observer } from "mobx-react";
+import classNames from "classnames";
+import { FixedSizeGrid } from "react-window";
+import AutoSizer from "react-virtualized-auto-sizer";
 
-import { Glyphs } from "project-editor/features/font/Glyphs";
+import { Loader } from "eez-studio-ui/loader";
+import {
+    FontRenderingEngine,
+    IFontExtract,
+    createFontExtract,
+    Params
+} from "project-editor/features/font/font-extract";
+import { ProjectContext } from "project-editor/project/context";
+import { IFieldComponentProps } from "eez-studio-ui/generic-dialog";
+import { SearchInput } from "eez-studio-ui/search-input";
+
+import {
+    drawGlyph2,
+    setBackColor,
+    setColor
+} from "project-editor/flow/editor/draw";
+import { formatEncoding } from "project-editor/features/font/utils";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -21,294 +36,376 @@ export const GlyphSelectFieldType = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
-        fontFilePath: string;
-        fontRenderingEngine: FontRenderingEngine;
-        fontBpp: number;
-        fontSize: number;
-        fontThreshold: number;
-
-        timeoutId: any;
-
-        glyphs: any;
-        glyphsContainer: any;
-
+        params: Params | undefined;
+        fontExtract: IFontExtract | undefined;
+        selectedEncoding = observable.box<number | undefined>();
         isLoading: boolean;
-        font?: Font;
-
-        selectedGlyph = observable.box<Glyph | undefined>();
-
-        static MAX_CACHED_FONTS = 5;
-
-        static fontsCache: {
-            font: Font;
-            fontFilePath: string;
-            fontRenderingEngine: FontRenderingEngine;
-            fontBpp: number;
-            fontSize: number;
-            fontThreshold: number;
-        }[] = [];
+        unmounted: boolean;
 
         constructor(props: IFieldComponentProps) {
             super(props);
 
+            this.selectedEncoding.set(props.values.encoding);
+
             makeObservable(this, {
+                fontExtract: observable,
                 isLoading: observable,
-                loadFont: action,
-                onChange: action
+                onSelectEncoding: action
             });
         }
 
-        static getFontFromCache(
-            fontFilePath: string,
-            fontRenderingEngine: FontRenderingEngine,
-            fontBpp: number,
-            fontSize: number,
-            fontThreshold: number
-        ) {
-            for (let cachedFont of GlyphSelectFieldType.fontsCache) {
-                if (
-                    cachedFont.fontFilePath === fontFilePath &&
-                    cachedFont.fontRenderingEngine === fontRenderingEngine &&
-                    cachedFont.fontBpp === fontBpp &&
-                    cachedFont.fontSize === fontSize &&
-                    cachedFont.fontThreshold === fontThreshold
-                ) {
-                    return cachedFont.font;
-                }
-            }
-            return undefined;
-        }
-
-        static putFontInCache(
-            font: Font,
-            fontFilePath: string,
-            fontRenderingEngine: FontRenderingEngine,
-            fontBpp: number,
-            fontSize: number,
-            fontThreshold: number
-        ) {
-            GlyphSelectFieldType.fontsCache.push({
-                font,
-                fontFilePath,
-                fontRenderingEngine,
-                fontBpp,
-                fontSize,
-                fontThreshold
-            });
-            if (
-                GlyphSelectFieldType.fontsCache.length >
-                GlyphSelectFieldType.MAX_CACHED_FONTS
-            ) {
-                GlyphSelectFieldType.fontsCache.shift();
-            }
-        }
-
-        componentDidMount() {
-            this.delayedLoadFont();
-        }
-
-        componentDidUpdate() {
-            this.delayedLoadFont();
-        }
-
-        delayedLoadFont() {
-            if (this.timeoutId) {
-                clearTimeout(this.timeoutId);
-            }
-            this.timeoutId = setTimeout(() => this.loadFont(), 100);
-        }
-
-        loadFont() {
+        async loadFont() {
             let fontFilePath: string =
                 this.props.values[
                     this.props.fieldProperties.options.fontFilePathField
                 ];
-            if (!fontFilePath) {
-                return;
-            }
 
             let fontRenderingEngine: FontRenderingEngine =
                 this.props.values[
                     this.props.fieldProperties.options.fontRenderingEngine
                 ];
-            if (!fontRenderingEngine) {
-                return;
-            }
 
             let fontBpp: number =
                 this.props.values[
                     this.props.fieldProperties.options.fontBppField
                 ];
-            if (!fontBpp) {
+
+            let fontSize: number =
+                this.props.values[
+                    this.props.fieldProperties.options.fontSizeField
+                ];
+
+            let fontThreshold: number =
+                fontBpp !== 8
+                    ? this.props.values[
+                          this.props.fieldProperties.options.fontThresholdField
+                      ]
+                    : 128;
+
+            if (
+                this.params &&
+                fontFilePath == this.params.relativeFilePath &&
+                fontRenderingEngine == this.params.renderingEngine &&
+                fontBpp == this.params.bpp &&
+                fontSize == this.params.size &&
+                fontThreshold == this.params.threshold
+            ) {
                 return;
             }
 
-            let fontSize: number;
-            let fontThreshold: number = 0;
-
-            if (!fontFilePath.toLowerCase().endsWith(".bdf")) {
-                fontSize =
-                    this.props.values[
-                        this.props.fieldProperties.options.fontSizeField
-                    ];
-                if (!fontSize || fontSize < 6 || fontSize > 100) {
-                    return;
-                }
-
-                if (fontBpp !== 8) {
-                    fontThreshold =
-                        this.props.values[
-                            this.props.fieldProperties.options
-                                .fontThresholdField
-                        ];
-                    if (
-                        !fontThreshold ||
-                        fontThreshold < 1 ||
-                        fontThreshold > 255
-                    ) {
-                        return;
-                    }
-                }
-            } else {
-                fontSize = this.fontSize;
-                fontThreshold = this.fontThreshold;
-                fontRenderingEngine = "bdf";
+            if (this.fontExtract) {
+                this.fontExtract.freeResources();
+                runInAction(() => {
+                    this.fontExtract = undefined;
+                });
+                this.params = undefined;
             }
 
             if (
-                fontFilePath != this.fontFilePath ||
-                fontRenderingEngine != this.fontRenderingEngine ||
-                fontBpp != this.fontBpp ||
-                fontSize != this.fontSize ||
-                fontThreshold != this.fontThreshold
+                !fontFilePath ||
+                !fontRenderingEngine ||
+                !fontBpp ||
+                !fontSize ||
+                fontSize < 6 ||
+                fontSize > 100 ||
+                !fontThreshold ||
+                fontThreshold < 1 ||
+                fontThreshold > 255
             ) {
-                this.fontFilePath = fontFilePath;
-                this.fontRenderingEngine = fontRenderingEngine;
-                this.fontBpp = fontBpp;
-                this.fontSize = fontSize;
-                this.fontThreshold = fontThreshold;
+                return;
+            }
 
-                const font = GlyphSelectFieldType.getFontFromCache(
-                    fontFilePath,
-                    fontRenderingEngine,
-                    fontBpp,
-                    fontSize,
-                    fontThreshold
-                );
-                if (font) {
-                    this.onChange(
-                        font,
-                        font.glyphs.find(
-                            glyph =>
-                                glyph.encoding ==
-                                this.props.values[
-                                    this.props.fieldProperties.name
-                                ]
-                        )
-                    );
-                } else {
-                    extractFont({
-                        absoluteFilePath:
-                            this.context.getAbsoluteFilePath(fontFilePath),
-                        relativeFilePath: fontFilePath,
-                        renderingEngine: fontRenderingEngine,
-                        bpp: fontBpp,
-                        size: fontSize,
-                        threshold: fontThreshold,
-                        createGlyphs: true
-                    })
-                        .then((fontValue: FontValue) => {
-                            const font: Font = loadObject(
-                                this.context,
-                                undefined,
-                                fontValue,
-                                Font
-                            ) as Font;
+            runInAction(() => (this.isLoading = true));
 
-                            GlyphSelectFieldType.putFontInCache(
-                                font,
-                                fontFilePath,
-                                fontRenderingEngine,
-                                fontBpp,
-                                fontSize,
-                                fontThreshold
-                            );
+            this.params = {
+                name: "",
+                absoluteFilePath:
+                    this.context.getAbsoluteFilePath(fontFilePath),
+                relativeFilePath: fontFilePath,
+                renderingEngine: fontRenderingEngine,
+                bpp: fontBpp,
+                size: fontSize,
+                threshold: fontThreshold,
+                createGlyphs: false,
+                encodings: [],
+                createBlankGlyphs: false,
+                doNotAddGlyphIfNotFound: false
+            };
 
-                            this.onChange(
-                                font,
-                                font.glyphs.find(
-                                    glyph =>
-                                        glyph.encoding ==
-                                        this.props.values[
-                                            this.props.fieldProperties.name
-                                        ]
-                                )
-                            );
-                        })
-                        .catch(error => {
-                            console.error(error);
-                            this.onChange(undefined, undefined);
-                        });
+            const fontExtract = await createFontExtract(this.params);
 
-                    this.isLoading = true;
-                    this.font = undefined;
-                    this.selectedGlyph.set(undefined);
+            if (fontExtract) {
+                try {
+                    await fontExtract.start();
+                } catch (err) {
+                    fontExtract.freeResources();
+                    return;
                 }
-            } else {
-                if (this.glyphs) {
-                    this.glyphs.ensureVisible();
+
+                runInAction(() => (this.isLoading = false));
+
+                if (!this.unmounted) {
+                    runInAction(() => {
+                        this.fontExtract = fontExtract;
+                    });
+                } else {
+                    fontExtract.freeResources();
                 }
             }
         }
 
-        onChange(font: Font | undefined, glyph: Glyph | undefined) {
-            this.isLoading = false;
-            this.font = font;
-            this.selectedGlyph.set(glyph);
-
-            this.props.onChange((glyph && glyph.encoding) || undefined);
-
-            this.props.fieldContext[this.props.fieldProperties.name] = {
-                font: font,
-                glyph: glyph
-            };
+        componentDidMount() {
+            this.loadFont();
         }
 
-        onSelectGlyph(glyph: Glyph) {
-            this.onChange(this.font, glyph);
+        componentDidUpdate() {
+            this.loadFont();
         }
 
-        onDoubleClickGlyph(glyph: Glyph) {
-            this.onSelectGlyph(glyph);
+        componentWillUnmount() {
+            if (this.fontExtract) {
+                this.fontExtract.freeResources();
+                this.fontExtract = undefined;
+                this.params = undefined;
+            }
+
+            this.unmounted = true;
+        }
+
+        onSelectEncoding = (encoding: number) => {
+            this.selectedEncoding.set(encoding);
+
+            if (this.fontExtract) {
+                const glyph = this.fontExtract.getGlyph(encoding);
+
+                this.props.onChange(glyph);
+
+                this.props.fieldContext[this.props.fieldProperties.name] = {
+                    glyph
+                };
+            }
+        };
+
+        onDoubleClickEncoding = (encoding: number) => {
+            this.onSelectEncoding(encoding);
             this.props.onOk();
+        };
+
+        render() {
+            return (
+                <div className="EezStudio_GlyphSelectFieldContainer">
+                    {this.fontExtract ? (
+                        <Glyphs
+                            fontExtract={this.fontExtract}
+                            selectedEncoding={this.selectedEncoding}
+                            onSelectEncoding={this.onSelectEncoding}
+                            onDoubleClickEncoding={this.onDoubleClickEncoding}
+                            dialog={true}
+                        />
+                    ) : this.isLoading ? (
+                        <Loader />
+                    ) : (
+                        <span>Unsupported font params.</span>
+                    )}
+                </div>
+            );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const Glyphs = observer(
+    class Glyphs extends React.Component<{
+        fontExtract: IFontExtract;
+        selectedEncoding: IObservableValue<number | undefined>;
+        onSelectEncoding: (encoding: number) => void;
+        onDoubleClickEncoding: (encoding: number) => void;
+        dialog: boolean;
+    }> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        searchText: string = "";
+
+        listRef = React.createRef<FixedSizeGrid>();
+
+        columnCount: number | undefined;
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                searchText: observable,
+                onSearchChange: action.bound
+            });
+        }
+
+        onSearchChange(event: any) {
+            this.searchText = ($(event.target).val() as string).trim();
+
+            const searchText = this.searchText.toLowerCase();
+
+            let encoding = this.props.fontExtract.allEncodings.find(
+                encoding =>
+                    formatEncoding(encoding)
+                        .toLowerCase()
+                        .indexOf(searchText) != -1
+            );
+
+            if (encoding) {
+                if (this.ensureVisibleIntervalID) {
+                    clearInterval(this.ensureVisibleIntervalID);
+                }
+                this.props.onSelectEncoding(encoding);
+            }
+        }
+
+        componentDidMount() {
+            this.ensureVisible();
+        }
+
+        componentDidUpdate() {
+            this.ensureVisible();
+        }
+
+        componentWillUnmount() {}
+
+        ensureVisibleIntervalID: any;
+
+        doEnsureVisible = () => {
+            const encoding = this.props.selectedEncoding.get();
+            if (encoding != undefined) {
+                const index =
+                    this.props.fontExtract.allEncodings.indexOf(encoding);
+                if (index != -1) {
+                    if (this.listRef.current && this.columnCount != undefined) {
+                        this.listRef.current.scrollToItem({
+                            align: "auto",
+                            columnIndex: index % this.columnCount,
+                            rowIndex: Math.floor(index / this.columnCount)
+                        });
+                    } else {
+                        return;
+                    }
+                }
+            }
+            clearInterval(this.ensureVisibleIntervalID);
+        };
+
+        ensureVisible() {
+            if (this.ensureVisibleIntervalID) {
+                clearInterval(this.ensureVisibleIntervalID);
+            }
+            this.ensureVisibleIntervalID = setInterval(this.doEnsureVisible);
         }
 
         render() {
-            if (this.font) {
-                return (
-                    <div
-                        className="EezStudio_GlyphSelectFieldContainer"
-                        ref={(ref: any) => (this.glyphsContainer = ref)}
-                    >
-                        <Glyphs
-                            ref={ref => (this.glyphs = ref!)}
-                            glyphs={this.font.glyphs}
-                            selectedGlyph={this.selectedGlyph}
-                            onSelectGlyph={this.onSelectGlyph.bind(this)}
-                            onDoubleClickGlyph={this.onDoubleClickGlyph.bind(
-                                this
-                            )}
-                            dialog={true}
+            const GLYPH_WIDTH = 128;
+            const GLYPH_HEIGHT = 100;
+
+            return (
+                <div className="EezStudio_GlyphSelect" tabIndex={0}>
+                    <div className="btn-toolbar" role="toolbar">
+                        <SearchInput
+                            searchText={this.searchText}
+                            onChange={this.onSearchChange}
+                            onKeyDown={this.onSearchChange}
                         />
                     </div>
-                );
-            } else {
-                return (
-                    <div style={{ padding: 20 }}>
-                        {this.isLoading && <Loader />}
+                    <div>
+                        <AutoSizer>
+                            {({ width, height }) => {
+                                this.columnCount = Math.floor(
+                                    width / GLYPH_WIDTH
+                                );
+                                const rowCount = Math.ceil(
+                                    this.props.fontExtract.allEncodings.length /
+                                        this.columnCount
+                                );
+
+                                return (
+                                    <FixedSizeGrid
+                                        ref={this.listRef}
+                                        columnCount={this.columnCount}
+                                        rowCount={rowCount}
+                                        columnWidth={GLYPH_WIDTH}
+                                        rowHeight={GLYPH_HEIGHT}
+                                        itemData={
+                                            {
+                                                columnCount: this.columnCount,
+                                                fontExtract:
+                                                    this.props.fontExtract,
+                                                selectedEncoding:
+                                                    this.props.selectedEncoding,
+                                                onSelect:
+                                                    this.props.onSelectEncoding,
+                                                onDoubleClick:
+                                                    this.props
+                                                        .onDoubleClickEncoding
+                                            } as any
+                                        }
+                                        width={width}
+                                        height={height}
+                                    >
+                                        {Glyph}
+                                    </FixedSizeGrid>
+                                );
+                            }}
+                        </AutoSizer>
                     </div>
-                );
-            }
+                </div>
+            );
         }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const Glyph = observer(
+    ({
+        columnIndex,
+        rowIndex,
+        style,
+        data
+    }: {
+        columnIndex: number;
+        rowIndex: number;
+        style: React.CSSProperties;
+        data: {
+            columnCount: number;
+            fontExtract: IFontExtract;
+            selectedEncoding: IObservableValue<number | undefined>;
+            onSelect: (encoding: number) => void;
+            onDoubleClick: (encoding: number) => void;
+        };
+    }) => {
+        const index = rowIndex * data.columnCount + columnIndex;
+        if (index >= data.fontExtract.allEncodings.length) {
+            return null;
+        }
+
+        const encoding = data.fontExtract.allEncodings[index];
+
+        setColor("black");
+        setBackColor("white");
+        const canvas = drawGlyph2(encoding, data.fontExtract);
+
+        return (
+            <div className="glyph" style={style}>
+                <div
+                    className={classNames({
+                        selected: encoding == data.selectedEncoding.get()
+                    })}
+                    onClick={() => data.onSelect(encoding)}
+                    onDoubleClick={() => data.onDoubleClick(encoding)}
+                >
+                    <div>
+                        <img src={canvas.toDataURL()}></img>
+                        <div>{formatEncoding(encoding)}</div>
+                    </div>
+                </div>
+            </div>
+        );
     }
 );

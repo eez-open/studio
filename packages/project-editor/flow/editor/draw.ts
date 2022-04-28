@@ -9,6 +9,7 @@ import type {
 import type { Font } from "project-editor/features/font/font";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getPixelByteIndex } from "project-editor/features/font/utils";
+import type { IFontExtract } from "project-editor/features/font/font-extract";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -247,6 +248,83 @@ export function drawGlyph(
     }
 
     return glyph.dx || 0;
+}
+
+export function drawGlyph2(encoding: number, fontExtract: IFontExtract) {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1;
+    canvas.height = 1;
+
+    const glyph = fontExtract.getGlyph(encoding);
+    if (glyph) {
+        const font = fontExtract.fontProperties;
+
+        let width = glyph.width;
+        let height = glyph.height;
+
+        if (glyph.glyphBitmap && width > 0 && height > 0) {
+            canvas.width = width;
+            canvas.height = height;
+
+            let ctx = canvas.getContext("2d")!;
+
+            const pixelImageData = ctx.createImageData(width, height);
+            const pixelData = pixelImageData.data;
+
+            let i = 0;
+            const fgColorRgb = tinycolor(fgColor).toRgb();
+            const bgColorRgb = tinycolor(bgColor).toRgb();
+            const pixelArray = glyph.glyphBitmap.pixelArray;
+            if (pixelArray) {
+                if (font.bpp === 8) {
+                    let pixelArrayIndex = 0;
+                    const pixelArrayOffset = glyph.glyphBitmap.width - width;
+                    for (let y = 0; y < height; y++) {
+                        for (let x = 0; x < width; x++) {
+                            pixelData[i++] = fgColorRgb.r;
+                            pixelData[i++] = fgColorRgb.g;
+                            pixelData[i++] = fgColorRgb.b;
+                            pixelData[i++] = pixelArray[pixelArrayIndex++];
+                        }
+                        pixelArrayIndex += pixelArrayOffset;
+                    }
+                } else {
+                    for (let y = 0; y < height; y++) {
+                        for (let x = 0; x < width; x++) {
+                            const pixel =
+                                pixelArray[
+                                    getPixelByteIndex(glyph.glyphBitmap, x, y)
+                                ] &
+                                (0x80 >> x % 8);
+                            if (pixel) {
+                                pixelData[i++] = fgColorRgb.r;
+                                pixelData[i++] = fgColorRgb.g;
+                                pixelData[i++] = fgColorRgb.b;
+                            } else {
+                                pixelData[i++] = bgColorRgb.r;
+                                pixelData[i++] = bgColorRgb.g;
+                                pixelData[i++] = bgColorRgb.b;
+                            }
+                            i++;
+                        }
+                    }
+                }
+            } else {
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        pixelData[i++] = bgColorRgb.r;
+                        pixelData[i++] = bgColorRgb.g;
+                        pixelData[i++] = bgColorRgb.b;
+                        pixelData[i++] = bgColorRgb.a;
+                    }
+                }
+            }
+
+            ctx.putImageData(pixelImageData, 0, 0);
+        }
+    }
+
+    return canvas;
 }
 
 export function drawStr(

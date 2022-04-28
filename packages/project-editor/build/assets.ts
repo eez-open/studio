@@ -1135,7 +1135,7 @@ function buildLanguages(assets: Assets, dataBuffer: DataBuffer) {
                             translation.languageID == language.languageID
                     );
                     if (translation) {
-                        dataBuffer.writeString(translation.text);
+                        dataBuffer.writeString(translation.text ?? "");
                     } else {
                         dataBuffer.writeString("");
                     }

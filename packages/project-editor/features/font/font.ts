@@ -1,8 +1,6 @@
 import { clipboard, nativeImage } from "@electron/remote";
-import path from "path";
 import { observable, computed, makeObservable } from "mobx";
 
-import { formatNumber } from "eez-studio-shared/util";
 import { Rect } from "eez-studio-shared/geometry";
 import { _minBy, _maxBy, _range } from "eez-studio-shared/algorithm";
 import { validators } from "eez-studio-shared/validation";
@@ -43,22 +41,13 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
     deserializePixelArray,
     EditorImageHitTestResult,
+    formatEncoding,
     getPixel,
     IGlyphBitmap,
     resizeGlyphBitmap,
     serializePixelArray
 } from "project-editor/features/font/utils";
 import { generalGroup } from "project-editor/components/PropertyGrid/groups";
-
-////////////////////////////////////////////////////////////////////////////////
-
-function formatEncoding(encoding: number) {
-    return `${formatNumber(encoding, 10, 4)}/0x${formatNumber(
-        encoding,
-        16,
-        4
-    )} (${String.fromCharCode(encoding)})`;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -946,9 +935,7 @@ export class Font extends EezObject {
                         id: "opentype",
                         label: "OpenType"
                     }
-                ],
-                hideInPropertyGrid: (font: Font) =>
-                    font.renderingEngine == "bdf"
+                ]
             },
             {
                 name: "source",
@@ -1024,23 +1011,12 @@ export class Font extends EezObject {
             return messages;
         },
         newItem: (parent: IEezObject) => {
-            function isFont(obj: IEezObject) {
-                return getProperty(obj, "filePath");
-            }
-
-            function isNonBdfFont(obj: IEezObject) {
-                return (
-                    isFont(obj) &&
-                    path.extname(getProperty(obj, "filePath")) != ".bdf"
-                );
-            }
-
-            function isNonBdfFontAnd1BitPerPixel(obj: IEezObject) {
-                return isNonBdfFont(obj) && getProperty(obj, "bpp") === 1;
+            function is1BitPerPixel(obj: IEezObject) {
+                return getProperty(obj, "bpp") === 1;
             }
 
             function isCreateGlyphs(obj: IEezObject) {
-                return isFont(obj) && getProperty(obj, "createGlyphs");
+                return getProperty(obj, "createGlyphs");
             }
 
             return showGenericDialog(getDocumentStore(parent), {
@@ -1064,7 +1040,7 @@ export class Font extends EezObject {
                                 filters: [
                                     {
                                         name: "Font files",
-                                        extensions: ["bdf", "ttf", "otf"]
+                                        extensions: ["ttf", "otf"]
                                     },
                                     { name: "All Files", extensions: ["*"] }
                                 ]
@@ -1077,8 +1053,7 @@ export class Font extends EezObject {
                             enumItems: [
                                 { id: "freetype", label: "FreeType" },
                                 { id: "opentype", label: "OpenType" }
-                            ],
-                            visible: isNonBdfFont
+                            ]
                         },
                         {
                             name: "bpp",
@@ -1088,18 +1063,16 @@ export class Font extends EezObject {
                         },
                         {
                             name: "size",
-                            type: "number",
-                            visible: isNonBdfFont
+                            type: "number"
                         },
                         {
                             name: "threshold",
                             type: "number",
-                            visible: isNonBdfFontAnd1BitPerPixel
+                            visible: is1BitPerPixel
                         },
                         {
                             name: "createGlyphs",
-                            type: "boolean",
-                            visible: isFont
+                            type: "boolean"
                         },
                         {
                             name: "fromGlyph",
@@ -1149,7 +1122,8 @@ export class Font extends EezObject {
                                   }
                               ]
                             : [],
-                        createBlankGlyphs: result.values.createBlankGlyphs
+                        createBlankGlyphs: result.values.createBlankGlyphs,
+                        doNotAddGlyphIfNotFound: false
                     })
                         .then(font => {
                             notification.info(

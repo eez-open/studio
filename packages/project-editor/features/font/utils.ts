@@ -5,6 +5,7 @@ import type {
     EncodingRange,
     GlyphBitmap
 } from "project-editor/features/font/font-extract";
+import { formatNumber } from "eez-studio-shared/util";
 
 export interface EditorImageHitTestResult {
     x: number;
@@ -212,13 +213,19 @@ export function getMissingEncodings(font: Font): EncodingRange[] {
         return [];
     }
 
+    const existingEncodings = new Set<number>();
+    font.glyphs.forEach(glyph => existingEncodings.add(glyph.encoding));
+
     const encodingsSet = new Set<number>();
 
     for (const textResource of project.texts.resources) {
         for (const translation of textResource.translations) {
             for (const ch of translation.text) {
                 const codePoint = ch.codePointAt(0);
-                if (codePoint != undefined) {
+                if (
+                    codePoint != undefined &&
+                    !existingEncodings.has(codePoint)
+                ) {
                     encodingsSet.add(codePoint);
                 }
             }
@@ -238,4 +245,12 @@ export function isEncodingInAnyGroup(
         }
     }
     return false;
+}
+
+export function formatEncoding(encoding: number) {
+    return `${formatNumber(encoding, 10, 4)}/0x${formatNumber(
+        encoding,
+        16,
+        4
+    )} (${String.fromCharCode(encoding)})`;
 }

@@ -1,419 +1,198 @@
 import fs from "fs";
 import { load, parse, Font as OpenTypeFont } from "opentype.js";
 
-import {
-    toArrayBuffer,
-    getEncodingArrayFromEncodingRanges
-} from "project-editor/features/font/utils";
+import { toArrayBuffer } from "project-editor/features/font/utils";
 import type {
     Params,
     FontProperties,
-    GlyphProperties
+    GlyphProperties,
+    IFontExtract
 } from "project-editor/features/font/font-extract";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export async function extractFont(params: Params) {
-    return new Promise<FontProperties>((resolve, reject) => {
-        load(params.absoluteFilePath, (err, font) => {
-            if (err) {
-                reject(err);
-                return;
-            }
+export class ExtractFont implements IFontExtract {
+    font: OpenTypeFont;
+    canvas: HTMLCanvasElement;
+    ctx: CanvasRenderingContext2D;
+    fontSize: number;
+    scale: number;
+    fontProperties: FontProperties;
+    allEncodings: number[];
 
-            if (!font) {
-                reject("Unexpected error!");
-                return;
-            }
+    constructor(private params: Params) {}
 
-            if (!font.supported) {
-                reject("Font is not supported!");
-                return;
-            }
+    async start() {
+        return new Promise<void>((resolve, reject) => {
+            load(this.params.absoluteFilePath, (err, font) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
 
-            const canvas = document.createElement(
-                "canvas"
-            ) as HTMLCanvasElement;
-            canvas.width = 1024;
-            canvas.height = 1024;
-            const ctx = canvas.getContext("2d")!;
+                if (!font) {
+                    reject("Unexpected error!");
+                    return;
+                }
 
-            const fontSize = params.size * (4 / 3);
+                if (!font.supported) {
+                    reject("Font is not supported!");
+                    return;
+                }
 
-            var scale = (1 / (font.unitsPerEm || 1000)) * fontSize;
+                this.font = font;
 
+                const canvas = document.createElement(
+                    "canvas"
+                ) as HTMLCanvasElement;
+                canvas.width = 1024;
+                canvas.height = 1024;
+                const ctx = canvas.getContext("2d")!;
+
+                // 1 pt = 1.333(3) px if resolution is 72
+                this.fontSize = 1.333 * this.params.size;
+
+                var scale = (1 / (font.unitsPerEm || 1000)) * this.fontSize;
+
+                this.canvas = canvas;
+                this.ctx = ctx;
+                this.scale = scale;
+
+                const ascent = Math.round(font.ascender * scale);
+                const descent = Math.round(-font.descender * scale);
+
+                this.fontProperties = {
+                    name: this.params.name || "",
+                    renderingEngine: "opentype",
+                    source: {
+                        filePath: this.params.relativeFilePath,
+                        size: this.params.size,
+                        threshold: this.params.threshold
+                    },
+                    bpp: this.params.bpp,
+                    threshold: this.params.threshold,
+                    height: ascent + descent,
+                    ascent,
+                    descent,
+                    glyphs: []
+                };
+
+                this.allEncodings = getAllGlyphEncodingsInOpenTypeFont(font);
+
+                resolve();
+            });
+        });
+    }
+
+    getGlyph(encoding: number) {
+        const glyph =
+            this.allEncodings.indexOf(encoding) != -1
+                ? this.font.charToGlyph(String.fromCharCode(encoding))
+                : undefined;
+
+        if (!glyph && this.params.doNotAddGlyphIfNotFound) {
+            return undefined;
+        }
+
+        const bb = glyph
+            ? glyph.getBoundingBox()
+            : {
+                  x1: 0,
+                  x2: 0,
+                  y1: 0,
+                  y2: 0
+              };
+        const x1 = Math.floor(bb.x1 * this.scale);
+        const x2 = Math.ceil(bb.x2 * this.scale);
+        const y1 = Math.floor(bb.y1 * this.scale);
+        const y2 = Math.ceil(bb.y2 * this.scale);
+
+        let glyphProperties: GlyphProperties = {} as any;
+
+        glyphProperties.encoding = encoding;
+
+        glyphProperties.dx = glyph
+            ? Math.ceil(glyph.advanceWidth * this.scale)
+            : 0;
+
+        glyphProperties.x = x1;
+        glyphProperties.y = y1;
+        glyphProperties.width = x2 - x1;
+        glyphProperties.height = y2 - y1;
+
+        glyphProperties.source = {
+            filePath: this.params.relativeFilePath,
+            size: this.params.size,
+            threshold: this.params.threshold,
+            encoding
+        } as any;
+
+        glyphProperties.glyphBitmap = {
+            width: 0,
+            height: 0,
+            pixelArray: []
+        };
+
+        if (
+            !this.params.createBlankGlyphs &&
+            glyph &&
+            glyphProperties.width > 0 &&
+            glyphProperties.height > 0
+        ) {
             const x = 512;
             const y = 512;
 
-            const ascent = Math.round(font.ascender * scale);
-            const descent = Math.round(-font.descender * scale);
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            glyph.draw(this.ctx, x, y, this.fontSize, {
+                hinting: true
+            } as any);
 
-            const fontProperties: FontProperties = {
-                name: params.name || "",
-                renderingEngine: "opentype",
-                source: {
-                    filePath: params.relativeFilePath,
-                    size: params.size,
-                    threshold: params.threshold
-                },
-                bpp: params.bpp,
-                threshold: params.threshold,
-                height: ascent + descent,
-                ascent,
-                descent,
-                glyphs: []
-            };
+            glyphProperties.glyphBitmap.width = glyphProperties.width;
+            glyphProperties.glyphBitmap.height = glyphProperties.height;
 
-            function addGlyph(encoding: number) {
-                const glyph =
-                    allEncodings.indexOf(encoding) != -1
-                        ? font!.charToGlyph(String.fromCharCode(encoding))
-                        : undefined;
+            const imageData = this.ctx.getImageData(
+                x + x1,
+                y - y2,
+                glyphProperties.width,
+                glyphProperties.height
+            );
 
-                const bb = glyph
-                    ? glyph.getBoundingBox()
-                    : {
-                          x1: 0,
-                          x2: 0,
-                          y1: 0,
-                          y2: 0
-                      };
-                const x1 = Math.floor(bb.x1 * scale);
-                const x2 = Math.ceil(bb.x2 * scale);
-                const y1 = Math.floor(bb.y1 * scale);
-                const y2 = Math.ceil(bb.y2 * scale);
+            const pixelArray = glyphProperties.glyphBitmap.pixelArray;
 
-                let glyphProperties: GlyphProperties = {} as any;
-
-                glyphProperties.encoding = encoding;
-
-                glyphProperties.dx = glyph
-                    ? Math.ceil(glyph.advanceWidth * scale)
-                    : 0;
-
-                glyphProperties.x = x1;
-                glyphProperties.y = y1;
-                glyphProperties.width = x2 - x1;
-                glyphProperties.height = y2 - y1;
-
-                glyphProperties.source = {
-                    filePath: params.relativeFilePath,
-                    size: params.size,
-                    threshold: params.threshold,
-                    encoding
-                } as any;
-
-                glyphProperties.glyphBitmap = {
-                    width: 0,
-                    height: 0,
-                    pixelArray: []
-                };
-
-                if (
-                    glyph &&
-                    glyphProperties.width > 0 &&
-                    glyphProperties.height > 0
+            if (this.params.bpp === 8) {
+                for (
+                    let i = 0;
+                    i < glyphProperties.width * glyphProperties.height;
+                    i++
                 ) {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    glyph.draw(ctx, x, y, fontSize, {
-                        hinting: true
-                    } as any);
+                    pixelArray.push(imageData.data[i * 4 + 3]);
+                }
+            } else {
+                let widthInBytes = Math.floor((glyphProperties.width + 7) / 8);
 
-                    glyphProperties.glyphBitmap.width = glyphProperties.width;
-                    glyphProperties.glyphBitmap.height = glyphProperties.height;
+                for (let y = 0; y < glyphProperties.height; y++) {
+                    for (let x = 0; x < glyphProperties.width; x++) {
+                        const index = y * widthInBytes + Math.floor(x / 8);
+                        if (index == pixelArray.length) {
+                            pixelArray.push(0);
+                        }
 
-                    const imageData = ctx.getImageData(
-                        x + x1,
-                        y - y2,
-                        glyphProperties.width,
-                        glyphProperties.height
-                    );
-
-                    const pixelArray = glyphProperties.glyphBitmap.pixelArray;
-
-                    if (params.bpp === 8) {
-                        for (
-                            let i = 0;
-                            i < glyphProperties.width * glyphProperties.height;
-                            i++
+                        if (
+                            imageData.data[
+                                (y * glyphProperties.width + x) * 4 + 3
+                            ] > this.params.threshold
                         ) {
-                            pixelArray.push(imageData.data[i * 4 + 3]);
-                        }
-                    } else {
-                        let widthInBytes = Math.floor(
-                            (glyphProperties.width + 7) / 8
-                        );
-
-                        for (let y = 0; y < glyphProperties.height; y++) {
-                            for (let x = 0; x < glyphProperties.width; x++) {
-                                const index =
-                                    y * widthInBytes + Math.floor(x / 8);
-                                if (index == pixelArray.length) {
-                                    pixelArray.push(0);
-                                }
-
-                                if (
-                                    imageData.data[
-                                        (y * glyphProperties.width + x) * 4 + 3
-                                    ] > params.threshold
-                                ) {
-                                    pixelArray[index] |= 0x80 >> x % 8;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                fontProperties.glyphs.push(glyphProperties);
-            }
-
-            const allEncodings = getAllGlyphEncodingsInOpenTypeFont(font);
-
-            let encodings = params.encodings
-                ? getEncodingArrayFromEncodingRanges(params.encodings)
-                : allEncodings;
-
-            for (const encoding of encodings) {
-                addGlyph(encoding);
-            }
-
-            resolve(fontProperties);
-        });
-    });
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function loadFontUsingOpentypeJS(
-    name: string | undefined,
-    filePath: string,
-    bpp: number,
-    size: number,
-    threshold: number,
-    createGlyphs: boolean,
-    fromEncoding: number | undefined,
-    toEncoding: number | undefined,
-    createBlankGlyphs: boolean,
-    resolve: (font: any) => void,
-    reject: (error: any) => void
-) {
-    fs.readFile(filePath, (err: any, data: any) => {
-        if (err) {
-            reject(err);
-        } else {
-            let openTypeFont = opentype.parse(toArrayBuffer(data));
-
-            if (!openTypeFont.supported) {
-                reject("Font is not supported!");
-                return;
-            }
-
-            const PPI = 100;
-            let sizePX = (size * PPI) / 72;
-
-            let scale = (1 / openTypeFont.unitsPerEm) * sizePX;
-
-            let ascent = Math.round(openTypeFont.ascender * scale);
-            let descent = Math.round(-openTypeFont.descender * scale);
-            let height = ascent + descent;
-
-            let font: FontProperties = {
-                name: name,
-                source: {
-                    filePath: filePath,
-                    size: size,
-                    threshold: threshold
-                },
-                bpp,
-                ascent: ascent,
-                descent: descent,
-                height: height,
-                glyphs: []
-            } as any;
-
-            if (createGlyphs) {
-                function addGlyph(glyph: any, encoding: number) {
-                    let glyphProperties: GlyphProperties = {} as any;
-
-                    glyphProperties.encoding = encoding;
-
-                    if (!createBlankGlyphs) {
-                        let dx = Math.round(glyph.advanceWidth * scale);
-
-                        glyphProperties.dx = dx;
-
-                        // get pixels
-                        let canvas = document.createElement(
-                            "canvas"
-                        ) as HTMLCanvasElement;
-                        canvas.width = dx;
-                        canvas.height = height;
-
-                        let xMin = canvas.width;
-                        let xMax = 0;
-                        let yMin = canvas.height;
-                        let yMax = 0;
-
-                        let ctx = canvas.getContext("2d")!;
-
-                        let x = 0;
-                        let y = openTypeFont.ascender * scale;
-
-                        glyph.draw(ctx, x, y, sizePX);
-
-                        let imageData = ctx.getImageData(
-                            0,
-                            0,
-                            canvas.width,
-                            canvas.height
-                        );
-                        let pixelMatrix = imageData.data;
-
-                        let hasPixels = false;
-
-                        for (let y = 0; y < canvas.height; y++) {
-                            for (let x = 0; x < canvas.width; x++) {
-                                let i = (y * canvas.width + x) * 4 + 3;
-
-                                let hasPixel: boolean = false;
-
-                                if (bpp === 8) {
-                                    if (pixelMatrix[i]) {
-                                        hasPixel = true;
-                                    }
-                                } else {
-                                    if (pixelMatrix[i] >= threshold) {
-                                        hasPixel = true;
-                                        pixelMatrix[i] = 255;
-                                    }
-                                }
-
-                                if (hasPixel) {
-                                    if (x < xMin) {
-                                        xMin = x;
-                                    } else if (x > xMax) {
-                                        xMax = x;
-                                    }
-
-                                    if (y < yMin) {
-                                        yMin = y;
-                                    } else if (y > yMax) {
-                                        yMax = y;
-                                    }
-
-                                    hasPixels = true;
-                                }
-                            }
-                        }
-
-                        if (hasPixels) {
-                            glyphProperties.x = xMin;
-                            glyphProperties.y = ascent - yMax;
-                            glyphProperties.width = xMax - xMin + 1;
-                            glyphProperties.height = yMax - yMin + 1;
-
-                            let pixelArray: Array<number>;
-
-                            if (bpp === 8) {
-                                pixelArray = new Array<number>(
-                                    glyphProperties.width *
-                                        glyphProperties.height
-                                );
-                                let i = 0;
-                                for (let y = yMin; y <= yMax; y++) {
-                                    for (let x = xMin; x <= xMax; x++) {
-                                        pixelArray[i++] =
-                                            pixelMatrix[
-                                                (y * canvas.width + x) * 4 + 3
-                                            ];
-                                    }
-                                }
-                            } else {
-                                pixelArray = [];
-
-                                let widthInBytes = Math.floor(
-                                    (glyphProperties.width + 7) / 8
-                                );
-
-                                for (let y = yMin; y <= yMax; y++) {
-                                    for (
-                                        let x = xMin, iByte = 0;
-                                        iByte < widthInBytes && x <= xMax;
-                                        iByte++
-                                    ) {
-                                        let byteData = 0;
-
-                                        for (
-                                            let iBit = 0;
-                                            iBit < 8 && x <= xMax;
-                                            iBit++, x++
-                                        ) {
-                                            let i =
-                                                (y * canvas.width + x) * 4 + 3;
-                                            if (pixelMatrix[i] > threshold) {
-                                                byteData |= 0x80 >> iBit;
-                                            }
-                                        }
-
-                                        pixelArray.push(byteData);
-                                    }
-                                }
-                            }
-
-                            glyphProperties.glyphBitmap = {
-                                width: glyphProperties.width,
-                                height: glyphProperties.height,
-                                pixelArray: pixelArray
-                            };
-                        } else {
-                            glyphProperties.x = 0;
-                            glyphProperties.y = 0;
-                            glyphProperties.width = 0;
-                            glyphProperties.height = 0;
-                            glyphProperties.glyphBitmap = {
-                                width: 0,
-                                height: 0,
-                                pixelArray: []
-                            };
-                        }
-                    }
-
-                    glyphProperties.source = {
-                        filePath: filePath,
-                        size: size,
-                        threshold: threshold,
-                        encoding: encoding
-                    } as any;
-
-                    font.glyphs.push(glyphProperties);
-                }
-
-                if (fromEncoding && toEncoding) {
-                    for (
-                        let encoding = fromEncoding;
-                        encoding <= toEncoding;
-                        encoding++
-                    ) {
-                        let glyph = openTypeFont.charToGlyph(
-                            String.fromCharCode(encoding)
-                        );
-                        if (glyph) {
-                            addGlyph(glyph, encoding);
-                        }
-                    }
-                } else {
-                    for (let i = 0; i < openTypeFont.glyphs.length; i++) {
-                        let glyph = openTypeFont.glyphs.get(i);
-                        if (glyph.unicode !== undefined) {
-                            addGlyph(glyph, glyph.unicode);
+                            pixelArray[index] |= 0x80 >> x % 8;
                         }
                     }
                 }
             }
-
-            resolve(font);
         }
-    });
+
+        return glyphProperties;
+    }
+
+    freeResources() {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

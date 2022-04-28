@@ -1,10 +1,4 @@
-import path from "path";
-
-import type * as BdfModule from "project-editor/features/font/font-extract/bdf";
-import type * as FreeTypeModule from "project-editor/features/font/font-extract/freetype";
-import type * as OpenTypeModule from "project-editor/features/font/font-extract/opentype";
-
-export type FontRenderingEngine = "bdf" | "freetype" | "opentype";
+export type FontRenderingEngine = "freetype" | "opentype";
 
 export interface FontProperties {
     name: string;
@@ -63,20 +57,56 @@ export interface Params {
     createGlyphs: boolean;
     encodings?: EncodingRange[];
     createBlankGlyphs?: boolean;
+    doNotAddGlyphIfNotFound: boolean;
 }
 
-export function extractFont(data: Params) {
-    if (path.extname(data.relativeFilePath) == ".bdf") {
-        const { extractFont } =
-            require("project-editor/features/font/font-extract/bdf") as typeof BdfModule;
-        return extractFont(data);
-    } else if (data.renderingEngine == "freetype") {
-        const { extractFont } =
-            require("project-editor/features/font/font-extract/freetype") as typeof FreeTypeModule;
-        return extractFont(data);
+export interface IFontExtract {
+    start(): Promise<void>;
+    getGlyph(encoding: number): GlyphProperties | undefined;
+    freeResources(): void;
+    fontProperties: FontProperties;
+    allEncodings: number[];
+}
+
+export async function createFontExtract(params: Params): Promise<IFontExtract> {
+    let renderingEngineModule;
+
+    if (params.renderingEngine == "freetype") {
+        renderingEngineModule = await import(
+            "project-editor/features/font/font-extract/freetype"
+        );
     } else {
-        const { extractFont } =
-            require("project-editor/features/font/font-extract/opentype") as typeof OpenTypeModule;
-        return extractFont(data);
+        renderingEngineModule = await import(
+            "project-editor/features/font/font-extract/opentype"
+        );
+    }
+
+    return new renderingEngineModule.ExtractFont(params);
+}
+
+export async function extractFont(params: Params) {
+    const extractFont = await createFontExtract(params);
+    try {
+        await extractFont.start();
+
+        if (params.createGlyphs) {
+            const { getEncodingArrayFromEncodingRanges } = await import(
+                "project-editor/features/font/utils"
+            );
+
+            let encodings = params.encodings
+                ? getEncodingArrayFromEncodingRanges(params.encodings)
+                : extractFont.allEncodings;
+
+            for (const encoding of encodings) {
+                const glyphProperties = extractFont.getGlyph(encoding);
+                if (glyphProperties) {
+                    extractFont.fontProperties.glyphs.push(glyphProperties);
+                }
+            }
+        }
+        return extractFont.fontProperties;
+    } finally {
+        extractFont.freeResources();
     }
 }

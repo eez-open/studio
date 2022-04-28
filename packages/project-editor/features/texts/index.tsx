@@ -263,7 +263,8 @@ export class Texts extends EezObject {
                     const project = ProjectEditor.getProject(languages);
                     for (const textResource of project.texts.resources) {
                         addObject(textResource.translations, {
-                            languageID: language.languageID
+                            languageID: language.languageID,
+                            text: ""
                         });
                     }
                     return language;

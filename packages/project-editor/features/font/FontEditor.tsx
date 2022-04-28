@@ -1,5 +1,4 @@
 import { dialog, getCurrentWindow } from "@electron/remote";
-import path from "path";
 import React from "react";
 import {
     observable,
@@ -15,7 +14,6 @@ import { getParent, getProperty, IEezObject } from "project-editor/core/object";
 import {
     IPanel,
     LayoutModels,
-    loadObject,
     objectToJS,
     getDocumentStore
 } from "project-editor/store";
@@ -35,7 +33,7 @@ import { Glyphs } from "./Glyphs";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 import { showGenericDialog } from "project-editor/core/util";
 import { GlyphSelectFieldType } from "project-editor/features/font/GlyphSelectFieldType";
-import { Font, Glyph, GlyphSource } from "project-editor/features/font/font";
+import { Font, Glyph } from "project-editor/features/font/font";
 
 import {
     EncodingRange,
@@ -65,7 +63,7 @@ export const FontEditor = observer(
 
         get glyphs() {
             let font = this.font;
-            return font.glyphs.sort((a, b) => a.encoding - b.encoding);
+            return font.glyphs;
         }
 
         get selectedGlyph() {
@@ -125,23 +123,12 @@ export const FontEditor = observer(
         };
 
         onAddGlyph() {
-            function isFont(obj: IEezObject) {
-                return getProperty(obj, "filePath");
-            }
-
-            function isNonBdfFont(obj: IEezObject) {
-                return (
-                    isFont(obj) &&
-                    path.extname(getProperty(obj, "filePath")) != ".bdf"
-                );
-            }
-
-            function isNonBdfFontAnd1BitPerPixel(obj: IEezObject) {
-                return isNonBdfFont(obj) && getProperty(obj, "bpp") === 1;
+            function is1BitPerPixel(obj: IEezObject) {
+                return getProperty(obj, "bpp") === 1;
             }
 
             function isAddOptionRange(obj: IEezObject) {
-                return isFont(obj) && getProperty(obj, "addOption") == "range";
+                return getProperty(obj, "addOption") == "range";
             }
 
             const missingEncodings = getMissingEncodings(this.font);
@@ -164,7 +151,7 @@ export const FontEditor = observer(
                 });
             }
 
-            return showGenericDialog(getDocumentStore(parent), {
+            return showGenericDialog(this.context, {
                 dialogDefinition: {
                     title: "Add Glyphs",
                     fields: [
@@ -176,7 +163,7 @@ export const FontEditor = observer(
                                 filters: [
                                     {
                                         name: "Font files",
-                                        extensions: ["bdf", "ttf", "otf"]
+                                        extensions: ["ttf", "otf"]
                                     },
                                     { name: "All Files", extensions: ["*"] }
                                 ]
@@ -189,8 +176,7 @@ export const FontEditor = observer(
                             enumItems: [
                                 { id: "freetype", label: "FreeType" },
                                 { id: "opentype", label: "OpenType" }
-                            ],
-                            visible: isNonBdfFont
+                            ]
                         },
                         {
                             name: "bpp",
@@ -201,18 +187,21 @@ export const FontEditor = observer(
                         {
                             name: "size",
                             type: "number",
-                            visible: isNonBdfFont
+                            validators: [
+                                validators.required,
+                                validators.rangeInclusive(6, 100)
+                            ]
                         },
                         {
                             name: "threshold",
                             type: "number",
-                            visible: isNonBdfFontAnd1BitPerPixel
+                            visible: is1BitPerPixel,
+                            validators: [validators.rangeInclusive(1, 255)]
                         },
                         {
                             name: "addOption",
                             type: "radio",
-                            enumItems: addOptionEnumItems,
-                            visible: isFont
+                            enumItems: addOptionEnumItems
                         },
                         {
                             name: "fromGlyph",
@@ -231,8 +220,7 @@ export const FontEditor = observer(
                         },
                         {
                             name: "createBlankGlyphs",
-                            type: "boolean",
-                            visible: isFont
+                            type: "boolean"
                         }
                     ]
                 },
@@ -276,6 +264,8 @@ export const FontEditor = observer(
                         encodings = missingEncodings;
                     }
 
+                    console.log(result.values.filePath);
+
                     return extractFont({
                         absoluteFilePath: this.context.getAbsoluteFilePath(
                             result.values.filePath
@@ -287,7 +277,9 @@ export const FontEditor = observer(
                         threshold: result.values.threshold,
                         createGlyphs: true,
                         encodings,
-                        createBlankGlyphs: result.values.createBlankGlyphs
+                        createBlankGlyphs: result.values.createBlankGlyphs,
+                        doNotAddGlyphIfNotFound:
+                            result.values.addOption === "missing"
                     })
                         .then(font => {
                             this.context.undoManager.setCombineCommands(true);
@@ -733,16 +725,8 @@ const GlyphEditor = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 export function browseGlyph(glyph: Glyph) {
-    function isFont(obj: any) {
-        return obj["filePath"];
-    }
-
-    function isNonBdfFont(obj: any) {
-        return isFont(obj) && path.extname(obj["filePath"]) != ".bdf";
-    }
-
-    function isNonBdfFontAnd1BitPerPixel(obj: any) {
-        return isNonBdfFont(obj) && obj["bpp"] === 1;
+    function is1BitPerPixel(obj: any) {
+        return obj["bpp"] === 1;
     }
 
     const title = "Select Glyph";
@@ -762,11 +746,12 @@ export function browseGlyph(glyph: Glyph) {
                         filters: [
                             {
                                 name: "Font files",
-                                extensions: ["bdf", "ttf", "otf"]
+                                extensions: ["ttf", "otf"]
                             },
                             { name: "All Files", extensions: ["*"] }
                         ]
-                    }
+                    },
+                    validators: [validators.required]
                 },
                 {
                     name: "renderingEngine",
@@ -776,22 +761,27 @@ export function browseGlyph(glyph: Glyph) {
                         { id: "freetype", label: "FreeType" },
                         { id: "opentype", label: "OpenType" }
                     ],
-                    visible: isNonBdfFont
+                    validators: [validators.required]
                 },
                 {
                     name: "bpp",
                     type: "number",
-                    visible: () => false
+                    visible: () => false,
+                    validators: [validators.required]
                 },
                 {
                     name: "size",
                     type: "number",
-                    visible: isNonBdfFont
+                    validators: [
+                        validators.required,
+                        validators.rangeInclusive(6, 100)
+                    ]
                 },
                 {
                     name: "threshold",
                     type: "number",
-                    visible: isNonBdfFontAnd1BitPerPixel
+                    visible: is1BitPerPixel,
+                    validators: [validators.rangeInclusive(1, 255)]
                 },
                 {
                     name: "encoding",
@@ -820,15 +810,7 @@ export function browseGlyph(glyph: Glyph) {
             fieldsEnclosureDiv: SelectGlyphDialogFieldsEnclosure
         }
     }).then(result => {
-        return {
-            x: result.context.encoding.glyph.x,
-            y: result.context.encoding.glyph.y,
-            width: result.context.encoding.glyph.width,
-            height: result.context.encoding.glyph.height,
-            dx: result.context.encoding.glyph.dx,
-            glyphBitmap: result.context.encoding.glyph.glyphBitmap,
-            source: loadObject(DocumentStore, glyph, result.values, GlyphSource)
-        };
+        return result.context.encoding.glyph;
     });
 }
 
