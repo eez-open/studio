@@ -19,6 +19,7 @@ export const TextsNavigation = observer(
         export = () => {
             showGenericDialog({
                 dialogDefinition: {
+                    title: "Export to XLIFF",
                     fields: [
                         {
                             name: "filePath",
@@ -101,25 +102,6 @@ export const TextsNavigation = observer(
             }
 
             if (component === "languages") {
-                let additionalButtons;
-
-                if (this.context.project.texts.languages.length > 1) {
-                    additionalButtons = [
-                        <TextAction
-                            key="export"
-                            text="Export"
-                            title="Export to XLIFF"
-                            onClick={this.export}
-                        />,
-                        <TextAction
-                            key="import"
-                            text="Import"
-                            title="Import from XLIFF"
-                            onClick={this.import}
-                        />
-                    ];
-                }
-
                 return (
                     <ListNavigation
                         id="languages"
@@ -127,20 +109,24 @@ export const TextsNavigation = observer(
                         selectedObject={
                             this.context.navigationStore.selectedLanguageObject
                         }
-                        additionalButtons={[
-                            <TextAction
-                                key="export"
-                                text="Export"
-                                title="Export to XLIFF"
-                                onClick={this.export}
-                            />,
-                            <TextAction
-                                key="import"
-                                text="Import"
-                                title="Import from XLIFF"
-                                onClick={this.import}
-                            />
-                        ]}
+                        additionalButtons={
+                            this.context.project.texts.languages.length > 1
+                                ? [
+                                      <TextAction
+                                          key="export"
+                                          text="Export"
+                                          title="Export to XLIFF"
+                                          onClick={this.export}
+                                      />,
+                                      <TextAction
+                                          key="import"
+                                          text="Import"
+                                          title="Import from XLIFF"
+                                          onClick={this.import}
+                                      />
+                                  ]
+                                : undefined
+                        }
                     />
                 );
             }
