@@ -11,6 +11,8 @@ declare const ace: {
 
 declare module "jspanel4";
 
+declare module "xliff";
+
 //
 
 type IIndexes = { [key: string]: number };

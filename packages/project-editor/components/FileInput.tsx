@@ -72,7 +72,7 @@ export class RelativeFileInput extends FieldComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class AbsoluteFileInput extends FieldComponent {
+export class AbsoluteFileSaveInput extends FieldComponent {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
@@ -81,17 +81,13 @@ export class AbsoluteFileInput extends FieldComponent {
     }
 
     async onSelect() {
-        const result = await dialog.showOpenDialog({
-            properties: ["openFile"],
+        const result = await dialog.showSaveDialog({
+            properties: ["showOverwriteConfirmation"],
             filters: this.props.fieldProperties.options.filters
         });
 
-        if (result.filePaths && result.filePaths[0]) {
-            this.props.onChange(
-                this.context.getFilePathRelativeToProjectPath(
-                    result.filePaths[0]
-                )
-            );
+        if (result.filePath) {
+            this.props.onChange(result.filePath);
         }
     }
 

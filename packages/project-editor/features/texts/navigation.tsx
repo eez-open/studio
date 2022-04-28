@@ -1,6 +1,8 @@
 import React from "react";
 import * as FlexLayout from "flexlayout-react";
+import xliff from "xliff";
 
+import * as notification from "eez-studio-ui/notification";
 import { ProjectContext } from "project-editor/project/context";
 import { NavigationComponent } from "project-editor/project/NavigationComponent";
 import { LayoutModels } from "project-editor/store";
@@ -9,7 +11,8 @@ import { observer } from "mobx-react";
 import { TextAction } from "eez-studio-ui/action";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
-import { AbsoluteFileInput } from "project-editor/components/FileInput";
+import { AbsoluteFileSaveInput } from "project-editor/components/FileInput";
+import { writeTextFile } from "eez-studio-shared/util-electron";
 
 export const TextsNavigation = observer(
     class TextsNavigation extends NavigationComponent {
@@ -23,7 +26,7 @@ export const TextsNavigation = observer(
                     fields: [
                         {
                             name: "filePath",
-                            type: AbsoluteFileInput,
+                            type: AbsoluteFileSaveInput,
                             validators: [validators.required],
                             options: {
                                 filters: [
@@ -70,6 +73,8 @@ export const TextsNavigation = observer(
                     ]
                 },
 
+                okButtonText: "Export",
+
                 values: {
                     sourceLanguage:
                         this.context.project.texts.languages[0].languageID,
@@ -79,6 +84,57 @@ export const TextsNavigation = observer(
             })
                 .then(result => {
                     console.log(result);
+
+                    const keys: {
+                        [key: string]: {
+                            source: string;
+                            target: string;
+                        };
+                    } = {};
+
+                    this.context.project.texts.resources.map(textResource => {
+                        const source = textResource.translations.find(
+                            translation =>
+                                translation.languageID ==
+                                result.values.sourceLanguage
+                        )?.text;
+                        if (source) {
+                            const target = textResource.translations.find(
+                                translation =>
+                                    translation.languageID ==
+                                    result.values.targetLanguage
+                            )?.text;
+
+                            keys[textResource.resourceID] = {
+                                source,
+                                target: target || ""
+                            };
+                        }
+                    });
+
+                    const js = {
+                        resources: {
+                            namespace1: keys
+                        },
+                        sourceLanguage: result.values.sourceLanguage,
+                        targetLanguage: result.values.targetLanguage
+                    };
+
+                    xliff.js2xliff(js, async (err: any, res: any) => {
+                        if (err) {
+                            notification.error(err.toString());
+                        } else {
+                            try {
+                                await writeTextFile(
+                                    result.values.filePath,
+                                    res
+                                );
+                                notification.info("File saved!");
+                            } catch (err) {
+                                notification.error(err.toString());
+                            }
+                        }
+                    });
                 })
                 .catch(() => {});
         };

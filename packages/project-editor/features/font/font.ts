@@ -845,7 +845,7 @@ export class FontSource extends EezObject {
         properties: [
             {
                 name: "filePath",
-                type: PropertyType.String
+                type: PropertyType.RelativeFile
             },
             {
                 name: "size",
@@ -940,8 +940,7 @@ export class Font extends EezObject {
             {
                 name: "source",
                 type: PropertyType.Object,
-                typeClass: FontSource,
-                readOnlyInPropertyGrid: true
+                typeClass: FontSource
             },
             {
                 name: "bpp",
