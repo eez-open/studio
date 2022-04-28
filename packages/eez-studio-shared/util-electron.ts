@@ -1,12 +1,8 @@
 import { roundNumber } from "./roundNumber";
+import fs from "fs";
+import path from "path";
 
 export let app: Electron.App;
-
-let fs: any;
-let path: any;
-
-fs = require("fs");
-path = require("path");
 
 if (isRenderer()) {
     app = require("@electron/remote").app;
@@ -72,8 +68,8 @@ export async function makeFolder(folderPath: string) {
     if (!exists) {
         await makeFolder(path.dirname(folderPath));
         await new Promise<void>(async (resolve, reject) => {
-            fs.mkdir(folderPath, (err: any) => {
-                if (err) {
+            fs.mkdir(folderPath, err => {
+                if (err && err.code != "EEXIST") {
                     reject(err);
                 } else {
                     resolve();
