@@ -11,8 +11,11 @@ import { observer } from "mobx-react";
 import { TextAction } from "eez-studio-ui/action";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
-import { AbsoluteFileSaveInput } from "project-editor/components/FileInput";
-import { writeTextFile } from "eez-studio-shared/util-electron";
+import {
+    AbsoluteFileInput,
+    AbsoluteFileSaveInput
+} from "project-editor/components/FileInput";
+import { readTextFile, writeTextFile } from "eez-studio-shared/util-electron";
 
 export const TextsNavigation = observer(
     class TextsNavigation extends NavigationComponent {
@@ -32,7 +35,7 @@ export const TextsNavigation = observer(
                                 filters: [
                                     {
                                         name: "XLIFF files",
-                                        extensions: ["xliff"]
+                                        extensions: ["xliff", "xlf"]
                                     },
                                     { name: "All Files", extensions: ["*"] }
                                 ]
@@ -69,6 +72,16 @@ export const TextsNavigation = observer(
                                         label: language.languageID
                                     })),
                             validators: [validators.required]
+                        },
+                        {
+                            name: "xliffVersion",
+                            displayName: "XLIFF file format version",
+                            type: "enum",
+                            enumItems: [
+                                { id: "1.2", label: "1.2" },
+                                { id: "2.0", label: "2.0" }
+                            ],
+                            validators: [validators.required]
                         }
                     ]
                 },
@@ -79,12 +92,11 @@ export const TextsNavigation = observer(
                     sourceLanguage:
                         this.context.project.texts.languages[0].languageID,
                     targetLanguage:
-                        this.context.project.texts.languages[1].languageID
+                        this.context.project.texts.languages[1].languageID,
+                    xliffVersion: "1.2"
                 }
             })
                 .then(result => {
-                    console.log(result);
-
                     const keys: {
                         [key: string]: {
                             source: string;
@@ -114,13 +126,18 @@ export const TextsNavigation = observer(
 
                     const js = {
                         resources: {
-                            namespace1: keys
+                            default: keys
                         },
                         sourceLanguage: result.values.sourceLanguage,
                         targetLanguage: result.values.targetLanguage
                     };
 
-                    xliff.js2xliff(js, async (err: any, res: any) => {
+                    const jsToXliff =
+                        result.values.xliffVersion == "1.2"
+                            ? xliff.jsToXliff12
+                            : xliff.js2xliff;
+
+                    jsToXliff(js, async (err: any, res: any) => {
                         if (err) {
                             notification.error(err.toString());
                         } else {
@@ -139,7 +156,55 @@ export const TextsNavigation = observer(
                 .catch(() => {});
         };
 
-        import = () => {};
+        import = () => {
+            showGenericDialog({
+                dialogDefinition: {
+                    title: "Import from XLIFF",
+                    fields: [
+                        {
+                            name: "filePath",
+                            type: AbsoluteFileInput,
+                            validators: [validators.required],
+                            options: {
+                                filters: [
+                                    {
+                                        name: "XLIFF files",
+                                        extensions: ["xliff", "xlf"]
+                                    },
+                                    { name: "All Files", extensions: ["*"] }
+                                ]
+                            }
+                        }
+                    ]
+                },
+
+                values: {},
+
+                okButtonText: "Import"
+            })
+                .then(async result => {
+                    try {
+                        const xliffDoc = await readTextFile(
+                            result.values.filePath
+                        );
+
+                        console.log(xliffDoc);
+
+                        const doit = (err: any, js: any) => {
+                            console.log(js);
+                        };
+
+                        try {
+                            xliff.xliff2js(xliffDoc, doit);
+                        } catch (err) {
+                            xliff.xliff12ToJs(xliffDoc, doit);
+                        }
+                    } catch (err) {
+                        notification.error(err.toString());
+                    }
+                })
+                .catch(() => {});
+        };
 
         factory = (node: FlexLayout.TabNode) => {
             var component = node.getComponent();

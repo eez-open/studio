@@ -19,7 +19,7 @@ import { getThemedColor } from "project-editor/features/style/theme";
 import { showGenericDialog } from "project-editor/core/util";
 
 import { RelativeFileInput } from "project-editor/components/FileInput";
-import type { Project } from "project-editor/project/project";
+import { getProject, Project } from "project-editor/project/project";
 
 import { metrics } from "project-editor/features/bitmap/metrics";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -262,17 +262,27 @@ export function getData(bitmap: Bitmap): Promise<BitmapData> {
                 (bitmap.bpp === 32 ? 4 : 2) * image.width * image.height
             );
 
+            const rgb = getProject(bitmap).isFirmwareWithFlowSupportProject;
+
             for (let i = 0; i < 4 * image.width * image.height; i += 4) {
                 let r = imageData[i];
                 let g = imageData[i + 1];
                 let b = imageData[i + 2];
 
                 if (bitmap.bpp === 32) {
-                    let a = imageData[i + 3];
-                    pixels[i] = b;
-                    pixels[i + 1] = g;
-                    pixels[i + 2] = r;
-                    pixels[i + 3] = a;
+                    if (rgb) {
+                        let a = imageData[i + 3];
+                        pixels[i] = r;
+                        pixels[i + 1] = g;
+                        pixels[i + 2] = b;
+                        pixels[i + 3] = a;
+                    } else {
+                        let a = imageData[i + 3];
+                        pixels[i] = b;
+                        pixels[i + 1] = g;
+                        pixels[i + 2] = r;
+                        pixels[i + 3] = a;
+                    }
                 } else {
                     // rrrrrggggggbbbbb
                     pixels[i / 2] = ((g & 28) << 3) | (b >> 3);
