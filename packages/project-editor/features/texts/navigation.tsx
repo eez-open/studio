@@ -174,6 +174,19 @@ export const TextsNavigation = observer(
                                     { name: "All Files", extensions: ["*"] }
                                 ]
                             }
+                        },
+                        {
+                            name: "targetLanguage",
+                            displayName: "Import into language",
+                            type: "enum",
+                            enumItems: (values: any) =>
+                                this.context.project.texts.languages.map(
+                                    language => ({
+                                        id: language.languageID,
+                                        label: language.languageID
+                                    })
+                                ),
+                            validators: [validators.required]
                         }
                     ]
                 },
@@ -191,7 +204,45 @@ export const TextsNavigation = observer(
                         console.log(xliffDoc);
 
                         const doit = (err: any, js: any) => {
-                            console.log(js);
+                            this.context.undoManager.setCombineCommands(true);
+
+                            const translationContext = js.resources.default;
+
+                            let updated = 0;
+                            for (const key of Object.keys(translationContext)) {
+                                const textResource =
+                                    this.context.project.texts.resources.find(
+                                        textResource =>
+                                            textResource.resourceID == key
+                                    );
+                                if (textResource) {
+                                    const translation =
+                                        textResource.translations.find(
+                                            translation =>
+                                                translation.languageID ==
+                                                result.values.targetLanguage
+                                        );
+                                    if (translation) {
+                                        const text =
+                                            translationContext[key].target;
+                                        if (text) {
+                                            this.context.updateObject(
+                                                translation,
+                                                {
+                                                    text
+                                                }
+                                            );
+                                            updated++;
+                                        }
+                                    }
+                                }
+                            }
+
+                            this.context.undoManager.setCombineCommands(false);
+
+                            notification.info(
+                                `Updated ${updated} translation(s) in language ${result.values.targetLangugage}`
+                            );
                         };
 
                         try {
