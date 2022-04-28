@@ -845,7 +845,14 @@ export class FontSource extends EezObject {
         properties: [
             {
                 name: "filePath",
-                type: PropertyType.RelativeFile
+                type: PropertyType.RelativeFile,
+                fileFilters: [
+                    {
+                        name: "Font files",
+                        extensions: ["ttf", "otf"]
+                    },
+                    { name: "All Files", extensions: ["*"] }
+                ]
             },
             {
                 name: "size",
