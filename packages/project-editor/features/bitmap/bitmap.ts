@@ -131,8 +131,8 @@ export class Bitmap extends EezObject {
                             options: {
                                 filters: [
                                     {
-                                        name: "PNG Image files",
-                                        extensions: ["png"]
+                                        name: "Image files",
+                                        extensions: ["png", "jpg", "jpeg"]
                                     },
                                     { name: "All Files", extensions: ["*"] }
                                 ]
