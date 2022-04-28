@@ -56,7 +56,7 @@ export interface IFieldProperties {
         | "button"
         | typeof FieldComponent;
     unit?: keyof typeof UNITS;
-    enumItems?: EnumItems | (() => EnumItems);
+    enumItems?: EnumItems | ((values: any) => EnumItems);
     defaultValue?: number | string | boolean;
     visible?: (values: any) => boolean;
     options?: any;
@@ -237,7 +237,7 @@ export const GenericDialog = observer(
                 } else if (fieldProperties.type === "enum") {
                     let enumItems;
                     if (typeof fieldProperties.enumItems === "function") {
-                        enumItems = fieldProperties.enumItems();
+                        enumItems = fieldProperties.enumItems(this.fieldValues);
                     } else {
                         enumItems = fieldProperties.enumItems!;
                     }
@@ -456,7 +456,9 @@ export const GenericDialog = observer(
                                     typeof fieldProperties.enumItems ===
                                     "function"
                                 ) {
-                                    enumItems = fieldProperties.enumItems();
+                                    enumItems = fieldProperties.enumItems(
+                                        this.fieldValues
+                                    );
                                 } else {
                                     enumItems = fieldProperties.enumItems!;
                                 }
@@ -526,7 +528,9 @@ export const GenericDialog = observer(
                                     typeof fieldProperties.enumItems ===
                                     "function"
                                 ) {
-                                    enumItems = fieldProperties.enumItems();
+                                    enumItems = fieldProperties.enumItems(
+                                        this.fieldValues
+                                    );
                                 } else {
                                     enumItems = fieldProperties.enumItems!;
                                 }

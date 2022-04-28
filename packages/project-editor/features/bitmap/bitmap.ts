@@ -18,7 +18,7 @@ import { getThemedColor } from "project-editor/features/style/theme";
 
 import { showGenericDialog } from "project-editor/core/util";
 
-import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
+import { RelativeFileInput } from "project-editor/components/FileInput";
 import type { Project } from "project-editor/project/project";
 
 import { metrics } from "project-editor/features/bitmap/metrics";

@@ -37,9 +37,8 @@ interface Rules {
 export const validators = {
     required: (object: any, ruleName: string) => {
         if (
-            object[ruleName] === undefined ||
-            object[ruleName] === null ||
-            object[ruleName].trim() === ""
+            object[ruleName] == undefined ||
+            object[ruleName].toString().trim() === ""
         ) {
             return VALIDATION_MESSAGE_REQUIRED;
         }

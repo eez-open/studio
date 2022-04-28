@@ -106,18 +106,21 @@ export const Glyphs = observer(
         };
 
         render() {
-            const glyphs: JSX.Element[] = this.props.glyphs.map(glyph => (
-                <GlyphComponent
-                    key={getId(glyph)}
-                    glyph={glyph}
-                    isSelected={glyph == this.props.selectedGlyph.get()}
-                    onSelect={this.props.onSelectGlyph.bind(null, glyph)}
-                    onDoubleClick={this.props.onDoubleClickGlyph.bind(
-                        null,
-                        glyph
-                    )}
-                />
-            ));
+            const glyphs: JSX.Element[] = this.props.glyphs
+                .slice()
+                .sort((a, b) => a.encoding - b.encoding)
+                .map(glyph => (
+                    <GlyphComponent
+                        key={getId(glyph)}
+                        glyph={glyph}
+                        isSelected={glyph == this.props.selectedGlyph.get()}
+                        onSelect={this.props.onSelectGlyph.bind(null, glyph)}
+                        onDoubleClick={this.props.onDoubleClickGlyph.bind(
+                            null,
+                            glyph
+                        )}
+                    />
+                ));
 
             let addGlyphButton: JSX.Element | undefined;
             if (!this.props.dialog && this.props.onAddGlyph) {

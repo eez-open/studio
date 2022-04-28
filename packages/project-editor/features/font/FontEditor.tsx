@@ -30,7 +30,7 @@ import {
 } from "project-editor/features/font/utils";
 import { Glyphs } from "./Glyphs";
 
-import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
+import { RelativeFileInput } from "project-editor/components/FileInput";
 import { showGenericDialog } from "project-editor/core/util";
 import { GlyphSelectFieldType } from "project-editor/features/font/GlyphSelectFieldType";
 import { Font, Glyph } from "project-editor/features/font/font";
@@ -286,6 +286,7 @@ export const FontEditor = observer(
 
                             let newGlyph: IEezObject | undefined;
 
+                            let added = 0;
                             for (const glyph of font.glyphs) {
                                 const existingGlyph = this.font.glyphs.find(
                                     existingGlyph =>
@@ -305,6 +306,7 @@ export const FontEditor = observer(
                                     this.font.glyphs,
                                     glyph
                                 ) as Glyph;
+                                added++;
                             }
 
                             this.context.undoManager.setCombineCommands(false);
@@ -315,6 +317,16 @@ export const FontEditor = observer(
                                         newGlyph!
                                     );
                                 });
+                            }
+
+                            if (result.values.addOption === "missing") {
+                                notification.info(
+                                    `Added ${added} glyph(s), not found ${
+                                        missingEncodings.length - added
+                                    } glyph(s)`
+                                );
+                            } else if (result.values.addOption === "range") {
+                                notification.info(`Added ${added} glyph(s)`);
                             }
                         })
                         .catch(err => {

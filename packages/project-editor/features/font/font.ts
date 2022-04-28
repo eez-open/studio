@@ -7,7 +7,7 @@ import { validators } from "eez-studio-shared/validation";
 
 import * as notification from "eez-studio-ui/notification";
 
-import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
+import { RelativeFileInput } from "project-editor/components/FileInput";
 
 import {
     ClassInfo,
