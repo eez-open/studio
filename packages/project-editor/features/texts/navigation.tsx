@@ -241,7 +241,7 @@ export const TextsNavigation = observer(
                             this.context.undoManager.setCombineCommands(false);
 
                             notification.info(
-                                `Updated ${updated} translation(s) in language ${result.values.targetLangugage}`
+                                `Updated ${updated} translation(s) in language ${result.values.targetLanguage}`
                             );
                         };
 
