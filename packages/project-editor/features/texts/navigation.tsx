@@ -142,10 +142,17 @@ export const TextsNavigation = observer(
                             notification.error(err.toString());
                         } else {
                             try {
-                                await writeTextFile(
-                                    result.values.filePath,
-                                    res
-                                );
+                                let filePath: string = result.values.filePath;
+                                if (
+                                    !filePath
+                                        .toLowerCase()
+                                        .endsWith(".xliff") &&
+                                    !filePath.toLowerCase().endsWith(".xlf")
+                                ) {
+                                    filePath += ".xliff";
+                                }
+
+                                await writeTextFile(filePath, res);
                                 notification.info("File saved!");
                             } catch (err) {
                                 notification.error(err.toString());
