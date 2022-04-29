@@ -159,6 +159,8 @@ export class Glyph extends EezObject {
             {
                 name: "source",
                 type: PropertyType.Object,
+                isOptional: true,
+                defaultValue: {},
                 typeClass: GlyphSource,
                 onSelect: (
                     object: IEezObject,

@@ -205,7 +205,7 @@ export const GlyphSelectFieldType = observer(
                     ) : this.isLoading ? (
                         <Loader />
                     ) : (
-                        <span>Unsupported font params.</span>
+                        <span></span>
                     )}
                 </div>
             );

@@ -329,11 +329,12 @@ const Controls = observer(
                         </>
                     )}
 
-                    {this.context.project.texts?.languages.length > 0 && (
-                        <div className="btn-group" role="group">
-                            <SelectLanguage />
-                        </div>
-                    )}
+                    {!this.context.runtime &&
+                        this.context.project.texts?.languages.length > 0 && (
+                            <div className="btn-group" role="group">
+                                <SelectLanguage />
+                            </div>
+                        )}
                 </div>
             );
         }

@@ -726,7 +726,7 @@
       "id": 1,
       "name": "shadow",
       "source": {
-        "filePath": "fonts\\fontawesome-webfont.ttf",
+        "filePath": "Oswald-Medium.ttf",
         "size": 14
       },
       "bpp": 8,
@@ -745,11 +745,6 @@
             "width": 20,
             "height": 20,
             "pixelArray": "0000000000000000000303030303060606060606000000000000030606060a0a0a0a0a0a0a0a0a0a000000000306060a10101010171717171717171700000003060a10171b1e21212828282828282828000003060a101b000000000000000000000000000000060a101b280000000000000000000000000000030a101b28390000000000000000000000000000060a1721364e000000000000000000000000000006101b2c445f000000000000000000000000000306101e324e7000000000000000000000000000030a102139587a00000000000000000000000000060a10213d5f8400000000000000000000000000060a1728405f8b00000000000000000000000000060a172844668b00000000000000000000000000060a172844668b00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000"
-          },
-          "source": {
-            "filePath": "fonts\\fontawesome-webfont.ttf",
-            "size": 14,
-            "encoding": 32
           }
         },
         {
@@ -763,11 +758,6 @@
             "width": 20,
             "height": 20,
             "pixelArray": "06060606060606060606060606060606060606060a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a171717171717171717171717171717171717171728282828282828282828282828282828282828280000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-          },
-          "source": {
-            "filePath": "fonts\\fontawesome-webfont.ttf",
-            "size": 14,
-            "encoding": 33
           }
         },
         {
@@ -781,11 +771,6 @@
             "width": 20,
             "height": 20,
             "pixelArray": "06060606060603030303030000000000000000000a0a0a0a0a0a0a0a0a0a060606030000000000001717171717171717101010100a06060300000000282828282828282821211e1b17100a0603000000000000000000000000000000001b100a0603000000000000000000000000000000281b100a0600000000000000000000000000000039281b100a0300000000000000000000000000004e3621170a0600000000000000000000000000005f442c1b10060000000000000000000000000000704e321e100603000000000000000000000000007a583921100a0300000000000000000000000000845f3d21100a06000000000000000000000000008b5f4028170a06000000000000000000000000008b664428170a06000000000000000000000000008b664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06"
-          },
-          "source": {
-            "filePath": "fonts\\fontawesome-webfont.ttf",
-            "size": 14,
-            "encoding": 34
           }
         },
         {
@@ -799,11 +784,6 @@
             "width": 20,
             "height": 20,
             "pixelArray": "060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000"
-          },
-          "source": {
-            "filePath": "fonts\\fontawesome-webfont.ttf",
-            "size": 14,
-            "encoding": 35
           }
         },
         {
@@ -817,11 +797,6 @@
             "width": 20,
             "height": 20,
             "pixelArray": "000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06"
-          },
-          "source": {
-            "filePath": "fonts\\fontawesome-webfont.ttf",
-            "size": 14,
-            "encoding": 36
           }
         },
         {
@@ -835,11 +810,6 @@
             "width": 20,
             "height": 20,
             "pixelArray": "060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668b00000000000000000000000000060a172844668b00000000000000000000000000060a1728405f8b00000000000000000000000000060a10213d5f84f8000000000000000000000000030a102139587ac5fb00000000000000000000000306101e324e708eb0c8ddeaf4f4fbfbfbfbfbfb0006101b2c445f7a99adbeccd2d6dddddddddddd00060a1721364e667a8e9faab0b4b4b4b4b4b4b400030a101b28394e5f707a84888b8b8b8e8e8e8e0000060a101b2836444e585f5f66666666666666000003060a101b212c32393d404444444444444400000003060a10171b1e21212828282828282828000000000306060a101010101717171717171b1b000000000000030606060a0a0a0a0a0a0a0d0d0d000000000000000000030303030306060a0a0a0a"
-          },
-          "source": {
-            "filePath": "fonts\\fontawesome-webfont.ttf",
-            "size": 14,
-            "encoding": 37
           }
         },
         {
@@ -853,11 +823,6 @@
             "width": 20,
             "height": 20,
             "pixelArray": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000fbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbddddddddddddddddddddddddddddddddddddddddb4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b48e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e6666666666666666666666666666666666666666444444444444444444444444444444444444444428282828282828282828282828282828282828281b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a"
-          },
-          "source": {
-            "filePath": "fonts\\fontawesome-webfont.ttf",
-            "size": 14,
-            "encoding": 38
           }
         },
         {
@@ -871,11 +836,6 @@
             "width": 20,
             "height": 20,
             "pixelArray": "000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008b664428170a06000000000000000000000000008b664428170a06000000000000000000000000008b5f4028170a06000000000000000000000000f8845f3d21100a060000000000000000000000fbc57a583921100a03fbfbfbfbfbfbf4f4eaddc8b08e704e321e100603ddddddddddddd6d2ccbead997a5f442c1b100600b4b4b4b4b4b4b4b0aa9f8e7a664e3621170a06008e8e8e8e8b8b8b88847a705f4e39281b100a0300666666666666665f5f584e4436281b100a06000044444444444444403d39322c211b100a06030000282828282828282821211e1b17100a06030000001b17171717171717101010100a060603000000000d0d0a0a0a0a0a0a0a0a060606030000000000000a0a0a0606060303030303000000000000000000"
-          },
-          "source": {
-            "filePath": "fonts\\fontawesome-webfont.ttf",
-            "size": 14,
-            "encoding": 39
           }
         }
       ],
@@ -884,7 +844,7 @@
     {
       "name": "gui_icons",
       "source": {
-        "filePath": "..\\fonts\\Oswald-Medium.ttf",
+        "filePath": "Oswald-Medium.ttf",
         "size": 14
       },
       "bpp": 8,
@@ -905,7 +865,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 32
           }
@@ -923,7 +883,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 33
           }
@@ -941,7 +901,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 34
           }
@@ -959,7 +919,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 35
           }
@@ -977,7 +937,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 36
           }
@@ -995,7 +955,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 37
           }
@@ -1013,7 +973,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 38
           }
@@ -1031,7 +991,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 39
           }
@@ -1049,7 +1009,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 40
           }
@@ -1067,7 +1027,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 41
           }
@@ -1085,7 +1045,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 42
           }
@@ -1103,7 +1063,7 @@
             "pixelArray": "00000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffff0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000ffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000404040404040404040404000000ffffff0000040404040404040404040100000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff00000000000000000000000000000000"
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 43
           }
@@ -1121,7 +1081,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 44
           }
@@ -1139,7 +1099,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 45
           }
@@ -1157,7 +1117,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 46
           }
@@ -1175,7 +1135,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 47
           }
@@ -1193,7 +1153,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 48
           }
@@ -1211,7 +1171,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 49
           }
@@ -1229,7 +1189,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 50
           }
@@ -1247,7 +1207,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 51
           }
@@ -1265,7 +1225,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 52
           }
@@ -1283,7 +1243,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 53
           }
@@ -1301,7 +1261,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 54
           }
@@ -1319,7 +1279,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 55
           }
@@ -1337,7 +1297,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 56
           }
@@ -1355,7 +1315,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 57
           }
@@ -1373,7 +1333,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 58
           }
@@ -1391,7 +1351,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 59
           }
@@ -1409,7 +1369,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 60
           }
@@ -1427,7 +1387,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 61
           }
@@ -1445,7 +1405,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 62
           }
@@ -1463,7 +1423,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 63
           }
@@ -1481,7 +1441,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 64
           }
@@ -1499,7 +1459,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 65
           }
@@ -1517,7 +1477,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 66
           }
@@ -1535,7 +1495,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 67
           }
@@ -1553,7 +1513,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 68
           }
@@ -1571,7 +1531,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 69
           }
@@ -1589,7 +1549,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 70
           }
@@ -1607,7 +1567,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 71
           }
@@ -1625,7 +1585,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 72
           }
@@ -1643,7 +1603,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 73
           }
@@ -1661,7 +1621,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 74
           }
@@ -1679,7 +1639,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 75
           }
@@ -1697,7 +1657,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 76
           }
@@ -1715,7 +1675,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 77
           }
@@ -1733,7 +1693,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 78
           }
@@ -1751,7 +1711,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 79
           }
@@ -1769,7 +1729,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 80
           }
@@ -1787,7 +1747,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 81
           }
@@ -1805,7 +1765,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 82
           }
@@ -1823,7 +1783,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 83
           }
@@ -1841,7 +1801,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 84
           }
@@ -1859,7 +1819,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 85
           }
@@ -1877,7 +1837,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 86
           }
@@ -1895,7 +1855,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 87
           }
@@ -1913,7 +1873,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 88
           }
@@ -1931,7 +1891,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 89
           }
@@ -1949,7 +1909,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 90
           }
@@ -1967,7 +1927,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 91
           }
@@ -1985,7 +1945,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 92
           }
@@ -2003,7 +1963,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 93
           }
@@ -2021,7 +1981,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 94
           }
@@ -2039,7 +1999,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 95
           }
@@ -2057,7 +2017,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 96
           }
@@ -2075,7 +2035,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 97
           }
@@ -2093,7 +2053,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 98
           }
@@ -2111,7 +2071,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 99
           }
@@ -2129,7 +2089,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 100
           }
@@ -2147,7 +2107,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 101
           }
@@ -2165,7 +2125,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 102
           }
@@ -2183,7 +2143,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 103
           }
@@ -2201,7 +2161,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 104
           }
@@ -2219,7 +2179,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 105
           }
@@ -2237,7 +2197,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 106
           }
@@ -2255,7 +2215,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 107
           }
@@ -2273,7 +2233,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 108
           }
@@ -2291,7 +2251,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 109
           }
@@ -2309,7 +2269,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 110
           }
@@ -2327,7 +2287,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 111
           }
@@ -2345,7 +2305,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 112
           }
@@ -2363,7 +2323,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 113
           }
@@ -2381,7 +2341,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 114
           }
@@ -2399,7 +2359,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 115
           }
@@ -2417,7 +2377,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 116
           }
@@ -2435,7 +2395,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 117
           }
@@ -2453,7 +2413,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 118
           }
@@ -2471,7 +2431,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 119
           }
@@ -2489,7 +2449,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 120
           }
@@ -2507,7 +2467,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 121
           }
@@ -2525,7 +2485,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 122
           }
@@ -2543,7 +2503,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 123
           }
@@ -2561,7 +2521,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 124
           }
@@ -2579,7 +2539,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 125
           }
@@ -2597,7 +2557,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 126
           }
@@ -2615,7 +2575,7 @@
             "pixelArray": ""
           },
           "source": {
-            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "filePath": "Oswald-Medium.ttf",
             "size": 14,
             "encoding": 127
           }
