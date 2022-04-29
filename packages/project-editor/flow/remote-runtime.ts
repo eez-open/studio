@@ -643,8 +643,6 @@ export abstract class DebuggerConnectionBase {
     }
 
     parseDebuggerValue(str: string) {
-        console.log("parseDebuggerValue", str);
-
         if (str == "undefined") {
             return undefined;
         }
@@ -675,26 +673,27 @@ export abstract class DebuggerConnectionBase {
             return `blob (size=${Number.parseInt(str.substring(1))})`;
         }
 
-        if (str[0] == "!") {
-            return new Date(Number.parseFloat(str.substring(1)));
-        }
-
-        if (str[0] == "H") {
-            str = str.slice(1);
-
+        function parseFloat(str: string) {
             const buf = Buffer.alloc(8);
 
             for (let i = 0; i < str.length; i += 2) {
-                buf[i] = parseInt(str.substring(i, i + 2));
+                buf[i / 2] = parseInt(str.substring(i, i + 2), 16);
             }
 
             if (str.length == 16) {
-                console.log(str, buf.readDoubleLE(0));
                 return buf.readDoubleLE(0);
             }
 
-            console.log(str, buf.readFloatLE(0));
             return buf.readFloatLE(0);
+        }
+
+        if (str[0] == "!") {
+            console.log(str);
+            return new Date(parseFloat(str.substring(2)));
+        }
+
+        if (str[0] == "H") {
+            return parseFloat(str.substring(1));
         }
 
         return Number.parseFloat(str);

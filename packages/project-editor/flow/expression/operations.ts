@@ -482,6 +482,28 @@ export const builtInFunctions: {
             return "date";
         }
     },
+    "Date.toString": {
+        arity: 1,
+        args: ["date"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => new Date(args[0]).toISOString(),
+        getValueType: (...args: ValueType[]) => {
+            return "string";
+        }
+    },
+    "Date.fromString": {
+        arity: 1,
+        args: ["dateStr"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => new Date(args[0]).getTime(),
+        getValueType: (...args: ValueType[]) => {
+            return "date";
+        }
+    },
     "Math.sin": {
         arity: 1,
         args: ["value"],

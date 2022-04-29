@@ -30,7 +30,9 @@
         "queue": "cpp",
         "type_traits": "cpp",
         "xhash": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "chrono": "cpp",
+        "sstream": "cpp"
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "workbench.editor.enablePreview": false,
