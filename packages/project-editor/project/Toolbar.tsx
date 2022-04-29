@@ -308,23 +308,31 @@ const Controls = observer(
                             {(this.flowTabState ||
                                 (this.pageTabState &&
                                     !this.pageTabState.frontFace)) && (
-                                <IconAction
-                                    title="Show component descriptions"
-                                    icon="material:comment"
-                                    iconSize={20}
-                                    onClick={action(
-                                        () =>
-                                            (this.context.uiStateStore.showComponentDescriptions =
-                                                !this.context.uiStateStore
-                                                    .showComponentDescriptions)
-                                    )}
-                                    selected={
-                                        this.context.uiStateStore
-                                            .showComponentDescriptions
-                                    }
-                                />
+                                <div className="btn-group" role="group">
+                                    <IconAction
+                                        title="Show component descriptions"
+                                        icon="material:comment"
+                                        iconSize={20}
+                                        onClick={action(
+                                            () =>
+                                                (this.context.uiStateStore.showComponentDescriptions =
+                                                    !this.context.uiStateStore
+                                                        .showComponentDescriptions)
+                                        )}
+                                        selected={
+                                            this.context.uiStateStore
+                                                .showComponentDescriptions
+                                        }
+                                    />
+                                </div>
                             )}
                         </>
+                    )}
+
+                    {this.context.project.texts?.languages.length > 0 && (
+                        <div className="btn-group" role="group">
+                            <SelectLanguage />
+                        </div>
                     )}
                 </div>
             );
@@ -527,6 +535,39 @@ const Search = observer(
                         />
                     </div>
                 </div>
+            );
+        }
+    }
+);
+
+const SelectLanguage = observer(
+    class SelectLanguage extends React.Component {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        render() {
+            return (
+                <select
+                    className="form-select"
+                    value={
+                        this.context.uiStateStore.selectedLanguage.languageID
+                    }
+                    onChange={action(
+                        (event: React.ChangeEvent<HTMLSelectElement>) =>
+                            (this.context.uiStateStore.selectedLanguageID =
+                                event.currentTarget.value)
+                    )}
+                    style={{ width: "fit-content" }}
+                >
+                    {this.context.project.texts.languages.map(language => (
+                        <option
+                            key={language.languageID}
+                            value={language.languageID}
+                        >
+                            {language.languageID}
+                        </option>
+                    ))}
+                </select>
             );
         }
     }

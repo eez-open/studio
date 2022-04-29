@@ -45,6 +45,7 @@ export class LayoutModels {
 
     static LANGUAGES_TAB_ID = "LANGUAGES";
     static TEXT_RESOURCES_TAB_ID = "TEXT_RESOURCES";
+    static TEXTS_STATISTICS_TAB_ID = "TEXTS_STATISTICS";
 
     static DEBUGGER_TAB: FlexLayout.IJsonTabNode = {
         type: "tab",
@@ -664,7 +665,7 @@ export class LayoutModels {
             },
             {
                 name: "texts",
-                version: 4,
+                version: 7,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: [],
@@ -695,6 +696,18 @@ export class LayoutModels {
                                                 name: "Languages",
                                                 id: LayoutModels.LANGUAGES_TAB_ID,
                                                 component: "languages"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Statistics",
+                                                id: LayoutModels.TEXTS_STATISTICS_TAB_ID,
+                                                component: "statistics"
                                             }
                                         ]
                                     }

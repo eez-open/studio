@@ -1,5 +1,5 @@
 import fs from "fs";
-import { makeObservable } from "mobx";
+import { computed, makeObservable } from "mobx";
 import { observable, extendObservable, action, toJS, runInAction } from "mobx";
 
 import { _each } from "eez-studio-shared/algorithm";
@@ -24,6 +24,7 @@ export class UIStateStore {
     pageRuntimeFrontFace: boolean = true;
     showCommandPalette: boolean = false;
     showComponentDescriptions: boolean = true;
+    selectedLanguageID: string;
 
     objectUIStates = new Map<string, any>();
 
@@ -40,6 +41,7 @@ export class UIStateStore {
             pageRuntimeFrontFace: observable,
             showCommandPalette: observable,
             showComponentDescriptions: observable,
+            selectedLanguageID: observable,
             getFeatureParam: action,
             setSelectedBuildConfiguration: action,
             breakpoints: observable,
@@ -48,7 +50,8 @@ export class UIStateStore {
             removeBreakpoint: action,
             enableBreakpoint: action,
             disableBreakpoint: action,
-            watchExpressions: observable
+            watchExpressions: observable,
+            selectedLanguage: computed
         });
     }
 
@@ -128,6 +131,10 @@ export class UIStateStore {
                 this.showComponentDescriptions =
                     uiState.showComponentDescriptions;
             }
+
+            if (uiState.selectedLanguageID != undefined) {
+                this.selectedLanguageID = uiState.selectedLanguageID;
+            }
         });
     }
 
@@ -173,7 +180,8 @@ export class UIStateStore {
                 {}
             ),
             watchExpressions: toJS(this.watchExpressions),
-            showComponentDescriptions: this.showComponentDescriptions
+            showComponentDescriptions: this.showComponentDescriptions,
+            selectedLanguageID: this.selectedLanguageID
         };
 
         return state;
@@ -283,4 +291,15 @@ export class UIStateStore {
     // WATCH EXPRESSIONS
 
     watchExpressions: string[] = [];
+
+    ////////////////////////////////////////
+    get selectedLanguage() {
+        let language = this.DocumentStore.project.texts?.languages.find(
+            language => language.languageID == this.selectedLanguageID
+        );
+        if (!language) {
+            language = this.DocumentStore.project.texts?.languages[0];
+        }
+        return language;
+    }
 }

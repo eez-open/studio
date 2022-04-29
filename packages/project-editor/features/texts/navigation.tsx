@@ -16,6 +16,8 @@ import {
     AbsoluteFileSaveInput
 } from "project-editor/components/FileInput";
 import { readTextFile, writeTextFile } from "eez-studio-shared/util-electron";
+import { LabelWithProgress } from "./LabelWithProgress";
+import { LabelWithInfo } from "./LabelWithInfo";
 
 export const TextsNavigation = observer(
     class TextsNavigation extends NavigationComponent {
@@ -267,6 +269,10 @@ export const TextsNavigation = observer(
         factory = (node: FlexLayout.TabNode) => {
             var component = node.getComponent();
 
+            if (component === "statistics") {
+                return <Statistics />;
+            }
+
             if (component === "resources") {
                 return (
                     <ListNavigation
@@ -306,6 +312,7 @@ export const TextsNavigation = observer(
                                   ]
                                 : undefined
                         }
+                        searchInput={false}
                     />
                 );
             }
@@ -321,6 +328,66 @@ export const TextsNavigation = observer(
                     realtimeResize={true}
                     font={LayoutModels.FONT_SUB}
                 />
+            );
+        }
+    }
+);
+
+export const Statistics = observer(
+    class Statistics extends React.Component {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        get totalStrings() {
+            return (
+                this.context.project.texts.languages.length *
+                this.context.project.texts.resources.length
+            );
+        }
+
+        get numTranslated() {
+            let numTranslated = 0;
+            this.context.project.texts.resources.forEach(textResource =>
+                textResource.translations.forEach(translation => {
+                    if (
+                        translation.text &&
+                        translation.text.trim().length > 0
+                    ) {
+                        numTranslated++;
+                    }
+                })
+            );
+            return numTranslated;
+        }
+
+        get progress() {
+            return this.numTranslated / this.totalStrings;
+        }
+
+        render() {
+            return (
+                <div className="EezStudio_TextsStatistics">
+                    <LabelWithProgress
+                        label="Progress"
+                        progress={this.progress}
+                    />
+                    <LabelWithInfo
+                        label="Available languages"
+                        info={this.context.project.texts.languages.length}
+                    />
+                    <LabelWithInfo
+                        label="Available text resources"
+                        info={this.context.project.texts.resources.length}
+                    />
+                    <LabelWithInfo
+                        label="Total strings"
+                        info={this.totalStrings}
+                    />
+                    <LabelWithInfo
+                        label="No. translations"
+                        info={this.numTranslated}
+                    />
+                </div>
             );
         }
     }

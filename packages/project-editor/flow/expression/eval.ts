@@ -181,6 +181,31 @@ export function evalConstantExpressionNode(
             throw `Not a constant`;
         }
 
+        if (node.type == "TextResource") {
+            const textResource = project.texts.resources.find(
+                textResource => textResource.resourceID == node.value
+            );
+            if (!textResource) {
+                throw `Text resource "${node.value}" not found`;
+            }
+
+            const languageID =
+                project._DocumentStore.uiStateStore.selectedLanguage.languageID;
+
+            const translation = textResource.translations.find(
+                translation => translation.languageID == languageID
+            );
+            if (!translation) {
+                throw `Translation for text resource "${node.value}" and language "${languageID}" not found`;
+            }
+
+            if (!translation.text || translation.text.trim().length == 0) {
+                throw `Translation for text resource "${node.value}" and language "${languageID}" not defined`;
+            }
+
+            return translation.text;
+        }
+
         if (node.type == "BinaryExpression") {
             let operator = binaryOperators[node.operator];
             if (!operator) {

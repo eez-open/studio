@@ -1063,6 +1063,11 @@ export class TreeAdapter implements ITreeAdapter {
     }
 
     itemToString(item: ITreeObjectAdapter) {
+        const classInfo = getClassInfo(item.object);
+        if (classInfo.listLabel) {
+            return classInfo.listLabel(item.object);
+        }
+
         return objectToString(item.object);
     }
 

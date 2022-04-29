@@ -98,14 +98,16 @@ export function isPropertyInError(
     object: IEezObject,
     propertyInfo: PropertyInfo
 ) {
-    return !!getDocumentStore(object)
-        .outputSectionsStore.getSection(Section.CHECKS)
-        .messages.find(
-            message =>
-                message.object &&
-                getParent(message.object) === object &&
-                getKey(message.object) === propertyInfo.name
-        );
+    return (
+        getDocumentStore(object)
+            .outputSectionsStore.getSection(Section.CHECKS)
+            .messages.find(
+                message =>
+                    message.object &&
+                    getParent(message.object) === object &&
+                    getKey(message.object) === propertyInfo.name
+            ) != undefined
+    );
 }
 
 export function isArrayElementPropertyVisible(

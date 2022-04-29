@@ -446,6 +446,30 @@ const alignVerticalProperty: PropertyInfo = {
     inheritable: true
 };
 
+const directionProperty: PropertyInfo = {
+    name: "direction",
+    type: PropertyType.Enum,
+    enumItems: [
+        {
+            id: "ltr"
+        },
+        {
+            id: "rtl"
+        },
+        {
+            id: "initial"
+        },
+        {
+            id: "inherit"
+        }
+    ],
+    defaultValue: undefined,
+    inheritable: true,
+    hideInPropertyGrid: isNotDashboardProject,
+    cssAttributeName: "direction",
+    propertyMenu
+};
+
 const colorProperty: PropertyInfo = {
     name: "color",
     type: PropertyType.ThemedColor,
@@ -672,6 +696,7 @@ const properties = [
     fontStyleProperty,
     alignHorizontalProperty,
     alignVerticalProperty,
+    directionProperty,
     colorProperty,
     backgroundColorProperty,
     backgroundImageProperty,
@@ -772,6 +797,7 @@ export class Style extends EezObject {
     fontStyle?: string;
     alignHorizontal?: string;
     alignVertical?: string;
+    direction?: string;
     color?: string;
     backgroundColor?: string;
     activeColor?: string;
@@ -806,6 +832,7 @@ export class Style extends EezObject {
             fontStyle: observable,
             alignHorizontal: observable,
             alignVertical: observable,
+            direction: observable,
             color: observable,
             backgroundColor: observable,
             activeColor: observable,
@@ -850,6 +877,10 @@ export class Style extends EezObject {
             }),
 
             alignVerticalProperty: computed({
+                keepAlive: true
+            }),
+
+            directionProperty: computed({
                 keepAlive: true
             }),
 
@@ -1115,6 +1146,19 @@ export class Style extends EezObject {
                     ) {
                         messages.push(
                             propertyInvalidValueMessage(style, "alignVertical")
+                        );
+                    }
+
+                    let direction = style.directionProperty;
+                    if (
+                        direction &&
+                        direction != "ltr" &&
+                        direction != "rtl" &&
+                        direction != "initial" &&
+                        direction != "inherit"
+                    ) {
+                        messages.push(
+                            propertyInvalidValueMessage(style, "direction")
                         );
                     }
 
@@ -1543,6 +1587,10 @@ export class Style extends EezObject {
         return getStyleProperty(this, "alignVertical");
     }
 
+    get directionProperty(): string {
+        return getStyleProperty(this, "direction");
+    }
+
     get colorProperty(): string {
         return getStyleProperty(this, "color");
     }
@@ -1649,6 +1697,7 @@ export class Style extends EezObject {
             this.alignHorizontalProperty ===
                 otherStyle.alignHorizontalProperty &&
             this.alignVerticalProperty === otherStyle.alignVerticalProperty &&
+            this.directionProperty === otherStyle.directionProperty &&
             this.colorProperty === otherStyle.colorProperty &&
             this.backgroundColorProperty ===
                 otherStyle.backgroundColorProperty &&
@@ -1679,6 +1728,7 @@ export class Style extends EezObject {
             {
                 selector: "",
                 attrs: [
+                    ["direction", this.direction],
                     ["font-family", this.fontFamily],
                     ["font-weight", this.fontWeight],
                     ["font-style", this.fontStyle],

@@ -257,6 +257,93 @@ function getAnyValue(
     return value || defaultValue;
 }
 
+function getTextValue(
+    flowContext: IFlowContext,
+    widget: Widget,
+    propertyName: string,
+    name: string | undefined,
+    text: string | undefined
+): { text: string; node: React.ReactNode } | string {
+    let data = (widget as any)[propertyName];
+
+    if (
+        flowContext.DocumentStore.project.isDashboardProject ||
+        flowContext.DocumentStore.project.isAppletProject ||
+        flowContext.DocumentStore.project.isFirmwareWithFlowSupportProject
+    ) {
+        if (data) {
+            if (flowContext.flowState) {
+                try {
+                    const value = evalProperty(
+                        flowContext,
+                        widget,
+                        propertyName
+                    );
+
+                    if (typeof value == "string" || typeof value == "number") {
+                        return value.toString();
+                    }
+                    return "";
+                } catch (err) {
+                    //console.error(err);
+                    return "";
+                }
+            }
+
+            if (flowContext.DocumentStore.runtime) {
+                return "";
+            }
+
+            if (name) {
+                return name;
+            }
+
+            try {
+                const result = evalConstantExpression(
+                    ProjectEditor.getProject(widget),
+                    data
+                );
+                if (typeof result.value === "string") {
+                    return result.value;
+                }
+            } catch (err) {}
+
+            return {
+                text: data,
+                node: <span className="expression">{data}</span>
+            };
+        }
+
+        if (flowContext.flowState) {
+            return "";
+        }
+
+        if (name) {
+            return name;
+        }
+
+        return "<no text>";
+    }
+
+    if (text) {
+        return text;
+    }
+
+    if (name) {
+        return name;
+    }
+
+    if (data) {
+        const result = flowContext.dataContext.get(data);
+        if (result != undefined) {
+            return result;
+        }
+        return data;
+    }
+
+    return "<no text>";
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildWidgetText(
@@ -1966,9 +2053,12 @@ export class TextWidget extends Widget {
                 }
 
                 try {
-                    const result = evalProperty(flowContext, this, "data");
-                    if (typeof result === "string") {
-                        return result;
+                    const result = evalConstantExpression(
+                        flowContext.DocumentStore.project,
+                        this.data
+                    );
+                    if (typeof result.value === "string") {
+                        return result.value;
                     }
                 } catch (err) {}
 
@@ -2410,88 +2500,14 @@ export class MultilineTextWidget extends Widget {
         });
     }
 
-    getText(
-        flowContext: IFlowContext
-    ): { text: string; node: React.ReactNode } | string {
-        if (
-            flowContext.DocumentStore.project.isDashboardProject ||
-            flowContext.DocumentStore.project.isAppletProject ||
-            flowContext.DocumentStore.project.isFirmwareWithFlowSupportProject
-        ) {
-            if (this.data) {
-                if (flowContext.flowState) {
-                    try {
-                        const value = evalProperty(flowContext, this, "data");
-
-                        if (
-                            typeof value == "string" ||
-                            typeof value == "number"
-                        ) {
-                            return value.toString();
-                        }
-                        return "";
-                    } catch (err) {
-                        //console.error(err);
-                        return "";
-                    }
-                }
-
-                if (flowContext.DocumentStore.runtime) {
-                    return "";
-                }
-
-                if (this.name) {
-                    return this.name;
-                }
-
-                try {
-                    const result = evalConstantExpression(
-                        ProjectEditor.getProject(this),
-                        this.data
-                    );
-                    if (typeof result.value === "string") {
-                        return result.value;
-                    }
-                } catch (err) {}
-
-                return {
-                    text: this.data,
-                    node: <span className="expression">{this.data}</span>
-                };
-            }
-
-            if (flowContext.flowState) {
-                return "";
-            }
-
-            if (this.name) {
-                return this.name;
-            }
-
-            return "<no text>";
-        }
-
-        if (this.text) {
-            return this.text;
-        }
-
-        if (this.name) {
-            return this.name;
-        }
-
-        if (this.data) {
-            const result = flowContext.dataContext.get(this.data);
-            if (result != undefined) {
-                return result;
-            }
-            return this.data;
-        }
-
-        return "<no text>";
-    }
-
     render(flowContext: IFlowContext) {
-        const result = this.getText(flowContext);
+        const result = getTextValue(
+            flowContext,
+            this,
+            "data",
+            this.name,
+            this.text
+        );
         let text: string;
         let node: React.ReactNode | null;
         if (typeof result == "object") {
@@ -3036,77 +3052,18 @@ export class ButtonWidget extends Widget {
         });
     }
 
-    getText(
-        flowContext: IFlowContext
-    ): { text: string; node: React.ReactNode } | string {
-        if (
-            flowContext.DocumentStore.project.isDashboardProject ||
-            flowContext.DocumentStore.project.isAppletProject ||
-            flowContext.DocumentStore.project.isFirmwareWithFlowSupportProject
-        ) {
-            if (this.data) {
-                if (flowContext.flowState) {
-                    try {
-                        const value = evalProperty(flowContext, this, "data");
-
-                        if (value != null && value != undefined) {
-                            return value;
-                        }
-                        return "";
-                    } catch (err) {
-                        //console.error(err);
-                        return "";
-                    }
-                }
-
-                if (flowContext.DocumentStore.runtime) {
-                    return "";
-                }
-
-                try {
-                    const result = evalConstantExpression(
-                        ProjectEditor.getProject(this),
-                        this.data
-                    );
-                    if (typeof result.value === "string") {
-                        return result.value;
-                    }
-                } catch (err) {}
-
-                return {
-                    text: this.data,
-                    node: <span className="expression">{this.data}</span>
-                };
-            }
-
-            if (flowContext.flowState) {
-                return "";
-            }
-
-            return "<no text>";
-        }
-
-        if (this.data) {
-            const result = flowContext.dataContext.get(this.data);
-            if (result != undefined) {
-                return result;
-            }
-            return this.data;
-        }
-
-        if (this.text) {
-            return this.text;
-        }
-
-        return "<no text>";
-    }
-
     getClassName() {
         return classNames("eez-widget-component", this.type);
     }
 
     render(flowContext: IFlowContext) {
-        const result = this.getText(flowContext);
+        const result = getTextValue(
+            flowContext,
+            this,
+            "data",
+            undefined,
+            this.text
+        );
         let text: string;
         let node: React.ReactNode | null;
         if (typeof result == "object") {

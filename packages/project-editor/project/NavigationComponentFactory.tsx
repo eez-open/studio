@@ -208,6 +208,11 @@ export function getNavigationObject(
         return ancestor;
     }
 
+    ancestor = getAncestorOfType(object, TextResource.classInfo);
+    if (ancestor) {
+        return ancestor;
+    }
+
     return undefined;
 }
 

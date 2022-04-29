@@ -4,7 +4,9 @@ import React from "react";
 import {
     ClassInfo,
     EezObject,
+    getParent,
     IEezObject,
+    MessageType,
     PropertyProps,
     PropertyType,
     registerClass
@@ -15,7 +17,19 @@ import { validators } from "eez-studio-shared/validation";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { observer } from "mobx-react";
 import { ProjectContext } from "project-editor/project/context";
-import { addObject, deleteObject, updateObject } from "project-editor/store";
+import {
+    addObject,
+    deleteObject,
+    getChildOfObject,
+    Message,
+    updateObject
+} from "project-editor/store";
+import classNames from "classnames";
+import {
+    isHighlightedProperty,
+    isPropertyInError
+} from "project-editor/components/PropertyGrid/utils";
+import { LabelWithProgress } from "./LabelWithProgress";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -49,6 +63,17 @@ export class Language extends EezObject {
             }
         ],
         label: (language: Language) => language.languageID,
+        listLabel: (language: Language) => {
+            const project = ProjectEditor.getProject(language);
+            return (
+                <LabelWithProgress
+                    label={language.languageID}
+                    progress={
+                        language.translated / project.texts.resources.length
+                    }
+                ></LabelWithProgress>
+            );
+        },
         newItem: (parent: IEezObject) => {
             return showGenericDialog({
                 dialogDefinition: {
@@ -114,6 +139,23 @@ export class Language extends EezObject {
             languageID: observable
         });
     }
+
+    get translated() {
+        const project = ProjectEditor.getProject(this);
+        let numTranslated = 0;
+        project.texts.resources.forEach(textResource =>
+            textResource.translations.forEach(translation => {
+                if (
+                    translation.languageID == this.languageID &&
+                    translation.text &&
+                    translation.text.trim().length > 0
+                ) {
+                    numTranslated++;
+                }
+            })
+        );
+        return numTranslated;
+    }
 }
 
 registerClass("Language", Language);
@@ -136,6 +178,25 @@ class Translation extends EezObject {
         defaultValue: {
             languageID: "",
             text: ""
+        },
+        check: (translation: Translation) => {
+            let messages: Message[] = [];
+
+            if (!translation.text?.trim()) {
+                const textResource = getParent(
+                    getParent(translation)
+                ) as TextResource;
+
+                messages.push(
+                    new Message(
+                        MessageType.WARNING,
+                        `"${textResource.resourceID}" not translated`,
+                        getChildOfObject(translation, "languageID")
+                    )
+                );
+            }
+
+            return messages;
         }
     };
 
@@ -157,26 +218,59 @@ const TranslationsEditorPropertyUI = observer(
         render() {
             const textResource = this.props.objects[0] as TextResource;
 
+            const languageIDPropertyInfo =
+                Translation.classInfo.properties.find(
+                    propertyInfo => propertyInfo.name == "languageID"
+                )!;
+
             return (
                 <table className="EezStudio_TextResource_Translations">
                     <tbody>
-                        {textResource.translations.map(translation => (
-                            <tr key={translation.languageID}>
-                                <td>{translation.languageID}</td>
-                                <td>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={translation.text}
-                                        onChange={event => {
-                                            updateObject(translation, {
-                                                text: event.target.value
-                                            });
+                        {this.context.project.texts.languages.map(language => {
+                            const translation = textResource.translations.find(
+                                translation =>
+                                    translation.languageID ==
+                                    language.languageID
+                            )!;
+
+                            const className = classNames({
+                                inError: isPropertyInError(
+                                    translation,
+                                    languageIDPropertyInfo
+                                ),
+                                highlighted: isHighlightedProperty(
+                                    translation,
+                                    languageIDPropertyInfo
+                                )
+                            });
+
+                            return (
+                                <tr
+                                    key={translation.languageID}
+                                    className={className}
+                                >
+                                    <td
+                                        style={{
+                                            whiteSpace: "nowrap"
                                         }}
-                                    ></input>
-                                </td>
-                            </tr>
-                        ))}
+                                    >
+                                        {translation.languageID}
+                                    </td>
+                                    <td>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            value={translation.text}
+                                            onChange={event => {
+                                                updateObject(translation, {
+                                                    text: event.target.value
+                                                });
+                                            }}
+                                        ></input>
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             );
@@ -203,6 +297,17 @@ export class TextResource extends EezObject {
             }
         ],
         label: (textResource: TextResource) => textResource.resourceID,
+        listLabel: (textResource: TextResource) => {
+            const project = ProjectEditor.getProject(textResource);
+            return (
+                <LabelWithProgress
+                    label={textResource.resourceID}
+                    progress={
+                        textResource.translated / project.texts.languages.length
+                    }
+                ></LabelWithProgress>
+            );
+        },
         newItem: (parent: IEezObject) => {
             return showGenericDialog({
                 dialogDefinition: {
@@ -246,6 +351,16 @@ export class TextResource extends EezObject {
             resourceID: observable,
             translations: observable
         });
+    }
+
+    get translated() {
+        let numTranslated = 0;
+        this.translations.forEach(translation => {
+            if (translation.text && translation.text.trim().length > 0) {
+                numTranslated++;
+            }
+        });
+        return numTranslated;
     }
 }
 

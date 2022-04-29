@@ -2657,6 +2657,7 @@ button.EezStudio_Action {
     }
 
     &.zero-level .tree-row-label {
+        display: block !important;
         margin-left: 0 !important;
     }
 
@@ -5147,6 +5148,13 @@ button.EezStudio_Action {
 .EezStudio_TextResource_Translations {
     margin: 10px 0;
 
+    tr.inError {
+        background-color: #ffcccc;
+    }
+    tr.highlighted {
+        background-color: #ff6666;
+    }
+
     td:first-child {
         padding-right: 10px;
     }
@@ -5157,4 +5165,35 @@ button.EezStudio_Action {
             width: 100%;
         }
     }
+}
+
+.EezStudio_LabelWithProgress {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    .label1 {
+        overflow: hidden;
+    }
+    .progress1 {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        progress {
+            width: 60px;
+            margin-right: 5px;
+        }
+    }
+}
+
+.EezStudio_LabelWithInfo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    .label1 {
+        overflow: hidden;
+    }
+}
+
+.EezStudio_TextsStatistics {
+    margin: 10px;
 }
