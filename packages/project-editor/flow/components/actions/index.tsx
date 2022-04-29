@@ -3067,21 +3067,55 @@ const TrixEditor = observer(
                 const trixToolbar =
                     trixEditor.parentElement?.querySelector("trix-toolbar");
                 if (trixToolbar instanceof HTMLElement) {
-                    trixToolbar.style.visibility = "";
+                    if (
+                        !document.activeElement?.classList.contains(
+                            "trix-input"
+                        )
+                    ) {
+                        trixToolbar.style.visibility = "";
+                    }
                 }
 
                 if (trixEditor.innerHTML != value) {
                     setValue(trixEditor.innerHTML);
                 }
             };
+            const onAttachmentAdd = (event: any) => {
+                const reader = new FileReader();
+                reader.addEventListener(
+                    "load",
+                    function () {
+                        event.attachment.setAttributes({
+                            url: reader.result
+                        });
+
+                        (trixEditor as any).editor.loadHTML(
+                            trixEditor.innerHTML
+                        );
+                    },
+                    false
+                );
+                reader.readAsDataURL(event.attachment.file);
+            };
+
             trixEditor.addEventListener("trix-change", onChange, false);
             trixEditor.addEventListener("trix-focus", onFocus, false);
             trixEditor.addEventListener("trix-blur", onBlur, false);
+            trixEditor.addEventListener(
+                "trix-attachment-add",
+                onAttachmentAdd,
+                false
+            );
 
             return () => {
                 trixEditor.removeEventListener("trix-change", onChange, false);
                 trixEditor.removeEventListener("trix-focus", onFocus, false);
                 trixEditor.removeEventListener("trix-blur", onBlur, false);
+                trixEditor.removeEventListener(
+                    "trix-attachment-add",
+                    onAttachmentAdd,
+                    false
+                );
             };
         }, [value]);
 
