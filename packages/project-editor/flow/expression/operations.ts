@@ -3,6 +3,10 @@ import type { ValueType } from "project-editor/features/variable/value-type";
 import type { IExpressionContext } from "project-editor/flow/expression";
 import type { DocumentStoreClass } from "project-editor/store";
 
+function roundN(value: number, decimals: number) {
+    return Number(Math.round(Number(value + "e" + decimals)) + "e-" + decimals);
+}
+
 export const binaryOperators: {
     [operator: string]: {
         name: string;
@@ -629,12 +633,12 @@ export const builtInFunctions: {
         }
     },
     "Math.round": {
-        arity: 1,
-        args: ["value"],
+        arity: { min: 1, max: 2 },
+        args: ["value", "numOfDigits"],
         eval: (
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
-        ) => Math.round(args[0]),
+        ) => (args.length == 1 ? roundN(args[0], 0) : roundN(args[0], args[1])),
         getValueType: (...args: ValueType[]) => {
             if (
                 args[0] != "integer" &&

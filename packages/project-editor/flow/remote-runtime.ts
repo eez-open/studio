@@ -643,6 +643,8 @@ export abstract class DebuggerConnectionBase {
     }
 
     parseDebuggerValue(str: string) {
+        console.log("parseDebuggerValue", str);
+
         if (str == "undefined") {
             return undefined;
         }
@@ -675,6 +677,24 @@ export abstract class DebuggerConnectionBase {
 
         if (str[0] == "!") {
             return new Date(Number.parseFloat(str.substring(1)));
+        }
+
+        if (str[0] == "H") {
+            str = str.slice(1);
+
+            const buf = Buffer.alloc(8);
+
+            for (let i = 0; i < str.length; i += 2) {
+                buf[i] = parseInt(str.substring(i, i + 2));
+            }
+
+            if (str.length == 16) {
+                console.log(str, buf.readDoubleLE(0));
+                return buf.readDoubleLE(0);
+            }
+
+            console.log(str, buf.readFloatLE(0));
+            return buf.readFloatLE(0);
         }
 
         return Number.parseFloat(str);

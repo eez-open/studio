@@ -319,6 +319,15 @@ function buildExpressionNode(
                 ],
                 []
             ),
+            ...(typeof builtInFunction.arity == "object"
+                ? [
+                      makePushConstantInstruction(
+                          assets,
+                          node.arguments.length,
+                          "integer"
+                      )
+                  ]
+                : []),
             makeOperationInstruction(operationIndexes[functionName])
         ];
     }

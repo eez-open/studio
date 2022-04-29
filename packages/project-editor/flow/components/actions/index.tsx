@@ -1731,6 +1731,20 @@ export class LogActionComponent extends ActionComponent {
             }
         ];
     }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        if (
+            this.value === "value" &&
+            this.customInputs.find(customInput => customInput.name === "value")
+        ) {
+            return null;
+        }
+        return (
+            <div className="body">
+                <pre>{this.value}</pre>
+            </div>
+        );
+    }
 }
 
 registerClass("LogActionComponent", LogActionComponent);
