@@ -374,22 +374,24 @@ export class WasmRuntime extends RemoteRuntime {
             );
             if (objectVariableType) {
                 if (value == null) {
-                    const constructorParams =
-                        await objectVariableType.editConstructorParams(
-                            variable,
-                            undefined
-                        );
+                    if (objectVariableType.editConstructorParams) {
+                        const constructorParams =
+                            await objectVariableType.editConstructorParams(
+                                variable,
+                                undefined
+                            );
 
-                    if (constructorParams) {
-                        value = objectVariableType.createValue(
-                            constructorParams,
-                            true
-                        );
+                        if (constructorParams) {
+                            value = objectVariableType.createValue(
+                                constructorParams,
+                                true
+                            );
 
-                        this.DocumentStore.dataContext.set(
-                            variable.name,
-                            value
-                        );
+                            this.DocumentStore.dataContext.set(
+                                variable.name,
+                                value
+                            );
+                        }
                     }
                 }
 
@@ -398,7 +400,7 @@ export class WasmRuntime extends RemoteRuntime {
                         this.assetsMap.typeIndexes[variable.type],
                         value,
                         this.assetsMap,
-                        objectVariableType
+                        getObjectVariableTypeFromType
                     );
 
                     this.globalVariables.push({
@@ -417,7 +419,7 @@ export class WasmRuntime extends RemoteRuntime {
                         this.assetsMap.typeIndexes[variable.type],
                         value,
                         this.assetsMap,
-                        undefined
+                        getObjectVariableTypeFromType
                     );
 
                     this.globalVariables.push({
@@ -469,7 +471,7 @@ export class WasmRuntime extends RemoteRuntime {
                     this.assetsMap.typeIndexes[objectVariable.variable.type],
                     objectVariable.objectVariableValue,
                     this.assetsMap,
-                    objectVariable.objectVariableType
+                    getObjectVariableTypeFromType
                 );
 
                 if (isDifferent(oldArrayValue, newArrayValue)) {
@@ -710,7 +712,7 @@ export class WasmRuntime extends RemoteRuntime {
             valueTypeIndex,
             value,
             this.assetsMap,
-            undefined
+            getObjectVariableTypeFromType
         );
 
         if (arrayValue == undefined) {
@@ -729,11 +731,31 @@ export class WasmRuntime extends RemoteRuntime {
     }
 
     createObjectValue(valueType: ValueType, value: any): any {
-        return createJsArrayValue(
-            this.assetsMap.typeIndexes[valueType],
-            value,
-            this.assetsMap,
-            getObjectVariableTypeFromType(valueType)
+        function toValue(arrayValue: ArrayValue) {
+            const result: any[] = [];
+            for (let i = 0; i < arrayValue.values.length; i++) {
+                const fieldValue = arrayValue.values[i];
+                if (
+                    fieldValue == null ||
+                    typeof fieldValue == "boolean" ||
+                    typeof fieldValue === "number" ||
+                    typeof fieldValue === "string"
+                ) {
+                    result[i] = fieldValue;
+                } else {
+                    result[i] = toValue(fieldValue);
+                }
+            }
+            return result;
+        }
+
+        return toValue(
+            createJsArrayValue(
+                this.assetsMap.typeIndexes[valueType],
+                value,
+                this.assetsMap,
+                getObjectVariableTypeFromType
+            )
         );
     }
 

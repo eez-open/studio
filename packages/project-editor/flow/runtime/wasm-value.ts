@@ -44,7 +44,9 @@ export function createJsArrayValue(
     valueTypeIndex: number,
     value: any,
     assetsMap: AssetsMap,
-    objectVariableType: IObjectVariableType | undefined
+    getObjectVariableTypeFromType:
+        | ((type: string) => IObjectVariableType | undefined)
+        | undefined
 ): ArrayValue {
     function createArrayValue(
         valueTypeIndex: number,
@@ -133,6 +135,12 @@ export function createJsArrayValue(
             valueTypeIndex,
             values
         };
+    }
+
+    let objectVariableType;
+    if (getObjectVariableTypeFromType) {
+        const type = assetsMap.types[valueTypeIndex];
+        objectVariableType = getObjectVariableTypeFromType(type.valueType);
     }
 
     return createArrayValue(

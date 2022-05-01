@@ -95,19 +95,21 @@ const GlobalVariableStatuses = observer(
                             variable={variable}
                             value={objectVariableValue}
                             onClick={async () => {
-                                const constructorParams =
-                                    await objectVariableType.editConstructorParams(
-                                        variable,
-                                        objectVariableValue?.constructorParams
-                                    );
-                                if (constructorParams !== undefined) {
-                                    this.context.dataContext.set(
-                                        variable.name,
-                                        objectVariableType.createValue(
-                                            constructorParams,
-                                            !!this.context.runtime
-                                        )
-                                    );
+                                if (objectVariableType.editConstructorParams) {
+                                    const constructorParams =
+                                        await objectVariableType.editConstructorParams(
+                                            variable,
+                                            objectVariableValue?.constructorParams
+                                        );
+                                    if (constructorParams !== undefined) {
+                                        this.context.dataContext.set(
+                                            variable.name,
+                                            objectVariableType.createValue(
+                                                constructorParams,
+                                                !!this.context.runtime
+                                            )
+                                        );
+                                    }
                                 }
                             }}
                         />

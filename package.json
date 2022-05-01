@@ -23,7 +23,7 @@
         "tslint": "tslint --project ./tsconfig.json 'packages/**/*.{ts,tsx}'",
         "tsc-version": "tsc --version",
         "electron-version": "electron --version",
-        "publish-types": "npm publish packages/eez-studio-types",
+        "publish-types": "cd packages/eez-studio-types && npm publish",
         "pack": "electron-builder --dir",
         "dist": "electron-builder",
         "build-dev-bundle": "node build-dev-bundle.js",

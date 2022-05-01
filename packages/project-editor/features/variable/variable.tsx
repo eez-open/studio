@@ -237,7 +237,7 @@ export const RenderVariableStatusPropertyUI = observer(
                     value={objectVariableValue}
                     onClick={async () => {
                         const constructorParams =
-                            await objectVariableType.editConstructorParams(
+                            await objectVariableType.editConstructorParams!(
                                 variable,
                                 objectVariableValue?.constructorParams
                             );
@@ -377,7 +377,9 @@ export class Variable extends EezObject {
                 hideInPropertyGrid: (variable: Variable) =>
                     !variable.persistent ||
                     !isObjectType(variable.type) ||
-                    !isGlobalVariable(variable)
+                    !isGlobalVariable(variable) ||
+                    !getObjectVariableTypeFromType(variable.type)
+                        ?.editConstructorParams
             }
         ],
         label: (variable: Variable) => {
