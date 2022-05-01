@@ -224,6 +224,10 @@ export function getValueLabel(
         return `${value.length} element(s)`;
     }
 
+    if (value instanceof Date) {
+        return value.toString();
+    }
+
     if (typeof value == "object") {
         try {
             return JSON.stringify(value);

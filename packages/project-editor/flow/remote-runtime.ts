@@ -689,7 +689,9 @@ export abstract class DebuggerConnectionBase {
 
         if (str[0] == "!") {
             console.log(str);
-            return new Date(parseFloat(str.substring(2)));
+            const time = parseFloat(str.substring(2));
+            console.log(time, Date.now());
+            return new Date(time);
         }
 
         if (str[0] == "H") {
