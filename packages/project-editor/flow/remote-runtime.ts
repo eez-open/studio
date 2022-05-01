@@ -688,7 +688,6 @@ export abstract class DebuggerConnectionBase {
         }
 
         if (str[0] == "!") {
-            console.log(str);
             const time = parseFloat(str.substring(2));
             console.log(time, Date.now());
             return new Date(time);

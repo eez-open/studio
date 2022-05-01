@@ -61,7 +61,13 @@ void executeDashboardComponent(uint16_t componentType, int flowStateIndex, int c
     }, componentType, flowStateIndex, componentIndex);
 }
 
-void stopScript() {
+void onArrayValueFree(eez::gui::ArrayValue *arrayValue) {
+    EM_ASM({
+        onArrayValueFree($0);
+    }, arrayValue);
+}
+
+EM_PORT_API(void) stopScript() {
     eez::flow::stop();
 }
 
@@ -77,6 +83,8 @@ EM_PORT_API(void) init(uint8_t *assets, uint32_t assetsSize, uint32_t displayWid
 
     eez::initMemory();
     eez::initAllocHeap(eez::ALLOC_BUFFER, eez::ALLOC_BUFFER_SIZE);
+
+    eez::gui::g_hooks.onArrayValueFreeHook = onArrayValueFree;
 
     eez::flow::startToDebuggerMessageHook = startToDebuggerMessage;
     eez::flow::writeDebuggerBufferHook = writeDebuggerBuffer;

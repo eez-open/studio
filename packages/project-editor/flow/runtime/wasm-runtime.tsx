@@ -50,6 +50,7 @@ import { makeObservable, observable, runInAction } from "mobx";
 import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
 import type {
     IObjectVariableType,
+    IObjectVariableValueConstructorParams,
     IVariable,
     ValueType
 } from "eez-studio-types";
@@ -213,6 +214,14 @@ export class WasmRuntime extends RemoteRuntime {
         }
     }
 
+    stop() {
+        const message: RendererToWorkerMessage = {};
+
+        message.stopScript = true;
+
+        this.worker.postMessage(message);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////
 
     onWorkerMessage = async (e: { data: WorkerToRenderMessage }) => {
@@ -304,6 +313,23 @@ export class WasmRuntime extends RemoteRuntime {
                         console.error("UNEXPECTED!");
                     }
                 }
+            }
+
+            if (e.data.freeArrayValue) {
+                const valueType = e.data.freeArrayValue.valueType;
+
+                const objectVariableType =
+                    getObjectVariableTypeFromType(valueType);
+                if (objectVariableType) {
+                    const value = objectVariableType.createValue(
+                        e.data.freeArrayValue
+                            .value as IObjectVariableValueConstructorParams,
+                        true
+                    );
+                    objectVariableType.destroyValue(value);
+                }
+
+                return;
             }
 
             this.screen = e.data.screen;
@@ -731,32 +757,24 @@ export class WasmRuntime extends RemoteRuntime {
     }
 
     createObjectValue(valueType: ValueType, value: any): any {
-        function toValue(arrayValue: ArrayValue) {
-            const result: any[] = [];
-            for (let i = 0; i < arrayValue.values.length; i++) {
-                const fieldValue = arrayValue.values[i];
-                if (
-                    fieldValue == null ||
-                    typeof fieldValue == "boolean" ||
-                    typeof fieldValue === "number" ||
-                    typeof fieldValue === "string"
-                ) {
-                    result[i] = fieldValue;
-                } else {
-                    result[i] = toValue(fieldValue);
-                }
-            }
-            return result;
+        const objectValueType = getObjectVariableTypeFromType(valueType);
+
+        if (!objectValueType) {
+            return null;
         }
 
-        return toValue(
-            createJsArrayValue(
-                this.assetsMap.typeIndexes[valueType],
-                value,
-                this.assetsMap,
-                getObjectVariableTypeFromType
-            )
-        );
+        const result: any = {};
+
+        for (
+            let i = 0;
+            i < objectValueType.valueFieldDescriptions.length;
+            i++
+        ) {
+            const field = objectValueType.valueFieldDescriptions[i];
+            result[field.name] = field.getFieldValue(value);
+        }
+
+        return result;
     }
 
     sendResultToWorker(messageId: number, result: any, finalResult: boolean) {

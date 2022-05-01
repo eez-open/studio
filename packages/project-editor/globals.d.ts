@@ -211,4 +211,6 @@ declare const WasmFlowRuntime: {
     _getNextSiblingFlowState(flowStateIndex: number): number;
 
     _getFlowStateFlowIndex(flowStateIndex: number): number;
+
+    _stopScript(): void;
 };

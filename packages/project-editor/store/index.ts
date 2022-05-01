@@ -853,11 +853,15 @@ export class DocumentStoreClass {
     }
 
     onSetEditorMode = () => {
-        this.setEditorMode();
-        this.layoutModels.selectTab(
-            this.layoutModels.root,
-            LayoutModels.PROPERTIES_TAB_ID
-        );
+        if (this.runtime && !this.runtime.isStopped) {
+            this.runtime.stop();
+        } else {
+            this.setEditorMode();
+            this.layoutModels.selectTab(
+                this.layoutModels.root,
+                LayoutModels.PROPERTIES_TAB_ID
+            );
+        }
     };
 
     onSetRuntimeMode = async () => {

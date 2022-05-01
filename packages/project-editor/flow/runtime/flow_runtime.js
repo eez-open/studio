@@ -1729,7 +1729,8 @@ var ASM_CONSTS = {
  65479: function($0, $1) {writeDebuggerBuffer(new Uint8Array(Module.HEAPU8.buffer, $0, $1));},  
  65550: function() {finishToDebuggerMessage();},  
  65581: function($0, $1, $2) {executeDashboardComponent($0, $1, $2);},  
- 65624: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
+ 65624: function($0) {onArrayValueFree($0);},  
+ 65650: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
 };
 
 
@@ -6213,6 +6214,9 @@ var _onMouseWheelEvent = Module["_onMouseWheelEvent"] = createExportWrapper("onM
 
 /** @type {function(...*):?} */
 var _onScpiResult = Module["_onScpiResult"] = createExportWrapper("onScpiResult");
+
+/** @type {function(...*):?} */
+var _stopScript = Module["_stopScript"] = createExportWrapper("stopScript");
 
 /** @type {function(...*):?} */
 var _init = Module["_init"] = createExportWrapper("init");

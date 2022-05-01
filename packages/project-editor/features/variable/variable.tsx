@@ -367,7 +367,11 @@ export class Variable extends EezObject {
                 name: "persistent",
                 type: PropertyType.Boolean,
                 hideInPropertyGrid: (variable: Variable) =>
-                    !isGlobalVariable(variable) || variable.native
+                    !isGlobalVariable(variable) ||
+                    variable.native ||
+                    (isObjectType(variable.type) &&
+                        !getObjectVariableTypeFromType(variable.type)
+                            ?.editConstructorParams)
             },
             {
                 name: "persistedValue",

@@ -25,6 +25,8 @@ export interface WorkerToRenderMessage {
     propertyValues?: IPropertyValue[];
 
     componentMessages?: IMessageFromWorker[];
+
+    freeArrayValue?: ObjectOrArrayValueWithType;
 }
 
 // message data sent from renderer to WASM worker
@@ -77,6 +79,8 @@ export interface RendererToWorkerMessage {
         result: any;
         finalResult: boolean;
     };
+
+    stopScript?: boolean;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

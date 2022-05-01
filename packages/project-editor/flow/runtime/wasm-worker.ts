@@ -81,10 +81,19 @@ function executeDashboardComponent(
     }
 }
 
+function onArrayValueFree(ptr: number) {
+    const arrayValue = getArrayValue(ptr);
+    const data: WorkerToRenderMessage = {
+        freeArrayValue: arrayValue
+    };
+    postMessage(data);
+}
+
 (global as any).startToDebuggerMessage = startToDebuggerMessage;
 (global as any).writeDebuggerBuffer = writeDebuggerBuffer;
 (global as any).finishToDebuggerMessage = finishToDebuggerMessage;
 (global as any).executeDashboardComponent = executeDashboardComponent;
+(global as any).onArrayValueFree = onArrayValueFree;
 (global as any).executeScpi = executeScpi;
 
 function initObjectGlobalVariableValues(globalVariables: IGlobalVariable[]) {
@@ -227,6 +236,11 @@ onmessage = async function (e: { data: RendererToWorkerMessage }) {
         } else {
             console.error("Unexpected: there is no worker callback");
         }
+        return;
+    }
+
+    if (e.data.stopScript) {
+        WasmFlowRuntime._stopScript();
         return;
     }
 
