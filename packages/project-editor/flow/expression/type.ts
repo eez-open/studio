@@ -333,11 +333,17 @@ export function checkArity(functionName: string, node: ExpressionNode) {
     const arity = builtInFunctions[functionName].arity;
 
     if (typeof arity == "object") {
-        if (
-            node.arguments.length < arity.min ||
-            node.arguments.length > arity.max
-        ) {
-            throw `In function '${functionName}' call expected ${arity.min} to ${arity.max} arguments, but got ${node.arguments.length}`;
+        if (arity.max != undefined) {
+            if (
+                node.arguments.length < arity.min ||
+                node.arguments.length > arity.max
+            ) {
+                throw `In function '${functionName}' call expected ${arity.min} to ${arity.max} arguments, but got ${node.arguments.length}`;
+            }
+        } else {
+            if (node.arguments.length < arity.min) {
+                throw `In function '${functionName}' call expected at least ${arity.min} arguments, but got ${node.arguments.length}`;
+            }
         }
     } else {
         if (node.arguments.length != arity) {

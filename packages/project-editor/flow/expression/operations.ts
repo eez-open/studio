@@ -330,7 +330,7 @@ export const CONDITIONAL_OPERATOR = "conditional"; // {test} ? {consequent} : {a
 
 export const builtInFunctions: {
     [name: string]: {
-        arity: number | { min: number; max: number };
+        arity: number | { min: number; max?: number };
         args: string[];
         eval: (
             expressionContext: IExpressionContext | undefined,
@@ -675,6 +675,48 @@ export const builtInFunctions: {
             return "double";
         }
     },
+    "Math.min": {
+        arity: { min: 2 },
+        args: ["value", "..."],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => Math.min(...args),
+        getValueType: (...args: ValueType[]) => {
+            if (
+                args[0] != "integer" &&
+                args[0] != "float" &&
+                args[0] != "double"
+            ) {
+                return "undefined";
+            }
+            if (args[0] == "float") {
+                return "float";
+            }
+            return "double";
+        }
+    },
+    "Math.max": {
+        arity: { min: 2 },
+        args: ["value", "..."],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => Math.max(...args),
+        getValueType: (...args: ValueType[]) => {
+            if (
+                args[0] != "integer" &&
+                args[0] != "float" &&
+                args[0] != "double"
+            ) {
+                return "undefined";
+            }
+            if (args[0] == "float") {
+                return "float";
+            }
+            return "double";
+        }
+    },
 
     "String.find": {
         arity: 2,
@@ -754,6 +796,10 @@ export const builtInConstants: {
     },
     "Math.PI": {
         value: () => Math.PI,
+        valueType: "double"
+    },
+    "Math.Infinity": {
+        value: () => Infinity,
         valueType: "double"
     }
 };

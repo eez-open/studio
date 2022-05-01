@@ -32,7 +32,9 @@
         "xhash": "cpp",
         "xutility": "cpp",
         "chrono": "cpp",
-        "sstream": "cpp"
+        "sstream": "cpp",
+        "algorithm": "cpp",
+        "limits": "cpp"
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "workbench.editor.enablePreview": false,
