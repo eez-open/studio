@@ -2759,6 +2759,10 @@ function getComponentFlowState(
                 value
             ),
 
+        createObjectValue: (valueType: ValueType, value: any) => {
+            return flowState.runtime.createObjectValue(valueType, value);
+        },
+
         sendResultToWorker: (
             messageId: number,
             result: any,

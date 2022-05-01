@@ -728,6 +728,15 @@ export class WasmRuntime extends RemoteRuntime {
         this.worker.postMessage(message);
     }
 
+    createObjectValue(valueType: ValueType, value: any): any {
+        return createJsArrayValue(
+            this.assetsMap.typeIndexes[valueType],
+            value,
+            this.assetsMap,
+            getObjectVariableTypeFromType(valueType)
+        );
+    }
+
     sendResultToWorker(messageId: number, result: any, finalResult: boolean) {
         const message: RendererToWorkerMessage = {};
         message.resultToWorker = {

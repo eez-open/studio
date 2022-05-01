@@ -77,6 +77,7 @@ export interface IRuntime {
         value: any,
         valueType: ValueType
     ): void;
+    createObjectValue(valueType: ValueType, value: any): any;
     sendResultToWorker(
         messageId: number,
         result: any,
