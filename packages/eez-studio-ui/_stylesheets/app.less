@@ -3354,11 +3354,19 @@ button.EezStudio_Action {
     }
 
     .EezStudio_DebuggerVariablesTable {
+        * {
+            user-select: text;
+        }
         height: 100%;
         overflow: auto;
         table {
             table-layout: fixed;
             //border-collapse: separate !important;
+
+            .colValue {
+                overflow-x: auto;
+                text-overflow: unset;
+            }
         }
     }
 
