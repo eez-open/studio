@@ -195,7 +195,7 @@ const LogItemRow = observer(
                     onClick={() => this.selectNode(logItem)}
                 >
                     <small>{logItem.date.toLocaleTimeString()}</small>
-                    <span>{logItem.label}</span>
+                    <span title={logItem.label}>{logItem.label}</span>
                 </div>
             );
         }

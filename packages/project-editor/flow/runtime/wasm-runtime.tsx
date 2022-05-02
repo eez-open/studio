@@ -133,6 +133,8 @@ export class WasmRuntime extends RemoteRuntime {
                 LayoutModels.OUTPUT_TAB_ID
             );
             if (outputSection.numErrors > 0) {
+                this.stopRuntimeWithError("Build error");
+                this.DocumentStore.setEditorMode();
                 return;
             }
         }
@@ -173,6 +175,7 @@ export class WasmRuntime extends RemoteRuntime {
 
         this.assetsMap = result.GUI_ASSETS_DATA_MAP_JS as AssetsMap;
         if (!this.assetsMap) {
+            this.stopRuntimeWithError("Build error");
             this.DocumentStore.setEditorMode();
             return;
         }
