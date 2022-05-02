@@ -29,7 +29,9 @@ import {
     getStructureFromType,
     isArrayType,
     isStructType,
-    humanizeVariableType
+    humanizeVariableType,
+    isObjectType,
+    getObjectVariableTypeFromType
 } from "project-editor/features/variable/value-type";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
@@ -37,6 +39,7 @@ import {
     FLOW_ITERATOR_INDEX_VARIABLE
 } from "project-editor/features/variable/defs";
 import { parseIdentifier } from "project-editor/flow/expression";
+import { IObjectVariableValueFieldDescription } from "eez-studio-types";
 
 export const EXPR_MARK_START = "{<";
 export const EXPR_MARK_END = ">}";
@@ -254,6 +257,53 @@ const SelectItemDialog = observer(
                         };
                     });
                 }
+            } else if (isObjectType(type)) {
+                const objectVariableType = getObjectVariableTypeFromType(type);
+                if (objectVariableType) {
+                    function getFields(
+                        fieldDescriptions: IObjectVariableValueFieldDescription[],
+                        prefix: string
+                    ): ITreeNode<string>[] {
+                        return fieldDescriptions.map(field => {
+                            const data = `${prefix}.${field.name}`;
+                            return {
+                                id: field.name,
+                                label:
+                                    typeof field.valueType == "string" ? (
+                                        <VariableLabel
+                                            name={
+                                                (prefix.endsWith("[]")
+                                                    ? "[]"
+                                                    : "") +
+                                                "." +
+                                                field.name
+                                            }
+                                            type={humanizeVariableType(
+                                                field.valueType
+                                            )}
+                                        />
+                                    ) : (
+                                        `.${field.name}`
+                                    ),
+                                children:
+                                    typeof field.valueType == "string"
+                                        ? []
+                                        : getFields(
+                                              field.valueType,
+                                              `${prefix}.${field.name}`
+                                          ),
+                                selected: selection == data,
+                                expanded: true,
+                                data: data
+                            };
+                        });
+                    }
+                    const selection = this.selection;
+                    return getFields(
+                        objectVariableType.valueFieldDescriptions,
+                        prefix
+                    );
+                }
             }
 
             return [];
@@ -336,7 +386,7 @@ const SelectItemDialog = observer(
                             componentInput.name
                         ),
                         selected: this.selection == componentInput.name,
-                        expanded: false,
+                        expanded: true,
                         data: componentInput.name
                     })),
                     selected: false,
