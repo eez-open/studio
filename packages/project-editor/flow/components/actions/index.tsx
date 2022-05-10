@@ -97,8 +97,8 @@ const NOT_NAMED_LABEL = "<not named>";
 export const LeftArrow = () => (
     <div style={{ marginTop: -2, padding: "0 8px" }}>
         <svg
-            width="20"
-            height="20"
+            width="16"
+            height="16"
             viewBox="0 0 24 24"
             strokeWidth="2"
             stroke="currentColor"

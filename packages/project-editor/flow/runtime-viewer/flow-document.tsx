@@ -91,7 +91,7 @@ export class FlowDocument implements IDocument {
     }
 
     createContextMenu(objects: ITreeObjectAdapter[]) {
-        return this.flow.createSelectionContextMenu();
+        return this.flow.createSelectionContextMenu(undefined, false);
     }
 
     duplicateSelection() {}

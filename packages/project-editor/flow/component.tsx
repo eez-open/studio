@@ -962,15 +962,15 @@ function addBreakpointMenuItems(
         }
     }
 
-    if (additionalMenuItems.length > 0) {
+    if (menuItems.length > 0) {
         additionalMenuItems.push(
             new MenuItem({
                 type: "separator"
             })
         );
-
-        menuItems.unshift(...additionalMenuItems);
     }
+
+    menuItems.unshift(...additionalMenuItems);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

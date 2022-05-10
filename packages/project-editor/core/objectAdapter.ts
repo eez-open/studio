@@ -186,10 +186,13 @@ export interface ITreeObjectAdapter
     pasteSelection(): void;
     canDelete(): boolean;
     deleteSelection(): void;
-    createSelectionContextMenu(actions?: {
-        pasteSelection: () => void;
-        duplicateSelection: () => void;
-    }): Electron.Menu | undefined;
+    createSelectionContextMenu(
+        actions?: {
+            pasteSelection: () => void;
+            duplicateSelection: () => void;
+        },
+        editable?: boolean
+    ): Electron.Menu | undefined;
     showSelectionContextMenu(editable: boolean): void;
 }
 
