@@ -31,37 +31,39 @@ export const LogsPanel = observer(
 
         render() {
             return (
-                <Panel
-                    id="project-editor/runtime-info/logs"
-                    title=""
-                    buttons={[
-                        <div key="filter">
-                            <span style={{ marginRight: 5 }}>Filter:</span>
-                            <select
-                                className="form-select"
-                                value={logsPanelFilter.get()}
-                                onChange={this.onChangeFilter}
-                            >
-                                <option value="all">All</option>
-                                <option value="scpi">SCPI</option>
-                                <option value="error">Error</option>
-                            </select>
-                        </div>,
-                        <IconAction
-                            key="clear"
-                            icon="material:delete"
-                            iconSize={20}
-                            title="Clear logs"
-                            onClick={this.props.runtime.logs.clear}
-                        ></IconAction>
-                    ]}
-                    body={
-                        <LogList
-                            runtime={this.props.runtime}
-                            filter={logsPanelFilter.get()}
-                        />
-                    }
-                />
+                <div className="EezStudio_DebuggerPanel">
+                    <Panel
+                        id="project-editor/runtime-info/logs"
+                        title=""
+                        buttons={[
+                            <div key="filter">
+                                <span style={{ marginRight: 5 }}>Filter:</span>
+                                <select
+                                    className="form-select"
+                                    value={logsPanelFilter.get()}
+                                    onChange={this.onChangeFilter}
+                                >
+                                    <option value="all">All</option>
+                                    <option value="scpi">SCPI</option>
+                                    <option value="error">Error</option>
+                                </select>
+                            </div>,
+                            <IconAction
+                                key="clear"
+                                icon="material:delete"
+                                iconSize={20}
+                                title="Clear logs"
+                                onClick={this.props.runtime.logs.clear}
+                            ></IconAction>
+                        ]}
+                        body={
+                            <LogList
+                                runtime={this.props.runtime}
+                                filter={logsPanelFilter.get()}
+                            />
+                        }
+                    />
+                </div>
             );
         }
     }

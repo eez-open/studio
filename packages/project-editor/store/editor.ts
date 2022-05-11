@@ -87,7 +87,7 @@ export class EditorsStore {
 
     get tabsModel() {
         return (
-            this.DocumentStore.layoutModels.root
+            this.DocumentStore.layoutModels.editors
                 .getNodeById(LayoutModels.EDITORS_TABSET_ID)
                 .getChildren()[0] as FlexLayout.TabNode
         ).getExtraData().model as FlexLayout.Model;

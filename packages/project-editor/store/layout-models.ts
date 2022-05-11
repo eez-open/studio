@@ -1,4 +1,4 @@
-import { makeObservable } from "mobx";
+import { action, computed, makeObservable } from "mobx";
 import { observable } from "mobx";
 import * as FlexLayout from "flexlayout-react";
 
@@ -47,14 +47,6 @@ export class LayoutModels {
     static TEXT_RESOURCES_TAB_ID = "TEXT_RESOURCES";
     static TEXTS_STATISTICS_TAB_ID = "TEXTS_STATISTICS";
 
-    static DEBUGGER_TAB: FlexLayout.IJsonTabNode = {
-        type: "tab",
-        enableClose: false,
-        name: "Debugger",
-        id: LayoutModels.DEBUGGER_TAB_ID,
-        component: "debuggerPanel"
-    };
-
     static BREAKPOINTS_TAB: FlexLayout.IJsonTabNode = {
         type: "tab",
         enableClose: false,
@@ -87,35 +79,55 @@ export class LayoutModels {
         set: (model: FlexLayout.Model) => void;
     }[];
 
-    root: FlexLayout.Model;
+    rootEditor: FlexLayout.Model;
+    rootRuntime: FlexLayout.Model;
+
+    editors: FlexLayout.Model;
+
     variables: FlexLayout.Model;
     bitmaps: FlexLayout.Model;
     fonts: FlexLayout.Model;
-    pages: FlexLayout.Model;
-    actions: FlexLayout.Model;
+
+    pagesEditor: FlexLayout.Model;
+    pagesRuntime: FlexLayout.Model;
+
+    actionsEditor: FlexLayout.Model;
+    actionsRuntime: FlexLayout.Model;
+
     scpi: FlexLayout.Model;
     styles: FlexLayout.Model;
     themes: FlexLayout.Model;
-    debugger: FlexLayout.Model;
     texts: FlexLayout.Model;
 
     constructor(public DocumentStore: DocumentStoreClass) {
         makeObservable(this, {
-            root: observable,
+            root: computed,
+            rootEditor: observable,
+            rootRuntime: observable,
+
+            editors: observable,
+
             variables: observable,
             bitmaps: observable,
             fonts: observable,
-            pages: observable,
+
+            pages: computed,
+            pagesEditor: observable,
+            pagesRuntime: observable,
+
+            actions: computed,
+            actionsEditor: observable,
+            actionsRuntime: observable,
+
             scpi: observable,
             styles: observable,
-            themes: observable,
-            debugger: observable
+            themes: observable
         });
 
         this.models = [
             {
-                name: "root",
-                version: 13,
+                name: "rootEditor",
+                version: 19,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: [
@@ -169,7 +181,7 @@ export class LayoutModels {
                         children: [
                             {
                                 type: "tabset",
-                                weight: 25,
+                                weight: 20,
                                 enableTabStrip: false,
                                 enableDrag: false,
                                 enableDrop: false,
@@ -184,71 +196,199 @@ export class LayoutModels {
                                     }
                                 ]
                             },
-
                             {
-                                type: "row",
-                                weight: 50,
+                                type: "tabset",
+                                weight: 60,
+                                enableTabStrip: false,
+                                enableDrag: false,
+                                enableDrop: false,
+                                enableClose: false,
+                                id: LayoutModels.EDITORS_TABSET_ID,
                                 children: [
                                     {
-                                        type: "tabset",
-                                        enableTabStrip: false,
-                                        enableDrag: false,
-                                        enableDrop: false,
-                                        id: LayoutModels.EDITORS_TABSET_ID,
-                                        children: [
-                                            {
-                                                type: "tab",
-                                                component: "sub",
-                                                config: {
-                                                    model: {
-                                                        global: {
-                                                            ...LayoutModels.GLOBAL_OPTIONS,
-                                                            tabEnableClose: true
-                                                        },
-                                                        borders: [],
-                                                        layout: {
-                                                            type: "row",
-                                                            children: [
-                                                                {
-                                                                    type: "tabset",
-                                                                    children: []
-                                                                }
-                                                            ]
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        ]
+                                        type: "tab",
+                                        enableClose: false,
+                                        name: "Editors",
+                                        component: "editors"
                                     }
                                 ]
                             },
                             {
-                                type: "tabset",
-                                weight: 25,
+                                type: "row",
+                                weight: 20,
                                 children: [
                                     {
-                                        type: "tab",
-                                        enableClose: false,
-                                        name: "Properties",
-                                        id: LayoutModels.PROPERTIES_TAB_ID,
-                                        component: "propertiesPanel"
+                                        type: "tabset",
+                                        weight: 50,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Properties",
+                                                id: LayoutModels.PROPERTIES_TAB_ID,
+                                                component: "propertiesPanel"
+                                            },
+                                            LayoutModels.BREAKPOINTS_TAB
+                                        ]
                                     },
                                     {
-                                        type: "tab",
-                                        enableClose: false,
-                                        name: "Components Palette",
-                                        id: LayoutModels.COMPONENTS_PALETTE_TAB_ID,
-                                        component: "componentsPalette"
-                                    },
-                                    LayoutModels.BREAKPOINTS_TAB,
-                                    LayoutModels.DEBUGGER_TAB
+                                        type: "tabset",
+                                        weight: 50,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Components Palette",
+                                                id: LayoutModels.COMPONENTS_PALETTE_TAB_ID,
+                                                component: "componentsPalette"
+                                            }
+                                        ]
+                                    }
                                 ]
                             }
                         ]
                     }
                 },
-                get: () => this.root,
-                set: model => (this.root = model)
+                get: () => this.rootEditor,
+                set: action(model => (this.rootEditor = model))
+            },
+            {
+                name: "rootRuntime",
+                version: 23,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "tabset",
+                                weight: 20,
+                                enableTabStrip: false,
+                                enableDrag: false,
+                                enableDrop: false,
+                                enableClose: false,
+                                id: LayoutModels.NAVIGATION_TABSET_ID,
+                                children: [
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        name: "Navigation",
+                                        component: "navigation"
+                                    }
+                                ]
+                            },
+                            {
+                                type: "tabset",
+                                weight: 50,
+                                enableTabStrip: false,
+                                enableDrag: false,
+                                enableDrop: false,
+                                enableClose: false,
+                                id: LayoutModels.EDITORS_TABSET_ID,
+                                children: [
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        name: "Editors",
+                                        component: "editors"
+                                    }
+                                ]
+                            },
+                            {
+                                type: "row",
+                                weight: 30,
+                                children: [
+                                    {
+                                        type: "tabset",
+                                        weight: 25,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Queue",
+                                                component: "queue"
+                                            },
+                                            LayoutModels.BREAKPOINTS_TAB
+                                        ]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        weight: 75,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Watch",
+                                                component: "watch"
+                                            },
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Active Flows",
+                                                component: "active-flows"
+                                            },
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Logs",
+                                                id: LayoutModels.DEBUGGER_LOGS_TAB_ID,
+                                                component: "logs"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.rootRuntime,
+                set: action(model => (this.rootRuntime = model))
+            },
+            {
+                name: "editors",
+                version: 3,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "tabset",
+                                enableTabStrip: false,
+                                enableDrag: false,
+                                enableDrop: false,
+                                id: LayoutModels.EDITORS_TABSET_ID,
+                                children: [
+                                    {
+                                        type: "tab",
+                                        component: "sub",
+                                        config: {
+                                            model: {
+                                                global: {
+                                                    ...LayoutModels.GLOBAL_OPTIONS,
+                                                    tabEnableClose: true
+                                                },
+                                                borders: [],
+                                                layout: {
+                                                    type: "row",
+                                                    children: [
+                                                        {
+                                                            type: "tabset",
+                                                            children: []
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.editors,
+                set: action(model => (this.editors = model))
             },
             {
                 name: "variables",
@@ -284,7 +424,7 @@ export class LayoutModels {
                     }
                 },
                 get: () => this.variables,
-                set: model => (this.variables = model)
+                set: action(model => (this.variables = model))
             },
             {
                 name: "bitmaps",
@@ -328,7 +468,7 @@ export class LayoutModels {
                     }
                 },
                 get: () => this.bitmaps,
-                set: model => (this.bitmaps = model)
+                set: action(model => (this.bitmaps = model))
             },
             {
                 name: "fonts",
@@ -371,11 +511,11 @@ export class LayoutModels {
                     }
                 },
                 get: () => this.fonts,
-                set: model => (this.fonts = model)
+                set: action(model => (this.fonts = model))
             },
             {
-                name: "pages",
-                version: 2,
+                name: "pagesEditor",
+                version: 3,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: [],
@@ -418,12 +558,38 @@ export class LayoutModels {
                         ]
                     }
                 },
-                get: () => this.pages,
-                set: model => (this.pages = model)
+                get: () => this.pagesEditor,
+                set: action(model => (this.pagesEditor = model))
             },
             {
-                name: "actions",
-                version: 2,
+                name: "pagesRuntime",
+                version: 3,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "tabset",
+                                children: [
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        name: "Pages",
+                                        component: "pages"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.pagesRuntime,
+                set: action(model => (this.pagesRuntime = model))
+            },
+            {
+                name: "actionsEditor",
+                version: 3,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: [],
@@ -460,8 +626,34 @@ export class LayoutModels {
                         ]
                     }
                 },
-                get: () => this.actions,
-                set: model => (this.actions = model)
+                get: () => this.actionsEditor,
+                set: action(model => (this.actionsEditor = model))
+            },
+            {
+                name: "actionsRuntime",
+                version: 3,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "tabset",
+                                children: [
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        name: "Actions",
+                                        component: "actions"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.actionsRuntime,
+                set: action(model => (this.actionsRuntime = model))
             },
             {
                 name: "scpi",
@@ -512,7 +704,7 @@ export class LayoutModels {
                     }
                 },
                 get: () => this.scpi,
-                set: model => (this.scpi = model)
+                set: action(model => (this.scpi = model))
             },
             {
                 name: "styles",
@@ -556,7 +748,7 @@ export class LayoutModels {
                     }
                 },
                 get: () => this.styles,
-                set: model => (this.styles = model)
+                set: action(model => (this.styles = model))
             },
             {
                 name: "themes",
@@ -604,64 +796,7 @@ export class LayoutModels {
                     }
                 },
                 get: () => this.themes,
-                set: model => (this.themes = model)
-            },
-            {
-                name: "debugger",
-                version: 2,
-                json: {
-                    global: LayoutModels.GLOBAL_OPTIONS,
-                    borders: [],
-                    layout: {
-                        type: "row",
-                        children: [
-                            {
-                                type: "row",
-                                children: [
-                                    {
-                                        type: "tabset",
-                                        weight: 25,
-                                        children: [
-                                            {
-                                                type: "tab",
-                                                enableClose: false,
-                                                name: "Queue",
-                                                component: "queue"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        type: "tabset",
-                                        weight: 75,
-                                        children: [
-                                            {
-                                                type: "tab",
-                                                enableClose: false,
-                                                name: "Watch",
-                                                component: "watch"
-                                            },
-                                            {
-                                                type: "tab",
-                                                enableClose: false,
-                                                name: "Active Flows",
-                                                component: "active-flows"
-                                            },
-                                            {
-                                                type: "tab",
-                                                enableClose: false,
-                                                name: "Logs",
-                                                id: LayoutModels.DEBUGGER_LOGS_TAB_ID,
-                                                component: "logs"
-                                            }
-                                        ]
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                },
-                get: () => this.debugger,
-                set: model => (this.debugger = model)
+                set: action(model => (this.themes = model))
             },
             {
                 name: "texts",
@@ -717,9 +852,25 @@ export class LayoutModels {
                     }
                 },
                 get: () => this.texts,
-                set: model => (this.texts = model)
+                set: action(model => (this.texts = model))
             }
         ];
+    }
+
+    get root() {
+        return this.DocumentStore.runtime ? this.rootRuntime : this.rootEditor;
+    }
+
+    get pages() {
+        return this.DocumentStore.runtime
+            ? this.pagesRuntime
+            : this.pagesEditor;
+    }
+
+    get actions() {
+        return this.DocumentStore.runtime
+            ? this.actionsRuntime
+            : this.actionsEditor;
     }
 
     load(layoutModels: any) {
@@ -739,10 +890,14 @@ export class LayoutModels {
         const layoutModels: any = {};
 
         for (const model of this.models) {
-            layoutModels[model.name] = {
-                version: model.version,
-                json: model.get().toJson()
-            };
+            try {
+                layoutModels[model.name] = {
+                    version: model.version,
+                    json: model.get().toJson()
+                };
+            } catch (err) {
+                console.error(err);
+            }
         }
 
         return layoutModels;

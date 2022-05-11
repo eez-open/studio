@@ -126,41 +126,43 @@ export const WatchPanel = observer(
 
         render() {
             return (
-                <Panel
-                    id="project-editor/debugger/variables"
-                    title=""
-                    buttons={[
-                        <IconAction
-                            key="add"
-                            icon="material:add"
-                            iconSize={20}
-                            title="Add Watch Expression"
-                            onClick={this.onAddExpression}
-                        />,
-                        <IconAction
-                            key="edit"
-                            icon="material:edit"
-                            iconSize={20}
-                            title="Edit Watch Expression"
-                            onClick={this.onEditExpression}
-                            enabled={this.selectedExpression.get() != -1}
-                        />,
-                        <IconAction
-                            key="delete"
-                            icon="material:delete"
-                            iconSize={20}
-                            title="Delete Watch Expression"
-                            onClick={this.onDeleteEpression}
-                            enabled={this.selectedExpression.get() != -1}
-                        />
-                    ]}
-                    body={
-                        <WatchTable
-                            runtime={this.props.runtime}
-                            selectedExpression={this.selectedExpression}
-                        />
-                    }
-                />
+                <div className="EezStudio_DebuggerPanel">
+                    <Panel
+                        id="project-editor/debugger/variables"
+                        title=""
+                        buttons={[
+                            <IconAction
+                                key="add"
+                                icon="material:add"
+                                iconSize={20}
+                                title="Add Watch Expression"
+                                onClick={this.onAddExpression}
+                            />,
+                            <IconAction
+                                key="edit"
+                                icon="material:edit"
+                                iconSize={20}
+                                title="Edit Watch Expression"
+                                onClick={this.onEditExpression}
+                                enabled={this.selectedExpression.get() != -1}
+                            />,
+                            <IconAction
+                                key="delete"
+                                icon="material:delete"
+                                iconSize={20}
+                                title="Delete Watch Expression"
+                                onClick={this.onDeleteEpression}
+                                enabled={this.selectedExpression.get() != -1}
+                            />
+                        ]}
+                        body={
+                            <WatchTable
+                                runtime={this.props.runtime}
+                                selectedExpression={this.selectedExpression}
+                            />
+                        }
+                    />
+                </div>
             );
         }
     }

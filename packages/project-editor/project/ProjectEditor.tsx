@@ -9,7 +9,6 @@ import { Messages } from "project-editor/components/Output";
 import { ProjectContext } from "project-editor/project/context";
 import { CommandPalette } from "project-editor/project/command-palette";
 import { Toolbar } from "project-editor/project/Toolbar";
-import { DebuggerPanel } from "project-editor/flow/debugger/DebuggerPanel";
 import {
     PageEditor,
     PageTabState
@@ -37,6 +36,10 @@ import { Icon } from "eez-studio-ui/icon";
 import { Loader } from "eez-studio-ui/loader";
 import { SingleStepMode } from "project-editor/flow/runtime";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { QueuePanel } from "project-editor/flow/debugger/QueuePanel";
+import { WatchPanel } from "project-editor/flow/debugger/WatchPanel";
+import { ActiveFlowsPanel } from "project-editor/flow/debugger/ActiveFlowsPanel";
+import { LogsPanel } from "project-editor/flow/debugger/LogsPanel";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -124,72 +127,26 @@ const Content = observer(
                 );
             }
 
-            if (component === "sub") {
-                var model = node.getExtraData().model;
-                if (model == null) {
-                    node.getExtraData().model = FlexLayout.Model.fromJson(
-                        node.getConfig().model
-                    );
-                    model = node.getExtraData().model;
-
-                    // save submodel on save event
-                    node.setEventListener("save", (p: any) => {
-                        this.context.layoutModels.root.doAction(
-                            FlexLayout.Actions.updateNodeAttributes(
-                                node.getId(),
-                                {
-                                    config: {
-                                        model: node
-                                            .getExtraData()
-                                            .model.toJson()
-                                    }
-                                }
-                            )
-                        );
-                    });
-
-                    this.context.editorsStore.refresh(false);
-                }
-
-                return (
-                    <FlexLayout.Layout
-                        model={model}
-                        factory={this.factory}
-                        realtimeResize={true}
-                        font={LayoutModels.FONT_SUB}
-                        onAuxMouseClick={this.onAuxMouseClick}
-                    />
-                );
+            if (component === "editors") {
+                return <Editors />;
             }
 
-            if (component === "editor") {
-                node.setEventListener("visibility", (p: any) => {
-                    this.context.editorsStore.refresh(true);
-                });
-
-                node.setEventListener("close", (p: any) => {
-                    this.context.editorsStore.refresh(true);
-                });
-
-                const editor = this.context.editorsStore.tabIdToEditorMap.get(
-                    node.getId()
-                );
-                if (editor) {
-                    let result = getEditorComponent(editor.object);
-                    if (result) {
-                        return <result.EditorComponent editor={editor} />;
-                    }
+            if (this.context.runtime) {
+                if (component === "queue") {
+                    return <QueuePanel runtime={this.context.runtime} />;
                 }
 
-                return null;
-            }
+                if (component === "watch") {
+                    return <WatchPanel runtime={this.context.runtime} />;
+                }
 
-            if (component === "debuggerPanel") {
-                return this.context.runtime ? (
-                    <DebuggerPanel runtime={this.context.runtime} />
-                ) : (
-                    <div />
-                );
+                if (component === "active-flows") {
+                    return <ActiveFlowsPanel runtime={this.context.runtime} />;
+                }
+
+                if (component === "logs") {
+                    return <LogsPanel runtime={this.context.runtime} />;
+                }
             }
 
             if (component === "propertiesPanel") {
@@ -239,23 +196,6 @@ const Content = observer(
             }
 
             return null;
-        };
-
-        onAuxMouseClick = (
-            node:
-                | FlexLayout.TabNode
-                | FlexLayout.TabSetNode
-                | FlexLayout.BorderNode,
-            event: React.MouseEvent<HTMLElement, MouseEvent>
-        ) => {
-            if (event.button == 1) {
-                // delete tab on mouse middle click
-                if (node instanceof FlexLayout.TabNode) {
-                    node.getModel().doAction(
-                        FlexLayout.Actions.deleteTab(node.getId())
-                    );
-                }
-            }
         };
 
         onRenderTab = (
@@ -332,7 +272,7 @@ const Content = observer(
                     (section.messages.length > 0
                         ? ` (${section.messages.length})`
                         : "");
-            } else if (node.getId() == LayoutModels.DEBUGGER_TAB_ID) {
+            } else if (node.getId() == LayoutModels.DEBUGGER_LOGS_TAB_ID) {
                 if (this.context.runtime && this.context.runtime.error) {
                     renderValues.leading = (
                         <div className="EezStudio_AttentionContainer">
@@ -455,6 +395,109 @@ export const SubNavigation = observer(
             }
 
             return subNavigation;
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+const Editors = observer(
+    class Editors extends React.Component {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        factory = (node: FlexLayout.TabNode) => {
+            var component = node.getComponent();
+
+            if (component === "sub") {
+                var model = node.getExtraData().model;
+                if (model == null) {
+                    node.getExtraData().model = FlexLayout.Model.fromJson(
+                        node.getConfig().model
+                    );
+                    model = node.getExtraData().model;
+
+                    // save submodel on save event
+                    node.setEventListener("save", (p: any) => {
+                        this.context.layoutModels.root.doAction(
+                            FlexLayout.Actions.updateNodeAttributes(
+                                node.getId(),
+                                {
+                                    config: {
+                                        model: node
+                                            .getExtraData()
+                                            .model.toJson()
+                                    }
+                                }
+                            )
+                        );
+                    });
+
+                    this.context.editorsStore.refresh(false);
+                }
+
+                return (
+                    <FlexLayout.Layout
+                        model={model}
+                        factory={this.factory}
+                        realtimeResize={true}
+                        font={LayoutModels.FONT_SUB}
+                        onAuxMouseClick={this.onAuxMouseClick}
+                    />
+                );
+            }
+
+            if (component === "editor") {
+                node.setEventListener("visibility", (p: any) => {
+                    this.context.editorsStore.refresh(true);
+                });
+
+                node.setEventListener("close", (p: any) => {
+                    this.context.editorsStore.refresh(true);
+                });
+
+                const editor = this.context.editorsStore.tabIdToEditorMap.get(
+                    node.getId()
+                );
+                if (editor) {
+                    let result = getEditorComponent(editor.object);
+                    if (result) {
+                        return <result.EditorComponent editor={editor} />;
+                    }
+                }
+
+                return null;
+            }
+
+            return null;
+        };
+
+        onAuxMouseClick = (
+            node:
+                | FlexLayout.TabNode
+                | FlexLayout.TabSetNode
+                | FlexLayout.BorderNode,
+            event: React.MouseEvent<HTMLElement, MouseEvent>
+        ) => {
+            if (event.button == 1) {
+                // delete tab on mouse middle click
+                if (node instanceof FlexLayout.TabNode) {
+                    node.getModel().doAction(
+                        FlexLayout.Actions.deleteTab(node.getId())
+                    );
+                }
+            }
+        };
+
+        render() {
+            return (
+                <FlexLayout.Layout
+                    model={this.context.layoutModels.editors}
+                    factory={this.factory}
+                    realtimeResize={true}
+                    font={LayoutModels.FONT}
+                />
+            );
         }
     }
 );

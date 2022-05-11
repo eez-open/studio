@@ -13,7 +13,11 @@ export const ActiveFlowsPanel = observer(
         runtime: RuntimeBase;
     }> {
         render() {
-            return <FlowsTree runtime={this.props.runtime} />;
+            return (
+                <div className="EezStudio_DebuggerPanel">
+                    <FlowsTree runtime={this.props.runtime} />
+                </div>
+            );
         }
     }
 );

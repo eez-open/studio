@@ -1706,15 +1706,7 @@ export class Project extends EezObject {
         const supportsFlow = Project.supportsFlow(projectType, flowSupport);
 
         enableTab(
-            this._DocumentStore.layoutModels.root,
-            LayoutModels.DEBUGGER_TAB_ID,
-            LayoutModels.DEBUGGER_TAB,
-            LayoutModels.COMPONENTS_PALETTE_TAB_ID,
-            supportsDebugger
-        );
-
-        enableTab(
-            this._DocumentStore.layoutModels.root,
+            this._DocumentStore.layoutModels.rootEditor,
             LayoutModels.BREAKPOINTS_TAB_ID,
             LayoutModels.BREAKPOINTS_TAB,
             LayoutModels.COMPONENTS_PALETTE_TAB_ID,
