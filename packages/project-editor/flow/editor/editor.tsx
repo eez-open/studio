@@ -886,6 +886,10 @@ export const FlowEditor = observer(
         }
 
         ensureSelectionVisible = () => {
+            console.log(
+                "ensureSelectionVisible",
+                this.flowContext.viewState.selectedObjects
+            );
             if (this.flowContext.viewState.selectedObjects.length > 0) {
                 const selectedObjectRects =
                     this.flowContext.viewState.selectedObjects.map(

@@ -1234,7 +1234,7 @@ export class Component extends EezObject {
                             new Message(
                                 MessageType.WARNING,
                                 `Any type used`,
-                                componentInput
+                                getChildOfObject(componentInput, "type")
                             )
                         );
                     }
@@ -1245,7 +1245,7 @@ export class Component extends EezObject {
                             new Message(
                                 MessageType.ERROR,
                                 `Invalid type`,
-                                componentInput
+                                getChildOfObject(componentInput, "type")
                             )
                         );
                     }
@@ -1303,7 +1303,7 @@ export class Component extends EezObject {
                             new Message(
                                 MessageType.WARNING,
                                 `Any type used`,
-                                componentOutput
+                                getChildOfObject(componentOutput, "type")
                             )
                         );
                     }
@@ -1314,7 +1314,7 @@ export class Component extends EezObject {
                             new Message(
                                 MessageType.ERROR,
                                 `Invalid type`,
-                                componentOutput
+                                getChildOfObject(componentOutput, "type")
                             )
                         );
                     }

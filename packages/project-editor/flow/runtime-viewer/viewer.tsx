@@ -10,11 +10,11 @@ import { observer } from "mobx-react";
 
 import { _range, _isEqual, _map } from "eez-studio-shared/algorithm";
 import {
-    BoundingRectBuilder,
     Point,
     pointDistance,
     Rect,
-    rectContains
+    rectContains,
+    rectExpand
 } from "eez-studio-shared/geometry";
 
 import { Draggable } from "eez-studio-ui/draggable";
@@ -519,19 +519,14 @@ export const FlowViewer = observer(
 
         ensureSelectionVisible = () => {
             if (this.flowContext.viewState.selectedObjects.length > 0) {
-                const selectedObjectRects =
-                    this.flowContext.viewState.selectedObjects.map(
-                        selectedObject => getObjectBoundingRect(selectedObject)
-                    );
-
-                let selectionBoundingRectBuilder = new BoundingRectBuilder();
-                for (let i = 0; i < selectedObjectRects.length; i++) {
-                    selectionBoundingRectBuilder.addRect(
-                        selectedObjectRects[i]
-                    );
-                }
-                const selectionBoundingRect =
-                    selectionBoundingRectBuilder.getRect();
+                const selectionBoundingRect = rectExpand(
+                    getObjectBoundingRect(
+                        this.flowContext.viewState.targetComponent ||
+                            this.flowContext.viewState.sourceComponent ||
+                            this.flowContext.viewState.selectedObjects[0]
+                    ),
+                    20 / this.flowContext.viewState.transform.scale
+                );
 
                 let pageRect =
                     this.flowContext.viewState.transform.clientToPageRect(
@@ -555,15 +550,40 @@ export const FlowViewer = observer(
                     canvasEl.style.transition = "transform 0.2s";
                     selectionEl.style.display = "none";
 
-                    this.flowContext.viewState.transform.translate = {
-                        x: -(
+                    let dx = 0;
+                    let dy = 0;
+
+                    if (pageRect.left > selectionBoundingRect.left) {
+                        dx = selectionBoundingRect.left - pageRect.left;
+                    } else if (
+                        pageRect.left + pageRect.width <
+                        selectionBoundingRect.left + selectionBoundingRect.width
+                    ) {
+                        dx =
                             selectionBoundingRect.left +
-                            selectionBoundingRect.width / 2
-                        ),
-                        y: -(
+                            selectionBoundingRect.width -
+                            (pageRect.left + pageRect.width);
+                    }
+
+                    if (pageRect.top > selectionBoundingRect.top) {
+                        dy = selectionBoundingRect.top - pageRect.top;
+                    } else if (
+                        pageRect.top + pageRect.height <
+                        selectionBoundingRect.top + selectionBoundingRect.height
+                    ) {
+                        dy =
                             selectionBoundingRect.top +
-                            selectionBoundingRect.height / 2
-                        )
+                            selectionBoundingRect.height -
+                            (pageRect.top + pageRect.height);
+                    }
+
+                    this.flowContext.viewState.transform.translate = {
+                        x:
+                            this.flowContext.viewState.transform.translate.x -
+                            dx * this.flowContext.viewState.transform.scale,
+                        y:
+                            this.flowContext.viewState.transform.translate.y -
+                            dy * this.flowContext.viewState.transform.scale
                     };
 
                     setTimeout(() => {

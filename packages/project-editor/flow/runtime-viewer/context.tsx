@@ -13,9 +13,10 @@ import type {
 import { Transform } from "project-editor/flow/editor/transform";
 
 import type { Component } from "project-editor/flow/component";
-import type { FlowTabState } from "project-editor/flow/flow";
+import type { ConnectionLine, FlowTabState } from "project-editor/flow/flow";
 import { FlowDocument } from "project-editor/flow/runtime-viewer/flow-document";
 import type { FlowState } from "project-editor/flow/runtime";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -59,6 +60,62 @@ class ViewState implements IViewState {
 
     get selectedObjects() {
         return this.document?.flow.selectedItems ?? [];
+    }
+
+    get connectionLine() {
+        const connectionLines = this.selectedObjects.filter(
+            selectedObject =>
+                selectedObject.object instanceof
+                ProjectEditor.ConnectionLineClass
+        );
+
+        if (connectionLines.length == 1) {
+            return connectionLines[0];
+        }
+
+        return undefined;
+    }
+
+    get sourceComponent() {
+        const connectionLine = this.connectionLine;
+        if (!connectionLine) {
+            return undefined;
+        }
+        if (
+            (connectionLine.object as ConnectionLine).sourceComponent ===
+            this.selectedObjects[0].object
+        ) {
+            return this.selectedObjects[0];
+        }
+
+        if (
+            (connectionLine.object as ConnectionLine).sourceComponent ===
+            this.selectedObjects[1].object
+        ) {
+            return this.selectedObjects[1];
+        }
+        return undefined;
+    }
+
+    get targetComponent() {
+        const connectionLine = this.connectionLine;
+        if (!connectionLine) {
+            return undefined;
+        }
+        if (
+            (connectionLine.object as ConnectionLine).targetComponent ===
+            this.selectedObjects[0].object
+        ) {
+            return this.selectedObjects[0];
+        }
+
+        if (
+            (connectionLine.object as ConnectionLine).targetComponent ===
+            this.selectedObjects[1].object
+        ) {
+            return this.selectedObjects[1];
+        }
+        return undefined;
     }
 
     isObjectSelected(object: ITreeObjectAdapter): boolean {

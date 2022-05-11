@@ -1999,7 +1999,7 @@ export class TextWidget extends Widget {
                 }
             } else {
                 if (!widget.data) {
-                    messages.push(propertyNotSetMessage(widget, "text"));
+                    messages.push(propertyNotSetMessage(widget, "data"));
                 }
             }
 

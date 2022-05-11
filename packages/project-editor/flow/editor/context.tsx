@@ -130,6 +130,18 @@ class ViewState implements IViewState {
             : this.document?.flow.selectedItems ?? [];
     }
 
+    get connectionLine() {
+        return undefined;
+    }
+
+    get sourceComponent() {
+        return undefined;
+    }
+
+    get targetComponent() {
+        return undefined;
+    }
+
     isObjectSelected(object: ITreeObjectAdapter): boolean {
         return this.selectedObjects.indexOf(object) !== -1;
     }

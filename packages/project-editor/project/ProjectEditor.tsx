@@ -419,7 +419,7 @@ const Editors = observer(
 
                     // save submodel on save event
                     node.setEventListener("save", (p: any) => {
-                        this.context.layoutModels.root.doAction(
+                        this.context.layoutModels.editors.doAction(
                             FlexLayout.Actions.updateNodeAttributes(
                                 node.getId(),
                                 {

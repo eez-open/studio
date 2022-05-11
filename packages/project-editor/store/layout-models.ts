@@ -896,6 +896,7 @@ export class LayoutModels {
                     json: model.get().toJson()
                 };
             } catch (err) {
+                console.log(model);
                 console.error(err);
             }
         }

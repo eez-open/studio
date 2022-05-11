@@ -18,7 +18,8 @@ import {
     getDocumentStore,
     objectToClipboardData,
     getLabel,
-    Message
+    Message,
+    getAncestorOfType
 } from "project-editor/store";
 import {
     ActionComponent,
@@ -890,6 +891,19 @@ export abstract class FlowTabState implements IEditorState {
         | undefined;
 
     selectObjectsAndEnsureVisible = (objects: IEezObject[]) => {
+        if (
+            objects.length == 1 &&
+            !(
+                objects[0] instanceof Component ||
+                objects[0] instanceof ConnectionLine
+            )
+        ) {
+            const object = getAncestorOfType(objects[0], Component.classInfo);
+            if (object) {
+                objects = [object];
+            }
+        }
+
         if (this.frontFace) {
             this.frontFace = false;
         }

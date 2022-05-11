@@ -967,7 +967,7 @@ export class StructureField extends EezObject implements IStructureField {
                     new Message(
                         MessageType.WARNING,
                         `Any type used`,
-                        structureField
+                        getChildOfObject(structureField, "type")
                     )
                 );
             }

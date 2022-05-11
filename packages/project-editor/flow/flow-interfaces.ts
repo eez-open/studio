@@ -210,6 +210,10 @@ export interface IViewState {
 
     dxMouseDrag: number | undefined;
     dyMouseDrag: number | undefined;
+
+    sourceComponent: ITreeObjectAdapter | undefined;
+    connectionLine: ITreeObjectAdapter | undefined;
+    targetComponent: ITreeObjectAdapter | undefined;
 }
 
 export interface IEditorOptions {
