@@ -53,14 +53,10 @@ export const Property = observer(
         changeDocumentDisposer: any;
 
         resizeTextArea = () => {
-            setTimeout(() => {
-                if (this.textarea) {
-                    this.textarea.style.overflow = "hidden";
-                    this.textarea.style.height = "0";
-                    this.textarea.style.height =
-                        Math.max(this.textarea.scrollHeight, 33.5) + "px";
-                }
-            }, 0);
+            if (this.textarea) {
+                this.textarea.style.height = "0";
+                this.textarea.style.height = this.textarea.scrollHeight + "px";
+            }
         };
 
         constructor(props: PropertyProps) {
@@ -437,7 +433,7 @@ export const Property = observer(
                                 value={this._value || ""}
                                 onChange={this.onChange}
                                 onSelect={this.onSelectionChange}
-                                style={{ resize: "none" }}
+                                style={{ resize: "none", overflowY: "hidden" }}
                                 readOnly={propertyInfo.computed}
                                 spellCheck={
                                     propertyInfo.disableSpellcheck
@@ -464,7 +460,7 @@ export const Property = observer(
                             })}
                             value={this._value || ""}
                             onChange={this.onChange}
-                            style={{ resize: "none" }}
+                            style={{ resize: "none", overflowY: "hidden" }}
                             readOnly={readOnly || propertyInfo.computed}
                             spellCheck={
                                 propertyInfo.disableSpellcheck ? false : true
@@ -588,7 +584,7 @@ export const Property = observer(
                             })}
                             value={this._value || ""}
                             onChange={this.onChange}
-                            style={{ resize: "none" }}
+                            style={{ resize: "none", overflowY: "hidden" }}
                             readOnly={readOnly || propertyInfo.computed}
                             spellCheck={
                                 propertyInfo.disableSpellcheck ? false : true
@@ -610,7 +606,10 @@ export const Property = observer(
                                     value={this._value || ""}
                                     onChange={this.onChange}
                                     onSelect={this.onSelectionChange}
-                                    style={{ resize: "none" }}
+                                    style={{
+                                        resize: "none",
+                                        overflowY: "hidden"
+                                    }}
                                     readOnly={propertyInfo.computed}
                                     spellCheck={
                                         propertyInfo.disableSpellcheck
