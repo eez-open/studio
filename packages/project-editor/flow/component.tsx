@@ -1546,6 +1546,18 @@ export class Component extends EezObject {
                         return true;
                     }
 
+                    if (
+                        propertyGridObjects
+                            .slice(1)
+                            .find(
+                                object =>
+                                    getParent(object) !=
+                                    getParent(propertyGridObjects[0])
+                            )
+                    ) {
+                        return true;
+                    }
+
                     return false;
                 }
             },
