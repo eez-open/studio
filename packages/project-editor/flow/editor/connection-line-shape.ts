@@ -9,6 +9,7 @@ import { getId, getParent, IEezObject } from "project-editor/core/object";
 import type { ConnectionLine } from "project-editor/flow/flow";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { getClassInfo } from "project-editor/store";
 
 export function getConnectionLineShape(
     context: IFlowContext,
@@ -60,6 +61,13 @@ export function getConnectionLineShape(
     function isObjectSelected(object: IEezObject | undefined): boolean {
         if (!object) {
             return false;
+        }
+        const classInfo = getClassInfo(object);
+        if (classInfo.isSelectable != undefined) {
+            const isSelectable = classInfo.isSelectable(object);
+            if (!isSelectable) {
+                return false;
+            }
         }
         if (context.viewState.isObjectIdSelected(getId(object))) {
             return true;

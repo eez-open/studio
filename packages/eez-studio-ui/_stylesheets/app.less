@@ -5204,3 +5204,29 @@ button.EezStudio_Action {
 .EezStudio_TextsStatistics {
     margin: 10px;
 }
+
+.EezStudio_WidgetTreeTrow {
+    display: flex !important;
+    justify-content: space-between;
+
+    &:not(.locked) {
+        .EezStudio_Icon {
+            position: absolute;
+            right: 0;
+            visibility: hidden;
+        }
+        &:hover {
+            .EezStudio_Icon {
+                visibility: visible;
+            }
+        }
+    }
+
+    &.locked {
+        span {
+            width: calc(100% - 18px);
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+    }
+}

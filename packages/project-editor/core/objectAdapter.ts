@@ -982,6 +982,12 @@ export class TreeAdapter implements ITreeAdapter {
                 childItem => childItem
             ) as ITreeObjectAdapter[];
 
+            itemChildren;
+
+            if (filter) {
+                itemChildren = itemChildren.filter(item => filter(item.object));
+            }
+
             if (searchText) {
                 itemChildren = itemChildren.filter(item => {
                     return (
@@ -1007,43 +1013,41 @@ export class TreeAdapter implements ITreeAdapter {
 
         function enumChildren(childItems: ITreeObjectAdapter[], level: number) {
             childItems.forEach(childItem => {
-                if (!filter || filter(childItem.object)) {
-                    const showOnlyChildren =
-                        childItem.children.length == 1 &&
-                        isArray(childItem.object) &&
-                        isShowOnlyChildrenInTree(childItem.object);
+                const showOnlyChildren =
+                    childItem.children.length == 1 &&
+                    isArray(childItem.object) &&
+                    isShowOnlyChildrenInTree(childItem.object);
 
-                    const childItems = getChildren(childItem);
+                let childItems = getChildren(childItem);
 
-                    if (showOnlyChildren) {
-                        enumChildren(childItems, level);
-                    } else {
-                        const row = {
-                            item: childItem,
-                            level,
-                            draggable,
-                            collapsable: false
-                        };
+                if (showOnlyChildren) {
+                    enumChildren(childItems, level);
+                } else {
+                    const row = {
+                        item: childItem,
+                        level,
+                        draggable,
+                        collapsable: false
+                    };
 
-                        children.push(row);
+                    children.push(row);
 
-                        const maxLevelReached =
-                            maxLevel !== undefined && level === maxLevel;
+                    const maxLevelReached =
+                        maxLevel !== undefined && level === maxLevel;
 
-                        if (
-                            !maxLevelReached &&
-                            childItem.expanded &&
-                            childItems.length > 0
-                        ) {
-                            enumChildren(childItems, level + 1);
-                        }
-
-                        row.collapsable =
-                            collapsable! &&
-                            !maxLevelReached &&
-                            (childItems.length > 0 ||
-                                canContainChildren(childItem.object));
+                    if (
+                        !maxLevelReached &&
+                        childItem.expanded &&
+                        childItems.length > 0
+                    ) {
+                        enumChildren(childItems, level + 1);
                     }
+
+                    row.collapsable =
+                        collapsable! &&
+                        !maxLevelReached &&
+                        (childItems.length > 0 ||
+                            canContainChildren(childItem.object));
                 }
             });
         }

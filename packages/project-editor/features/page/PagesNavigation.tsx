@@ -19,6 +19,9 @@ import { NavigationComponent } from "project-editor/project/NavigationComponent"
 import { PageTabState } from "project-editor/features/page/PageEditor";
 import { Page } from "project-editor/features/page/page";
 import { LocalVariables } from "../variable/VariablesNavigation";
+import type { Widget } from "project-editor/flow/component";
+import { Icon } from "eez-studio-ui/icon";
+import classNames from "classnames";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -153,12 +156,50 @@ export const PageStructure = observer(
             this.context.navigationStore.setSelectedPanel(this);
         };
 
+        renderItem = (itemId: string, className: string | undefined) => {
+            if (!this.treeAdapter) {
+                return null;
+            }
+            const item = this.treeAdapter.getItemFromId(itemId);
+            if (!item) {
+                return null;
+            }
+
+            const widget = item.object as Widget;
+
+            return (
+                <span
+                    className={classNames(
+                        "EezStudio_WidgetTreeTrow",
+                        className,
+                        { locked: widget.locked }
+                    )}
+                >
+                    <span>{this.treeAdapter.itemToString(item)}</span>
+                    <Icon
+                        icon={
+                            widget.locked
+                                ? "material:lock"
+                                : "material:lock_open"
+                        }
+                        size={16}
+                        onClick={() =>
+                            this.context.updateObject(widget, {
+                                locked: !widget.locked
+                            })
+                        }
+                    />
+                </span>
+            );
+        };
+
         render() {
             return this.treeAdapter ? (
                 <Tree
                     treeAdapter={this.treeAdapter}
                     onFocus={this.onFocus}
                     tabIndex={0}
+                    renderItem={this.renderItem}
                 />
             ) : null;
         }

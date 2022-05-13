@@ -83,6 +83,7 @@ export const Selection = observer(
         get selectedObjects() {
             return this.props.context.viewState.selectedObjects.filter(
                 selectedObject =>
+                    (!this.props.mouseHandler || selectedObject.isSelectable) &&
                     !(
                         selectedObject.object instanceof
                             ProjectEditor.ConnectionLineClass ||
@@ -250,7 +251,12 @@ export const Selection = observer(
                 }
 
                 // build resizeHandlersElement
-                if (!this.props.mouseHandler) {
+                if (
+                    !this.props.mouseHandler &&
+                    !selectedObjects.find(
+                        selectedObject => !selectedObject.isSelectable
+                    )
+                ) {
                     resizeHandlersElement = this.getResizeHandlers(
                         this.selectedObjectsBoundingRect
                     );

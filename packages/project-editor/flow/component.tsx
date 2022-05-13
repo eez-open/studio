@@ -1733,6 +1733,8 @@ export class Widget extends Component {
 
     allowOutside: boolean;
 
+    locked: boolean;
+
     static classInfo: ClassInfo = makeDerivedClassInfo(Component.classInfo, {
         properties: [
             resizingProperty,
@@ -1746,6 +1748,11 @@ export class Widget extends Component {
                 displayName: `Hide "Widget is outside of its parent" warning`,
                 type: PropertyType.Boolean,
                 propertyGridGroup: geometryGroup
+            },
+            {
+                name: "locked",
+                type: PropertyType.Boolean,
+                hideInPropertyGrid: true
             }
         ],
 
@@ -1977,10 +1984,16 @@ export class Widget extends Component {
         showSelectedObjectsParent: () => {
             return true;
         },
-        getResizeHandlers(object: Widget) {
-            return object.getResizeHandlers();
+        getResizeHandlers(widget: Widget) {
+            return widget.getResizeHandlers();
         },
-        componentHeaderColor: "#ddd"
+        componentHeaderColor: "#ddd",
+        isSelectable(widget: Widget) {
+            return !widget.locked;
+        },
+        isMoveable(widget: Widget) {
+            return !widget.locked;
+        }
     });
 
     constructor() {
@@ -1992,7 +2005,8 @@ export class Widget extends Component {
             resizing: observable,
             style: observable,
             allowOutside: observable,
-            styleObject: computed
+            styleObject: computed,
+            locked: observable
         });
     }
 

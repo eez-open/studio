@@ -68,9 +68,7 @@ export interface IPointerEvent {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function isSelectionMoveable(context: IFlowContext) {
-    return !context.viewState.selectedObjects.find(
-        object => !object.isMoveable
-    );
+    return context.viewState.selectedObjects.find(object => object.isMoveable);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -454,6 +452,8 @@ class MouseHandlerWithSnapLines extends MouseHandler {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DragMouseHandler extends MouseHandlerWithSnapLines {
+    selectedObjects: ITreeObjectAdapter[];
+
     changed: boolean = false;
     rects: Rect[] = [];
 
@@ -484,12 +484,14 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
             getSelectedObjectsBoundingRect(context.viewState)
         );
 
-        this.objectPositionsAtDown = context.viewState.selectedObjects.map(
-            object => ({
-                x: object.rect.left,
-                y: object.rect.top
-            })
+        this.selectedObjects = context.viewState.selectedObjects.filter(
+            selectedObject => selectedObject.isMoveable
         );
+
+        this.objectPositionsAtDown = this.selectedObjects.map(object => ({
+            x: object.rect.left,
+            y: object.rect.top
+        }));
 
         this.left = this.selectionBoundingRectAtDown.left;
         this.top = this.selectionBoundingRectAtDown.top;
@@ -526,7 +528,7 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
                 ".EezStudio_FlowEditorSelection_Draggable"
             ) as HTMLElement;
 
-            this.objectNodes = context.viewState.selectedObjects.map(
+            this.objectNodes = this.selectedObjects.map(
                 selectedObject =>
                     container.querySelector(
                         `[data-eez-flow-object-id="${selectedObject.id}"]`
@@ -542,8 +544,8 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
 
         this.changed = false;
 
-        for (let i = 0; i < context.viewState.selectedObjects.length; ++i) {
-            const object = context.viewState.selectedObjects[i];
+        for (let i = 0; i < this.selectedObjects.length; ++i) {
+            const object = this.selectedObjects[i];
 
             this.rects[i] = {
                 left: Math.round(
@@ -570,8 +572,8 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
         super.up(context);
 
         if (this.changed) {
-            for (let i = 0; i < context.viewState.selectedObjects.length; ++i) {
-                const object = context.viewState.selectedObjects[i];
+            for (let i = 0; i < this.selectedObjects.length; ++i) {
+                const object = this.selectedObjects[i];
                 const rect = this.rects[i];
                 if (!rectEqual(rect, object.rect)) {
                     object.rect = rect;

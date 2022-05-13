@@ -77,7 +77,10 @@ const TreeRow = observer(
         collapsable: boolean;
         onToggleCollapse: (event: any) => void;
         onEditItem?: (itemId: string) => void;
-        renderItem?: (itemId: string) => React.ReactNode;
+        renderItem?: (
+            itemId: string,
+            className: string | undefined
+        ) => React.ReactNode;
     }) => {
         const ref = useRef<HTMLDivElement>(null);
 
@@ -156,7 +159,7 @@ const TreeRow = observer(
                 {triangle}
 
                 {renderItem ? (
-                    renderItem(treeAdapter.getItemId(item))
+                    renderItem(treeAdapter.getItemId(item), labelClassName)
                 ) : (
                     <span className={labelClassName}>
                         {treeAdapter.itemToString(item)}
@@ -174,7 +177,10 @@ interface TreeProps {
     tabIndex?: number;
     onFocus?: () => void;
     onEditItem?: (itemId: string) => void;
-    renderItem?: (itemId: string) => React.ReactNode;
+    renderItem?: (
+        itemId: string,
+        className: string | undefined
+    ) => React.ReactNode;
 }
 
 export const Tree = observer(

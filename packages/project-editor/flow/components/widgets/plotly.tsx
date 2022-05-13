@@ -412,7 +412,8 @@ export class LineChartWidget extends Widget {
                 name: "margin",
                 type: PropertyType.Object,
                 typeClass: RectObject,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: specificGroup,
+                enumerable: false
             }
         ],
 
