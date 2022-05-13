@@ -4,7 +4,7 @@ import { observable, computed, makeObservable } from "mobx";
 
 import { _each, _find, _range } from "eez-studio-shared/algorithm";
 import { validators } from "eez-studio-shared/validation";
-import { Rect } from "eez-studio-shared/geometry";
+import { BoundingRectBuilder, Rect } from "eez-studio-shared/geometry";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
@@ -96,8 +96,28 @@ import {
     generalGroup,
     geometryGroup,
     specificGroup,
-    styleGroup
+    styleGroup,
+    topGroup
 } from "project-editor/components/PropertyGrid/groups";
+import { IconAction } from "eez-studio-ui/action";
+import { observer } from "mobx-react";
+import {
+    ALIGN_HORIZONTAL_LEFT_ICON,
+    ALIGN_HORIZONTAL_CENTER_ICON,
+    ALIGN_HORIZONTAL_RIGHT_ICON,
+    ALIGN_VERTICAL_TOP_ICON,
+    ALIGN_VERTICAL_CENTER_ICON,
+    ALIGN_VERTICAL_BOTTOM_ICON,
+    DISTRIBUTE_HORIZONTAL_LEFT_ICON,
+    DISTRIBUTE_HORIZONTAL_CENTER_ICON,
+    DISTRIBUTE_HORIZONTAL_RIGHT_ICON,
+    DISTRIBUTE_HORIZONTAL_GAPS_ICON,
+    DISTRIBUTE_VERTICAL_TOP_ICON,
+    DISTRIBUTE_VERTICAL_CENTER_ICON,
+    DISTRIBUTE_VERTICAL_BOTTOM_ICON,
+    DISTRIBUTE_VERTICAL_GAPS_ICON
+} from "./align_and_distribute_icons";
+import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -975,6 +995,462 @@ function addBreakpointMenuItems(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const AlignAndDistributePropertyGridUI = observer(
+    class AlignAndDistributePropertyGridUI extends React.Component<PropertyProps> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        get components() {
+            return this.props.objects as Component[];
+        }
+
+        get boundingRect() {
+            const rectBuilder = new BoundingRectBuilder();
+            this.components.forEach(component =>
+                rectBuilder.addRect(component.rect)
+            );
+            return rectBuilder.getRect();
+        }
+
+        get componentsHorizontallySorted() {
+            return this.components.slice().sort((a, b) => a.left - b.left);
+        }
+
+        get componentsVerticallySorted() {
+            return this.components.slice().sort((a, b) => a.top - b.top);
+        }
+
+        onAlignHorizontalLeft = () => {
+            const boundingRect = this.boundingRect;
+
+            this.context.undoManager.setCombineCommands(true);
+
+            this.components.forEach(component =>
+                this.context.updateObject(component, {
+                    left: boundingRect.left
+                })
+            );
+
+            this.context.undoManager.setCombineCommands(false);
+        };
+
+        onAlignHorizontalCenter = () => {
+            const boundingRect = this.boundingRect;
+
+            const center = boundingRect.left + boundingRect.width / 2;
+
+            this.context.undoManager.setCombineCommands(true);
+
+            this.components.forEach(component =>
+                this.context.updateObject(component, {
+                    left: Math.round(center - component.width / 2)
+                })
+            );
+
+            this.context.undoManager.setCombineCommands(false);
+        };
+
+        onAlignHorizontalRight = () => {
+            const boundingRect = this.boundingRect;
+
+            const right = boundingRect.left + boundingRect.width;
+
+            this.context.undoManager.setCombineCommands(true);
+
+            this.components.forEach(component =>
+                this.context.updateObject(component, {
+                    left: right - component.width
+                })
+            );
+
+            this.context.undoManager.setCombineCommands(false);
+        };
+
+        onAlignVerticalTop = () => {
+            const boundingRect = this.boundingRect;
+
+            this.context.undoManager.setCombineCommands(true);
+
+            this.components.forEach(component =>
+                this.context.updateObject(component, {
+                    top: boundingRect.top
+                })
+            );
+
+            this.context.undoManager.setCombineCommands(false);
+        };
+
+        onAlignVerticalCenter = () => {
+            const boundingRect = this.boundingRect;
+
+            const center = boundingRect.top + boundingRect.height / 2;
+
+            this.context.undoManager.setCombineCommands(true);
+
+            this.components.forEach(component =>
+                this.context.updateObject(component, {
+                    top: Math.round(center - component.height / 2)
+                })
+            );
+
+            this.context.undoManager.setCombineCommands(false);
+        };
+
+        onAlignVerticalBottom = () => {
+            const boundingRect = this.boundingRect;
+
+            const bottom = boundingRect.top + boundingRect.height;
+
+            this.context.undoManager.setCombineCommands(true);
+
+            this.components.forEach(component =>
+                this.context.updateObject(component, {
+                    top: bottom - component.height
+                })
+            );
+
+            this.context.undoManager.setCombineCommands(false);
+        };
+
+        onDistributeHorizontalLeft = () => {
+            const components = this.componentsHorizontallySorted;
+
+            if (components.length < 3) {
+                return;
+            }
+
+            const leftFirst = components[0].left;
+            const leftLast = components[components.length - 1].left;
+
+            const totalWidth = leftLast - leftFirst;
+
+            const width = totalWidth / (components.length - 1);
+
+            this.context.undoManager.setCombineCommands(true);
+
+            components.slice(1, components.length - 1).forEach((component, i) =>
+                this.context.updateObject(component, {
+                    left: Math.round(leftFirst + width * (i + 1))
+                })
+            );
+
+            this.context.undoManager.setCombineCommands(false);
+        };
+
+        onDistributeHorizontalCenter = () => {
+            const components = this.componentsHorizontallySorted;
+
+            if (components.length < 3) {
+                return;
+            }
+
+            const centerFirst = components[0].left + components[0].width / 2;
+            const centerLast =
+                components[components.length - 1].left +
+                components[components.length - 1].width / 2;
+
+            const totalWidth = centerLast - centerFirst;
+
+            const width = totalWidth / (components.length - 1);
+
+            this.context.undoManager.setCombineCommands(true);
+
+            components.slice(1, components.length - 1).forEach((component, i) =>
+                this.context.updateObject(component, {
+                    left: Math.round(
+                        centerFirst + width * (i + 1) - component.width / 2
+                    )
+                })
+            );
+
+            this.context.undoManager.setCombineCommands(false);
+        };
+
+        onDistributeHorizontalRight = () => {
+            const components = this.componentsHorizontallySorted;
+
+            if (components.length < 3) {
+                return;
+            }
+
+            const rightFirst = components[0].left + components[0].width;
+            const rightLast =
+                components[components.length - 1].left +
+                components[components.length - 1].width;
+
+            const totalWidth = rightLast - rightFirst;
+
+            const width = totalWidth / (components.length - 1);
+
+            this.context.undoManager.setCombineCommands(true);
+
+            components.slice(1, components.length - 1).forEach((component, i) =>
+                this.context.updateObject(component, {
+                    left: Math.round(
+                        rightFirst + width * (i + 1) - component.width
+                    )
+                })
+            );
+
+            this.context.undoManager.setCombineCommands(false);
+        };
+
+        onDistributeHorizontalGaps = () => {
+            const components = this.componentsHorizontallySorted;
+
+            if (components.length < 3) {
+                return;
+            }
+
+            let totalGap = 0;
+            for (let i = 1; i < components.length; i++) {
+                totalGap +=
+                    components[i].left -
+                    (components[i - 1].left + components[i - 1].width);
+            }
+
+            let gap = totalGap / (components.length - 1);
+
+            this.context.undoManager.setCombineCommands(true);
+
+            components.slice(1, components.length - 1).forEach((component, i) =>
+                this.context.updateObject(component, {
+                    left: Math.round(
+                        components[i].left + components[i].width + gap
+                    )
+                })
+            );
+
+            this.context.undoManager.setCombineCommands(false);
+        };
+
+        onDistributeVerticalTop = () => {
+            const components = this.componentsVerticallySorted;
+
+            if (components.length < 3) {
+                return;
+            }
+
+            const topFirst = components[0].top;
+            const topLast = components[components.length - 1].top;
+
+            const totalHeight = topLast - topFirst;
+
+            const height = totalHeight / (components.length - 1);
+
+            this.context.undoManager.setCombineCommands(true);
+
+            components.slice(1, components.length - 1).forEach((component, i) =>
+                this.context.updateObject(component, {
+                    top: Math.round(topFirst + height * (i + 1))
+                })
+            );
+
+            this.context.undoManager.setCombineCommands(false);
+        };
+
+        onDistributeVerticalCenter = () => {
+            const components = this.componentsVerticallySorted;
+
+            if (components.length < 3) {
+                return;
+            }
+
+            const centerFirst = components[0].top + components[0].height / 2;
+            const centerLast =
+                components[components.length - 1].top +
+                components[components.length - 1].height / 2;
+
+            const totalHeight = centerLast - centerFirst;
+
+            const height = totalHeight / (components.length - 1);
+
+            this.context.undoManager.setCombineCommands(true);
+
+            components.slice(1, components.length - 1).forEach((component, i) =>
+                this.context.updateObject(component, {
+                    top: Math.round(
+                        centerFirst + height * (i + 1) - component.height / 2
+                    )
+                })
+            );
+
+            this.context.undoManager.setCombineCommands(false);
+        };
+
+        onDistributeVerticalBottom = () => {
+            const components = this.componentsVerticallySorted;
+
+            if (components.length < 3) {
+                return;
+            }
+
+            const bottomFirst = components[0].top + components[0].height;
+            const bottomLast =
+                components[components.length - 1].top +
+                components[components.length - 1].height;
+
+            const totalHeight = bottomLast - bottomFirst;
+
+            const height = totalHeight / (components.length - 1);
+
+            this.context.undoManager.setCombineCommands(true);
+
+            components.slice(1, components.length - 1).forEach((component, i) =>
+                this.context.updateObject(component, {
+                    top: Math.round(
+                        bottomFirst + height * (i + 1) - component.height
+                    )
+                })
+            );
+
+            this.context.undoManager.setCombineCommands(false);
+        };
+
+        onDistributeVerticalGaps = () => {
+            const components = this.componentsVerticallySorted;
+
+            if (components.length < 3) {
+                return;
+            }
+
+            let totalGap = 0;
+            for (let i = 1; i < components.length; i++) {
+                totalGap +=
+                    components[i].top -
+                    (components[i - 1].top + components[i - 1].height);
+            }
+
+            let gap = totalGap / (components.length - 1);
+
+            this.context.undoManager.setCombineCommands(true);
+
+            components.slice(1, components.length - 1).forEach((component, i) =>
+                this.context.updateObject(component, {
+                    top: Math.round(
+                        components[i].top + components[i].height + gap
+                    )
+                })
+            );
+
+            this.context.undoManager.setCombineCommands(false);
+        };
+
+        render() {
+            return (
+                <div className="EezStudio_ActionGroups">
+                    <div className="EezStudio_ActionGroup">
+                        <div className="EezStudio_ActionGroup_Title">Align</div>
+                        <div className="EezStudio_ActionGroup_Actions">
+                            <div className="EezStudio_ActionGroup_Actions_Group">
+                                <IconAction
+                                    icon={ALIGN_HORIZONTAL_LEFT_ICON}
+                                    title="Align left edges"
+                                    onClick={this.onAlignHorizontalLeft}
+                                />
+                                <IconAction
+                                    icon={ALIGN_HORIZONTAL_CENTER_ICON}
+                                    title="Center on vertical axis"
+                                    onClick={this.onAlignHorizontalCenter}
+                                />
+                                <IconAction
+                                    icon={ALIGN_HORIZONTAL_RIGHT_ICON}
+                                    title="Align right edges"
+                                    onClick={this.onAlignHorizontalRight}
+                                />
+                            </div>
+                            <div className="EezStudio_ActionGroup_Actions_Group">
+                                <IconAction
+                                    icon={ALIGN_VERTICAL_TOP_ICON}
+                                    title="Align top edges"
+                                    onClick={this.onAlignVerticalTop}
+                                />
+                                <IconAction
+                                    icon={ALIGN_VERTICAL_CENTER_ICON}
+                                    title="Center on horizontal axis"
+                                    onClick={this.onAlignVerticalCenter}
+                                />
+                                <IconAction
+                                    icon={ALIGN_VERTICAL_BOTTOM_ICON}
+                                    title="Align bottom edges"
+                                    onClick={this.onAlignVerticalBottom}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    {this.components.length >= 3 && (
+                        <div className="EezStudio_ActionGroup">
+                            <div className="EezStudio_ActionGroup_Title">
+                                Distribute
+                            </div>
+                            <div className="EezStudio_ActionGroup_Actions">
+                                <div className="EezStudio_ActionGroup_Actions_Group">
+                                    <IconAction
+                                        icon={DISTRIBUTE_HORIZONTAL_LEFT_ICON}
+                                        title="Distribute left edges equidistantly"
+                                        onClick={
+                                            this.onDistributeHorizontalLeft
+                                        }
+                                    />
+                                    <IconAction
+                                        icon={DISTRIBUTE_HORIZONTAL_CENTER_ICON}
+                                        title="Distribute centers equidistantly horizontally"
+                                        onClick={
+                                            this.onDistributeHorizontalCenter
+                                        }
+                                    />
+                                    <IconAction
+                                        icon={DISTRIBUTE_HORIZONTAL_RIGHT_ICON}
+                                        title="Distribute right edges equidistantly"
+                                        onClick={
+                                            this.onDistributeHorizontalRight
+                                        }
+                                    />
+                                    <IconAction
+                                        icon={DISTRIBUTE_HORIZONTAL_GAPS_ICON}
+                                        title="Make horizontal gaps equal"
+                                        onClick={
+                                            this.onDistributeHorizontalGaps
+                                        }
+                                    />
+                                </div>
+                                <div className="EezStudio_ActionGroup_Actions_Group">
+                                    <IconAction
+                                        icon={DISTRIBUTE_VERTICAL_TOP_ICON}
+                                        title="Distribute top edges equidistantly"
+                                        onClick={this.onDistributeVerticalTop}
+                                    />
+                                    <IconAction
+                                        icon={DISTRIBUTE_VERTICAL_CENTER_ICON}
+                                        title="Distribute centers equidistantly vertically"
+                                        onClick={
+                                            this.onDistributeVerticalCenter
+                                        }
+                                    />
+                                    <IconAction
+                                        icon={DISTRIBUTE_VERTICAL_BOTTOM_ICON}
+                                        title="Distribute bottom edges equidistantly"
+                                        onClick={
+                                            this.onDistributeVerticalBottom
+                                        }
+                                    />
+                                    <IconAction
+                                        icon={DISTRIBUTE_VERTICAL_GAPS_ICON}
+                                        title="Make vertical gaps equal"
+                                        onClick={this.onDistributeVerticalGaps}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export type AutoSize = "width" | "height" | "both" | "none";
 
 export class Component extends EezObject {
@@ -1045,6 +1521,33 @@ export class Component extends EezObject {
                 name: "type",
                 type: PropertyType.Enum,
                 hideInPropertyGrid: true
+            },
+            {
+                name: "alignAndDistribute",
+                type: PropertyType.Any,
+                propertyGridGroup: topGroup,
+                computed: true,
+                propertyGridRowComponent: AlignAndDistributePropertyGridUI,
+                hideInPropertyGrid: (widget: Widget) => {
+                    const DocumentStore =
+                        ProjectEditor.getProject(widget)._DocumentStore;
+                    const propertyGridObjects =
+                        DocumentStore.navigationStore.propertyGridObjects;
+
+                    if (propertyGridObjects.length < 2) {
+                        return true;
+                    }
+
+                    if (
+                        propertyGridObjects.find(
+                            object => !(object instanceof Component)
+                        )
+                    ) {
+                        return true;
+                    }
+
+                    return false;
+                }
             },
             {
                 name: "left",

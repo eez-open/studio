@@ -214,7 +214,8 @@ export const Selection = observer(
             if (isSelectionVisible) {
                 // build selectedObjectRectsElement
                 const selectedObjectClassName =
-                    selectedObjects.length > 1
+                    selectedObjects.length > 1 ||
+                    !selectedObjects[0].isSelectable
                         ? "EezStudio_FlowEditorSelection_SelectedObject"
                         : "EezStudio_FlowEditorSelection_BoundingRect";
 

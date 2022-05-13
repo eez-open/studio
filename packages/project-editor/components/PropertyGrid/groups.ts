@@ -44,3 +44,9 @@ export const styleGroup: IPropertyGridGroupDefinition = {
     position: (object: IEezObject) =>
         object instanceof ProjectEditor.ActionComponentClass ? 4 : 1
 };
+
+export const topGroup: IPropertyGridGroupDefinition = {
+    id: "top",
+    title: "",
+    position: (object: IEezObject) => -1
+};

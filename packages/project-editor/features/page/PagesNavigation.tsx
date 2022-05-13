@@ -6,7 +6,10 @@ import * as FlexLayout from "flexlayout-react";
 import { _find } from "eez-studio-shared/algorithm";
 
 import { IEezObject } from "project-editor/core/object";
-import { TreeAdapter } from "project-editor/core/objectAdapter";
+import {
+    TreeAdapter,
+    TreeObjectAdapter
+} from "project-editor/core/objectAdapter";
 import { IPanel, LayoutModels } from "project-editor/store";
 
 import { ListNavigation } from "project-editor/components/ListNavigation";
@@ -20,10 +23,28 @@ import { PageTabState } from "project-editor/features/page/PageEditor";
 import { Page } from "project-editor/features/page/page";
 import { LocalVariables } from "../variable/VariablesNavigation";
 import type { Widget } from "project-editor/flow/component";
-import { Icon } from "eez-studio-ui/icon";
 import classNames from "classnames";
+import { IconAction } from "eez-studio-ui/action";
+import {
+    Body,
+    ToolbarHeader,
+    VerticalHeaderWithBody
+} from "eez-studio-ui/header-with-body";
+import { Toolbar } from "eez-studio-ui/toolbar";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const LOCK_ICON = (
+    <svg viewBox="0 0 320 420">
+        <path d="M280 140h-20v-40C260 45 215 0 160 0S60 45 60 100v40H40c-22.002 0-40 17.998-40 40v200c0 22.002 17.998 40 40 40h240c22.002 0 40-17.998 40-40V180c0-22.002-17.998-40-40-40zM160 322c-22.002 0-40-17.998-40-40s17.998-40 40-40 40 17.998 40 40-17.998 40-40 40zm62.002-182H97.998v-40c0-34.004 28.003-62.002 62.002-62.002 34.004 0 62.002 27.998 62.002 62.002v40z" />
+    </svg>
+);
+
+const UNLOCK_ICON = (
+    <svg viewBox="0 0 320 420">
+        <path d="M280 140h-20v-40C260 45 215 0 160 0S60 45 60 100h37.998c0-34.004 28.003-62.002 62.002-62.002 34.004 0 62.002 27.998 62.002 62.002H222v40H40c-22.002 0-40 17.998-40 40v200c0 22.002 17.998 40 40 40h240c22.002 0 40-17.998 40-40V180c0-22.002-17.998-40-40-40zM160 322c-22.002 0-40-17.998-40-40s17.998-40 40-40 40 17.998 40 40-17.998 40-40 40z" />
+    </svg>
+);
 
 export const PagesNavigation = observer(
     class PagesNavigation extends NavigationComponent {
@@ -81,7 +102,9 @@ export const PageStructure = observer(
             makeObservable(this, {
                 pageTabState: computed,
                 componentContainerDisplayItem: computed,
-                treeAdapter: computed
+                treeAdapter: computed,
+                isLockAllEnabled: computed,
+                isUnlockAllEnabled: computed
             });
         }
 
@@ -156,7 +179,72 @@ export const PageStructure = observer(
             this.context.navigationStore.setSelectedPanel(this);
         };
 
-        renderItem = (itemId: string, className: string | undefined) => {
+        get isLockAllEnabled() {
+            if (!this.treeAdapter) {
+                return false;
+            }
+            return (
+                this.treeAdapter.allRows.find(
+                    row =>
+                        !((row.item as TreeObjectAdapter).object as Widget)
+                            .locked
+                ) != undefined
+            );
+        }
+
+        onLockAll = () => {
+            if (!this.treeAdapter) {
+                return;
+            }
+
+            this.context.undoManager.setCombineCommands(true);
+
+            this.treeAdapter.allRows.forEach(row => {
+                const widget = (row.item as TreeObjectAdapter).object as Widget;
+                if (!widget.locked) {
+                    this.context.updateObject(widget, {
+                        locked: true
+                    });
+                }
+            });
+
+            this.context.undoManager.setCombineCommands(false);
+        };
+
+        get isUnlockAllEnabled() {
+            if (!this.treeAdapter) {
+                return false;
+            }
+
+            return (
+                this.treeAdapter.allRows.find(
+                    row =>
+                        ((row.item as TreeObjectAdapter).object as Widget)
+                            .locked
+                ) != undefined
+            );
+        }
+
+        onUnlockAll = () => {
+            if (!this.treeAdapter) {
+                return;
+            }
+
+            this.context.undoManager.setCombineCommands(true);
+
+            this.treeAdapter.allRows.forEach(row => {
+                const widget = (row.item as TreeObjectAdapter).object as Widget;
+                if (widget.locked) {
+                    this.context.updateObject(widget, {
+                        locked: false
+                    });
+                }
+            });
+
+            this.context.undoManager.setCombineCommands(false);
+        };
+
+        renderItem = (itemId: string) => {
             if (!this.treeAdapter) {
                 return null;
             }
@@ -169,20 +257,19 @@ export const PageStructure = observer(
 
             return (
                 <span
-                    className={classNames(
-                        "EezStudio_WidgetTreeTrow",
-                        className,
-                        { locked: widget.locked }
-                    )}
+                    className={classNames("EezStudio_WidgetTreeTrow", {
+                        locked: widget.locked
+                    })}
                 >
                     <span>{this.treeAdapter.itemToString(item)}</span>
-                    <Icon
-                        icon={
+                    <IconAction
+                        icon={widget.locked ? LOCK_ICON : UNLOCK_ICON}
+                        title={
                             widget.locked
-                                ? "material:lock"
-                                : "material:lock_open"
+                                ? "Unlock this widget"
+                                : "Lock this widget"
                         }
-                        size={16}
+                        iconSize={14}
                         onClick={() =>
                             this.context.updateObject(widget, {
                                 locked: !widget.locked
@@ -195,12 +282,34 @@ export const PageStructure = observer(
 
         render() {
             return this.treeAdapter ? (
-                <Tree
-                    treeAdapter={this.treeAdapter}
-                    onFocus={this.onFocus}
-                    tabIndex={0}
-                    renderItem={this.renderItem}
-                />
+                <VerticalHeaderWithBody className="EezStudio_PageStructure">
+                    <ToolbarHeader>
+                        <Toolbar>
+                            <IconAction
+                                title="Lock All"
+                                icon={LOCK_ICON}
+                                iconSize={16}
+                                onClick={this.onLockAll}
+                                enabled={this.isLockAllEnabled}
+                            />
+                            <IconAction
+                                title="Unlock All"
+                                icon={UNLOCK_ICON}
+                                iconSize={16}
+                                onClick={this.onUnlockAll}
+                                enabled={this.isUnlockAllEnabled}
+                            />
+                        </Toolbar>
+                    </ToolbarHeader>
+                    <Body>
+                        <Tree
+                            treeAdapter={this.treeAdapter}
+                            onFocus={this.onFocus}
+                            tabIndex={0}
+                            renderItem={this.renderItem}
+                        />
+                    </Body>
+                </VerticalHeaderWithBody>
             ) : null;
         }
     }

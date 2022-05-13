@@ -2648,18 +2648,6 @@ button.EezStudio_Action {
     padding: 5px;
     border: 2px dashed transparent;
     height: 100%;
-    position: relative;
-
-    & > div {
-        position: absolute;
-        width: calc(100% - 10px);
-        padding-bottom: 5px;
-    }
-
-    &.zero-level .tree-row-label {
-        display: block !important;
-        margin-left: 0 !important;
-    }
 
     &:not(.drag-source) {
         .tree-row:not(.drag-source) {
@@ -2690,7 +2678,7 @@ button.EezStudio_Action {
     }
 
     .tree-row {
-        white-space: nowrap;
+        display: flex;
 
         &.drag-source {
             background-color: @dragSourceBackgroundColor;
@@ -2700,11 +2688,6 @@ button.EezStudio_Action {
         &.drop-target {
             background-color: @dropTargetBackgroundColor;
             color: @dropTargetColor;
-        }
-
-        .tree-row-label {
-            display: inline-block;
-            margin-left: 18px;
         }
 
         .tree-row-triangle {
@@ -5205,18 +5188,48 @@ button.EezStudio_Action {
     margin: 10px;
 }
 
+.EezStudio_PageStructure {
+    height: 100%;
+
+    .EezStudio_ToolbarHeader {
+        min-height: 28px;
+    }
+}
+
 .EezStudio_WidgetTreeTrow {
-    display: flex !important;
+    position: relative;
+    display: flex;
+    flex: 1;
     justify-content: space-between;
+    width: 100%;
+    height: 20px;
+
+    span {
+        flex: 1;
+        white-space: nowrap;
+    }
+
+    .EezStudio_IconAction {
+        margin: 0;
+        padding: 0;
+        line-height: 0;
+    }
+
+    .EezStudio_IconAction {
+        .EezStudio_Icon {
+            fill: @textColor;
+        }
+    }
 
     &:not(.locked) {
-        .EezStudio_Icon {
+        .EezStudio_IconAction {
             position: absolute;
-            right: 0;
+            top: 3px;
+            right: 0px;
             visibility: hidden;
         }
         &:hover {
-            .EezStudio_Icon {
+            .EezStudio_IconAction {
                 visibility: visible;
             }
         }
@@ -5224,9 +5237,39 @@ button.EezStudio_Action {
 
     &.locked {
         span {
-            width: calc(100% - 18px);
             text-overflow: ellipsis;
             overflow: hidden;
+        }
+    }
+}
+
+.EezStudio_ActionGroups {
+    .EezStudio_ActionGroup {
+        margin-bottom: 10px;
+        .EezStudio_ActionGroup_Title {
+            font-size: 85%;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .EezStudio_ActionGroup_Actions {
+            padding-left: 10px;
+            display: flex;
+            flex-direction: column;
+
+            .EezStudio_ActionGroup_Actions_Group {
+                margin-bottom: 5px;
+                &:last-child {
+                    margin-bottom: 0;
+                }
+                .EezStudio_Action {
+                    margin-right: 5px;
+                    &:last-child {
+                        margin-right: 0;
+                    }
+                }
+            }
         }
     }
 }

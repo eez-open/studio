@@ -132,7 +132,7 @@ const ColorItem = observer(
 
         render() {
             return (
-                <div className="tree-row-label EezStudio_ColorItem">
+                <div className="EezStudio_ColorItem">
                     <input
                         type="color"
                         value={

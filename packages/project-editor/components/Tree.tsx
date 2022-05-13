@@ -77,10 +77,7 @@ const TreeRow = observer(
         collapsable: boolean;
         onToggleCollapse: (event: any) => void;
         onEditItem?: (itemId: string) => void;
-        renderItem?: (
-            itemId: string,
-            className: string | undefined
-        ) => React.ReactNode;
+        renderItem?: (itemId: string) => React.ReactNode;
     }) => {
         const ref = useRef<HTMLDivElement>(null);
 
@@ -115,7 +112,6 @@ const TreeRow = observer(
         });
 
         let triangle: JSX.Element | undefined;
-        let labelClassName;
         if (collapsable) {
             triangle = (
                 <Icon
@@ -129,8 +125,6 @@ const TreeRow = observer(
                     onClick={onToggleCollapse}
                 />
             );
-        } else {
-            labelClassName = "tree-row-label";
         }
 
         return (
@@ -138,7 +132,12 @@ const TreeRow = observer(
                 ref={ref}
                 data-object-id={treeAdapter.getItemId(item)}
                 className={className}
-                style={{ paddingLeft: level * 20 }}
+                style={{
+                    paddingLeft:
+                        treeAdapter.maxLevel === 0
+                            ? 0
+                            : (triangle ? 0 : 18) + level * 20
+                }}
                 onMouseUp={onMouseUp}
                 onClick={onClick}
                 onDoubleClick={onDoubleClick}
@@ -159,11 +158,9 @@ const TreeRow = observer(
                 {triangle}
 
                 {renderItem ? (
-                    renderItem(treeAdapter.getItemId(item), labelClassName)
+                    renderItem(treeAdapter.getItemId(item))
                 ) : (
-                    <span className={labelClassName}>
-                        {treeAdapter.itemToString(item)}
-                    </span>
+                    <span>{treeAdapter.itemToString(item)}</span>
                 )}
             </div>
         );
@@ -177,10 +174,7 @@ interface TreeProps {
     tabIndex?: number;
     onFocus?: () => void;
     onEditItem?: (itemId: string) => void;
-    renderItem?: (
-        itemId: string,
-        className: string | undefined
-    ) => React.ReactNode;
+    renderItem?: (itemId: string) => React.ReactNode;
 }
 
 export const Tree = observer(
@@ -774,8 +768,7 @@ export const Tree = observer(
             const className = classNames("EezStudio_Tree", {
                 "drag-source":
                     treeAdapter.draggableAdapter &&
-                    treeAdapter.draggableAdapter.isDragging,
-                "zero-level": treeAdapter.maxLevel === 0
+                    treeAdapter.draggableAdapter.isDragging
             });
 
             return (
@@ -796,7 +789,8 @@ export const Tree = observer(
                                 treeAdapter.draggableAdapter &&
                                 treeAdapter.draggableAdapter.isDragging
                                     ? "none"
-                                    : "auto"
+                                    : "auto",
+                            position: "relative"
                         }}
                     >
                         {this.allRows.map(row => (

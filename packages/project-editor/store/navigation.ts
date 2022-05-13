@@ -4,7 +4,11 @@ import { observable, action } from "mobx";
 import { IEezObject, getParent } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { DocumentStoreClass } from "project-editor/store";
-import { isValue, getObjectPathAsString } from "project-editor/store/helper";
+import {
+    isValue,
+    getObjectPathAsString,
+    findPropertyByChildObject
+} from "project-editor/store/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -305,5 +309,45 @@ export class NavigationStore {
         if (selectObject) {
             ProjectEditor.selectObject(objects[0]);
         }
+    }
+
+    get propertyGridObjects() {
+        let objects: IEezObject[];
+
+        const navigationStore = this;
+
+        if (
+            navigationStore.selectedPanel &&
+            navigationStore.selectedPanel.selectedObjects !== undefined &&
+            navigationStore.selectedPanel.selectedObjects.length > 0
+        ) {
+            objects = navigationStore.selectedPanel.selectedObjects;
+        } else if (
+            navigationStore.selectedPanel &&
+            navigationStore.selectedPanel.selectedObject !== undefined
+        ) {
+            objects = [navigationStore.selectedPanel.selectedObject];
+        } else {
+            objects = [];
+        }
+
+        if (objects.length === 1) {
+            if (isValue(objects[0])) {
+                const object = objects[0];
+                const childObject = getParent(object);
+                const parent = getParent(childObject);
+                if (parent) {
+                    const propertyInfo = findPropertyByChildObject(
+                        parent,
+                        childObject
+                    );
+                    if (propertyInfo && !propertyInfo.hideInPropertyGrid) {
+                        objects = [parent];
+                    }
+                }
+            }
+        }
+
+        return objects;
     }
 }
