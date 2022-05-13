@@ -139,16 +139,21 @@ export class WasmRuntime extends RemoteRuntime {
             }
         }
 
-        const maxPageWidth = Math.max(
-            ...this.DocumentStore.project.pages.map(page => page.width)
-        );
-        if (this.DocumentStore.project.isFirmwareWithFlowSupportProject) {
-            this.displayWidth = Math.max(
-                maxPageWidth,
-                this.DocumentStore.project.settings.general.displayWidth
-            );
+        if (this.DocumentStore.project.isDashboardProject) {
+            this.displayWidth = 1;
+            this.displayHeight = 1;
         } else {
-            this.displayWidth = maxPageWidth;
+            const maxPageWidth = Math.max(
+                ...this.DocumentStore.project.pages.map(page => page.width)
+            );
+            if (this.DocumentStore.project.isFirmwareWithFlowSupportProject) {
+                this.displayWidth = Math.max(
+                    maxPageWidth,
+                    this.DocumentStore.project.settings.general.displayWidth
+                );
+            } else {
+                this.displayWidth = maxPageWidth;
+            }
         }
 
         const maxPageHeight = Math.max(
@@ -219,10 +224,14 @@ export class WasmRuntime extends RemoteRuntime {
 
     stop() {
         const message: RendererToWorkerMessage = {};
-
         message.stopScript = true;
-
         this.worker.postMessage(message);
+
+        setTimeout(() => {
+            if (!this.isStopped) {
+                this.DocumentStore.setEditorMode();
+            }
+        }, 500);
     }
 
     ////////////////////////////////////////////////////////////////////////////////
