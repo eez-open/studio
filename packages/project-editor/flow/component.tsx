@@ -4,7 +4,7 @@ import { observable, computed, makeObservable } from "mobx";
 
 import { _each, _find, _range } from "eez-studio-shared/algorithm";
 import { validators } from "eez-studio-shared/validation";
-import { BoundingRectBuilder, Rect } from "eez-studio-shared/geometry";
+import { BoundingRectBuilder, Point, Rect } from "eez-studio-shared/geometry";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
@@ -995,13 +995,38 @@ function addBreakpointMenuItems(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+interface ComponentAdapter {
+    component: Component;
+    rect: Rect;
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+}
+
 const AlignAndDistributePropertyGridUI = observer(
     class AlignAndDistributePropertyGridUI extends React.Component<PropertyProps> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
-        get components() {
-            return this.props.objects as Component[];
+        get components(): ComponentAdapter[] {
+            return (this.props.objects as Component[]).map(component => {
+                const absolutePosition = component.absolutePositionPoint;
+
+                return {
+                    component,
+                    rect: {
+                        left: absolutePosition.x,
+                        top: absolutePosition.y,
+                        width: component.width,
+                        height: component.height
+                    },
+                    left: absolutePosition.x,
+                    top: absolutePosition.y,
+                    width: component.width,
+                    height: component.height
+                };
+            });
         }
 
         get boundingRect() {
@@ -1020,13 +1045,42 @@ const AlignAndDistributePropertyGridUI = observer(
             return this.components.slice().sort((a, b) => a.top - b.top);
         }
 
+        updateObject(
+            componentAdapter: ComponentAdapter,
+            props: {
+                left?: number;
+                top?: number;
+            }
+        ) {
+            let parentPosition: Point;
+
+            const parent = getWidgetParent(componentAdapter.component);
+            if (parent instanceof Component) {
+                parentPosition = parent.absolutePositionPoint;
+            } else {
+                parentPosition = { x: 0, y: 0 };
+            }
+
+            if (props.left != undefined) {
+                this.context.updateObject(componentAdapter.component, {
+                    left: props.left - parentPosition.x
+                });
+            }
+
+            if (props.top != undefined) {
+                this.context.updateObject(componentAdapter.component, {
+                    top: props.top - parentPosition.y
+                });
+            }
+        }
+
         onAlignHorizontalLeft = () => {
             const boundingRect = this.boundingRect;
 
             this.context.undoManager.setCombineCommands(true);
 
             this.components.forEach(component =>
-                this.context.updateObject(component, {
+                this.updateObject(component, {
                     left: boundingRect.left
                 })
             );
@@ -1042,7 +1096,7 @@ const AlignAndDistributePropertyGridUI = observer(
             this.context.undoManager.setCombineCommands(true);
 
             this.components.forEach(component =>
-                this.context.updateObject(component, {
+                this.updateObject(component, {
                     left: Math.round(center - component.width / 2)
                 })
             );
@@ -1058,7 +1112,7 @@ const AlignAndDistributePropertyGridUI = observer(
             this.context.undoManager.setCombineCommands(true);
 
             this.components.forEach(component =>
-                this.context.updateObject(component, {
+                this.updateObject(component, {
                     left: right - component.width
                 })
             );
@@ -1072,7 +1126,7 @@ const AlignAndDistributePropertyGridUI = observer(
             this.context.undoManager.setCombineCommands(true);
 
             this.components.forEach(component =>
-                this.context.updateObject(component, {
+                this.updateObject(component, {
                     top: boundingRect.top
                 })
             );
@@ -1088,7 +1142,7 @@ const AlignAndDistributePropertyGridUI = observer(
             this.context.undoManager.setCombineCommands(true);
 
             this.components.forEach(component =>
-                this.context.updateObject(component, {
+                this.updateObject(component, {
                     top: Math.round(center - component.height / 2)
                 })
             );
@@ -1104,7 +1158,7 @@ const AlignAndDistributePropertyGridUI = observer(
             this.context.undoManager.setCombineCommands(true);
 
             this.components.forEach(component =>
-                this.context.updateObject(component, {
+                this.updateObject(component, {
                     top: bottom - component.height
                 })
             );
@@ -1129,7 +1183,7 @@ const AlignAndDistributePropertyGridUI = observer(
             this.context.undoManager.setCombineCommands(true);
 
             components.slice(1, components.length - 1).forEach((component, i) =>
-                this.context.updateObject(component, {
+                this.updateObject(component, {
                     left: Math.round(leftFirst + width * (i + 1))
                 })
             );
@@ -1156,7 +1210,7 @@ const AlignAndDistributePropertyGridUI = observer(
             this.context.undoManager.setCombineCommands(true);
 
             components.slice(1, components.length - 1).forEach((component, i) =>
-                this.context.updateObject(component, {
+                this.updateObject(component, {
                     left: Math.round(
                         centerFirst + width * (i + 1) - component.width / 2
                     )
@@ -1185,7 +1239,7 @@ const AlignAndDistributePropertyGridUI = observer(
             this.context.undoManager.setCombineCommands(true);
 
             components.slice(1, components.length - 1).forEach((component, i) =>
-                this.context.updateObject(component, {
+                this.updateObject(component, {
                     left: Math.round(
                         rightFirst + width * (i + 1) - component.width
                     )
@@ -1213,13 +1267,17 @@ const AlignAndDistributePropertyGridUI = observer(
 
             this.context.undoManager.setCombineCommands(true);
 
-            components.slice(1, components.length - 1).forEach((component, i) =>
-                this.context.updateObject(component, {
-                    left: Math.round(
-                        components[i].left + components[i].width + gap
-                    )
-                })
-            );
+            let left = components[0].left + components[0].width;
+
+            components
+                .slice(1, components.length - 1)
+                .forEach((component, i) => {
+                    left += gap;
+                    this.updateObject(component, {
+                        left: Math.round(left)
+                    });
+                    left += component.width;
+                });
 
             this.context.undoManager.setCombineCommands(false);
         };
@@ -1241,7 +1299,7 @@ const AlignAndDistributePropertyGridUI = observer(
             this.context.undoManager.setCombineCommands(true);
 
             components.slice(1, components.length - 1).forEach((component, i) =>
-                this.context.updateObject(component, {
+                this.updateObject(component, {
                     top: Math.round(topFirst + height * (i + 1))
                 })
             );
@@ -1268,7 +1326,7 @@ const AlignAndDistributePropertyGridUI = observer(
             this.context.undoManager.setCombineCommands(true);
 
             components.slice(1, components.length - 1).forEach((component, i) =>
-                this.context.updateObject(component, {
+                this.updateObject(component, {
                     top: Math.round(
                         centerFirst + height * (i + 1) - component.height / 2
                     )
@@ -1297,7 +1355,7 @@ const AlignAndDistributePropertyGridUI = observer(
             this.context.undoManager.setCombineCommands(true);
 
             components.slice(1, components.length - 1).forEach((component, i) =>
-                this.context.updateObject(component, {
+                this.updateObject(component, {
                     top: Math.round(
                         bottomFirst + height * (i + 1) - component.height
                     )
@@ -1325,13 +1383,17 @@ const AlignAndDistributePropertyGridUI = observer(
 
             this.context.undoManager.setCombineCommands(true);
 
-            components.slice(1, components.length - 1).forEach((component, i) =>
-                this.context.updateObject(component, {
-                    top: Math.round(
-                        components[i].top + components[i].height + gap
-                    )
-                })
-            );
+            let top = components[0].top + components[0].height;
+
+            components
+                .slice(1, components.length - 1)
+                .forEach((component, i) => {
+                    top += gap;
+                    this.updateObject(component, {
+                        top: Math.round(top)
+                    });
+                    top += component.height;
+                });
 
             this.context.undoManager.setCombineCommands(false);
         };
@@ -1542,18 +1604,6 @@ export class Component extends EezObject {
                         propertyGridObjects.find(
                             object => !(object instanceof Component)
                         )
-                    ) {
-                        return true;
-                    }
-
-                    if (
-                        propertyGridObjects
-                            .slice(1)
-                            .find(
-                                object =>
-                                    getParent(object) !=
-                                    getParent(propertyGridObjects[0])
-                            )
                     ) {
                         return true;
                     }
