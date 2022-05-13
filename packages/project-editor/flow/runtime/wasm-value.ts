@@ -121,6 +121,17 @@ export function createJsArrayValue(
                                 } else if (fieldType.valueType == "integer") {
                                     fieldValue = Number.parseInt(fieldValue);
                                 }
+                            } else if (fieldValue instanceof Date) {
+                                if (fieldType.valueType == "string") {
+                                    fieldValue = fieldValue.toISOString();
+                                    fieldValue =
+                                        fieldValue.substring(0, 10) +
+                                        " " +
+                                        fieldValue.substring(
+                                            11,
+                                            fieldValue.length - 1
+                                        );
+                                }
                             }
                         }
                     }
@@ -159,24 +170,21 @@ export function createWasmArrayValue(arrayValue: ArrayValue) {
     for (let i = 0; i < arraySize; i++) {
         let value = arrayValue.values[i];
 
-        if (value instanceof Date) {
-            value = value.toString();
-        }
-
         let valuePtr;
         if (
             value === null ||
             value === undefined ||
             typeof value == "number" ||
             typeof value == "boolean" ||
-            typeof value == "string"
+            typeof value == "string" ||
+            value instanceof Date
         ) {
             valuePtr = createWasmValue(value);
         } else {
             const type = WasmFlowRuntime.assetsMap.types[value.valueTypeIndex];
             valuePtr =
                 type.kind == "basic"
-                    ? createWasmValue(value.values as any)
+                    ? createWasmValue(value)
                     : createWasmArrayValue(value);
         }
 
