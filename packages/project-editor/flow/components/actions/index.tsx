@@ -656,7 +656,7 @@ export class EvalJSExprActionComponent extends ActionComponent {
                 const name = `_val${i}`;
                 valueExpressions.push(valueExpression);
                 expression = expression.replace(
-                    new RegExp(`\{${valueExpression}\}`, "g"),
+                    `{${valueExpression}}`,
                     `values.${name}`
                 );
             }
