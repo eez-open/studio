@@ -8,38 +8,82 @@ import { getId } from "project-editor/core/object";
 
 import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
 import type { Page } from "project-editor/features/page/page";
+import type { Action } from "project-editor/features/action/action";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import type { Component } from "project-editor/flow/component";
 import { strokeWidth } from "project-editor/flow/editor/ConnectionLineComponent";
 import { DragAndDropManager } from "project-editor/core/dd";
 import type { Flow } from "project-editor/flow/flow";
+import { resizeWidget } from "./resizing-widget-property";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export const ComponentsContainerEnclosure = observer(
     class ComponentsContainerEnclosure extends React.Component<{
+        parent: Component | Page | Action;
         components: Component[];
         flowContext: IFlowContext;
         visibleComponent?: Component | null | undefined;
+        width?: number;
+        height?: number;
     }> {
         render() {
             const { components, flowContext, visibleComponent } = this.props;
 
-            return components.map((component, i) => (
-                <ComponentEnclosure
-                    key={getId(component)}
-                    component={component}
-                    flowContext={flowContext}
-                    visible={
-                        visibleComponent
-                            ? visibleComponent == component
-                            : visibleComponent === null
-                            ? false
-                            : true
-                    }
-                />
-            ));
+            return components.map((component, i) => {
+                let left: number | undefined;
+                let top: number | undefined;
+                let width: number | undefined;
+                let height: number | undefined;
+
+                const parent = this.props.parent;
+
+                if (
+                    !(parent instanceof ProjectEditor.ActionClass) &&
+                    component instanceof ProjectEditor.WidgetClass &&
+                    this.props.width != undefined &&
+                    this.props.height != undefined
+                ) {
+                    const rect = resizeWidget(
+                        component.rect,
+                        {
+                            top: parent.left,
+                            left: parent.top,
+                            width: parent.width,
+                            height: parent.height
+                        },
+                        {
+                            top: 0,
+                            left: 0,
+                            width: this.props.width,
+                            height: this.props.height
+                        },
+                        component.resizing
+                    );
+
+                    ({ left, top, width, height } = rect);
+                }
+
+                return (
+                    <ComponentEnclosure
+                        key={getId(component)}
+                        component={component}
+                        flowContext={flowContext}
+                        visible={
+                            visibleComponent
+                                ? visibleComponent == component
+                                : visibleComponent === null
+                                ? false
+                                : true
+                        }
+                        left={left}
+                        top={top}
+                        width={width}
+                        height={height}
+                    />
+                );
+            });
         }
     }
 );
@@ -52,6 +96,8 @@ export const ComponentEnclosure = observer(
         flowContext: IFlowContext;
         left?: number;
         top?: number;
+        width?: number;
+        height?: number;
         visible?: boolean;
     }> {
         elRef = React.createRef<HTMLDivElement>();
@@ -79,6 +125,11 @@ export const ComponentEnclosure = observer(
 
         updateComponentGeometry() {
             if (this.elRef.current && this.listIndex == 0) {
+                const component = this.props.component;
+                if (component instanceof ProjectEditor.PageClass) {
+                    return;
+                }
+
                 const el = this.elRef.current.closest(".LayoutViewWidget");
                 if (el && el != this.elRef.current) {
                     // do not calculate geometry if component is inside LayoutViewWidget
@@ -91,12 +142,12 @@ export const ComponentEnclosure = observer(
                 }
 
                 const geometry = calcComponentGeometry(
-                    this.props.component,
+                    component,
                     this.elRef.current,
                     this.props.flowContext
                 );
                 runInAction(() => {
-                    this.props.component.geometry = geometry;
+                    component.geometry = geometry;
                 });
             }
         }
@@ -134,18 +185,40 @@ export const ComponentEnclosure = observer(
                 dataFlowObjectId = dataFlowObjectId + "-" + this.listIndex;
             }
 
+            let width;
+            let height;
             if (
-                !(component.autoSize == "width" || component.autoSize == "both")
+                this.props.width != undefined &&
+                this.props.height != undefined
             ) {
-                style.width = component.width;
+                width = this.props.width;
+                height = this.props.height;
+            } else {
+                if (
+                    !(
+                        component.autoSize == "width" ||
+                        component.autoSize == "both"
+                    )
+                ) {
+                    width = component.width;
+                }
+
+                if (
+                    !(
+                        component.autoSize == "height" ||
+                        component.autoSize == "both"
+                    )
+                ) {
+                    height = component.height;
+                }
             }
-            if (
-                !(
-                    component.autoSize == "height" ||
-                    component.autoSize == "both"
-                )
-            ) {
-                style.height = component.height;
+
+            if (width != undefined) {
+                style.width = width;
+            }
+
+            if (height != undefined) {
+                style.height = height;
             }
 
             component.styleHook(style, flowContext);
@@ -188,7 +261,11 @@ export const ComponentEnclosure = observer(
                     className={className}
                     style={style}
                 >
-                    {component.render(flowContext)}
+                    {component.render(
+                        flowContext,
+                        width ?? component.width,
+                        height ?? component.height
+                    )}
                 </div>
             );
         }
@@ -268,7 +345,7 @@ export interface ComponentGeometry {
 }
 
 export function calcComponentGeometry(
-    component: Component | Page,
+    component: Component,
     el: HTMLElement | undefined,
     flowContext: IFlowContext | undefined
 ): ComponentGeometry {
@@ -281,16 +358,12 @@ export function calcComponentGeometry(
         const transform = flowContext.viewState.transform;
         rect = transform.clientToPageRect(el.getBoundingClientRect());
     } else {
-        if (component instanceof ProjectEditor.ComponentClass) {
-            rect = {
-                left: component.absolutePositionPoint.x,
-                top: component.absolutePositionPoint.y,
-                width: component.width ?? 1,
-                height: component.height ?? 1
-            };
-        } else {
-            rect = component.pageRect;
-        }
+        rect = {
+            left: component.absolutePositionPoint.x,
+            top: component.absolutePositionPoint.y,
+            width: component.width ?? 1,
+            height: component.height ?? 1
+        };
     }
 
     if (!(component.autoSize == "width" || component.autoSize == "both")) {

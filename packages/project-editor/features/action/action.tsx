@@ -169,6 +169,7 @@ export class Action extends Flow {
     renderComponents(flowContext: IFlowContext) {
         return (
             <ComponentsContainerEnclosure
+                parent={this}
                 components={this.components}
                 flowContext={flowContext}
             />

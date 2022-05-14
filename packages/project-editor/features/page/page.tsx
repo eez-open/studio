@@ -31,7 +31,6 @@ import type {
 } from "project-editor/flow/flow-interfaces";
 import {
     ComponentsContainerEnclosure,
-    ComponentGeometry,
     ComponentEnclosure,
     ComponentCanvas
 } from "project-editor/flow/editor/render";
@@ -47,7 +46,6 @@ import {
 
 import { findStyle } from "project-editor/features/style/style";
 import { getThemedColor } from "project-editor/features/style/theme";
-import { Rect } from "eez-studio-shared/geometry";
 import { Flow } from "project-editor/flow/flow";
 import { metrics } from "project-editor/features/page/metrics";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
@@ -169,13 +167,13 @@ export class Page extends Flow {
     width: number;
     height: number;
 
+    scaleToFit: boolean;
+
     portrait: PageOrientation;
 
     isUsedAsCustomWidget: boolean;
 
     dataContextOverrides: string;
-
-    _geometry: ComponentGeometry;
 
     constructor() {
         super();
@@ -191,10 +189,10 @@ export class Page extends Flow {
             top: observable,
             width: observable,
             height: observable,
+            scaleToFit: observable,
             portrait: observable,
             isUsedAsCustomWidget: observable,
             dataContextOverrides: observable,
-            _geometry: observable,
             dataContextOverridesObject: computed
         });
     }
@@ -243,6 +241,11 @@ export class Page extends Flow {
             {
                 name: "height",
                 type: PropertyType.Number,
+                propertyGridGroup: geometryGroup
+            },
+            {
+                name: "scaleToFit",
+                type: PropertyType.Boolean,
                 propertyGridGroup: geometryGroup
             },
             {
@@ -429,36 +432,6 @@ export class Page extends Flow {
 
             return messages;
         },
-        getRect: (object: Page) => {
-            return {
-                left: object.left,
-                top: object.top,
-                width: object._geometry?.width ?? 0,
-                height: object._geometry?.height ?? 0
-            };
-        },
-        setRect: (object: Page, value: Rect) => {
-            const props: Partial<Rect> = {};
-
-            if (value.left !== object.left) {
-                props.left = value.left;
-            }
-
-            if (value.top !== object.top) {
-                props.top = value.top;
-            }
-
-            if (value.width !== object._geometry?.width ?? 0) {
-                props.width = value.width;
-            }
-
-            if (value.height !== object._geometry?.height ?? 0) {
-                props.height = value.height;
-            }
-
-            const DocumentStore = getDocumentStore(object);
-            DocumentStore.updateObject(object, props);
-        },
         isMoveable: (object: Page) => {
             return true;
         },
@@ -472,10 +445,6 @@ export class Page extends Flow {
             return object.getResizeHandlers();
         }
     });
-
-    set geometry(value: ComponentGeometry) {
-        this._geometry = value;
-    }
 
     get autoSize(): AutoSize {
         return "none";
@@ -529,6 +498,18 @@ export class Page extends Flow {
     }
 
     renderComponents(flowContext: IFlowContext) {
+        const scaleToFit =
+            this.scaleToFit &&
+            flowContext.DocumentStore.runtime &&
+            !flowContext.DocumentStore.runtime.isDebuggerActive;
+
+        let width: number | undefined;
+        let height: number | undefined;
+        if (scaleToFit) {
+            width = flowContext.viewState.transform.clientRect.width;
+            height = flowContext.viewState.transform.clientRect.height;
+        }
+
         return (
             <>
                 {this.isRuntimeSelectedPage ? (
@@ -539,11 +520,14 @@ export class Page extends Flow {
                     <ComponentEnclosure
                         component={this}
                         flowContext={flowContext}
+                        width={width}
+                        height={height}
                     />
                 )}
 
                 {!flowContext.frontFace && (
                     <ComponentsContainerEnclosure
+                        parent={this}
                         components={this.components.filter(
                             component => !(component instanceof Widget)
                         )}
@@ -560,7 +544,7 @@ export class Page extends Flow {
         );
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         const pageStyle = findStyle(
             ProjectEditor.getProject(this),
             this.style || "default"
@@ -600,6 +584,7 @@ export class Page extends Flow {
                 {pageBackground}
 
                 <ComponentsContainerEnclosure
+                    parent={this}
                     components={this.components.filter(
                         component => component instanceof Widget
                     )}
@@ -610,6 +595,8 @@ export class Page extends Flow {
                                   this.dataContextOverridesObject
                               )
                     }
+                    width={width}
+                    height={height}
                 />
             </>
         );

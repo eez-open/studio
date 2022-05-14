@@ -60,11 +60,15 @@ export class TerminalWidget extends Widget {
         ];
     }
 
-    render(flowContext: IFlowContext): React.ReactNode {
+    render(
+        flowContext: IFlowContext,
+        width: number,
+        height: number
+    ): React.ReactNode {
         return (
             <>
                 <TerminalElement widget={this} flowContext={flowContext} />
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }

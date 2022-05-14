@@ -54,7 +54,9 @@ export const PageEditor = observer(
         }
     }
 );
+
 ////////////////////////////////////////////////////////////////////////////////
+
 class PageTreeObjectAdapter extends TreeObjectAdapter {
     constructor(private page: Page, private frontFace: boolean) {
         super(page);
@@ -75,6 +77,7 @@ class PageTreeObjectAdapter extends TreeObjectAdapter {
         ];
     }
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export class PageTabState extends FlowTabState {

@@ -2264,7 +2264,11 @@ export class Component extends EezObject {
 
     draw?: (ctx: CanvasRenderingContext2D) => void;
 
-    render(flowContext: IFlowContext): React.ReactNode {
+    render(
+        flowContext: IFlowContext,
+        width: number,
+        height: number
+    ): React.ReactNode {
         return null;
     }
 
@@ -2898,7 +2902,11 @@ export class Widget extends Component {
         );
     }
 
-    render(flowContext: IFlowContext): React.ReactNode {
+    render(
+        flowContext: IFlowContext,
+        width: number,
+        height: number
+    ): React.ReactNode {
         if (flowContext.frontFace) {
             return null;
         }

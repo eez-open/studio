@@ -412,21 +412,36 @@ export const Canvas = observer(
         render() {
             let style: React.CSSProperties = {};
 
+            const runtime = this.props.flowContext.DocumentStore.runtime!;
+            const runMode = runtime && !runtime.isDebuggerActive;
+
             const transform = this.props.flowContext.viewState.transform;
 
-            const xt = Math.round(
-                transform.translate.x + transform.clientRect.width / 2
-            );
-            let yt = Math.round(
-                transform.translate.y + transform.clientRect.height / 2
-            );
-
-            const runMode =
-                this.props.flowContext.DocumentStore.runtime &&
-                !this.props.flowContext.DocumentStore.runtime.isDebuggerActive;
-
-            if (yt < 0 && runMode) {
+            let xt: number;
+            let yt: number;
+            let scale: number;
+            if (
+                runMode &&
+                this.props.flowContext.document.flow.object instanceof
+                    ProjectEditor.PageClass &&
+                this.props.flowContext.document.flow.object.scaleToFit
+            ) {
+                xt = 0;
                 yt = 0;
+                scale = 1;
+            } else {
+                xt = Math.round(
+                    transform.translate.x + transform.clientRect.width / 2
+                );
+
+                yt = Math.round(
+                    transform.translate.y + transform.clientRect.height / 2
+                );
+                if (yt < 0 && runMode) {
+                    yt = 0;
+                }
+
+                scale = transform.scale;
             }
 
             if (
@@ -435,8 +450,6 @@ export const Canvas = observer(
             ) {
                 style.visibility = "hidden";
             }
-
-            const runtimeStore = this.props.flowContext.DocumentStore.runtime;
 
             return (
                 <div
@@ -448,19 +461,17 @@ export const Canvas = observer(
                         className="eez-canvas"
                         style={{
                             position: "absolute",
-                            transform: `translate(${xt}px, ${yt}px) scale(${transform.scale})`
+                            transform: `translate(${xt}px, ${yt}px) scale(${scale})`
                         }}
                     >
                         {this.props.children}
                     </div>
-                    {runtimeStore &&
-                        runtimeStore.isDebuggerActive &&
-                        (runtimeStore.isPaused || runtimeStore.isStopped) && (
-                            <Selection
-                                context={this.props.flowContext}
-                                mouseHandler={undefined}
-                            />
-                        )}
+                    {!runMode && (runtime.isPaused || runtime.isStopped) && (
+                        <Selection
+                            context={this.props.flowContext}
+                            mouseHandler={undefined}
+                        />
+                    )}
                 </div>
             );
         }
@@ -631,6 +642,10 @@ export const FlowViewer = observer(
                 this.flowContext.DocumentStore.runtime &&
                 !this.flowContext.DocumentStore.runtime.isDebuggerActive;
 
+            const renderParts =
+                this.flowContext.flowState ||
+                this.flowContext.flow instanceof ProjectEditor.ActionClass;
+
             return (
                 <div
                     className={classNames(
@@ -643,7 +658,7 @@ export const FlowViewer = observer(
                     id={this.flowContext.viewState.containerId}
                     onFocus={this.onFocus}
                     tabIndex={0}
-                    onDoubleClick={this.onDoubleClick}
+                    onDoubleClick={runMode ? undefined : this.onDoubleClick}
                 >
                     <Canvas flowContext={this.flowContext}>
                         {this.flowContext.document?.flow.object === flow && (
@@ -653,31 +668,44 @@ export const FlowViewer = observer(
                                         position: "absolute"
                                     }}
                                 >
-                                    {(this.flowContext.flowState ||
-                                        this.flowContext.flow instanceof
-                                            ProjectEditor.ActionClass) &&
-                                        flow.renderComponents(this.flowContext)}
-                                </div>
-                                {!this.props.tabState.frontFace && (
-                                    <AllConnectionLines
-                                        flowContext={this.flowContext}
-                                    />
-                                )}
-                                {this.context.uiStateStore
-                                    .showComponentDescriptions &&
-                                    this.context.runtime &&
-                                    this.context.runtime.isDebuggerActive &&
-                                    !this.props.tabState.frontFace && (
-                                        <div
-                                            style={{
-                                                position: "absolute"
-                                            }}
-                                        >
-                                            {renderComponentDescriptions(
+                                    {
+                                        // render components
+                                        renderParts &&
+                                            flow.renderComponents(
                                                 this.flowContext
-                                            )}
-                                        </div>
-                                    )}
+                                            )
+                                    }
+                                </div>
+
+                                {
+                                    // render connection lines
+                                    renderParts &&
+                                        !this.props.tabState.frontFace && (
+                                            <AllConnectionLines
+                                                flowContext={this.flowContext}
+                                            />
+                                        )
+                                }
+
+                                {
+                                    // render component descriptions
+                                    renderParts &&
+                                        this.context.uiStateStore
+                                            .showComponentDescriptions &&
+                                        this.context.runtime &&
+                                        this.context.runtime.isDebuggerActive &&
+                                        !this.props.tabState.frontFace && (
+                                            <div
+                                                style={{
+                                                    position: "absolute"
+                                                }}
+                                            >
+                                                {renderComponentDescriptions(
+                                                    this.flowContext
+                                                )}
+                                            </div>
+                                        )
+                                }
                             </>
                         )}
                     </Canvas>

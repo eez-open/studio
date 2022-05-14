@@ -116,14 +116,18 @@ export class MarkdownWidget extends Widget {
         return "<no text>";
     }
 
-    render(flowContext: IFlowContext): React.ReactNode {
+    render(
+        flowContext: IFlowContext,
+        width: number,
+        height: number
+    ): React.ReactNode {
         const showdown = require("showdown");
         const converter = new showdown.Converter();
         const html = { __html: converter.makeHtml(this.text || "") };
         return (
             <>
                 <div dangerouslySetInnerHTML={html} />
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }

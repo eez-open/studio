@@ -448,7 +448,11 @@ export class ContainerWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext): React.ReactNode {
+    render(
+        flowContext: IFlowContext,
+        width: number,
+        height: number
+    ): React.ReactNode {
         let visible: boolean = flowContext.flowState
             ? getBooleanValue(flowContext, this, "visible", !this.visible)
             : true;
@@ -474,11 +478,14 @@ export class ContainerWidget extends Widget {
                 )}
                 {visible && (
                     <ComponentsContainerEnclosure
+                        parent={this}
                         components={this.widgets}
                         flowContext={flowContext}
+                        width={width}
+                        height={height}
                     />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -608,7 +615,7 @@ export class ListWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         const itemWidget = this.itemWidget;
         if (!itemWidget) {
             return null;
@@ -799,7 +806,7 @@ export class GridWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         const itemWidget = this.itemWidget;
         if (!itemWidget) {
             return null;
@@ -1116,7 +1123,7 @@ export class SelectWidget extends Widget {
         }
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         const index = this.getSelectedIndex(flowContext);
 
         let selectedWidget =
@@ -1145,11 +1152,14 @@ export class SelectWidget extends Widget {
                     />
                 )}
                 <ComponentsContainerEnclosure
+                    parent={this}
                     components={this.widgets}
                     flowContext={flowContext}
                     visibleComponent={selectedWidget}
+                    width={width}
+                    height={height}
                 />
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -1431,7 +1441,11 @@ export class LayoutViewWidget extends Widget {
         LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId = undefined;
     }
 
-    render(flowContext: IFlowContext): React.ReactNode {
+    render(
+        flowContext: IFlowContext,
+        width: number,
+        height: number
+    ): React.ReactNode {
         let visible = true;
 
         if (flowContext.flowState) {
@@ -1515,7 +1529,7 @@ export class LayoutViewWidget extends Widget {
                     />
                 )}
                 {element}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -1838,7 +1852,7 @@ export class DisplayDataWidget extends Widget {
         return text;
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         const result = this.getText(flowContext);
         let text: string;
         let node: React.ReactNode | null;
@@ -1873,7 +1887,7 @@ export class DisplayDataWidget extends Widget {
                         }}
                     />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -2102,7 +2116,7 @@ export class TextWidget extends Widget {
         return classNames("eez-widget-component", this.type);
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         const result = this.getText(flowContext);
         let text: string;
         let node: React.ReactNode | null;
@@ -2137,7 +2151,7 @@ export class TextWidget extends Widget {
                         }}
                     />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -2500,7 +2514,7 @@ export class MultilineTextWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         const result = getTextValue(
             flowContext,
             this,
@@ -2541,7 +2555,7 @@ export class MultilineTextWidget extends Widget {
                         }}
                     />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -2617,7 +2631,7 @@ export class RectangleWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         const invertColors = isV3OrNewerProject(this)
             ? true
             : this.invertColors;
@@ -2640,7 +2654,7 @@ export class RectangleWidget extends Widget {
                         }}
                     />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -2845,7 +2859,7 @@ export class BitmapWidget extends Widget {
         return undefined;
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         const bitmap = this.getBitmap(flowContext);
 
         return (
@@ -2936,7 +2950,7 @@ export class BitmapWidget extends Widget {
                         }}
                     />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -3056,7 +3070,7 @@ export class ButtonWidget extends Widget {
         return classNames("eez-widget-component", this.type);
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         const result = getTextValue(
             flowContext,
             this,
@@ -3123,7 +3137,7 @@ export class ButtonWidget extends Widget {
                         }}
                     />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -3204,7 +3218,7 @@ export class ToggleButtonWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
@@ -3224,7 +3238,7 @@ export class ToggleButtonWidget extends Widget {
                         }}
                     />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -3281,7 +3295,7 @@ export class ButtonGroupWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
@@ -3390,7 +3404,7 @@ export class ButtonGroupWidget extends Widget {
                         }}
                     />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -3511,7 +3525,7 @@ export class BarGraphWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
@@ -3751,7 +3765,7 @@ export class BarGraphWidget extends Widget {
                         }}
                     />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -3876,7 +3890,7 @@ export class YTGraphWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
@@ -3895,7 +3909,7 @@ export class YTGraphWidget extends Widget {
                         }}
                     />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -3968,7 +3982,7 @@ export class UpDownWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
@@ -4024,7 +4038,7 @@ export class UpDownWidget extends Widget {
                         }}
                     />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -4146,7 +4160,7 @@ export class ListGraphWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
@@ -4165,7 +4179,7 @@ export class ListGraphWidget extends Widget {
                         }}
                     />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -4231,7 +4245,7 @@ export class AppViewWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         if (!this.data) {
             return null;
         }
@@ -4246,7 +4260,7 @@ export class AppViewWidget extends Widget {
             return null;
         }
 
-        return page.render(flowContext);
+        return page.render(flowContext, width, height);
     }
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
@@ -4316,7 +4330,7 @@ export class ScrollBarWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
@@ -4429,7 +4443,7 @@ export class ScrollBarWidget extends Widget {
                         }}
                     />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -4521,7 +4535,7 @@ export class ProgressWidget extends Widget {
         return 25;
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         const percent = this.getPercent(flowContext);
 
         return (
@@ -4571,7 +4585,7 @@ export class ProgressWidget extends Widget {
                         }}
                     />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -4610,7 +4624,7 @@ export class CanvasWidget extends Widget {
             projectType !== ProjectType.DASHBOARD
     });
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
@@ -4628,7 +4642,7 @@ export class CanvasWidget extends Widget {
                         }}
                     />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -4706,7 +4720,7 @@ export class GaugeEmbeddedWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         let widget = this;
         let style = widget.style;
 
@@ -5052,7 +5066,7 @@ export class GaugeEmbeddedWidget extends Widget {
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas component={this} draw={drawGauge} />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -5222,7 +5236,7 @@ export class InputEmbeddedWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
@@ -5284,7 +5298,7 @@ export class InputEmbeddedWidget extends Widget {
                         }}
                     />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -5412,7 +5426,11 @@ export class TextInputWidget extends Widget {
         return "";
     }
 
-    render(flowContext: IFlowContext): React.ReactNode {
+    render(
+        flowContext: IFlowContext,
+        width: number,
+        height: number
+    ): React.ReactNode {
         let value = this.getValue(flowContext);
 
         return (
@@ -5449,7 +5467,7 @@ export class TextInputWidget extends Widget {
                         }
                     }}
                 ></input>
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -5575,7 +5593,11 @@ export class CheckboxWidget extends Widget {
         return classNames("eez-widget-component", this.type);
     }
 
-    render(flowContext: IFlowContext): React.ReactNode {
+    render(
+        flowContext: IFlowContext,
+        width: number,
+        height: number
+    ): React.ReactNode {
         let checked = this.getChecked(flowContext);
 
         let index;
@@ -5633,7 +5655,7 @@ export class CheckboxWidget extends Widget {
                         {this.getLabel(flowContext)}
                     </label>
                 </div>
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -5716,7 +5738,7 @@ export class RollerWidget extends Widget {
         ];
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
@@ -5757,7 +5779,7 @@ export class RollerWidget extends Widget {
                         }}
                     />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -5815,7 +5837,7 @@ export class SwitchWidget extends Widget {
             projectType !== ProjectType.DASHBOARD
     });
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         const enabled = getBooleanValue(flowContext, this, "data", false);
 
         return (
@@ -5877,7 +5899,7 @@ export class SwitchWidget extends Widget {
                         }}
                     />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -5940,7 +5962,7 @@ export class SliderWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
@@ -6020,7 +6042,7 @@ export class SliderWidget extends Widget {
                         }}
                     />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -6118,7 +6140,7 @@ export class DropDownListWidget extends Widget {
         );
     }
 
-    render(flowContext: IFlowContext) {
+    render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? (
@@ -6183,7 +6205,7 @@ export class DropDownListWidget extends Widget {
                         }}
                     />
                 )}
-                {super.render(flowContext)}
+                {super.render(flowContext, width, height)}
             </>
         );
     }

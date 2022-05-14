@@ -44,10 +44,14 @@ import { ValueType } from "eez-studio-types";
 const LineChartElement = observer(
     ({
         widget,
-        flowContext
+        flowContext,
+        width,
+        height
     }: {
         widget: LineChartWidget;
         flowContext: IFlowContext;
+        width: number;
+        height: number;
     }) => {
         const runningState =
             flowContext.flowState?.getComponentRunningState<RunningState>(
@@ -202,7 +206,7 @@ const LineChartElement = observer(
             if (plotly) {
                 Plotly().Plots.resize(ref.current!);
             }
-        }, [plotly, widget.width, widget.height]);
+        }, [plotly, width, height]);
 
         React.useEffect(() => {
             if (plotly) {
@@ -238,8 +242,8 @@ const LineChartElement = observer(
             <div
                 ref={ref}
                 style={{
-                    width: widget.width,
-                    height: widget.height
+                    width,
+                    height
                 }}
                 className={classNames("EezStudio_Plotly", {
                     interactive: !!flowContext.DocumentStore.runtime
@@ -516,11 +520,20 @@ export class LineChartWidget extends Widget {
         ];
     }
 
-    render(flowContext: IFlowContext): React.ReactNode {
+    render(
+        flowContext: IFlowContext,
+        width: number,
+        height: number
+    ): React.ReactNode {
         return (
             <>
-                <LineChartElement widget={this} flowContext={flowContext} />
-                {super.render(flowContext)}
+                <LineChartElement
+                    widget={this}
+                    flowContext={flowContext}
+                    width={width}
+                    height={height}
+                />
+                {super.render(flowContext, width, height)}
             </>
         );
     }
@@ -602,10 +615,14 @@ registerClass("LineChartWidget", LineChartWidget);
 const GaugeElement = observer(
     ({
         widget,
-        flowContext
+        flowContext,
+        width,
+        height
     }: {
         widget: GaugeWidget;
         flowContext: IFlowContext;
+        width: number;
+        height: number;
     }) => {
         const ref = React.useRef<HTMLDivElement>(null);
         const [plotly, setPlotly] = React.useState<
@@ -702,7 +719,7 @@ const GaugeElement = observer(
             if (plotly) {
                 Plotly().Plots.resize(ref.current!);
             }
-        }, [plotly, widget.width, widget.height]);
+        }, [plotly, width, height]);
 
         React.useEffect(() => {
             if (plotly) {
@@ -730,8 +747,8 @@ const GaugeElement = observer(
             <div
                 ref={ref}
                 style={{
-                    width: widget.width,
-                    height: widget.height
+                    width,
+                    height
                 }}
                 className={classNames("EezStudio_Plotly", {
                     interactive: !!flowContext.DocumentStore.runtime
@@ -818,11 +835,21 @@ export class GaugeWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext): React.ReactNode {
+    render(
+        flowContext: IFlowContext,
+
+        width: number,
+        height: number
+    ): React.ReactNode {
         return (
             <>
-                <GaugeElement widget={this} flowContext={flowContext} />
-                {super.render(flowContext)}
+                <GaugeElement
+                    widget={this}
+                    flowContext={flowContext}
+                    width={width}
+                    height={height}
+                />
+                {super.render(flowContext, width, height)}
             </>
         );
     }
