@@ -109,6 +109,7 @@ export const Canvas = observer(
             });
         }
 
+        _setOverflowTimeout: any;
         resizeObserverCallback = () => {
             if ($(this.div).is(":visible")) {
                 const transform = this.props.flowContext.viewState.transform;
@@ -122,6 +123,17 @@ export const Canvas = observer(
                     (clientRect.height &&
                         clientRect.height !== transform.clientRect.height)
                 ) {
+                    // set overflow to hidden and back to auto after timeout
+                    if (this._setOverflowTimeout) {
+                        clearTimeout(this._setOverflowTimeout);
+                        this._setOverflowTimeout = undefined;
+                    }
+                    this.div.style.overflow = "hidden";
+                    this._setOverflowTimeout = setTimeout(() => {
+                        this._setOverflowTimeout = undefined;
+                        this.div.style.overflow = "auto";
+                    }, 100);
+
                     runInAction(() => {
                         transform.clientRect = clientRect;
                     });
@@ -157,6 +169,11 @@ export const Canvas = observer(
 
             if (this.div) {
                 this.resizeObserver.unobserve(this.div);
+            }
+
+            if (this._setOverflowTimeout) {
+                clearTimeout(this._setOverflowTimeout);
+                this._setOverflowTimeout = undefined;
             }
         }
 

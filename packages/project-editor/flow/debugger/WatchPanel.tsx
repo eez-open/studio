@@ -332,6 +332,7 @@ const WatchTable = observer(
                 children: () =>
                     this.props.runtime.DocumentStore.uiStateStore.watchExpressions.map(
                         (expression, i) => {
+                            let watchExpressionLabel;
                             let value;
                             let type: any;
                             let className: string | undefined;
@@ -344,19 +345,19 @@ const WatchTable = observer(
                                             expression
                                         ));
 
-                                    value = getValueLabel(
+                                    watchExpressionLabel = getValueLabel(
                                         this.props.runtime.DocumentStore
                                             .project,
                                         value,
                                         type
                                     );
                                 } catch (err) {
-                                    value = err.toString();
+                                    watchExpressionLabel = err.toString();
                                     type = "";
                                     className = "error";
                                 }
                             } else {
-                                value = "undefined";
+                                watchExpressionLabel = "undefined";
                                 type = "undefined";
                             }
 
@@ -364,14 +365,13 @@ const WatchTable = observer(
                                 id: expression,
 
                                 name: expression,
-                                value,
-                                valueTitle: value,
+                                value: watchExpressionLabel,
+                                valueTitle: watchExpressionLabel,
                                 type,
 
                                 children: this.getValueChildren(value, type),
-                                selected:
-                                    i == this.props.selectedExpression.get(),
-                                expanded: true,
+                                selected: false,
+                                expanded: false,
                                 className,
                                 data: i
                             });
@@ -477,7 +477,7 @@ const WatchTable = observer(
 
                     children: this.getValueChildren(value, null),
                     selected: false,
-                    expanded: true
+                    expanded: false
                 });
             });
         };
@@ -586,9 +586,18 @@ const WatchTable = observer(
             return treeNode;
         }
 
+        selectedNode: ITreeNode | undefined;
+
         selectNode = action((node?: ITreeNode) => {
+            if (this.selectedNode) {
+                this.selectedNode.selected = false;
+                this.selectedNode = undefined;
+            }
+
             if (node && typeof node.data == "number") {
                 this.props.selectedExpression.set(node.data);
+                this.selectedNode = node;
+                node.selected = true;
             } else {
                 this.props.selectedExpression.set(-1);
             }

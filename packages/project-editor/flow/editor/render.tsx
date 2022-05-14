@@ -43,7 +43,9 @@ export const ComponentsContainerEnclosure = observer(
                     !(parent instanceof ProjectEditor.ActionClass) &&
                     component instanceof ProjectEditor.WidgetClass &&
                     this.props.width != undefined &&
-                    this.props.height != undefined
+                    this.props.height != undefined &&
+                    (this.props.width != parent.width ||
+                        this.props.height != parent.height)
                 ) {
                     const rect = resizeWidget(
                         component.rect,

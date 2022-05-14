@@ -821,8 +821,8 @@ export class GridWidget extends Widget {
         }
 
         return _range(dataValue.length).map(i => {
-            const rows = Math.floor(this.width / itemWidget.width);
-            const cols = Math.floor(this.height / itemWidget.height);
+            const rows = Math.floor(width / itemWidget.width);
+            const cols = Math.floor(height / itemWidget.height);
 
             let row;
             let col;
@@ -5431,7 +5431,7 @@ export class TextInputWidget extends Widget {
         width: number,
         height: number
     ): React.ReactNode {
-        let value = this.getValue(flowContext);
+        let value = this.getValue(flowContext) ?? "";
 
         return (
             <>

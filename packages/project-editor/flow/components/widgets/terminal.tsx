@@ -67,7 +67,12 @@ export class TerminalWidget extends Widget {
     ): React.ReactNode {
         return (
             <>
-                <TerminalElement widget={this} flowContext={flowContext} />
+                <TerminalElement
+                    widget={this}
+                    flowContext={flowContext}
+                    width={width}
+                    height={height}
+                />
                 {super.render(flowContext, width, height)}
             </>
         );
@@ -151,6 +156,8 @@ const TerminalElement = observer(
     class TerminalElement extends React.Component<{
         widget: TerminalWidget;
         flowContext: IFlowContext;
+        width: number;
+        height: number;
     }> {
         ref = React.createRef<HTMLDivElement>();
 
@@ -235,8 +242,8 @@ const TerminalElement = observer(
                 <div
                     ref={this.ref}
                     style={{
-                        width: this.props.widget.width,
-                        height: this.props.widget.height
+                        width: this.props.width,
+                        height: this.props.height
                     }}
                 ></div>
             );

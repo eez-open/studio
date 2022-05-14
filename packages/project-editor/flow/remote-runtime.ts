@@ -588,7 +588,7 @@ export abstract class DebuggerConnectionBase {
 
         const arrayType = addresses[1];
         const type = this.runtime.assetsMap.types[arrayType];
-        if (!type || type.kind == "basic") {
+        if (!type) {
             console.error("UNEXPECTED!");
             return undefined;
         }
@@ -617,7 +617,7 @@ export abstract class DebuggerConnectionBase {
             if (type.kind == "array") {
                 propertyName = i;
                 propertyType = type.elementType.valueType;
-            } else {
+            } else if (type.kind == "object") {
                 const field = type.fields[i];
                 if (!field) {
                     console.error("UNEXPECTED!");
@@ -625,6 +625,9 @@ export abstract class DebuggerConnectionBase {
                 }
                 propertyName = field.name;
                 propertyType = field.valueType;
+            } else {
+                propertyName = i;
+                propertyType = type.valueType;
             }
 
             const objectMemberValue = new ObjectMemberValue(
