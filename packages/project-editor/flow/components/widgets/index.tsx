@@ -1500,6 +1500,8 @@ export class LayoutViewWidget extends Widget {
                                         ? flowContext.overrideFlowState(this)
                                         : flowContext
                                 }
+                                width={width}
+                                height={height}
                             />
                         );
 

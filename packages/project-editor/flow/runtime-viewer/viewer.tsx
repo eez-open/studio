@@ -123,16 +123,22 @@ export const Canvas = observer(
                     (clientRect.height &&
                         clientRect.height !== transform.clientRect.height)
                 ) {
-                    // set overflow to hidden and back to auto after timeout
-                    if (this._setOverflowTimeout) {
-                        clearTimeout(this._setOverflowTimeout);
-                        this._setOverflowTimeout = undefined;
+                    if (
+                        this.props.flowContext.DocumentStore.runtime &&
+                        !this.props.flowContext.DocumentStore.runtime
+                            .isDebuggerActive
+                    ) {
+                        // set overflow to hidden and back to auto after timeout
+                        if (this._setOverflowTimeout) {
+                            clearTimeout(this._setOverflowTimeout);
+                            this._setOverflowTimeout = undefined;
+                        }
+                        this.div.style.overflow = "hidden";
+                        this._setOverflowTimeout = setTimeout(() => {
+                            this._setOverflowTimeout = undefined;
+                            this.div.style.overflow = "auto";
+                        }, 100);
                     }
-                    this.div.style.overflow = "hidden";
-                    this._setOverflowTimeout = setTimeout(() => {
-                        this._setOverflowTimeout = undefined;
-                        this.div.style.overflow = "auto";
-                    }, 100);
 
                     runInAction(() => {
                         transform.clientRect = clientRect;
