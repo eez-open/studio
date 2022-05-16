@@ -445,12 +445,39 @@ export const Canvas = observer(
             let scale: number;
             if (
                 runMode &&
+                this.props.flowContext.DocumentStore.project
+                    .isDashboardProject &&
                 this.props.flowContext.document.flow.object instanceof
                     ProjectEditor.PageClass &&
                 this.props.flowContext.document.flow.object.scaleToFit
             ) {
                 xt = 0;
                 yt = 0;
+                scale = 1;
+            } else if (
+                runMode &&
+                this.props.flowContext.DocumentStore.project
+                    .isFirmwareWithFlowSupportProject &&
+                this.props.flowContext.DocumentStore.runtime instanceof
+                    ProjectEditor.WasmRuntimeClass
+            ) {
+                xt = Math.round(
+                    (transform.clientRect.width -
+                        this.props.flowContext.DocumentStore.runtime
+                            .displayWidth) /
+                        2
+                );
+
+                yt = Math.round(
+                    (transform.clientRect.height -
+                        this.props.flowContext.DocumentStore.runtime
+                            .displayHeight) /
+                        2
+                );
+                if (yt < 0) {
+                    yt = 0;
+                }
+
                 scale = 1;
             } else {
                 xt = Math.round(

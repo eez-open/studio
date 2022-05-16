@@ -16,6 +16,8 @@ export class DataBuffer {
         callback: () => void;
     }[] = [];
 
+    constructor(public utf8Support: boolean) {}
+
     writeInt8(value: number) {
         this.buffer.writeInt8(value, this.currentOffset);
         this.currentOffset += 1;
@@ -104,7 +106,12 @@ export class DataBuffer {
         if (this.currentOffset % 4) {
             throw "invalid offset";
         }
-        const buffer = Buffer.from(str, "utf8");
+        let buffer: Buffer;
+        if (this.utf8Support) {
+            buffer = Buffer.from(str, "utf8");
+        } else {
+            buffer = Buffer.from(str, "binary");
+        }
         for (let i = 0; i < buffer.length; i++) {
             this.writeUint8(buffer[i]);
         }
@@ -263,6 +270,8 @@ export class DummyDataBuffer {
         currentOffset: number;
         callback: () => void;
     }[] = [];
+
+    constructor(public utf8Support: boolean) {}
 
     writeInt8(value: number) {}
 

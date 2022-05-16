@@ -40,6 +40,16 @@ export function buildWidget(
     // style
     dataBuffer.writeInt16(assets.getStyleIndex(object, "style"));
 
+    // flags
+    let flags = 0;
+    if (object instanceof ProjectEditor.WidgetClass) {
+        if (object.resizing) {
+            flags |= object.resizing.pinToEdge;
+            flags |= object.resizing.fixSize << 4;
+        }
+    }
+    dataBuffer.writeUint32(flags);
+
     // specific
     object.buildFlowWidgetSpecific(assets, dataBuffer);
 }

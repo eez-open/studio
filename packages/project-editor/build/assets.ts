@@ -447,8 +447,15 @@ export class Assets {
         this.colors = [];
 
         //
-        buildGuiDocumentData(this, new DummyDataBuffer());
-        buildGuiStylesData(this, new DummyDataBuffer());
+        buildGuiDocumentData(this, new DummyDataBuffer(this.utf8Support));
+        buildGuiStylesData(this, new DummyDataBuffer(this.utf8Support));
+    }
+
+    get utf8Support() {
+        return (
+            this.DocumentStore.project.isDashboardProject ||
+            this.DocumentStore.project.isFirmwareWithFlowSupportProject
+        );
     }
 
     getAssetIndex<T>(
@@ -1147,7 +1154,7 @@ function buildLanguages(assets: Assets, dataBuffer: DataBuffer) {
 }
 
 export async function buildGuiAssetsData(assets: Assets) {
-    const dataBuffer = new DataBuffer();
+    const dataBuffer = new DataBuffer(assets.utf8Support);
 
     buildGuiDocumentData(assets, dataBuffer);
     buildGuiStylesData(assets, dataBuffer);
@@ -1165,7 +1172,7 @@ export async function buildGuiAssetsData(assets: Assets) {
 
     const { compressedBuffer, compressedSize } = dataBuffer.compress();
 
-    const headerBuffer = new DataBuffer();
+    const headerBuffer = new DataBuffer(assets.utf8Support);
     buildHeaderData(assets, decompressedSize, headerBuffer);
 
     const allData = Buffer.alloc(headerBuffer.size + compressedSize);

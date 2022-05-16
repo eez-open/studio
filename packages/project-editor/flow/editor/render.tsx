@@ -40,8 +40,6 @@ export const ComponentsContainerEnclosure = observer(
                 const parent = this.props.parent;
 
                 if (
-                    this.props.flowContext.DocumentStore.project
-                        .isDashboardProject &&
                     !(parent instanceof ProjectEditor.ActionClass) &&
                     component instanceof ProjectEditor.WidgetClass &&
                     this.props.width != undefined &&

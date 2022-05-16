@@ -385,11 +385,12 @@ export class Page extends Flow {
             if (DocumentStore.project.isFirmwareWithFlowSupportProject) {
                 if (
                     page.width !=
-                    DocumentStore.project.settings.general.displayWidth
+                        DocumentStore.project.settings.general.displayWidth &&
+                    !(page.scaleToFit || page.isUsedAsCustomWidget)
                 ) {
                     messages.push(
                         new Message(
-                            MessageType.ERROR,
+                            MessageType.WARNING,
                             `Width (${page.width}) is different from display width (${DocumentStore.project.settings.general.displayWidth})`,
                             getChildOfObject(page, "width")
                         )
@@ -408,11 +409,12 @@ export class Page extends Flow {
 
                 if (
                     page.height !=
-                    DocumentStore.project.settings.general.displayHeight
+                        DocumentStore.project.settings.general.displayHeight &&
+                    !(page.scaleToFit || page.isUsedAsCustomWidget)
                 ) {
                     messages.push(
                         new Message(
-                            MessageType.ERROR,
+                            MessageType.WARNING,
                             `Height (${page.height}) is different from display height (${DocumentStore.project.settings.general.displayHeight})`,
                             getChildOfObject(page, "height")
                         )
@@ -500,6 +502,7 @@ export class Page extends Flow {
     renderComponents(flowContext: IFlowContext) {
         const scaleToFit =
             this.scaleToFit &&
+            flowContext.DocumentStore.project.isDashboardProject &&
             flowContext.DocumentStore.runtime &&
             !flowContext.DocumentStore.runtime.isDebuggerActive;
 
@@ -654,6 +657,7 @@ export class Page extends Flow {
         const CLOSE_PAGE_IF_TOUCHED_OUTSIDE_FLAG = 1 << 1;
         const PAGE_IS_USED_AS_CUSTOM_WIDGET = 1 << 2;
         const PAGE_CONTAINER = 1 << 3;
+        const PAGE_SCALE_TO_FIT = 1 << 4;
 
         if (this.closePageIfTouchedOutside) {
             flags |= CLOSE_PAGE_IF_TOUCHED_OUTSIDE_FLAG;
@@ -663,6 +667,10 @@ export class Page extends Flow {
             flags |= PAGE_IS_USED_AS_CUSTOM_WIDGET;
         } else {
             flags |= PAGE_CONTAINER;
+        }
+
+        if (this.scaleToFit) {
+            flags |= PAGE_SCALE_TO_FIT;
         }
 
         dataBuffer.writeUint16(flags);
