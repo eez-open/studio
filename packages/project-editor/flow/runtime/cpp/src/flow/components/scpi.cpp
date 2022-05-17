@@ -200,8 +200,7 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
     auto component = (ScpiActionComponent *)flowState->flow->components[componentIndex];
 
     Value instrumentValue;
-    if (!evalProperty(flowState, componentIndex, defs_v3::SCPIACTION_COMPONENT_PROPERTY_INSTRUMENT, instrumentValue)) {
-        throwError(flowState, componentIndex, "Failed to evaluate Instrument in SCPI\n");
+    if (!evalProperty(flowState, componentIndex, defs_v3::SCPIACTION_COMPONENT_PROPERTY_INSTRUMENT, instrumentValue, "Failed to evaluate Instrument in SCPI")) {
         return;
     }
     if (instrumentValue.getType() != VALUE_TYPE_ARRAY && instrumentValue.getType() != VALUE_TYPE_ARRAY_REF) {
@@ -241,8 +240,7 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 		} else if (scpiComponentExecutionState->op == SCPI_PART_EXPR) {
 			Value value;
 			int numInstructionBytes;
-			if (!evalExpression(flowState, componentIndex, instructions + scpiComponentExecutionState->instructionIndex, value, &numInstructionBytes)) {
-				throwError(flowState, componentIndex, "Failed to evaluate assignable expression in SCPI\n");
+			if (!evalExpression(flowState, componentIndex, instructions + scpiComponentExecutionState->instructionIndex, value, "Failed to evaluate assignable expression in SCPI", &numInstructionBytes)) {
 				deallocateComponentExecutionState(flowState, componentIndex);
 				return;
 			}
@@ -280,8 +278,7 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 
 			Value dstValue;
 			int numInstructionBytes;
-			if (!evalAssignableExpression(flowState, componentIndex, instructions + scpiComponentExecutionState->instructionIndex, dstValue, &numInstructionBytes)) {
-				throwError(flowState, componentIndex, "Failed to evaluate assignable expression in SCPI\n");
+			if (!evalAssignableExpression(flowState, componentIndex, instructions + scpiComponentExecutionState->instructionIndex, dstValue, "Failed to evaluate assignable expression in SCPI", &numInstructionBytes)) {
 				deallocateComponentExecutionState(flowState, componentIndex);
 				return;
 			}

@@ -1045,8 +1045,11 @@ export class SwitchActionComponent extends ActionComponent {
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
             <div className="body">
-                {this.tests.map(test => (
-                    <pre key={test.outputName}>{test.condition}</pre>
+                {this.tests.map((test, i) => (
+                    <pre key={test.outputName}>
+                        {`${i + 1}: `}
+                        {test.condition}
+                    </pre>
                 ))}
             </div>
         );
