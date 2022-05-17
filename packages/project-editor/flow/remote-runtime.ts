@@ -37,6 +37,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import { ExecuteComponentLogItem } from "project-editor/flow/debugger/logs";
 import type { ValueType } from "eez-studio-types";
 import { InputActionComponent } from "project-editor/flow/components/actions";
+import _ from "lodash";
 
 const DEBUGGER_TCP_PORT = 3333;
 
@@ -73,7 +74,9 @@ enum MessagesFromDebugger {
     MESSAGE_FROM_DEBUGGER_ADD_BREAKPOINT, // FLOW_INDEX, COMPONENT_INDEX
     MESSAGE_FROM_DEBUGGER_REMOVE_BREAKPOINT, // FLOW_INDEX, COMPONENT_INDEX
     MESSAGE_FROM_DEBUGGER_ENABLE_BREAKPOINT, // FLOW_INDEX, COMPONENT_INDEX
-    MESSAGE_FROM_DEBUGGER_DISABLE_BREAKPOINT // FLOW_INDEX, COMPONENT_INDEX
+    MESSAGE_FROM_DEBUGGER_DISABLE_BREAKPOINT, // FLOW_INDEX, COMPONENT_INDEX
+
+    MESSAGE_FROM_DEBUGGER_MODE // MODE (0:RUN | 1:DEBUG)
 }
 
 const DEBUGGER_STATE_RESUMED = 0;
@@ -243,6 +246,8 @@ export class RemoteRuntime extends RuntimeBase {
                 });
             }
 
+            this.onDebuggerActiveChanged();
+
             return;
         } catch (err) {
             notification.update(toastId, {
@@ -352,6 +357,8 @@ export class RemoteRuntime extends RuntimeBase {
         } else {
             this.pause();
         }
+
+        this.onDebuggerActiveChanged();
     }
 
     resume() {
@@ -377,6 +384,16 @@ export class RemoteRuntime extends RuntimeBase {
             this.isDebuggerActive = true;
             this.DocumentStore.uiStateStore.pageRuntimeFrontFace = false;
         });
+    }
+
+    onDebuggerActiveChanged() {
+        if (this.debuggerConnection) {
+            this.debuggerConnection.sendMessageFromDebugger(
+                `${MessagesFromDebugger.MESSAGE_FROM_DEBUGGER_MODE}\t${
+                    this.isDebuggerActive ? 1 : 0
+                }\n`
+            );
+        }
     }
 
     runSingleStep(singleStepMode?: SingleStepMode) {
@@ -709,6 +726,10 @@ export abstract class DebuggerConnectionBase {
                 flowState: undefined
             }
         );
+    }
+
+    onConnected() {
+        this.runtime.onDebuggerActiveChanged();
     }
 
     counter = 0;
@@ -1540,6 +1561,7 @@ class SocketDebuggerConnection extends DebuggerConnectionBase {
                 DEBUGGER_TCP_PORT,
                 connectionParameters.ethernetParameters.address,
                 () => {
+                    this.onConnected();
                     if (!this.runtime.isDebuggerActive) {
                         this.runtime.resume();
                     }
@@ -1603,6 +1625,7 @@ class WebSimulatorDebuggerConnection extends DebuggerConnectionBase {
         if (!this.runtime.isDebuggerActive) {
             this.runtime.resume();
         }
+        this.onConnected();
     }
 
     async stop() {

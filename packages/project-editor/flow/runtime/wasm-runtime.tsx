@@ -274,6 +274,8 @@ export class WasmRuntime extends RemoteRuntime {
             };
 
             this.worker.postMessage(message);
+
+            this.debuggerConnection.onConnected();
         } else {
             if (e.data.scpiCommand) {
                 this.executeScpiCommand(e.data.scpiCommand);
@@ -366,6 +368,26 @@ export class WasmRuntime extends RemoteRuntime {
                 this.displayWidth,
                 this.displayHeight
             );
+
+            // let left;
+            // let top;
+            // let width;
+            // let height;
+            // if (this.isDebuggerActive) {
+            //     this.ctx.clearRect(0, 0, this.displayWidth, this.displayHeight);
+            //     left = this.selectedPage.left;
+            //     top = this.selectedPage.top;
+            //     width = this.selectedPage.width;
+            //     height = this.selectedPage.height;
+            // } else {
+            //     left = 0;
+            //     top = 0;
+            //     width = this.displayWidth;
+            //     height = this.displayHeight;
+            // }
+
+            // this.ctx.putImageData(imgData, 0, 0, left, top, width, height);
+
             this.ctx.putImageData(imgData, 0, 0);
         }
 

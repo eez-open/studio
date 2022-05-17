@@ -275,6 +275,7 @@ export abstract class RuntimeBase {
             if (action == StateMachineAction.PAUSE) {
                 this.isDebuggerActive = true;
                 this.DocumentStore.uiStateStore.pageRuntimeFrontFace = false;
+                this.onDebuggerActiveChanged();
                 return;
             }
         }
@@ -293,6 +294,8 @@ export abstract class RuntimeBase {
             // );
         }
     }
+
+    onDebuggerActiveChanged() {}
 
     ////////////////////////////////////////
 
