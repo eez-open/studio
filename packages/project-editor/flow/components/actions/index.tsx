@@ -3147,8 +3147,19 @@ export class CommentActionComponent extends ActionComponent {
                 name: "text",
                 type: PropertyType.String,
                 hideInPropertyGrid: true
+            },
+            {
+                name: "description",
+                type: PropertyType.String,
+                hideInPropertyGrid: () => true
             }
         ],
+        beforeLoadHook: (
+            object: CommentActionComponent,
+            jsObject: Partial<CommentActionComponent>
+        ) => {
+            delete jsObject.description;
+        },
         icon: (
             <svg viewBox="0 0 14 13.5">
                 <path d="M13 0H1C.45 0 0 .45 0 1v8c0 .55.45 1 1 1h2v3.5L6.5 10H13c.55 0 1-.45 1-1V1c0-.55-.45-1-1-1zm0 9H6l-2 2V9H1V1h12v8z" />

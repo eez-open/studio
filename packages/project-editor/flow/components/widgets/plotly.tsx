@@ -24,10 +24,7 @@ import { observer } from "mobx-react";
 import type * as PlotlyModule from "plotly.js-dist-min";
 import classNames from "classnames";
 import { specificGroup } from "project-editor/components/PropertyGrid/groups";
-import {
-    evalProperty,
-    getNumberValue
-} from "project-editor/flow/components/widgets";
+import { evalProperty, getNumberValue } from "project-editor/flow/helper";
 import { getChildOfObject, Message, Section } from "project-editor/store";
 import {
     buildExpression,

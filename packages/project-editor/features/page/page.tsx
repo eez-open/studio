@@ -499,7 +499,7 @@ export class Page extends Flow {
         );
     }
 
-    renderComponents(flowContext: IFlowContext) {
+    renderWidgetComponents(flowContext: IFlowContext) {
         const scaleToFit =
             this.scaleToFit &&
             flowContext.DocumentStore.project.isDashboardProject &&
@@ -527,7 +527,13 @@ export class Page extends Flow {
                         height={height}
                     />
                 )}
+            </>
+        );
+    }
 
+    renderActionComponents(flowContext: IFlowContext) {
+        return (
+            <>
                 {!flowContext.frontFace && (
                     <ComponentsContainerEnclosure
                         parent={this}
@@ -677,6 +683,16 @@ export class Page extends Flow {
 
         // overlay
         dataBuffer.writeInt16(0);
+
+        // layout
+        const CONTAINER_WIDGET_LAYOUT_STATIC = 0;
+
+        let layout = CONTAINER_WIDGET_LAYOUT_STATIC;
+
+        dataBuffer.writeUint16(layout);
+
+        // reserved1
+        dataBuffer.writeUint16(0);
     }
 }
 

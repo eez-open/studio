@@ -166,7 +166,11 @@ export class Action extends Flow {
         return { left: 0, top: 0, width: 0, height: 0 };
     }
 
-    renderComponents(flowContext: IFlowContext) {
+    renderWidgetComponents(flowContext: IFlowContext) {
+        return null;
+    }
+
+    renderActionComponents(flowContext: IFlowContext) {
         return (
             <ComponentsContainerEnclosure
                 parent={this}

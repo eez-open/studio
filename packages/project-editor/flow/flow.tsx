@@ -662,7 +662,8 @@ export abstract class Flow extends EezObject {
             .sort((a, b) => a.top - b.top) as OutputActionComponent[];
     }
 
-    abstract renderComponents(flowContext: IFlowContext): React.ReactNode;
+    abstract renderWidgetComponents(flowContext: IFlowContext): React.ReactNode;
+    abstract renderActionComponents(flowContext: IFlowContext): React.ReactNode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

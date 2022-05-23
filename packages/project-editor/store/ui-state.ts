@@ -21,12 +21,23 @@ export class UIStateStore {
     searchMatchWholeWord: boolean;
     activeOutputSection = Section.CHECKS;
     pageEditorFrontFace: boolean = false;
-    pageRuntimeFrontFace: boolean = true;
+    _pageRuntimeFrontFace: boolean = true;
     showCommandPalette: boolean = false;
     showComponentDescriptions: boolean = true;
     selectedLanguageID: string;
 
     objectUIStates = new Map<string, any>();
+
+    get pageRuntimeFrontFace() {
+        return this.DocumentStore.runtime &&
+            !this.DocumentStore.runtime.isDebuggerActive
+            ? true
+            : this._pageRuntimeFrontFace;
+    }
+
+    set pageRuntimeFrontFace(value: boolean) {
+        runInAction(() => (this._pageRuntimeFrontFace = value));
+    }
 
     constructor(public DocumentStore: DocumentStoreClass) {
         makeObservable(this, {
@@ -38,7 +49,7 @@ export class UIStateStore {
             searchMatchWholeWord: observable,
             activeOutputSection: observable,
             pageEditorFrontFace: observable,
-            pageRuntimeFrontFace: observable,
+            _pageRuntimeFrontFace: observable,
             showCommandPalette: observable,
             showComponentDescriptions: observable,
             selectedLanguageID: observable,

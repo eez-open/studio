@@ -2296,6 +2296,7 @@ export class Component extends EezObject {
 
 export class Widget extends Component {
     data?: string;
+    visible?: string;
     action?: string;
     resizing: IResizing;
     style: Style;
@@ -2308,6 +2309,7 @@ export class Widget extends Component {
         properties: [
             resizingProperty,
             makeDataPropertyInfo("data"),
+            makeDataPropertyInfo("visible"),
             makeActionPropertyInfo("action", {
                 expressionType: `struct:${ACTION_PARAMS_STRUCT_NAME}`
             }),
@@ -2570,6 +2572,7 @@ export class Widget extends Component {
 
         makeObservable(this, {
             data: observable,
+            visible: observable,
             action: observable,
             resizing: observable,
             style: observable,
@@ -3149,49 +3152,63 @@ function renderActionComponent(
             </div>
             {!emptyContent && (
                 <div className="content ">
-                    {inputs.length > 0 && (
-                        <div className="inputs">
-                            {inputs.map(input => (
-                                <div
-                                    className="connection-input-label"
-                                    key={input.name}
-                                >
-                                    <ComponentInputSpan
-                                        componentInput={input}
-                                    />
-                                    {getInputDisplayName(actionNode, input)}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                    {body ? (
-                        <div
-                            className="eez-flow-editor-capture-pointers"
-                            style={{ width: "100%" }}
-                        >
-                            {body}
-                        </div>
-                    ) : null}
-                    {outputs.length > 0 && (
-                        <div className="outputs">
-                            {outputs.map(output => (
-                                <div
-                                    key={output.name}
-                                    className={classNames(
-                                        "connection-output-label",
-                                        {
-                                            error: output.name === "@error"
-                                        }
-                                    )}
-                                >
-                                    {getOutputDisplayName(actionNode, output)}
-                                    <ComponentOutputSpan
-                                        componentOutput={output}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                    {
+                        // inputs
+                        inputs.length > 0 && (
+                            <div className="inputs">
+                                {inputs.map(input => (
+                                    <div
+                                        className="connection-input-label"
+                                        key={input.name}
+                                    >
+                                        <ComponentInputSpan
+                                            componentInput={input}
+                                        />
+                                        {getInputDisplayName(actionNode, input)}
+                                    </div>
+                                ))}
+                            </div>
+                        )
+                    }
+
+                    {
+                        // body
+                        body ? (
+                            <div
+                                className="eez-flow-editor-capture-pointers"
+                                style={{ width: "100%" }}
+                            >
+                                {body}
+                            </div>
+                        ) : null
+                    }
+
+                    {
+                        // outputs
+                        outputs.length > 0 && (
+                            <div className="outputs">
+                                {outputs.map(output => (
+                                    <div
+                                        key={output.name}
+                                        className={classNames(
+                                            "connection-output-label",
+                                            {
+                                                error: output.name === "@error"
+                                            }
+                                        )}
+                                    >
+                                        {getOutputDisplayName(
+                                            actionNode,
+                                            output
+                                        )}
+                                        <ComponentOutputSpan
+                                            componentOutput={output}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        )
+                    }
                 </div>
             )}
         </>

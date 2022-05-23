@@ -14,8 +14,8 @@ import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import type { Component } from "project-editor/flow/component";
 import { strokeWidth } from "project-editor/flow/editor/ConnectionLineComponent";
 import { DragAndDropManager } from "project-editor/core/dd";
-import type { Flow } from "project-editor/flow/flow";
 import { resizeWidget } from "./resizing-widget-property";
+import { getBooleanValue } from "project-editor/flow/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -171,6 +171,22 @@ export const ComponentEnclosure = observer(
                 top: top ?? component.top
             };
 
+            if (
+                component instanceof ProjectEditor.WidgetClass &&
+                flowContext.flowState
+            ) {
+                if (
+                    !getBooleanValue(
+                        flowContext,
+                        component,
+                        "visible",
+                        !component.visible
+                    )
+                ) {
+                    return null;
+                }
+            }
+
             if (visible === false) {
                 if (this.props.flowContext.flowState) {
                     return null;
@@ -268,6 +284,24 @@ export const ComponentEnclosure = observer(
                         width ?? component.width,
                         height ?? component.height
                     )}
+
+                    {
+                        // component description
+                        component instanceof
+                            ProjectEditor.ActionComponentClass &&
+                            component.description &&
+                            flowContext.DocumentStore.uiStateStore
+                                .showComponentDescriptions &&
+                            (flowContext.DocumentStore.runtime
+                                ? flowContext.DocumentStore.runtime
+                                      .isDebuggerActive &&
+                                  !flowContext.frontFace
+                                : true) && (
+                                <div className="EezStudio_ActionComponentDescription">
+                                    {component.description}
+                                </div>
+                            )
+                    }
                 </div>
             );
         }
@@ -519,42 +553,3 @@ export const Svg: React.FunctionComponent<{
         </svg>
     );
 });
-
-export function renderComponentDescriptions(flowContext: IFlowContext) {
-    const dx = flowContext.viewState.dxMouseDrag ?? 0;
-    const dy = flowContext.viewState.dyMouseDrag ?? 0;
-
-    const flow = flowContext.document.flow.object as Flow;
-    return flow.actionComponents
-        .filter(component => !!component.description)
-        .map(component => {
-            const id = getId(component);
-
-            let left = component.left;
-            let top = component.top + component.height + 6;
-
-            if (flowContext.viewState.isObjectIdSelected(id)) {
-                left += dx;
-                top += dy;
-            }
-
-            const width = Math.max(component.width, 200);
-
-            const style: React.CSSProperties = {
-                position: "absolute",
-                left,
-                top,
-                width
-            };
-
-            return (
-                <div
-                    key={id}
-                    className="EezStudio_ActionComponentDescription"
-                    style={style}
-                >
-                    {component.description}
-                </div>
-            );
-        });
-}

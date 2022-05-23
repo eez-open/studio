@@ -27,10 +27,7 @@ import type { Flow, FlowTabState } from "project-editor/flow/flow";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { RuntimeFlowContext } from "project-editor/flow/runtime-viewer/context";
 
-import {
-    renderComponentDescriptions,
-    Svg
-} from "project-editor/flow/editor/render";
+import { Svg } from "project-editor/flow/editor/render";
 import { ConnectionLines } from "project-editor/flow/editor/ConnectionLineComponent";
 import { getObjectBoundingRect } from "project-editor/flow/editor/bounding-rects";
 import {
@@ -713,19 +710,19 @@ export const FlowViewer = observer(
                     <Canvas flowContext={this.flowContext}>
                         {this.flowContext.document?.flow.object === flow && (
                             <>
-                                <div
-                                    style={{
-                                        position: "absolute"
-                                    }}
-                                >
-                                    {
-                                        // render components
-                                        renderParts &&
-                                            flow.renderComponents(
+                                {
+                                    // render widget components
+                                    <div
+                                        style={{
+                                            position: "absolute"
+                                        }}
+                                    >
+                                        {renderParts &&
+                                            flow.renderWidgetComponents(
                                                 this.flowContext
-                                            )
-                                    }
-                                </div>
+                                            )}
+                                    </div>
+                                }
 
                                 {
                                     // render connection lines
@@ -738,23 +735,18 @@ export const FlowViewer = observer(
                                 }
 
                                 {
-                                    // render component descriptions
-                                    renderParts &&
-                                        this.context.uiStateStore
-                                            .showComponentDescriptions &&
-                                        this.context.runtime &&
-                                        this.context.runtime.isDebuggerActive &&
-                                        !this.props.tabState.frontFace && (
-                                            <div
-                                                style={{
-                                                    position: "absolute"
-                                                }}
-                                            >
-                                                {renderComponentDescriptions(
-                                                    this.flowContext
-                                                )}
-                                            </div>
-                                        )
+                                    // render action components
+                                    <div
+                                        style={{
+                                            position: "absolute"
+                                        }}
+                                    >
+                                        {renderParts &&
+                                            !this.props.tabState.frontFace &&
+                                            flow.renderActionComponents(
+                                                this.flowContext
+                                            )}
+                                    </div>
                                 }
                             </>
                         )}

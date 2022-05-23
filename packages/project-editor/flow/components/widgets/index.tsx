@@ -145,6 +145,14 @@ import {
     indentationGroup,
     specificGroup
 } from "project-editor/components/PropertyGrid/groups";
+import {
+    getBooleanValue,
+    evalProperty,
+    buildWidgetText,
+    getTextValue,
+    getNumberValue,
+    getAnyValue
+} from "project-editor/flow/helper";
 
 const LIST_TYPE_VERTICAL = 1;
 const LIST_TYPE_HORIZONTAL = 2;
@@ -160,224 +168,12 @@ const BAR_GRAPH_DO_NOT_DISPLAY_VALUE = 1 << 4;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function evalProperty(
-    flowContext: IFlowContext,
-    widget: Widget,
-    propertyName: string
-) {
-    let expr = (widget as any)[propertyName];
-    if (!expr) {
-        return undefined;
-    }
-
-    if (flowContext.flowState) {
-        return flowContext.DocumentStore.runtime!.evalProperty(
-            flowContext,
-            widget,
-            propertyName
-        );
-    } else {
-        try {
-            return evalConstantExpression(
-                flowContext.DocumentStore.project,
-                expr
-            ).value;
-        } catch (err) {
-            return undefined;
-        }
-    }
-}
-
-function getBooleanValue(
-    flowContext: IFlowContext,
-    widget: Widget,
-    propertyName: string,
-    defaultValue: boolean
-) {
-    let expr = (widget as any)[propertyName];
-
-    if (!expr) {
-        return defaultValue;
-    }
-
-    let value;
-    try {
-        value = evalProperty(flowContext, widget, propertyName);
-    } catch (err) {
-        // console.error(err);
-    }
-
-    return !!value;
-}
-
-export function getNumberValue(
-    flowContext: IFlowContext,
-    widget: Widget,
-    propertyName: string,
-    defaultValue: number
-) {
-    let expr = (widget as any)[propertyName];
-
-    if (!expr) {
-        return defaultValue;
-    }
-
-    let value;
-    try {
-        value = evalProperty(flowContext, widget, propertyName);
-    } catch (err) {
-        // console.error(err);
-    }
-
-    if (typeof value === "number") {
-        return value;
-    }
-
-    return defaultValue;
-}
-
-function getAnyValue(
-    flowContext: IFlowContext,
-    widget: Widget,
-    propertyName: string,
-    defaultValue: any
-) {
-    let expr = (widget as any)[propertyName];
-    if (!expr) {
-        return defaultValue;
-    }
-
-    let value;
-    try {
-        value = evalProperty(flowContext, widget, propertyName);
-    } catch (err) {
-        // console.error(err);
-    }
-
-    return value || defaultValue;
-}
-
-function getTextValue(
-    flowContext: IFlowContext,
-    widget: Widget,
-    propertyName: string,
-    name: string | undefined,
-    text: string | undefined
-): { text: string; node: React.ReactNode } | string {
-    let data = (widget as any)[propertyName];
-
-    if (
-        flowContext.DocumentStore.project.isDashboardProject ||
-        flowContext.DocumentStore.project.isAppletProject ||
-        flowContext.DocumentStore.project.isFirmwareWithFlowSupportProject
-    ) {
-        if (data) {
-            if (flowContext.flowState) {
-                try {
-                    const value = evalProperty(
-                        flowContext,
-                        widget,
-                        propertyName
-                    );
-
-                    if (typeof value == "string" || typeof value == "number") {
-                        return value.toString();
-                    }
-                    return "";
-                } catch (err) {
-                    //console.error(err);
-                    return "";
-                }
-            }
-
-            if (flowContext.DocumentStore.runtime) {
-                return "";
-            }
-
-            if (name) {
-                return name;
-            }
-
-            try {
-                const result = evalConstantExpression(
-                    ProjectEditor.getProject(widget),
-                    data
-                );
-                if (typeof result.value === "string") {
-                    return result.value;
-                }
-            } catch (err) {}
-
-            return {
-                text: data,
-                node: <span className="expression">{data}</span>
-            };
-        }
-
-        if (flowContext.flowState) {
-            return "";
-        }
-
-        if (name) {
-            return name;
-        }
-
-        return "<no text>";
-    }
-
-    if (text) {
-        return text;
-    }
-
-    if (name) {
-        return name;
-    }
-
-    if (data) {
-        const result = flowContext.dataContext.get(data);
-        if (result != undefined) {
-            return result;
-        }
-        return data;
-    }
-
-    return "<no text>";
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-function buildWidgetText(
-    assets: Assets,
-    dataBuffer: DataBuffer,
-    text: string | undefined,
-    defaultValue?: string
-) {
-    if (text == undefined) {
-        text = defaultValue;
-    }
-
-    if (text != undefined) {
-        try {
-            text = JSON.parse('"' + text + '"');
-        } catch (e) {}
-    }
-
-    if (text != undefined) {
-        const writeText = text;
-        dataBuffer.writeObjectOffset(() => dataBuffer.writeString(writeText));
-    } else {
-        dataBuffer.writeUint32(0);
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 export class ContainerWidget extends Widget {
     name?: string;
+    layout: string;
     widgets: Widget[];
     overlay?: string;
     shadow?: boolean;
-    visible?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_CONTAINER,
@@ -391,18 +187,43 @@ export class ContainerWidget extends Widget {
 
         properties: [
             {
+                name: "name",
+                type: PropertyType.String,
+                propertyGridGroup: generalGroup
+            },
+            {
+                name: "layout",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "static"
+                    },
+                    {
+                        id: "horizontal"
+                    },
+                    {
+                        id: "vertical"
+                    }
+                ],
+                propertyGridGroup: specificGroup
+            },
+            {
                 name: "widgets",
                 type: PropertyType.Array,
                 typeClass: Widget,
                 hideInPropertyGrid: true
             },
-            {
-                name: "name",
-                type: PropertyType.String,
-                propertyGridGroup: generalGroup
-            },
-            makeDataPropertyInfo("overlay"),
-            makeDataPropertyInfo("visible"),
+            makeDataPropertyInfo("overlay", {
+                hideInPropertyGrid: (containerWidget: ContainerWidget) => {
+                    const project = ProjectEditor.getProject(containerWidget);
+                    const projectType = project.settings.general.projectType;
+                    return !(
+                        (projectType === "firmware" &&
+                            !project.isFirmwareWithFlowSupportProject) ||
+                        projectType === "firmware-module"
+                    );
+                }
+            }),
             {
                 name: "shadow",
                 type: PropertyType.Boolean,
@@ -419,10 +240,20 @@ export class ContainerWidget extends Widget {
                 inheritFrom: "default"
             },
             widgets: [],
+            layout: "static",
             left: 0,
             top: 0,
             width: 64,
             height: 32
+        },
+
+        beforeLoadHook: (
+            widget: ContainerWidget,
+            jsWidget: Partial<ContainerWidget>
+        ) => {
+            if (jsWidget.layout == undefined) {
+                jsWidget.layout = "static";
+            }
         },
 
         icon: "../home/_images/widgets/Container.png",
@@ -441,10 +272,10 @@ export class ContainerWidget extends Widget {
 
         makeObservable(this, {
             name: observable,
+            layout: observable,
             widgets: observable,
             overlay: observable,
-            shadow: observable,
-            visible: observable
+            shadow: observable
         });
     }
 
@@ -453,14 +284,94 @@ export class ContainerWidget extends Widget {
         width: number,
         height: number
     ): React.ReactNode {
-        let visible: boolean = flowContext.flowState
-            ? getBooleanValue(flowContext, this, "visible", !this.visible)
-            : true;
+        let children;
+        if (this.layout == "horizontal") {
+            let offset = 0;
+
+            children = this.widgets.map((widget, i) => {
+                let left = offset;
+                let top = 0;
+                let width = widget.width;
+                let height = widget.height;
+
+                if (flowContext.flowState) {
+                    if (
+                        !getBooleanValue(
+                            flowContext,
+                            widget,
+                            "visible",
+                            !widget.visible
+                        )
+                    ) {
+                        return null;
+                    }
+                }
+
+                offset += width;
+
+                return (
+                    <ComponentEnclosure
+                        key={getId(widget)}
+                        component={widget}
+                        flowContext={flowContext}
+                        left={left}
+                        top={top}
+                        width={width}
+                        height={height}
+                    />
+                );
+            });
+        } else if (this.layout == "vertical") {
+            let offset = 0;
+
+            children = this.widgets.map((widget, i) => {
+                let left = 0;
+                let top = offset;
+                let width = widget.width;
+                let height = widget.height;
+
+                if (flowContext.flowState) {
+                    if (
+                        !getBooleanValue(
+                            flowContext,
+                            widget,
+                            "visible",
+                            !widget.visible
+                        )
+                    ) {
+                        return null;
+                    }
+                }
+
+                offset += height;
+
+                return (
+                    <ComponentEnclosure
+                        key={getId(widget)}
+                        component={widget}
+                        flowContext={flowContext}
+                        left={left}
+                        top={top}
+                        width={width}
+                        height={height}
+                    />
+                );
+            });
+        } else {
+            children = (
+                <ComponentsContainerEnclosure
+                    parent={this}
+                    components={this.widgets}
+                    flowContext={flowContext}
+                    width={width}
+                    height={height}
+                />
+            );
+        }
 
         return (
             <>
-                {!visible ||
-                flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
@@ -476,15 +387,9 @@ export class ContainerWidget extends Widget {
                         }}
                     />
                 )}
-                {visible && (
-                    <ComponentsContainerEnclosure
-                        parent={this}
-                        components={this.widgets}
-                        flowContext={flowContext}
-                        width={width}
-                        height={height}
-                    />
-                )}
+
+                {children}
+
                 {super.render(flowContext, width, height)}
             </>
         );
@@ -522,6 +427,24 @@ export class ContainerWidget extends Widget {
 
         // overlay
         dataBuffer.writeInt16(overlay);
+
+        // layout
+        const CONTAINER_WIDGET_LAYOUT_STATIC = 0;
+        const CONTAINER_WIDGET_LAYOUT_HORIZONTAL = 1;
+        const CONTAINER_WIDGET_LAYOUT_VERTICAL = 2;
+
+        let layout = CONTAINER_WIDGET_LAYOUT_STATIC;
+
+        if (this.layout === "horizontal") {
+            layout = CONTAINER_WIDGET_LAYOUT_HORIZONTAL;
+        } else if (this.layout === "vertical") {
+            layout = CONTAINER_WIDGET_LAYOUT_VERTICAL;
+        }
+
+        dataBuffer.writeUint16(layout);
+
+        // reserved1
+        dataBuffer.writeUint16(0);
     }
 }
 
@@ -1204,7 +1127,6 @@ const LayoutViewPropertyGridUI = observer(
 export class LayoutViewWidget extends Widget {
     layout: string;
     context?: string;
-    visible?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_LAYOUT_VIEW,
@@ -1217,7 +1139,6 @@ export class LayoutViewWidget extends Widget {
                 referencedObjectCollectionPath: "pages"
             },
             makeDataPropertyInfo("context"),
-            makeDataPropertyInfo("visible"),
             {
                 name: "customUI",
                 type: PropertyType.Any,
@@ -1338,8 +1259,7 @@ export class LayoutViewWidget extends Widget {
 
         makeObservable(this, {
             layout: observable,
-            context: observable,
-            visible: observable
+            context: observable
         });
     }
 
@@ -1446,75 +1366,51 @@ export class LayoutViewWidget extends Widget {
         width: number,
         height: number
     ): React.ReactNode {
-        let visible = true;
-
-        if (flowContext.flowState) {
-            let value: any;
-            try {
-                value = this.visible
-                    ? evalProperty(flowContext, this, "visible")
-                    : true;
-            } catch (err) {
-                //console.error(err);
-            }
-            if (typeof value === "boolean") {
-                visible = value;
-            } else if (typeof value === "number") {
-                visible = value != 0;
-            } else {
-                visible = false;
-            }
-        }
-
         let element;
 
-        if (visible) {
-            const layoutPage = this.getLayoutPage(flowContext.dataContext);
-            if (layoutPage) {
-                if (!LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId) {
-                    LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId =
-                        window.requestAnimationFrame(
-                            LayoutViewWidget.clearRenderedLayoutPages
-                        );
-                }
+        const layoutPage = this.getLayoutPage(flowContext.dataContext);
+        if (layoutPage) {
+            if (!LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId) {
+                LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId =
+                    window.requestAnimationFrame(
+                        LayoutViewWidget.clearRenderedLayoutPages
+                    );
+            }
 
-                let flowStateExists = true;
-                if (flowContext.flowState) {
-                    flowStateExists =
-                        !!flowContext.flowState.getFlowStateByComponent(this);
-                }
+            let flowStateExists = true;
+            if (flowContext.flowState) {
+                flowStateExists =
+                    !!flowContext.flowState.getFlowStateByComponent(this);
+            }
 
-                if (flowStateExists) {
-                    if (
-                        LayoutViewWidget.renderedLayoutPages.indexOf(
-                            layoutPage
-                        ) === -1
-                    ) {
-                        LayoutViewWidget.renderedLayoutPages.push(layoutPage);
+            if (flowStateExists) {
+                if (
+                    LayoutViewWidget.renderedLayoutPages.indexOf(layoutPage) ===
+                    -1
+                ) {
+                    LayoutViewWidget.renderedLayoutPages.push(layoutPage);
 
-                        element = (
-                            <ComponentEnclosure
-                                component={layoutPage}
-                                flowContext={
-                                    flowContext.flowState
-                                        ? flowContext.overrideFlowState(this)
-                                        : flowContext
-                                }
-                                width={width}
-                                height={height}
-                            />
-                        );
+                    element = (
+                        <ComponentEnclosure
+                            component={layoutPage}
+                            flowContext={
+                                flowContext.flowState
+                                    ? flowContext.overrideFlowState(this)
+                                    : flowContext
+                            }
+                            width={width}
+                            height={height}
+                        />
+                    );
 
-                        LayoutViewWidget.renderedLayoutPages.pop();
-                    }
+                    LayoutViewWidget.renderedLayoutPages.pop();
                 }
             }
         }
 
         return (
             <>
-                {!visible ||
-                flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {

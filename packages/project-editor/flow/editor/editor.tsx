@@ -42,11 +42,7 @@ import { DragAndDropManager } from "project-editor/core/dd";
 
 import type { Flow, FlowTabState } from "project-editor/flow/flow";
 import type { Component } from "project-editor/flow/component";
-import {
-    Svg,
-    ComponentEnclosure,
-    renderComponentDescriptions
-} from "project-editor/flow/editor/render";
+import { Svg, ComponentEnclosure } from "project-editor/flow/editor/render";
 import { ProjectContext } from "project-editor/project/context";
 import { ConnectionLines } from "project-editor/flow/editor/ConnectionLineComponent";
 import { Draggable } from "eez-studio-ui/draggable";
@@ -1197,34 +1193,45 @@ export const FlowEditor = observer(
                     >
                         {this.flowContext.document && (
                             <>
-                                <div
-                                    style={{
-                                        position: "absolute"
-                                    }}
-                                >
-                                    {flow.renderComponents(this.flowContext)}
-                                </div>
-                                {!this.props.tabState.frontFace && (
-                                    <AllConnectionLines
-                                        flowContext={this.flowContext}
-                                    />
-                                )}
-                                <DragComponent
-                                    flow={flow}
-                                    flowContext={this.flowContext}
-                                />
-                                {this.context.uiStateStore
-                                    .showComponentDescriptions && (
+                                {
+                                    // render widget components
                                     <div
                                         style={{
                                             position: "absolute"
                                         }}
                                     >
-                                        {renderComponentDescriptions(
+                                        {flow.renderWidgetComponents(
                                             this.flowContext
                                         )}
                                     </div>
-                                )}
+                                }
+
+                                {
+                                    // render connection lines
+                                    !this.props.tabState.frontFace && (
+                                        <AllConnectionLines
+                                            flowContext={this.flowContext}
+                                        />
+                                    )
+                                }
+
+                                {
+                                    // render action components
+                                    <div
+                                        style={{
+                                            position: "absolute"
+                                        }}
+                                    >
+                                        {flow.renderActionComponents(
+                                            this.flowContext
+                                        )}
+                                    </div>
+                                }
+
+                                <DragComponent
+                                    flow={flow}
+                                    flowContext={this.flowContext}
+                                />
                             </>
                         )}
                     </Canvas>

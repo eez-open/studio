@@ -18,6 +18,13 @@ export function buildWidget(
     }
     dataBuffer.writeInt16(data);
 
+    // visible
+    let visible = 0;
+    if (object instanceof ProjectEditor.WidgetClass) {
+        visible = assets.getWidgetDataItemIndex(object, "visible");
+    }
+    dataBuffer.writeInt16(visible);
+
     // action
     let action: number = 0;
     if (object instanceof ProjectEditor.WidgetClass) {
@@ -48,7 +55,7 @@ export function buildWidget(
             flags |= object.resizing.fixSize << 4;
         }
     }
-    dataBuffer.writeUint32(flags);
+    dataBuffer.writeUint16(flags);
 
     // specific
     object.buildFlowWidgetSpecific(assets, dataBuffer);

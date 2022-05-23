@@ -15,7 +15,9 @@
         "build-src": "tsc && node node_modules/gulp-cli/bin/gulp.js release",
         "build-css": "node node_modules/less/bin/lessc --clean-css packages/eez-studio-ui/_stylesheets/main.less build/eez-studio-ui/_stylesheets/main.css",
         "build-dark-css": "node node_modules/less/bin/lessc packages/eez-studio-ui/_stylesheets/main-dark.less build/eez-studio-ui/_stylesheets/main-dark.css",
-        "build-flow-runtime": "cp packages/project-editor/flow/runtime/flow_runtime.* build/project-editor/flow/runtime",
+        "build-flow-runtime": "run-script-os",
+        "build-flow-runtime:darwin:linux": "cp packages/project-editor/flow/runtime/flow_runtime.* build/project-editor/flow/runtime",
+        "build-flow-runtime:win32": "copy packages\\project-editor\\flow\\runtime\\flow_runtime.* build\\project-editor\\flow\\runtime\\",
         "make-electron-builder-yml": "cd installation && tsc && cd .. && node installation/make-electron-builder-yml.js",
         "watch-all": "concurrently \"npm run watch\" \"npm run watch-less\"",
         "watch": "node node_modules/gulp-cli/bin/gulp.js debug && tsc --project tsconfig.dev.json",
@@ -94,6 +96,7 @@
         "pump": "^3.0.0",
         "request": "^2.88.2",
         "request-promise-native": "^1.0.8",
+        "run-script-os": "^1.1.6",
         "tslint": "^6.1.3",
         "tslint-sonarts": "^1.9.0",
         "typescript": "^4.5.5"
