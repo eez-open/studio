@@ -27,6 +27,7 @@ export const ComponentsContainerEnclosure = observer(
         visibleComponent?: Component | null | undefined;
         width?: number;
         height?: number;
+        isRTL?: boolean;
     }> {
         render() {
             const { components, flowContext, visibleComponent } = this.props;
@@ -65,6 +66,17 @@ export const ComponentsContainerEnclosure = observer(
                     );
 
                     ({ left, top, width, height } = rect);
+                }
+
+                if (
+                    component instanceof ProjectEditor.WidgetClass &&
+                    this.props.isRTL === true &&
+                    this.props.width != undefined
+                ) {
+                    left = left ?? component.rect.left;
+                    width = width ?? component.rect.width;
+
+                    left = this.props.width - (left + width);
                 }
 
                 return (
@@ -165,12 +177,6 @@ export const ComponentEnclosure = observer(
         render() {
             const { component, flowContext, left, top, visible } = this.props;
 
-            // style
-            const style: React.CSSProperties = {
-                left: left ?? component.left,
-                top: top ?? component.top
-            };
-
             if (
                 component instanceof ProjectEditor.WidgetClass &&
                 flowContext.flowState
@@ -187,20 +193,18 @@ export const ComponentEnclosure = observer(
                 }
             }
 
+            // style
+            const style: React.CSSProperties = {
+                left: left ?? component.left,
+                top: top ?? component.top
+            };
+
             if (visible === false) {
                 if (this.props.flowContext.flowState) {
                     return null;
-                    //style.visibility = "hidden";
-                } else {
-                    style.opacity = "0.05";
                 }
+                style.opacity = "0.05";
                 style.pointerEvents = "none";
-            }
-
-            // data-eez-flow-object-id
-            let dataFlowObjectId = getId(component);
-            if (this.listIndex > 0) {
-                dataFlowObjectId = dataFlowObjectId + "-" + this.listIndex;
             }
 
             let width;
@@ -240,6 +244,12 @@ export const ComponentEnclosure = observer(
             }
 
             component.styleHook(style, flowContext);
+
+            // data-eez-flow-object-id
+            let dataFlowObjectId = getId(component);
+            if (this.listIndex > 0) {
+                dataFlowObjectId = dataFlowObjectId + "-" + this.listIndex;
+            }
 
             // className
             const DocumentStore = flowContext.DocumentStore;

@@ -107,6 +107,8 @@ export abstract class RuntimeBase {
     freeMemory: number = 0;
     totalMemory: number = 0;
 
+    isRTL: boolean = false;
+
     get isPaused() {
         return this.state == State.PAUSED;
     }
@@ -163,7 +165,8 @@ export abstract class RuntimeBase {
             popTask: action,
             showNextQueueTask: action,
             freeMemory: observable,
-            totalMemory: observable
+            totalMemory: observable,
+            isRTL: observable
         });
 
         this.selectedPage = this.DocumentStore.project.pages[0];

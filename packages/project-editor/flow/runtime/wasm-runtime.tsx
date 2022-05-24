@@ -347,6 +347,11 @@ export class WasmRuntime extends RemoteRuntime {
             }
 
             this.screen = e.data.screen;
+            runInAction(() => {
+                if (e.data.isRTL != undefined && this.isRTL !== e.data.isRTL) {
+                    this.isRTL = e.data.isRTL ? true : false;
+                }
+            });
 
             this.requestAnimationFrameId = window.requestAnimationFrame(
                 this.tick

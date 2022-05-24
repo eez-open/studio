@@ -86,7 +86,8 @@ import {
     COMPONENT_TYPE_SHOW_KEYPAD_ACTION,
     COMPONENT_TYPE_NOOP_ACTION,
     COMPONENT_TYPE_COMMENT_ACTION,
-    COMPONENT_TYPE_SELECT_LANGUAGE_ACTION
+    COMPONENT_TYPE_SELECT_LANGUAGE_ACTION,
+    COMPONENT_TYPE_SET_PAGE_DIRECTION_ACTION
 } from "project-editor/flow/components/component_types";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -3017,6 +3018,79 @@ export class SelectLanguageActionComponent extends ActionComponent {
 }
 
 registerClass("SelectLanguageActionComponent", SelectLanguageActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class SetPageDirectionActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: COMPONENT_TYPE_SET_PAGE_DIRECTION_ACTION,
+
+        properties: [
+            {
+                name: "direction",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "LTR", label: "LTR" },
+                    { id: "RTL", label: "RTL" }
+                ],
+                propertyGridGroup: specificGroup
+            }
+        ],
+        icon: LANGUAGE_ICON,
+        componentHeaderColor: "#fff5c2"
+    });
+
+    direction: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            direction: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            }
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        return (
+            <div className="body">
+                <pre>{this.direction}</pre>
+            </div>
+        );
+    }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        dataBuffer.writeUint8(this.direction == "LTR" ? 0 : 1);
+    }
+}
+
+registerClass(
+    "SetPageDirectionActionComponent",
+    SetPageDirectionActionComponent
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 

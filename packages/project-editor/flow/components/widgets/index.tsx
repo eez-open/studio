@@ -281,8 +281,8 @@ export class ContainerWidget extends Widget {
 
     render(
         flowContext: IFlowContext,
-        width: number,
-        height: number
+        containerWidth: number,
+        containerHeight: number
     ): React.ReactNode {
         let children;
         if (flowContext.flowState && this.layout == "horizontal") {
@@ -306,6 +306,13 @@ export class ContainerWidget extends Widget {
                 }
 
                 offset += width;
+
+                if (
+                    flowContext.DocumentStore.runtime &&
+                    flowContext.DocumentStore.runtime.isRTL
+                ) {
+                    left = containerWidth - (left + width);
+                }
 
                 return (
                     <ComponentEnclosure
@@ -341,6 +348,13 @@ export class ContainerWidget extends Widget {
 
                 offset += height;
 
+                if (
+                    flowContext.DocumentStore.runtime &&
+                    flowContext.DocumentStore.runtime.isRTL
+                ) {
+                    left = containerWidth - (left + width);
+                }
+
                 return (
                     <ComponentEnclosure
                         key={getId(widget)}
@@ -359,8 +373,13 @@ export class ContainerWidget extends Widget {
                     parent={this}
                     components={this.widgets}
                     flowContext={flowContext}
-                    width={width}
-                    height={height}
+                    width={containerWidth}
+                    height={containerHeight}
+                    isRTL={
+                        flowContext.DocumentStore.runtime
+                            ? flowContext.DocumentStore.runtime.isRTL
+                            : undefined
+                    }
                 />
             );
         }
@@ -386,7 +405,7 @@ export class ContainerWidget extends Widget {
 
                 {children}
 
-                {super.render(flowContext, width, height)}
+                {super.render(flowContext, containerWidth, containerHeight)}
             </>
         );
     }
@@ -1380,11 +1399,10 @@ export class LayoutViewWidget extends Widget {
             }
 
             if (flowStateExists) {
-                if (
-                    LayoutViewWidget.renderedLayoutPages.indexOf(layoutPage) ===
-                    -1
-                ) {
-                    LayoutViewWidget.renderedLayoutPages.push(layoutPage);
+                const renderedLayoutPages =
+                    LayoutViewWidget.renderedLayoutPages;
+                if (renderedLayoutPages.indexOf(layoutPage) === -1) {
+                    renderedLayoutPages.push(layoutPage);
 
                     element = (
                         <ComponentEnclosure
@@ -1399,7 +1417,7 @@ export class LayoutViewWidget extends Widget {
                         />
                     );
 
-                    LayoutViewWidget.renderedLayoutPages.pop();
+                    renderedLayoutPages.pop();
                 }
             }
         }

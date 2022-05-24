@@ -442,5 +442,7 @@ onmessage = async function (e: { data: RendererToWorkerMessage }) {
         );
     }
 
+    data.isRTL = WasmFlowRuntime._isRTL();
+
     postMessage(data);
 };

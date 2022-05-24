@@ -12,6 +12,8 @@ export interface WorkerToRenderMessage {
     // screen data (to be displayed in Canvas), sent from worker at each tick
     screen?: Uint8ClampedArray;
 
+    isRTL?: boolean;
+
     // message from worker to Studio debugger
     messageToDebugger?: Uint8Array;
 

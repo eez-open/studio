@@ -213,4 +213,6 @@ declare const WasmFlowRuntime: {
     _getFlowStateFlowIndex(flowStateIndex: number): number;
 
     _stopScript(): void;
+
+    _isRTL(): boolean;
 };

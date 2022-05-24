@@ -606,6 +606,11 @@ export class Page extends Flow {
                     }
                     width={width}
                     height={height}
+                    isRTL={
+                        flowContext.DocumentStore.runtime
+                            ? flowContext.DocumentStore.runtime.isRTL
+                            : undefined
+                    }
                 />
             </>
         );
