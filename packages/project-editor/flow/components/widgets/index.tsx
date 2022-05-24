@@ -170,10 +170,10 @@ const BAR_GRAPH_DO_NOT_DISPLAY_VALUE = 1 << 4;
 
 export class ContainerWidget extends Widget {
     name?: string;
-    layout: string;
     widgets: Widget[];
     overlay?: string;
     shadow?: boolean;
+    layout: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_CONTAINER,
@@ -190,22 +190,6 @@ export class ContainerWidget extends Widget {
                 name: "name",
                 type: PropertyType.String,
                 propertyGridGroup: generalGroup
-            },
-            {
-                name: "layout",
-                type: PropertyType.Enum,
-                enumItems: [
-                    {
-                        id: "static"
-                    },
-                    {
-                        id: "horizontal"
-                    },
-                    {
-                        id: "vertical"
-                    }
-                ],
-                propertyGridGroup: specificGroup
             },
             {
                 name: "widgets",
@@ -231,6 +215,22 @@ export class ContainerWidget extends Widget {
                 hideInPropertyGrid: (containerWidget: ContainerWidget) => {
                     return !containerWidget.overlay;
                 }
+            },
+            {
+                name: "layout",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "static"
+                    },
+                    {
+                        id: "horizontal"
+                    },
+                    {
+                        id: "vertical"
+                    }
+                ],
+                propertyGridGroup: specificGroup
             }
         ],
 
@@ -272,10 +272,10 @@ export class ContainerWidget extends Widget {
 
         makeObservable(this, {
             name: observable,
-            layout: observable,
             widgets: observable,
             overlay: observable,
-            shadow: observable
+            shadow: observable,
+            layout: observable
         });
     }
 
@@ -285,7 +285,7 @@ export class ContainerWidget extends Widget {
         height: number
     ): React.ReactNode {
         let children;
-        if (this.layout == "horizontal") {
+        if (flowContext.flowState && this.layout == "horizontal") {
             let offset = 0;
 
             children = this.widgets.map((widget, i) => {
@@ -294,17 +294,15 @@ export class ContainerWidget extends Widget {
                 let width = widget.width;
                 let height = widget.height;
 
-                if (flowContext.flowState) {
-                    if (
-                        !getBooleanValue(
-                            flowContext,
-                            widget,
-                            "visible",
-                            !widget.visible
-                        )
-                    ) {
-                        return null;
-                    }
+                if (
+                    !getBooleanValue(
+                        flowContext,
+                        widget,
+                        "visible",
+                        !widget.visible
+                    )
+                ) {
+                    return null;
                 }
 
                 offset += width;
@@ -321,7 +319,7 @@ export class ContainerWidget extends Widget {
                     />
                 );
             });
-        } else if (this.layout == "vertical") {
+        } else if (flowContext.flowState && this.layout == "vertical") {
             let offset = 0;
 
             children = this.widgets.map((widget, i) => {
@@ -330,17 +328,15 @@ export class ContainerWidget extends Widget {
                 let width = widget.width;
                 let height = widget.height;
 
-                if (flowContext.flowState) {
-                    if (
-                        !getBooleanValue(
-                            flowContext,
-                            widget,
-                            "visible",
-                            !widget.visible
-                        )
-                    ) {
-                        return null;
-                    }
+                if (
+                    !getBooleanValue(
+                        flowContext,
+                        widget,
+                        "visible",
+                        !widget.visible
+                    )
+                ) {
+                    return null;
                 }
 
                 offset += height;
@@ -4584,7 +4580,7 @@ export class GaugeEmbeddedWidget extends Widget {
         },
 
         icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">
+            <svg viewBox="0 0 1000 1000" width="20" height="20">
                 <path d="M406 509.333c22.667-37.333 94-132 214-284S804.667 0 814 5.333c8 4-24 96.667-96 278s-118 290-138 326c-33.333 57.333-78.667 69.333-136 36s-70-78.667-38-136m94-380c-112 0-206.667 42.333-284 127s-116 188.333-116 311c0 20 .667 35.333 2 46 1.333 14.667-2.667 27-12 37s-20.667 15.667-34 17c-13.333 1.333-25.333-2.667-36-12-10.667-9.333-16.667-20.667-18-34 0-5.333-.333-14-1-26s-1-21.333-1-28c0-150.667 48.333-278 145-382s215-156 355-156c48 0 92.667 6 134 18l-70 86c-26.667-2.667-48-4-64-4m362 62c92 102.667 138 228 138 376 0 25.333-.667 44-2 56-1.333 13.333-6.667 24.333-16 33-9.333 8.667-20.667 13-34 13h-4c-14.667-2.667-26.333-9.333-35-20-8.667-10.667-12.333-22.667-11-36 1.333-9.333 2-24.667 2-46 0-100-26.667-189.333-80-268 4-9.333 10.667-26.333 20-51s16.667-43.667 22-57" />
             </svg>
         ),
