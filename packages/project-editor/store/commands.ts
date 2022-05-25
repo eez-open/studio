@@ -6,7 +6,8 @@ import {
     IEezObject,
     getProperty,
     getParent,
-    getKey
+    getKey,
+    PropertyType
 } from "project-editor/core/object";
 
 import {
@@ -21,6 +22,7 @@ import {
 import { ICommand } from "project-editor/store/undo-manager";
 import { loadObject } from "project-editor/store/serialization";
 import { _map } from "eez-studio-shared/algorithm";
+import { guid } from "eez-studio-shared/guid";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -385,11 +387,15 @@ function ensureUniqueProperties(
     objects.forEach(object => {
         for (const propertyInfo of getClassInfo(object).properties) {
             if (propertyInfo.unique) {
-                (object as any)[propertyInfo.name] = getUniquePropertyValue(
-                    existingObjects,
-                    propertyInfo.name,
-                    getProperty(object, propertyInfo.name)
-                );
+                if (propertyInfo.type == PropertyType.GUID) {
+                    (object as any)[propertyInfo.name] = guid();
+                } else {
+                    (object as any)[propertyInfo.name] = getUniquePropertyValue(
+                        existingObjects,
+                        propertyInfo.name,
+                        getProperty(object, propertyInfo.name)
+                    );
+                }
             }
         }
         existingObjects.push(object);

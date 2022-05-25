@@ -8,8 +8,9 @@ import {
     GenericDialogResult
 } from "eez-studio-ui/generic-dialog";
 
-import type { DocumentStoreClass } from "project-editor/store";
+import { DocumentStoreClass, getClassInfo } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
+import type { IEezObject } from "./object";
 
 export async function confirm(
     message: string,
@@ -84,5 +85,31 @@ export function showGenericDialog(
             </ProjectContext.Provider>,
             conf.opts
         );
+    });
+}
+
+export function onAfterPaste(
+    newObjectOrObjects: IEezObject | IEezObject[],
+    fromObjectOrObjects: IEezObject | IEezObject[]
+) {
+    let newObjects: IEezObject[];
+    if (Array.isArray(newObjectOrObjects)) {
+        newObjects = newObjectOrObjects;
+    } else {
+        newObjects = [newObjectOrObjects];
+    }
+
+    let fromObjects: IEezObject[];
+    if (Array.isArray(fromObjectOrObjects)) {
+        fromObjects = fromObjectOrObjects as IEezObject[];
+    } else {
+        fromObjects = [fromObjectOrObjects];
+    }
+
+    newObjects.forEach((object, i) => {
+        const classInfo = getClassInfo(object);
+        if (classInfo.onAfterPaste) {
+            classInfo.onAfterPaste(object, fromObjects[i]);
+        }
     });
 }

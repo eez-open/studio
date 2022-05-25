@@ -60,6 +60,7 @@ import { DragAndDropManager } from "project-editor/core/dd";
 
 import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
 import { IEditorState } from "project-editor/project/EditorComponent";
+import { onAfterPaste } from "project-editor/core/util";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -683,19 +684,22 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
 
     pasteSelection() {
         if (this.canPaste()) {
-            let aNewObject;
+            let newObject;
 
+            let fromObject;
             if (this.selectedItems.length == 0) {
-                aNewObject = pasteItem(this.object);
+                fromObject = this.object;
             } else {
-                aNewObject = pasteItem(this.selectedItems[0].object);
+                fromObject = this.selectedItems[0].object;
             }
 
-            if (aNewObject) {
-                if (Array.isArray(aNewObject)) {
-                    this.selectObjects(aNewObject);
+            newObject = pasteItem(fromObject);
+            if (newObject) {
+                onAfterPaste(newObject, fromObject);
+                if (Array.isArray(newObject)) {
+                    this.selectObjects(newObject);
                 } else {
-                    this.selectObject(aNewObject);
+                    this.selectObject(newObject);
                 }
             }
         }

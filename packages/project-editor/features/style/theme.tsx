@@ -36,29 +36,6 @@ import { generalGroup } from "project-editor/components/PropertyGrid/groups";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getProjectWithThemes(DocumentStore: DocumentStoreClass) {
-    if (DocumentStore.masterProject) {
-        return DocumentStore.masterProject;
-    }
-
-    if (DocumentStore.project.themes.length > 0) {
-        return DocumentStore.project;
-    }
-
-    for (const importDirective of DocumentStore.project.settings.general
-        .imports) {
-        if (importDirective.project) {
-            if (importDirective.project.themes.length > 0) {
-                return importDirective.project;
-            }
-        }
-    }
-
-    return DocumentStore.project;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 const ColorItem = observer(
     class ColorItem extends React.Component<{
         itemId: string;
@@ -500,7 +477,7 @@ export class Theme extends EezObject implements ITheme {
         properties: [
             {
                 name: "themeId",
-                type: PropertyType.String,
+                type: PropertyType.GUID,
                 unique: true,
                 hideInPropertyGrid: true
             },
@@ -538,6 +515,17 @@ export class Theme extends EezObject implements ITheme {
                     name: result.values.name
                 });
             });
+        },
+        onAfterPaste: (newTheme: Theme, fromTheme: Theme) => {
+            const project = ProjectEditor.getProject(newTheme);
+
+            for (const color of project.colors) {
+                project.setThemeColor(
+                    newTheme.themeId,
+                    color.colorId,
+                    project.getThemeColor(fromTheme.themeId, color.colorId)
+                );
+            }
         }
     };
 
@@ -619,4 +607,27 @@ export function getThemedColor(
     }
 
     return colorValue;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+function getProjectWithThemes(DocumentStore: DocumentStoreClass) {
+    if (DocumentStore.masterProject) {
+        return DocumentStore.masterProject;
+    }
+
+    if (DocumentStore.project.themes.length > 0) {
+        return DocumentStore.project;
+    }
+
+    for (const importDirective of DocumentStore.project.settings.general
+        .imports) {
+        if (importDirective.project) {
+            if (importDirective.project.themes.length > 0) {
+                return importDirective.project;
+            }
+        }
+    }
+
+    return DocumentStore.project;
 }

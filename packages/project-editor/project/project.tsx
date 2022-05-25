@@ -930,15 +930,13 @@ let builtinProjectProperties: PropertyInfo[] = [
         name: "colors",
         type: PropertyType.Array,
         typeClass: Color,
-        hideInPropertyGrid: true,
-        partOfNavigation: false
+        hideInPropertyGrid: true
     },
     {
         name: "themes",
         type: PropertyType.Array,
         typeClass: Theme,
-        hideInPropertyGrid: true,
-        partOfNavigation: false
+        hideInPropertyGrid: true
     }
 ];
 let projectProperties = builtinProjectProperties;

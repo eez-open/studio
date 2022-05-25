@@ -41,7 +41,7 @@ import {
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { loadObject, objectToJson } from "project-editor/store/serialization";
-import { confirm } from "project-editor/core/util";
+import { confirm, onAfterPaste } from "project-editor/core/util";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -817,6 +817,7 @@ export function createContextMenu(
                 click: () => {
                     const aNewObject = pasteItem(object);
                     if (aNewObject) {
+                        onAfterPaste(aNewObject, object);
                         if (Array.isArray(aNewObject)) {
                             context.selectObjects(aNewObject);
                         } else {

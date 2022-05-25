@@ -270,6 +270,8 @@ export interface ClassInfo {
             pastePlace: EezObject;
         }
     ) => IEezObject;
+
+    onAfterPaste?: (newObject: IEezObject, fromObject: IEezObject) => void;
 }
 
 export function makeDerivedClassInfo(
