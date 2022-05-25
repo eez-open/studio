@@ -47,7 +47,6 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import { MenuItem } from "@electron/remote";
 import { generalGroup } from "project-editor/components/PropertyGrid/groups";
-import { findBitmap } from "../bitmap/bitmap";
 
 export type BorderRadiusSpec = {
     topLeftX: number;
@@ -1876,7 +1875,10 @@ export class Style extends EezObject {
 
         if (this.backgroundImageProperty) {
             const project = ProjectEditor.getProject(this);
-            const bitmap = findBitmap(project, this.backgroundImageProperty);
+            const bitmap = ProjectEditor.findBitmap(
+                project,
+                this.backgroundImageProperty
+            );
             if (bitmap) {
                 spec[0].attrs.push([
                     "background-image",
