@@ -4383,6 +4383,65 @@ export class ProgressWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_PROGRESS,
 
+        properties: [
+            makeDataPropertyInfo("min", {
+                hideInPropertyGrid: (containerWidget: ContainerWidget) => {
+                    const project = ProjectEditor.getProject(containerWidget);
+                    return !(
+                        project.isDashboardProject ||
+                        project.isFirmwareWithFlowSupportProject
+                    );
+                }
+            }),
+            makeDataPropertyInfo("max", {
+                hideInPropertyGrid: (containerWidget: ContainerWidget) => {
+                    const project = ProjectEditor.getProject(containerWidget);
+                    return !(
+                        project.isDashboardProject ||
+                        project.isFirmwareWithFlowSupportProject
+                    );
+                }
+            }),
+            {
+                name: "orientation",
+                type: PropertyType.Enum,
+                propertyGridGroup: specificGroup,
+                enumItems: [
+                    {
+                        id: "horizontal"
+                    },
+                    {
+                        id: "vertical"
+                    }
+                ]
+            }
+        ],
+
+        beforeLoadHook: (
+            progressWidget: ProgressWidget,
+            jsProgressWidget: Partial<ProgressWidget>
+        ) => {
+            const project = ProjectEditor.getProject(progressWidget);
+            if (
+                project.isDashboardProject ||
+                project.isFirmwareWithFlowSupportProject
+            ) {
+                if (jsProgressWidget.min == undefined) {
+                    jsProgressWidget.min = "0";
+                }
+                if (jsProgressWidget.max == undefined) {
+                    jsProgressWidget.max = "100";
+                }
+            }
+
+            if (jsProgressWidget.orientation == undefined) {
+                jsProgressWidget.orientation =
+                    jsProgressWidget.width! > jsProgressWidget.height!
+                        ? "horizontal"
+                        : "vertical";
+            }
+        },
+
         defaultValue: {
             left: 0,
             top: 0,
@@ -4393,44 +4452,41 @@ export class ProgressWidget extends Widget {
         icon: "../home/_images/widgets/Progress.png"
     });
 
+    min: string;
+    max: string;
+    orientation: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            min: observable,
+            max: observable,
+            orientation: observable
+        });
+    }
+
     getPercent(flowContext: IFlowContext) {
         if (
             flowContext.DocumentStore.project.isDashboardProject ||
             flowContext.DocumentStore.project.isAppletProject ||
             flowContext.DocumentStore.project.isFirmwareWithFlowSupportProject
         ) {
-            if (this.data) {
-                if (flowContext.flowState) {
-                    try {
-                        const value = evalProperty(flowContext, this, "data");
-
-                        if (value != null && value != undefined) {
-                            return value;
-                        }
-                    } catch (err) {
-                        //console.error(err);
-                    }
-                    return 0;
-                }
-
-                if (flowContext.DocumentStore.runtime) {
-                    return 0;
-                }
-
-                try {
-                    const result = evalConstantExpression(
-                        ProjectEditor.getProject(this),
-                        this.data
-                    );
-                    if (typeof result.value === "string") {
-                        return result.value;
-                    }
-                } catch (err) {}
-
-                return 25;
-            }
-
             if (flowContext.flowState) {
+                try {
+                    const min = evalProperty(flowContext, this, "min");
+                    const max = evalProperty(flowContext, this, "max");
+                    let value = evalProperty(flowContext, this, "data");
+
+                    value = ((value - min) * 100) / (max - min);
+
+                    if (value != null && value != undefined) {
+                        return value;
+                    }
+                } catch (err) {
+                    //console.error(err);
+                }
+
                 return 0;
             }
 
@@ -4449,23 +4505,53 @@ export class ProgressWidget extends Widget {
 
     render(flowContext: IFlowContext, width: number, height: number) {
         const percent = this.getPercent(flowContext);
+        let isHorizontal = this.orientation == "horizontal";
 
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? (
-                    <div className="progress">
+                    <div
+                        className="progress"
+                        style={{
+                            display: "block",
+                            position: "relative",
+                            backgroundColor: this.style.color
+                        }}
+                    >
                         <div
                             className="progress-bar"
                             role="progressbar"
-                            style={{ width: percent + "%" }}
+                            style={
+                                isHorizontal
+                                    ? {
+                                          display: "block",
+                                          position: "absolute",
+                                          transition: "none",
+                                          left: 0,
+                                          top: 0,
+                                          width: percent + "%",
+                                          height,
+                                          backgroundColor:
+                                              this.style.activeColor
+                                      }
+                                    : {
+                                          display: "block",
+                                          position: "absolute",
+                                          transition: "none",
+                                          left: 0,
+                                          top: 100 - percent + "%",
+                                          width,
+                                          height: percent + "%",
+                                          backgroundColor:
+                                              this.style.activeColor
+                                      }
+                            }
                         ></div>
                     </div>
                 ) : (
                     <ComponentCanvas
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
-                            let isHorizontal = this.width > this.height;
-
                             draw.setColor(this.style.backgroundColorProperty);
                             draw.fillRect(
                                 ctx,
@@ -4502,7 +4588,25 @@ export class ProgressWidget extends Widget {
         );
     }
 
-    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // min
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "min"));
+
+        // max
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "max"));
+
+        // direction
+        const PROGRESS_WIDGET_ORIENTATION_HORIZONTAL = 0;
+        const PROGRESS_WIDGET_ORIENTATION_VERTICAL = 1;
+        dataBuffer.writeUint8(
+            this.orientation == "horizontal"
+                ? PROGRESS_WIDGET_ORIENTATION_HORIZONTAL
+                : PROGRESS_WIDGET_ORIENTATION_VERTICAL
+        );
+
+        // reserved1
+        dataBuffer.writeUint8(0);
+    }
 }
 
 registerClass("ProgressWidget", ProgressWidget);
