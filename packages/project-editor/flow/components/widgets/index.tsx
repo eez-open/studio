@@ -4523,17 +4523,30 @@ export class ProgressWidget extends Widget {
                             role="progressbar"
                             style={
                                 isHorizontal
-                                    ? {
-                                          display: "block",
-                                          position: "absolute",
-                                          transition: "none",
-                                          left: 0,
-                                          top: 0,
-                                          width: percent + "%",
-                                          height,
-                                          backgroundColor:
-                                              this.style.activeColor
-                                      }
+                                    ? flowContext.DocumentStore.runtime &&
+                                      flowContext.DocumentStore.runtime.isRTL
+                                        ? {
+                                              display: "block",
+                                              position: "absolute",
+                                              transition: "none",
+                                              left: 100 - percent + "%",
+                                              top: 0,
+                                              width: percent + "%",
+                                              height,
+                                              backgroundColor:
+                                                  this.style.activeColor
+                                          }
+                                        : {
+                                              display: "block",
+                                              position: "absolute",
+                                              transition: "none",
+                                              left: 0,
+                                              top: 0,
+                                              width: percent + "%",
+                                              height,
+                                              backgroundColor:
+                                                  this.style.activeColor
+                                          }
                                     : {
                                           display: "block",
                                           position: "absolute",

@@ -88,6 +88,7 @@ export abstract class RuntimeBase {
     isDebuggerActive = false;
 
     _selectedPage: Page;
+    _previousPage: Page;
     selectedFlowState: FlowState | undefined;
     selectedQueueTask: QueueTask | undefined;
 
@@ -131,6 +132,7 @@ export abstract class RuntimeBase {
 
     set selectedPage(value: Page) {
         runInAction(() => {
+            this._previousPage = this._selectedPage;
             this._selectedPage = value;
         });
 
@@ -140,6 +142,10 @@ export abstract class RuntimeBase {
         ) {
             this.DocumentStore.editorsStore.openEditor(this.selectedPage);
         }
+    }
+
+    get previousPage() {
+        return this._previousPage;
     }
 
     setActiveConnectionLine(connectionLine: ConnectionLine) {
