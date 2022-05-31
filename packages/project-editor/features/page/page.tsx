@@ -193,7 +193,8 @@ export class Page extends Flow {
             portrait: observable,
             isUsedAsCustomWidget: observable,
             dataContextOverrides: observable,
-            dataContextOverridesObject: computed
+            dataContextOverridesObject: computed,
+            rect: computed
         });
     }
 
@@ -447,6 +448,19 @@ export class Page extends Flow {
             return object.getResizeHandlers();
         }
     });
+
+    get rect() {
+        return {
+            left: this.left,
+            top: this.top,
+            width: this.width,
+            height: this.height
+        };
+    }
+
+    getTimelineRect(timelineTime: number) {
+        return this.rect;
+    }
 
     get autoSize(): AutoSize {
         return "none";

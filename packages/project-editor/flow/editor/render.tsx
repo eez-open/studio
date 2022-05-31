@@ -32,6 +32,15 @@ export const ComponentsContainerEnclosure = observer(
         render() {
             const { components, flowContext, visibleComponent } = this.props;
 
+            let parentRect: Rect;
+            if (flowContext.flowState) {
+                parentRect = this.props.parent.getTimelineRect(
+                    flowContext.flowState.timelineTime
+                );
+            } else {
+                parentRect = this.props.parent.rect;
+            }
+
             return components.map((component, i) => {
                 let left: number | undefined;
                 let top: number | undefined;
@@ -40,21 +49,30 @@ export const ComponentsContainerEnclosure = observer(
 
                 const parent = this.props.parent;
 
+                let componentRect;
+                if (flowContext.flowState) {
+                    componentRect = component.getTimelineRect(
+                        flowContext.flowState.timelineTime
+                    );
+                } else {
+                    componentRect = component.rect;
+                }
+
                 if (
                     !(parent instanceof ProjectEditor.ActionClass) &&
                     component instanceof ProjectEditor.WidgetClass &&
                     this.props.width != undefined &&
                     this.props.height != undefined &&
-                    (this.props.width != parent.width ||
-                        this.props.height != parent.height)
+                    (this.props.width != parentRect.width ||
+                        this.props.height != parentRect.height)
                 ) {
                     const rect = resizeWidget(
-                        component.rect,
+                        componentRect,
                         {
-                            top: parent.left,
-                            left: parent.top,
-                            width: parent.width,
-                            height: parent.height
+                            top: parentRect.left,
+                            left: parentRect.top,
+                            width: parentRect.width,
+                            height: parentRect.height
                         },
                         {
                             top: 0,
@@ -73,8 +91,8 @@ export const ComponentsContainerEnclosure = observer(
                     this.props.isRTL === true &&
                     this.props.width != undefined
                 ) {
-                    left = left ?? component.rect.left;
-                    width = width ?? component.rect.width;
+                    left = left ?? componentRect.left;
+                    width = width ?? componentRect.width;
 
                     left = this.props.width - (left + width);
                 }
@@ -194,9 +212,18 @@ export const ComponentEnclosure = observer(
             }
 
             // style
+            let componentRect: Rect;
+            if (flowContext.flowState) {
+                componentRect = component.getTimelineRect(
+                    flowContext.flowState.timelineTime
+                );
+            } else {
+                componentRect = component.rect;
+            }
+
             const style: React.CSSProperties = {
-                left: left ?? component.left,
-                top: top ?? component.top
+                left: left ?? componentRect.left,
+                top: top ?? componentRect.top
             };
 
             if (visible === false) {
@@ -222,7 +249,7 @@ export const ComponentEnclosure = observer(
                         component.autoSize == "both"
                     )
                 ) {
-                    width = component.width;
+                    width = componentRect.width;
                 }
 
                 if (
@@ -231,7 +258,7 @@ export const ComponentEnclosure = observer(
                         component.autoSize == "both"
                     )
                 ) {
-                    height = component.height;
+                    height = componentRect.height;
                 }
             }
 

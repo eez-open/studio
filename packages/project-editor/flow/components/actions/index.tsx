@@ -87,7 +87,8 @@ import {
     COMPONENT_TYPE_NOOP_ACTION,
     COMPONENT_TYPE_COMMENT_ACTION,
     COMPONENT_TYPE_SELECT_LANGUAGE_ACTION,
-    COMPONENT_TYPE_SET_PAGE_DIRECTION_ACTION
+    COMPONENT_TYPE_SET_PAGE_DIRECTION_ACTION,
+    COMPONENT_TYPE_ANIMATE_ACTION
 } from "project-editor/flow/components/component_types";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -3091,6 +3092,84 @@ registerClass(
     "SetPageDirectionActionComponent",
     SetPageDirectionActionComponent
 );
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class AnimateActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: COMPONENT_TYPE_ANIMATE_ACTION,
+
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "time",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "double"
+            )
+        ],
+        icon: (
+            <svg
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <rect x="4" y="4" width="16" height="16" rx="2" />
+                <path d="M8 4v16m8-16v16M4 8h4m-4 8h4m-4-4h16m-4-4h4m-4 8h4" />
+            </svg>
+        ),
+        componentHeaderColor: "#fff5c2"
+    });
+
+    time: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            time: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            }
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        return (
+            <div className="body">
+                <pre>{this.time}</pre>
+            </div>
+        );
+    }
+}
+
+registerClass("AnimateActionComponent", AnimateActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 

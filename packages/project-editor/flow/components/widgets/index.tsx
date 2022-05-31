@@ -2043,7 +2043,23 @@ export class TextWidget extends Widget {
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? (
-                    <span className={classNames(this.style.classNames)}>
+                    <span
+                        className={classNames(this.style.classNames)}
+                        onClick={event => {
+                            event.preventDefault();
+                            event.stopPropagation();
+
+                            if (flowContext.DocumentStore.runtime) {
+                                flowContext.DocumentStore.runtime.executeWidgetAction(
+                                    flowContext,
+                                    this,
+                                    "action",
+                                    makeActionParamsValue(flowContext),
+                                    `struct:${ACTION_PARAMS_STRUCT_NAME}`
+                                );
+                            }
+                        }}
+                    >
                         {node || text}
                     </span>
                 ) : (

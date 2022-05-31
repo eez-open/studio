@@ -225,6 +225,7 @@ export class WasmRuntime extends RemoteRuntime {
     stop() {
         const message: RendererToWorkerMessage = {};
         message.stopScript = true;
+
         this.worker.postMessage(message);
 
         setTimeout(() => {
@@ -951,10 +952,12 @@ class WasmDebuggerConnection extends DebuggerConnectionBase {
     stop() {}
 
     sendMessageFromDebugger(data: string) {
-        const message: RendererToWorkerMessage = {
-            messageFromDebugger: binaryStringToArrayBuffer(data)
-        };
-        this.wasmRuntime.worker.postMessage(message);
+        if (this.wasmRuntime.worker) {
+            const message: RendererToWorkerMessage = {
+                messageFromDebugger: binaryStringToArrayBuffer(data)
+            };
+            this.wasmRuntime.worker.postMessage(message);
+        }
     }
 }
 

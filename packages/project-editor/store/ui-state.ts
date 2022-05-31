@@ -20,17 +20,27 @@ export class UIStateStore {
     searchMatchCase: boolean;
     searchMatchWholeWord: boolean;
     activeOutputSection = Section.CHECKS;
-    pageEditorFrontFace: boolean = false;
+    _pageEditorFrontFace: boolean = false;
     _pageRuntimeFrontFace: boolean = true;
     showCommandPalette: boolean = false;
     showComponentDescriptions: boolean = true;
     selectedLanguageID: string;
+    showTimeline: boolean = false;
 
     objectUIStates = new Map<string, any>();
 
+    get pageEditorFrontFace() {
+        return this.showTimeline ? true : this._pageEditorFrontFace;
+    }
+
+    set pageEditorFrontFace(value: boolean) {
+        runInAction(() => (this._pageEditorFrontFace = value));
+    }
+
     get pageRuntimeFrontFace() {
-        return this.DocumentStore.runtime &&
-            !this.DocumentStore.runtime.isDebuggerActive
+        return this.showTimeline ||
+            (this.DocumentStore.runtime &&
+                !this.DocumentStore.runtime.isDebuggerActive)
             ? true
             : this._pageRuntimeFrontFace;
     }
@@ -48,7 +58,7 @@ export class UIStateStore {
             searchMatchCase: observable,
             searchMatchWholeWord: observable,
             activeOutputSection: observable,
-            pageEditorFrontFace: observable,
+            _pageEditorFrontFace: observable,
             _pageRuntimeFrontFace: observable,
             showCommandPalette: observable,
             showComponentDescriptions: observable,
@@ -62,7 +72,8 @@ export class UIStateStore {
             enableBreakpoint: action,
             disableBreakpoint: action,
             watchExpressions: observable,
-            selectedLanguage: computed
+            selectedLanguage: computed,
+            showTimeline: observable
         });
     }
 
@@ -146,6 +157,10 @@ export class UIStateStore {
             if (uiState.selectedLanguageID != undefined) {
                 this.selectedLanguageID = uiState.selectedLanguageID;
             }
+
+            if (uiState.showTimeline != undefined) {
+                this.showTimeline = uiState.showTimeline;
+            }
         });
     }
 
@@ -192,7 +207,8 @@ export class UIStateStore {
             ),
             watchExpressions: toJS(this.watchExpressions),
             showComponentDescriptions: this.showComponentDescriptions,
-            selectedLanguageID: this.selectedLanguageID
+            selectedLanguageID: this.selectedLanguageID,
+            showTimeline: this.showTimeline
         };
 
         return state;

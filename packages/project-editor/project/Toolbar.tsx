@@ -142,6 +142,11 @@ const Controls = observer(
             if (this.pageTabState) {
                 this.pageTabState.frontFace = enabled;
             }
+            this.context.uiStateStore.showTimeline = false;
+        });
+
+        showTimeline = action(() => {
+            this.context.uiStateStore.showTimeline = true;
         });
 
         get pageTabState() {
@@ -299,15 +304,35 @@ const Controls = observer(
                                         icon="material:flip_to_front"
                                         iconSize={20}
                                         onClick={() => this.setFrontFace(true)}
-                                        selected={this.pageTabState.frontFace}
+                                        selected={
+                                            this.pageTabState.frontFace &&
+                                            !this.context.uiStateStore
+                                                .showTimeline
+                                        }
                                     />
                                     <IconAction
                                         title="Show back face"
                                         icon="material:flip_to_back"
                                         iconSize={20}
                                         onClick={() => this.setFrontFace(false)}
-                                        selected={!this.pageTabState.frontFace}
+                                        selected={
+                                            !this.pageTabState.frontFace &&
+                                            !this.context.uiStateStore
+                                                .showTimeline
+                                        }
                                     />
+                                    {!this.flowTabState?.flowState && (
+                                        <IconAction
+                                            title="Show timeline"
+                                            icon="material:timeline"
+                                            iconSize={20}
+                                            onClick={() => this.showTimeline()}
+                                            selected={
+                                                this.context.uiStateStore
+                                                    .showTimeline
+                                            }
+                                        />
+                                    )}
                                 </div>
                             )}
 

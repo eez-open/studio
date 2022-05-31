@@ -54,6 +54,7 @@ enum MessagesToDebugger {
     MESSAGE_TO_DEBUGGER_VALUE_CHANGED, // VALUE_ADDR, VALUE
 
     MESSAGE_TO_DEBUGGER_FLOW_STATE_CREATED, // FLOW_STATE_INDEX, FLOW_INDEX, PARENT_FLOW_STATE_INDEX (-1 - NO PARENT), PARENT_COMPONENT_INDEX (-1 - NO PARENT COMPONENT)
+    MESSAGE_TO_DEBUGGER_FLOW_STATE_TIMELINE_CHANGED, // FLOW_STATE_INDEX, TIMELINE_TIME
     MESSAGE_TO_DEBUGGER_FLOW_STATE_DESTROYED, // FLOW_STATE_INDEX
 
     MESSAGE_TO_DEBUGGER_FLOW_STATE_ERROR, // FLOW_STATE_INDEX, COMPONENT_INDEX, ERROR_MESSAGE
@@ -1241,6 +1242,30 @@ export abstract class DebuggerConnectionBase {
                             (parentFlowState || runtime).flowStates.push(
                                 flowState
                             )
+                        );
+                    }
+                    break;
+
+                case MessagesToDebugger.MESSAGE_TO_DEBUGGER_FLOW_STATE_TIMELINE_CHANGED:
+                    {
+                        const flowStateIndex = parseInt(messageParameters[1]);
+                        const timelineTime = parseFloat(messageParameters[2]);
+
+                        // console.log(
+                        //     "MESSAGE_TO_DEBUGGER_FLOW_STATE_TIMELINE_CHANGED",
+                        //     "flowStateIndex",
+                        //     flowStateIndex,
+                        //     timelineTime
+                        // );
+
+                        const { flowState } = this.getFlowState(flowStateIndex);
+                        if (!flowState) {
+                            console.error("UNEXPECTED!");
+                            return;
+                        }
+
+                        runInAction(
+                            () => (flowState.timelineTime = timelineTime)
                         );
                     }
                     break;

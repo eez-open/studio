@@ -162,6 +162,14 @@ export class Action extends Flow {
         icon: "code"
     });
 
+    get rect() {
+        return this.pageRect;
+    }
+
+    getTimelineRect(timelineTime: number) {
+        return this.pageRect;
+    }
+
     get pageRect() {
         return { left: 0, top: 0, width: 0, height: 0 };
     }

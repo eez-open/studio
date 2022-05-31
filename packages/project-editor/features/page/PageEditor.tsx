@@ -4,7 +4,6 @@ import { observer } from "mobx-react";
 import { IEezObject } from "project-editor/core/object";
 import {
     ITreeObjectAdapter,
-    TreeAdapter,
     TreeObjectAdapter,
     TreeObjectAdapterChildren
 } from "project-editor/core/objectAdapter";
@@ -24,25 +23,8 @@ export const PageEditor = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
-        constructor(props: any) {
-            super(props);
-
-            makeObservable(this, {
-                treeAdapter: computed
-            });
-        }
-
         get pageTabState() {
             return this.props.editor.state as PageTabState;
-        }
-
-        get treeAdapter() {
-            return new TreeAdapter(
-                this.pageTabState.widgetContainer,
-                undefined,
-                undefined,
-                true
-            );
         }
 
         render() {
@@ -89,12 +71,15 @@ export class PageTabState extends FlowTabState {
         scale: 1
     });
 
+    timelineTime: number = 0;
+
     constructor(object: IEezObject) {
         super(object as Flow);
 
         makeObservable(this, {
             _transform: observable,
-            frontFace: computed
+            frontFace: computed,
+            timelineTime: observable
         });
 
         this.widgetContainerFrontFace = new PageTreeObjectAdapter(
@@ -178,6 +163,10 @@ export class PageTabState extends FlowTabState {
                 scale: state.transform.scale ?? 1
             });
         }
+
+        if (state.timelineTime != undefined) {
+            this.timelineTime = state.timelineTime;
+        }
     }
 
     saveState() {
@@ -193,7 +182,8 @@ export class PageTabState extends FlowTabState {
                     y: this._transform.translate.y
                 },
                 scale: this._transform.scale
-            }
+            },
+            timelineTime: this.timelineTime
         };
 
         this.DocumentStore.uiStateStore.updateObjectUIState(

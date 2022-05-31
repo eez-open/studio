@@ -118,6 +118,7 @@ import {
     DISTRIBUTE_VERTICAL_GAPS_ICON
 } from "./align_and_distribute_icons";
 import { ProjectContext } from "project-editor/project/context";
+import type { PageTabState } from "project-editor/features/page/PageEditor";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1555,7 +1556,8 @@ export class Component extends EezObject {
             outputs: computed,
             buildInputs: computed({ keepAlive: true }),
             buildOutputs: computed({ keepAlive: true }),
-            isMoveable: computed
+            isMoveable: computed,
+            rect: computed
         });
     }
 
@@ -1750,6 +1752,136 @@ export class Component extends EezObject {
             return object.rect;
         },
         setRect: (object: Component, value: Rect) => {
+            const DocumentStore = getDocumentStore(object);
+
+            if (object instanceof Widget) {
+                if (DocumentStore.uiStateStore.showTimeline) {
+                    const editor = DocumentStore.editorsStore.activeEditor;
+                    if (editor) {
+                        if (editor.object instanceof ProjectEditor.PageClass) {
+                            const pageTabState = editor.state as PageTabState;
+                            const time = pageTabState.timelineTime;
+
+                            const props: Partial<Rect> = {};
+
+                            props.left = value.left;
+                            props.top = value.top;
+                            if (
+                                !(
+                                    object.autoSize == "width" ||
+                                    object.autoSize == "both"
+                                )
+                            ) {
+                                props.width = value.width;
+                            }
+                            if (
+                                !(
+                                    object.autoSize == "height" ||
+                                    object.autoSize == "both"
+                                )
+                            ) {
+                                props.height = value.height;
+                            }
+
+                            for (let i = 0; i < object.timeline.length; i++) {
+                                const timelineProperties = object.timeline[i];
+
+                                if (time == timelineProperties.end) {
+                                    DocumentStore.updateObject(
+                                        timelineProperties,
+                                        props
+                                    );
+
+                                    return;
+                                }
+
+                                if (
+                                    time >= timelineProperties.start &&
+                                    time < timelineProperties.end
+                                ) {
+                                    const newTimelineProperties =
+                                        new WidgetTimelineProperties();
+
+                                    newTimelineProperties.start = time;
+                                    newTimelineProperties.end =
+                                        timelineProperties.end;
+                                    newTimelineProperties.left =
+                                        timelineProperties.left;
+                                    newTimelineProperties.top =
+                                        timelineProperties.top;
+                                    newTimelineProperties.width =
+                                        timelineProperties.width;
+                                    newTimelineProperties.height =
+                                        timelineProperties.height;
+
+                                    DocumentStore.undoManager.setCombineCommands(
+                                        true
+                                    );
+
+                                    DocumentStore.updateObject(
+                                        timelineProperties,
+                                        Object.assign(props, {
+                                            end: time
+                                        })
+                                    );
+
+                                    DocumentStore.insertObjectBefore(
+                                        timelineProperties,
+                                        newTimelineProperties
+                                    );
+
+                                    DocumentStore.undoManager.setCombineCommands(
+                                        false
+                                    );
+
+                                    return;
+                                }
+
+                                if (
+                                    (i == 0 ||
+                                        time > object.timeline[i - 1].end) &&
+                                    time < object.timeline[i].start
+                                ) {
+                                    const newTimelineProperties =
+                                        new WidgetTimelineProperties();
+
+                                    newTimelineProperties.start = time;
+                                    newTimelineProperties.end = time;
+                                    newTimelineProperties.left = props.left;
+                                    newTimelineProperties.top = props.top;
+                                    newTimelineProperties.width = props.width;
+                                    newTimelineProperties.height = props.height;
+
+                                    DocumentStore.insertObjectBefore(
+                                        timelineProperties,
+                                        newTimelineProperties
+                                    );
+
+                                    return;
+                                }
+                            }
+
+                            const newTimelineProperties =
+                                new WidgetTimelineProperties();
+
+                            newTimelineProperties.start = time;
+                            newTimelineProperties.end = time;
+                            newTimelineProperties.left = props.left;
+                            newTimelineProperties.top = props.top;
+                            newTimelineProperties.width = props.width;
+                            newTimelineProperties.height = props.height;
+
+                            DocumentStore.addObject(
+                                object.timeline,
+                                newTimelineProperties
+                            );
+
+                            return;
+                        }
+                    }
+                }
+            }
+
             const props: Partial<Rect> = {};
 
             if (value.left !== object.left) {
@@ -1772,7 +1904,6 @@ export class Component extends EezObject {
                 }
             }
 
-            const DocumentStore = getDocumentStore(object);
             DocumentStore.updateObject(object, props);
         },
         isMoveable: (object: Component) => {
@@ -2108,7 +2239,20 @@ export class Component extends EezObject {
         this.height = this._geometry.height;
     }
 
-    get rect() {
+    get rect(): Rect {
+        if (this instanceof Widget) {
+            const DocumentStore = getDocumentStore(this);
+            if (DocumentStore.uiStateStore.showTimeline) {
+                const editor = DocumentStore.editorsStore.activeEditor;
+                if (editor) {
+                    if (editor.object instanceof ProjectEditor.PageClass) {
+                        const pageTabState = editor.state as PageTabState;
+                        return this.getTimelineRect(pageTabState.timelineTime);
+                    }
+                }
+            }
+        }
+
         return {
             left: this.left,
             top: this.top,
@@ -2117,9 +2261,13 @@ export class Component extends EezObject {
         };
     }
 
+    getTimelineRect(timelineTime: number) {
+        return this.rect;
+    }
+
     get absolutePositionPoint() {
-        let x = this.left;
-        let y = this.top;
+        let x = this.rect.left;
+        let y = this.rect.top;
 
         for (
             let parent = getWidgetParent(this);
@@ -2128,8 +2276,8 @@ export class Component extends EezObject {
                 parent instanceof ProjectEditor.WidgetClass);
             parent = getWidgetParent(parent)
         ) {
-            x += parent.left;
-            y += parent.top;
+            x += parent.rect.left;
+            y += parent.rect.top;
         }
 
         return { x, y };
@@ -2294,6 +2442,69 @@ export class Component extends EezObject {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class WidgetTimelineProperties extends EezObject {
+    start: number;
+    end: number;
+
+    left: number | undefined;
+    top: number | undefined;
+    width: number | undefined;
+    height: number | undefined;
+
+    opacity: number | undefined;
+
+    static classInfo: ClassInfo = {
+        properties: [
+            {
+                name: "start",
+                type: PropertyType.Number
+            },
+            {
+                name: "end",
+                type: PropertyType.Number
+            },
+            {
+                name: "left",
+                type: PropertyType.Number
+            },
+            {
+                name: "top",
+                type: PropertyType.Number
+            },
+            {
+                name: "width",
+                type: PropertyType.Number
+            },
+            {
+                name: "height",
+                type: PropertyType.Number
+            },
+            {
+                name: "opacity",
+                type: PropertyType.Number
+            }
+        ]
+    };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            start: observable,
+            end: observable,
+            left: observable,
+            top: observable,
+            width: observable,
+            height: observable,
+            opacity: observable
+        });
+    }
+}
+
+registerClass("WidgetTimelineProperties", WidgetTimelineProperties);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class Widget extends Component {
     data?: string;
     visible?: string;
@@ -2304,6 +2515,8 @@ export class Widget extends Component {
     allowOutside: boolean;
 
     locked: boolean;
+
+    timeline: WidgetTimelineProperties[];
 
     static classInfo: ClassInfo = makeDerivedClassInfo(Component.classInfo, {
         properties: [
@@ -2324,6 +2537,17 @@ export class Widget extends Component {
                 name: "locked",
                 type: PropertyType.Boolean,
                 hideInPropertyGrid: true
+            },
+            {
+                name: "timeline",
+                type: PropertyType.Array,
+                typeClass: WidgetTimelineProperties,
+                propertyGridGroup: specificGroup,
+                partOfNavigation: false,
+                enumerable: false,
+                defaultValue: [],
+                hideInPropertyGrid:
+                    isNotDashboardOrAppletOrFirmwareWithFlowSupportProject
             }
         ],
 
@@ -2440,12 +2664,7 @@ export class Widget extends Component {
                     new MenuItem({
                         label: "Copy position and size",
                         click: async () => {
-                            positionAndSize = {
-                                top: thisObject.top,
-                                left: thisObject.left,
-                                width: thisObject.width,
-                                height: thisObject.height
-                            };
+                            positionAndSize = thisObject.rect;
                         }
                     })
                 );
@@ -2578,7 +2797,8 @@ export class Widget extends Component {
             style: observable,
             allowOutside: observable,
             styleObject: computed,
-            locked: observable
+            locked: observable,
+            timeline: observable
         });
     }
 
@@ -2905,6 +3125,32 @@ export class Widget extends Component {
         );
     }
 
+    styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
+        super.styleHook(style, flowContext);
+
+        if (flowContext.flowState) {
+            let timelineTime = flowContext.flowState.timelineTime;
+            let timeStart = 0;
+
+            let opacity: number | undefined;
+
+            for (const timelineProperties of this.timeline) {
+                if (
+                    timelineProperties.end >= timeStart &&
+                    timelineProperties.end <= timelineTime
+                ) {
+                    timeStart = timelineProperties.end;
+
+                    opacity = timelineProperties.opacity;
+                }
+            }
+
+            if (opacity != undefined) {
+                style.opacity = opacity;
+            }
+        }
+    }
+
     render(
         flowContext: IFlowContext,
         width: number,
@@ -2972,6 +3218,52 @@ export class Widget extends Component {
     }
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
+
+    getTimelineRect(timelineTime: number): Rect {
+        const rect = {
+            left: this.left,
+            top: this.top,
+            width: this.width ?? 0,
+            height: this.height ?? 0
+        };
+
+        let timeStart = 0;
+
+        let left: number | undefined;
+        let top: number | undefined;
+        let width: number | undefined;
+        let height: number | undefined;
+
+        for (const timelineProperties of this.timeline) {
+            if (
+                timelineProperties.end >= timeStart &&
+                timelineProperties.end <= timelineTime
+            ) {
+                timeStart = timelineProperties.end;
+
+                left = timelineProperties.left;
+                top = timelineProperties.top;
+                width = timelineProperties.width;
+                height = timelineProperties.height;
+            }
+        }
+
+        if (
+            left != undefined ||
+            top != undefined ||
+            width != undefined ||
+            height != undefined
+        ) {
+            return {
+                left: left ?? rect.left,
+                top: top ?? rect.top,
+                width: width ?? rect.width,
+                height: height ?? rect.height
+            };
+        }
+
+        return rect;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

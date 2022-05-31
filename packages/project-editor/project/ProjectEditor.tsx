@@ -40,6 +40,10 @@ import { QueuePanel } from "project-editor/flow/debugger/QueuePanel";
 import { WatchPanel } from "project-editor/flow/debugger/WatchPanel";
 import { ActiveFlowsPanel } from "project-editor/flow/debugger/ActiveFlowsPanel";
 import { LogsPanel } from "project-editor/flow/debugger/LogsPanel";
+import {
+    PageStructure,
+    PageTimeline
+} from "project-editor/features/page/PagesNavigation";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -193,6 +197,14 @@ const Content = observer(
                         )}
                     />
                 );
+            }
+
+            if (component === "page-structure") {
+                return <PageStructure />;
+            }
+
+            if (component === "timeline") {
+                return <PageTimeline />;
             }
 
             return null;

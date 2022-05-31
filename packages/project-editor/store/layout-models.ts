@@ -80,6 +80,7 @@ export class LayoutModels {
     }[];
 
     rootEditor: FlexLayout.Model;
+    rootTimeline: FlexLayout.Model;
     rootRuntime: FlexLayout.Model;
 
     editors: FlexLayout.Model;
@@ -89,6 +90,7 @@ export class LayoutModels {
     fonts: FlexLayout.Model;
 
     pagesEditor: FlexLayout.Model;
+    pagesTimeline: FlexLayout.Model;
     pagesRuntime: FlexLayout.Model;
 
     actionsEditor: FlexLayout.Model;
@@ -127,7 +129,7 @@ export class LayoutModels {
         this.models = [
             {
                 name: "rootEditor",
-                version: 19,
+                version: 20,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: [
@@ -253,8 +255,128 @@ export class LayoutModels {
                 set: action(model => (this.rootEditor = model))
             },
             {
+                name: "rootTimeline",
+                version: 25,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "row",
+                                children: [
+                                    {
+                                        type: "row",
+                                        weight: 60,
+                                        children: [
+                                            {
+                                                type: "tabset",
+                                                weight: 20,
+                                                enableTabStrip: false,
+                                                enableDrag: false,
+                                                enableDrop: false,
+                                                enableClose: false,
+                                                id: LayoutModels.NAVIGATION_TABSET_ID,
+                                                children: [
+                                                    {
+                                                        type: "tab",
+                                                        enableClose: false,
+                                                        name: "Navigation",
+                                                        component: "navigation"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                type: "tabset",
+                                                weight: 60,
+                                                enableTabStrip: false,
+                                                enableDrag: false,
+                                                enableDrop: false,
+                                                enableClose: false,
+                                                id: LayoutModels.EDITORS_TABSET_ID,
+                                                children: [
+                                                    {
+                                                        type: "tab",
+                                                        enableClose: false,
+                                                        name: "Editors",
+                                                        component: "editors"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                type: "row",
+                                                weight: 20,
+                                                children: [
+                                                    {
+                                                        type: "tabset",
+                                                        weight: 50,
+                                                        children: [
+                                                            {
+                                                                type: "tab",
+                                                                enableClose:
+                                                                    false,
+                                                                name: "Properties",
+                                                                id: LayoutModels.PROPERTIES_TAB_ID,
+                                                                component:
+                                                                    "propertiesPanel"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        type: "row",
+                                        weight: 40,
+                                        children: [
+                                            {
+                                                type: "tabset",
+                                                enableMaximize: false,
+                                                weight: 20,
+                                                children: [
+                                                    {
+                                                        type: "tab",
+                                                        enableClose: false,
+                                                        enableDrag: false,
+                                                        enableFloat: false,
+                                                        enableRename: false,
+                                                        name: "Page Structure",
+                                                        component:
+                                                            "page-structure"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                type: "tabset",
+                                                enableMaximize: false,
+                                                weight: 80,
+                                                children: [
+                                                    {
+                                                        type: "tab",
+                                                        enableClose: false,
+                                                        enableDrag: false,
+                                                        enableFloat: false,
+                                                        enableRename: false,
+                                                        name: "Timeline",
+                                                        component: "timeline"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.rootTimeline,
+                set: action(model => (this.rootTimeline = model))
+            },
+            {
                 name: "rootRuntime",
-                version: 23,
+                version: 24,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     layout: {
@@ -562,6 +684,37 @@ export class LayoutModels {
                 set: action(model => (this.pagesEditor = model))
             },
             {
+                name: "pagesTimeline",
+                version: 1,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "row",
+                                children: [
+                                    {
+                                        type: "tabset",
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Pages",
+                                                component: "pages"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.pagesTimeline,
+                set: action(model => (this.pagesTimeline = model))
+            },
+            {
                 name: "pagesRuntime",
                 version: 3,
                 json: {
@@ -858,12 +1011,18 @@ export class LayoutModels {
     }
 
     get root() {
-        return this.DocumentStore.runtime ? this.rootRuntime : this.rootEditor;
+        return this.DocumentStore.runtime
+            ? this.rootRuntime
+            : this.DocumentStore.uiStateStore.showTimeline
+            ? this.rootTimeline
+            : this.rootEditor;
     }
 
     get pages() {
         return this.DocumentStore.runtime
             ? this.pagesRuntime
+            : this.DocumentStore.uiStateStore.showTimeline
+            ? this.pagesTimeline
             : this.pagesEditor;
     }
 

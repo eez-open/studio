@@ -218,9 +218,10 @@ export class RuntimeFlowContext implements IFlowContext {
     }
 
     overrideFlowState(component: Component): IFlowContext {
-        return Object.assign(new RuntimeFlowContext(), this, {
+        const props: Partial<RuntimeFlowContext> = {
             _flowState: this.flowState?.getFlowStateByComponent(component)
-        });
+        };
+        return Object.assign(new RuntimeFlowContext(), this, props);
     }
 
     set(tabState: FlowTabState) {

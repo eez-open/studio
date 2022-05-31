@@ -26,8 +26,8 @@ export function getObjectBoundingRect(objectAdapter: ITreeObjectAdapter) {
         };
     } else if (object instanceof ProjectEditor.ComponentClass) {
         return {
-            left: object.absolutePositionPoint?.x ?? object.left,
-            top: object.absolutePositionPoint?.y ?? object.top,
+            left: object.absolutePositionPoint?.x ?? objectAdapter.rect.left,
+            top: object.absolutePositionPoint?.y ?? objectAdapter.rect.top,
             width: objectAdapter.rect.width,
             height: objectAdapter.rect.height
         };

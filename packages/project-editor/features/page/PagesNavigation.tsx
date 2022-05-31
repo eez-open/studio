@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, makeObservable } from "mobx";
+import { action, computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 
@@ -310,6 +310,89 @@ export const PageStructure = observer(
                         />
                     </Body>
                 </VerticalHeaderWithBody>
+            ) : null;
+        }
+    }
+);
+
+export const PageTimeline = observer(
+    class PageTimeline extends React.Component {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {});
+        }
+
+        get pageTabState() {
+            const editor = this.context.editorsStore.activeEditor;
+            if (!editor) {
+                return undefined;
+            }
+
+            const object = editor.object;
+            if (!(object instanceof Page)) {
+                return undefined;
+            }
+
+            return editor.state as PageTabState;
+        }
+
+        get componentContainerDisplayItem() {
+            if (!this.pageTabState) {
+                return undefined;
+            }
+
+            return this.pageTabState.widgetContainer;
+        }
+
+        get treeAdapter() {
+            if (!this.componentContainerDisplayItem) {
+                return null;
+            }
+            return new TreeAdapter(
+                this.componentContainerDisplayItem,
+                undefined,
+                (object: IEezObject) => {
+                    return object instanceof ProjectEditor.WidgetClass;
+                },
+                true
+            );
+        }
+
+        render() {
+            return this.pageTabState ? (
+                <div>
+                    <div style={{ display: "flex" }}>
+                        <input
+                            type="range"
+                            min="0"
+                            max="10.0"
+                            step="0.1"
+                            value={this.pageTabState.timelineTime}
+                            onChange={action(event => {
+                                this.pageTabState!.timelineTime = parseFloat(
+                                    event.target.value
+                                );
+                            })}
+                            style={{ flex: 1 }}
+                        />
+                        <input
+                            type="number"
+                            min="0"
+                            max="10.0"
+                            step="0.1"
+                            value={this.pageTabState.timelineTime}
+                            onChange={action(event => {
+                                this.pageTabState!.timelineTime = parseFloat(
+                                    event.target.value
+                                );
+                            })}
+                        />
+                    </div>
+                </div>
             ) : null;
         }
     }

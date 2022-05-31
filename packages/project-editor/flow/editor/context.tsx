@@ -203,12 +203,7 @@ class ViewState implements IViewState {
 
         const builder = new BoundingRectBuilder();
         widgets.forEach(widget => {
-            builder.addRect({
-                left: widget.left,
-                top: widget.top,
-                width: widget.width,
-                height: widget.height
-            });
+            builder.addRect(widget.rect);
         });
         const boundingRect = builder.getRect();
 
@@ -223,43 +218,43 @@ class ViewState implements IViewState {
         widgets.forEach(widget => {
             if (where === "left") {
                 DocumentStore.updateObject(widget, {
-                    left: widget.left - 1
+                    left: widget.rect.left - 1
                 });
             } else if (where === "up") {
                 DocumentStore.updateObject(widget, {
-                    top: widget.top - 1
+                    top: widget.rect.top - 1
                 });
             } else if (where === "right") {
                 DocumentStore.updateObject(widget, {
-                    left: widget.left + 1
+                    left: widget.rect.left + 1
                 });
             } else if (where === "down") {
                 DocumentStore.updateObject(widget, {
-                    top: widget.top + 1
+                    top: widget.rect.top + 1
                 });
             } else if (allWidgetsAreFromTheSameParent) {
                 if (where === "home-x") {
                     DocumentStore.updateObject(widget, {
-                        left: 0 + widget.left - boundingRect.left
+                        left: 0 + widget.rect.left - boundingRect.left
                     });
                 } else if (where === "end-x") {
                     DocumentStore.updateObject(widget, {
                         left:
                             getWidgetParent(widget).width -
                             boundingRect.width +
-                            widget.left -
+                            widget.rect.left -
                             boundingRect.left
                     });
                 } else if (where === "home-y") {
                     DocumentStore.updateObject(widget, {
-                        top: 0 + widget.top - boundingRect.top
+                        top: 0 + widget.rect.top - boundingRect.top
                     });
                 } else if (where === "end-y") {
                     DocumentStore.updateObject(widget, {
                         top:
                             getWidgetParent(widget).height -
                             boundingRect.height +
-                            widget.top -
+                            widget.rect.top -
                             boundingRect.top
                     });
                 }

@@ -124,6 +124,8 @@ export interface IFlowState {
         message: string,
         component: Component | undefined
     ): void;
+
+    timelineTime: number;
 }
 
 export interface IDocument {
