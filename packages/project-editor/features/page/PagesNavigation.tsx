@@ -371,11 +371,10 @@ export const PageTimeline = observer(
                             min="0"
                             max="10.0"
                             step="0.1"
-                            value={this.pageTabState.timelineTime}
+                            value={this.pageTabState.timelinePosition}
                             onChange={action(event => {
-                                this.pageTabState!.timelineTime = parseFloat(
-                                    event.target.value
-                                );
+                                this.pageTabState!.timelinePosition =
+                                    parseFloat(event.target.value);
                             })}
                             style={{ flex: 1 }}
                         />
@@ -384,11 +383,10 @@ export const PageTimeline = observer(
                             min="0"
                             max="10.0"
                             step="0.1"
-                            value={this.pageTabState.timelineTime}
+                            value={this.pageTabState.timelinePosition}
                             onChange={action(event => {
-                                this.pageTabState!.timelineTime = parseFloat(
-                                    event.target.value
-                                );
+                                this.pageTabState!.timelinePosition =
+                                    parseFloat(event.target.value);
                             })}
                         />
                     </div>

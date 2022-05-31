@@ -33,9 +33,13 @@ export const ComponentsContainerEnclosure = observer(
             const { components, flowContext, visibleComponent } = this.props;
 
             let parentRect: Rect;
-            if (flowContext.flowState) {
+            if (
+                flowContext.flowState &&
+                this.props.parent instanceof ProjectEditor.WidgetClass &&
+                this.props.parent.timeline.length > 0
+            ) {
                 parentRect = this.props.parent.getTimelineRect(
-                    flowContext.flowState.timelineTime
+                    flowContext.flowState.timelinePosition
                 );
             } else {
                 parentRect = this.props.parent.rect;
@@ -50,9 +54,13 @@ export const ComponentsContainerEnclosure = observer(
                 const parent = this.props.parent;
 
                 let componentRect;
-                if (flowContext.flowState) {
+                if (
+                    flowContext.flowState &&
+                    component instanceof ProjectEditor.WidgetClass &&
+                    component.timeline.length > 0
+                ) {
                     componentRect = component.getTimelineRect(
-                        flowContext.flowState.timelineTime
+                        flowContext.flowState.timelinePosition
                     );
                 } else {
                     componentRect = component.rect;
@@ -213,9 +221,13 @@ export const ComponentEnclosure = observer(
 
             // style
             let componentRect: Rect;
-            if (flowContext.flowState) {
+            if (
+                flowContext.flowState &&
+                component instanceof ProjectEditor.WidgetClass &&
+                component.timeline.length > 0
+            ) {
                 componentRect = component.getTimelineRect(
-                    flowContext.flowState.timelineTime
+                    flowContext.flowState.timelinePosition
                 );
             } else {
                 componentRect = component.rect;

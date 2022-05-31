@@ -3103,12 +3103,29 @@ export class AnimateActionComponent extends ActionComponent {
             makeExpressionProperty(
                 {
                     name: "time",
+                    displayName: "Timeline position",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "double"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "speed",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
                 "double"
             )
         ],
+        beforeLoadHook: (
+            component: AnimateActionComponent,
+            jsComponent: Partial<AnimateActionComponent>
+        ) => {
+            if (jsComponent.speed == undefined) {
+                jsComponent.speed = "1";
+            }
+        },
         icon: (
             <svg
                 strokeWidth="2"
@@ -3127,6 +3144,7 @@ export class AnimateActionComponent extends ActionComponent {
     });
 
     time: string;
+    speed: string;
 
     constructor() {
         super();

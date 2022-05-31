@@ -458,10 +458,6 @@ export class Page extends Flow {
         };
     }
 
-    getTimelineRect(timelineTime: number) {
-        return this.rect;
-    }
-
     get autoSize(): AutoSize {
         return "none";
     }

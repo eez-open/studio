@@ -125,7 +125,7 @@ export interface IFlowState {
         component: Component | undefined
     ): void;
 
-    timelineTime: number;
+    timelinePosition: number;
 }
 
 export interface IDocument {

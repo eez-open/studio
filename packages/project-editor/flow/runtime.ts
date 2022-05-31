@@ -796,7 +796,7 @@ export class FlowState {
     error: string | undefined = undefined;
     isFinished: boolean = false;
     numActiveComponents = 0;
-    timelineTime: number = 0;
+    timelinePosition: number = 0;
 
     constructor(
         public runtime: RuntimeBase,
@@ -813,7 +813,7 @@ export class FlowState {
             isRunning: computed({ keepAlive: true }),
             hasAnyDiposableComponent: computed({ keepAlive: true }),
             finish: action,
-            timelineTime: observable
+            timelinePosition: observable
         });
 
         this.dataContext =

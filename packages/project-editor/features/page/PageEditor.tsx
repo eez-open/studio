@@ -71,7 +71,7 @@ export class PageTabState extends FlowTabState {
         scale: 1
     });
 
-    timelineTime: number = 0;
+    timelinePosition: number = 0;
 
     constructor(object: IEezObject) {
         super(object as Flow);
@@ -79,7 +79,7 @@ export class PageTabState extends FlowTabState {
         makeObservable(this, {
             _transform: observable,
             frontFace: computed,
-            timelineTime: observable
+            timelinePosition: observable
         });
 
         this.widgetContainerFrontFace = new PageTreeObjectAdapter(
@@ -164,8 +164,8 @@ export class PageTabState extends FlowTabState {
             });
         }
 
-        if (state.timelineTime != undefined) {
-            this.timelineTime = state.timelineTime;
+        if (state.timelinePosition != undefined) {
+            this.timelinePosition = state.timelinePosition;
         }
     }
 
@@ -183,7 +183,7 @@ export class PageTabState extends FlowTabState {
                 },
                 scale: this._transform.scale
             },
-            timelineTime: this.timelineTime
+            timelinePosition: this.timelinePosition
         };
 
         this.DocumentStore.uiStateStore.updateObjectUIState(

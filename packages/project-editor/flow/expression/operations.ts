@@ -401,6 +401,21 @@ export const builtInFunctions: {
             return "integer";
         }
     },
+    "Flow.pageTimelinePosition": {
+        arity: 0,
+        args: [],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => {
+            return expressionContext && expressionContext.flowState
+                ? expressionContext.flowState.timelinePosition
+                : 0;
+        },
+        getValueType: (...args: ValueType[]) => {
+            return "float";
+        }
+    },
     "Flow.makeValue": {
         arity: 2,
         args: ["struct", "value"],

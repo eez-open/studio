@@ -1019,13 +1019,13 @@ const AlignAndDistributePropertyGridUI = observer(
                     rect: {
                         left: absolutePosition.x,
                         top: absolutePosition.y,
-                        width: component.width,
-                        height: component.height
+                        width: component.rect.width,
+                        height: component.rect.height
                     },
                     left: absolutePosition.x,
                     top: absolutePosition.y,
-                    width: component.width,
-                    height: component.height
+                    width: component.rect.width,
+                    height: component.rect.height
                 };
             });
         }
@@ -1062,16 +1062,22 @@ const AlignAndDistributePropertyGridUI = observer(
                 parentPosition = { x: 0, y: 0 };
             }
 
-            if (props.left != undefined) {
-                this.context.updateObject(componentAdapter.component, {
-                    left: props.left - parentPosition.x
-                });
-            }
+            const classInfo = getClassInfo(componentAdapter.component);
 
-            if (props.top != undefined) {
-                this.context.updateObject(componentAdapter.component, {
-                    top: props.top - parentPosition.y
-                });
+            if (classInfo.setRect) {
+                classInfo.setRect(componentAdapter.component, props);
+            } else {
+                if (props.left != undefined) {
+                    this.context.updateObject(componentAdapter.component, {
+                        left: props.left - parentPosition.x
+                    });
+                }
+
+                if (props.top != undefined) {
+                    this.context.updateObject(componentAdapter.component, {
+                        top: props.top - parentPosition.y
+                    });
+                }
             }
         }
 
@@ -1751,7 +1757,7 @@ export class Component extends EezObject {
         getRect: (object: Component) => {
             return object.rect;
         },
-        setRect: (object: Component, value: Rect) => {
+        setRect: (object: Component, value: Partial<Rect>) => {
             const DocumentStore = getDocumentStore(object);
 
             if (object instanceof Widget) {
@@ -1760,19 +1766,19 @@ export class Component extends EezObject {
                     if (editor) {
                         if (editor.object instanceof ProjectEditor.PageClass) {
                             const pageTabState = editor.state as PageTabState;
-                            const time = pageTabState.timelineTime;
+                            const time = pageTabState.timelinePosition;
 
                             const props: Partial<Rect> = {};
 
-                            props.left = value.left;
-                            props.top = value.top;
+                            props.left = value.left ?? object.rect.left;
+                            props.top = value.top ?? object.rect.top;
                             if (
                                 !(
                                     object.autoSize == "width" ||
                                     object.autoSize == "both"
                                 )
                             ) {
-                                props.width = value.width;
+                                props.width = value.width ?? object.rect.width;
                             }
                             if (
                                 !(
@@ -1780,7 +1786,8 @@ export class Component extends EezObject {
                                     object.autoSize == "both"
                                 )
                             ) {
-                                props.height = value.height;
+                                props.height =
+                                    value.height ?? object.rect.height;
                             }
 
                             for (let i = 0; i < object.timeline.length; i++) {
@@ -1796,7 +1803,7 @@ export class Component extends EezObject {
                                 }
 
                                 if (
-                                    time >= timelineProperties.start &&
+                                    time > timelineProperties.start &&
                                     time < timelineProperties.end
                                 ) {
                                     const newTimelineProperties =
@@ -1814,9 +1821,15 @@ export class Component extends EezObject {
                                     newTimelineProperties.height =
                                         timelineProperties.height;
 
-                                    DocumentStore.undoManager.setCombineCommands(
-                                        true
-                                    );
+                                    const combineCommands =
+                                        DocumentStore.undoManager
+                                            .combineCommands;
+
+                                    if (!combineCommands) {
+                                        DocumentStore.undoManager.setCombineCommands(
+                                            true
+                                        );
+                                    }
 
                                     DocumentStore.updateObject(
                                         timelineProperties,
@@ -1830,18 +1843,16 @@ export class Component extends EezObject {
                                         newTimelineProperties
                                     );
 
-                                    DocumentStore.undoManager.setCombineCommands(
-                                        false
-                                    );
+                                    if (!combineCommands) {
+                                        DocumentStore.undoManager.setCombineCommands(
+                                            false
+                                        );
+                                    }
 
                                     return;
                                 }
 
-                                if (
-                                    (i == 0 ||
-                                        time > object.timeline[i - 1].end) &&
-                                    time < object.timeline[i].start
-                                ) {
+                                if (time <= object.timeline[i].start) {
                                     const newTimelineProperties =
                                         new WidgetTimelineProperties();
 
@@ -1884,22 +1895,25 @@ export class Component extends EezObject {
 
             const props: Partial<Rect> = {};
 
-            if (value.left !== object.left) {
+            if (value.left != undefined && value.left !== object.left) {
                 props.left = value.left;
             }
 
             if (!(object.autoSize == "width" || object.autoSize == "both")) {
-                if (value.width !== object.width) {
+                if (value.width != undefined && value.width !== object.width) {
                     props.width = value.width;
                 }
             }
 
-            if (value.top !== object.top) {
+            if (value.top != undefined && value.top !== object.top) {
                 props.top = value.top;
             }
 
             if (!(object.autoSize == "height" || object.autoSize == "both")) {
-                if (value.height !== object.height) {
+                if (
+                    value.height != undefined &&
+                    value.height !== object.height
+                ) {
                     props.height = value.height;
                 }
             }
@@ -2240,14 +2254,16 @@ export class Component extends EezObject {
     }
 
     get rect(): Rect {
-        if (this instanceof Widget) {
+        if (this instanceof Widget && this.timeline.length > 0) {
             const DocumentStore = getDocumentStore(this);
             if (DocumentStore.uiStateStore.showTimeline) {
                 const editor = DocumentStore.editorsStore.activeEditor;
                 if (editor) {
                     if (editor.object instanceof ProjectEditor.PageClass) {
                         const pageTabState = editor.state as PageTabState;
-                        return this.getTimelineRect(pageTabState.timelineTime);
+                        return this.getTimelineRect(
+                            pageTabState.timelinePosition
+                        );
                     }
                 }
             }
@@ -2259,10 +2275,6 @@ export class Component extends EezObject {
             width: this.width ?? 0,
             height: this.height ?? 0
         };
-    }
-
-    getTimelineRect(timelineTime: number) {
-        return this.rect;
     }
 
     get absolutePositionPoint() {
@@ -3128,25 +3140,30 @@ export class Widget extends Component {
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
         super.styleHook(style, flowContext);
 
-        if (flowContext.flowState) {
-            let timelineTime = flowContext.flowState.timelineTime;
-            let timeStart = 0;
+        if (this.timeline.length > 0) {
+            let timelinePosition: number | undefined;
 
-            let opacity: number | undefined;
-
-            for (const timelineProperties of this.timeline) {
-                if (
-                    timelineProperties.end >= timeStart &&
-                    timelineProperties.end <= timelineTime
-                ) {
-                    timeStart = timelineProperties.end;
-
-                    opacity = timelineProperties.opacity;
+            if (flowContext.flowState) {
+                timelinePosition = flowContext.flowState.timelinePosition;
+            } else {
+                if (flowContext.DocumentStore.uiStateStore.showTimeline) {
+                    const editor =
+                        flowContext.DocumentStore.editorsStore.activeEditor;
+                    if (editor) {
+                        if (editor.object instanceof ProjectEditor.PageClass) {
+                            const pageTabState = editor.state as PageTabState;
+                            timelinePosition = pageTabState.timelinePosition;
+                        }
+                    }
                 }
             }
 
-            if (opacity != undefined) {
-                style.opacity = opacity;
+            if (timelinePosition != undefined) {
+                let opacity = this.getTimelineOpacity(timelinePosition);
+
+                if (opacity != undefined) {
+                    style.opacity = opacity;
+                }
             }
         }
     }
@@ -3219,50 +3236,101 @@ export class Widget extends Component {
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
 
-    getTimelineRect(timelineTime: number): Rect {
-        const rect = {
-            left: this.left,
-            top: this.top,
-            width: this.width ?? 0,
-            height: this.height ?? 0
-        };
-
-        let timeStart = 0;
-
-        let left: number | undefined;
-        let top: number | undefined;
-        let width: number | undefined;
-        let height: number | undefined;
+    getTimelineRect(timelinePosition: number): Rect {
+        let left = this.left;
+        let top = this.top;
+        let width = this.width ?? 0;
+        let height = this.height ?? 0;
 
         for (const timelineProperties of this.timeline) {
-            if (
-                timelineProperties.end >= timeStart &&
-                timelineProperties.end <= timelineTime
-            ) {
-                timeStart = timelineProperties.end;
+            if (timelinePosition < timelineProperties.start) {
+                continue;
+            }
 
+            if (
+                timelinePosition >= timelineProperties.start &&
+                timelinePosition <= timelineProperties.end
+            ) {
+                const t =
+                    timelineProperties.start == timelineProperties.end
+                        ? 1
+                        : (timelinePosition - timelineProperties.start) /
+                          (timelineProperties.end - timelineProperties.start);
+
+                if (timelineProperties.left != undefined) {
+                    left += t * (timelineProperties.left - left);
+                }
+                if (timelineProperties.top != undefined) {
+                    top += t * (timelineProperties.top - top);
+                }
+                if (timelineProperties.width != undefined) {
+                    width += t * (timelineProperties.width - width);
+                }
+                if (timelineProperties.height != undefined) {
+                    height += t * (timelineProperties.height - height);
+                }
+
+                break;
+            }
+
+            if (timelineProperties.left != undefined) {
                 left = timelineProperties.left;
+            }
+            if (timelineProperties.top != undefined) {
                 top = timelineProperties.top;
+            }
+            if (timelineProperties.width != undefined) {
                 width = timelineProperties.width;
+            }
+            if (timelineProperties.height != undefined) {
                 height = timelineProperties.height;
             }
         }
 
-        if (
-            left != undefined ||
-            top != undefined ||
-            width != undefined ||
-            height != undefined
-        ) {
-            return {
-                left: left ?? rect.left,
-                top: top ?? rect.top,
-                width: width ?? rect.width,
-                height: height ?? rect.height
-            };
+        return {
+            left,
+            top,
+            width,
+            height
+        };
+    }
+
+    getTimelineOpacity(timelinePosition: number): number | undefined {
+        let opacity: number | undefined;
+
+        for (const timelineProperties of this.timeline) {
+            if (timelinePosition < timelineProperties.start) {
+                continue;
+            }
+
+            if (
+                timelinePosition >= timelineProperties.start &&
+                timelinePosition <= timelineProperties.end
+            ) {
+                if (timelineProperties.opacity != undefined) {
+                    const t =
+                        timelineProperties.start == timelineProperties.end
+                            ? 1
+                            : (timelinePosition - timelineProperties.start) /
+                              (timelineProperties.end -
+                                  timelineProperties.start);
+
+                    if (opacity == undefined) {
+                        opacity = 1;
+                    }
+
+                    opacity += t * (timelineProperties.opacity - opacity);
+                }
+
+                break;
+            }
+
+            if (timelineProperties.opacity != undefined) {
+                opacity = timelineProperties.opacity;
+            }
         }
 
-        return rect;
+        return opacity;
     }
 }
 

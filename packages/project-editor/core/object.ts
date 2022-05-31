@@ -232,7 +232,7 @@ export interface ClassInfo {
     check?: (object: IEezObject) => IMessage[];
 
     getRect?: (object: IEezObject) => Rect;
-    setRect?: (object: IEezObject, rect: Rect) => void;
+    setRect?: (object: IEezObject, rect: Partial<Rect>) => void;
     isMoveable?: (object: IEezObject) => boolean;
     isSelectable?: (object: IEezObject) => boolean;
     showSelectedObjectsParent?: (object: IEezObject) => boolean;

@@ -25,7 +25,7 @@ export class UIStateStore {
     showCommandPalette: boolean = false;
     showComponentDescriptions: boolean = true;
     selectedLanguageID: string;
-    showTimeline: boolean = false;
+    _showTimeline: boolean = false;
 
     objectUIStates = new Map<string, any>();
 
@@ -47,6 +47,14 @@ export class UIStateStore {
 
     set pageRuntimeFrontFace(value: boolean) {
         runInAction(() => (this._pageRuntimeFrontFace = value));
+    }
+
+    get showTimeline() {
+        return this.DocumentStore.runtime ? false : this._showTimeline;
+    }
+
+    set showTimeline(value: boolean) {
+        runInAction(() => (this._showTimeline = value));
     }
 
     constructor(public DocumentStore: DocumentStoreClass) {
@@ -73,7 +81,7 @@ export class UIStateStore {
             disableBreakpoint: action,
             watchExpressions: observable,
             selectedLanguage: computed,
-            showTimeline: observable
+            _showTimeline: observable
         });
     }
 
@@ -124,9 +132,9 @@ export class UIStateStore {
             this.activeOutputSection =
                 uiState.activeOutputSection ?? Section.CHECKS;
 
-            this.pageEditorFrontFace = uiState.pageEditorFrontFace;
+            this._pageEditorFrontFace = uiState.pageEditorFrontFace;
 
-            this.pageRuntimeFrontFace = uiState.pageRuntimeFrontFace;
+            this._pageRuntimeFrontFace = uiState.pageRuntimeFrontFace;
 
             if (uiState.breakpoints) {
                 for (const key in uiState.breakpoints) {
@@ -159,7 +167,7 @@ export class UIStateStore {
             }
 
             if (uiState.showTimeline != undefined) {
-                this.showTimeline = uiState.showTimeline;
+                this._showTimeline = uiState.showTimeline;
             }
         });
     }
@@ -196,8 +204,8 @@ export class UIStateStore {
             features: this.featuresJS,
             objects: this.objectsJS,
             activeOutputSection: this.activeOutputSection,
-            pageEditorFrontFace: this.pageEditorFrontFace,
-            pageRuntimeFrontFace: this.pageRuntimeFrontFace,
+            pageEditorFrontFace: this._pageEditorFrontFace,
+            pageRuntimeFrontFace: this._pageRuntimeFrontFace,
             breakpoints: Array.from(this.breakpoints).reduce(
                 (obj, [key, value]) =>
                     Object.assign(obj, {
@@ -208,7 +216,7 @@ export class UIStateStore {
             watchExpressions: toJS(this.watchExpressions),
             showComponentDescriptions: this.showComponentDescriptions,
             selectedLanguageID: this.selectedLanguageID,
-            showTimeline: this.showTimeline
+            showTimeline: this._showTimeline
         };
 
         return state;
