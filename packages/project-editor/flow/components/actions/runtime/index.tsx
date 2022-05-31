@@ -216,6 +216,67 @@ registerExecuteFunction(
 );
 
 registerExecuteFunction(
+    "FileAppend",
+    function (context: IDashboardComponentContext) {
+        const filePathValue = context.evalProperty("filePath");
+        if (typeof filePathValue != "string") {
+            context.throwError("filePath is not a string");
+            return;
+        }
+
+        const encodingValue = context.evalProperty("encoding");
+        if (typeof encodingValue != "string") {
+            context.throwError("${encoding} is not a string");
+            return;
+        }
+
+        const encodings = [
+            "ascii",
+            "base64",
+            "hex",
+            "ucs2",
+            "ucs-2",
+            "utf16le",
+            "utf-16le",
+            "utf8",
+            "utf-8",
+            "binary",
+            "latin1"
+        ];
+        if (encodings.indexOf(encodingValue) == -1) {
+            context.throwError(
+                `Unsupported encoding value ${encodingValue}, supported: ${encodings.join(
+                    ", "
+                )}`
+            );
+            return;
+        }
+
+        const contentValue = context.evalProperty("content");
+
+        context = context.startAsyncExecution();
+
+        (async function () {
+            try {
+                const fs = await import("fs");
+                await fs.promises.appendFile(
+                    filePathValue,
+                    contentValue,
+                    encodingValue as any
+                );
+                context.propagateValueThroughSeqout();
+            } catch (err) {
+                context.throwError(err.toString());
+            } finally {
+                context.endAsyncExecution();
+            }
+        })();
+
+        return undefined;
+    }
+);
+
+registerExecuteFunction(
     "FileSaveDialog",
     function (context: IDashboardComponentContext) {
         const fileNameValue = context.evalProperty("fileName");
