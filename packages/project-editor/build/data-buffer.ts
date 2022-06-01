@@ -34,7 +34,7 @@ export class DataBuffer {
 
     writeInt16(value: number) {
         if (this.currentOffset % 2) {
-            throw "invalid offset";
+            throw "invalid offset 1";
         }
         this.buffer.writeInt16LE(value, this.currentOffset);
         this.currentOffset += 2;
@@ -42,7 +42,7 @@ export class DataBuffer {
 
     writeUint16(value: number) {
         if (this.currentOffset % 2) {
-            throw "invalid offset";
+            throw "invalid offset 2";
         }
         this.buffer.writeUInt16LE(value, this.currentOffset);
         this.currentOffset += 2;
@@ -55,7 +55,7 @@ export class DataBuffer {
 
     writeInt32(value: number) {
         if (this.currentOffset % 4) {
-            throw "invalid offset";
+            throw "invalid offset 3";
         }
         this.buffer.writeInt32LE(value, this.currentOffset);
         this.currentOffset += 4;
@@ -63,7 +63,7 @@ export class DataBuffer {
 
     writeUint32(value: number) {
         if (this.currentOffset % 4) {
-            throw "invalid offset";
+            throw "invalid offset 4";
         }
         this.buffer.writeUInt32LE(value, this.currentOffset);
         this.currentOffset += 4;
@@ -71,7 +71,7 @@ export class DataBuffer {
 
     writeUint64(value: number) {
         if (this.currentOffset % 8) {
-            throw "invalid offset";
+            throw "invalid offset 5";
         }
         this.buffer.writeBigUInt64LE(BigInt(value), this.currentOffset);
         this.currentOffset += 8;
@@ -79,7 +79,7 @@ export class DataBuffer {
 
     writeFloat(value: number) {
         if (this.currentOffset % 4) {
-            throw "invalid offset";
+            throw "invalid offset 6";
         }
         this.buffer.writeFloatLE(value, this.currentOffset);
         this.currentOffset += 4;
@@ -87,7 +87,7 @@ export class DataBuffer {
 
     writeDouble(value: number) {
         if (this.currentOffset % 8) {
-            throw "invalid offset";
+            throw "invalid offset 7";
         }
         this.buffer.writeDoubleLE(value, this.currentOffset);
         this.currentOffset += 8;
@@ -95,7 +95,7 @@ export class DataBuffer {
 
     writeUint8Array(array: Uint8Array | number[]) {
         if (this.currentOffset % 4) {
-            throw "invalid offset";
+            throw "invalid offset 8";
         }
         this.buffer.set(array, this.currentOffset);
         this.currentOffset += array.length;
@@ -104,7 +104,7 @@ export class DataBuffer {
 
     writeString(str: string) {
         if (this.currentOffset % 4) {
-            throw "invalid offset";
+            throw "invalid offset 9";
         }
         let buffer: Buffer;
         if (this.utf8Support) {
@@ -125,7 +125,7 @@ export class DataBuffer {
         padding: number = 4
     ) {
         if (this.currentOffset % 4) {
-            throw "invalid offset";
+            throw "invalid offset 10";
         }
         if (arr.length > 0) {
             this.writeUint32(arr.length);
@@ -142,7 +142,7 @@ export class DataBuffer {
 
     writeFutureArray(callback: () => void) {
         if (this.currentOffset % 4) {
-            throw "invalid offset";
+            throw "invalid offset 11";
         }
         const currentOffset = this.currentOffset;
         this.writeUint32(0);
@@ -155,7 +155,7 @@ export class DataBuffer {
 
     writeNumberArray<T>(arr: T[], callback: (item: T, i: number) => void) {
         if (this.currentOffset % 4) {
-            throw "invalid offset";
+            throw "invalid offset 12";
         }
         if (arr.length > 0) {
             this.writeUint32(arr.length);
@@ -172,7 +172,7 @@ export class DataBuffer {
 
     writeObjectOffset(callback: () => void, padding: number = 4) {
         if (this.currentOffset % 4) {
-            throw "invalid offset";
+            throw "invalid offset 13";
         }
         const currentOffset = this.currentOffset;
         this.writeUint32(0);

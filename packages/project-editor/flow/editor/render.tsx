@@ -363,6 +363,8 @@ export const ComponentCanvas = observer(
     class ComponentCanvas extends React.Component<{
         component: Page | Component;
         draw: (ctx: CanvasRenderingContext2D) => void;
+        width: number;
+        height: number;
     }> {
         elRef = React.createRef<HTMLDivElement>();
 
@@ -392,11 +394,11 @@ export const ComponentCanvas = observer(
         }
 
         render() {
-            const { component, draw } = this.props;
+            const { draw } = this.props;
 
             this.canvas = document.createElement("canvas");
-            this.canvas.width = component.width;
-            this.canvas.height = component.height;
+            this.canvas.width = this.props.width;
+            this.canvas.height = this.props.height;
             this.canvas.style.imageRendering = "pixelated";
             this.canvas.style.display = "block";
             draw(this.canvas.getContext("2d")!);
@@ -404,7 +406,10 @@ export const ComponentCanvas = observer(
             return (
                 <div
                     ref={this.elRef}
-                    style={{ width: component.width, height: component.height }}
+                    style={{
+                        width: this.props.width,
+                        height: this.props.height
+                    }}
                 ></div>
             );
         }

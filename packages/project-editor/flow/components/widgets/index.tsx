@@ -389,13 +389,15 @@ export class ContainerWidget extends Widget {
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
+                        width={containerWidth}
+                        height={containerHeight}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             draw.drawBackground(
                                 ctx,
                                 0,
                                 0,
-                                this.width,
-                                this.height,
+                                containerWidth,
+                                containerHeight,
                                 this.style,
                                 true
                             );
@@ -1076,13 +1078,15 @@ export class SelectWidget extends Widget {
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             draw.drawBackground(
                                 ctx,
                                 0,
                                 0,
-                                this.width,
-                                this.height,
+                                width,
+                                height,
                                 this.style,
                                 true
                             );
@@ -1427,13 +1431,15 @@ export class LayoutViewWidget extends Widget {
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             draw.drawBackground(
                                 ctx,
                                 0,
                                 0,
-                                this.width,
-                                this.height,
+                                width,
+                                height,
                                 this.style,
                                 true
                             );
@@ -1785,14 +1791,16 @@ export class DisplayDataWidget extends Widget {
                 ) : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             drawText(
                                 ctx,
                                 text,
                                 0,
                                 0,
-                                this.width,
-                                this.height,
+                                width,
+                                height,
                                 this.style,
                                 false
                             );
@@ -2065,14 +2073,16 @@ export class TextWidget extends Widget {
                 ) : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             drawText(
                                 ctx,
                                 text,
                                 0,
                                 0,
-                                this.width,
-                                this.height,
+                                width,
+                                height,
                                 this.style,
                                 false
                             );
@@ -2467,14 +2477,16 @@ export class MultilineTextWidget extends Widget {
                 ) : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             var multilineTextRender = new MultilineTextRender(
                                 ctx,
                                 text,
                                 0,
                                 0,
-                                this.width,
-                                this.height,
+                                width,
+                                height,
                                 this.style,
                                 this.firstLineIndent || 0,
                                 this.hangingIndent || 0
@@ -2569,13 +2581,15 @@ export class RectangleWidget extends Widget {
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             draw.drawBackground(
                                 ctx,
                                 0,
                                 0,
-                                this.width,
-                                this.height,
+                                width,
+                                height,
                                 this.style,
                                 invertColors
                             );
@@ -2803,9 +2817,11 @@ export class BitmapWidget extends Widget {
                 ) : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
-                            const w = this.width;
-                            const h = this.height;
+                            const w = width;
+                            const h = height;
                             const style = this.style;
 
                             const inverse = false;
@@ -3051,14 +3067,16 @@ export class ButtonWidget extends Widget {
                 ) : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             drawText(
                                 ctx,
                                 text,
                                 0,
                                 0,
-                                this.width,
-                                this.height,
+                                width,
+                                height,
                                 style,
                                 false
                             );
@@ -3152,14 +3170,16 @@ export class ToggleButtonWidget extends Widget {
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             drawText(
                                 ctx,
                                 this.text1 || "",
                                 0,
                                 0,
-                                this.width,
-                                this.height,
+                                width,
+                                height,
                                 this.style,
                                 false
                             );
@@ -3229,6 +3249,8 @@ export class ButtonGroupWidget extends Widget {
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             let buttonLabels =
                                 (this.data &&
@@ -3243,8 +3265,8 @@ export class ButtonGroupWidget extends Widget {
 
                             let x = 0;
                             let y = 0;
-                            let w = this.width;
-                            let h = this.height;
+                            let w = width;
+                            let h = height;
 
                             if (w > h) {
                                 // horizontal orientation
@@ -3459,6 +3481,8 @@ export class BarGraphWidget extends Widget {
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             let barGraphWidget = this;
                             let style = barGraphWidget.style;
@@ -3489,7 +3513,7 @@ export class BarGraphWidget extends Widget {
                                 barGraphWidget.orientation == "left-right" ||
                                 barGraphWidget.orientation == "right-left";
 
-                            let d = horizontal ? this.width : this.height;
+                            let d = horizontal ? width : height;
 
                             function calcPos(value: number) {
                                 let pos = Math.round((value * d) / (max - min));
@@ -3506,20 +3530,14 @@ export class BarGraphWidget extends Widget {
 
                             if (barGraphWidget.orientation == "left-right") {
                                 draw.setColor(style.colorProperty);
-                                draw.fillRect(
-                                    ctx,
-                                    0,
-                                    0,
-                                    pos - 1,
-                                    this.height - 1
-                                );
+                                draw.fillRect(ctx, 0, 0, pos - 1, height - 1);
                                 draw.setColor(style.backgroundColorProperty);
                                 draw.fillRect(
                                     ctx,
                                     pos,
                                     0,
-                                    this.width - 1,
-                                    this.height - 1
+                                    width - 1,
+                                    height - 1
                                 );
                             } else if (
                                 barGraphWidget.orientation == "right-left"
@@ -3529,35 +3547,29 @@ export class BarGraphWidget extends Widget {
                                     ctx,
                                     0,
                                     0,
-                                    this.width - pos - 1,
-                                    this.height - 1
+                                    width - pos - 1,
+                                    height - 1
                                 );
                                 draw.setColor(style.colorProperty);
                                 draw.fillRect(
                                     ctx,
-                                    this.width - pos,
+                                    width - pos,
                                     0,
-                                    this.width - 1,
-                                    this.height - 1
+                                    width - 1,
+                                    height - 1
                                 );
                             } else if (
                                 barGraphWidget.orientation == "top-bottom"
                             ) {
                                 draw.setColor(style.colorProperty);
-                                draw.fillRect(
-                                    ctx,
-                                    0,
-                                    0,
-                                    this.width - 1,
-                                    pos - 1
-                                );
+                                draw.fillRect(ctx, 0, 0, width - 1, pos - 1);
                                 draw.setColor(style.backgroundColorProperty);
                                 draw.fillRect(
                                     ctx,
                                     0,
                                     pos,
-                                    this.width - 1,
-                                    this.height - 1
+                                    width - 1,
+                                    height - 1
                                 );
                             } else {
                                 draw.setColor(style.backgroundColorProperty);
@@ -3565,16 +3577,16 @@ export class BarGraphWidget extends Widget {
                                     ctx,
                                     0,
                                     0,
-                                    this.width - 1,
-                                    this.height - pos - 1
+                                    width - 1,
+                                    height - pos - 1
                                 );
                                 draw.setColor(style.colorProperty);
                                 draw.fillRect(
                                     ctx,
                                     0,
-                                    this.height - pos,
-                                    this.width - 1,
-                                    this.height - 1
+                                    height - pos,
+                                    width - 1,
+                                    height - 1
                                 );
                             }
 
@@ -3586,15 +3598,15 @@ export class BarGraphWidget extends Widget {
                                         let w = draw.measureStr(
                                             valueText,
                                             font,
-                                            this.width
+                                            width
                                         );
                                         w += style.paddingRect.left;
 
-                                        if (w > 0 && this.height > 0) {
+                                        if (w > 0 && height > 0) {
                                             let backgroundColor: string;
                                             let x: number;
 
-                                            if (pos + w <= this.width) {
+                                            if (pos + w <= width) {
                                                 backgroundColor =
                                                     style.backgroundColorProperty;
                                                 x = pos;
@@ -3613,7 +3625,7 @@ export class BarGraphWidget extends Widget {
                                                 x,
                                                 0,
                                                 w,
-                                                this.height,
+                                                height,
                                                 textStyle,
                                                 false,
                                                 backgroundColor
@@ -3646,41 +3658,29 @@ export class BarGraphWidget extends Widget {
                                 if (
                                     barGraphWidget.orientation == "left-right"
                                 ) {
-                                    draw.drawVLine(
-                                        ctx,
-                                        pos,
-                                        0,
-                                        widget.height - 1
-                                    );
+                                    draw.drawVLine(ctx, pos, 0, height - 1);
                                 } else if (
                                     barGraphWidget.orientation == "right-left"
                                 ) {
                                     draw.drawVLine(
                                         ctx,
-                                        widget.width - pos,
+                                        width - pos,
                                         0,
-                                        widget.height - 1
+                                        height - 1
                                     );
                                 } else if (
                                     barGraphWidget.orientation == "top-bottom"
                                 ) {
-                                    draw.drawHLine(
-                                        ctx,
-                                        0,
-                                        pos,
-                                        widget.width - 1
-                                    );
+                                    draw.drawHLine(ctx, 0, pos, width - 1);
                                 } else {
                                     draw.drawHLine(
                                         ctx,
                                         0,
-                                        widget.height - pos,
-                                        widget.width - 1
+                                        height - pos,
+                                        width - 1
                                     );
                                 }
                             }
-
-                            const widget = this;
 
                             drawLine(
                                 barGraphWidget.line1Data,
@@ -3824,13 +3824,15 @@ export class YTGraphWidget extends Widget {
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             draw.drawBackground(
                                 ctx,
                                 0,
                                 0,
-                                this.width,
-                                this.height,
+                                width,
+                                height,
                                 this.style,
                                 true
                             );
@@ -3916,6 +3918,8 @@ export class UpDownWidget extends Widget {
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             let upDownWidget = this;
                             let style = upDownWidget.style;
@@ -3932,7 +3936,7 @@ export class UpDownWidget extends Widget {
                                 0,
                                 0,
                                 buttonsFont.height,
-                                this.height,
+                                height,
                                 buttonsStyle,
                                 false
                             );
@@ -3947,8 +3951,8 @@ export class UpDownWidget extends Widget {
                                 text,
                                 buttonsFont.height,
                                 0,
-                                this.width - 2 * buttonsFont.height,
-                                this.height,
+                                width - 2 * buttonsFont.height,
+                                height,
                                 style,
                                 false
                             );
@@ -3956,10 +3960,10 @@ export class UpDownWidget extends Widget {
                             drawText(
                                 ctx,
                                 upDownWidget.upButtonText || ">",
-                                this.width - buttonsFont.height,
+                                width - buttonsFont.height,
                                 0,
                                 buttonsFont.height,
-                                this.height,
+                                height,
                                 buttonsStyle,
                                 false
                             );
@@ -4094,13 +4098,15 @@ export class ListGraphWidget extends Widget {
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             draw.drawBackground(
                                 ctx,
                                 0,
                                 0,
-                                this.width,
-                                this.height,
+                                width,
+                                height,
                                 this.style,
                                 true
                             );
@@ -4264,6 +4270,8 @@ export class ScrollBarWidget extends Widget {
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             let widget = this;
 
@@ -4274,11 +4282,9 @@ export class ScrollBarWidget extends Widget {
                                 return;
                             }
 
-                            let isHorizontal = this.width > this.height;
+                            let isHorizontal = width > height;
 
-                            let buttonSize = isHorizontal
-                                ? this.height
-                                : this.width;
+                            let buttonSize = isHorizontal ? height : width;
 
                             // draw left button
                             drawText(
@@ -4286,8 +4292,8 @@ export class ScrollBarWidget extends Widget {
                                 widget.leftButtonText || "<",
                                 0,
                                 0,
-                                isHorizontal ? buttonSize : this.width,
-                                isHorizontal ? this.height : buttonSize,
+                                isHorizontal ? buttonSize : width,
+                                isHorizontal ? height : buttonSize,
                                 widget.buttonsStyle,
                                 false
                             );
@@ -4295,29 +4301,23 @@ export class ScrollBarWidget extends Widget {
                             // draw track
                             let x;
                             let y;
-                            let width;
-                            let height;
+                            let w;
+                            let h;
 
                             if (isHorizontal) {
                                 x = buttonSize;
                                 y = 0;
-                                width = this.width - 2 * buttonSize;
-                                height = this.height;
+                                w = width - 2 * buttonSize;
+                                h = height;
                             } else {
                                 x = 0;
                                 y = buttonSize;
-                                width = this.width;
-                                height = this.height - 2 * buttonSize;
+                                w = width;
+                                h = height - 2 * buttonSize;
                             }
 
                             draw.setColor(this.style.colorProperty);
-                            draw.fillRect(
-                                ctx,
-                                x,
-                                y,
-                                x + width - 1,
-                                y + height - 1
-                            );
+                            draw.fillRect(ctx, x, y, x + w - 1, y + h - 1);
 
                             // draw thumb
                             const [size, position, pageSize] = (widget.data &&
@@ -4331,19 +4331,19 @@ export class ScrollBarWidget extends Widget {
                             let heightThumb;
 
                             if (isHorizontal) {
-                                xThumb = Math.floor((position * width) / size);
+                                xThumb = Math.floor((position * w) / size);
                                 widthThumb = Math.max(
-                                    Math.floor((pageSize * width) / size),
+                                    Math.floor((pageSize * w) / size),
                                     buttonSize
                                 );
                                 yThumb = y;
-                                heightThumb = height;
+                                heightThumb = h;
                             } else {
                                 xThumb = x;
-                                widthThumb = width;
-                                yThumb = Math.floor((position * height) / size);
+                                widthThumb = w;
+                                yThumb = Math.floor((position * h) / size);
                                 heightThumb = Math.max(
-                                    Math.floor((pageSize * height) / size),
+                                    Math.floor((pageSize * h) / size),
                                     buttonSize
                                 );
                             }
@@ -4361,10 +4361,10 @@ export class ScrollBarWidget extends Widget {
                             drawText(
                                 ctx,
                                 widget.rightButtonText || ">",
-                                isHorizontal ? this.width - buttonSize : 0,
-                                isHorizontal ? 0 : this.height - buttonSize,
-                                isHorizontal ? buttonSize : this.width,
-                                isHorizontal ? this.height : buttonSize,
+                                isHorizontal ? width - buttonSize : 0,
+                                isHorizontal ? 0 : height - buttonSize,
+                                isHorizontal ? buttonSize : width,
+                                isHorizontal ? height : buttonSize,
                                 widget.buttonsStyle,
                                 false
                             );
@@ -4580,15 +4580,11 @@ export class ProgressWidget extends Widget {
                 ) : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             draw.setColor(this.style.backgroundColorProperty);
-                            draw.fillRect(
-                                ctx,
-                                0,
-                                0,
-                                this.width - 1,
-                                this.height - 1
-                            );
+                            draw.fillRect(ctx, 0, 0, width - 1, height - 1);
 
                             // draw thumb
                             draw.setColor(this.style.colorProperty);
@@ -4597,16 +4593,16 @@ export class ProgressWidget extends Widget {
                                     ctx,
                                     0,
                                     0,
-                                    (percent * this.width) / 100 - 1,
-                                    this.height - 1
+                                    (percent * width) / 100 - 1,
+                                    height - 1
                                 );
                             } else {
                                 draw.fillRect(
                                     ctx,
                                     0,
-                                    this.height - (percent * this.height) / 100,
-                                    this.width - 1,
-                                    this.height - 1
+                                    height - (percent * height) / 100,
+                                    width - 1,
+                                    height - 1
                                 );
                             }
                         }}
@@ -4675,15 +4671,11 @@ export class CanvasWidget extends Widget {
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             draw.setColor(this.style.backgroundColorProperty);
-                            draw.fillRect(
-                                ctx,
-                                0,
-                                0,
-                                this.width - 1,
-                                this.height - 1
-                            );
+                            draw.fillRect(ctx, 0, 0, width - 1, height - 1);
                         }}
                     />
                 )}
@@ -4868,7 +4860,11 @@ export class GaugeEmbeddedWidget extends Widget {
             return i * p;
         }
 
-        const drawGauge = (ctx: CanvasRenderingContext2D) => {
+        const drawGauge = (
+            ctx: CanvasRenderingContext2D,
+            width: number,
+            height: number
+        ) => {
             // min
             let min;
             let max;
@@ -4914,18 +4910,10 @@ export class GaugeEmbeddedWidget extends Widget {
             let ticksStyle = widget.ticksStyle;
             let thresholdStyle = widget.thresholdStyle;
 
-            let w = this.width;
-            let h = this.height;
+            let w = width;
+            let h = height;
 
-            draw.drawBackground(
-                ctx,
-                0,
-                0,
-                this.width,
-                this.height,
-                this.style,
-                true
-            );
+            draw.drawBackground(ctx, 0, 0, width, height, this.style, true);
 
             const PADDING_HORZ = 56;
             const TICK_LINE_LENGTH = 5;
@@ -5109,7 +5097,14 @@ export class GaugeEmbeddedWidget extends Widget {
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
-                    <ComponentCanvas component={this} draw={drawGauge} />
+                    <ComponentCanvas
+                        width={width}
+                        height={height}
+                        component={this}
+                        draw={(ctx: CanvasRenderingContext2D) =>
+                            drawGauge(ctx, width, height)
+                        }
+                    />
                 )}
                 {super.render(flowContext, width, height)}
             </>
@@ -5287,6 +5282,8 @@ export class InputEmbeddedWidget extends Widget {
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             let text;
 
@@ -5335,8 +5332,8 @@ export class InputEmbeddedWidget extends Widget {
                                 text + (unit ? " " + unit : ""),
                                 0,
                                 0,
-                                this.width,
-                                this.height,
+                                width,
+                                height,
                                 this.style,
                                 false
                             );
@@ -5789,13 +5786,15 @@ export class RollerWidget extends Widget {
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             draw.drawBackground(
                                 ctx,
                                 0,
                                 0,
-                                this.width,
-                                this.height,
+                                width,
+                                height,
                                 this.style,
                                 true
                             );
@@ -5815,8 +5814,8 @@ export class RollerWidget extends Widget {
                             draw.drawBackground(
                                 ctx,
                                 0,
-                                (this.height - selectedValueHeight) / 2,
-                                this.width,
+                                (height - selectedValueHeight) / 2,
+                                width,
                                 selectedValueHeight,
                                 this.selectedValueStyle,
                                 true
@@ -5890,15 +5889,17 @@ export class SwitchWidget extends Widget {
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             let x = this.style.paddingRect.left;
                             let y = this.style.paddingRect.top;
                             let w =
-                                this.width -
+                                width -
                                 this.style.paddingRect.left -
                                 this.style.paddingRect.right;
                             let h =
-                                this.height -
+                                height -
                                 this.style.paddingRect.top -
                                 this.style.paddingRect.bottom;
 
@@ -6013,15 +6014,17 @@ export class SliderWidget extends Widget {
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             let x = this.style.paddingRect.left;
                             let y = this.style.paddingRect.top;
                             let w =
-                                this.width -
+                                width -
                                 this.style.paddingRect.left -
                                 this.style.paddingRect.right;
                             let h =
-                                this.height -
+                                height -
                                 this.style.paddingRect.top -
                                 this.style.paddingRect.bottom;
 
@@ -6193,13 +6196,15 @@ export class DropDownListWidget extends Widget {
                 ) : (
                     <ComponentCanvas
                         component={this}
+                        width={width}
+                        height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             const { x1, y1, x2, y2 } = draw.drawBackground(
                                 ctx,
                                 0,
                                 0,
-                                this.width,
-                                this.height,
+                                width,
+                                height,
                                 this.style,
                                 true
                             );

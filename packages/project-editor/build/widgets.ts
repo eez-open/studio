@@ -57,6 +57,61 @@ export function buildWidget(
     }
     dataBuffer.writeUint16(flags);
 
+    // timeline
+    if (object instanceof ProjectEditor.WidgetClass) {
+        dataBuffer.writeArray(object.timeline, timelineProperties => {
+            // start
+            dataBuffer.writeFloat(timelineProperties.start);
+
+            // end
+            dataBuffer.writeFloat(timelineProperties.end);
+
+            // enabledProperties
+            const WIDGET_TIMELINE_PROPERTY_X = 1 << 0;
+            const WIDGET_TIMELINE_PROPERTY_Y = 1 << 1;
+            const WIDGET_TIMELINE_PROPERTY_WIDTH = 1 << 2;
+            const WIDGET_TIMELINE_PROPERTY_HEIGHT = 1 << 3;
+            const WIDGET_TIMELINE_PROPERTY_OPACITY = 1 << 4;
+
+            let enabledProperties = 0;
+
+            if (timelineProperties.left != undefined) {
+                enabledProperties |= WIDGET_TIMELINE_PROPERTY_X;
+            }
+            if (timelineProperties.top != undefined) {
+                enabledProperties |= WIDGET_TIMELINE_PROPERTY_Y;
+            }
+            if (timelineProperties.width != undefined) {
+                enabledProperties |= WIDGET_TIMELINE_PROPERTY_WIDTH;
+            }
+            if (timelineProperties.height != undefined) {
+                enabledProperties |= WIDGET_TIMELINE_PROPERTY_HEIGHT;
+            }
+            if (timelineProperties.opacity != undefined) {
+                enabledProperties |= WIDGET_TIMELINE_PROPERTY_OPACITY;
+            }
+
+            dataBuffer.writeUint32(enabledProperties);
+
+            // x
+            dataBuffer.writeInt16(timelineProperties.left ?? 0);
+
+            // y
+            dataBuffer.writeInt16(timelineProperties.top ?? 0);
+
+            // width
+            dataBuffer.writeInt16(timelineProperties.width ?? 0);
+
+            // height
+            dataBuffer.writeInt16(timelineProperties.height ?? 0);
+
+            // opacity
+            dataBuffer.writeFloat(timelineProperties.opacity ?? 0);
+        });
+    } else {
+        dataBuffer.writeArray([], timelineProperties => {});
+    }
+
     // specific
     object.buildFlowWidgetSpecific(assets, dataBuffer);
 }

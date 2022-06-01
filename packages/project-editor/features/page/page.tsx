@@ -581,14 +581,16 @@ export class Page extends Flow {
             pageBackground = (
                 <ComponentCanvas
                     component={this}
+                    width={width}
+                    height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
                         if (pageStyle) {
                             draw.drawBackground(
                                 ctx,
                                 0,
                                 0,
-                                this.width,
-                                this.height,
+                                width,
+                                height,
                                 pageStyle,
                                 true
                             );
