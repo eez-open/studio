@@ -15,6 +15,8 @@ import { Flow, FlowTabState } from "project-editor/flow/flow";
 import { Transform } from "project-editor/flow/editor/transform";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { EditorComponent } from "project-editor/project/EditorComponent";
+import { Splitter } from "eez-studio-ui/splitter";
+import { PageTimelineEditorState, PageTimelineEditor } from "./PageTimeline";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -30,6 +32,17 @@ export const PageEditor = observer(
         render() {
             return this.pageTabState.isRuntime ? (
                 <FlowViewer tabState={this.pageTabState} />
+            ) : this.pageTabState.timeline.isEditorActive ? (
+                <Splitter
+                    type="vertical"
+                    sizes="65%|35%"
+                    persistId="project-editor/page/page-timeline-splitter"
+                    className="EezStudio_PageTimelineSplitter"
+                    splitterSize={5}
+                >
+                    <FlowEditor tabState={this.pageTabState} />
+                    <PageTimelineEditor tabState={this.pageTabState} />
+                </Splitter>
             ) : (
                 <FlowEditor tabState={this.pageTabState} />
             );
@@ -71,15 +84,14 @@ export class PageTabState extends FlowTabState {
         scale: 1
     });
 
-    timelinePosition: number = 0;
+    timeline: PageTimelineEditorState;
 
     constructor(object: IEezObject) {
         super(object as Flow);
 
         makeObservable(this, {
             _transform: observable,
-            frontFace: computed,
-            timelinePosition: observable
+            frontFace: computed
         });
 
         this.widgetContainerFrontFace = new PageTreeObjectAdapter(
@@ -93,6 +105,8 @@ export class PageTabState extends FlowTabState {
         );
 
         this.resetTransform(this.transform);
+
+        this.timeline = new PageTimelineEditorState(this);
 
         this.loadState();
     }
@@ -164,8 +178,8 @@ export class PageTabState extends FlowTabState {
             });
         }
 
-        if (state.timelinePosition != undefined) {
-            this.timelinePosition = state.timelinePosition;
+        if (state.timeline) {
+            this.timeline.loadState(state.timeline);
         }
     }
 
@@ -183,7 +197,7 @@ export class PageTabState extends FlowTabState {
                 },
                 scale: this._transform.scale
             },
-            timelinePosition: this.timelinePosition
+            timeline: this.timeline.saveState()
         };
 
         this.DocumentStore.uiStateStore.updateObjectUIState(

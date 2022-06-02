@@ -2556,10 +2556,7 @@ export class RectangleWidget extends Widget {
             }
 
             return messages;
-        },
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        }
     });
 
     constructor() {

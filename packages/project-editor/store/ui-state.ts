@@ -25,12 +25,11 @@ export class UIStateStore {
     showCommandPalette: boolean = false;
     showComponentDescriptions: boolean = true;
     selectedLanguageID: string;
-    _showTimeline: boolean = false;
 
     objectUIStates = new Map<string, any>();
 
     get pageEditorFrontFace() {
-        return this.showTimeline ? true : this._pageEditorFrontFace;
+        return this._pageEditorFrontFace;
     }
 
     set pageEditorFrontFace(value: boolean) {
@@ -38,23 +37,14 @@ export class UIStateStore {
     }
 
     get pageRuntimeFrontFace() {
-        return this.showTimeline ||
-            (this.DocumentStore.runtime &&
-                !this.DocumentStore.runtime.isDebuggerActive)
+        return this.DocumentStore.runtime &&
+            !this.DocumentStore.runtime.isDebuggerActive
             ? true
             : this._pageRuntimeFrontFace;
     }
 
     set pageRuntimeFrontFace(value: boolean) {
         runInAction(() => (this._pageRuntimeFrontFace = value));
-    }
-
-    get showTimeline() {
-        return this.DocumentStore.runtime ? false : this._showTimeline;
-    }
-
-    set showTimeline(value: boolean) {
-        runInAction(() => (this._showTimeline = value));
     }
 
     constructor(public DocumentStore: DocumentStoreClass) {
@@ -80,8 +70,7 @@ export class UIStateStore {
             enableBreakpoint: action,
             disableBreakpoint: action,
             watchExpressions: observable,
-            selectedLanguage: computed,
-            _showTimeline: observable
+            selectedLanguage: computed
         });
     }
 
@@ -165,10 +154,6 @@ export class UIStateStore {
             if (uiState.selectedLanguageID != undefined) {
                 this.selectedLanguageID = uiState.selectedLanguageID;
             }
-
-            if (uiState.showTimeline != undefined) {
-                this._showTimeline = uiState.showTimeline;
-            }
         });
     }
 
@@ -215,8 +200,7 @@ export class UIStateStore {
             ),
             watchExpressions: toJS(this.watchExpressions),
             showComponentDescriptions: this.showComponentDescriptions,
-            selectedLanguageID: this.selectedLanguageID,
-            showTimeline: this._showTimeline
+            selectedLanguageID: this.selectedLanguageID
         };
 
         return state;

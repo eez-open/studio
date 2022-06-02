@@ -1761,12 +1761,12 @@ export class Component extends EezObject {
             const DocumentStore = getDocumentStore(object);
 
             if (object instanceof Widget) {
-                if (DocumentStore.uiStateStore.showTimeline) {
-                    const editor = DocumentStore.editorsStore.activeEditor;
-                    if (editor) {
-                        if (editor.object instanceof ProjectEditor.PageClass) {
-                            const pageTabState = editor.state as PageTabState;
-                            const time = pageTabState.timelinePosition;
+                const editor = DocumentStore.editorsStore.activeEditor;
+                if (editor) {
+                    if (editor.object instanceof ProjectEditor.PageClass) {
+                        const pageTabState = editor.state as PageTabState;
+                        if (pageTabState.timeline.isEditorActive) {
+                            const time = pageTabState.timeline.position;
 
                             const props: Partial<Rect> = {};
 
@@ -2256,13 +2256,13 @@ export class Component extends EezObject {
     get rect(): Rect {
         if (this instanceof Widget && this.timeline.length > 0) {
             const DocumentStore = getDocumentStore(this);
-            if (DocumentStore.uiStateStore.showTimeline) {
-                const editor = DocumentStore.editorsStore.activeEditor;
-                if (editor) {
-                    if (editor.object instanceof ProjectEditor.PageClass) {
-                        const pageTabState = editor.state as PageTabState;
+            const editor = DocumentStore.editorsStore.activeEditor;
+            if (editor) {
+                if (editor.object instanceof ProjectEditor.PageClass) {
+                    const pageTabState = editor.state as PageTabState;
+                    if (pageTabState.timeline.isEditorActive) {
                         return this.getTimelineRect(
-                            pageTabState.timelinePosition
+                            pageTabState.timeline.position
                         );
                     }
                 }
@@ -3146,13 +3146,13 @@ export class Widget extends Component {
             if (flowContext.flowState) {
                 timelinePosition = flowContext.flowState.timelinePosition;
             } else {
-                if (flowContext.DocumentStore.uiStateStore.showTimeline) {
-                    const editor =
-                        flowContext.DocumentStore.editorsStore.activeEditor;
-                    if (editor) {
-                        if (editor.object instanceof ProjectEditor.PageClass) {
-                            const pageTabState = editor.state as PageTabState;
-                            timelinePosition = pageTabState.timelinePosition;
+                const editor =
+                    flowContext.DocumentStore.editorsStore.activeEditor;
+                if (editor) {
+                    if (editor.object instanceof ProjectEditor.PageClass) {
+                        const pageTabState = editor.state as PageTabState;
+                        if (pageTabState.timeline.isEditorActive) {
+                            timelinePosition = pageTabState.timeline.position;
                         }
                     }
                 }

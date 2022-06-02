@@ -870,7 +870,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
 
 export interface ITreeItem {}
 
-interface ITreeRow {
+export interface ITreeRow {
     item: ITreeItem;
     level: number;
     draggable: boolean;
@@ -909,6 +909,7 @@ export interface ITreeAdapter {
     sortDirection?: SortDirectionType;
 
     getItemId(item: ITreeItem): string;
+    getItemObject(item: ITreeItem): IEezObject;
     getItemFromId(id: string): ITreeItem | undefined;
     getItemParent(item: ITreeItem): ITreeItem | undefined;
     itemToString(item: ITreeItem): React.ReactNode;
@@ -1063,6 +1064,10 @@ export class TreeAdapter implements ITreeAdapter {
 
     getItemId(item: ITreeObjectAdapter) {
         return getId(item.object);
+    }
+
+    getItemObject(item: ITreeObjectAdapter) {
+        return item.object;
     }
 
     getItemFromId(id: string): ITreeObjectAdapter | undefined {

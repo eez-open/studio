@@ -5285,3 +5285,124 @@ button.EezStudio_Action {
         }
     }
 }
+
+.EezStudio_PageTimelineSplitter {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+
+    .EezStudio_SplitterThumbDiv.EezStudio_Splitter_Vertical,
+    .EezStudio_SplitterThumbDiv.EezStudio_Splitter_Horizontal {
+        background-image: none;
+        border: none !important;
+    }
+}
+
+@timelineHeight: 40px;
+@timelineScrollBarSize: 20px;
+@timelineRowHeight: 20px;
+
+.EezStudio_PageTimeline_Outline {
+    margin-top: @timelineHeight;
+    margin-bottom: @timelineScrollBarSize;
+    overflow: hidden;
+    height: 100%;
+
+    .EezStudio_PageTimeline_Outline_Item {
+        height: @timelineRowHeight;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: flex;
+        align-items: center;
+        border-top: 1px dotted @borderColor;
+        &:last-child {
+            border-bottom: 1px dotted @borderColor;
+        }
+    }
+}
+
+.EezStudio_PageTimeline_Timeline {
+    position: absolute;
+    width: calc(100% - @timelineScrollBarSize);
+    height: calc(100% - @timelineScrollBarSize);
+
+    .EezStudio_PageTimeline_Timeline_Timeline_Area {
+        fill: @backgroundColor;
+    }
+
+    rect.EezStudio_PageTimeline_Timeline_Timeline_Needle {
+        fill: #ff8c00;
+    }
+
+    line.EezStudio_PageTimeline_Timeline_Timeline_Needle {
+        stroke: #ff8c00;
+    }
+
+    text.EezStudio_PageTimeline_Timeline_Timeline_Needle {
+        stroke: #ff8c00;
+        font-weight: lighter;
+    }
+
+    .EezStudio_PageTimeline_Timeline_Timeline_Tick {
+        stroke: @textColor;
+        stroke-width: 1;
+    }
+
+    .EezStudio_PageTimeline_Timeline_Timeline_Subtick {
+        stroke: @textColor;
+        stroke-width: 0.5;
+    }
+
+    .EezStudio_PageTimeline_Timeline_Timeline_TickText {
+        stroke: @textColor;
+        font-weight: lighter;
+    }
+
+    .EezStudio_PageTimeline_Timeline_Row {
+        fill: @panelHeaderColor;
+    }
+
+    .EezStudio_PageTimeline_Timeline_Segment {
+        fill: #094771;
+    }
+
+    .EezStudio_PageTimeline_Timeline_SegmentSelection {
+        fill: none;
+        stroke: red;
+        stroke-width: 1;
+    }
+
+    .EezStudio_PageTimeline_Timeline_Point {
+        fill: #ff8c00;
+    }
+}
+
+.EezStudio_PageTimeline_ScrollBar {
+    position: absolute;
+    overflow: hidden;
+    & > div {
+        overflow: hidden;
+    }
+}
+
+.EezStudio_PageTimeline_VerticalScrollBar {
+    top: @timelineHeight;
+    right: 0;
+    width: @timelineScrollBarSize;
+    height: calc(100% - @timelineScrollBarSize - @timelineHeight);
+    overflow-y: auto;
+    & > div {
+        width: @timelineScrollBarSize;
+    }
+}
+
+.EezStudio_PageTimeline_HorizontalScrollBar {
+    bottom: 0;
+    width: calc(100% - @timelineScrollBarSize);
+    height: @timelineScrollBarSize;
+    overflow-x: auto;
+    & > div {
+        height: @timelineScrollBarSize;
+    }
+}

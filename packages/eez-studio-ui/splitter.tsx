@@ -23,6 +23,8 @@ interface SplitterProps {
     tabIndex?: number;
     onFocus?: () => void;
     onKeyDown?: (event: any) => void;
+
+    splitterSize?: number;
 }
 
 interface IDraggableParams {
@@ -205,7 +207,7 @@ export const Splitter = observer(
 
             for (let i = 0; i < this.sizes.length - 1; i++) {
                 if (this.isSplitterAtPosition(i)) {
-                    totalSize -= SPLITTER_SIZE;
+                    totalSize -= this.props.splitterSize ?? SPLITTER_SIZE;
                 }
             }
 
@@ -271,7 +273,7 @@ export const Splitter = observer(
             for (let i = 1; i < this.sizes.length; i++) {
                 this.offsets[i] = this.offsets[i - 1] + this.sizes[i - 1];
                 if (this.isSplitterAtPosition(i - 1)) {
-                    this.offsets[i] += SPLITTER_SIZE;
+                    this.offsets[i] += this.props.splitterSize ?? SPLITTER_SIZE;
                 }
             }
         }
@@ -417,7 +419,8 @@ export const Splitter = observer(
                         style.cursor = "col-resize";
                         style.left = this.offsets[i] + this.sizes[i] + "px";
                         style.top = 0;
-                        style.width = SPLITTER_SIZE + "px";
+                        style.width =
+                            this.props.splitterSize ?? SPLITTER_SIZE + "px";
                         style.height = "100%";
 
                         style.borderLeft = "1px solid " + theme().borderColor;
@@ -427,7 +430,8 @@ export const Splitter = observer(
                         style.left = 0;
                         style.top = this.offsets[i] + this.sizes[i] + "px";
                         style.width = "100%";
-                        style.height = SPLITTER_SIZE + "px";
+                        style.height =
+                            this.props.splitterSize ?? SPLITTER_SIZE + "px";
 
                         style.borderTop = "1px solid " + theme().borderColor;
                         style.borderBottom = "1px solid " + theme().borderColor;
@@ -478,12 +482,16 @@ export const Splitter = observer(
                                     xOffset:
                                         this.props.type === "horizontal"
                                             ? this.offsets[iSplitter[i] + 1] -
-                                              SPLITTER_SIZE / 2
+                                              (this.props.splitterSize ??
+                                                  SPLITTER_SIZE) /
+                                                  2
                                             : 0,
                                     yOffset:
                                         this.props.type === "vertical"
                                             ? this.offsets[iSplitter[i] + 1] -
-                                              SPLITTER_SIZE / 2
+                                              (this.props.splitterSize ??
+                                                  SPLITTER_SIZE) /
+                                                  2
                                             : 0
                                 } as IDraggableParams;
                             }}

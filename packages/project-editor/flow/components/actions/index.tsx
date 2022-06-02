@@ -88,11 +88,13 @@ import {
     COMPONENT_TYPE_COMMENT_ACTION,
     COMPONENT_TYPE_SELECT_LANGUAGE_ACTION,
     COMPONENT_TYPE_SET_PAGE_DIRECTION_ACTION,
-    COMPONENT_TYPE_ANIMATE_ACTION
+    COMPONENT_TYPE_ANIMATE_ACTION,
+    COMPONENT_TYPE_ON_EVENT_ACTION
 } from "project-editor/flow/components/component_types";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { LANGUAGE_ICON } from "project-editor/features/texts";
+import { humanize } from "eez-studio-shared/string";
 
 const NOT_NAMED_LABEL = "<not named>";
 
@@ -2439,6 +2441,89 @@ registerClass("LoopActionComponent", LoopActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class OnEventActionComponent extends ActionComponent {
+    event: string;
+
+    constructor() {
+        super();
+        makeObservable(this, {
+            event: observable
+        });
+    }
+
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: COMPONENT_TYPE_ON_EVENT_ACTION,
+
+        properties: [
+            {
+                name: "event",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "page_open", label: "Page open" },
+                    { id: "page_close", label: "Page close" }
+                ],
+                propertyGridGroup: specificGroup
+            }
+        ],
+
+        icon: (
+            <svg
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <rect x="4" y="5" width="16" height="16" rx="2" />
+                <path d="M16 3v4M8 3v4m-4 4h16M8 15h2v2H8z" />
+            </svg>
+        ),
+        componentHeaderColor: "#DEB887"
+    });
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        return (
+            <div className="body">
+                <pre>{humanize(this.event)}</pre>
+            </div>
+        );
+    }
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: false
+            }
+        ];
+    }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // event
+        const FLOW_EVENT_OPEN_PAGE = 0;
+        const FLOW_EVENT_CLOSE_PAGE = 1;
+
+        let event: number = 0;
+
+        if (this.event == "page_open") {
+            event = FLOW_EVENT_OPEN_PAGE;
+        } else if (this.event == "page_close") {
+            event = FLOW_EVENT_CLOSE_PAGE;
+        }
+
+        dataBuffer.writeUint8(event);
+    }
+}
+
+registerClass("OnEventActionComponent", OnEventActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class ShowPageActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SHOW_PAGE_ACTION,
@@ -2884,87 +2969,6 @@ registerClass("ShowKeypadActionComponent", ShowKeypadActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class NoopActionComponent extends ActionComponent {
-    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: COMPONENT_TYPE_NOOP_ACTION,
-
-        properties: [
-            {
-                name: "name",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            }
-        ],
-        check: (inputActionComponent: InputActionComponent) => {
-            let messages: Message[] = [];
-            if (!inputActionComponent.name) {
-                messages.push(
-                    propertyNotSetMessage(inputActionComponent, "name")
-                );
-            }
-            return messages;
-        },
-        label: (component: InputActionComponent) => {
-            if (!component.name) {
-                return NOT_NAMED_LABEL;
-            }
-            return component.name;
-        },
-        icon: (
-            <svg
-                viewBox="0 0 24 24"
-                strokeWidth="2"
-                stroke="currentColor"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            >
-                <path d="M0 0h24v24H0z" stroke="none" />
-                <rect x="4" y="4" width="16" height="16" rx="2" />
-            </svg>
-        ),
-        componentHeaderColor: "#fff5c2"
-    });
-
-    name: string;
-
-    constructor() {
-        super();
-
-        makeObservable(this, {
-            name: observable
-        });
-    }
-
-    getInputs() {
-        return [
-            ...super.getInputs(),
-            {
-                name: "@seqin",
-                type: "any" as ValueType,
-                isSequenceInput: true,
-                isOptionalInput: true
-            }
-        ];
-    }
-
-    getOutputs() {
-        return [
-            ...super.getOutputs(),
-            {
-                name: "@seqout",
-                type: "null" as ValueType,
-                isSequenceOutput: true,
-                isOptionalOutput: true
-            }
-        ];
-    }
-}
-
-registerClass("NoopActionComponent", NoopActionComponent);
-
-////////////////////////////////////////////////////////////////////////////////
-
 export class SelectLanguageActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SELECT_LANGUAGE_ACTION,
@@ -3181,13 +3185,94 @@ export class AnimateActionComponent extends ActionComponent {
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
             <div className="body">
-                <pre>{this.time}</pre>
+                <pre>To {this.time} s</pre>
             </div>
         );
     }
 }
 
 registerClass("AnimateActionComponent", AnimateActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class NoopActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: COMPONENT_TYPE_NOOP_ACTION,
+
+        properties: [
+            {
+                name: "name",
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
+            }
+        ],
+        check: (inputActionComponent: InputActionComponent) => {
+            let messages: Message[] = [];
+            if (!inputActionComponent.name) {
+                messages.push(
+                    propertyNotSetMessage(inputActionComponent, "name")
+                );
+            }
+            return messages;
+        },
+        label: (component: InputActionComponent) => {
+            if (!component.name) {
+                return NOT_NAMED_LABEL;
+            }
+            return component.name;
+        },
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <rect x="4" y="4" width="16" height="16" rx="2" />
+            </svg>
+        ),
+        componentHeaderColor: "#fff5c2"
+    });
+
+    name: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            name: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            }
+        ];
+    }
+}
+
+registerClass("NoopActionComponent", NoopActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
