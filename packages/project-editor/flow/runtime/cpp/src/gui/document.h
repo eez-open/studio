@@ -117,9 +117,12 @@ enum StylesEnum {
     STYLE_ID_BACKGROUND = 15,
     STYLE_ID_BUTTON = 16,
     STYLE_ID_BUTTON_DISABLED = 17,
-    STYLE_ID_TOUCH_CALIBRATION = 18,
-    STYLE_ID_NOTE_M = 19,
-    STYLE_ID_TOUCH_CALIBRATION_POINT = 20
+    STYLE_ID_VALUE = 18,
+    STYLE_ID_SLIDER_WIDGET = 19,
+    STYLE_ID_VALUE_LABEL = 20,
+    STYLE_ID_TOUCH_CALIBRATION = 21,
+    STYLE_ID_NOTE_M = 22,
+    STYLE_ID_TOUCH_CALIBRATION_POINT = 23
 };
 
 enum ThemesEnum {
@@ -174,7 +177,7 @@ enum PagesEnum {
     PAGE_ID_PAGE2 = 4
 };
 
-extern const uint8_t assets[10059];
+extern const uint8_t assets[10910];
 
 } // namespace gui
 } // namespace eez

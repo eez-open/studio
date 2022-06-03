@@ -5342,6 +5342,12 @@ button.EezStudio_Action {
     text.EezStudio_PageTimeline_Timeline_Timeline_Needle {
         stroke: #ff8c00;
         font-weight: lighter;
+        cursor: ew-resize;
+    }
+
+    .EezStudio_PageTimeline_Timeline_Timeline_Needle_TextBackground {
+        fill: @backgroundColor;
+        stroke: none;
     }
 
     .EezStudio_PageTimeline_Timeline_Timeline_Tick {
@@ -5360,14 +5366,14 @@ button.EezStudio_Action {
     }
 
     .EezStudio_PageTimeline_Timeline_Row {
-        fill: @panelHeaderColor;
+        fill: @darkBorderColor;
     }
 
-    .EezStudio_PageTimeline_Timeline_Segment {
+    .EezStudio_PageTimeline_Timeline_Keyframe {
         fill: #094771;
     }
 
-    .EezStudio_PageTimeline_Timeline_SegmentSelection {
+    .EezStudio_PageTimeline_Timeline_KeyframeSelection {
         fill: none;
         stroke: red;
         stroke-width: 1;

@@ -114,6 +114,8 @@ interface AssetsMap {
     };
     types: IType[];
     typeIndexes: IIndexes;
+    displayWidth: number;
+    displayHeight: number;
 }
 
 interface IMessageFromWorker {
@@ -149,7 +151,7 @@ declare const WasmFlowRuntime: {
     componentMessages: IMessageFromWorker[] | undefined;
 
     // eez framework API
-    _init(assets: number, assetsSize: number, displayWidth: number, displayHeight: number);
+    _init(assets: number, assetsSize: number);
     _startFlow();
     _mainLoop();
     _getSyncedBuffer(): number;

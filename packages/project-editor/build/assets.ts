@@ -133,7 +133,9 @@ export class Assets {
         globalVariables: [],
         dashboardComponentTypeToNameMap: {},
         types: [],
-        typeIndexes: {}
+        typeIndexes: {},
+        displayWidth: this.displayWidth,
+        displayHeight: this.displayHeight
     };
 
     dashboardComponentClassNameToComponentIdMap: {
@@ -1096,6 +1098,44 @@ export class Assets {
         this.map.types = this.DocumentStore.typesStore.types;
         this.map.typeIndexes = this.DocumentStore.typesStore.typeIndexes;
     }
+
+    get displayWidth() {
+        if (this.DocumentStore.project.isDashboardProject) {
+            return 1;
+        }
+
+        const maxPageWidth = Math.max(
+            ...this.DocumentStore.project.pages.map(page => page.width)
+        );
+
+        if (this.DocumentStore.project.isFirmwareWithFlowSupportProject) {
+            return Math.max(
+                maxPageWidth,
+                this.DocumentStore.project.settings.general.displayWidth
+            );
+        } else {
+            return maxPageWidth;
+        }
+    }
+
+    get displayHeight() {
+        if (this.DocumentStore.project.isDashboardProject) {
+            return 1;
+        }
+
+        const maxPageHeight = Math.max(
+            ...this.DocumentStore.project.pages.map(page => page.height)
+        );
+
+        if (this.DocumentStore.project.isFirmwareWithFlowSupportProject) {
+            return Math.max(
+                maxPageHeight,
+                this.DocumentStore.project.settings.general.displayHeight
+            );
+        } else {
+            return maxPageHeight;
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1155,6 +1195,12 @@ function buildLanguages(assets: Assets, dataBuffer: DataBuffer) {
 
 export async function buildGuiAssetsData(assets: Assets) {
     const dataBuffer = new DataBuffer(assets.utf8Support);
+
+    // settings
+    dataBuffer.writeObjectOffset(() => {
+        dataBuffer.writeUint16(assets.map.displayWidth);
+        dataBuffer.writeUint16(assets.map.displayHeight);
+    });
 
     buildGuiDocumentData(assets, dataBuffer);
     buildGuiStylesData(assets, dataBuffer);

@@ -77,11 +77,10 @@ namespace eez {
     }
 }
 
-EM_PORT_API(void) init(uint8_t *assets, uint32_t assetsSize, uint32_t displayWidth, uint32_t displayHeight) {
-    DISPLAY_WIDTH = displayWidth;
-    DISPLAY_HEIGHT = displayHeight;
-
-    eez::initMemory();
+EM_PORT_API(void) init(uint8_t *assets, uint32_t assetsSize) {
+    eez::initAssetsMemory();
+    eez::gui::loadMainAssets(assets, assetsSize);
+    eez::initOtherMemory();
     eez::initAllocHeap(eez::ALLOC_BUFFER, eez::ALLOC_BUFFER_SIZE);
 
     eez::gui::g_hooks.onArrayValueFreeHook = onArrayValueFree;
@@ -95,7 +94,6 @@ EM_PORT_API(void) init(uint8_t *assets, uint32_t assetsSize, uint32_t displayWid
 
     eez::flow::onDebuggerClientConnected();
 
-    eez::gui::loadMainAssets(assets, assetsSize);
     eez::gui::startThread();
     eez::gui::display::turnOn();
     eez::gui::display::init();

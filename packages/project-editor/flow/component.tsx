@@ -97,6 +97,7 @@ import {
     geometryGroup,
     specificGroup,
     styleGroup,
+    timelineGroup,
     topGroup
 } from "project-editor/components/PropertyGrid/groups";
 import { IconAction } from "eez-studio-ui/action";
@@ -119,6 +120,9 @@ import {
 } from "./align_and_distribute_icons";
 import { ProjectContext } from "project-editor/project/context";
 import type { PageTabState } from "project-editor/features/page/PageEditor";
+import { BootstrapButton } from "project-editor/components/BootstrapButton";
+import { PropertyGrid } from "project-editor/components/PropertyGrid";
+import { getProject } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1010,6 +1014,17 @@ const AlignAndDistributePropertyGridUI = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                components: computed,
+                boundingRect: computed,
+                componentsHorizontallySorted: computed,
+                componentsVerticallySorted: computed
+            });
+        }
+
         get components(): ComponentAdapter[] {
             return (this.props.objects as Component[]).map(component => {
                 const absolutePosition = component.absolutePositionPoint;
@@ -1622,22 +1637,26 @@ export class Component extends EezObject {
             {
                 name: "left",
                 type: PropertyType.Number,
-                propertyGridGroup: geometryGroup
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: isTimelineEditorActive
             },
             {
                 name: "top",
                 type: PropertyType.Number,
-                propertyGridGroup: geometryGroup
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: isTimelineEditorActive
             },
             {
                 name: "width",
                 type: PropertyType.Number,
-                propertyGridGroup: geometryGroup
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: isTimelineEditorActive
             },
             {
                 name: "height",
                 type: PropertyType.Number,
-                propertyGridGroup: geometryGroup
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: isTimelineEditorActive
             },
             {
                 name: "absolutePosition",
@@ -1760,137 +1779,77 @@ export class Component extends EezObject {
         setRect: (object: Component, value: Partial<Rect>) => {
             const DocumentStore = getDocumentStore(object);
 
-            if (object instanceof Widget) {
-                const editor = DocumentStore.editorsStore.activeEditor;
-                if (editor) {
-                    if (editor.object instanceof ProjectEditor.PageClass) {
-                        const pageTabState = editor.state as PageTabState;
-                        if (pageTabState.timeline.isEditorActive) {
-                            const time = pageTabState.timeline.position;
+            const timelineEditorState = getTimelineEditorState(object);
+            if (timelineEditorState) {
+                const widget = object as Widget;
+                const time = timelineEditorState.position;
 
-                            const props: Partial<Rect> = {};
+                const props: Partial<Rect> = {};
 
-                            props.left = value.left ?? object.rect.left;
-                            props.top = value.top ?? object.rect.top;
-                            if (
-                                !(
-                                    object.autoSize == "width" ||
-                                    object.autoSize == "both"
-                                )
-                            ) {
-                                props.width = value.width ?? object.rect.width;
-                            }
-                            if (
-                                !(
-                                    object.autoSize == "height" ||
-                                    object.autoSize == "both"
-                                )
-                            ) {
-                                props.height =
-                                    value.height ?? object.rect.height;
-                            }
+                props.left = value.left ?? object.rect.left;
+                props.top = value.top ?? object.rect.top;
+                if (
+                    !(object.autoSize == "width" || object.autoSize == "both")
+                ) {
+                    props.width = value.width ?? object.rect.width;
+                }
+                if (
+                    !(object.autoSize == "height" || object.autoSize == "both")
+                ) {
+                    props.height = value.height ?? object.rect.height;
+                }
 
-                            for (let i = 0; i < object.timeline.length; i++) {
-                                const timelineProperties = object.timeline[i];
+                const newKeyframe = new TimelineKeyframe();
 
-                                if (time == timelineProperties.end) {
-                                    DocumentStore.updateObject(
-                                        timelineProperties,
-                                        props
-                                    );
+                newKeyframe.start = time;
+                newKeyframe.end = time;
+                newKeyframe.left = props.left;
+                newKeyframe.top = props.top;
+                newKeyframe.width = props.width;
+                newKeyframe.height = props.height;
 
-                                    return;
-                                }
+                for (let i = 0; i < widget.timeline.length; i++) {
+                    const keyframe = widget.timeline[i];
 
-                                if (
-                                    time > timelineProperties.start &&
-                                    time < timelineProperties.end
-                                ) {
-                                    const newTimelineProperties =
-                                        new WidgetTimelineProperties();
+                    if (time == keyframe.end) {
+                        DocumentStore.updateObject(keyframe, props);
 
-                                    newTimelineProperties.start = time;
-                                    newTimelineProperties.end =
-                                        timelineProperties.end;
-                                    newTimelineProperties.left =
-                                        timelineProperties.left;
-                                    newTimelineProperties.top =
-                                        timelineProperties.top;
-                                    newTimelineProperties.width =
-                                        timelineProperties.width;
-                                    newTimelineProperties.height =
-                                        timelineProperties.height;
+                        return;
+                    }
 
-                                    const combineCommands =
-                                        DocumentStore.undoManager
-                                            .combineCommands;
+                    if (time > keyframe.start && time < keyframe.end) {
+                        newKeyframe.start = keyframe.start;
 
-                                    if (!combineCommands) {
-                                        DocumentStore.undoManager.setCombineCommands(
-                                            true
-                                        );
-                                    }
+                        const combineCommands =
+                            DocumentStore.undoManager.combineCommands;
 
-                                    DocumentStore.updateObject(
-                                        timelineProperties,
-                                        Object.assign(props, {
-                                            end: time
-                                        })
-                                    );
-
-                                    DocumentStore.insertObjectBefore(
-                                        timelineProperties,
-                                        newTimelineProperties
-                                    );
-
-                                    if (!combineCommands) {
-                                        DocumentStore.undoManager.setCombineCommands(
-                                            false
-                                        );
-                                    }
-
-                                    return;
-                                }
-
-                                if (time <= object.timeline[i].start) {
-                                    const newTimelineProperties =
-                                        new WidgetTimelineProperties();
-
-                                    newTimelineProperties.start = time;
-                                    newTimelineProperties.end = time;
-                                    newTimelineProperties.left = props.left;
-                                    newTimelineProperties.top = props.top;
-                                    newTimelineProperties.width = props.width;
-                                    newTimelineProperties.height = props.height;
-
-                                    DocumentStore.insertObjectBefore(
-                                        timelineProperties,
-                                        newTimelineProperties
-                                    );
-
-                                    return;
-                                }
-                            }
-
-                            const newTimelineProperties =
-                                new WidgetTimelineProperties();
-
-                            newTimelineProperties.start = time;
-                            newTimelineProperties.end = time;
-                            newTimelineProperties.left = props.left;
-                            newTimelineProperties.top = props.top;
-                            newTimelineProperties.width = props.width;
-                            newTimelineProperties.height = props.height;
-
-                            DocumentStore.addObject(
-                                object.timeline,
-                                newTimelineProperties
-                            );
-
-                            return;
+                        if (!combineCommands) {
+                            DocumentStore.undoManager.setCombineCommands(true);
                         }
+
+                        DocumentStore.updateObject(keyframe, {
+                            start: time
+                        });
+
+                        DocumentStore.insertObjectBefore(keyframe, newKeyframe);
+
+                        if (!combineCommands) {
+                            DocumentStore.undoManager.setCombineCommands(false);
+                        }
+
+                        return;
+                    }
+
+                    if (time <= keyframe.start) {
+                        DocumentStore.insertObjectBefore(keyframe, newKeyframe);
+
+                        return;
                     }
                 }
+
+                DocumentStore.addObject(widget.timeline, newKeyframe);
+
+                return;
             }
 
             const props: Partial<Rect> = {};
@@ -2255,17 +2214,9 @@ export class Component extends EezObject {
 
     get rect(): Rect {
         if (this instanceof Widget && this.timeline.length > 0) {
-            const DocumentStore = getDocumentStore(this);
-            const editor = DocumentStore.editorsStore.activeEditor;
-            if (editor) {
-                if (editor.object instanceof ProjectEditor.PageClass) {
-                    const pageTabState = editor.state as PageTabState;
-                    if (pageTabState.timeline.isEditorActive) {
-                        return this.getTimelineRect(
-                            pageTabState.timeline.position
-                        );
-                    }
-                }
+            const timelineEditorState = getTimelineEditorState(this);
+            if (timelineEditorState) {
+                return this.getTimelineRect(timelineEditorState.position);
             }
         }
 
@@ -2454,7 +2405,7 @@ export class Component extends EezObject {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class WidgetTimelineProperties extends EezObject {
+export class TimelineKeyframe extends EezObject {
     start: number;
     end: number;
 
@@ -2513,7 +2464,116 @@ export class WidgetTimelineProperties extends EezObject {
     }
 }
 
-registerClass("WidgetTimelineProperties", WidgetTimelineProperties);
+registerClass("TimelineKeyframe", TimelineKeyframe);
+
+////////////////////////////////////////////////////////////////////////////////
+
+const TimelineKeyframePropertyUI = observer(
+    class TextResourceEditorPropertyUI extends React.Component<PropertyProps> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        constructor(props: any) {
+            super(props);
+            makeObservable(this, {
+                timeline: computed,
+                keyframe: computed
+            });
+        }
+
+        get widget() {
+            return this.props.objects[0] as Widget;
+        }
+
+        get timeline() {
+            return getTimelineEditorState(this.widget)!;
+        }
+
+        get keyframe() {
+            for (let i = 0; i < this.widget.timeline.length; i++) {
+                const keyframe = this.widget.timeline[i];
+                if (keyframe.end == this.timeline.position) {
+                    return keyframe;
+                }
+            }
+            return undefined;
+        }
+
+        onInsertKeyframe = () => {
+            const position = this.timeline.position;
+
+            const newKeyframe = new TimelineKeyframe();
+            newKeyframe.start = position;
+            newKeyframe.end = position;
+
+            for (let i = 0; i < this.widget.timeline.length; i++) {
+                const keyframe = this.widget.timeline[i];
+
+                if (position > keyframe.start && position < keyframe.end) {
+                    newKeyframe.start = keyframe.start;
+
+                    this.context.undoManager.setCombineCommands(true);
+
+                    this.context.updateObject(keyframe, {
+                        start: position
+                    });
+
+                    this.context.insertObjectBefore(keyframe, newKeyframe);
+
+                    this.context.undoManager.setCombineCommands(false);
+
+                    return;
+                }
+
+                if (position <= keyframe.start) {
+                    this.context.insertObjectBefore(keyframe, newKeyframe);
+                    return;
+                }
+            }
+
+            this.context.addObject(this.widget.timeline, newKeyframe);
+        };
+
+        onDeleteKeyframe = () => {
+            const keyframe = this.keyframe;
+            if (keyframe) {
+                this.context.deleteObject(keyframe);
+            }
+        };
+
+        render() {
+            if (this.props.objects.length > 1) {
+                return null;
+            }
+
+            const keyframe = this.keyframe;
+            return (
+                <div style={{ marginBottom: 10 }}>
+                    {keyframe ? (
+                        <>
+                            <PropertyGrid objects={[keyframe]} />
+                            <BootstrapButton
+                                color="primary"
+                                size="small"
+                                onClick={this.onDeleteKeyframe}
+                            >
+                                Delete Keyframe
+                            </BootstrapButton>
+                        </>
+                    ) : (
+                        <BootstrapButton
+                            color="primary"
+                            size="small"
+                            onClick={this.onInsertKeyframe}
+                        >
+                            Insert Keyframe
+                        </BootstrapButton>
+                    )}
+                </div>
+            );
+        }
+    }
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2528,7 +2588,7 @@ export class Widget extends Component {
 
     locked: boolean;
 
-    timeline: WidgetTimelineProperties[];
+    timeline: TimelineKeyframe[];
 
     static classInfo: ClassInfo = makeDerivedClassInfo(Component.classInfo, {
         properties: [
@@ -2553,13 +2613,14 @@ export class Widget extends Component {
             {
                 name: "timeline",
                 type: PropertyType.Array,
-                typeClass: WidgetTimelineProperties,
-                propertyGridGroup: specificGroup,
+                typeClass: TimelineKeyframe,
+                propertyGridRowComponent: TimelineKeyframePropertyUI,
+                propertyGridGroup: timelineGroup,
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: [],
-                hideInPropertyGrid:
-                    isNotDashboardOrAppletOrFirmwareWithFlowSupportProject
+                hideInPropertyGrid: (widget: Widget) =>
+                    !isTimelineEditorActive(widget)
             }
         ],
 
@@ -3237,53 +3298,80 @@ export class Widget extends Component {
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
 
     getTimelineRect(timelinePosition: number): Rect {
+        const project = getProject(this);
+        const isFirmwareWithFlowSupportProject =
+            project.isFirmwareWithFlowSupportProject;
+
         let left = this.left;
         let top = this.top;
         let width = this.width ?? 0;
         let height = this.height ?? 0;
 
-        for (const timelineProperties of this.timeline) {
-            if (timelinePosition < timelineProperties.start) {
+        for (const keyframe of this.timeline) {
+            if (timelinePosition < keyframe.start) {
                 continue;
             }
 
             if (
-                timelinePosition >= timelineProperties.start &&
-                timelinePosition <= timelineProperties.end
+                timelinePosition >= keyframe.start &&
+                timelinePosition <= keyframe.end
             ) {
                 const t =
-                    timelineProperties.start == timelineProperties.end
+                    keyframe.start == keyframe.end
                         ? 1
-                        : (timelinePosition - timelineProperties.start) /
-                          (timelineProperties.end - timelineProperties.start);
+                        : (timelinePosition - keyframe.start) /
+                          (keyframe.end - keyframe.start);
 
-                if (timelineProperties.left != undefined) {
-                    left += t * (timelineProperties.left - left);
+                if (keyframe.left != undefined) {
+                    const savedLeft = left;
+                    left += t * (keyframe.left - left);
+                    if (isFirmwareWithFlowSupportProject) {
+                        left = Math.floor(left);
+                    }
+                    if (keyframe.width != undefined) {
+                        let right = savedLeft + width;
+                        right += t * (keyframe.left + keyframe.width - right);
+                        if (isFirmwareWithFlowSupportProject) {
+                            right = Math.floor(right);
+                        }
+                        width = right - left;
+                    }
+                } else if (keyframe.width != undefined) {
+                    width += t * (keyframe.width - width);
                 }
-                if (timelineProperties.top != undefined) {
-                    top += t * (timelineProperties.top - top);
-                }
-                if (timelineProperties.width != undefined) {
-                    width += t * (timelineProperties.width - width);
-                }
-                if (timelineProperties.height != undefined) {
-                    height += t * (timelineProperties.height - height);
+
+                if (keyframe.top != undefined) {
+                    const savedTop = top;
+                    top += t * (keyframe.top - top);
+                    if (isFirmwareWithFlowSupportProject) {
+                        top = Math.floor(top);
+                    }
+                    if (keyframe.height != undefined) {
+                        let bottom = savedTop + height;
+                        bottom += t * (keyframe.top + keyframe.height - bottom);
+                        if (isFirmwareWithFlowSupportProject) {
+                            bottom = Math.floor(bottom);
+                        }
+                        height = bottom - top;
+                    }
+                } else if (keyframe.height != undefined) {
+                    height += t * (keyframe.height - height);
                 }
 
                 break;
             }
 
-            if (timelineProperties.left != undefined) {
-                left = timelineProperties.left;
+            if (keyframe.left != undefined) {
+                left = keyframe.left;
             }
-            if (timelineProperties.top != undefined) {
-                top = timelineProperties.top;
+            if (keyframe.top != undefined) {
+                top = keyframe.top;
             }
-            if (timelineProperties.width != undefined) {
-                width = timelineProperties.width;
+            if (keyframe.width != undefined) {
+                width = keyframe.width;
             }
-            if (timelineProperties.height != undefined) {
-                height = timelineProperties.height;
+            if (keyframe.height != undefined) {
+                height = keyframe.height;
             }
         }
 
@@ -3298,35 +3386,34 @@ export class Widget extends Component {
     getTimelineOpacity(timelinePosition: number): number | undefined {
         let opacity: number | undefined;
 
-        for (const timelineProperties of this.timeline) {
-            if (timelinePosition < timelineProperties.start) {
+        for (const keyframe of this.timeline) {
+            if (timelinePosition < keyframe.start) {
                 continue;
             }
 
             if (
-                timelinePosition >= timelineProperties.start &&
-                timelinePosition <= timelineProperties.end
+                timelinePosition >= keyframe.start &&
+                timelinePosition <= keyframe.end
             ) {
-                if (timelineProperties.opacity != undefined) {
+                if (keyframe.opacity != undefined) {
                     const t =
-                        timelineProperties.start == timelineProperties.end
+                        keyframe.start == keyframe.end
                             ? 1
-                            : (timelinePosition - timelineProperties.start) /
-                              (timelineProperties.end -
-                                  timelineProperties.start);
+                            : (timelinePosition - keyframe.start) /
+                              (keyframe.end - keyframe.start);
 
                     if (opacity == undefined) {
                         opacity = 1;
                     }
 
-                    opacity += t * (timelineProperties.opacity - opacity);
+                    opacity += t * (keyframe.opacity - opacity);
                 }
 
                 break;
             }
 
-            if (timelineProperties.opacity != undefined) {
-                opacity = timelineProperties.opacity;
+            if (keyframe.opacity != undefined) {
+                opacity = keyframe.opacity;
             }
         }
 
@@ -3924,4 +4011,24 @@ export function registerActionComponents(
             componentPaletteGroupName
         )
     );
+}
+
+function getTimelineEditorState(component: Component) {
+    if (component instanceof Widget) {
+        const DocumentStore = getDocumentStore(component);
+        const editor = DocumentStore.editorsStore.activeEditor;
+        if (editor) {
+            if (editor.object instanceof ProjectEditor.PageClass) {
+                const pageTabState = editor.state as PageTabState;
+                if (pageTabState.timeline.isEditorActive) {
+                    return pageTabState.timeline;
+                }
+            }
+        }
+    }
+    return undefined;
+}
+
+function isTimelineEditorActive(component: Component) {
+    return getTimelineEditorState(component) != undefined;
 }

@@ -139,51 +139,15 @@ export class WasmRuntime extends RemoteRuntime {
             }
         }
 
-        if (this.DocumentStore.project.isDashboardProject) {
-            this.displayWidth = 1;
-            this.displayHeight = 1;
-        } else {
-            const maxPageWidth = Math.max(
-                ...this.DocumentStore.project.pages.map(page => page.width)
-            );
-            if (this.DocumentStore.project.isFirmwareWithFlowSupportProject) {
-                this.displayWidth = Math.max(
-                    maxPageWidth,
-                    this.DocumentStore.project.settings.general.displayWidth
-                );
-            } else {
-                this.displayWidth = maxPageWidth;
-            }
-        }
-
-        const maxPageHeight = Math.max(
-            ...this.DocumentStore.project.pages.map(page => page.height)
-        );
-        if (this.DocumentStore.project.isFirmwareWithFlowSupportProject) {
-            this.displayHeight = Math.max(
-                maxPageHeight,
-                this.DocumentStore.project.settings.general.displayHeight
-            );
-        } else {
-            this.displayHeight = maxPageHeight;
-        }
-
-        this.displayHeight = Math.min(
-            Math.max(
-                this.DocumentStore.project.isFirmwareWithFlowSupportProject
-                    ? this.DocumentStore.project.settings.general.displayHeight
-                    : maxPageHeight,
-                1
-            ),
-            1280
-        );
-
         this.assetsMap = result.GUI_ASSETS_DATA_MAP_JS as AssetsMap;
         if (!this.assetsMap) {
             this.stopRuntimeWithError("Build error");
             this.DocumentStore.setEditorMode();
             return;
         }
+
+        this.displayWidth = this.assetsMap.displayWidth;
+        this.displayHeight = this.assetsMap.displayHeight;
 
         this.assetsData = result.GUI_ASSETS_DATA;
 

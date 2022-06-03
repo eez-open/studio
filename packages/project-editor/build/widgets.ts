@@ -59,12 +59,12 @@ export function buildWidget(
 
     // timeline
     if (object instanceof ProjectEditor.WidgetClass) {
-        dataBuffer.writeArray(object.timeline, timelineProperties => {
+        dataBuffer.writeArray(object.timeline, keyframe => {
             // start
-            dataBuffer.writeFloat(timelineProperties.start);
+            dataBuffer.writeFloat(keyframe.start);
 
             // end
-            dataBuffer.writeFloat(timelineProperties.end);
+            dataBuffer.writeFloat(keyframe.end);
 
             // enabledProperties
             const WIDGET_TIMELINE_PROPERTY_X = 1 << 0;
@@ -75,41 +75,41 @@ export function buildWidget(
 
             let enabledProperties = 0;
 
-            if (timelineProperties.left != undefined) {
+            if (keyframe.left != undefined) {
                 enabledProperties |= WIDGET_TIMELINE_PROPERTY_X;
             }
-            if (timelineProperties.top != undefined) {
+            if (keyframe.top != undefined) {
                 enabledProperties |= WIDGET_TIMELINE_PROPERTY_Y;
             }
-            if (timelineProperties.width != undefined) {
+            if (keyframe.width != undefined) {
                 enabledProperties |= WIDGET_TIMELINE_PROPERTY_WIDTH;
             }
-            if (timelineProperties.height != undefined) {
+            if (keyframe.height != undefined) {
                 enabledProperties |= WIDGET_TIMELINE_PROPERTY_HEIGHT;
             }
-            if (timelineProperties.opacity != undefined) {
+            if (keyframe.opacity != undefined) {
                 enabledProperties |= WIDGET_TIMELINE_PROPERTY_OPACITY;
             }
 
             dataBuffer.writeUint32(enabledProperties);
 
             // x
-            dataBuffer.writeInt16(timelineProperties.left ?? 0);
+            dataBuffer.writeInt16(keyframe.left ?? 0);
 
             // y
-            dataBuffer.writeInt16(timelineProperties.top ?? 0);
+            dataBuffer.writeInt16(keyframe.top ?? 0);
 
             // width
-            dataBuffer.writeInt16(timelineProperties.width ?? 0);
+            dataBuffer.writeInt16(keyframe.width ?? 0);
 
             // height
-            dataBuffer.writeInt16(timelineProperties.height ?? 0);
+            dataBuffer.writeInt16(keyframe.height ?? 0);
 
             // opacity
-            dataBuffer.writeFloat(timelineProperties.opacity ?? 0);
+            dataBuffer.writeFloat(keyframe.opacity ?? 0);
         });
     } else {
-        dataBuffer.writeArray([], timelineProperties => {});
+        dataBuffer.writeArray([], keyframe => {});
     }
 
     // specific

@@ -3,60 +3,36 @@ import { observable, runInAction, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
 export const SvgLabel = observer(
-    class SvgLabel extends React.Component<
-        {
-            text: string;
-            x: number;
-            y: number;
-            horizontalAlignment?: "left" | "center" | "right";
-            verticalAlignment?: "top" | "center" | "bottom";
-            border?: {
-                size?: number;
-                color?: string;
-                radius?: number;
-            };
-            padding?: {
-                left?: number;
-                top?: number;
-                right?: number;
-                bottom?: number;
-            };
-            backgroundColor?: string;
-            textColor?: string;
-            textWeight?: string;
-            rectStyle?: React.CSSProperties;
-            textClassName?: string;
-        },
-        {}
-    > {
+    class SvgLabel extends React.Component<{
+        text: string;
+        x: number;
+        y: number;
+        horizontalAlignment?: "left" | "center" | "right";
+        verticalAlignment?: "top" | "center" | "bottom";
+        border?: {
+            size?: number;
+            color?: string;
+            radius?: number;
+        };
+        padding?: {
+            left?: number;
+            top?: number;
+            right?: number;
+            bottom?: number;
+        };
+        backgroundColor?: string;
+        textColor?: string;
+        textWeight?: string;
+        rectStyle?: React.CSSProperties;
+        rectClassName?: string;
+        textClassName?: string;
+    }> {
         myRef = React.createRef<SVGTextElement>();
 
         contentWidth: number = 0;
         contentHeight: number = 0;
 
-        constructor(props: {
-            text: string;
-            x: number;
-            y: number;
-            horizontalAlignment?: "left" | "center" | "right";
-            verticalAlignment?: "top" | "center" | "bottom";
-            border?: {
-                size?: number;
-                color?: string;
-                radius?: number;
-            };
-            padding?: {
-                left?: number;
-                top?: number;
-                right?: number;
-                bottom?: number;
-            };
-            backgroundColor?: string;
-            textColor?: string;
-            textWeight?: string;
-            rectStyle?: React.CSSProperties;
-            textClassName?: string;
-        }) {
+        constructor(props: any) {
             super(props);
 
             makeObservable(this, {
@@ -163,6 +139,7 @@ export const SvgLabel = observer(
                         stroke={this.border.color}
                         strokeWidth={this.border.size}
                         style={this.props.rectStyle}
+                        className={this.props.rectClassName}
                     />
                     <text
                         ref={this.myRef}

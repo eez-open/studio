@@ -24,10 +24,7 @@ import {
 
 import type { PageTabState } from "project-editor/features/page/PageEditor";
 import { createTransformer } from "mobx-utils";
-import type {
-    Widget,
-    WidgetTimelineProperties
-} from "project-editor/flow/component";
+import type { Widget, TimelineKeyframe } from "project-editor/flow/component";
 import { Draggable } from "eez-studio-ui/draggable";
 import { closestBySelector } from "eez-studio-shared/dom";
 import {
@@ -39,6 +36,7 @@ import { ProjectContext } from "project-editor/project/context";
 import { isRectInsideRect, Rect } from "eez-studio-shared/geometry";
 import { addAlphaToColor } from "eez-studio-shared/color";
 import { theme } from "eez-studio-ui/theme";
+import { SvgLabel } from "eez-studio-ui/svg-label";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -47,8 +45,8 @@ const OUTLINE_LEVEL_MARGIN = 20;
 const TIMELINE_X_OFFSET = 10;
 const TIMELINE_HEIGHT = 40;
 const ROW_HEIGHT = 20;
-const POINT_RADIUS = 3;
-const ROW_GAP = 2;
+const POINT_RADIUS = 4;
+const ROW_GAP = 3;
 const NEEDLE_WIDTH = 4;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +58,7 @@ export class PageTimelineEditorState {
     scrollLeft: number;
     scrollTop: number;
     secondToPx: number = 200;
-    selectedSegments: WidgetTimelineProperties[] = [];
+    selectedKeyframes: TimelineKeyframe[] = [];
     rubberBendRect: Rect | undefined;
 
     constructor(private tabState: PageTabState) {
@@ -75,7 +73,7 @@ export class PageTimelineEditorState {
             scrollLeft: observable,
             scrollTop: observable,
             secondToPx: observable,
-            selectedSegments: observable,
+            selectedKeyframes: observable,
             rubberBendRect: observable,
             timelineHeight: computed,
             timelineWidth: computed
@@ -180,23 +178,23 @@ export const PageTimelineEditor = observer(
 
         // interface IPanel implementation
         get selectedObject() {
-            return this.props.tabState.timeline.selectedSegments.length > 0
-                ? this.props.tabState.timeline.selectedSegments[0]
+            return this.props.tabState.timeline.selectedKeyframes.length > 0
+                ? this.props.tabState.timeline.selectedKeyframes[0]
                 : undefined;
         }
         get selectedObjects() {
-            return this.props.tabState.timeline.selectedSegments;
+            return this.props.tabState.timeline.selectedKeyframes;
         }
         cutSelection() {}
         copySelection() {}
         pasteSelection() {}
         deleteSelection() {
-            if (this.props.tabState.timeline.selectedSegments.length > 0) {
+            if (this.props.tabState.timeline.selectedKeyframes.length > 0) {
                 this.context.deleteObjects(
-                    this.props.tabState.timeline.selectedSegments
+                    this.props.tabState.timeline.selectedKeyframes
                 );
                 runInAction(() => {
-                    this.props.tabState.timeline.selectedSegments = [];
+                    this.props.tabState.timeline.selectedKeyframes = [];
                 });
             }
         }
@@ -385,23 +383,23 @@ const TimelineEditor = observer(
 
             if (y < TIMELINE_HEIGHT) {
                 runInAction(() => {
-                    this.props.timelineState.selectedSegments = [];
+                    this.props.timelineState.selectedKeyframes = [];
                 });
 
                 this.setTimelinePosition(x);
                 this.dragMode = "timeline-position";
             } else {
-                const widgetTimelineProperties = (() => {
-                    const segment: HTMLElement = closestBySelector(
+                const keyframe = (() => {
+                    const keyframeElement: HTMLElement = closestBySelector(
                         e.target,
-                        "[data-timeline-segment-object-path]"
+                        "[data-timeline-keyframe-object-path]"
                     );
-                    if (!segment) {
+                    if (!keyframeElement) {
                         return undefined;
                     }
 
-                    const objectPath = segment.getAttribute(
-                        "data-timeline-segment-object-path"
+                    const objectPath = keyframeElement.getAttribute(
+                        "data-timeline-keyframe-object-path"
                     );
                     if (!objectPath) {
                         return undefined;
@@ -410,58 +408,58 @@ const TimelineEditor = observer(
                     return getObjectFromStringPath(
                         this.context.project,
                         objectPath
-                    ) as WidgetTimelineProperties | undefined;
+                    ) as TimelineKeyframe | undefined;
                 })();
 
-                if (widgetTimelineProperties) {
+                if (keyframe) {
                     runInAction(() => {
                         if (e.ctrlKey || e.shiftKey) {
                             const i =
-                                this.props.timelineState.selectedSegments.indexOf(
-                                    widgetTimelineProperties
+                                this.props.timelineState.selectedKeyframes.indexOf(
+                                    keyframe
                                 );
                             if (i == -1) {
-                                this.props.timelineState.selectedSegments.push(
-                                    widgetTimelineProperties
+                                this.props.timelineState.selectedKeyframes.push(
+                                    keyframe
                                 );
 
                                 this.props.timelineState.position =
-                                    widgetTimelineProperties.end;
+                                    keyframe.end;
                             } else {
-                                this.props.timelineState.selectedSegments.splice(
+                                this.props.timelineState.selectedKeyframes.splice(
                                     i,
                                     1
                                 );
                                 if (
-                                    this.props.timelineState.selectedSegments
+                                    this.props.timelineState.selectedKeyframes
                                         .length > 0
                                 ) {
                                     this.props.timelineState.position =
-                                        this.props.timelineState.selectedSegments[
+                                        this.props.timelineState.selectedKeyframes[
                                             this.props.timelineState
-                                                .selectedSegments.length - 1
+                                                .selectedKeyframes.length - 1
                                         ].end;
                                 }
                             }
                         } else {
                             if (
-                                this.props.timelineState.selectedSegments.indexOf(
-                                    widgetTimelineProperties
+                                this.props.timelineState.selectedKeyframes.indexOf(
+                                    keyframe
                                 ) == -1
                             ) {
-                                this.props.timelineState.selectedSegments = [
-                                    widgetTimelineProperties
+                                this.props.timelineState.selectedKeyframes = [
+                                    keyframe
                                 ];
 
                                 this.props.timelineState.position =
-                                    widgetTimelineProperties.end;
+                                    keyframe.end;
                             }
                         }
                     });
                     this.dragMode = "none";
                 } else {
                     runInAction(() => {
-                        this.props.timelineState.selectedSegments = [];
+                        this.props.timelineState.selectedKeyframes = [];
                         this.props.timelineState.rubberBendRect = {
                             left: x,
                             top: y,
@@ -519,7 +517,7 @@ const TimelineEditor = observer(
             params: any
         ) => {
             if (this.dragMode == "rubber-bend") {
-                const selectedSegments: WidgetTimelineProperties[] = [];
+                const selectedKeyframes: TimelineKeyframe[] = [];
 
                 const timelineState = this.props.timelineState;
 
@@ -530,29 +528,29 @@ const TimelineEditor = observer(
                         row.item
                     ) as Widget;
 
-                    widget.timeline.forEach(timelineProperties => {
+                    widget.timeline.forEach(keyframe => {
                         const { x1, y1, x2, y2 } = getTimelineCircleRect(
                             timelineState,
-                            timelineProperties,
+                            keyframe,
                             rowIndex
                         );
 
-                        const segmentRect: Rect = {
+                        const keyframeRect: Rect = {
                             left: x1,
                             top: y1,
                             width: x2 - x1,
                             height: y2 - y1
                         };
 
-                        if (isRectInsideRect(segmentRect, rubberBendRect)) {
-                            selectedSegments.push(timelineProperties);
+                        if (isRectInsideRect(keyframeRect, rubberBendRect)) {
+                            selectedKeyframes.push(keyframe);
                         }
                     });
                 });
 
                 runInAction(() => {
-                    this.props.timelineState.selectedSegments =
-                        selectedSegments;
+                    this.props.timelineState.selectedKeyframes =
+                        selectedKeyframes;
                     this.props.timelineState.rubberBendRect = undefined;
                 });
             }
@@ -587,42 +585,30 @@ const TimelineEditor = observer(
             }
         };
 
-        get ticks() {
-            let delta;
-            if (this.props.timelineState.secondToPx > 600) {
-                delta = 0.1;
-            } else {
-                delta = 1;
-            }
-
+        genTicks(delta: number) {
             const ticks = [];
             for (
                 let i = 0;
-                i <= this.props.timelineState.duration;
-                i += delta
+                i <= Math.floor(this.props.timelineState.duration / delta);
+                i++
             ) {
-                ticks.push(i);
+                ticks.push(i * delta);
             }
             return ticks;
         }
 
-        get subticks() {
-            let delta;
+        get ticks() {
             if (this.props.timelineState.secondToPx > 600) {
-                delta = 0.01;
-            } else {
-                delta = 0.1;
+                return this.genTicks(0.1);
             }
+            return this.genTicks(1);
+        }
 
-            const ticks = [];
-            for (
-                let i = 0;
-                i <= this.props.timelineState.duration;
-                i += delta
-            ) {
-                ticks.push(i);
+        get subticks() {
+            if (this.props.timelineState.secondToPx > 600) {
+                return this.genTicks(0.01);
             }
-            return ticks;
+            return this.genTicks(0.1);
         }
 
         render() {
@@ -674,7 +660,10 @@ const Timeline = observer(
         subticks: number[];
     }) => {
         return (
-            <g transform={`translate(${-timelineState.scrollLeft}, 0)`}>
+            <g
+                transform={`translate(${-timelineState.scrollLeft}, 0)`}
+                style={{ shapeRendering: "crispEdges" }}
+            >
                 <rect
                     className="EezStudio_PageTimeline_Timeline_Timeline_Area"
                     x={0}
@@ -777,20 +766,31 @@ const Timeline = observer(
                     }
                 />
 
-                <text
-                    className="EezStudio_PageTimeline_Timeline_Timeline_Needle"
+                <SvgLabel
+                    text={(
+                        Math.round(timelineState.position * 1000) / 1000
+                    ).toString()}
+                    textClassName="EezStudio_PageTimeline_Timeline_Timeline_Needle"
+                    rectClassName="EezStudio_PageTimeline_Timeline_Timeline_Needle_TextBackground"
                     x={
                         TIMELINE_X_OFFSET +
                         timelineState.position * timelineState.secondToPx +
                         4
                     }
-                    y={0}
-                    textAnchor="left"
-                    alignmentBaseline="hanging"
-                    style={{ cursor: "ew-resize" }}
-                >
-                    {Math.round(timelineState.position * 1000) / 1000}
-                </text>
+                    y={-3}
+                    horizontalAlignment="left"
+                    verticalAlignment="top"
+                    border={{
+                        size: 0,
+                        radius: 0
+                    }}
+                    padding={{
+                        left: 4,
+                        top: 0,
+                        right: 4,
+                        bottom: 0
+                    }}
+                />
             </g>
         );
     }
@@ -820,24 +820,24 @@ const Rows = observer(
 
                     return (
                         <g key={timelineState.treeAdapter.getItemId(row.item)}>
-                            {widget.timeline.map((timelineProperties, i) => {
+                            {widget.timeline.map((keyframe, i) => {
                                 const { cx, cy, x1, y1, x2, y2 } =
                                     getTimelineCircleRect(
                                         timelineState,
-                                        timelineProperties,
+                                        keyframe,
                                         rowIndex
                                     );
 
                                 return (
                                     <g
-                                        key={getId(timelineProperties)}
-                                        data-timeline-segment-object-path={getObjectPathAsString(
-                                            timelineProperties
+                                        key={getId(keyframe)}
+                                        data-timeline-keyframe-object-path={getObjectPathAsString(
+                                            keyframe
                                         )}
                                     >
                                         <circle
-                                            data-timeline-segment-object-path={getObjectPathAsString(
-                                                timelineProperties
+                                            data-timeline-keyframe-object-path={getObjectPathAsString(
+                                                keyframe
                                             )}
                                             className="EezStudio_PageTimeline_Timeline_Point"
                                             cx={cx}
@@ -845,17 +845,16 @@ const Rows = observer(
                                             r={POINT_RADIUS}
                                         ></circle>
 
-                                        {timelineState.selectedSegments.indexOf(
-                                            timelineProperties
+                                        {timelineState.selectedKeyframes.indexOf(
+                                            keyframe
                                         ) != -1 &&
-                                            timelineProperties.start ==
-                                                timelineProperties.end && (
+                                            keyframe.start == keyframe.end && (
                                                 <rect
-                                                    className="EezStudio_PageTimeline_Timeline_SegmentSelection"
-                                                    x={x1 - 1}
-                                                    y={y1 - 1}
-                                                    width={x2 - x1 + 2}
-                                                    height={y2 - y1 + 2}
+                                                    className="EezStudio_PageTimeline_Timeline_KeyframeSelection"
+                                                    x={x1 - 2}
+                                                    y={y1 - 2}
+                                                    width={x2 - x1 + 4}
+                                                    height={y2 - y1 + 4}
                                                 ></rect>
                                             )}
                                     </g>
@@ -891,19 +890,17 @@ const Row = observer(
                     y={TIMELINE_HEIGHT + rowIndex * ROW_HEIGHT + ROW_GAP / 2}
                     width={timelineState.duration * timelineState.secondToPx}
                     height={ROW_HEIGHT - ROW_GAP}
+                    style={{ shapeRendering: "crispEdges" }}
                 ></rect>
 
                 {widget.timeline
-                    .filter(
-                        timelineProperties =>
-                            timelineProperties.start < timelineProperties.end
-                    )
-                    .map(timelineProperties => (
-                        <Segment
-                            key={getId(timelineProperties)}
+                    .filter(keyframe => keyframe.start < keyframe.end)
+                    .map(keyframe => (
+                        <Keyframe
+                            key={getId(keyframe)}
                             timelineState={timelineState}
                             rowIndex={rowIndex}
-                            timelineProperties={timelineProperties}
+                            keyframe={keyframe}
                         />
                     ))}
             </g>
@@ -911,31 +908,28 @@ const Row = observer(
     }
 );
 
-const Segment = observer(
+const Keyframe = observer(
     ({
         timelineState,
         rowIndex,
-        timelineProperties
+        keyframe
     }: {
         timelineState: PageTimelineEditorState;
         rowIndex: number;
-        timelineProperties: WidgetTimelineProperties;
+        keyframe: TimelineKeyframe;
     }) => {
         const x1 =
-            TIMELINE_X_OFFSET +
-            timelineProperties.start * timelineState.secondToPx;
+            TIMELINE_X_OFFSET + keyframe.start * timelineState.secondToPx;
 
-        const x2 =
-            TIMELINE_X_OFFSET +
-            timelineProperties.end * timelineState.secondToPx;
+        const x2 = TIMELINE_X_OFFSET + keyframe.end * timelineState.secondToPx;
 
         const y1 = TIMELINE_HEIGHT + rowIndex * ROW_HEIGHT + ROW_GAP / 2;
 
         const y2 = y1 + ROW_HEIGHT - ROW_GAP;
 
-        const SEGMENT_MAX_OFFSET = 8;
+        const KEYFRAME_MAX_OFFSET = 8;
 
-        const offset = Math.min(x2 - x1, SEGMENT_MAX_OFFSET);
+        const offset = Math.min(x2 - x1, KEYFRAME_MAX_OFFSET);
 
         const path =
             `M${x1},${(y1 + y2) / 2} ` +
@@ -953,18 +947,17 @@ const Segment = observer(
 
         return (
             <g
-                data-timeline-segment-object-path={getObjectPathAsString(
-                    timelineProperties
+                data-timeline-keyframe-object-path={getObjectPathAsString(
+                    keyframe
                 )}
             >
                 <path
-                    className="EezStudio_PageTimeline_Timeline_Segment"
+                    className="EezStudio_PageTimeline_Timeline_Keyframe"
                     d={path}
                 ></path>
-                {timelineState.selectedSegments.indexOf(timelineProperties) !=
-                    -1 && (
+                {timelineState.selectedKeyframes.indexOf(keyframe) != -1 && (
                     <rect
-                        className="EezStudio_PageTimeline_Timeline_SegmentSelection"
+                        className="EezStudio_PageTimeline_Timeline_KeyframeSelection"
                         x={x1 - 1}
                         y={y1 - 1}
                         width={x2 - x1 + 2}
@@ -980,11 +973,10 @@ const Segment = observer(
 
 function getTimelineCircleRect(
     timelineState: PageTimelineEditorState,
-    timelineProperties: WidgetTimelineProperties,
+    keyframe: TimelineKeyframe,
     rowIndex: number
 ) {
-    const cx =
-        TIMELINE_X_OFFSET + timelineProperties.end * timelineState.secondToPx;
+    const cx = TIMELINE_X_OFFSET + keyframe.end * timelineState.secondToPx;
 
     const cy = TIMELINE_HEIGHT + rowIndex * ROW_HEIGHT + ROW_HEIGHT / 2;
 

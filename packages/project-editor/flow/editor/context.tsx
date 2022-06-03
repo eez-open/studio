@@ -2,7 +2,7 @@ import { observable, computed, action, makeObservable } from "mobx";
 
 import { BoundingRectBuilder } from "eez-studio-shared/geometry";
 
-import { getDocumentStore } from "project-editor/store";
+import { getClassInfo, getDocumentStore } from "project-editor/store";
 
 import {
     ITreeObjectAdapter,
@@ -191,70 +191,73 @@ class ViewState implements IViewState {
             | "home-y"
             | "end-y"
     ) {
-        const widgets =
+        const components =
             this.document &&
             (this.document.flow.selectedObjects.filter(
                 object => object instanceof Component
             ) as Component[]);
 
-        if (!widgets || widgets.length === 0) {
+        if (!components || components.length === 0) {
             return;
         }
 
         const builder = new BoundingRectBuilder();
-        widgets.forEach(widget => {
+        components.forEach(widget => {
             builder.addRect(widget.rect);
         });
         const boundingRect = builder.getRect();
 
-        const allWidgetsAreFromTheSameParent = !widgets.find(
-            widget => getWidgetParent(widget) !== getWidgetParent(widgets[0])
+        const allWidgetsAreFromTheSameParent = !components.find(
+            widget => getWidgetParent(widget) !== getWidgetParent(components[0])
         );
 
-        const DocumentStore = getDocumentStore(widgets[0]);
+        const DocumentStore = getDocumentStore(components[0]);
 
         DocumentStore.undoManager.setCombineCommands(true);
 
-        widgets.forEach(widget => {
+        components.forEach(component => {
+            const classInfo = getClassInfo(component);
+            const setRect = classInfo.setRect!;
+
             if (where === "left") {
-                DocumentStore.updateObject(widget, {
-                    left: widget.rect.left - 1
+                setRect(component, {
+                    left: component.rect.left - 1
                 });
             } else if (where === "up") {
-                DocumentStore.updateObject(widget, {
-                    top: widget.rect.top - 1
+                setRect(component, {
+                    top: component.rect.top - 1
                 });
             } else if (where === "right") {
-                DocumentStore.updateObject(widget, {
-                    left: widget.rect.left + 1
+                setRect(component, {
+                    left: component.rect.left + 1
                 });
             } else if (where === "down") {
-                DocumentStore.updateObject(widget, {
-                    top: widget.rect.top + 1
+                setRect(component, {
+                    top: component.rect.top + 1
                 });
             } else if (allWidgetsAreFromTheSameParent) {
                 if (where === "home-x") {
-                    DocumentStore.updateObject(widget, {
-                        left: 0 + widget.rect.left - boundingRect.left
+                    setRect(component, {
+                        left: 0 + component.rect.left - boundingRect.left
                     });
                 } else if (where === "end-x") {
-                    DocumentStore.updateObject(widget, {
+                    setRect(component, {
                         left:
-                            getWidgetParent(widget).width -
+                            getWidgetParent(component).width -
                             boundingRect.width +
-                            widget.rect.left -
+                            component.rect.left -
                             boundingRect.left
                     });
                 } else if (where === "home-y") {
-                    DocumentStore.updateObject(widget, {
-                        top: 0 + widget.rect.top - boundingRect.top
+                    setRect(component, {
+                        top: 0 + component.rect.top - boundingRect.top
                     });
                 } else if (where === "end-y") {
-                    DocumentStore.updateObject(widget, {
+                    setRect(component, {
                         top:
-                            getWidgetParent(widget).height -
+                            getWidgetParent(component).height -
                             boundingRect.height +
-                            widget.rect.top -
+                            component.rect.top -
                             boundingRect.top
                     });
                 }
