@@ -1175,14 +1175,14 @@
               "height": 0
             },
             {
-              "start": 1,
-              "end": 1.5,
+              "start": 0,
+              "end": 0.5,
               "top": 0,
               "height": 20
             },
             {
-              "start": 1.5,
-              "end": 2,
+              "start": 2.5,
+              "end": 3,
               "top": 20,
               "height": 0
             }
@@ -1241,16 +1241,16 @@
               "height": 0
             },
             {
-              "start": 0,
-              "end": 0.5,
+              "start": 1,
+              "end": 1.5,
               "left": 22,
               "top": 0,
               "width": 8,
               "height": 20
             },
             {
-              "start": 2.5,
-              "end": 3,
+              "start": 1.5,
+              "end": 2,
               "top": 20,
               "height": 0
             }
