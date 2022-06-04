@@ -1,0 +1,1368 @@
+{
+  "settings": {
+    "general": {
+      "projectVersion": "v3",
+      "projectType": "dashboard",
+      "imports": []
+    },
+    "build": {
+      "configurations": [
+        {
+          "name": "Default"
+        }
+      ],
+      "files": []
+    }
+  },
+  "variables": {
+    "globalVariables": [],
+    "structures": [],
+    "enums": []
+  },
+  "actions": [],
+  "pages": [
+    {
+      "components": [
+        {
+          "type": "ContainerWidget",
+          "left": 691,
+          "top": 84,
+          "width": 109,
+          "height": 324,
+          "wireID": "fcc62c70-b87b-40ae-cb7d-5bec10de8f74",
+          "customInputs": [],
+          "customOutputs": [],
+          "style": {
+            "inheritFrom": "default"
+          },
+          "timeline": [],
+          "widgets": [
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 0,
+              "width": 64,
+              "height": 32,
+              "wireID": "5db3b1d3-927f-4fc4-a628-caf792fd16ee",
+              "customInputs": [],
+              "customOutputs": [],
+              "data": "\"Text 1\"",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "timeline": [
+                {
+                  "start": 0.5,
+                  "end": 0.5,
+                  "left": 45,
+                  "top": 228,
+                  "width": 64,
+                  "height": 32
+                },
+                {
+                  "start": 0.5,
+                  "end": 1,
+                  "left": 25,
+                  "top": 19,
+                  "width": 64,
+                  "height": 32
+                },
+                {
+                  "start": 0,
+                  "end": 0.5,
+                  "left": 45,
+                  "top": 228,
+                  "width": 64,
+                  "height": 32
+                },
+                {
+                  "start": 1.1,
+                  "end": 1.3,
+                  "left": 15,
+                  "top": 92,
+                  "width": 64,
+                  "height": 32
+                }
+              ]
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 32,
+              "width": 64,
+              "height": 32,
+              "wireID": "b39e1b90-75c2-45d8-be8d-1a093531a3a8",
+              "customInputs": [],
+              "customOutputs": [],
+              "data": "\"Text 2\"",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "timeline": [
+                {
+                  "start": 0,
+                  "end": 0,
+                  "left": 0,
+                  "top": 32,
+                  "width": 64,
+                  "height": 32
+                },
+                {
+                  "start": 0,
+                  "end": 0.5,
+                  "left": 45,
+                  "top": 260,
+                  "width": 64,
+                  "height": 32
+                }
+              ]
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 64,
+              "width": 64,
+              "height": 32,
+              "wireID": "a46bca4a-115f-4c76-d820-cd5a3b328fc5",
+              "customInputs": [],
+              "customOutputs": [],
+              "data": "\"Text 3\"",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "timeline": [
+                {
+                  "start": 0.5,
+                  "end": 0.5,
+                  "left": 45,
+                  "top": 292,
+                  "width": 64,
+                  "height": 32
+                },
+                {
+                  "start": 0.5,
+                  "end": 2,
+                  "left": 8,
+                  "top": 136,
+                  "width": 64,
+                  "height": 32
+                },
+                {
+                  "start": 0,
+                  "end": 0.5,
+                  "left": 45,
+                  "top": 292,
+                  "width": 64,
+                  "height": 32,
+                  "opacity": 0
+                }
+              ]
+            }
+          ],
+          "layout": "static"
+        },
+        {
+          "type": "TextWidget",
+          "left": 0,
+          "top": 0,
+          "width": 160,
+          "height": 56,
+          "wireID": "ea7eb013-6c4a-4647-ff9f-0f2f5df1d137",
+          "customInputs": [],
+          "customOutputs": [],
+          "asOutputProperties": [
+            "action"
+          ],
+          "data": "\"Albert Einstein\"",
+          "style": {
+            "inheritFrom": "tab"
+          },
+          "timeline": []
+        },
+        {
+          "type": "TextWidget",
+          "left": 0,
+          "top": 63,
+          "width": 400,
+          "height": 60,
+          "wireID": "871bc7ce-c53e-479a-89e8-41306e538877",
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "\"“Two things are infinite: the universe and human stupidity; and I'm not sure about the universe.”\"",
+          "style": {
+            "inheritFrom": "quote"
+          },
+          "timeline": [
+            {
+              "start": 0,
+              "end": 0,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 1
+            },
+            {
+              "start": 0,
+              "end": 0.5,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 0
+            },
+            {
+              "start": 0.5,
+              "end": 1,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 0
+            },
+            {
+              "start": 1,
+              "end": 1.5,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 0
+            },
+            {
+              "start": 1.5,
+              "end": 2,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 0
+            }
+          ]
+        },
+        {
+          "type": "TextWidget",
+          "left": 160,
+          "top": 0,
+          "width": 160,
+          "height": 56,
+          "wireID": "cfb4e34b-21a5-4673-ff2b-9e8491fdad17",
+          "customInputs": [],
+          "customOutputs": [],
+          "asOutputProperties": [
+            "action"
+          ],
+          "data": "\"Marilyn Monroe\"",
+          "style": {
+            "inheritFrom": "tab"
+          },
+          "timeline": [],
+          "name": ""
+        },
+        {
+          "type": "TextWidget",
+          "left": 0,
+          "top": 142,
+          "width": 400,
+          "height": 60,
+          "wireID": "867cb574-8d88-4dd9-baaf-e3d6b219ce27",
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "\"“I'm selfish, impatient and a little insecure. I make mistakes, I am out of control and at times hard to handle. But if you can't handle me at my worst, then you sure as hell don't deserve me at my best.”\"",
+          "style": {
+            "inheritFrom": "quote",
+            "opacity": 0
+          },
+          "timeline": [
+            {
+              "start": 0,
+              "end": 0,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 0
+            },
+            {
+              "start": 0,
+              "end": 0.5,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 1
+            },
+            {
+              "start": 0.5,
+              "end": 1,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 0
+            },
+            {
+              "start": 1,
+              "end": 1.5,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 0
+            },
+            {
+              "start": 1.5,
+              "end": 2,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 0
+            }
+          ]
+        },
+        {
+          "type": "TextWidget",
+          "left": 320,
+          "top": 0,
+          "width": 160,
+          "height": 56,
+          "wireID": "f074da15-1c5c-4a7e-fde5-aa877523682c",
+          "customInputs": [],
+          "customOutputs": [],
+          "asOutputProperties": [
+            "action"
+          ],
+          "data": "\"Albert Camus\"",
+          "style": {
+            "inheritFrom": "tab"
+          },
+          "timeline": []
+        },
+        {
+          "type": "TextWidget",
+          "left": 0,
+          "top": 232,
+          "width": 400,
+          "height": 60,
+          "wireID": "c081a593-c6b6-4c60-856e-ef7aaf5ed334",
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "\"“Don’t walk in front of me… I may not follow Don’t walk behind me… I may not lead Walk beside me… just be my friend”\"",
+          "style": {
+            "inheritFrom": "quote",
+            "opacity": 0
+          },
+          "timeline": [
+            {
+              "start": 0,
+              "end": 0,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 0
+            },
+            {
+              "start": 0,
+              "end": 0.5,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 0
+            },
+            {
+              "start": 0.5,
+              "end": 1,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 1
+            },
+            {
+              "start": 1,
+              "end": 1.5,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 0
+            },
+            {
+              "start": 1.5,
+              "end": 2,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 0
+            }
+          ]
+        },
+        {
+          "type": "TextWidget",
+          "left": 480,
+          "top": 0,
+          "width": 160,
+          "height": 56,
+          "wireID": "f8a61bce-986c-4de0-ac3a-ede4989b0b14",
+          "customInputs": [],
+          "customOutputs": [],
+          "asOutputProperties": [
+            "action"
+          ],
+          "data": "\"Oscar Wilde\"",
+          "style": {
+            "inheritFrom": "tab"
+          },
+          "timeline": []
+        },
+        {
+          "type": "TextWidget",
+          "left": 0,
+          "top": 322,
+          "width": 400,
+          "height": 60,
+          "wireID": "515c0944-9b6b-48aa-f6b1-43b9c35656cd",
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "\"“I am so clever that sometimes I don't understand a single word of what I am saying.”\"",
+          "style": {
+            "inheritFrom": "quote",
+            "opacity": 0
+          },
+          "timeline": [
+            {
+              "start": 0,
+              "end": 0,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 0
+            },
+            {
+              "start": 0,
+              "end": 0.5,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 0
+            },
+            {
+              "start": 0.5,
+              "end": 1,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 0
+            },
+            {
+              "start": 1,
+              "end": 1.5,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 1
+            },
+            {
+              "start": 1.5,
+              "end": 2,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 0
+            }
+          ]
+        },
+        {
+          "type": "TextWidget",
+          "left": 640,
+          "top": 0,
+          "width": 160,
+          "height": 56,
+          "wireID": "bd34555d-f94b-48ef-e2a8-6cef2344e8fa",
+          "customInputs": [],
+          "customOutputs": [],
+          "asOutputProperties": [
+            "action"
+          ],
+          "data": "\"Mark Twain\"",
+          "style": {
+            "inheritFrom": "tab"
+          },
+          "timeline": []
+        },
+        {
+          "type": "TextWidget",
+          "left": 0,
+          "top": 388,
+          "width": 400,
+          "height": 60,
+          "wireID": "db82426c-2b64-4344-b72b-a2e335d75ea7",
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "\"“If you tell the truth, you don't have to remember anything.”\"",
+          "style": {
+            "inheritFrom": "quote",
+            "opacity": 0
+          },
+          "locked": false,
+          "timeline": [
+            {
+              "start": 0,
+              "end": 0,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 0
+            },
+            {
+              "start": 0,
+              "end": 0.5,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 0
+            },
+            {
+              "start": 0.5,
+              "end": 1,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 0
+            },
+            {
+              "start": 1,
+              "end": 1.5,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 0
+            },
+            {
+              "start": 1.5,
+              "end": 2,
+              "left": 200,
+              "top": 90,
+              "width": 400,
+              "height": 360,
+              "opacity": 1
+            }
+          ]
+        },
+        {
+          "type": "ContainerWidget",
+          "left": 0,
+          "top": 56,
+          "width": 160,
+          "height": 4,
+          "wireID": "767d9732-ad46-4595-bd0e-d74ffe365a7f",
+          "customInputs": [],
+          "customOutputs": [],
+          "style": {
+            "inheritFrom": "default",
+            "backgroundColor": "#4a27e9"
+          },
+          "timeline": [
+            {
+              "start": 0,
+              "end": 0,
+              "left": 0,
+              "top": 57,
+              "width": 160,
+              "height": 4
+            },
+            {
+              "start": 0,
+              "end": 0.5,
+              "left": 160,
+              "top": 56,
+              "width": 160,
+              "height": 4
+            },
+            {
+              "start": 0.5,
+              "end": 1,
+              "left": 320,
+              "top": 56,
+              "width": 160,
+              "height": 4
+            },
+            {
+              "start": 1,
+              "end": 1.5,
+              "left": 480,
+              "top": 56,
+              "width": 160,
+              "height": 4
+            },
+            {
+              "start": 1.5,
+              "end": 2,
+              "left": 640,
+              "top": 56,
+              "width": 160,
+              "height": 4
+            }
+          ],
+          "widgets": [],
+          "layout": "static"
+        },
+        {
+          "type": "AnimateActionComponent",
+          "left": 51,
+          "top": -137,
+          "width": 87,
+          "height": 55,
+          "wireID": "bfac3c4c-58da-4686-fa0f-095f7a3c3fc0",
+          "customInputs": [],
+          "customOutputs": [],
+          "speed": "Math.abs(Flow.pageTimelinePosition() - 0) / 0.25",
+          "time": "0"
+        },
+        {
+          "type": "AnimateActionComponent",
+          "left": 211,
+          "top": -137,
+          "width": 87,
+          "height": 55,
+          "wireID": "9c9efb9a-7600-424b-e636-06a64a256192",
+          "customInputs": [],
+          "customOutputs": [],
+          "speed": "Math.abs(Flow.pageTimelinePosition() - 0.5) / 0.25",
+          "time": "0.5"
+        },
+        {
+          "type": "AnimateActionComponent",
+          "left": 371,
+          "top": -137,
+          "width": 87,
+          "height": 55,
+          "wireID": "d2eabd82-2dc9-4862-a82d-25741005e835",
+          "customInputs": [],
+          "customOutputs": [],
+          "speed": "Math.abs(Flow.pageTimelinePosition() - 1.0) / 0.25",
+          "time": "1.0"
+        },
+        {
+          "type": "AnimateActionComponent",
+          "left": 531,
+          "top": -137,
+          "width": 87,
+          "height": 55,
+          "wireID": "87a59ce7-b51d-4baf-8b4b-db0d81190aeb",
+          "customInputs": [],
+          "customOutputs": [],
+          "speed": "Math.abs(Flow.pageTimelinePosition() - 1.5) / 0.25",
+          "time": "1.5"
+        },
+        {
+          "type": "AnimateActionComponent",
+          "left": 691,
+          "top": -137,
+          "width": 87,
+          "height": 55,
+          "wireID": "fbf9c2a0-1747-40e2-83c3-7f252e11ec55",
+          "customInputs": [],
+          "customOutputs": [],
+          "speed": "Math.abs(Flow.pageTimelinePosition() - 2.0) / 0.25",
+          "time": "2.0"
+        },
+        {
+          "type": "StartActionComponent",
+          "left": -145,
+          "top": -184,
+          "width": 87,
+          "height": 25,
+          "wireID": "d4e5eba1-7162-4e49-a46b-9298e1f569c4",
+          "customInputs": [],
+          "customOutputs": []
+        },
+        {
+          "type": "ButtonWidget",
+          "left": 4,
+          "top": 414,
+          "width": 64,
+          "height": 32,
+          "wireID": "26a87451-1428-49c8-daa8-403bbb0d18fe",
+          "customInputs": [],
+          "customOutputs": [],
+          "asOutputProperties": [
+            "action"
+          ],
+          "data": "\"Page 2\"",
+          "style": {
+            "inheritFrom": "default"
+          },
+          "timeline": [],
+          "disabledStyle": {
+            "inheritFrom": "default"
+          }
+        },
+        {
+          "type": "ShowPageActionComponent",
+          "left": 103,
+          "top": 475,
+          "width": 97,
+          "height": 55,
+          "wireID": "4ede99ef-45da-426b-eab3-3e9cf3f31b18",
+          "customInputs": [],
+          "customOutputs": [],
+          "page": "Page2"
+        },
+        {
+          "type": "LayoutViewWidget",
+          "left": 385.5,
+          "top": 215.5,
+          "width": 30,
+          "height": 20,
+          "wireID": "b3052593-ba78-4365-f5bd-9517893b7390",
+          "customInputs": [],
+          "customOutputs": [],
+          "style": {
+            "inheritFrom": "default"
+          },
+          "timeline": [
+            {
+              "start": 0,
+              "end": 0,
+              "left": 38,
+              "top": 158,
+              "width": 30,
+              "height": 20
+            }
+          ],
+          "layout": "anim1"
+        },
+        {
+          "type": "LayoutViewWidget",
+          "left": 385.5,
+          "top": 215.5,
+          "width": 30,
+          "height": 20,
+          "wireID": "5bf8d6a8-0b7d-4c92-866a-41549b908530",
+          "customInputs": [],
+          "customOutputs": [],
+          "style": {
+            "inheritFrom": "default"
+          },
+          "timeline": [
+            {
+              "start": 0,
+              "end": 0,
+              "left": 38,
+              "top": 270,
+              "width": 30,
+              "height": 20
+            }
+          ],
+          "layout": "anim1"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "ea7eb013-6c4a-4647-ff9f-0f2f5df1d137",
+          "output": "action",
+          "target": "bfac3c4c-58da-4686-fa0f-095f7a3c3fc0",
+          "input": "@seqin"
+        },
+        {
+          "source": "cfb4e34b-21a5-4673-ff2b-9e8491fdad17",
+          "output": "action",
+          "target": "9c9efb9a-7600-424b-e636-06a64a256192",
+          "input": "@seqin"
+        },
+        {
+          "source": "f074da15-1c5c-4a7e-fde5-aa877523682c",
+          "output": "action",
+          "target": "d2eabd82-2dc9-4862-a82d-25741005e835",
+          "input": "@seqin"
+        },
+        {
+          "source": "f8a61bce-986c-4de0-ac3a-ede4989b0b14",
+          "output": "action",
+          "target": "87a59ce7-b51d-4baf-8b4b-db0d81190aeb",
+          "input": "@seqin"
+        },
+        {
+          "source": "bd34555d-f94b-48ef-e2a8-6cef2344e8fa",
+          "output": "action",
+          "target": "fbf9c2a0-1747-40e2-83c3-7f252e11ec55",
+          "input": "@seqin"
+        },
+        {
+          "source": "d4e5eba1-7162-4e49-a46b-9298e1f569c4",
+          "output": "@seqout",
+          "target": "bfac3c4c-58da-4686-fa0f-095f7a3c3fc0",
+          "input": "@seqin"
+        },
+        {
+          "source": "26a87451-1428-49c8-daa8-403bbb0d18fe",
+          "output": "action",
+          "target": "4ede99ef-45da-426b-eab3-3e9cf3f31b18",
+          "input": "@seqin"
+        },
+        {
+          "source": "d4e5eba1-7162-4e49-a46b-9298e1f569c4",
+          "output": "@seqout",
+          "target": "b3052593-ba78-4365-f5bd-9517893b7390",
+          "input": "@seqin"
+        },
+        {
+          "source": "d4e5eba1-7162-4e49-a46b-9298e1f569c4",
+          "output": "@seqout",
+          "target": "5bf8d6a8-0b7d-4c92-866a-41549b908530",
+          "input": "@seqin"
+        }
+      ],
+      "localVariables": [],
+      "name": "Main",
+      "style": "page",
+      "left": 0,
+      "top": 0,
+      "width": 800,
+      "height": 450
+    },
+    {
+      "components": [
+        {
+          "type": "RectangleWidget",
+          "left": 44,
+          "top": 28,
+          "width": 64,
+          "height": 32,
+          "wireID": "3b6b1b91-7afb-4eff-da22-8164096e2097",
+          "customInputs": [],
+          "customOutputs": [],
+          "style": {
+            "inheritFrom": "rect"
+          },
+          "timeline": [
+            {
+              "start": 0,
+              "end": 0,
+              "left": 0,
+              "top": 0,
+              "width": 64,
+              "height": 32
+            },
+            {
+              "start": 0,
+              "end": 0.5,
+              "left": 144,
+              "top": 88,
+              "width": 64,
+              "height": 32
+            },
+            {
+              "start": 0.5,
+              "end": 1,
+              "left": 272,
+              "top": 88,
+              "width": 64,
+              "height": 32
+            }
+          ]
+        },
+        {
+          "type": "RectangleWidget",
+          "left": 366,
+          "top": 34,
+          "width": 64,
+          "height": 32,
+          "wireID": "a93bf88a-4883-4d97-82ee-d7249b3291a2",
+          "customInputs": [],
+          "customOutputs": [],
+          "style": {
+            "inheritFrom": "rect",
+            "backgroundColor": "#af4dda"
+          },
+          "timeline": [
+            {
+              "start": 0,
+              "end": 0,
+              "left": 416,
+              "top": 0,
+              "width": 64,
+              "height": 32
+            },
+            {
+              "start": 0,
+              "end": 0.5,
+              "left": 272,
+              "top": 88,
+              "width": 64,
+              "height": 32
+            },
+            {
+              "start": 0.5,
+              "end": 1,
+              "left": 272,
+              "top": 152,
+              "width": 64,
+              "height": 32
+            }
+          ]
+        },
+        {
+          "type": "RectangleWidget",
+          "left": 52,
+          "top": 168,
+          "width": 64,
+          "height": 32,
+          "wireID": "ace26090-d2d3-4404-bd31-e04a085a8f10",
+          "customInputs": [],
+          "customOutputs": [],
+          "style": {
+            "inheritFrom": "rect",
+            "backgroundColor": "#9fdaa7"
+          },
+          "timeline": [
+            {
+              "start": 0,
+              "end": 0,
+              "left": 416,
+              "top": 240,
+              "width": 64,
+              "height": 32
+            },
+            {
+              "start": 0,
+              "end": 0.5,
+              "left": 272,
+              "top": 152,
+              "width": 64,
+              "height": 32
+            },
+            {
+              "start": 0.5,
+              "end": 1,
+              "left": 144,
+              "top": 152,
+              "width": 64,
+              "height": 32
+            }
+          ]
+        },
+        {
+          "type": "RectangleWidget",
+          "left": 359,
+          "top": 168,
+          "width": 64,
+          "height": 32,
+          "wireID": "c2100a4c-f218-4780-f9e7-f41f97f4d3b8",
+          "customInputs": [],
+          "customOutputs": [],
+          "style": {
+            "inheritFrom": "rect",
+            "backgroundColor": "#759aeb"
+          },
+          "timeline": [
+            {
+              "start": 0,
+              "end": 0,
+              "left": 0,
+              "top": 240,
+              "width": 64,
+              "height": 32
+            },
+            {
+              "start": 0,
+              "end": 0.5,
+              "left": 144,
+              "top": 152,
+              "width": 64,
+              "height": 32
+            },
+            {
+              "start": 0.5,
+              "end": 1,
+              "left": 144,
+              "top": 88,
+              "width": 64,
+              "height": 32
+            }
+          ]
+        },
+        {
+          "type": "ButtonWidget",
+          "left": 176,
+          "top": 239,
+          "width": 106,
+          "height": 32,
+          "wireID": "e5979d5e-65c2-4175-8263-25df0726e66f",
+          "customInputs": [],
+          "customOutputs": [],
+          "asOutputProperties": [
+            "action"
+          ],
+          "data": "\"Main Page\"",
+          "style": {
+            "inheritFrom": "default"
+          },
+          "timeline": [
+            {
+              "start": 0,
+              "end": 0,
+              "left": 201,
+              "top": 226,
+              "width": 106,
+              "height": 32,
+              "opacity": 0
+            },
+            {
+              "start": 0.8,
+              "end": 1,
+              "left": 201,
+              "top": 236,
+              "width": 106,
+              "height": 32,
+              "opacity": 1
+            }
+          ],
+          "disabledStyle": {
+            "inheritFrom": "default"
+          }
+        },
+        {
+          "type": "ShowPageActionComponent",
+          "left": 391,
+          "top": 317,
+          "width": 97,
+          "height": 55,
+          "wireID": "b4ec4588-9b3f-4490-f641-1facd6af85a6",
+          "customInputs": [],
+          "customOutputs": [],
+          "page": "Main"
+        },
+        {
+          "type": "OnEventActionComponent",
+          "left": 65,
+          "top": -145,
+          "width": 87,
+          "height": 55,
+          "wireID": "e4166b6a-7bb2-4841-8870-30dcb69e414b",
+          "customInputs": [],
+          "customOutputs": [],
+          "event": "page_open"
+        },
+        {
+          "type": "AnimateActionComponent",
+          "left": 263,
+          "top": -145,
+          "width": 87,
+          "height": 55,
+          "wireID": "7938bfbc-e8df-4aff-b12c-54f77342bcd3",
+          "customInputs": [],
+          "customOutputs": [],
+          "speed": "1",
+          "time": "1"
+        },
+        {
+          "type": "OnEventActionComponent",
+          "left": 65,
+          "top": -76,
+          "width": 87,
+          "height": 55,
+          "wireID": "73d91d80-fc0f-4c32-9e4a-9fb8c5c31896",
+          "customInputs": [],
+          "customOutputs": [],
+          "event": "page_close"
+        },
+        {
+          "type": "AnimateActionComponent",
+          "left": 263,
+          "top": -76,
+          "width": 87,
+          "height": 55,
+          "wireID": "451fa467-bbf7-4f54-e657-5f83cae0a141",
+          "customInputs": [],
+          "customOutputs": [],
+          "speed": "1000",
+          "time": "0"
+        },
+        {
+          "type": "LayoutViewWidget",
+          "left": 225,
+          "top": 126,
+          "width": 30,
+          "height": 20,
+          "wireID": "30a7caf5-fd8a-4380-b6d7-1e010b07c58b",
+          "customInputs": [],
+          "customOutputs": [],
+          "style": {
+            "inheritFrom": "default"
+          },
+          "timeline": [],
+          "layout": "anim1"
+        },
+        {
+          "type": "StartActionComponent",
+          "left": -123,
+          "top": 121,
+          "width": 87,
+          "height": 25,
+          "wireID": "aa9d6f39-58a9-4512-86e8-19da2f3e1397",
+          "customInputs": [],
+          "customOutputs": []
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "e5979d5e-65c2-4175-8263-25df0726e66f",
+          "output": "action",
+          "target": "b4ec4588-9b3f-4490-f641-1facd6af85a6",
+          "input": "@seqin"
+        },
+        {
+          "source": "e4166b6a-7bb2-4841-8870-30dcb69e414b",
+          "output": "@seqout",
+          "target": "7938bfbc-e8df-4aff-b12c-54f77342bcd3",
+          "input": "@seqin"
+        },
+        {
+          "source": "73d91d80-fc0f-4c32-9e4a-9fb8c5c31896",
+          "output": "@seqout",
+          "target": "451fa467-bbf7-4f54-e657-5f83cae0a141",
+          "input": "@seqin"
+        },
+        {
+          "source": "aa9d6f39-58a9-4512-86e8-19da2f3e1397",
+          "output": "@seqout",
+          "target": "30a7caf5-fd8a-4380-b6d7-1e010b07c58b",
+          "input": "@seqin"
+        }
+      ],
+      "localVariables": [],
+      "name": "Page2",
+      "style": "page",
+      "left": 0,
+      "top": 0,
+      "width": 480,
+      "height": 272
+    },
+    {
+      "components": [
+        {
+          "type": "RectangleWidget",
+          "left": 0,
+          "top": 0,
+          "width": 8,
+          "height": 20,
+          "wireID": "17541954-3e22-48af-866a-62fa2d1da19c",
+          "customInputs": [],
+          "customOutputs": [],
+          "style": {
+            "inheritFrom": "block"
+          },
+          "timeline": [
+            {
+              "start": 0,
+              "end": 0,
+              "top": 20,
+              "height": 0
+            },
+            {
+              "start": 1,
+              "end": 1.5,
+              "top": 0,
+              "height": 20
+            },
+            {
+              "start": 1.5,
+              "end": 2,
+              "top": 20,
+              "height": 0
+            }
+          ]
+        },
+        {
+          "type": "RectangleWidget",
+          "left": 11,
+          "top": 0,
+          "width": 8,
+          "height": 20,
+          "wireID": "9ed45c07-f3ca-4127-cf64-fac57bb00432",
+          "customInputs": [],
+          "customOutputs": [],
+          "style": {
+            "inheritFrom": "block"
+          },
+          "timeline": [
+            {
+              "start": 0,
+              "end": 0,
+              "top": 20,
+              "height": 0
+            },
+            {
+              "start": 0.5,
+              "end": 1,
+              "top": 0,
+              "height": 20
+            },
+            {
+              "start": 2,
+              "end": 2.5,
+              "top": 20,
+              "height": 0
+            }
+          ]
+        },
+        {
+          "type": "RectangleWidget",
+          "left": 22,
+          "top": 0,
+          "width": 8,
+          "height": 20,
+          "wireID": "0a636500-228c-4b5a-d596-b9c3168cb12f",
+          "customInputs": [],
+          "customOutputs": [],
+          "style": {
+            "inheritFrom": "block"
+          },
+          "timeline": [
+            {
+              "start": 0,
+              "end": 0,
+              "top": 20,
+              "height": 0
+            },
+            {
+              "start": 0,
+              "end": 0.5,
+              "left": 22,
+              "top": 0,
+              "width": 8,
+              "height": 20
+            },
+            {
+              "start": 2.5,
+              "end": 3,
+              "top": 20,
+              "height": 0
+            }
+          ]
+        },
+        {
+          "type": "AnimateActionComponent",
+          "left": -8,
+          "top": -131,
+          "width": 87,
+          "height": 55,
+          "wireID": "d3aeebcc-d506-4db8-91bb-72885c1fe4d7",
+          "customInputs": [],
+          "customOutputs": [],
+          "speed": "1",
+          "time": "3"
+        },
+        {
+          "type": "StartActionComponent",
+          "left": -139,
+          "top": -131,
+          "width": 87,
+          "height": 25,
+          "wireID": "f117265e-3305-4b78-fc87-d761dfe1b184",
+          "customInputs": [],
+          "customOutputs": []
+        },
+        {
+          "type": "AnimateActionComponent",
+          "left": 100,
+          "top": -131,
+          "width": 87,
+          "height": 55,
+          "wireID": "9a017bf9-04db-4086-b95f-5f0b976d5bf3",
+          "customInputs": [],
+          "customOutputs": [],
+          "speed": "1000",
+          "time": "0"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "f117265e-3305-4b78-fc87-d761dfe1b184",
+          "output": "@seqout",
+          "target": "d3aeebcc-d506-4db8-91bb-72885c1fe4d7",
+          "input": "@seqin"
+        },
+        {
+          "source": "d3aeebcc-d506-4db8-91bb-72885c1fe4d7",
+          "output": "@seqout",
+          "target": "9a017bf9-04db-4086-b95f-5f0b976d5bf3",
+          "input": "@seqin"
+        },
+        {
+          "source": "9a017bf9-04db-4086-b95f-5f0b976d5bf3",
+          "output": "@seqout",
+          "target": "d3aeebcc-d506-4db8-91bb-72885c1fe4d7",
+          "input": "@seqin"
+        }
+      ],
+      "localVariables": [],
+      "name": "anim1",
+      "left": 0,
+      "top": 0,
+      "width": 30,
+      "height": 20,
+      "isUsedAsCustomWidget": true
+    }
+  ],
+  "styles": [
+    {
+      "name": "default"
+    },
+    {
+      "name": "page",
+      "inheritFrom": "",
+      "backgroundColor": "page_color",
+      "css": "\n"
+    },
+    {
+      "name": "tab",
+      "inheritFrom": "default",
+      "alignHorizontal": "center",
+      "activeColor": "#3300f6",
+      "activeBackgroundColor": "#b9b9b9"
+    },
+    {
+      "name": "quote",
+      "inheritFrom": "default",
+      "fontWeight": "normal"
+    },
+    {
+      "name": "rect",
+      "backgroundColor": "#f1bd0f"
+    },
+    {
+      "name": "block",
+      "inheritFrom": "default",
+      "backgroundColor": "#3a3a3a"
+    }
+  ],
+  "colors": [
+    {
+      "name": "page_color"
+    }
+  ],
+  "themes": [
+    {
+      "name": "default",
+      "colors": [
+        "#f0f0f0"
+      ]
+    }
+  ]
+}
