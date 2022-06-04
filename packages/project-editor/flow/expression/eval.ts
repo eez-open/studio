@@ -313,7 +313,7 @@ export function evalConstantExpressionNode(
             const object: any = {};
 
             for (const property of node.properties) {
-                object[property.key.value] = evalNode(property.value);
+                object[property.key.name] = evalNode(property.value);
             }
 
             return object;
@@ -488,7 +488,7 @@ function evalExpressionWithContext(
             const object: any = {};
 
             for (const property of node.properties) {
-                object[property.key.value] = evalNode(property.value);
+                object[property.key.name] = evalNode(property.value);
             }
 
             return object;

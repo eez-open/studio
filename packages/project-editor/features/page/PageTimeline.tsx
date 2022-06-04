@@ -1260,5 +1260,5 @@ function hitTest(
 }
 
 function roundPosition(position: number) {
-    return Math.round(position * 1000) / 1000;
+    return Math.round(position * 100) / 100;
 }
