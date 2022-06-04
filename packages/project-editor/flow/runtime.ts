@@ -209,7 +209,9 @@ export abstract class RuntimeBase {
         this.stopRuntime(true);
     }
 
-    stop() {}
+    stop() {
+        this.stopRuntime(true);
+    }
 
     private setState(state: State) {
         this.state = state;

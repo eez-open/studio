@@ -1126,11 +1126,11 @@ export abstract class DebuggerConnectionBase {
                         const debuggerValue =
                             runtime.debuggerValues.get(valueAddress);
                         if (!debuggerValue) {
-                            console.log(
-                                "MESSAGE_TO_DEBUGGER_VALUE_CHANGED",
-                                messageParameters
-                            );
-                            console.error("UNEXPECTED!");
+                            // console.log(
+                            //     "MESSAGE_TO_DEBUGGER_VALUE_CHANGED",
+                            //     messageParameters
+                            // );
+                            // console.error("UNEXPECTED!");
                             return;
                         }
 
