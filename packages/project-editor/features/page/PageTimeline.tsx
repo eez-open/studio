@@ -28,6 +28,7 @@ import type { Widget, TimelineKeyframe } from "project-editor/flow/component";
 import { Draggable } from "eez-studio-ui/draggable";
 import { closestBySelector } from "eez-studio-shared/dom";
 import {
+    getAncestorOfType,
     getObjectFromStringPath,
     getObjectPathAsString,
     IPanel
@@ -178,12 +179,18 @@ export const PageTimelineEditor = observer(
 
         // interface IPanel implementation
         get selectedObject() {
-            return this.props.tabState.timeline.selectedKeyframes.length > 0
-                ? this.props.tabState.timeline.selectedKeyframes[0]
+            return this.selectedObjects.length > 0
+                ? this.selectedObjects[0]
                 : undefined;
         }
         get selectedObjects() {
-            return this.props.tabState.timeline.selectedKeyframes;
+            return this.props.tabState.timeline.selectedKeyframes.map(
+                keyframe =>
+                    getAncestorOfType(
+                        keyframe,
+                        ProjectEditor.WidgetClass.classInfo
+                    )!
+            );
         }
         cutSelection() {}
         copySelection() {}
@@ -315,7 +322,13 @@ const TimelineEditor = observer(
         svgRef = React.createRef<SVGSVGElement>();
         draggable = new Draggable(this);
         dragStart = { x: 0, y: 0 };
-        dragMode: "none" | "timeline-position" | "rubber-bend";
+        dragMode:
+            | "none"
+            | "timeline-position"
+            | "rubber-bend"
+            | "keyframe"
+            | "keyframe-start"
+            | "keyframe-end";
         deltaY = 0;
 
         constructor(props: any) {
@@ -629,7 +642,7 @@ const TimelineEditor = observer(
 
                     {timelineState.rubberBendRect && (
                         <rect
-                            className="EezStudio_PageTimeline_Timeline_RubberBendRect"
+                            className="EezStudio_PageTimeline_RubberBendRect"
                             x={timelineState.rubberBendRect.left}
                             y={timelineState.rubberBendRect.top}
                             width={timelineState.rubberBendRect.width}
@@ -665,7 +678,7 @@ const Timeline = observer(
                 style={{ shapeRendering: "crispEdges" }}
             >
                 <rect
-                    className="EezStudio_PageTimeline_Timeline_Timeline_Area"
+                    className="EezStudio_PageTimeline_Timeline_Area"
                     x={0}
                     y={0}
                     width={
@@ -678,7 +691,7 @@ const Timeline = observer(
                 {subticks.map(x => (
                     <g key={x}>
                         <line
-                            className="EezStudio_PageTimeline_Timeline_Timeline_Subtick"
+                            className="EezStudio_PageTimeline_Subtick"
                             x1={
                                 TIMELINE_X_OFFSET + x * timelineState.secondToPx
                             }
@@ -694,7 +707,7 @@ const Timeline = observer(
                 {ticks.map(x => (
                     <g key={x}>
                         <line
-                            className="EezStudio_PageTimeline_Timeline_Timeline_Tick"
+                            className="EezStudio_PageTimeline_Tick"
                             x1={
                                 TIMELINE_X_OFFSET + x * timelineState.secondToPx
                             }
@@ -706,7 +719,7 @@ const Timeline = observer(
                         />
                         {Math.abs(x - timelineState.position) > 1e-4 && (
                             <text
-                                className="EezStudio_PageTimeline_Timeline_Timeline_TickText"
+                                className="EezStudio_PageTimeline_TickText"
                                 x={
                                     TIMELINE_X_OFFSET +
                                     x * timelineState.secondToPx
@@ -722,7 +735,7 @@ const Timeline = observer(
                 ))}
 
                 <rect
-                    className="EezStudio_PageTimeline_Timeline_Timeline_Needle"
+                    className="EezStudio_PageTimeline_Needle"
                     x={
                         TIMELINE_X_OFFSET +
                         timelineState.position * timelineState.secondToPx -
@@ -731,11 +744,10 @@ const Timeline = observer(
                     y={0}
                     width={NEEDLE_WIDTH}
                     height={TIMELINE_HEIGHT / 2}
-                    style={{ cursor: "ew-resize" }}
                 />
 
                 <line
-                    className="EezStudio_PageTimeline_Timeline_Timeline_Needle"
+                    className="EezStudio_PageTimeline_Needle"
                     x1={
                         TIMELINE_X_OFFSET +
                         timelineState.position * timelineState.secondToPx
@@ -746,11 +758,10 @@ const Timeline = observer(
                         timelineState.position * timelineState.secondToPx
                     }
                     y2={TIMELINE_HEIGHT}
-                    style={{ cursor: "ew-resize" }}
                 />
 
                 <line
-                    className="EezStudio_PageTimeline_Timeline_Timeline_Needle"
+                    className="EezStudio_PageTimeline_Needle"
                     x1={
                         TIMELINE_X_OFFSET +
                         timelineState.position * timelineState.secondToPx
@@ -770,8 +781,8 @@ const Timeline = observer(
                     text={(
                         Math.round(timelineState.position * 1000) / 1000
                     ).toString()}
-                    textClassName="EezStudio_PageTimeline_Timeline_Timeline_Needle"
-                    rectClassName="EezStudio_PageTimeline_Timeline_Timeline_Needle_TextBackground"
+                    textClassName="EezStudio_PageTimeline_Needle"
+                    rectClassName="EezStudio_PageTimeline_Needle_TextBackground"
                     x={
                         TIMELINE_X_OFFSET +
                         timelineState.position * timelineState.secondToPx +
@@ -839,7 +850,7 @@ const Rows = observer(
                                             data-timeline-keyframe-object-path={getObjectPathAsString(
                                                 keyframe
                                             )}
-                                            className="EezStudio_PageTimeline_Timeline_Point"
+                                            className="EezStudio_PageTimeline_Keyframe_Point"
                                             cx={cx}
                                             cy={cy}
                                             r={POINT_RADIUS}
@@ -850,7 +861,7 @@ const Rows = observer(
                                         ) != -1 &&
                                             keyframe.start == keyframe.end && (
                                                 <rect
-                                                    className="EezStudio_PageTimeline_Timeline_KeyframeSelection"
+                                                    className="EezStudio_PageTimeline_Keyframe_Selection"
                                                     x={x1 - 2}
                                                     y={y1 - 2}
                                                     width={x2 - x1 + 4}
@@ -885,7 +896,7 @@ const Row = observer(
         return (
             <g key={timelineState.treeAdapter.getItemId(row.item)}>
                 <rect
-                    className="EezStudio_PageTimeline_Timeline_Row"
+                    className="EezStudio_PageTimeline_Row"
                     x={TIMELINE_X_OFFSET}
                     y={TIMELINE_HEIGHT + rowIndex * ROW_HEIGHT + ROW_GAP / 2}
                     width={timelineState.duration * timelineState.secondToPx}
@@ -952,12 +963,12 @@ const Keyframe = observer(
                 )}
             >
                 <path
-                    className="EezStudio_PageTimeline_Timeline_Keyframe"
+                    className="EezStudio_PageTimeline_Keyframe"
                     d={path}
                 ></path>
                 {timelineState.selectedKeyframes.indexOf(keyframe) != -1 && (
                     <rect
-                        className="EezStudio_PageTimeline_Timeline_KeyframeSelection"
+                        className="EezStudio_PageTimeline_Keyframe_Selection"
                         x={x1 - 1}
                         y={y1 - 1}
                         width={x2 - x1 + 2}

@@ -80,6 +80,8 @@ namespace eez {
 EM_PORT_API(void) init(uint8_t *assets, uint32_t assetsSize) {
     eez::initAssetsMemory();
     eez::gui::loadMainAssets(assets, assetsSize);
+    DISPLAY_WIDTH = eez::gui::g_mainAssets->settings->displayWidth;
+    DISPLAY_HEIGHT = eez::gui::g_mainAssets->settings->displayHeight;
     eez::initOtherMemory();
     eez::initAllocHeap(eez::ALLOC_BUFFER, eez::ALLOC_BUFFER_SIZE);
 
