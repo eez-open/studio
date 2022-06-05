@@ -407,6 +407,11 @@ type DragSettings =
           ends: number[];
           minDelta: number;
           maxDelta: number;
+      }
+    | {
+          mode: "row";
+          cursor: string;
+          widget: Widget;
       };
 
 const TimelineEditor = observer(
@@ -535,174 +540,175 @@ const TimelineEditor = observer(
                 // this.props.tabState.selectObjects([]);
 
                 this.setTimelinePosition(dragSettings.startPoint.x);
-            } else {
-                if (
-                    dragSettings.mode == "keyframe" ||
-                    dragSettings.mode == "keyframe-start" ||
-                    dragSettings.mode == "keyframe-end"
-                ) {
-                    runInAction(() => {
-                        if (e.ctrlKey || e.shiftKey) {
-                            const i =
-                                this.props.timelineState.selectedKeyframes.indexOf(
-                                    dragSettings.keyframe
-                                );
-                            if (i == -1) {
-                                this.props.timelineState.selectedKeyframes.push(
-                                    dragSettings.keyframe
-                                );
+            }
+            if (
+                dragSettings.mode == "keyframe" ||
+                dragSettings.mode == "keyframe-start" ||
+                dragSettings.mode == "keyframe-end"
+            ) {
+                runInAction(() => {
+                    if (e.ctrlKey || e.shiftKey) {
+                        const i =
+                            this.props.timelineState.selectedKeyframes.indexOf(
+                                dragSettings.keyframe
+                            );
+                        if (i == -1) {
+                            this.props.timelineState.selectedKeyframes.push(
+                                dragSettings.keyframe
+                            );
 
-                                this.props.timelineState.position =
-                                    dragSettings.keyframe.end;
-                            } else {
-                                this.props.timelineState.selectedKeyframes.splice(
-                                    i,
-                                    1
-                                );
-                                if (
-                                    this.props.timelineState.selectedKeyframes
-                                        .length > 0
-                                ) {
-                                    this.props.timelineState.position =
-                                        this.props.timelineState.selectedKeyframes[
-                                            this.props.timelineState
-                                                .selectedKeyframes.length - 1
-                                        ].end;
-                                }
-                            }
+                            this.props.timelineState.position =
+                                dragSettings.keyframe.end;
                         } else {
+                            this.props.timelineState.selectedKeyframes.splice(
+                                i,
+                                1
+                            );
                             if (
-                                this.props.timelineState.selectedKeyframes.indexOf(
-                                    dragSettings.keyframe
-                                ) == -1
+                                this.props.timelineState.selectedKeyframes
+                                    .length > 0
                             ) {
-                                this.props.timelineState.selectedKeyframes = [
-                                    dragSettings.keyframe
-                                ];
-
                                 this.props.timelineState.position =
-                                    dragSettings.keyframe.end;
+                                    this.props.timelineState.selectedKeyframes[
+                                        this.props.timelineState
+                                            .selectedKeyframes.length - 1
+                                    ].end;
                             }
                         }
-
-                        this.props.tabState.selectObjects(
-                            this.props.tabState.timeline.selectedKeyframes.map(
-                                keyframe =>
-                                    getAncestorOfType(
-                                        keyframe,
-                                        ProjectEditor.WidgetClass.classInfo
-                                    )!
-                            )
-                        );
-                    });
-
-                    if (dragSettings.mode == "keyframe-start") {
-                        dragSettings.starts =
-                            this.props.timelineState.selectedKeyframes.map(
-                                keyframe => keyframe.start
-                            );
                     } else {
-                        dragSettings.ends =
-                            this.props.timelineState.selectedKeyframes.map(
-                                keyframe => keyframe.end
-                            );
+                        if (
+                            this.props.timelineState.selectedKeyframes.indexOf(
+                                dragSettings.keyframe
+                            ) == -1
+                        ) {
+                            this.props.timelineState.selectedKeyframes = [
+                                dragSettings.keyframe
+                            ];
+
+                            this.props.timelineState.position =
+                                dragSettings.keyframe.end;
+                        }
                     }
 
-                    dragSettings.minDelta = Math.max(
-                        ...this.props.timelineState.selectedKeyframes.map(
-                            keyframe => {
-                                const widgetTimeline = getParent(
-                                    keyframe
-                                ) as TimelineKeyframe[];
-
-                                let keyframeIndex =
-                                    widgetTimeline.indexOf(keyframe);
-
-                                if (dragSettings.mode == "keyframe-end") {
-                                    return keyframe.start - keyframe.end;
-                                }
-
-                                for (
-                                    keyframeIndex = keyframeIndex - 1;
-                                    keyframeIndex >= 0;
-                                    keyframeIndex--
-                                ) {
-                                    const previousKeyframe =
-                                        widgetTimeline[keyframeIndex];
-
-                                    if (
-                                        this.props.timelineState.selectedKeyframes.indexOf(
-                                            previousKeyframe
-                                        ) == -1
-                                    ) {
-                                        return (
-                                            previousKeyframe.end -
-                                            keyframe.start
-                                        );
-                                    }
-
-                                    keyframe = previousKeyframe;
-                                }
-
-                                return 0 - keyframe.start;
-                            }
+                    this.props.tabState.selectObjects(
+                        this.props.tabState.timeline.selectedKeyframes.map(
+                            keyframe =>
+                                getAncestorOfType(
+                                    keyframe,
+                                    ProjectEditor.WidgetClass.classInfo
+                                )!
                         )
                     );
+                });
 
-                    dragSettings.maxDelta = Math.min(
-                        ...this.props.timelineState.selectedKeyframes.map(
-                            keyframe => {
-                                const widgetTimeline = getParent(
-                                    keyframe
-                                ) as TimelineKeyframe[];
-
-                                let keyframeIndex =
-                                    widgetTimeline.indexOf(keyframe);
-
-                                if (dragSettings.mode == "keyframe-start") {
-                                    return keyframe.end - keyframe.start;
-                                }
-
-                                for (
-                                    keyframeIndex = keyframeIndex + 1;
-                                    keyframeIndex < widgetTimeline.length;
-                                    keyframeIndex++
-                                ) {
-                                    const nextKeyframe =
-                                        widgetTimeline[keyframeIndex];
-
-                                    if (
-                                        this.props.timelineState.selectedKeyframes.indexOf(
-                                            nextKeyframe
-                                        ) == -1
-                                    ) {
-                                        return (
-                                            nextKeyframe.start - keyframe.end
-                                        );
-                                    }
-
-                                    keyframe = nextKeyframe;
-                                }
-
-                                return (
-                                    this.props.timelineState.duration -
-                                    keyframe.end
-                                );
-                            }
-                        )
-                    );
-                } else if (dragSettings.mode == "rubber-band") {
-                    runInAction(() => {
-                        this.props.timelineState.selectedKeyframes = [];
-                        this.props.tabState.selectObjects([]);
-                        this.props.timelineState.rubberBendRect = {
-                            left: dragSettings.startPoint.x,
-                            top: dragSettings.startPoint.y,
-                            width: 0,
-                            height: 0
-                        };
-                    });
+                if (dragSettings.mode == "keyframe-start") {
+                    dragSettings.starts =
+                        this.props.timelineState.selectedKeyframes.map(
+                            keyframe => keyframe.start
+                        );
+                } else {
+                    dragSettings.ends =
+                        this.props.timelineState.selectedKeyframes.map(
+                            keyframe => keyframe.end
+                        );
                 }
+
+                dragSettings.minDelta = Math.max(
+                    ...this.props.timelineState.selectedKeyframes.map(
+                        keyframe => {
+                            const widgetTimeline = getParent(
+                                keyframe
+                            ) as TimelineKeyframe[];
+
+                            let keyframeIndex =
+                                widgetTimeline.indexOf(keyframe);
+
+                            if (dragSettings.mode == "keyframe-end") {
+                                return keyframe.start - keyframe.end;
+                            }
+
+                            for (
+                                keyframeIndex = keyframeIndex - 1;
+                                keyframeIndex >= 0;
+                                keyframeIndex--
+                            ) {
+                                const previousKeyframe =
+                                    widgetTimeline[keyframeIndex];
+
+                                if (
+                                    this.props.timelineState.selectedKeyframes.indexOf(
+                                        previousKeyframe
+                                    ) == -1
+                                ) {
+                                    return (
+                                        previousKeyframe.end - keyframe.start
+                                    );
+                                }
+
+                                keyframe = previousKeyframe;
+                            }
+
+                            return 0 - keyframe.start;
+                        }
+                    )
+                );
+
+                dragSettings.maxDelta = Math.min(
+                    ...this.props.timelineState.selectedKeyframes.map(
+                        keyframe => {
+                            const widgetTimeline = getParent(
+                                keyframe
+                            ) as TimelineKeyframe[];
+
+                            let keyframeIndex =
+                                widgetTimeline.indexOf(keyframe);
+
+                            if (dragSettings.mode == "keyframe-start") {
+                                return keyframe.end - keyframe.start;
+                            }
+
+                            for (
+                                keyframeIndex = keyframeIndex + 1;
+                                keyframeIndex < widgetTimeline.length;
+                                keyframeIndex++
+                            ) {
+                                const nextKeyframe =
+                                    widgetTimeline[keyframeIndex];
+
+                                if (
+                                    this.props.timelineState.selectedKeyframes.indexOf(
+                                        nextKeyframe
+                                    ) == -1
+                                ) {
+                                    return nextKeyframe.start - keyframe.end;
+                                }
+
+                                keyframe = nextKeyframe;
+                            }
+
+                            return (
+                                this.props.timelineState.duration - keyframe.end
+                            );
+                        }
+                    )
+                );
+            } else if (dragSettings.mode == "rubber-band") {
+                runInAction(() => {
+                    this.props.timelineState.selectedKeyframes = [];
+                    this.props.timelineState.rubberBendRect = {
+                        left: dragSettings.startPoint.x,
+                        top: dragSettings.startPoint.y,
+                        width: 0,
+                        height: 0
+                    };
+                });
+
+                this.props.tabState.selectObjects([]);
+            } else if (dragSettings.mode == "row") {
+                runInAction(() => {
+                    this.props.timelineState.selectedKeyframes = [];
+                });
+                this.props.tabState.selectObjects([dragSettings.widget]);
             }
 
             this.dragSettings = dragSettings;
@@ -1473,6 +1479,12 @@ function hitTest(
                 }
             }
         }
+
+        return {
+            mode: "row",
+            cursor: "default",
+            widget
+        };
     }
 
     return {
