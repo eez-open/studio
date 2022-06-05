@@ -15,7 +15,6 @@ import { theme } from "eez-studio-ui/theme";
 
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import {
-    getObjectBoundingRect,
     getSelectedObjectsBoundingRect,
     getObjectIdFromPoint
 } from "project-editor/flow/editor/bounding-rects";
@@ -608,9 +607,8 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
     savedBoundingRect: Rect;
     boundingRect: Rect;
 
-    savedBoundingRects: Rect[];
-    savedRects: Rect[];
-    rects: Rect[];
+    savedRect: Rect;
+    rect: Rect;
 
     changed: boolean = false;
 
@@ -627,24 +625,8 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
 
         context.document.onDragStart();
 
-        this.savedBoundingRect = rectClone(
-            getSelectedObjectsBoundingRect(context.viewState)
-        );
-        this.boundingRect = rectClone(this.savedBoundingRect);
-
-        this.savedBoundingRects = [];
-        this.savedRects = [];
-        this.rects = [];
-        for (const object of context.viewState.selectedObjects) {
-            const boundingRect = getObjectBoundingRect(object);
-            if (boundingRect) {
-                this.savedBoundingRects.push(rectClone(boundingRect));
-
-                const rect = object.rect;
-                this.savedRects.push(rectClone(rect));
-                this.rects.push(rectClone(rect));
-            }
-        }
+        this.savedRect = rectClone(context.viewState.selectedObjects[0].rect);
+        this.rect = rectClone(context.viewState.selectedObjects[0].rect);
     }
 
     snapX(x: number) {
@@ -781,38 +763,11 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
     move(context: IFlowContext, event: IPointerEvent) {
         super.move(context, event);
 
-        this.resizeRect(context, this.savedBoundingRect, this.boundingRect);
+        this.resizeRect(context, this.savedRect, this.rect);
 
-        let scaleWidth = this.boundingRect.width / this.savedBoundingRect.width;
-        let scaleHeight =
-            this.boundingRect.height / this.savedBoundingRect.height;
-
-        let objects = context.viewState.selectedObjects;
-
-        for (let i = 0; i < this.rects.length; i++) {
-            let savedBoundingRect = this.savedBoundingRects[i];
-            let savedRect = this.savedRects[i];
-            let rect = this.rects[i];
-
-            rect.left = Math.floor(
-                savedRect.left +
-                    (this.boundingRect.left - this.savedBoundingRect.left) +
-                    (savedBoundingRect.left - this.savedBoundingRect.left) *
-                        (scaleWidth - 1)
-            );
-            rect.top = Math.floor(
-                savedRect.top +
-                    (this.boundingRect.top - this.savedBoundingRect.top) +
-                    (savedBoundingRect.top - this.savedBoundingRect.top) *
-                        (scaleHeight - 1)
-            );
-            rect.width = Math.floor(savedRect.width * scaleWidth);
-            rect.height = Math.floor(savedRect.height * scaleHeight);
-
-            if (!rectEqual(rect, objects[i].rect)) {
-                this.changed = true;
-                objects[i].rect = rect;
-            }
+        if (!rectEqual(this.rect, context.viewState.selectedObjects[0].rect)) {
+            this.changed = true;
+            context.viewState.selectedObjects[0].rect = this.rect;
         }
     }
 

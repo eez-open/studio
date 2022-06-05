@@ -299,7 +299,7 @@ export const Canvas = observer(
             ) {
                 this.dragScrollDispose = setupDragScroll(
                     this.div,
-                    this.mouseHandler,
+                    () => this.mouseHandler?.lastPointerEvent,
                     (point: Point) => {
                         const newTransform =
                             this.props.flowContext.viewState.transform.clone();

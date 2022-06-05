@@ -38,6 +38,8 @@ import {
 import { addAlphaToColor } from "eez-studio-shared/color";
 import { theme } from "eez-studio-ui/theme";
 import { SvgLabel } from "eez-studio-ui/svg-label";
+import { setupDragScroll } from "project-editor/flow/editor/drag-scroll";
+import { IPointerEvent } from "project-editor/flow/editor/mouse-handler";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -61,6 +63,7 @@ export class PageTimelineEditorState {
     secondToPx: number = 200;
     selectedKeyframes: TimelineKeyframe[] = [];
     rubberBendRect: Rect | undefined;
+    horizontalScrollBar: HTMLDivElement | null = null;
 
     constructor(private tabState: PageTabState) {
         this.duration = 60.0;
@@ -142,6 +145,10 @@ export class PageTimelineEditorState {
 
     positionToPx(position: number) {
         return TIMELINE_X_OFFSET + position * this.secondToPx;
+    }
+
+    pxToPosition(px: number) {
+        return (px - TIMELINE_X_OFFSET) / this.secondToPx;
     }
 
     getKeyframeCircleBoundingRect(
@@ -229,6 +236,15 @@ export const PageTimelineEditor = observer(
 
         verticalScrollBarRef = React.createRef<HTMLDivElement>();
         horizontalScrollBarRef = React.createRef<HTMLDivElement>();
+
+        componentDidMount() {
+            this.props.tabState.timeline.horizontalScrollBar =
+                this.horizontalScrollBarRef.current;
+        }
+
+        componentWillUnmount() {
+            this.props.tabState.timeline.horizontalScrollBar = null;
+        }
 
         onVerticalScroll = action(() => {
             if (this.verticalScrollBarRef.current) {
@@ -405,6 +421,7 @@ type DragSettings =
     | {
           mode: "keyframe";
           cursor: string;
+          dragStartPosition: number;
           keyframe: TimelineKeyframe;
           keyframeEnd: number;
           ends: number[];
@@ -414,10 +431,22 @@ type DragSettings =
     | {
           mode: "keyframe-start";
           cursor: string;
+          dragStartPosition: number;
+          keyframe: TimelineKeyframe;
+          keyframeStart: number;
+          starts: number[];
+          minDelta: number;
+          maxDelta: number;
       }
     | {
           mode: "keyframe-end";
           cursor: string;
+          dragStartPosition: number;
+          keyframe: TimelineKeyframe;
+          keyframeEnd: number;
+          ends: number[];
+          minDelta: number;
+          maxDelta: number;
       };
 
 const TimelineEditor = observer(
@@ -431,10 +460,14 @@ const TimelineEditor = observer(
         svgRef = React.createRef<SVGSVGElement>();
         draggable = new Draggable(this);
 
+        lastPointerEvent: IPointerEvent | undefined;
+
         dragSettings: DragSettings = {
             mode: "none",
             cursor: "default"
         };
+
+        dragScrollDispose: (() => void) | undefined;
 
         deltaY = 0;
 
@@ -501,7 +534,38 @@ const TimelineEditor = observer(
             });
         }
 
+        limitScrollLeft(scrollLeft: number) {
+            if (scrollLeft < 0) {
+                scrollLeft = 0;
+            } else {
+                const horizontalScrollBarWidth =
+                    this.props.timelineState.horizontalScrollBar!.getBoundingClientRect()
+                        .width;
+
+                const timelineWidth = this.props.timelineState.timelineWidth;
+
+                const maxScrollLeft = Math.max(
+                    timelineWidth - horizontalScrollBarWidth,
+                    0
+                );
+
+                if (scrollLeft > maxScrollLeft) {
+                    scrollLeft = maxScrollLeft;
+                }
+            }
+            return scrollLeft;
+        }
+
         onDragStart = (e: PointerEvent, x1: number, y1: number) => {
+            this.lastPointerEvent = {
+                clientX: e.clientX,
+                clientY: e.clientY,
+                movementX: e.movementX ?? 0,
+                movementY: e.movementY ?? 0,
+                ctrlKey: e.ctrlKey,
+                shiftKey: e.shiftKey
+            };
+
             const dragSettings = hitTest(this.props.timelineState, e, x1, y1);
 
             if (dragSettings.mode == "timeline-position") {
@@ -511,7 +575,11 @@ const TimelineEditor = observer(
 
                 this.setTimelinePosition(dragSettings.startPoint.x);
             } else {
-                if (dragSettings.mode == "keyframe") {
+                if (
+                    dragSettings.mode == "keyframe" ||
+                    dragSettings.mode == "keyframe-start" ||
+                    dragSettings.mode == "keyframe-end"
+                ) {
                     runInAction(() => {
                         if (e.ctrlKey || e.shiftKey) {
                             const i =
@@ -557,10 +625,17 @@ const TimelineEditor = observer(
                         }
                     });
 
-                    dragSettings.ends =
-                        this.props.timelineState.selectedKeyframes.map(
-                            keyframe => keyframe.end
-                        );
+                    if (dragSettings.mode == "keyframe-start") {
+                        dragSettings.starts =
+                            this.props.timelineState.selectedKeyframes.map(
+                                keyframe => keyframe.start
+                            );
+                    } else {
+                        dragSettings.ends =
+                            this.props.timelineState.selectedKeyframes.map(
+                                keyframe => keyframe.end
+                            );
+                    }
 
                     dragSettings.minDelta = Math.max(
                         ...this.props.timelineState.selectedKeyframes.map(
@@ -571,6 +646,10 @@ const TimelineEditor = observer(
 
                                 let keyframeIndex =
                                     widgetTimeline.indexOf(keyframe);
+
+                                if (dragSettings.mode == "keyframe-end") {
+                                    return keyframe.start - keyframe.end;
+                                }
 
                                 for (
                                     keyframeIndex = keyframeIndex - 1;
@@ -609,6 +688,10 @@ const TimelineEditor = observer(
                                 let keyframeIndex =
                                     widgetTimeline.indexOf(keyframe);
 
+                                if (dragSettings.mode == "keyframe-start") {
+                                    return keyframe.end - keyframe.start;
+                                }
+
                                 for (
                                     keyframeIndex = keyframeIndex + 1;
                                     keyframeIndex < widgetTimeline.length;
@@ -637,8 +720,6 @@ const TimelineEditor = observer(
                             }
                         )
                     );
-
-                    console.log(dragSettings.minDelta, dragSettings.maxDelta);
                 } else if (dragSettings.mode == "rubber-band") {
                     runInAction(() => {
                         this.props.timelineState.selectedKeyframes = [];
@@ -659,9 +740,45 @@ const TimelineEditor = observer(
                     this.svgRef.current.style.cursor = "grabbing";
                 }
             }
+
+            if (this.dragScrollDispose) {
+                this.dragScrollDispose();
+                this.dragScrollDispose = undefined;
+            }
+
+            this.dragScrollDispose = setupDragScroll(
+                this.svgRef.current!,
+                () => this.lastPointerEvent,
+                (point: Point) => {
+                    let scrollLeft =
+                        this.props.timelineState.scrollLeft - point.x;
+
+                    scrollLeft = this.limitScrollLeft(scrollLeft);
+
+                    runInAction(() => {
+                        this.props.timelineState.scrollLeft = scrollLeft;
+                    });
+
+                    this.props.updateHorizontalScoll();
+                }
+            );
         };
 
         onDragMove = (e: PointerEvent, x: number, y: number, params: any) => {
+            this.lastPointerEvent = {
+                clientX: e.clientX,
+                clientY: e.clientY,
+                movementX: e.movementX ?? 0,
+                movementY: e.movementY ?? 0,
+                ctrlKey: e.ctrlKey,
+                shiftKey: e.shiftKey
+            };
+
+            const rectSvg = this.svgRef.current!.getBoundingClientRect();
+            const dragPosition = this.props.timelineState.pxToPosition(
+                e.clientX - rectSvg.x + this.props.timelineState.scrollLeft
+            );
+
             const dragSettings = this.dragSettings;
 
             if (dragSettings.mode == "timeline-position") {
@@ -699,9 +816,11 @@ const TimelineEditor = observer(
             } else if (dragSettings.mode == "keyframe") {
                 let delta =
                     this.snapToTicks(
-                        dragSettings.keyframeEnd +
-                            x / this.props.timelineState.secondToPx
+                        dragPosition -
+                            dragSettings.dragStartPosition +
+                            dragSettings.keyframeEnd
                     ) - dragSettings.keyframeEnd;
+
                 delta = Math.min(delta, dragSettings.maxDelta);
                 delta = Math.max(delta, dragSettings.minDelta);
 
@@ -730,6 +849,75 @@ const TimelineEditor = observer(
                     (keyframe, selectedKeyframeIndex) => {
                         this.context.updateObject(keyframe, {
                             start: newStarts[selectedKeyframeIndex],
+                            end: newEnds[selectedKeyframeIndex]
+                        });
+
+                        if (keyframe == dragSettings.keyframe) {
+                            runInAction(() => {
+                                this.props.timelineState.position =
+                                    newEnds[selectedKeyframeIndex];
+                            });
+                        }
+                    }
+                );
+            } else if (dragSettings.mode == "keyframe-start") {
+                let delta =
+                    this.snapToTicks(
+                        dragPosition -
+                            dragSettings.dragStartPosition +
+                            dragSettings.keyframeStart
+                    ) - dragSettings.keyframeStart;
+
+                delta = Math.min(delta, dragSettings.maxDelta);
+                delta = Math.max(delta, dragSettings.minDelta);
+
+                const newStarts =
+                    this.props.timelineState.selectedKeyframes.map(
+                        (keyframe, selectedKeyframeIndex) => {
+                            const start =
+                                dragSettings.starts[selectedKeyframeIndex];
+                            const newStart = start + delta;
+                            return roundPosition(newStart);
+                        }
+                    );
+
+                if (!this.context.undoManager.combineCommands) {
+                    this.context.undoManager.setCombineCommands(true);
+                }
+
+                this.props.timelineState.selectedKeyframes.forEach(
+                    (keyframe, selectedKeyframeIndex) => {
+                        this.context.updateObject(keyframe, {
+                            start: newStarts[selectedKeyframeIndex]
+                        });
+                    }
+                );
+            } else if (dragSettings.mode == "keyframe-end") {
+                let delta =
+                    this.snapToTicks(
+                        dragPosition -
+                            dragSettings.dragStartPosition +
+                            dragSettings.keyframeEnd
+                    ) - dragSettings.keyframeEnd;
+
+                delta = Math.min(delta, dragSettings.maxDelta);
+                delta = Math.max(delta, dragSettings.minDelta);
+
+                const newEnds = this.props.timelineState.selectedKeyframes.map(
+                    (keyframe, selectedKeyframeIndex) => {
+                        const end = dragSettings.ends[selectedKeyframeIndex];
+                        const newEnd = end + delta;
+                        return roundPosition(newEnd);
+                    }
+                );
+
+                if (!this.context.undoManager.combineCommands) {
+                    this.context.undoManager.setCombineCommands(true);
+                }
+
+                this.props.timelineState.selectedKeyframes.forEach(
+                    (keyframe, selectedKeyframeIndex) => {
+                        this.context.updateObject(keyframe, {
                             end: newEnds[selectedKeyframeIndex]
                         });
 
@@ -808,6 +996,11 @@ const TimelineEditor = observer(
             if (this.context.undoManager.combineCommands) {
                 this.context.undoManager.setCombineCommands(false);
             }
+
+            if (this.dragScrollDispose) {
+                this.dragScrollDispose();
+                this.dragScrollDispose = undefined;
+            }
         };
 
         onDraggableWheel = (event: WheelEvent) => {
@@ -833,16 +1026,14 @@ const TimelineEditor = observer(
                     const rect = this.svgRef.current!.getBoundingClientRect();
 
                     let scrollLeft =
-                        this.props.timelineState.scrollLeft > 0
-                            ? ((this.props.timelineState.scrollLeft +
-                                  event.clientX -
-                                  rect.x) *
-                                  secondToPx) /
-                                  this.props.timelineState.secondToPx -
-                              (event.clientX - rect.x)
-                            : 0;
+                        ((this.props.timelineState.scrollLeft +
+                            event.clientX -
+                            rect.x) *
+                            secondToPx) /
+                            this.props.timelineState.secondToPx -
+                        (event.clientX - rect.x);
 
-                    scrollLeft = Math.max(scrollLeft, 0);
+                    scrollLeft = this.limitScrollLeft(scrollLeft);
 
                     runInAction(() => {
                         this.props.timelineState.scrollLeft = scrollLeft;
@@ -1234,6 +1425,8 @@ function hitTest(
 
     const point = { x, y };
 
+    const dragStartPosition = timelineState.pxToPosition(x);
+
     let rowIndex = timelineState.getRowIndexFromY(y);
 
     if (rowIndex != -1) {
@@ -1248,31 +1441,38 @@ function hitTest(
         ) {
             const keyframe = widget.timeline[keyframeIndex];
 
-            const rect1 = timelineState.getKeyframeRect(rowIndex, keyframe);
-
-            const rect2 = timelineState.getKeyframeCircleBoundingRect(
-                rowIndex,
-                keyframe
-            );
-
-            if (
-                pointInRect(point, rect1) ||
-                pointInRect(point, {
-                    left: rect2.x1,
-                    top: rect2.y1,
-                    width: rect2.x2 - rect2.x1,
-                    height: rect2.y2 - rect2.y1
-                })
-            ) {
-                return {
-                    mode: "keyframe",
-                    cursor: "grab",
+            if (timelineState.selectedKeyframes.indexOf(keyframe) != -1) {
+                const hitTestResult = rowHitTest(
+                    point,
+                    rowIndex,
                     keyframe,
-                    keyframeEnd: keyframe.end,
-                    ends: [],
-                    minDelta: 0,
-                    maxDelta: 0
-                };
+                    timelineState,
+                    dragStartPosition
+                );
+                if (hitTestResult) {
+                    return hitTestResult;
+                }
+            }
+        }
+
+        for (
+            let keyframeIndex = 0;
+            keyframeIndex < widget.timeline.length;
+            keyframeIndex++
+        ) {
+            const keyframe = widget.timeline[keyframeIndex];
+
+            if (timelineState.selectedKeyframes.indexOf(keyframe) == -1) {
+                const hitTestResult = rowHitTest(
+                    point,
+                    rowIndex,
+                    keyframe,
+                    timelineState,
+                    dragStartPosition
+                );
+                if (hitTestResult) {
+                    return hitTestResult;
+                }
             }
         }
     }
@@ -1282,6 +1482,98 @@ function hitTest(
         cursor: "default",
         startPoint
     };
+}
+
+function rowHitTest(
+    point: Point,
+    rowIndex: number,
+    keyframe: TimelineKeyframe,
+    timelineState: PageTimelineEditorState,
+    dragStartPosition: number
+): DragSettings | undefined {
+    const rect1 = timelineState.getKeyframeRect(rowIndex, keyframe);
+
+    const rect2 = timelineState.getKeyframeCircleBoundingRect(
+        rowIndex,
+        keyframe
+    );
+
+    if (
+        pointInRect(point, rect1) ||
+        pointInRect(point, {
+            left: rect2.x1,
+            top: rect2.y1,
+            width: rect2.x2 - rect2.x1,
+            height: rect2.y2 - rect2.y1
+        })
+    ) {
+        return {
+            mode: "keyframe",
+            cursor: "grab",
+            dragStartPosition,
+            keyframe,
+            keyframeEnd: keyframe.end,
+            ends: [],
+            minDelta: 0,
+            maxDelta: 0
+        };
+    }
+
+    const D = 20;
+
+    if (
+        pointInRect(point, {
+            left: rect1.left - D,
+            top: rect1.top,
+            width: D,
+            height: rect1.height
+        }) ||
+        pointInRect(point, {
+            left: rect2.x1 - D,
+            top: rect2.y1,
+            width: D,
+            height: rect2.y2 - rect2.y1
+        })
+    ) {
+        return {
+            mode: "keyframe-start",
+            cursor: "ew-resize",
+            dragStartPosition,
+            keyframe,
+            keyframeStart: keyframe.start,
+            starts: [],
+            minDelta: 0,
+            maxDelta: 0
+        };
+    }
+
+    if (
+        pointInRect(point, {
+            left: rect1.left + rect1.width,
+            top: rect1.top,
+            width: D,
+            height: rect1.height
+        }) ||
+        pointInRect(point, {
+            left: rect2.x2,
+            top: rect2.y1,
+            width: D,
+            height: rect2.y2 - rect2.y1
+        })
+    ) {
+        return {
+            mode: "keyframe-end",
+            cursor: "ew-resize",
+            dragStartPosition,
+            keyframe,
+            keyframeEnd: keyframe.end,
+            ends: [],
+            minDelta: 0,
+            maxDelta: 0
+        };
+    }
+
+    return undefined;
 }
 
 function roundPosition(position: number) {

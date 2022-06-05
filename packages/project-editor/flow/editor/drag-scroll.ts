@@ -1,5 +1,5 @@
 import { Point } from "eez-studio-shared/geometry";
-import { IMouseHandler } from "project-editor/flow/editor/mouse-handler";
+import { IPointerEvent } from "project-editor/flow/editor/mouse-handler";
 
 const DRAG_SCROLL_BORDER_THRESHOLD = 10;
 const DRAG_SCROLL_MIN_SPEED = 50; // px per second
@@ -30,69 +30,76 @@ function calcDragScrollSpeed(distance: number, dt: number) {
 }
 
 export function setupDragScroll(
-    el: HTMLElement,
-    mouseHandler: IMouseHandler,
+    el: Element,
+    getLastPointerEvent: () => IPointerEvent | undefined,
     translateBy: (point: Point) => void
 ) {
     let dragScrollLastTime: number | undefined;
 
     function onDragScroll() {
-        const lastPointerEvent = mouseHandler.lastPointerEvent;
-        const r = el.getBoundingClientRect();
+        const lastPointerEvent = getLastPointerEvent();
+        if (lastPointerEvent) {
+            const r = el.getBoundingClientRect();
 
-        let tx = 0;
-        let ty = 0;
+            let tx = 0;
+            let ty = 0;
 
-        if (
-            lastPointerEvent.clientX < r.left + DRAG_SCROLL_BORDER_THRESHOLD &&
-            lastPointerEvent.movementX < 0
-        ) {
-            tx =
-                r.left +
-                DRAG_SCROLL_BORDER_THRESHOLD -
-                lastPointerEvent.clientX;
-        } else if (
-            lastPointerEvent.clientX > r.right - DRAG_SCROLL_BORDER_THRESHOLD &&
-            lastPointerEvent.movementX > 0
-        ) {
-            tx = -(
-                lastPointerEvent.clientX -
-                (r.right - DRAG_SCROLL_BORDER_THRESHOLD)
-            );
-        }
-
-        if (
-            lastPointerEvent.clientY < r.top + DRAG_SCROLL_BORDER_THRESHOLD &&
-            lastPointerEvent.movementY < 0
-        ) {
-            ty =
-                r.top + DRAG_SCROLL_BORDER_THRESHOLD - lastPointerEvent.clientY;
-        } else if (
-            lastPointerEvent.clientY >
-                r.bottom - DRAG_SCROLL_BORDER_THRESHOLD &&
-            lastPointerEvent.movementY > 0
-        ) {
-            ty = -(
-                lastPointerEvent.clientY -
-                (r.bottom - DRAG_SCROLL_BORDER_THRESHOLD)
-            );
-        }
-
-        if (tx || ty) {
-            if (!dragScrollLastTime) {
-                dragScrollLastTime = new Date().getTime();
-            } else {
-                const currentTime = new Date().getTime();
-                const dt = currentTime - dragScrollLastTime;
-                dragScrollLastTime = currentTime;
-
-                translateBy({
-                    x: calcDragScrollSpeed(tx, dt),
-                    y: calcDragScrollSpeed(ty, dt)
-                });
+            if (
+                lastPointerEvent.clientX <
+                    r.left + DRAG_SCROLL_BORDER_THRESHOLD &&
+                lastPointerEvent.movementX < 0
+            ) {
+                tx =
+                    r.left +
+                    DRAG_SCROLL_BORDER_THRESHOLD -
+                    lastPointerEvent.clientX;
+            } else if (
+                lastPointerEvent.clientX >
+                    r.right - DRAG_SCROLL_BORDER_THRESHOLD &&
+                lastPointerEvent.movementX > 0
+            ) {
+                tx = -(
+                    lastPointerEvent.clientX -
+                    (r.right - DRAG_SCROLL_BORDER_THRESHOLD)
+                );
             }
-        } else {
-            dragScrollLastTime = undefined;
+
+            if (
+                lastPointerEvent.clientY <
+                    r.top + DRAG_SCROLL_BORDER_THRESHOLD &&
+                lastPointerEvent.movementY < 0
+            ) {
+                ty =
+                    r.top +
+                    DRAG_SCROLL_BORDER_THRESHOLD -
+                    lastPointerEvent.clientY;
+            } else if (
+                lastPointerEvent.clientY >
+                    r.bottom - DRAG_SCROLL_BORDER_THRESHOLD &&
+                lastPointerEvent.movementY > 0
+            ) {
+                ty = -(
+                    lastPointerEvent.clientY -
+                    (r.bottom - DRAG_SCROLL_BORDER_THRESHOLD)
+                );
+            }
+
+            if (tx || ty) {
+                if (!dragScrollLastTime) {
+                    dragScrollLastTime = new Date().getTime();
+                } else {
+                    const currentTime = new Date().getTime();
+                    const dt = currentTime - dragScrollLastTime;
+                    dragScrollLastTime = currentTime;
+
+                    translateBy({
+                        x: calcDragScrollSpeed(tx, dt),
+                        y: calcDragScrollSpeed(ty, dt)
+                    });
+                }
+            } else {
+                dragScrollLastTime = undefined;
+            }
         }
 
         dragScrollAnimationFrameRequest =
