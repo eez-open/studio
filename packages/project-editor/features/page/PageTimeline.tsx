@@ -4,12 +4,9 @@ import {
     action,
     computed,
     observable,
-    autorun,
     runInAction
 } from "mobx";
 import { observer } from "mobx-react";
-
-import { Splitter } from "eez-studio-ui/splitter";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
@@ -17,13 +14,10 @@ import { getId, getParent, IEezObject } from "project-editor/core/object";
 import {
     TreeAdapter,
     ITreeAdapter,
-    TreeObjectAdapter,
-    TreeObjectAdapterChildren,
     ITreeRow
 } from "project-editor/core/objectAdapter";
 
 import type { PageTabState } from "project-editor/features/page/PageEditor";
-import { createTransformer } from "mobx-utils";
 import { Widget, TimelineKeyframe } from "project-editor/flow/component";
 import { Draggable } from "eez-studio-ui/draggable";
 import { closestBySelector } from "eez-studio-shared/dom";
@@ -40,10 +34,9 @@ import { theme } from "eez-studio-ui/theme";
 import { SvgLabel } from "eez-studio-ui/svg-label";
 import { setupDragScroll } from "project-editor/flow/editor/drag-scroll";
 import { IPointerEvent } from "project-editor/flow/editor/mouse-handler";
+import classNames from "classnames";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const OUTLINE_LEVEL_MARGIN = 20;
 
 const TIMELINE_X_OFFSET = 10;
 const TIMELINE_HEIGHT = 40;
@@ -51,6 +44,7 @@ const ROW_HEIGHT = 20;
 const POINT_RADIUS = 4;
 const ROW_GAP = 3;
 const NEEDLE_WIDTH = 4;
+const VISIBILITY_TOLERANCE = 10;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -63,7 +57,7 @@ export class PageTimelineEditorState {
     secondToPx: number = 200;
     selectedKeyframes: TimelineKeyframe[] = [];
     rubberBendRect: Rect | undefined;
-    horizontalScrollBar: HTMLDivElement | null = null;
+    horizontalScrollBarWidth: number;
 
     constructor(private tabState: PageTabState) {
         this.duration = 60.0;
@@ -79,6 +73,7 @@ export class PageTimelineEditorState {
             secondToPx: observable,
             selectedKeyframes: observable,
             rubberBendRect: observable,
+            horizontalScrollBarWidth: observable,
             timelineHeight: computed,
             timelineWidth: computed
         });
@@ -107,7 +102,14 @@ export class PageTimelineEditorState {
     }
 
     get treeAdapter(): ITreeAdapter {
-        return new TreeAdapter(new PageTreeObjectAdapter(this.tabState));
+        return new TreeAdapter(
+            this.tabState.widgetContainer,
+            undefined,
+            (object: IEezObject) => {
+                return object instanceof ProjectEditor.WidgetClass;
+            },
+            true
+        );
     }
 
     static getTimelineWidth(duration: number, secondToPx: number) {
@@ -202,23 +204,20 @@ export class PageTimelineEditorState {
     getKeyFrameEndPosition(rowIndex: number, keyframe: TimelineKeyframe) {
         return this.positionToPx(keyframe.end);
     }
-}
 
-class PageTreeObjectAdapter extends TreeObjectAdapter {
-    constructor(private tabState: PageTabState) {
-        super(
-            tabState.page,
-            createTransformer((object: IEezObject) => {
-                return new TreeObjectAdapter(object, this.transformer, true);
-            }),
-            true
-        );
-    }
-
-    get children(): TreeObjectAdapterChildren {
-        return this.tabState.page.components
-            .filter(component => component instanceof ProjectEditor.WidgetClass)
-            .map(child => this.transformer(child));
+    isVerticalLineVisible(x: number) {
+        if (x < this.scrollLeft - VISIBILITY_TOLERANCE) {
+            return false;
+        }
+        if (
+            x >
+            this.scrollLeft +
+                this.horizontalScrollBarWidth +
+                VISIBILITY_TOLERANCE
+        ) {
+            return false;
+        }
+        return true;
     }
 }
 
@@ -237,13 +236,40 @@ export const PageTimelineEditor = observer(
         verticalScrollBarRef = React.createRef<HTMLDivElement>();
         horizontalScrollBarRef = React.createRef<HTMLDivElement>();
 
+        resizeObserver: ResizeObserver;
+
+        constructor(props: any) {
+            super(props);
+            this.resizeObserver = new ResizeObserver(
+                this.resizeObserverCallback
+            );
+        }
+
+        resizeObserverCallback = () => {
+            if (this.horizontalScrollBarRef.current) {
+                let rect =
+                    this.horizontalScrollBarRef.current.getBoundingClientRect();
+                runInAction(() => {
+                    this.props.tabState.timeline.horizontalScrollBarWidth =
+                        rect.width;
+                });
+            }
+        };
+
         componentDidMount() {
-            this.props.tabState.timeline.horizontalScrollBar =
-                this.horizontalScrollBarRef.current;
+            if (this.horizontalScrollBarRef.current) {
+                this.resizeObserver.observe(
+                    this.horizontalScrollBarRef.current
+                );
+            }
         }
 
         componentWillUnmount() {
-            this.props.tabState.timeline.horizontalScrollBar = null;
+            if (this.horizontalScrollBarRef.current) {
+                this.resizeObserver.unobserve(
+                    this.horizontalScrollBarRef.current
+                );
+            }
         }
 
         onVerticalScroll = action(() => {
@@ -269,18 +295,10 @@ export const PageTimelineEditor = observer(
 
         // interface IPanel implementation
         get selectedObject() {
-            return this.selectedObjects.length > 0
-                ? this.selectedObjects[0]
-                : undefined;
+            return this.props.tabState.selectedObject;
         }
         get selectedObjects() {
-            return this.props.tabState.timeline.selectedKeyframes.map(
-                keyframe =>
-                    getAncestorOfType(
-                        keyframe,
-                        ProjectEditor.WidgetClass.classInfo
-                    )!
-            );
+            return this.props.tabState.selectedObjects;
         }
         cutSelection() {}
         copySelection() {}
@@ -292,6 +310,7 @@ export const PageTimelineEditor = observer(
                 );
                 runInAction(() => {
                     this.props.tabState.timeline.selectedKeyframes = [];
+                    this.props.tabState.selectObjects([]);
                 });
             }
         }
@@ -302,98 +321,39 @@ export const PageTimelineEditor = observer(
 
         render() {
             return (
-                <Splitter
-                    type="horizontal"
-                    sizes="25%|75%"
-                    persistId="project-editor/page/timeline-splitter"
+                <div
                     className="EezStudio_PageTimelineSplitter"
-                    splitterSize={5}
                     onFocus={this.onFocus}
                     tabIndex={0}
                 >
-                    <Outline timelineState={this.props.tabState.timeline} />
-                    <>
-                        <TimelineEditor
-                            timelineState={this.props.tabState.timeline}
-                            updateHorizontalScoll={this.updateHorizontalScoll}
-                        />
+                    <TimelineEditor
+                        tabState={this.props.tabState}
+                        timelineState={this.props.tabState.timeline}
+                        updateHorizontalScoll={this.updateHorizontalScoll}
+                    />
+                    <div
+                        ref={this.verticalScrollBarRef}
+                        className="EezStudio_PageTimeline_ScrollBar EezStudio_PageTimeline_VerticalScrollBar"
+                        onScroll={this.onVerticalScroll}
+                    >
                         <div
-                            ref={this.verticalScrollBarRef}
-                            className="EezStudio_PageTimeline_ScrollBar EezStudio_PageTimeline_VerticalScrollBar"
-                            onScroll={this.onVerticalScroll}
-                        >
-                            <div
-                                style={{
-                                    height: this.props.tabState.timeline
-                                        .timelineHeight
-                                }}
-                            ></div>
-                        </div>
+                            style={{
+                                height: this.props.tabState.timeline
+                                    .timelineHeight
+                            }}
+                        ></div>
+                    </div>
+                    <div
+                        ref={this.horizontalScrollBarRef}
+                        className="EezStudio_PageTimeline_ScrollBar EezStudio_PageTimeline_HorizontalScrollBar"
+                        onScroll={this.onHorizontalScroll}
+                    >
                         <div
-                            ref={this.horizontalScrollBarRef}
-                            className="EezStudio_PageTimeline_ScrollBar EezStudio_PageTimeline_HorizontalScrollBar"
-                            onScroll={this.onHorizontalScroll}
-                        >
-                            <div
-                                style={{
-                                    width: this.props.tabState.timeline
-                                        .timelineWidth
-                                }}
-                            ></div>
-                        </div>
-                    </>
-                </Splitter>
-            );
-        }
-    }
-);
-
-////////////////////////////////////////////////////////////////////////////////
-
-const Outline = observer(
-    class Outline extends React.Component<{
-        timelineState: PageTimelineEditorState;
-    }> {
-        divRef = React.createRef<HTMLDivElement>();
-        dispose: any;
-
-        componentDidMount() {
-            this.dispose = autorun(() => {
-                const scrollTop = this.props.timelineState.scrollTop;
-                if (this.divRef.current) {
-                    this.divRef.current.scrollTop = scrollTop;
-                }
-            });
-        }
-
-        componentWillUnmount() {
-            this.dispose();
-        }
-
-        render() {
-            const { timelineState } = this.props;
-            return (
-                <div
-                    ref={this.divRef}
-                    className="EezStudio_PageTimeline_Outline"
-                >
-                    <div>
-                        {timelineState.treeAdapter.allRows.map(row => (
-                            <div
-                                key={timelineState.treeAdapter.getItemId(
-                                    row.item
-                                )}
-                                className="EezStudio_PageTimeline_Outline_Item"
-                                style={{
-                                    paddingLeft:
-                                        row.level * OUTLINE_LEVEL_MARGIN
-                                }}
-                            >
-                                {timelineState.treeAdapter.itemToString(
-                                    row.item
-                                )}
-                            </div>
-                        ))}
+                            style={{
+                                width: this.props.tabState.timeline
+                                    .timelineWidth
+                            }}
+                        ></div>
                     </div>
                 </div>
             );
@@ -451,6 +411,7 @@ type DragSettings =
 
 const TimelineEditor = observer(
     class TimelineEditor extends React.Component<{
+        tabState: PageTabState;
         timelineState: PageTimelineEditorState;
         updateHorizontalScoll: () => void;
     }> {
@@ -539,8 +500,7 @@ const TimelineEditor = observer(
                 scrollLeft = 0;
             } else {
                 const horizontalScrollBarWidth =
-                    this.props.timelineState.horizontalScrollBar!.getBoundingClientRect()
-                        .width;
+                    this.props.timelineState.horizontalScrollBarWidth;
 
                 const timelineWidth = this.props.timelineState.timelineWidth;
 
@@ -572,6 +532,7 @@ const TimelineEditor = observer(
                 // runInAction(() => {
                 //     this.props.timelineState.selectedKeyframes = [];
                 // });
+                // this.props.tabState.selectObjects([]);
 
                 this.setTimelinePosition(dragSettings.startPoint.x);
             } else {
@@ -623,6 +584,16 @@ const TimelineEditor = observer(
                                     dragSettings.keyframe.end;
                             }
                         }
+
+                        this.props.tabState.selectObjects(
+                            this.props.tabState.timeline.selectedKeyframes.map(
+                                keyframe =>
+                                    getAncestorOfType(
+                                        keyframe,
+                                        ProjectEditor.WidgetClass.classInfo
+                                    )!
+                            )
+                        );
                     });
 
                     if (dragSettings.mode == "keyframe-start") {
@@ -723,6 +694,7 @@ const TimelineEditor = observer(
                 } else if (dragSettings.mode == "rubber-band") {
                     runInAction(() => {
                         this.props.timelineState.selectedKeyframes = [];
+                        this.props.tabState.selectObjects([]);
                         this.props.timelineState.rubberBendRect = {
                             left: dragSettings.startPoint.x,
                             top: dragSettings.startPoint.y,
@@ -991,6 +963,10 @@ const TimelineEditor = observer(
                 });
             }
 
+            if (this.svgRef.current) {
+                this.svgRef.current.style.cursor = dragSettings.cursor;
+            }
+
             this.dragSettings = { mode: "none", cursor: "default" };
 
             if (this.context.undoManager.combineCommands) {
@@ -1143,40 +1119,52 @@ const Timeline = observer(
                     height={TIMELINE_HEIGHT}
                 />
 
-                {subticks.map(x => (
-                    <g key={x}>
-                        <line
-                            className="EezStudio_PageTimeline_Subtick"
-                            x1={timelineState.positionToPx(x)}
-                            y1={(3 * TIMELINE_HEIGHT) / 4}
-                            x2={timelineState.positionToPx(x)}
-                            y2={TIMELINE_HEIGHT}
-                        />
-                    </g>
-                ))}
+                {subticks
+                    .filter(x =>
+                        timelineState.isVerticalLineVisible(
+                            timelineState.positionToPx(x)
+                        )
+                    )
+                    .map(x => (
+                        <g key={x}>
+                            <line
+                                className="EezStudio_PageTimeline_Subtick"
+                                x1={timelineState.positionToPx(x)}
+                                y1={(3 * TIMELINE_HEIGHT) / 4}
+                                x2={timelineState.positionToPx(x)}
+                                y2={TIMELINE_HEIGHT}
+                            />
+                        </g>
+                    ))}
 
-                {ticks.map(x => (
-                    <g key={x}>
-                        <line
-                            className="EezStudio_PageTimeline_Tick"
-                            x1={timelineState.positionToPx(x)}
-                            y1={TIMELINE_HEIGHT / 2}
-                            x2={timelineState.positionToPx(x)}
-                            y2={TIMELINE_HEIGHT}
-                        />
-                        {Math.abs(x - timelineState.position) > 1e-4 && (
-                            <text
-                                className="EezStudio_PageTimeline_TickText"
-                                x={timelineState.positionToPx(x)}
-                                y={0}
-                                textAnchor="middle"
-                                alignmentBaseline="hanging"
-                            >
-                                {x}
-                            </text>
-                        )}
-                    </g>
-                ))}
+                {ticks
+                    .filter(x =>
+                        timelineState.isVerticalLineVisible(
+                            timelineState.positionToPx(x)
+                        )
+                    )
+                    .map(x => (
+                        <g key={x}>
+                            <line
+                                className="EezStudio_PageTimeline_Tick"
+                                x1={timelineState.positionToPx(x)}
+                                y1={TIMELINE_HEIGHT / 2}
+                                x2={timelineState.positionToPx(x)}
+                                y2={TIMELINE_HEIGHT}
+                            />
+                            {Math.abs(x - timelineState.position) > 1e-4 && (
+                                <text
+                                    className="EezStudio_PageTimeline_TickText"
+                                    x={timelineState.positionToPx(x)}
+                                    y={0}
+                                    textAnchor="middle"
+                                    alignmentBaseline="hanging"
+                                >
+                                    {x}
+                                </text>
+                            )}
+                        </g>
+                    ))}
 
                 <rect
                     className="EezStudio_PageTimeline_Needle"
@@ -1311,7 +1299,9 @@ const Row = observer(
         return (
             <g key={timelineState.treeAdapter.getItemId(row.item)}>
                 <rect
-                    className="EezStudio_PageTimeline_Row"
+                    className={classNames("EezStudio_PageTimeline_Row", {
+                        selected: timelineState.treeAdapter.isSelected(row.item)
+                    })}
                     x={rowRect.left}
                     y={rowRect.top}
                     width={rowRect.width}

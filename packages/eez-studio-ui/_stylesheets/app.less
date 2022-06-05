@@ -5365,7 +5365,10 @@ button.EezStudio_Action {
     }
 
     .EezStudio_PageTimeline_Row {
-        fill: @darkBorderColor;
+        fill: @pageTimelineRowColor;
+        &.selected {
+            fill: @pageTimelineSelectedRowColor;
+        }
     }
 
     .EezStudio_PageTimeline_Keyframe {
