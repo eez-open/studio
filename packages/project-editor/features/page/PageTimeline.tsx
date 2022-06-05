@@ -569,9 +569,9 @@ const TimelineEditor = observer(
             const dragSettings = hitTest(this.props.timelineState, e, x1, y1);
 
             if (dragSettings.mode == "timeline-position") {
-                runInAction(() => {
-                    this.props.timelineState.selectedKeyframes = [];
-                });
+                // runInAction(() => {
+                //     this.props.timelineState.selectedKeyframes = [];
+                // });
 
                 this.setTimelinePosition(dragSettings.startPoint.x);
             } else {
@@ -1042,6 +1042,14 @@ const TimelineEditor = observer(
 
                     this.props.updateHorizontalScoll();
                 }
+            } else {
+                let scrollLeft =
+                    this.props.timelineState.scrollLeft + event.deltaY;
+                scrollLeft = this.limitScrollLeft(scrollLeft);
+                runInAction(() => {
+                    this.props.timelineState.scrollLeft = scrollLeft;
+                });
+                this.props.updateHorizontalScoll();
             }
         };
 
