@@ -2587,6 +2587,7 @@ export class Widget extends Component {
     allowOutside: boolean;
 
     locked: boolean;
+    hiddenInEditor: boolean;
 
     timeline: TimelineKeyframe[];
 
@@ -2607,6 +2608,11 @@ export class Widget extends Component {
             },
             {
                 name: "locked",
+                type: PropertyType.Boolean,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "hiddenInEditor",
                 type: PropertyType.Boolean,
                 hideInPropertyGrid: true
             },
@@ -2871,6 +2877,7 @@ export class Widget extends Component {
             allowOutside: observable,
             styleObject: computed,
             locked: observable,
+            hiddenInEditor: observable,
             timeline: observable
         });
     }

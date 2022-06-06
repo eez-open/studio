@@ -7,6 +7,20 @@ import {
     runInAction
 } from "mobx";
 import { observer } from "mobx-react";
+import classNames from "classnames";
+
+import { addAlphaToColor } from "eez-studio-shared/color";
+import {
+    isRectInsideRect,
+    Point,
+    pointInRect,
+    Rect
+} from "eez-studio-shared/geometry";
+import { closestBySelector } from "eez-studio-shared/dom";
+
+import { theme } from "eez-studio-ui/theme";
+import { SvgLabel } from "eez-studio-ui/svg-label";
+import { Draggable } from "eez-studio-ui/draggable";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
@@ -16,25 +30,15 @@ import {
     ITreeAdapter,
     ITreeRow
 } from "project-editor/core/objectAdapter";
-
-import type { PageTabState } from "project-editor/features/page/PageEditor";
-import { Widget, TimelineKeyframe } from "project-editor/flow/component";
-import { Draggable } from "eez-studio-ui/draggable";
-import { closestBySelector } from "eez-studio-shared/dom";
 import { getAncestorOfType, IPanel } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
-import {
-    isRectInsideRect,
-    Point,
-    pointInRect,
-    Rect
-} from "eez-studio-shared/geometry";
-import { addAlphaToColor } from "eez-studio-shared/color";
-import { theme } from "eez-studio-ui/theme";
-import { SvgLabel } from "eez-studio-ui/svg-label";
+
 import { setupDragScroll } from "project-editor/flow/editor/drag-scroll";
 import { IPointerEvent } from "project-editor/flow/editor/mouse-handler";
-import classNames from "classnames";
+
+import type { Widget, TimelineKeyframe } from "project-editor/flow/component";
+
+import type { PageTabState } from "project-editor/features/page/PageEditor";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -942,6 +946,10 @@ const TimelineEditor = observer(
                         row.item
                     ) as Widget;
 
+                    if (widget.locked || widget.hiddenInEditor) {
+                        return;
+                    }
+
                     widget.timeline.forEach(keyframe => {
                         const { x1, y1, x2, y2 } =
                             timelineState.getKeyframeCircleBoundingRect(
@@ -1246,7 +1254,15 @@ const Rows = observer(
                     ) as Widget;
 
                     return (
-                        <g key={timelineState.treeAdapter.getItemId(row.item)}>
+                        <g
+                            key={timelineState.treeAdapter.getItemId(row.item)}
+                            style={{
+                                opacity:
+                                    widget.hiddenInEditor || widget.locked
+                                        ? 0.1
+                                        : 1.0
+                            }}
+                        >
                             {widget.timeline.map(keyframe => {
                                 const { cx, cy, x1, y1, x2, y2 } =
                                     timelineState.getKeyframeCircleBoundingRect(
@@ -1303,7 +1319,12 @@ const Row = observer(
         const rowRect = timelineState.getRowRect(rowIndex);
 
         return (
-            <g key={timelineState.treeAdapter.getItemId(row.item)}>
+            <g
+                key={timelineState.treeAdapter.getItemId(row.item)}
+                style={{
+                    opacity: widget.hiddenInEditor || widget.locked ? 0.1 : 1.0
+                }}
+            >
                 <rect
                     className={classNames("EezStudio_PageTimeline_Row", {
                         selected: timelineState.treeAdapter.isSelected(row.item)
@@ -1438,53 +1459,55 @@ function hitTest(
             timelineState.treeAdapter.allRows[rowIndex].item
         ) as Widget;
 
-        for (
-            let keyframeIndex = 0;
-            keyframeIndex < widget.timeline.length;
-            keyframeIndex++
-        ) {
-            const keyframe = widget.timeline[keyframeIndex];
+        if (!widget.locked && !widget.hiddenInEditor) {
+            for (
+                let keyframeIndex = 0;
+                keyframeIndex < widget.timeline.length;
+                keyframeIndex++
+            ) {
+                const keyframe = widget.timeline[keyframeIndex];
 
-            if (timelineState.selectedKeyframes.indexOf(keyframe) != -1) {
-                const hitTestResult = rowHitTest(
-                    point,
-                    rowIndex,
-                    keyframe,
-                    timelineState,
-                    dragStartPosition
-                );
-                if (hitTestResult) {
-                    return hitTestResult;
+                if (timelineState.selectedKeyframes.indexOf(keyframe) != -1) {
+                    const hitTestResult = rowHitTest(
+                        point,
+                        rowIndex,
+                        keyframe,
+                        timelineState,
+                        dragStartPosition
+                    );
+                    if (hitTestResult) {
+                        return hitTestResult;
+                    }
                 }
             }
-        }
 
-        for (
-            let keyframeIndex = 0;
-            keyframeIndex < widget.timeline.length;
-            keyframeIndex++
-        ) {
-            const keyframe = widget.timeline[keyframeIndex];
+            for (
+                let keyframeIndex = 0;
+                keyframeIndex < widget.timeline.length;
+                keyframeIndex++
+            ) {
+                const keyframe = widget.timeline[keyframeIndex];
 
-            if (timelineState.selectedKeyframes.indexOf(keyframe) == -1) {
-                const hitTestResult = rowHitTest(
-                    point,
-                    rowIndex,
-                    keyframe,
-                    timelineState,
-                    dragStartPosition
-                );
-                if (hitTestResult) {
-                    return hitTestResult;
+                if (timelineState.selectedKeyframes.indexOf(keyframe) == -1) {
+                    const hitTestResult = rowHitTest(
+                        point,
+                        rowIndex,
+                        keyframe,
+                        timelineState,
+                        dragStartPosition
+                    );
+                    if (hitTestResult) {
+                        return hitTestResult;
+                    }
                 }
             }
-        }
 
-        return {
-            mode: "row",
-            cursor: "default",
-            widget
-        };
+            return {
+                mode: "row",
+                cursor: "default",
+                widget
+            };
+        }
     }
 
     return {

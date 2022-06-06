@@ -5216,6 +5216,10 @@ button.EezStudio_Action {
     width: 100%;
     height: 20px;
 
+    &.dimmed {
+        opacity: 0.5;
+    }
+
     span {
         flex: 1;
         white-space: nowrap;
@@ -5233,24 +5237,28 @@ button.EezStudio_Action {
         }
     }
 
-    &:not(.locked) {
-        .EezStudio_IconAction {
+    &:not(.withIcon) {
+        .EezStudio_Toolbar {
             position: absolute;
             top: 3px;
             right: 0px;
-            visibility: hidden;
-        }
-        &:hover {
-            .EezStudio_IconAction {
-                visibility: visible;
-            }
         }
     }
 
-    &.locked {
+    &.withIcon {
         span {
             text-overflow: ellipsis;
             overflow: hidden;
+        }
+    }
+
+    .EezStudio_IconAction {
+        margin-right: 5px;
+    }
+
+    &:hover {
+        .EezStudio_IconAction {
+            visibility: visible !important;
         }
     }
 }

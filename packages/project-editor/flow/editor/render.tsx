@@ -203,19 +203,22 @@ export const ComponentEnclosure = observer(
         render() {
             const { component, flowContext, left, top, visible } = this.props;
 
-            if (
-                component instanceof ProjectEditor.WidgetClass &&
-                flowContext.flowState
-            ) {
-                if (
-                    !getBooleanValue(
-                        flowContext,
-                        component,
-                        "visible",
-                        !component.visible
-                    )
-                ) {
-                    return null;
+            if (component instanceof ProjectEditor.WidgetClass) {
+                if (flowContext.flowState) {
+                    if (
+                        !getBooleanValue(
+                            flowContext,
+                            component,
+                            "visible",
+                            !component.visible
+                        )
+                    ) {
+                        return null;
+                    }
+                } else {
+                    if (component.hiddenInEditor) {
+                        return null;
+                    }
                 }
             }
 

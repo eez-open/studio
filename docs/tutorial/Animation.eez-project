@@ -563,64 +563,6 @@
           ]
         },
         {
-          "type": "ContainerWidget",
-          "left": 142,
-          "top": 75,
-          "width": 160,
-          "height": 4,
-          "wireID": "767d9732-ad46-4595-bd0e-d74ffe365a7f",
-          "customInputs": [],
-          "customOutputs": [],
-          "style": {
-            "inheritFrom": "default",
-            "backgroundColor": "#4a27e9"
-          },
-          "timeline": [
-            {
-              "start": 0,
-              "end": 0,
-              "left": 0,
-              "top": 57,
-              "width": 160,
-              "height": 4
-            },
-            {
-              "start": 0,
-              "end": 0.5,
-              "left": 160,
-              "top": 56,
-              "width": 160,
-              "height": 4
-            },
-            {
-              "start": 0.5,
-              "end": 1,
-              "left": 320,
-              "top": 56,
-              "width": 160,
-              "height": 4
-            },
-            {
-              "start": 1,
-              "end": 1.5,
-              "left": 480,
-              "top": 56,
-              "width": 160,
-              "height": 4
-            },
-            {
-              "start": 1.5,
-              "end": 2,
-              "left": 640,
-              "top": 56,
-              "width": 160,
-              "height": 4
-            }
-          ],
-          "widgets": [],
-          "layout": "static"
-        },
-        {
           "type": "AnimateActionComponent",
           "left": 222,
           "top": -67,
@@ -689,6 +631,70 @@
           "wireID": "d4e5eba1-7162-4e49-a46b-9298e1f569c4",
           "customInputs": [],
           "customOutputs": []
+        },
+        {
+          "type": "RectangleWidget",
+          "left": 0,
+          "top": 56,
+          "width": 160,
+          "height": 4,
+          "wireID": "3c231220-8d99-4d2a-cdcc-25bf313bfd97",
+          "customInputs": [],
+          "customOutputs": [],
+          "style": {
+            "inheritFrom": "default",
+            "backgroundColor": "#4a27e9"
+          },
+          "timeline": [
+            {
+              "start": 0,
+              "end": 0,
+              "left": 0,
+              "top": 56,
+              "width": 160,
+              "height": 4
+            },
+            {
+              "start": 0,
+              "end": 0.5,
+              "left": 160,
+              "top": 56,
+              "width": 160,
+              "height": 4
+            },
+            {
+              "start": 0.5,
+              "end": 0.5,
+              "left": 160,
+              "top": 56,
+              "width": 160,
+              "height": 4
+            },
+            {
+              "start": 0.5,
+              "end": 1,
+              "left": 320,
+              "top": 56,
+              "width": 160,
+              "height": 4
+            },
+            {
+              "start": 1,
+              "end": 1.5,
+              "left": 480,
+              "top": 56,
+              "width": 160,
+              "height": 4
+            },
+            {
+              "start": 1.5,
+              "end": 2,
+              "left": 640,
+              "top": 56,
+              "width": 160,
+              "height": 4
+            }
+          ]
         },
         {
           "type": "ButtonWidget",
