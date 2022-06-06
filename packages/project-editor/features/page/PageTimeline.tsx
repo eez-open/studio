@@ -95,13 +95,18 @@ export class PageTimelineEditorState {
         if (state.secondToPx != undefined) {
             this.secondToPx = state.secondToPx;
         }
+
+        if (state.scrollLeft != undefined) {
+            this.scrollLeft = state.scrollLeft;
+        }
     }
 
     saveState() {
         return {
             isEditorActive: this.isEditorActive,
             position: this.position,
-            secondToPx: this.secondToPx
+            secondToPx: this.secondToPx,
+            scrollLeft: this.scrollLeft
         };
     }
 
@@ -266,6 +271,8 @@ export const PageTimelineEditor = observer(
                     this.horizontalScrollBarRef.current
                 );
             }
+
+            this.updateHorizontalScoll();
         }
 
         componentWillUnmount() {
@@ -971,10 +978,26 @@ const TimelineEditor = observer(
                 });
 
                 runInAction(() => {
+                    if (selectedKeyframes.length > 0) {
+                        this.props.timelineState.position = Math.max(
+                            ...selectedKeyframes.map(keyframe => keyframe.end)
+                        );
+                    }
+
                     this.props.timelineState.selectedKeyframes =
                         selectedKeyframes;
                     this.props.timelineState.rubberBendRect = undefined;
                 });
+
+                this.props.tabState.selectObjects(
+                    this.props.tabState.timeline.selectedKeyframes.map(
+                        keyframe =>
+                            getAncestorOfType(
+                                keyframe,
+                                ProjectEditor.WidgetClass.classInfo
+                            )!
+                    )
+                );
             }
 
             if (this.svgRef.current) {

@@ -1187,8 +1187,20 @@
               "height": 20
             },
             {
-              "start": 2.5,
+              "start": 1.5,
               "end": 3,
+              "scale": 0.5,
+              "rotate": 360
+            },
+            {
+              "start": 3,
+              "end": 4.5,
+              "scale": 1,
+              "rotate": 0
+            },
+            {
+              "start": 5.5,
+              "end": 6,
               "top": 20,
               "height": 0
             }
@@ -1220,8 +1232,20 @@
               "height": 20
             },
             {
-              "start": 2,
-              "end": 2.5,
+              "start": 1.5,
+              "end": 3,
+              "scale": 0.5,
+              "rotate": 360
+            },
+            {
+              "start": 3,
+              "end": 4.5,
+              "scale": 1,
+              "rotate": 0
+            },
+            {
+              "start": 5,
+              "end": 5.5,
               "top": 20,
               "height": 0
             }
@@ -1256,7 +1280,19 @@
             },
             {
               "start": 1.5,
-              "end": 2,
+              "end": 3,
+              "scale": 0.5,
+              "rotate": 360
+            },
+            {
+              "start": 3,
+              "end": 4.5,
+              "scale": 1,
+              "rotate": 0
+            },
+            {
+              "start": 4.5,
+              "end": 5,
               "top": 20,
               "height": 0
             }
@@ -1271,8 +1307,8 @@
           "wireID": "d3aeebcc-d506-4db8-91bb-72885c1fe4d7",
           "customInputs": [],
           "customOutputs": [],
-          "speed": "4",
-          "time": "3"
+          "speed": "3",
+          "time": "6"
         },
         {
           "type": "StartActionComponent",

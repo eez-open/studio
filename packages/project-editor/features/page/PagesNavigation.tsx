@@ -19,8 +19,7 @@ import { ProjectContext } from "project-editor/project/context";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { NavigationComponent } from "project-editor/project/NavigationComponent";
-import { PageTabState } from "project-editor/features/page/PageEditor";
-import { Page } from "project-editor/features/page/page";
+import type { PageTabState } from "project-editor/features/page/PageEditor";
 import { LocalVariables } from "../variable/VariablesNavigation";
 import type { Widget } from "project-editor/flow/component";
 import classNames from "classnames";
@@ -128,7 +127,7 @@ export const PageStructure = observer(
             }
 
             const object = editor.object;
-            if (!(object instanceof Page)) {
+            if (!(object instanceof ProjectEditor.PageClass)) {
                 return undefined;
             }
 

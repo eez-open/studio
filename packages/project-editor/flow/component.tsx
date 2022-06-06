@@ -38,7 +38,8 @@ import {
     propertyNotSetMessage,
     updateObject,
     isDashboardOrAppletOrFirmwareWithFlowSupportProject,
-    isNotDashboardOrAppletOrFirmwareWithFlowSupportProject
+    isNotDashboardOrAppletOrFirmwareWithFlowSupportProject,
+    isNotDashboardProject
 } from "project-editor/store";
 import { loadObject, objectToJS } from "project-editor/store";
 import { IContextMenuContext, getDocumentStore } from "project-editor/store";
@@ -122,7 +123,6 @@ import { ProjectContext } from "project-editor/project/context";
 import type { PageTabState } from "project-editor/features/page/PageEditor";
 import { BootstrapButton } from "project-editor/components/BootstrapButton";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
-import { getProject } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2414,6 +2414,9 @@ export class TimelineKeyframe extends EezObject {
     width: number | undefined;
     height: number | undefined;
 
+    scale: number | undefined;
+    rotate: number | undefined;
+
     opacity: number | undefined;
 
     static classInfo: ClassInfo = {
@@ -2428,23 +2431,40 @@ export class TimelineKeyframe extends EezObject {
             },
             {
                 name: "left",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                isOptional: true
             },
             {
                 name: "top",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                isOptional: true
             },
             {
                 name: "width",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                isOptional: true
             },
             {
                 name: "height",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                isOptional: true
+            },
+            {
+                name: "scale",
+                type: PropertyType.Number,
+                isOptional: true,
+                hideInPropertyGrid: isNotDashboardProject
+            },
+            {
+                name: "rotate",
+                type: PropertyType.Number,
+                isOptional: true,
+                hideInPropertyGrid: isNotDashboardProject
             },
             {
                 name: "opacity",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                isOptional: true
             }
         ]
     };
@@ -2459,6 +2479,8 @@ export class TimelineKeyframe extends EezObject {
             top: observable,
             width: observable,
             height: observable,
+            scale: observable,
+            rotate: observable,
             opacity: observable
         });
     }
@@ -2475,98 +2497,112 @@ const TimelineKeyframePropertyUI = observer(
 
         constructor(props: any) {
             super(props);
+
             makeObservable(this, {
+                widgets: computed,
                 timeline: computed,
-                keyframe: computed
+                keyframes: computed
             });
         }
 
-        get widget() {
-            return this.props.objects[0] as Widget;
+        get widgets() {
+            return this.props.objects as Widget[];
         }
 
         get timeline() {
-            return getTimelineEditorState(this.widget)!;
+            return getTimelineEditorState(this.props.objects[0] as Widget)!;
         }
 
-        get keyframe() {
-            for (let i = 0; i < this.widget.timeline.length; i++) {
-                const keyframe = this.widget.timeline[i];
-                if (keyframe.end == this.timeline.position) {
-                    return keyframe;
+        get keyframes() {
+            return this.widgets.map(widget => {
+                for (const keyframe of widget.timeline) {
+                    if (keyframe.end == this.timeline.position) {
+                        return keyframe;
+                    }
                 }
-            }
-            return undefined;
+                return undefined;
+            });
         }
 
-        onInsertKeyframe = () => {
-            const position = this.timeline.position;
+        onInsertKeyframes = () => {
+            this.context.undoManager.setCombineCommands(true);
 
-            const newKeyframe = new TimelineKeyframe();
-            newKeyframe.start = position;
-            newKeyframe.end = position;
+            this.widgets.forEach(widget => {
+                const position = this.timeline.position;
 
-            for (let i = 0; i < this.widget.timeline.length; i++) {
-                const keyframe = this.widget.timeline[i];
+                const newKeyframe = new TimelineKeyframe();
+                newKeyframe.start = position;
+                newKeyframe.end = position;
 
-                if (position > keyframe.start && position < keyframe.end) {
-                    newKeyframe.start = keyframe.start;
+                for (let i = 0; i < widget.timeline.length; i++) {
+                    const keyframe = widget.timeline[i];
 
-                    this.context.undoManager.setCombineCommands(true);
+                    if (position <= keyframe.start) {
+                        this.context.insertObjectBefore(keyframe, newKeyframe);
+                        return;
+                    }
 
-                    this.context.updateObject(keyframe, {
-                        start: position
-                    });
+                    if (position < keyframe.end) {
+                        newKeyframe.start = keyframe.start;
 
-                    this.context.insertObjectBefore(keyframe, newKeyframe);
+                        this.context.updateObject(keyframe, {
+                            start: position
+                        });
 
-                    this.context.undoManager.setCombineCommands(false);
+                        this.context.insertObjectBefore(keyframe, newKeyframe);
 
-                    return;
+                        return;
+                    }
+
+                    if (position == keyframe.end) {
+                        return;
+                    }
                 }
 
-                if (position <= keyframe.start) {
-                    this.context.insertObjectBefore(keyframe, newKeyframe);
-                    return;
-                }
-            }
+                this.context.addObject(widget.timeline, newKeyframe);
+            });
 
-            this.context.addObject(this.widget.timeline, newKeyframe);
+            this.context.undoManager.setCombineCommands(false);
         };
 
-        onDeleteKeyframe = () => {
-            const keyframe = this.keyframe;
-            if (keyframe) {
-                this.context.deleteObject(keyframe);
-            }
+        onDeleteKeyframes = () => {
+            this.context.deleteObjects(
+                this.keyframes.filter(
+                    keyframe => keyframe != undefined
+                ) as TimelineKeyframe[]
+            );
         };
 
         render() {
-            if (this.props.objects.length > 1) {
-                return null;
-            }
+            const keyframes = this.keyframes.filter(
+                keyframe => keyframe != undefined
+            ) as TimelineKeyframe[];
 
-            const keyframe = this.keyframe;
             return (
                 <div style={{ marginBottom: 10 }}>
-                    {keyframe ? (
-                        <>
-                            <PropertyGrid objects={[keyframe]} />
-                            <BootstrapButton
-                                color="primary"
-                                size="small"
-                                onClick={this.onDeleteKeyframe}
-                            >
-                                Delete Keyframe
-                            </BootstrapButton>
-                        </>
-                    ) : (
+                    {keyframes.length > 0 && (
+                        <PropertyGrid objects={keyframes} />
+                    )}
+                    {keyframes.length > 0 && (
                         <BootstrapButton
                             color="primary"
                             size="small"
-                            onClick={this.onInsertKeyframe}
+                            onClick={this.onDeleteKeyframes}
                         >
-                            Insert Keyframe
+                            {keyframes.length > 1
+                                ? "Delete Keyframes"
+                                : "Delete Keyframe"}
+                        </BootstrapButton>
+                    )}
+                    {keyframes.length < this.keyframes.length && (
+                        <BootstrapButton
+                            color="primary"
+                            size="small"
+                            onClick={this.onInsertKeyframes}
+                        >
+                            {this.keyframes.length > 1
+                                ? "Insert Keyframes"
+                                : "Insert Keyframe"}
                         </BootstrapButton>
                     )}
                 </div>
@@ -2620,11 +2656,17 @@ export class Widget extends Component {
                 name: "timeline",
                 type: PropertyType.Array,
                 typeClass: TimelineKeyframe,
-                propertyGridRowComponent: TimelineKeyframePropertyUI,
-                propertyGridGroup: timelineGroup,
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: [],
+                hideInPropertyGrid: true
+            },
+            {
+                name: "timelineUI",
+                type: PropertyType.Any,
+                propertyGridGroup: timelineGroup,
+                propertyGridRowComponent: TimelineKeyframePropertyUI,
+                computed: true,
                 hideInPropertyGrid: (widget: Widget) =>
                     !isTimelineEditorActive(widget)
             }
@@ -3227,11 +3269,39 @@ export class Widget extends Component {
             }
 
             if (timelinePosition != undefined) {
-                let opacity = this.getTimelineOpacity(timelinePosition);
-
+                let opacity = this.getTimelineProperty(
+                    timelinePosition,
+                    "opacity"
+                );
                 if (opacity != undefined) {
                     style.opacity = opacity;
                 }
+
+                let transform: string | undefined;
+
+                let scale = this.getTimelineProperty(timelinePosition, "scale");
+                if (scale != undefined) {
+                    transform =
+                        (transform ? transform + " " : "") +
+                        `scale(${scale}, ${scale})`;
+                }
+
+                let rotate = this.getTimelineProperty(
+                    timelinePosition,
+                    "rotate"
+                );
+                if (rotate != undefined) {
+                    if (transform == undefined) {
+                        transform = "";
+                    } else {
+                        transform += " ";
+                    }
+                    transform =
+                        (transform ? transform + " " : "") +
+                        `rotate(${rotate}deg)`;
+                }
+
+                style.transform = transform;
             }
         }
     }
@@ -3305,7 +3375,7 @@ export class Widget extends Component {
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
 
     getTimelineRect(timelinePosition: number): Rect {
-        const project = getProject(this);
+        const project = ProjectEditor.getProject(this);
         const isFirmwareWithFlowSupportProject =
             project.isFirmwareWithFlowSupportProject;
 
@@ -3390,41 +3460,46 @@ export class Widget extends Component {
         };
     }
 
-    getTimelineOpacity(timelinePosition: number): number | undefined {
-        let opacity: number | undefined;
+    getTimelineProperty(
+        timelinePosition: number,
+        propertyName: keyof TimelineKeyframe
+    ): number | undefined {
+        let value: number | undefined;
 
         for (const keyframe of this.timeline) {
             if (timelinePosition < keyframe.start) {
                 continue;
             }
 
+            const keyframeValue = keyframe[propertyName];
+
             if (
                 timelinePosition >= keyframe.start &&
                 timelinePosition <= keyframe.end
             ) {
-                if (keyframe.opacity != undefined) {
+                if (keyframeValue != undefined) {
                     const t =
                         keyframe.start == keyframe.end
                             ? 1
                             : (timelinePosition - keyframe.start) /
                               (keyframe.end - keyframe.start);
 
-                    if (opacity == undefined) {
-                        opacity = 1;
+                    if (value == undefined) {
+                        value = 1;
                     }
 
-                    opacity += t * (keyframe.opacity - opacity);
+                    value += t * (keyframeValue - value);
                 }
 
                 break;
             }
 
-            if (keyframe.opacity != undefined) {
-                opacity = keyframe.opacity;
+            if (keyframeValue != undefined) {
+                value = keyframeValue;
             }
         }
 
-        return opacity;
+        return value;
     }
 }
 

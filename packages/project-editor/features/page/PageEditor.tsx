@@ -10,7 +10,7 @@ import {
 import { FlowEditor } from "project-editor/flow/editor/editor";
 import { FlowViewer } from "project-editor/flow/runtime-viewer/viewer";
 import { ProjectContext } from "project-editor/project/context";
-import { Page } from "project-editor/features/page/page";
+import type { Page } from "project-editor/features/page/page";
 import { Flow, FlowTabState } from "project-editor/flow/flow";
 import { Transform } from "project-editor/flow/editor/transform";
 import { ProjectEditor } from "project-editor/project-editor-interface";
