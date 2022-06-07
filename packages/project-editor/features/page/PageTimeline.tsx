@@ -14,7 +14,8 @@ import {
     isRectInsideRect,
     Point,
     pointInRect,
-    Rect
+    Rect,
+    rectClone
 } from "eez-studio-shared/geometry";
 import { closestBySelector } from "eez-studio-shared/dom";
 
@@ -959,7 +960,10 @@ const TimelineEditor = observer(
 
                 const timelineState = this.props.timelineState;
 
-                const rubberBendRect = timelineState.rubberBendRect!;
+                const rubberBendRect = rectClone(timelineState.rubberBendRect!);
+
+                rubberBendRect.left += timelineState.scrollLeft;
+                rubberBendRect.top += timelineState.scrollTop;
 
                 timelineState.treeAdapter.allRows.forEach((row, rowIndex) => {
                     const widget = timelineState.treeAdapter.getItemObject(

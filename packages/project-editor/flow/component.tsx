@@ -2605,27 +2605,40 @@ const TimelineKeyframePropertyName = observer(
     }
 );
 
+interface NumberInputProps {
+    value: any;
+    onChange: (value: number) => any;
+    min: number | undefined;
+    max: number | undefined;
+    readOnly: boolean;
+}
+
 const NumberInput = observer(
-    class NumberInput extends React.Component<{
-        value: any;
-        onChange: (value: number) => any;
-        min: number | undefined;
-        max: number | undefined;
-        round: number | undefined;
-        readOnly: boolean;
-    }> {
+    class NumberInput extends React.Component<NumberInputProps> {
         value: string;
+        numValue: number;
         error: string | undefined;
 
-        constructor(props: any) {
+        constructor(props: NumberInputProps) {
             super(props);
 
-            this.value = this.props.value ?? "";
+            this.value = this.props.value.toString();
+            this.numValue = this.props.value;
 
             makeObservable(this, {
                 value: observable,
                 error: observable
             });
+        }
+
+        componentDidUpdate() {
+            if (this.props.value != this.numValue) {
+                runInAction(() => {
+                    this.value = this.props.value.toString();
+                    this.numValue = this.props.value;
+                    this.error = undefined;
+                });
+            }
         }
 
         onChange = action((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -2666,10 +2679,7 @@ const NumberInput = observer(
 
             this.error = undefined;
 
-            if (this.props.round != undefined) {
-                const r = 1 / this.props.round;
-                value = Math.round(value * r) / r;
-            }
+            this.numValue = value;
 
             this.props.onChange(value);
         });
@@ -2970,7 +2980,6 @@ const TimelineKeyframePropertyUI = observer(
                                 }
                                 min={min}
                                 max={max}
-                                round={round}
                                 readOnly={false}
                             />
                         )}
@@ -3037,7 +3046,6 @@ const TimelineKeyframePropertyUI = observer(
                                               )
                                             : undefined
                                     }
-                                    round={0.01}
                                     readOnly={start == undefined}
                                 />
                             </td>
@@ -3063,7 +3071,6 @@ const TimelineKeyframePropertyUI = observer(
                                               )
                                             : undefined
                                     }
-                                    round={0.01}
                                     readOnly={end == undefined}
                                 />
                             </td>
