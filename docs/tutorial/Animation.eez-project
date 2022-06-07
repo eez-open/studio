@@ -3709,7 +3709,7 @@
               "start": 1,
               "end": 1.5,
               "left": {
-                "enabled": true,
+                "enabled": false,
                 "value": 22,
                 "easingFunction": "linear"
               },
@@ -3719,7 +3719,7 @@
                 "easingFunction": "linear"
               },
               "width": {
-                "enabled": true,
+                "enabled": false,
                 "value": 8,
                 "easingFunction": "linear"
               },

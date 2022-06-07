@@ -568,7 +568,7 @@ const TimelineEditor = observer(
             return snapPosition;
         }
 
-        setTimelinePosition(x: number, snap: boolean) {
+        setTimelinePosition(x: number) {
             let position =
                 (this.props.timelineState.scrollLeft + x - TIMELINE_X_OFFSET) /
                 this.props.timelineState.secondToPx;
@@ -579,9 +579,7 @@ const TimelineEditor = observer(
                 position = this.props.timelineState.duration;
             }
 
-            let snapPosition = snap
-                ? this.snapToTicks(position)
-                : roundPosition(position);
+            let snapPosition = this.snapToTicks(position);
 
             runInAction(() => {
                 this.props.timelineState.position = snapPosition;
@@ -627,7 +625,7 @@ const TimelineEditor = observer(
                 // });
                 // this.props.tabState.selectObjects([]);
 
-                this.setTimelinePosition(dragSettings.startPoint.x, true);
+                this.setTimelinePosition(dragSettings.startPoint.x);
             }
             if (
                 dragSettings.mode == "keyframe" ||
@@ -778,7 +776,7 @@ const TimelineEditor = observer(
             const dragSettings = this.dragSettings;
 
             if (dragSettings.mode == "timeline-position") {
-                this.setTimelinePosition(x + dragSettings.startPoint.x, false);
+                this.setTimelinePosition(x + dragSettings.startPoint.x);
             } else if (dragSettings.mode == "rubber-band") {
                 runInAction(() => {
                     let left;
@@ -948,14 +946,7 @@ const TimelineEditor = observer(
         ) => {
             const dragSettings = this.dragSettings;
 
-            if (dragSettings.mode == "timeline-position") {
-                let snapPosition = this.snapToTicks(
-                    this.props.timelineState.position
-                );
-                runInAction(() => {
-                    this.props.timelineState.position = snapPosition;
-                });
-            } else if (dragSettings.mode == "rubber-band") {
+            if (dragSettings.mode == "rubber-band") {
                 const selectedKeyframes: TimelineKeyframe[] = [];
 
                 const timelineState = this.props.timelineState;

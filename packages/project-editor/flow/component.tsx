@@ -2916,6 +2916,20 @@ const TimelineKeyframePropertyUI = observer(
             });
         }
 
+        getFromPropertyValue(propertyName: TimelineKeyframeProperty) {
+            return this.getValue<number>(keyframe => {
+                const widget: Widget = getAncestorOfType(
+                    keyframe,
+                    ProjectEditor.WidgetClass.classInfo
+                )!;
+                const fromValue = widget.getTimelineProperty(
+                    keyframe.start - 1e-9,
+                    propertyName
+                );
+                return Math.round(fromValue * 100) / 100;
+            });
+        }
+
         setPropertyValue(
             propertyName: TimelineKeyframeProperty,
             value: number
@@ -2972,6 +2986,10 @@ const TimelineKeyframePropertyUI = observer(
                         }
                     />
                     <td>
+                        {propertyEnabled &&
+                            this.getFromPropertyValue(propertyName)}
+                    </td>
+                    <td>
                         {propertyEnabled && (
                             <NumberInput
                                 value={this.getPropertyValue(propertyName)}
@@ -3021,6 +3039,7 @@ const TimelineKeyframePropertyUI = observer(
                         <tr>
                             <td className="duration-heading">Start</td>
                             <td className="duration-heading">End</td>
+                            <td className="duration-heading"></td>
                             <td className="duration-heading">Duration</td>
                         </tr>
                         <tr>
@@ -3074,9 +3093,8 @@ const TimelineKeyframePropertyUI = observer(
                                     readOnly={end == undefined}
                                 />
                             </td>
-                            <td style={{ paddingLeft: 10 }}>
-                                {this.getDuration()}
-                            </td>
+                            <td></td>
+                            <td>{this.getDuration()}</td>
                         </tr>
                         <tr>
                             <td className="property-heading">Property</td>
@@ -3084,7 +3102,13 @@ const TimelineKeyframePropertyUI = observer(
                                 className="property-heading"
                                 style={{ paddingTop: 10 }}
                             >
-                                Value
+                                From Value
+                            </td>
+                            <td
+                                className="property-heading"
+                                style={{ paddingTop: 10 }}
+                            >
+                                To Value
                             </td>
                             <td
                                 className="property-heading"
@@ -4034,7 +4058,7 @@ export class Widget extends Component {
     getTimelineProperty(
         timelinePosition: number,
         propertyName: TimelineKeyframeProperty
-    ): number | undefined {
+    ) {
         let value: number;
 
         if (
