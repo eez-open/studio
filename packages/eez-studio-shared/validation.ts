@@ -4,9 +4,9 @@ import { UNITS } from "eez-studio-shared/units";
 
 const VALIDATION_MESSAGE_INVALID_VALUE = "Invalid value.";
 export const VALIDATION_MESSAGE_REQUIRED = "Please fill out this field.";
-const VALIDATION_MESSAGE_RANGE_INCLUSIVE =
+export const VALIDATION_MESSAGE_RANGE_INCLUSIVE =
     "Please enter value between ${min} and ${max}.";
-const VALIDATION_MESSAGE_RANGE_INCLUSIVE_WITHOUT_MAX =
+export const VALIDATION_MESSAGE_RANGE_INCLUSIVE_WITHOUT_MAX =
     "Please enter value greater than or equal to ${min}.";
 const VALIDATION_MESSAGE_RANGE_EXCLUSIVE =
     "Please enter value between (not included) ${min} and ${max}.";

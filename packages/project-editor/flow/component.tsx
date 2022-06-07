@@ -1,9 +1,20 @@
 import { MenuItem } from "@electron/remote";
 import React from "react";
-import { observable, computed, makeObservable, runInAction } from "mobx";
+import {
+    observable,
+    computed,
+    makeObservable,
+    action,
+    runInAction
+} from "mobx";
 
 import { _each, _find, _range } from "eez-studio-shared/algorithm";
-import { validators } from "eez-studio-shared/validation";
+import {
+    VALIDATION_MESSAGE_RANGE_INCLUSIVE,
+    VALIDATION_MESSAGE_RANGE_INCLUSIVE_WITHOUT_MAX,
+    VALIDATION_MESSAGE_REQUIRED,
+    validators
+} from "eez-studio-shared/validation";
 import { BoundingRectBuilder, Point, Rect } from "eez-studio-shared/geometry";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
@@ -2594,6 +2605,91 @@ const TimelineKeyframePropertyName = observer(
     }
 );
 
+const NumberInput = observer(
+    class NumberInput extends React.Component<{
+        value: any;
+        onChange: (value: number) => any;
+        min: number | undefined;
+        max: number | undefined;
+        round: number | undefined;
+        readOnly: boolean;
+    }> {
+        value: string;
+        error: string | undefined;
+
+        constructor(props: any) {
+            super(props);
+
+            this.value = this.props.value ?? "";
+
+            makeObservable(this, {
+                value: observable,
+                error: observable
+            });
+        }
+
+        onChange = action((e: React.ChangeEvent<HTMLInputElement>) => {
+            this.value = e.target.value;
+
+            if (!this.value) {
+                this.error = VALIDATION_MESSAGE_REQUIRED;
+                return;
+            }
+
+            let value = parseFloat(this.value);
+            if (isNaN(value)) {
+                this.error = "Not a number";
+                e.target.setCustomValidity("Not a number");
+                return;
+            }
+
+            if (this.props.min != undefined) {
+                if (this.props.max != undefined) {
+                    if (value < this.props.min || value > this.props.max) {
+                        this.error = VALIDATION_MESSAGE_RANGE_INCLUSIVE.replace(
+                            "${min}",
+                            this.props.min.toString()
+                        ).replace("${max}", this.props.max.toString());
+                        return;
+                    }
+                } else {
+                    if (value < this.props.min) {
+                        this.error =
+                            VALIDATION_MESSAGE_RANGE_INCLUSIVE_WITHOUT_MAX.replace(
+                                "${min}",
+                                this.props.min.toString()
+                            );
+                        return;
+                    }
+                }
+            }
+
+            this.error = undefined;
+
+            if (this.props.round != undefined) {
+                const r = 1 / this.props.round;
+                value = Math.round(value * r) / r;
+            }
+
+            this.props.onChange(value);
+        });
+
+        render() {
+            return (
+                <>
+                    <input
+                        className="form-control"
+                        type="text"
+                        value={this.value}
+                        onChange={this.onChange}
+                    ></input>
+                    {this.error && <div className="error">{this.error}</div>}
+                </>
+            );
+        }
+    }
+);
+
 const TimelineKeyframePropertyUI = observer(
     class TextResourceEditorPropertyUI extends React.Component<PropertyProps> {
         static contextType = ProjectContext;
@@ -2726,27 +2822,19 @@ const TimelineKeyframePropertyUI = observer(
             return this.getValue<number>(keyframe => keyframe.start);
         }
 
-        setStart(value: string) {
-            const newStart = parseFloat(value);
-            if (isNaN(newStart)) {
-                return;
-            }
-            this.setValue<number>("start", () => newStart);
+        setStart(value: number) {
+            this.setValue<number>("start", () => value);
         }
 
         getEnd() {
             return this.getValue<number>(keyframe => keyframe.end!);
         }
 
-        setEnd(value: string) {
-            const oldEnd = this.getEnd();
-            const newEnd = parseFloat(value);
-            if (isNaN(newEnd)) {
-                return;
-            }
-            this.setValue<number>("end", () => newEnd);
-            if (oldEnd == this.timeline.position) {
-                runInAction(() => (this.timeline.position = newEnd));
+        setEnd(value: number) {
+            const oldValue = this.getEnd();
+            this.setValue<number>("end", () => value);
+            if (oldValue == this.timeline.position) {
+                runInAction(() => (this.timeline.position = value));
             }
         }
 
@@ -2820,18 +2908,13 @@ const TimelineKeyframePropertyUI = observer(
 
         setPropertyValue(
             propertyName: TimelineKeyframeProperty,
-            value: string
+            value: number
         ) {
-            const newValue = parseFloat(value);
-            if (isNaN(newValue)) {
-                return;
-            }
-
             this.setValue<TimelineKeyframePropertyValue<number>>(
                 propertyName,
                 keyframe => ({
                     enabled: true,
-                    value: newValue,
+                    value,
                     easingFunction: keyframe[propertyName].easingFunction
                 })
             );
@@ -2863,7 +2946,8 @@ const TimelineKeyframePropertyUI = observer(
         renderProperty(
             propertyName: TimelineKeyframeProperty,
             min?: number,
-            max?: number
+            max?: number,
+            round?: number
         ) {
             const propertyEnabled = this.isPropertyEnabled(propertyName);
             const propertyEasingFunction =
@@ -2879,21 +2963,16 @@ const TimelineKeyframePropertyUI = observer(
                     />
                     <td>
                         {propertyEnabled && (
-                            <input
-                                className="form-control"
-                                type="number"
+                            <NumberInput
                                 value={this.getPropertyValue(propertyName)}
+                                onChange={value =>
+                                    this.setPropertyValue(propertyName, value)
+                                }
                                 min={min}
                                 max={max}
-                                step={0.01}
-                                onChange={e =>
-                                    e.target.checkValidity() &&
-                                    this.setPropertyValue(
-                                        propertyName,
-                                        e.target.value
-                                    )
-                                }
-                            ></input>
+                                round={round}
+                                readOnly={false}
+                            />
                         )}
                     </td>
                     <td>
@@ -2937,14 +3016,9 @@ const TimelineKeyframePropertyUI = observer(
                         </tr>
                         <tr>
                             <td>
-                                <input
-                                    className="form-control"
-                                    type="number"
+                                <NumberInput
                                     value={start ?? ""}
-                                    onChange={e =>
-                                        e.target.checkValidity() &&
-                                        this.setStart(e.target.value)
-                                    }
+                                    onChange={value => this.setStart(value)}
                                     min={
                                         start
                                             ? start +
@@ -2963,19 +3037,14 @@ const TimelineKeyframePropertyUI = observer(
                                               )
                                             : undefined
                                     }
-                                    step={this.timeline.step}
+                                    round={0.01}
                                     readOnly={start == undefined}
-                                ></input>
+                                />
                             </td>
                             <td>
-                                <input
-                                    className="form-control"
-                                    type="number"
+                                <NumberInput
                                     value={end ?? ""}
-                                    onChange={e =>
-                                        e.target.checkValidity() &&
-                                        this.setEnd(e.target.value)
-                                    }
+                                    onChange={value => this.setEnd(value)}
                                     min={
                                         end
                                             ? end +
@@ -2994,9 +3063,9 @@ const TimelineKeyframePropertyUI = observer(
                                               )
                                             : undefined
                                     }
-                                    step={this.timeline.step}
+                                    round={0.01}
                                     readOnly={end == undefined}
-                                ></input>
+                                />
                             </td>
                             <td style={{ paddingLeft: 10 }}>
                                 {this.getDuration()}
@@ -3022,9 +3091,9 @@ const TimelineKeyframePropertyUI = observer(
                         {this.renderProperty("width")}
                         {this.renderProperty("height")}
                         {this.context.project.isDashboardProject &&
-                            this.renderProperty("scaleX")}
+                            this.renderProperty("scaleX", 0)}
                         {this.context.project.isDashboardProject &&
-                            this.renderProperty("scaleY")}
+                            this.renderProperty("scaleY", 0)}
                         {this.context.project.isDashboardProject &&
                             this.renderProperty("rotate", -360, 360)}
                         {this.renderProperty("opacity", 0, 1)}
