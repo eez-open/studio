@@ -5422,3 +5422,38 @@ button.EezStudio_Action {
         height: @timelineScrollBarSize;
     }
 }
+
+.EezStudio_TimelineKeyframe_PropertyUI {
+    margin-bottom: 10px;
+
+    table {
+        width: 100%;
+        margin-bottom: 10px;
+
+        td {
+            width: 33%;
+
+            input[type="number"] {
+                width: 100%;
+                :not(:valid) {
+                    border: red;
+                }
+            }
+
+            select {
+                width: 100%;
+            }
+        }
+
+        .duration-heading,
+        .property-heading {
+            text-transform: uppercase;
+            font-weight: bold;
+            font-size: 80%;
+        }
+
+        .property-heading {
+            padding-top: 10px;
+        }
+    }
+}

@@ -53,6 +53,6 @@ export const topGroup: IPropertyGridGroupDefinition = {
 
 export const timelineGroup: IPropertyGridGroupDefinition = {
     id: "timeline",
-    title: "Timeline",
+    title: "Timeline keyframe",
     position: (object: IEezObject) => -2
 };

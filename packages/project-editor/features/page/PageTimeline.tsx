@@ -228,6 +228,80 @@ export class PageTimelineEditorState {
         }
         return true;
     }
+
+    getMinDelta(
+        keyframes: TimelineKeyframe[],
+        mode: "keyframe-start" | "keyframe-end" | "keyframe"
+    ) {
+        return Math.max(
+            ...keyframes.map(keyframe => {
+                const widgetTimeline = getParent(
+                    keyframe
+                ) as TimelineKeyframe[];
+
+                let keyframeIndex = widgetTimeline.indexOf(keyframe);
+
+                if (mode == "keyframe-end") {
+                    return keyframe.start - keyframe.end;
+                }
+
+                for (
+                    keyframeIndex = keyframeIndex - 1;
+                    keyframeIndex >= 0;
+                    keyframeIndex--
+                ) {
+                    const previousKeyframe = widgetTimeline[keyframeIndex];
+
+                    if (keyframes.indexOf(previousKeyframe) == -1) {
+                        return previousKeyframe.end - keyframe.start;
+                    }
+
+                    keyframe = previousKeyframe;
+                }
+
+                return 0 - keyframe.start;
+            })
+        );
+    }
+
+    getMaxDelta(
+        keyframes: TimelineKeyframe[],
+        mode: "keyframe-start" | "keyframe-end" | "keyframe"
+    ) {
+        return Math.min(
+            ...keyframes.map(keyframe => {
+                const widgetTimeline = getParent(
+                    keyframe
+                ) as TimelineKeyframe[];
+
+                let keyframeIndex = widgetTimeline.indexOf(keyframe);
+
+                if (mode == "keyframe-start") {
+                    return keyframe.end - keyframe.start;
+                }
+
+                for (
+                    keyframeIndex = keyframeIndex + 1;
+                    keyframeIndex < widgetTimeline.length;
+                    keyframeIndex++
+                ) {
+                    const nextKeyframe = widgetTimeline[keyframeIndex];
+
+                    if (keyframes.indexOf(nextKeyframe) == -1) {
+                        return nextKeyframe.start - keyframe.end;
+                    }
+
+                    keyframe = nextKeyframe;
+                }
+
+                return this.duration - keyframe.end;
+            })
+        );
+    }
+
+    get step() {
+        return this.secondToPx > 600 ? 0.01 : 0.1;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -493,7 +567,7 @@ const TimelineEditor = observer(
             return snapPosition;
         }
 
-        setTimelinePosition(x: number) {
+        setTimelinePosition(x: number, snap: boolean) {
             let position =
                 (this.props.timelineState.scrollLeft + x - TIMELINE_X_OFFSET) /
                 this.props.timelineState.secondToPx;
@@ -504,7 +578,9 @@ const TimelineEditor = observer(
                 position = this.props.timelineState.duration;
             }
 
-            let snapPosition = this.snapToTicks(position);
+            let snapPosition = snap
+                ? this.snapToTicks(position)
+                : roundPosition(position);
 
             runInAction(() => {
                 this.props.timelineState.position = snapPosition;
@@ -550,7 +626,7 @@ const TimelineEditor = observer(
                 // });
                 // this.props.tabState.selectObjects([]);
 
-                this.setTimelinePosition(dragSettings.startPoint.x);
+                this.setTimelinePosition(dragSettings.startPoint.x, true);
             }
             if (
                 dragSettings.mode == "keyframe" ||
@@ -624,84 +700,14 @@ const TimelineEditor = observer(
                         );
                 }
 
-                dragSettings.minDelta = Math.max(
-                    ...this.props.timelineState.selectedKeyframes.map(
-                        keyframe => {
-                            const widgetTimeline = getParent(
-                                keyframe
-                            ) as TimelineKeyframe[];
-
-                            let keyframeIndex =
-                                widgetTimeline.indexOf(keyframe);
-
-                            if (dragSettings.mode == "keyframe-end") {
-                                return keyframe.start - keyframe.end;
-                            }
-
-                            for (
-                                keyframeIndex = keyframeIndex - 1;
-                                keyframeIndex >= 0;
-                                keyframeIndex--
-                            ) {
-                                const previousKeyframe =
-                                    widgetTimeline[keyframeIndex];
-
-                                if (
-                                    this.props.timelineState.selectedKeyframes.indexOf(
-                                        previousKeyframe
-                                    ) == -1
-                                ) {
-                                    return (
-                                        previousKeyframe.end - keyframe.start
-                                    );
-                                }
-
-                                keyframe = previousKeyframe;
-                            }
-
-                            return 0 - keyframe.start;
-                        }
-                    )
+                dragSettings.minDelta = this.props.timelineState.getMinDelta(
+                    this.props.timelineState.selectedKeyframes,
+                    dragSettings.mode
                 );
 
-                dragSettings.maxDelta = Math.min(
-                    ...this.props.timelineState.selectedKeyframes.map(
-                        keyframe => {
-                            const widgetTimeline = getParent(
-                                keyframe
-                            ) as TimelineKeyframe[];
-
-                            let keyframeIndex =
-                                widgetTimeline.indexOf(keyframe);
-
-                            if (dragSettings.mode == "keyframe-start") {
-                                return keyframe.end - keyframe.start;
-                            }
-
-                            for (
-                                keyframeIndex = keyframeIndex + 1;
-                                keyframeIndex < widgetTimeline.length;
-                                keyframeIndex++
-                            ) {
-                                const nextKeyframe =
-                                    widgetTimeline[keyframeIndex];
-
-                                if (
-                                    this.props.timelineState.selectedKeyframes.indexOf(
-                                        nextKeyframe
-                                    ) == -1
-                                ) {
-                                    return nextKeyframe.start - keyframe.end;
-                                }
-
-                                keyframe = nextKeyframe;
-                            }
-
-                            return (
-                                this.props.timelineState.duration - keyframe.end
-                            );
-                        }
-                    )
+                dragSettings.maxDelta = this.props.timelineState.getMaxDelta(
+                    this.props.timelineState.selectedKeyframes,
+                    dragSettings.mode
                 );
             } else if (dragSettings.mode == "rubber-band") {
                 runInAction(() => {
@@ -771,7 +777,7 @@ const TimelineEditor = observer(
             const dragSettings = this.dragSettings;
 
             if (dragSettings.mode == "timeline-position") {
-                this.setTimelinePosition(x + dragSettings.startPoint.x);
+                this.setTimelinePosition(x + dragSettings.startPoint.x, false);
             } else if (dragSettings.mode == "rubber-band") {
                 runInAction(() => {
                     let left;
@@ -941,7 +947,14 @@ const TimelineEditor = observer(
         ) => {
             const dragSettings = this.dragSettings;
 
-            if (dragSettings.mode == "rubber-band") {
+            if (dragSettings.mode == "timeline-position") {
+                let snapPosition = this.snapToTicks(
+                    this.props.timelineState.position
+                );
+                runInAction(() => {
+                    this.props.timelineState.position = snapPosition;
+                });
+            } else if (dragSettings.mode == "rubber-band") {
                 const selectedKeyframes: TimelineKeyframe[] = [];
 
                 const timelineState = this.props.timelineState;
@@ -1079,14 +1092,14 @@ const TimelineEditor = observer(
         }
 
         get ticks() {
-            if (this.props.timelineState.secondToPx > 600) {
+            if (this.props.timelineState.step == 0.01) {
                 return this.genTicks(0.1);
             }
             return this.genTicks(1);
         }
 
         get subticks() {
-            if (this.props.timelineState.secondToPx > 600) {
+            if (this.props.timelineState.step == 0.01) {
                 return this.genTicks(0.01);
             }
             return this.genTicks(0.1);

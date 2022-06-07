@@ -75,38 +75,48 @@ export function buildWidget(
 
             let enabledProperties = 0;
 
-            if (keyframe.left != undefined) {
+            if (keyframe.left.enabled) {
                 enabledProperties |= WIDGET_TIMELINE_PROPERTY_X;
             }
-            if (keyframe.top != undefined) {
+            if (keyframe.top.enabled) {
                 enabledProperties |= WIDGET_TIMELINE_PROPERTY_Y;
             }
-            if (keyframe.width != undefined) {
+            if (keyframe.width.enabled) {
                 enabledProperties |= WIDGET_TIMELINE_PROPERTY_WIDTH;
             }
-            if (keyframe.height != undefined) {
+            if (keyframe.height.enabled) {
                 enabledProperties |= WIDGET_TIMELINE_PROPERTY_HEIGHT;
             }
-            if (keyframe.opacity != undefined) {
+            if (keyframe.opacity.enabled) {
                 enabledProperties |= WIDGET_TIMELINE_PROPERTY_OPACITY;
             }
 
             dataBuffer.writeUint32(enabledProperties);
 
             // x
-            dataBuffer.writeInt16(keyframe.left ?? 0);
+            dataBuffer.writeInt16(
+                keyframe.left.enabled ? keyframe.left.value! : 0
+            );
 
             // y
-            dataBuffer.writeInt16(keyframe.top ?? 0);
+            dataBuffer.writeInt16(
+                keyframe.top.enabled ? keyframe.top.value! : 0
+            );
 
             // width
-            dataBuffer.writeInt16(keyframe.width ?? 0);
+            dataBuffer.writeInt16(
+                keyframe.width.enabled ? keyframe.width.value! : 0
+            );
 
             // height
-            dataBuffer.writeInt16(keyframe.height ?? 0);
+            dataBuffer.writeInt16(
+                keyframe.height.enabled ? keyframe.height.value! : 0
+            );
 
             // opacity
-            dataBuffer.writeFloat(keyframe.opacity ?? 0);
+            dataBuffer.writeFloat(
+                keyframe.opacity.enabled ? keyframe.opacity.value! : 0
+            );
         });
     } else {
         dataBuffer.writeArray([], keyframe => {});
