@@ -1840,17 +1840,93 @@ export class Component extends EezObject {
                     easingFunction: "linear"
                 };
 
+                newKeyframe.scaleX = {
+                    enabled: false,
+                    value: undefined,
+                    easingFunction: "linear"
+                };
+                newKeyframe.scaleY = {
+                    enabled: false,
+                    value: undefined,
+                    easingFunction: "linear"
+                };
+                newKeyframe.rotate = {
+                    enabled: false,
+                    value: undefined,
+                    easingFunction: "linear"
+                };
+                newKeyframe.opacity = {
+                    enabled: false,
+                    value: undefined,
+                    easingFunction: "linear"
+                };
+
                 for (let i = 0; i < widget.timeline.length; i++) {
                     const keyframe = widget.timeline[i];
 
                     if (time == keyframe.end) {
-                        DocumentStore.updateObject(keyframe, props);
+                        DocumentStore.updateObject(keyframe, {
+                            left: {
+                                enabled: true,
+                                value: newKeyframe.left.value,
+                                easingFunction: keyframe.left.enabled
+                                    ? keyframe.left.easingFunction
+                                    : "linear"
+                            },
+
+                            top: {
+                                enabled: true,
+                                value: newKeyframe.top.value,
+                                easingFunction: keyframe.top.enabled
+                                    ? keyframe.top.easingFunction
+                                    : "linear"
+                            },
+
+                            width: {
+                                enabled: newKeyframe.width.enabled,
+                                value: newKeyframe.width.value,
+                                easingFunction: keyframe.width.enabled
+                                    ? keyframe.width.easingFunction
+                                    : "linear"
+                            },
+
+                            height: {
+                                enabled: newKeyframe.height.enabled,
+                                value: newKeyframe.height.value,
+                                easingFunction: keyframe.height.enabled
+                                    ? keyframe.height.easingFunction
+                                    : "linear"
+                            }
+                        });
 
                         return;
                     }
 
                     if (time > keyframe.start && time < keyframe.end) {
                         newKeyframe.start = keyframe.start;
+
+                        newKeyframe.left.easingFunction = keyframe.left.enabled
+                            ? keyframe.left.easingFunction
+                            : "linear";
+                        newKeyframe.top.easingFunction = keyframe.top.enabled
+                            ? keyframe.top.easingFunction
+                            : "linear";
+                        newKeyframe.width.easingFunction = keyframe.width
+                            .enabled
+                            ? keyframe.width.easingFunction
+                            : "linear";
+                        newKeyframe.height.easingFunction = keyframe.height
+                            .enabled
+                            ? keyframe.height.easingFunction
+                            : "linear";
+
+                        newKeyframe.scaleX = Object.assign({}, keyframe.scaleX);
+                        newKeyframe.scaleY = Object.assign({}, keyframe.scaleY);
+                        newKeyframe.rotate = Object.assign({}, keyframe.rotate);
+                        newKeyframe.opacity = Object.assign(
+                            {},
+                            keyframe.opacity
+                        );
 
                         const combineCommands =
                             DocumentStore.undoManager.combineCommands;
@@ -2437,7 +2513,7 @@ export class Component extends EezObject {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-type EasingFunction = keyof typeof easingFunctions;
+export type EasingFunction = keyof typeof easingFunctions;
 
 type TimelineKeyframeProperty =
     | "left"
@@ -2522,6 +2598,7 @@ export class TimelineKeyframe extends EezObject {
                 "top",
                 "width",
                 "height",
+                "rotate",
                 "opacity"
             ] as TimelineKeyframeProperty[]) {
                 const value = (jsKeyframe as any)[propertyName];
@@ -2532,6 +2609,22 @@ export class TimelineKeyframe extends EezObject {
                         easingFunction: "linear"
                     };
                 }
+            }
+
+            if (jsKeyframe.scaleX == undefined) {
+                jsKeyframe.scaleX = {
+                    enabled: false,
+                    value: undefined,
+                    easingFunction: "linear"
+                };
+            }
+
+            if (jsKeyframe.scaleY == undefined) {
+                jsKeyframe.scaleY = {
+                    enabled: false,
+                    value: undefined,
+                    easingFunction: "linear"
+                };
             }
         }
     };
@@ -2622,7 +2715,7 @@ const NumberInput = observer(
         constructor(props: NumberInputProps) {
             super(props);
 
-            this.value = this.props.value.toString();
+            this.value = (this.props.value ?? "").toString();
             this.numValue = this.props.value;
 
             makeObservable(this, {
@@ -2634,7 +2727,7 @@ const NumberInput = observer(
         componentDidUpdate() {
             if (this.props.value != this.numValue) {
                 runInAction(() => {
-                    this.value = this.props.value.toString();
+                    this.value = (this.props.value ?? "").toString();
                     this.numValue = this.props.value;
                     this.error = undefined;
                 });
@@ -2684,6 +2777,24 @@ const NumberInput = observer(
             this.props.onChange(value);
         });
 
+        onKeyDown = (event: React.KeyboardEvent) => {
+            if (event.keyCode === 13) {
+                try {
+                    var mexp = require("math-expression-evaluator");
+                    const newValue = mexp.eval(this.value);
+                    if (
+                        newValue !== undefined &&
+                        !isNaN(newValue) &&
+                        newValue !== this.value
+                    ) {
+                        this.props.onChange(newValue);
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+        };
+
         render() {
             return (
                 <>
@@ -2692,6 +2803,7 @@ const NumberInput = observer(
                         type="text"
                         value={this.value}
                         onChange={this.onChange}
+                        onKeyDown={this.onKeyDown}
                     ></input>
                     {this.error && <div className="error">{this.error}</div>}
                 </>
@@ -2743,6 +2855,48 @@ const TimelineKeyframePropertyUI = observer(
                 const newKeyframe = new TimelineKeyframe();
                 newKeyframe.start = position;
                 newKeyframe.end = position;
+
+                newKeyframe.left = {
+                    enabled: false,
+                    value: undefined,
+                    easingFunction: "linear"
+                };
+                newKeyframe.top = {
+                    enabled: false,
+                    value: undefined,
+                    easingFunction: "linear"
+                };
+                newKeyframe.width = {
+                    enabled: false,
+                    value: undefined,
+                    easingFunction: "linear"
+                };
+                newKeyframe.height = {
+                    enabled: false,
+                    value: undefined,
+                    easingFunction: "linear"
+                };
+
+                newKeyframe.scaleX = {
+                    enabled: false,
+                    value: undefined,
+                    easingFunction: "linear"
+                };
+                newKeyframe.scaleY = {
+                    enabled: false,
+                    value: undefined,
+                    easingFunction: "linear"
+                };
+                newKeyframe.rotate = {
+                    enabled: false,
+                    value: undefined,
+                    easingFunction: "linear"
+                };
+                newKeyframe.opacity = {
+                    enabled: false,
+                    value: undefined,
+                    easingFunction: "linear"
+                };
 
                 for (let i = 0; i < widget.timeline.length; i++) {
                     const keyframe = widget.timeline[i];
@@ -2799,7 +2953,6 @@ const TimelineKeyframePropertyUI = observer(
                     value = keyframeValue;
                 } else {
                     if (keyframeValue != value) {
-                        console.log("Txxx");
                         return undefined;
                     }
                 }
@@ -2922,10 +3075,22 @@ const TimelineKeyframePropertyUI = observer(
                     keyframe,
                     ProjectEditor.WidgetClass.classInfo
                 )!;
-                const fromValue = widget.getTimelineProperty(
-                    keyframe.start - 1e-9,
-                    propertyName
-                );
+
+                let fromValue;
+
+                const keyframeIndex = widget.timeline.indexOf(keyframe);
+                if (keyframeIndex > 0) {
+                    fromValue = widget.getTimelineProperty(
+                        widget.timeline[keyframeIndex - 1].end,
+                        propertyName
+                    );
+                } else {
+                    fromValue = widget.getTimelineProperty(
+                        keyframe.start - 1e-9,
+                        propertyName
+                    );
+                }
+
                 return Math.round(fromValue * 100) / 100;
             });
         }
@@ -2955,7 +3120,7 @@ const TimelineKeyframePropertyUI = observer(
 
         setPropertyEasingFunction(
             propertyName: TimelineKeyframeProperty,
-            value: string
+            value: EasingFunction
         ) {
             this.setValue<TimelineKeyframePropertyValue<number>>(
                 propertyName,
@@ -2985,7 +3150,7 @@ const TimelineKeyframePropertyUI = observer(
                             this.enableProperty(propertyName, checked)
                         }
                     />
-                    <td>
+                    <td style={{ paddingLeft: 20 }}>
                         {propertyEnabled &&
                             this.getFromPropertyValue(propertyName)}
                     </td>
@@ -3010,7 +3175,7 @@ const TimelineKeyframePropertyUI = observer(
                                 onChange={e =>
                                     this.setPropertyEasingFunction(
                                         propertyName,
-                                        e.target.value
+                                        e.target.value as EasingFunction
                                     )
                                 }
                             >
@@ -3037,12 +3202,13 @@ const TimelineKeyframePropertyUI = observer(
                 <table>
                     <tbody>
                         <tr>
+                            <td className="duration-heading"></td>
                             <td className="duration-heading">Start</td>
                             <td className="duration-heading">End</td>
-                            <td className="duration-heading"></td>
                             <td className="duration-heading">Duration</td>
                         </tr>
                         <tr>
+                            <td></td>
                             <td>
                                 <NumberInput
                                     value={start ?? ""}
@@ -3093,29 +3259,15 @@ const TimelineKeyframePropertyUI = observer(
                                     readOnly={end == undefined}
                                 />
                             </td>
-                            <td></td>
-                            <td>{this.getDuration()}</td>
+                            <td style={{ paddingLeft: 20 }}>
+                                {this.getDuration()}
+                            </td>
                         </tr>
                         <tr>
                             <td className="property-heading">Property</td>
-                            <td
-                                className="property-heading"
-                                style={{ paddingTop: 10 }}
-                            >
-                                From Value
-                            </td>
-                            <td
-                                className="property-heading"
-                                style={{ paddingTop: 10 }}
-                            >
-                                To Value
-                            </td>
-                            <td
-                                className="property-heading"
-                                style={{ paddingTop: 10 }}
-                            >
-                                Easing
-                            </td>
+                            <td className="property-heading">From Value</td>
+                            <td className="property-heading">To Value</td>
+                            <td className="property-heading">Easing</td>
                         </tr>
                         {this.renderProperty("left")}
                         {this.renderProperty("top")}
