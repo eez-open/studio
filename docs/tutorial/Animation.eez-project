@@ -2151,6 +2151,17 @@
           "customInputs": [],
           "customOutputs": [],
           "page": "Page3"
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": -126,
+          "top": 125,
+          "width": 87,
+          "height": 55,
+          "wireID": "e220797a-d59a-4a31-a2f5-a30abdd3cbf0",
+          "customInputs": [],
+          "customOutputs": [],
+          "milliseconds": "500"
         }
       ],
       "connectionLines": [
@@ -2199,7 +2210,7 @@
         {
           "source": "d4e5eba1-7162-4e49-a46b-9298e1f569c4",
           "output": "@seqout",
-          "target": "b3052593-ba78-4365-f5bd-9517893b7390",
+          "target": "e220797a-d59a-4a31-a2f5-a30abdd3cbf0",
           "input": "@seqin"
         },
         {
@@ -2212,6 +2223,12 @@
           "source": "61bfd469-7161-49f0-91e2-0b6b1bb63799",
           "output": "action",
           "target": "9d443ecd-e221-4789-bbdb-e5632defde81",
+          "input": "@seqin"
+        },
+        {
+          "source": "e220797a-d59a-4a31-a2f5-a30abdd3cbf0",
+          "output": "@seqout",
+          "target": "b3052593-ba78-4365-f5bd-9517893b7390",
           "input": "@seqin"
         }
       ],

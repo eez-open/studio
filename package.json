@@ -156,7 +156,7 @@
         "react-window": "^1.8.6",
         "ref-napi": "^3.0.3",
         "rimraf": "^3.0.2",
-        "serialport": "^9.0.7",
+        "serialport": "^10.4.0",
         "sha256": "^0.2.0",
         "showdown": "^1.9.1",
         "tinycolor2": "^1.4.1",

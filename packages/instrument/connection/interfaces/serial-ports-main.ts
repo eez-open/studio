@@ -1,5 +1,5 @@
 import { ipcMain, WebContents } from "electron";
-import SerialPort from "serialport";
+import { SerialPort } from "serialport";
 import type { SerialConnectionConstructorParams } from "instrument/connection/interfaces/serial-ports-renderer";
 
 ipcMain.handle("getSerialPorts", async () => {
@@ -67,8 +67,8 @@ class Connection {
     ) {
         try {
             this.port = new SerialPort(
-                params.port,
                 {
+                    path: params.port,
                     baudRate: params.baudRate,
                     rtscts: false
                 },

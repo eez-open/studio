@@ -801,6 +801,23 @@ export class Tabs {
                 if (tabsJSON) {
                     const savedTabs: ISavedTab[] = JSON.parse(tabsJSON);
 
+                    // make sure Home tab is at the 1st place
+                    const homeTab = savedTabs.find(
+                        savedTab => savedTab.id == "home"
+                    );
+                    if (!homeTab) {
+                        savedTabs.splice(0, 0, {
+                            id: "home",
+                            active: false
+                        });
+                    } else {
+                        const homeTabIndex = savedTabs.indexOf(homeTab);
+                        if (homeTabIndex != 0) {
+                            savedTabs.splice(homeTabIndex, 1);
+                            savedTabs.splice(0, 0, homeTab);
+                        }
+                    }
+
                     for (const savedTab of savedTabs) {
                         if (savedTab.id) {
                             try {

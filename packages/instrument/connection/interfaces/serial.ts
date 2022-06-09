@@ -1,3 +1,4 @@
+import os from "os";
 import SerialPortModule from "serialport";
 
 import {
@@ -6,10 +7,10 @@ import {
 } from "instrument/connection/interface";
 import { ConnectionErrorCode } from "instrument/connection/ConnectionErrorCode";
 
-const CONF_CHUNK_SIZE = 64;
+const CONF_CHUNK_SIZE = os.platform() == "darwin" ? 48 : 64;
 
 export class SerialInterface implements CommunicationInterface {
-    port: any;
+    port: SerialPortModule.SerialPort | undefined;
     connectedCalled = false;
     data: string | undefined;
 
@@ -25,9 +26,9 @@ export class SerialInterface implements CommunicationInterface {
                 this.host.connectionParameters.serialParameters.flowControl ??
                 "none";
 
-            this.port = new SerialPort(
-                this.host.connectionParameters.serialParameters.port,
+            this.port = new SerialPort.SerialPort(
                 {
+                    path: this.host.connectionParameters.serialParameters.port,
                     baudRate:
                         this.host.connectionParameters.serialParameters
                             .baudRate,
@@ -83,7 +84,7 @@ export class SerialInterface implements CommunicationInterface {
     }
 
     isConnected() {
-        return this.port && this.port.isOpen;
+        return this.port ? this.port.isOpen : false;
     }
 
     destroy() {
@@ -116,11 +117,13 @@ export class SerialInterface implements CommunicationInterface {
     }
 
     write(data: string) {
-        if (this.data) {
-            this.data += data;
-        } else {
-            this.data = data;
-            this.port.drain(this.sendNextChunkCallback);
+        if (this.port) {
+            if (this.data) {
+                this.data += data;
+            } else {
+                this.data = data;
+                this.port.drain(this.sendNextChunkCallback);
+            }
         }
     }
 
