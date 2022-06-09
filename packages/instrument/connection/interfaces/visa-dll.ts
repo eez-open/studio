@@ -446,6 +446,13 @@ try {
     console.error("viOpenDefaultRM", error);
 }
 
+export function unloadVisa() {
+    if (libVisa && defaultSession) {
+        console.log("Unload VISA dll");
+        libVisa.viClose(defaultSession);
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // var viHandler = ffi.Callback(

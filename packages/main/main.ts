@@ -9,6 +9,7 @@ import { setup } from "setup/setup";
 
 import type * as HomeWindowModule from "main/home-window";
 import type * as SettingsModule from "main/settings";
+import { unloadVisa } from "instrument/connection/interfaces/visa-dll";
 
 // disable security warnings inside dev console
 process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = true as any;
@@ -86,6 +87,8 @@ app.on("window-all-closed", function () {
 app.on("quit", function () {
     const { saveSettings } = require("main/settings") as typeof SettingsModule;
     saveSettings();
+
+    unloadVisa();
 });
 
 app.on("will-finish-launching", async function () {
