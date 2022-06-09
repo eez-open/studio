@@ -1547,6 +1547,62 @@ const AlignAndDistributePropertyGridUI = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const CenterWidgetUI = observer(
+    class CenterWidgetUI extends React.Component<PropertyProps> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        get widget() {
+            return this.props.objects[0] as Widget;
+        }
+
+        get parent() {
+            return getWidgetParent(this.widget);
+        }
+
+        onCenterHorizontally = () => {
+            const parentRect = this.parent.rect;
+            const rect = this.widget.rect;
+
+            const left = Math.round((parentRect.width - rect.width) / 2);
+
+            Widget.classInfo.setRect!(this.widget, {
+                left
+            });
+        };
+
+        onCenterVertically = () => {
+            const parentRect = this.parent.rect;
+            const rect = this.widget.rect;
+
+            const top = Math.round((parentRect.height - rect.height) / 2);
+
+            Widget.classInfo.setRect!(this.widget, {
+                top
+            });
+        };
+
+        render() {
+            return (
+                <div className="EezStudio_WidgetCenter">
+                    <IconAction
+                        icon={ALIGN_HORIZONTAL_CENTER_ICON}
+                        title="Center horizontally relative to parent"
+                        onClick={this.onCenterHorizontally}
+                    />
+                    <IconAction
+                        icon={ALIGN_VERTICAL_CENTER_ICON}
+                        title="Center vertically relative to parent"
+                        onClick={this.onCenterVertically}
+                    />
+                </div>
+            );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export type AutoSize = "width" | "height" | "both" | "none";
 
 export class Component extends EezObject {
@@ -1662,19 +1718,37 @@ export class Component extends EezObject {
                 name: "width",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isTimelineEditorActive
+                hideInPropertyGrid: isTimelineEditorActiveOrActionComponent
             },
             {
                 name: "height",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isTimelineEditorActive
+                hideInPropertyGrid: isTimelineEditorActiveOrActionComponent
             },
             {
                 name: "absolutePosition",
                 type: PropertyType.String,
                 propertyGridGroup: geometryGroup,
-                computed: true
+                computed: true,
+                hideInPropertyGrid: isActionComponent
+            },
+            {
+                name: "centerWidgetUI",
+                type: PropertyType.Any,
+                propertyGridGroup: geometryGroup,
+                computed: true,
+                propertyGridRowComponent: CenterWidgetUI,
+                hideInPropertyGrid: (widget: Widget) => {
+                    const DocumentStore =
+                        ProjectEditor.getProject(widget)._DocumentStore;
+                    const propertyGridObjects =
+                        DocumentStore.navigationStore.propertyGridObjects;
+                    return !(
+                        propertyGridObjects.length == 1 &&
+                        propertyGridObjects[0] instanceof Widget
+                    );
+                }
             },
             {
                 name: "wireID",
@@ -4874,4 +4948,15 @@ function getTimelineEditorState(component: Component) {
 
 function isTimelineEditorActive(component: Component) {
     return getTimelineEditorState(component) != undefined;
+}
+
+function isTimelineEditorActiveOrActionComponent(component: Component) {
+    return (
+        getTimelineEditorState(component) != undefined ||
+        component instanceof ActionComponent
+    );
+}
+
+function isActionComponent(component: Component) {
+    return component instanceof ActionComponent;
 }

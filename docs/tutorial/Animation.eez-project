@@ -2786,110 +2786,6 @@
           ]
         },
         {
-          "type": "ButtonWidget",
-          "left": 176,
-          "top": 239,
-          "width": 106,
-          "height": 32,
-          "wireID": "e5979d5e-65c2-4175-8263-25df0726e66f",
-          "customInputs": [],
-          "customOutputs": [],
-          "asOutputProperties": [
-            "action"
-          ],
-          "data": "\"Main Page\"",
-          "style": {
-            "inheritFrom": "default"
-          },
-          "timeline": [
-            {
-              "start": 0,
-              "end": 0,
-              "left": {
-                "enabled": true,
-                "value": 201,
-                "easingFunction": "linear"
-              },
-              "top": {
-                "enabled": true,
-                "value": 226,
-                "easingFunction": "linear"
-              },
-              "width": {
-                "enabled": true,
-                "value": 106,
-                "easingFunction": "linear"
-              },
-              "height": {
-                "enabled": true,
-                "value": 32,
-                "easingFunction": "linear"
-              },
-              "scaleX": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "scaleY": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "rotate": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "opacity": {
-                "enabled": true,
-                "value": 0,
-                "easingFunction": "linear"
-              }
-            },
-            {
-              "start": 0.8,
-              "end": 1,
-              "left": {
-                "enabled": true,
-                "value": 201,
-                "easingFunction": "linear"
-              },
-              "top": {
-                "enabled": true,
-                "value": 236,
-                "easingFunction": "linear"
-              },
-              "width": {
-                "enabled": true,
-                "value": 106,
-                "easingFunction": "linear"
-              },
-              "height": {
-                "enabled": true,
-                "value": 32,
-                "easingFunction": "linear"
-              },
-              "scaleX": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "scaleY": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "rotate": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "opacity": {
-                "enabled": true,
-                "value": 1,
-                "easingFunction": "linear"
-              }
-            }
-          ],
-          "disabledStyle": {
-            "inheritFrom": "default"
-          }
-        },
-        {
           "type": "ShowPageActionComponent",
           "left": 391,
           "top": 317,
@@ -2962,6 +2858,110 @@
           "layout": "anim1"
         },
         {
+          "type": "ButtonWidget",
+          "left": 176,
+          "top": 239,
+          "width": 106,
+          "height": 32,
+          "wireID": "e5979d5e-65c2-4175-8263-25df0726e66f",
+          "customInputs": [],
+          "customOutputs": [],
+          "asOutputProperties": [
+            "action"
+          ],
+          "data": "\"Main Page\"",
+          "style": {
+            "inheritFrom": "default"
+          },
+          "timeline": [
+            {
+              "start": 0,
+              "end": 0,
+              "left": {
+                "enabled": true,
+                "value": 187,
+                "easingFunction": "linear"
+              },
+              "top": {
+                "enabled": true,
+                "value": 226,
+                "easingFunction": "linear"
+              },
+              "width": {
+                "enabled": true,
+                "value": 106,
+                "easingFunction": "linear"
+              },
+              "height": {
+                "enabled": true,
+                "value": 32,
+                "easingFunction": "linear"
+              },
+              "scaleX": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "scaleY": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "rotate": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "opacity": {
+                "enabled": true,
+                "value": 0,
+                "easingFunction": "linear"
+              }
+            },
+            {
+              "start": 0.8,
+              "end": 1,
+              "left": {
+                "enabled": true,
+                "value": 187,
+                "easingFunction": "linear"
+              },
+              "top": {
+                "enabled": true,
+                "value": 236,
+                "easingFunction": "linear"
+              },
+              "width": {
+                "enabled": true,
+                "value": 106,
+                "easingFunction": "linear"
+              },
+              "height": {
+                "enabled": true,
+                "value": 32,
+                "easingFunction": "linear"
+              },
+              "scaleX": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "scaleY": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "rotate": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "opacity": {
+                "enabled": true,
+                "value": 1,
+                "easingFunction": "linear"
+              }
+            }
+          ],
+          "disabledStyle": {
+            "inheritFrom": "default"
+          }
+        },
+        {
           "type": "StartActionComponent",
           "left": -123,
           "top": 121,
@@ -3008,110 +3008,6 @@
     },
     {
       "components": [
-        {
-          "type": "ButtonWidget",
-          "left": 176,
-          "top": 239,
-          "width": 106,
-          "height": 32,
-          "wireID": "e5979d5e-65c2-4175-8263-25df0726e66f",
-          "customInputs": [],
-          "customOutputs": [],
-          "asOutputProperties": [
-            "action"
-          ],
-          "data": "\"Main Page\"",
-          "style": {
-            "inheritFrom": "default"
-          },
-          "timeline": [
-            {
-              "start": 0,
-              "end": 0,
-              "left": {
-                "enabled": true,
-                "value": 201,
-                "easingFunction": "linear"
-              },
-              "top": {
-                "enabled": true,
-                "value": 226,
-                "easingFunction": "linear"
-              },
-              "width": {
-                "enabled": true,
-                "value": 106,
-                "easingFunction": "linear"
-              },
-              "height": {
-                "enabled": true,
-                "value": 32,
-                "easingFunction": "linear"
-              },
-              "scaleX": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "scaleY": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "rotate": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "opacity": {
-                "enabled": true,
-                "value": 0,
-                "easingFunction": "linear"
-              }
-            },
-            {
-              "start": 0.8,
-              "end": 1,
-              "left": {
-                "enabled": true,
-                "value": 201,
-                "easingFunction": "linear"
-              },
-              "top": {
-                "enabled": true,
-                "value": 236,
-                "easingFunction": "linear"
-              },
-              "width": {
-                "enabled": true,
-                "value": 106,
-                "easingFunction": "linear"
-              },
-              "height": {
-                "enabled": true,
-                "value": 32,
-                "easingFunction": "linear"
-              },
-              "scaleX": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "scaleY": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "rotate": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "opacity": {
-                "enabled": true,
-                "value": 1,
-                "easingFunction": "linear"
-              }
-            }
-          ],
-          "disabledStyle": {
-            "inheritFrom": "default"
-          }
-        },
         {
           "type": "ShowPageActionComponent",
           "left": 391,
@@ -3172,7 +3068,7 @@
         {
           "type": "RectangleWidget",
           "left": 208,
-          "top": 113,
+          "top": 120,
           "width": 64,
           "height": 32,
           "wireID": "cc89a040-5ef9-4401-b094-d7a1667aafb4",
@@ -3225,6 +3121,110 @@
               }
             }
           ]
+        },
+        {
+          "type": "ButtonWidget",
+          "left": 187,
+          "top": 239,
+          "width": 106,
+          "height": 32,
+          "wireID": "e5979d5e-65c2-4175-8263-25df0726e66f",
+          "customInputs": [],
+          "customOutputs": [],
+          "asOutputProperties": [
+            "action"
+          ],
+          "data": "\"Main Page\"",
+          "style": {
+            "inheritFrom": "default"
+          },
+          "timeline": [
+            {
+              "start": 0,
+              "end": 0,
+              "left": {
+                "enabled": true,
+                "value": 187,
+                "easingFunction": "linear"
+              },
+              "top": {
+                "enabled": true,
+                "value": 226,
+                "easingFunction": "linear"
+              },
+              "width": {
+                "enabled": true,
+                "value": 106,
+                "easingFunction": "linear"
+              },
+              "height": {
+                "enabled": true,
+                "value": 32,
+                "easingFunction": "linear"
+              },
+              "scaleX": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "scaleY": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "rotate": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "opacity": {
+                "enabled": true,
+                "value": 0,
+                "easingFunction": "linear"
+              }
+            },
+            {
+              "start": 0.8,
+              "end": 1,
+              "left": {
+                "enabled": true,
+                "value": 187,
+                "easingFunction": "linear"
+              },
+              "top": {
+                "enabled": true,
+                "value": 236,
+                "easingFunction": "linear"
+              },
+              "width": {
+                "enabled": true,
+                "value": 106,
+                "easingFunction": "linear"
+              },
+              "height": {
+                "enabled": true,
+                "value": 32,
+                "easingFunction": "linear"
+              },
+              "scaleX": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "scaleY": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "rotate": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "opacity": {
+                "enabled": true,
+                "value": 1,
+                "easingFunction": "linear"
+              }
+            }
+          ],
+          "disabledStyle": {
+            "inheritFrom": "default"
+          }
         }
       ],
       "connectionLines": [
