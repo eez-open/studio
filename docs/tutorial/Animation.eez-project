@@ -1652,63 +1652,68 @@
         },
         {
           "type": "AnimateActionComponent",
-          "left": 222,
-          "top": -67,
-          "width": 87,
+          "left": 892,
+          "top": -340,
+          "width": 410,
           "height": 55,
           "wireID": "bfac3c4c-58da-4686-fa0f-095f7a3c3fc0",
           "customInputs": [],
           "customOutputs": [],
-          "speed": "Math.abs(Flow.pageTimelinePosition() - 0) / 0.25",
-          "time": "0"
+          "from": "Flow.pageTimelinePosition()",
+          "to": "0",
+          "speed": "Math.abs(Flow.pageTimelinePosition() - 0) / 0.25"
         },
         {
           "type": "AnimateActionComponent",
-          "left": 382,
-          "top": -67,
-          "width": 87,
+          "left": 892,
+          "top": -269,
+          "width": 435,
           "height": 55,
           "wireID": "9c9efb9a-7600-424b-e636-06a64a256192",
           "customInputs": [],
           "customOutputs": [],
-          "speed": "Math.abs(Flow.pageTimelinePosition() - 0.5) / 0.25",
-          "time": "0.5"
+          "from": "Flow.pageTimelinePosition()",
+          "to": "0.5",
+          "speed": "Math.abs(Flow.pageTimelinePosition() - 0.5) / 0.25"
         },
         {
           "type": "AnimateActionComponent",
-          "left": 542,
-          "top": -67,
-          "width": 87,
+          "left": 892,
+          "top": -196,
+          "width": 435,
           "height": 55,
           "wireID": "d2eabd82-2dc9-4862-a82d-25741005e835",
           "customInputs": [],
           "customOutputs": [],
-          "speed": "Math.abs(Flow.pageTimelinePosition() - 1.0) / 0.25",
-          "time": "1.0"
+          "from": "Flow.pageTimelinePosition()",
+          "to": "1.0",
+          "speed": "Math.abs(Flow.pageTimelinePosition() - 1.0) / 0.25"
         },
         {
           "type": "AnimateActionComponent",
-          "left": 702,
-          "top": -67,
-          "width": 87,
+          "left": 892,
+          "top": -126,
+          "width": 435,
           "height": 55,
           "wireID": "87a59ce7-b51d-4baf-8b4b-db0d81190aeb",
           "customInputs": [],
           "customOutputs": [],
-          "speed": "Math.abs(Flow.pageTimelinePosition() - 1.5) / 0.25",
-          "time": "1.5"
+          "from": "Flow.pageTimelinePosition()",
+          "to": "1.5",
+          "speed": "Math.abs(Flow.pageTimelinePosition() - 1.5) / 0.25"
         },
         {
           "type": "AnimateActionComponent",
-          "left": 862,
-          "top": -67,
-          "width": 87,
+          "left": 892,
+          "top": -55,
+          "width": 435,
           "height": 55,
           "wireID": "fbf9c2a0-1747-40e2-83c3-7f252e11ec55",
           "customInputs": [],
           "customOutputs": [],
-          "speed": "Math.abs(Flow.pageTimelinePosition() - 2.0) / 0.25",
-          "time": "2.0"
+          "from": "Flow.pageTimelinePosition()",
+          "to": "2.0",
+          "speed": "Math.abs(Flow.pageTimelinePosition() - 2.0) / 0.25"
         },
         {
           "type": "StartActionComponent",
@@ -2816,8 +2821,9 @@
           "wireID": "7938bfbc-e8df-4aff-b12c-54f77342bcd3",
           "customInputs": [],
           "customOutputs": [],
-          "speed": "1",
-          "time": "1"
+          "from": "Flow.pageTimelinePosition()",
+          "to": "1",
+          "speed": "1"
         },
         {
           "type": "OnEventActionComponent",
@@ -2834,13 +2840,14 @@
           "type": "AnimateActionComponent",
           "left": 263,
           "top": -76,
-          "width": 87,
+          "width": 127,
           "height": 55,
           "wireID": "451fa467-bbf7-4f54-e657-5f83cae0a141",
           "customInputs": [],
           "customOutputs": [],
-          "speed": "1000",
-          "time": "0"
+          "from": "0",
+          "to": "0",
+          "speed": "1"
         },
         {
           "type": "LayoutViewWidget",
@@ -3039,8 +3046,9 @@
           "wireID": "7938bfbc-e8df-4aff-b12c-54f77342bcd3",
           "customInputs": [],
           "customOutputs": [],
-          "speed": "1",
-          "time": "1"
+          "from": "Flow.pageTimelinePosition()",
+          "to": "1",
+          "speed": "1"
         },
         {
           "type": "OnEventActionComponent",
@@ -3057,13 +3065,14 @@
           "type": "AnimateActionComponent",
           "left": 263,
           "top": -76,
-          "width": 87,
+          "width": 127,
           "height": 55,
           "wireID": "451fa467-bbf7-4f54-e657-5f83cae0a141",
           "customInputs": [],
           "customOutputs": [],
-          "speed": "1000",
-          "time": "0"
+          "from": "0",
+          "to": "0",
+          "speed": "1"
         },
         {
           "type": "RectangleWidget",
@@ -3884,13 +3893,14 @@
           "type": "AnimateActionComponent",
           "left": -8,
           "top": -106,
-          "width": 87,
+          "width": 188,
           "height": 55,
           "wireID": "d3aeebcc-d506-4db8-91bb-72885c1fe4d7",
           "customInputs": [],
           "customOutputs": [],
-          "speed": "3",
-          "time": "6"
+          "from": "0",
+          "to": "6",
+          "speed": "3"
         },
         {
           "type": "StartActionComponent",
@@ -3901,18 +3911,6 @@
           "wireID": "f117265e-3305-4b78-fc87-d761dfe1b184",
           "customInputs": [],
           "customOutputs": []
-        },
-        {
-          "type": "AnimateActionComponent",
-          "left": 125,
-          "top": -106,
-          "width": 87,
-          "height": 55,
-          "wireID": "9a017bf9-04db-4086-b95f-5f0b976d5bf3",
-          "customInputs": [],
-          "customOutputs": [],
-          "speed": "1000",
-          "time": "0"
         }
       ],
       "connectionLines": [
@@ -3924,12 +3922,6 @@
         },
         {
           "source": "d3aeebcc-d506-4db8-91bb-72885c1fe4d7",
-          "output": "@seqout",
-          "target": "9a017bf9-04db-4086-b95f-5f0b976d5bf3",
-          "input": "@seqin"
-        },
-        {
-          "source": "9a017bf9-04db-4086-b95f-5f0b976d5bf3",
           "output": "@seqout",
           "target": "d3aeebcc-d506-4db8-91bb-72885c1fe4d7",
           "input": "@seqin"

@@ -3106,12 +3106,19 @@ export class AnimateActionComponent extends ActionComponent {
         properties: [
             makeExpressionProperty(
                 {
-                    name: "time",
-                    displayName: "Timeline position",
+                    name: "from",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
-                "double"
+                "float"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "to",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "float"
             ),
             makeExpressionProperty(
                 {
@@ -3119,13 +3126,21 @@ export class AnimateActionComponent extends ActionComponent {
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
-                "double"
+                "float"
             )
         ],
         beforeLoadHook: (
             component: AnimateActionComponent,
             jsComponent: Partial<AnimateActionComponent>
         ) => {
+            if (jsComponent.from == undefined) {
+                jsComponent.from = "Flow.pageTimelinePosition()";
+            }
+
+            if ((jsComponent as any).time != undefined) {
+                jsComponent.to = (jsComponent as any).time;
+            }
+
             if (jsComponent.speed == undefined) {
                 jsComponent.speed = "1";
             }
@@ -3144,17 +3159,23 @@ export class AnimateActionComponent extends ActionComponent {
                 <path d="M8 4v16m8-16v16M4 8h4m-4 8h4m-4-4h16m-4-4h4m-4 8h4" />
             </svg>
         ),
-        componentHeaderColor: "#fff5c2"
+        componentHeaderColor: "#fff5c2",
+        defaultValue: {
+            from: "Flow.pageTimelinePosition()"
+        }
     });
 
-    time: string;
+    from: string;
+    to: string;
     speed: string;
 
     constructor() {
         super();
 
         makeObservable(this, {
-            time: observable
+            from: observable,
+            to: observable,
+            speed: observable
         });
     }
 
@@ -3185,7 +3206,13 @@ export class AnimateActionComponent extends ActionComponent {
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
             <div className="body">
-                <pre>To {this.time} s</pre>
+                <pre>
+                    {this.from != "Flow.pageTimelinePosition()"
+                        ? `From: ${this.from} s, `
+                        : ""}
+                    To: {this.to} s
+                    {this.speed != "1" ? `, Speed: ${this.speed}` : ""}
+                </pre>
             </div>
         );
     }

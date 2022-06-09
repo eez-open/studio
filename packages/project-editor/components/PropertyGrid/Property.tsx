@@ -642,7 +642,7 @@ export const Property = observer(
                 }
             } else if (propertyInfo.type === PropertyType.Boolean) {
                 return (
-                    <label>
+                    <label className="EezStudio_PropertyGrid_Checkbox">
                         <input
                             ref={(ref: any) => (this.input = ref)}
                             type="checkbox"
