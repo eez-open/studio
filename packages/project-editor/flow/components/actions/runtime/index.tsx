@@ -277,6 +277,21 @@ registerExecuteFunction(
 );
 
 registerExecuteFunction(
+    "FileOpenDialog",
+    function (context: IDashboardComponentContext) {
+        context = context.startAsyncExecution();
+
+        context.sendMessageToComponent(undefined, result => {
+            if (!result.canceled) {
+                context.propagateValue("file_path", result.filePath);
+            }
+            context.propagateValueThroughSeqout();
+            context.endAsyncExecution();
+        });
+    }
+);
+
+registerExecuteFunction(
     "FileSaveDialog",
     function (context: IDashboardComponentContext) {
         const fileNameValue = context.evalProperty("fileName");

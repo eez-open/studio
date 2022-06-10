@@ -4810,12 +4810,16 @@ export function registerActionComponent(
                 : undefined,
             icon:
                 typeof actionComponentDefinition.icon === "string" ? (
-                    <img
-                        src={
-                            "data:image/svg+xml;charset=utf-8," +
-                            actionComponentDefinition.icon
-                        }
-                    />
+                    actionComponentDefinition.icon.startsWith("data:image") ? (
+                        <img src={actionComponentDefinition.icon} />
+                    ) : (
+                        <img
+                            src={
+                                "data:image/svg+xml;charset=utf-8," +
+                                actionComponentDefinition.icon
+                            }
+                        />
+                    )
                 ) : (
                     actionComponentDefinition.icon
                 ),

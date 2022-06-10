@@ -23,11 +23,17 @@ const writeIcon: any = (
 
 const appendIcon: any = writeIcon;
 
-const fileSaveDialogIcon: any = (
-    <svg viewBox="0 0 512 512">
-        <path d="M362.7 64h-256C83 64 64 83.2 64 106.7v298.7c0 23.5 19 42.7 42.7 42.7h298.7c23.5 0 42.7-19.2 42.7-42.7v-256L362.7 64zM256 405.3c-35.4 0-64-28.6-64-64s28.6-64 64-64 64 28.6 64 64-28.6 64-64 64zM320 192H106.7v-85.3H320V192z" />
-    </svg>
-);
+// const fileOpenDialogIcon: any = (
+//     <svg viewBox="0 0 256 256">
+//         <path d="M240.2578 111.814A14.0339 14.0339 0 0 0 228.9004 106H214V88a14.0157 14.0157 0 0 0-14-14h-69.3335a2.0125 2.0125 0 0 1-1.1997-.3999l-27.7334-20.8003A14.0874 14.0874 0 0 0 93.3335 50H40a14.0157 14.0157 0 0 0-14 14v144c0 .038.0049.0752.0059.1133.0014.0844.0073.1684.0126.2524.0088.143.021.2847.0396.4248.0103.0757.0215.1514.0347.2266.0263.1543.059.3061.0971.456.0152.0616.0298.1226.047.1836.0517.1797.1117.355.1791.5274.0122.0312.022.0635.0347.0952a6.0854 6.0854 0 0 0 .293.6128c.0112.02.0244.0386.0356.0586q.145.2563.3145.496c.0136.02.0244.0416.039.0616.026.0361.0572.0679.084.103.0923.122.188.2402.2891.355.0513.0576.102.1147.1548.17.107.1117.2182.2182.3335.3212.0473.043.0927.0879.1416.1294a6.1715 6.1715 0 0 0 .5224.3965l.0132.0078a5.9471 5.9471 0 0 0 .5532.3252c.0484.0254.0977.0469.147.0708.1495.0732.3018.1411.4585.2017.0591.023.1187.0444.1788.0654q.2263.0798.46.1411c.0634.0166.126.0342.1894.0488.1611.0367.3242.065.4898.0884.059.0083.1171.0205.1767.0269A6.0473 6.0473 0 0 0 32 214h176a6.0003 6.0003 0 0 0 5.6924-4.1025l28.4897-85.4703a14.0342 14.0342 0 0 0-1.9243-12.6132ZM40 62h53.3335a2.0125 2.0125 0 0 1 1.1997.3999l27.7334 20.8003A14.0874 14.0874 0 0 0 130.6665 86H200a2.0026 2.0026 0 0 1 2 2v18H69.7661a13.9825 13.9825 0 0 0-13.2817 9.5727L38 171.0265V64a2.0026 2.0026 0 0 1 2-2Zm190.7979 58.6323L203.6758 202H40.3248l27.5439-82.6323A1.998 1.998 0 0 1 69.766 118h159.1343a2 2 0 0 1 1.8974 2.6323Z" />
+//     </svg>
+// );
+
+// const fileSaveDialogIcon: any = (
+//     <svg viewBox="0 0 512 512">
+//         <path d="M362.7 64h-256C83 64 64 83.2 64 106.7v298.7c0 23.5 19 42.7 42.7 42.7h298.7c23.5 0 42.7-19.2 42.7-42.7v-256L362.7 64zM256 405.3c-35.4 0-64-28.6-64-64s28.6-64 64-64 64 28.6 64 64-28.6 64-64 64zM320 192H106.7v-85.3H320V192z" />
+//     </svg>
+// );
 
 const showFileInFolderIcon: any = (
     <svg viewBox="0 0 32 32">
@@ -116,8 +122,40 @@ registerActionComponents("File", [
         ]
     },
     {
+        name: "FileOpenDialog",
+        icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAABHhJREFUWIXdlktslVUQx39zvvvobcsFSmmxPCoEKkYwRhrwhQ1oYqML2enCxJgY48aVS9GkbDQhhkSiwTfRjbjRBGPUGARFIwVFKSAp7yoWyO3jPtrS3u/MuPgAS/q6FywLJ5nFd87M/P8z38w5B/4v0nJo9YaWjjWfl+vn/isC4nhEhMfXdjQ/UZZfOcYPH75/UTyIPRri7zDVdGg6YKKnRHS/efeuiCwzswvehm7fe2dHXykxY6UYtXa2zo1buEXxT6pZICaYCM5ATcAC5HIqIlIfSMVm4NlSYk9ZgQ0nH2rCu28VW+hNUVO8edQUVY9iY3zMzMCv37Pyl91TxZ+0B1o7W9OOxJeIWzhVoNEiIoIEb7d811gxle2kv6A6Fjzv1W90ibB9eFCqAtE6xRZjrARba3AXE1RRkCY/t/4+OLvrugi0nG6pEJVPPlv6VddENg8cal4SiHtFRJ4evW5mhtnH3X/1/TgZOBOxL0daDjU/Iy74YBT4r4q+8MPKAz+V4l/SFEwm5oJ1EiFnVOSl71e0v4egpfpPSKBQKDwGmKq2p9PpzER2YrrK4E1vl17eu7K02b/Gf7zFrq6uVE1NTVZE4tFIcRrYZ2btqtqezWYPLlq0aAhgaefS5ImmE8Oj/a1zaTIsxB4Usbrx4nsA08PJu4//fg0BM5sJLM7lcvO9918457ii2cIQvblBatIpKpOJopl2iMg+73070L5169ZjbW1tGh5sesojr4vIuOBXscAQfU76PmycFU+kNgm2PLF+e1NQv6bxMhnCMMR7j/eenv4ClRVxujM5+nKDJOIOVWNGVQVz0pUk4kGuIr/9aDL3/hqRUpvbjsRckNimqtEFEqu8uiUixONxMtlB+vKDBCK4GMyfV8uyxqh1VJXBoWF6swNIf0e6sfjRPWDY2MNxIgJdMTVtFosIS6p+jEmmP8/s6jjg6DrfS8PcWfzc0c2Culn0ZAeYnU4hWmC5vobY8Bj/SeGNXU699nmveHNIqhaAgaKy7XCOY71RwONnurjQ20/d7GoaatPUpFMc6TxCKhlDiudZopuQYhfR+VO6hqq7Yqo+A4KrvAWR6Go4P6QcPXeAVclhan2BofAiM/xsZlKN5VNUFrtpqOimQfdQZ1/jNF9W5gAGvVU7T/4WU68ZQ3Cpf5t2Qf4NNte9BYXou6EKCIGeSG9zwJwoStTO5YuZ7ZY2NOa99iAgqXnRxsg5uPgOZXTSdYnALoBYqGFGcEhlRCC8uB2zkWkFBwjFIgIWkjGnuKp5mM/jMzuwac4eozu9+uwfEQEJM1hAUN1AmNmBhbnpBY8YXH0jxAKVjHcQVNXjL7yKXVdL3QCBEdWewDkIO9DhP28COARaHFUBCTK4GJbbeVOyF7NTqXsvnLny7QrZTE+QwnxhfzR606w2qvwAbkUbI8k6zZd7jF6vjoxcSyAGEK+RfrD0dJe/GNqloWH3zRgC/QXZkoiz0YnMmS5wM8uPFOXFW1v/7hm9fu2L6FOC3Udu/KU8nqxrwzPOtfEPmju7fm01yQcAAAAASUVORK5CYII=",
+        componentHeaderColor,
+        inputs: [],
+        outputs: [
+            {
+                name: "file_path",
+                type: "string",
+                isSequenceOutput: false,
+                isOptionalOutput: false
+            }
+        ],
+        properties: [],
+        onWasmWorkerMessage: async (flowState, message, messageId) => {
+            const result = await dialog.showOpenDialog({
+                properties: ["openFile"],
+                filters: [{ name: "All Files", extensions: ["*"] }]
+            });
+
+            // workaround: for some reason electron returs "\\" as path separator on windows, probably bug
+            const filePath =
+                result.filePaths && result.filePaths[0]
+                    ? result.filePaths[0].replace(/\\/g, "/")
+                    : undefined;
+
+            flowState.sendResultToWorker(messageId, {
+                cancelled: result.canceled,
+                filePath
+            });
+        }
+    },
+    {
         name: "FileSaveDialog",
-        icon: fileSaveDialogIcon,
+        icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAABRBJREFUWIWtll+I3NUVxz/nzszOJlnzZ3A3m40ma8x/rIipAVEqFFIoaUQMixoKhbagD74U6oP0wYdCqaIPakvtQwgtISlLC7Wk+tSHQmmLwcQU6ibZ9U80upttdnc25s/M/XNOH34zszO76+7M6oELv/ndM/d8ft9z7rlXqNmRP17YVnTyi4nJzzduv72H1w7vY6X2wtv/4Z8fXWWgd2NZyf1lZObG8Xef/mZYzDdffxCz4/mce9A0EdOc76E3/sZ1HwE4fN9Wnv3W7mUBUkrEGOjuctwM8tieUs+ze/409t3jh7dPzvd19QfVtEc1EYInhjkAHwLee7z3pBjbUiDGmPknRTWhmu5PsXrqwO/fW7MEgKKm+OgJTYFC8PhQxYcqKaU2AQI+VGvBFVXFVB8oFfInh4aHc4sCWOZE8J4YmxXwBJ+NmNpUIEWC96SUUNPGMEuHJOz41ZcokNGGGFoAYvD42kjangIpRnzwja9vGcYzQ8fPHKn7NopQrSaVGWbWWOyJ/buohCzwA4Mblw0+dv0UA4Nnebhnlv7eSZJJY67qK1z67ABRCz8DTrQC1AgBRq+UGZsss71vPT/5Tmfb8V+zr9O/tUr/1oVzTopMzw4wM3vv3oNH39n21x/t/7ABkFVsBnArRB57/c+sKXZ1FBzgqcMXyeUW3fKZWUBVyZncAXzYpEDCR9jcV2Ls0wnU4IuK7xhADcSWmrfsQwWBeSmoeKWv1Mem3r6WOujEBIc15X0BgNZ6Q239piJMiAkT09dXFLhuOxUcywEoiMwD0FRX5SuZmiBLKWBWU4BWAFPFvg4AlSU/RLVeA64VINsBXxOALA+gposALPHHTgCWWmcu+DwFkuqS5O1aUkdTh18EwFqaXosCIrC3fwPf+8ad5N3KYE7fdCRdLgUJyKqw4fngS2/OiLD+5A+/zZZST1vBonpeOvMQlXRtRbCYjbduQxHWdGWvpsvXmZ5dvifsyH2f96pvrDC+/XReCuakq3hP+dryAHcVDjK1+hwfffHvjoIL/OHFR86faDmOxYR6Ax7oKzHQV2prsZ3VX/LK6ce5Ecpt+Vf9WkZGH/0tPD+vCIF6cYxdmuCDTybaWhBg860jjLjlU2EII6OHmJq+22BBJ5yzgb4NrF+7um2AfWzjrU/HOT1+akm/icl9TE0PAtmR3XIfaG6E3cUCXV15OrHHdz3Hhatnma6MLzrf3zNIvutJLugVTBccRjWAmgzvj13mv6OfdAQAcFfuKf6XXsNqrbZuOZfnB/f+nF9fmUJVSSw4jiM0FeE9O7dwz84tHQPAw5RGyrw1+ruWtwd3/JjB9Xsx/XvWiOZ3QrOshV87+xsK3a30ndojGjmrOcZddpm9Q/M8NDNF+Z2X8VO3AcWG71yShY+B+94+d5E1rvOr2Hy7ze3m8qbzYELPxC7e/Ow8AJdndmPWm8TZxwAyPDzclVK68x9X/IFzs+mFaLIWxAnmJLveZf3JTBpV+uUHvmU5NBCx20sXMXN2dXq7GaJgCuY3d8uJRze5V8vl8iU5evRob6FQeEJE9ovIALDBzHqAooh0mVkeyIlI/ZgTq136pNY6rekCKSJa+60iEoFoZgGoADeAMvA5cAY4KYAcO3asGGNcvW7dulUhhNUisirGuMrMup1zdZCCcy6vqnkzcyIiZpZ3zmFm0TlnMUbL5/NBVaOIBDPzqloVkQpQMbNbzrmbxWLxJnBraGio8n+BRf2XIiOGEwAAAABJRU5ErkJggg==",
         componentHeaderColor,
         inputs: [],
         outputs: [
