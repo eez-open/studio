@@ -352,6 +352,7 @@ export const builtInFunctions: {
             return "integer";
         }
     },
+
     "Flow.index": {
         arity: 1,
         args: ["index"],
@@ -525,6 +526,7 @@ export const builtInFunctions: {
             return "double";
         }
     },
+
     "Date.now": {
         arity: 0,
         args: [],
@@ -558,6 +560,7 @@ export const builtInFunctions: {
             return "date";
         }
     },
+
     "Math.sin": {
         arity: 1,
         args: ["value"],
@@ -848,6 +851,7 @@ export const builtInConstants: {
         value: (DocumentStore: DocumentStoreClass) => DocumentStore.filePath,
         valueType: "string"
     },
+
     "Math.PI": {
         value: () => Math.PI,
         valueType: "double"
