@@ -28,7 +28,10 @@ import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { RuntimeFlowContext } from "project-editor/flow/runtime-viewer/context";
 
 import { Svg } from "project-editor/flow/editor/render";
-import { ConnectionLines } from "project-editor/flow/editor/ConnectionLineComponent";
+import {
+    ConnectionLineDebugValues,
+    ConnectionLines
+} from "project-editor/flow/editor/ConnectionLineComponent";
 import { getObjectBoundingRect } from "project-editor/flow/editor/bounding-rects";
 import {
     IMouseHandler,
@@ -54,6 +57,29 @@ const AllConnectionLines = observer(
                     selected={false}
                 />
                 <ConnectionLines
+                    connectionLines={
+                        flowContext.document.selectedConnectionLines
+                    }
+                    context={flowContext}
+                    selected={true}
+                />
+            </Svg>
+        );
+    }
+);
+
+const AllConnectionLineDebugValues = observer(
+    ({ flowContext }: { flowContext: IFlowContext }) => {
+        return (
+            <Svg flowContext={flowContext}>
+                <ConnectionLineDebugValues
+                    connectionLines={
+                        flowContext.document.nonSelectedConnectionLines
+                    }
+                    context={flowContext}
+                    selected={false}
+                />
+                <ConnectionLineDebugValues
                     connectionLines={
                         flowContext.document.selectedConnectionLines
                     }
@@ -747,6 +773,16 @@ export const FlowViewer = observer(
                                                 this.flowContext
                                             )}
                                     </div>
+                                }
+
+                                {
+                                    // render connection line debug values
+                                    renderParts &&
+                                        !this.props.tabState.frontFace && (
+                                            <AllConnectionLineDebugValues
+                                                flowContext={this.flowContext}
+                                            />
+                                        )
                                 }
                             </>
                         )}

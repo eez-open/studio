@@ -52,52 +52,30 @@ export const ConnectionLines = observer(
     }
 );
 
-class VisiblePath extends React.Component<{
-    lineShape: string;
-    selected: boolean;
-    connectionLine: ConnectionLine;
-    context: IFlowContext;
-    targetInput: ComponentInput | undefined;
-}> {
-    ref = React.createRef<SVGPathElement>();
-
-    componentDidMount() {
-        if (this.ref.current) {
-            registerPath(this.props.connectionLine, this.ref.current);
-        }
-    }
-
-    componentWillUnmount() {
-        if (this.ref.current) {
-            unregisterPath(this.props.connectionLine, this.ref.current);
-        }
-    }
-
-    render() {
-        const { lineShape, selected, connectionLine, targetInput } = this.props;
-
-        const seq =
-            targetInput?.isSequenceInput &&
-            !(connectionLine.targetComponent instanceof OutputActionComponent);
-
+export const ConnectionLineDebugValues = observer(
+    ({
+        connectionLines,
+        context,
+        selected = false
+    }: {
+        connectionLines: ITreeObjectAdapter[];
+        context: IFlowContext;
+        selected?: boolean;
+    }) => {
         return (
-            <path
-                ref={this.ref}
-                d={lineShape}
-                style={{
-                    fill: "none",
-                    strokeWidth: seq ? seqStrokeWidth : strokeWidth,
-                    strokeLinecap: "round"
-                }}
-                className={classNames("connection-line-path", {
-                    selected,
-                    seq
-                })}
-                vectorEffect={selected ? "non-scaling-stroke" : "none"}
-            ></path>
+            <>
+                {connectionLines.map(connectionLineAdapter => (
+                    <ConnectionLineDebugValue
+                        key={connectionLineAdapter.id}
+                        connectionLineAdapter={connectionLineAdapter}
+                        context={context}
+                        selected={selected}
+                    />
+                ))}
+            </>
         );
     }
-}
+);
 
 const ConnectionLineShape = observer(
     ({
@@ -160,13 +138,6 @@ const ConnectionLineShape = observer(
                     context={context}
                     targetInput={targetInput}
                 />
-                <DebugValue
-                    context={context}
-                    connectionLine={connectionLine}
-                    selected={selected}
-                    id={connectionLineAdapter.id}
-                    targetInput={targetInput}
-                />
                 {context.DocumentStore.uiStateStore.showComponentDescriptions &&
                     connectionLine.description && (
                         <SvgLabel
@@ -184,6 +155,86 @@ const ConnectionLineShape = observer(
         );
     }
 );
+
+const ConnectionLineDebugValue = observer(
+    ({
+        connectionLineAdapter,
+        context,
+        selected
+    }: {
+        connectionLineAdapter: ITreeObjectAdapter;
+        context: IFlowContext;
+        selected: boolean;
+    }) => {
+        const connectionLine = connectionLineAdapter.object as ConnectionLine;
+
+        const targetInput = connectionLine.targetComponent?.inputs.find(
+            input => input.name == connectionLine.input
+        );
+
+        return (
+            <g
+                className={classNames("connection-line", { selected })}
+                data-eez-flow-object-id={connectionLineAdapter.id}
+            >
+                <DebugValue
+                    context={context}
+                    connectionLine={connectionLine}
+                    selected={selected}
+                    id={connectionLineAdapter.id}
+                    targetInput={targetInput}
+                />
+            </g>
+        );
+    }
+);
+
+class VisiblePath extends React.Component<{
+    lineShape: string;
+    selected: boolean;
+    connectionLine: ConnectionLine;
+    context: IFlowContext;
+    targetInput: ComponentInput | undefined;
+}> {
+    ref = React.createRef<SVGPathElement>();
+
+    componentDidMount() {
+        if (this.ref.current) {
+            registerPath(this.props.connectionLine, this.ref.current);
+        }
+    }
+
+    componentWillUnmount() {
+        if (this.ref.current) {
+            unregisterPath(this.props.connectionLine, this.ref.current);
+        }
+    }
+
+    render() {
+        const { lineShape, selected, connectionLine, targetInput } = this.props;
+
+        const seq =
+            targetInput?.isSequenceInput &&
+            !(connectionLine.targetComponent instanceof OutputActionComponent);
+
+        return (
+            <path
+                ref={this.ref}
+                d={lineShape}
+                style={{
+                    fill: "none",
+                    strokeWidth: seq ? seqStrokeWidth : strokeWidth,
+                    strokeLinecap: "round"
+                }}
+                className={classNames("connection-line-path", {
+                    selected,
+                    seq
+                })}
+                vectorEffect={selected ? "non-scaling-stroke" : "none"}
+            ></path>
+        );
+    }
+}
 
 const DebugValue = observer(
     ({

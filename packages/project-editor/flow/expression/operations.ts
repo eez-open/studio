@@ -486,6 +486,45 @@ export const builtInFunctions: {
             return "string";
         }
     },
+    "Flow.parseInteger": {
+        arity: 1,
+        args: ["str"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => {
+            return parseInt(args[0]);
+        },
+        getValueType: (...args: ValueType[]) => {
+            return "integer";
+        }
+    },
+    "Flow.parseFloat": {
+        arity: 1,
+        args: ["str"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => {
+            return parseFloat(args[0]);
+        },
+        getValueType: (...args: ValueType[]) => {
+            return "float";
+        }
+    },
+    "Flow.parseDouble": {
+        arity: 1,
+        args: ["str"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => {
+            return parseFloat(args[0]);
+        },
+        getValueType: (...args: ValueType[]) => {
+            return "double";
+        }
+    },
     "Date.now": {
         arity: 0,
         args: [],

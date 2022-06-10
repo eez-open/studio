@@ -139,7 +139,7 @@ export function createJsArrayValue(
                 return fieldValue;
             });
         } else {
-            values = value;
+            return value;
         }
 
         return {
