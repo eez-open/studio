@@ -135,6 +135,7 @@ import { BootstrapButton } from "project-editor/components/BootstrapButton";
 //import { PropertyGrid } from "project-editor/components/PropertyGrid";
 import { easingFunctions } from "./easing-functions";
 import { humanize } from "eez-studio-shared/string";
+import { Icon } from "eez-studio-ui/icon";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3341,7 +3342,23 @@ const TimelineKeyframePropertyUI = observer(
                             <td className="property-heading">Property</td>
                             <td className="property-heading">From Value</td>
                             <td className="property-heading">To Value</td>
-                            <td className="property-heading">Easing</td>
+                            <td className="property-heading">
+                                Easing{" "}
+                                <a>
+                                    <Icon
+                                        icon="material:info"
+                                        style={{ cursor: "pointer" }}
+                                        onClick={async () => {
+                                            const { shell } = await import(
+                                                "electron"
+                                            );
+                                            shell.openExternal(
+                                                "https://easings.net"
+                                            );
+                                        }}
+                                    />
+                                </a>
+                            </td>
                         </tr>
                         {this.renderProperty("left")}
                         {this.renderProperty("top")}

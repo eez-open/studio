@@ -34,3 +34,4 @@ circular.txt
 packages/project-editor/flow/runtime/cpp/build
 !packages/project-editor/flow/runtime/flow_runtime.js
 !packages/project-editor/flow/runtime/cpp/src/platform/simulator/emscripten/pre.js
+!packages/project-editor/flow/runtime/cpp/src/platform/simulator/emscripten/post.js

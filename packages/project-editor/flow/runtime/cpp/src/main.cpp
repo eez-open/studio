@@ -39,32 +39,32 @@ void mountFileSystem() {
 
 void startToDebuggerMessage() {
     EM_ASM({
-        startToDebuggerMessage();
-    }, 0);
+        startToDebuggerMessage($0);
+    }, eez::flow::g_wasmModuleId);
 }
 
 void writeDebuggerBuffer(const char *buffer, uint32_t length) {
     EM_ASM({
-        writeDebuggerBuffer(new Uint8Array(Module.HEAPU8.buffer, $0, $1));
-    }, buffer, length);
+        writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2));
+    }, eez::flow::g_wasmModuleId, buffer, length);
 }
 
 void finishToDebuggerMessage() {
     EM_ASM({
-        finishToDebuggerMessage();
-    }, 0);
+        finishToDebuggerMessage($0);
+    }, eez::flow::g_wasmModuleId);
 }
 
 void executeDashboardComponent(uint16_t componentType, int flowStateIndex, int componentIndex) {
     EM_ASM({
-        executeDashboardComponent($0, $1, $2);
-    }, componentType, flowStateIndex, componentIndex);
+        executeDashboardComponent($0, $1, $2, $3);
+    }, eez::flow::g_wasmModuleId, componentType, flowStateIndex, componentIndex);
 }
 
 void onArrayValueFree(eez::gui::ArrayValue *arrayValue) {
     EM_ASM({
-        onArrayValueFree($0);
-    }, arrayValue);
+        onArrayValueFree($0, $1);
+    }, eez::flow::g_wasmModuleId, arrayValue);
 }
 
 EM_PORT_API(void) stopScript() {
@@ -77,7 +77,9 @@ namespace eez {
     }
 }
 
-EM_PORT_API(void) init(uint8_t *assets, uint32_t assetsSize) {
+EM_PORT_API(void) init(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSize) {
+    eez::flow::g_wasmModuleId = wasmModuleId;
+
     eez::initAssetsMemory();
     eez::gui::loadMainAssets(assets, assetsSize);
     DISPLAY_WIDTH = eez::gui::g_mainAssets->settings->displayWidth;

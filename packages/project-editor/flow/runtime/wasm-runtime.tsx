@@ -58,6 +58,7 @@ import { getNodeModuleFolders } from "eez-studio-shared/extensions/yarn";
 import { IExpressionContext } from "project-editor/flow/expression";
 import { FileHistoryItem } from "instrument/window/history/items/file";
 import type { Page } from "project-editor/features/page/page";
+import { createWasmWorker } from "project-editor/flow/runtime/wasm-worker";
 
 interface IGlobalVariableBase {
     variable: IVariable;
@@ -87,10 +88,14 @@ type IRuntimeGlobalVariable =
     | IStructGlobalVariable
     | IObjectGlobalVariable;
 
+let nextWasmModuleId = 1;
+
 export class WasmRuntime extends RemoteRuntime {
+    wasmModuleId: number;
+
     debuggerConnection = new WasmDebuggerConnection(this);
 
-    worker: Worker;
+    worker: ReturnType<typeof createWasmWorker>;
 
     assetsData: any;
     assetsDataMapJs: AssetsMap;
@@ -160,10 +165,8 @@ export class WasmRuntime extends RemoteRuntime {
         }
 
         // create WASM worker
-        this.worker = new Worker(
-            "../project-editor/flow/runtime/wasm-worker-pre.js"
-        );
-        this.worker.onmessage = this.onWorkerMessage;
+        this.wasmModuleId = nextWasmModuleId++;
+        this.worker = createWasmWorker(this.wasmModuleId, this.onWorkerMessage);
     }
 
     async doStopRuntime(notifyUser: boolean) {
@@ -201,8 +204,8 @@ export class WasmRuntime extends RemoteRuntime {
 
     ////////////////////////////////////////////////////////////////////////////////
 
-    onWorkerMessage = async (e: { data: WorkerToRenderMessage }) => {
-        if (e.data.init) {
+    onWorkerMessage = async (workerToRenderMessage: WorkerToRenderMessage) => {
+        if (workerToRenderMessage.init) {
             const message: RendererToWorkerMessage = {};
 
             let globalVariableValues: IGlobalVariable[];
@@ -242,31 +245,35 @@ export class WasmRuntime extends RemoteRuntime {
 
             this.debuggerConnection.onConnected();
         } else {
-            if (e.data.scpiCommand) {
-                this.executeScpiCommand(e.data.scpiCommand);
+            if (workerToRenderMessage.scpiCommand) {
+                this.executeScpiCommand(workerToRenderMessage.scpiCommand);
                 return;
             }
 
-            if (e.data.connectToInstrumentId) {
-                this.connectToInstrument(e.data.connectToInstrumentId);
+            if (workerToRenderMessage.connectToInstrumentId) {
+                this.connectToInstrument(
+                    workerToRenderMessage.connectToInstrumentId
+                );
                 return;
             }
 
-            if (e.data.messageToDebugger) {
+            if (workerToRenderMessage.messageToDebugger) {
                 this.debuggerConnection.onMessageToDebugger(
-                    arrayBufferToBinaryString(e.data.messageToDebugger)
+                    arrayBufferToBinaryString(
+                        workerToRenderMessage.messageToDebugger
+                    )
                 );
                 return;
             }
 
-            if (e.data.propertyValues) {
+            if (workerToRenderMessage.propertyValues) {
                 this.componentProperties.valuesFromWorker(
-                    e.data.propertyValues
+                    workerToRenderMessage.propertyValues
                 );
             }
 
-            if (e.data.componentMessages) {
-                for (const componentMessage of e.data.componentMessages) {
+            if (workerToRenderMessage.componentMessages) {
+                for (const componentMessage of workerToRenderMessage.componentMessages) {
                     const flowStateAndIndex = this.flowStateMap.get(
                         componentMessage.flowStateIndex
                     );
@@ -294,14 +301,15 @@ export class WasmRuntime extends RemoteRuntime {
                 }
             }
 
-            if (e.data.freeArrayValue) {
-                const valueType = e.data.freeArrayValue.valueType;
+            if (workerToRenderMessage.freeArrayValue) {
+                const valueType =
+                    workerToRenderMessage.freeArrayValue.valueType;
 
                 const objectVariableType =
                     getObjectVariableTypeFromType(valueType);
                 if (objectVariableType) {
                     const value = objectVariableType.createValue(
-                        e.data.freeArrayValue
+                        workerToRenderMessage.freeArrayValue
                             .value as IObjectVariableValueConstructorParams,
                         true
                     );
@@ -311,10 +319,13 @@ export class WasmRuntime extends RemoteRuntime {
                 return;
             }
 
-            this.screen = e.data.screen;
+            this.screen = workerToRenderMessage.screen;
             runInAction(() => {
-                if (e.data.isRTL != undefined && this.isRTL !== e.data.isRTL) {
-                    this.isRTL = e.data.isRTL ? true : false;
+                if (
+                    workerToRenderMessage.isRTL != undefined &&
+                    this.isRTL !== workerToRenderMessage.isRTL
+                ) {
+                    this.isRTL = workerToRenderMessage.isRTL ? true : false;
                 }
             });
 
@@ -357,8 +368,6 @@ export class WasmRuntime extends RemoteRuntime {
             }
 
             this.ctx.putImageData(imgData, 0, 0, left, top, width, height);
-
-            // this.ctx.putImageData(imgData, 0, 0);
         }
 
         const message: RendererToWorkerMessage = {
@@ -379,7 +388,7 @@ export class WasmRuntime extends RemoteRuntime {
         this.wheelDeltaY = 0;
         this.wheelClicked = 0;
         this.pointerEvents = [];
-        this.screen = undefined;
+        //this.screen = undefined;
         this.componentProperties.assignPropertiesOnNextTick = [];
     };
 

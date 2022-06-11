@@ -767,7 +767,12 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
 
         if (!rectEqual(this.rect, context.viewState.selectedObjects[0].rect)) {
             this.changed = true;
-            context.viewState.selectedObjects[0].rect = this.rect;
+            context.viewState.selectedObjects[0].rect = {
+                left: Math.floor(this.rect.left),
+                top: Math.floor(this.rect.top),
+                width: Math.floor(this.rect.width),
+                height: Math.floor(this.rect.height)
+            };
         }
     }
 

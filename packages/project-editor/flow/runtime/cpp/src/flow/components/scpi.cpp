@@ -123,8 +123,8 @@ struct ScpiComponentExecutionState : public ComponenentExecutionState {
         resultIsReady = false;
 
 		EM_ASM({
-            executeScpi($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2), $3);
-        }, instrument, commandOrQueryText, strlen(commandOrQueryText), isQuery ? 1 : 0);
+            executeScpi($0, $1, new Uint8Array(Module.HEAPU8.buffer, $2, $3), $4);
+        }, g_wasmModuleId, instrument, commandOrQueryText, strlen(commandOrQueryText), isQuery ? 1 : 0);
 
 		return SCPI_RESULT_STATUS_QUEUED;
 	}

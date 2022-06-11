@@ -1,4 +1,8 @@
-import type { IDashboardComponentContext, ValueType } from "eez-studio-types";
+import type {
+    IDashboardComponentContext,
+    ValueType,
+    IWasmFlowRuntime
+} from "eez-studio-types";
 import {
     createWasmValue,
     getValue
@@ -7,10 +11,14 @@ import {
 let nextWidgetMessageId = 0;
 
 export class DashboardComponentContext implements IDashboardComponentContext {
-    constructor(public flowStateIndex: number, public componentIndex: number) {}
+    constructor(
+        public WasmFlowRuntime: IWasmFlowRuntime,
+        public flowStateIndex: number,
+        public componentIndex: number
+    ) {}
 
     getFlowIndex(): number {
-        return WasmFlowRuntime._getFlowIndex(this.flowStateIndex);
+        return this.WasmFlowRuntime._getFlowIndex(this.flowStateIndex);
     }
 
     getComponentIndex(): number {
@@ -18,7 +26,7 @@ export class DashboardComponentContext implements IDashboardComponentContext {
     }
 
     getComponentExecutionState<T>() {
-        const wasmState = WasmFlowRuntime._getComponentExecutionState(
+        const wasmState = this.WasmFlowRuntime._getComponentExecutionState(
             this.flowStateIndex,
             this.componentIndex
         );
@@ -27,7 +35,7 @@ export class DashboardComponentContext implements IDashboardComponentContext {
 
     setComponentExecutionState<T>(state: T | undefined) {
         const wasmState = componentExecutionStateToWasm<T>(state);
-        WasmFlowRuntime._setComponentExecutionState(
+        this.WasmFlowRuntime._setComponentExecutionState(
             this.flowStateIndex,
             this.componentIndex,
             wasmState
@@ -35,16 +43,16 @@ export class DashboardComponentContext implements IDashboardComponentContext {
     }
 
     getStringParam(offset: number) {
-        const ptr = WasmFlowRuntime._getStringParam(
+        const ptr = this.WasmFlowRuntime._getStringParam(
             this.flowStateIndex,
             this.componentIndex,
             offset
         );
-        return WasmFlowRuntime.UTF8ToString(ptr);
+        return this.WasmFlowRuntime.UTF8ToString(ptr);
     }
 
     getExpressionListParam(offset: number) {
-        const ptr = WasmFlowRuntime._getExpressionListParam(
+        const ptr = this.WasmFlowRuntime._getExpressionListParam(
             this.flowStateIndex,
             this.componentIndex,
             offset
@@ -53,13 +61,13 @@ export class DashboardComponentContext implements IDashboardComponentContext {
         const values: any[] = [];
 
         if (ptr) {
-            const count = WasmFlowRuntime.HEAPU32[(ptr >> 2) + 0];
+            const count = this.WasmFlowRuntime.HEAPU32[(ptr >> 2) + 0];
             for (let i = 0; i < count; i++) {
                 let offset = ptr + 8 + 16 * i;
-                values.push(getValue(offset).value);
+                values.push(getValue(this.WasmFlowRuntime, offset).value);
             }
 
-            WasmFlowRuntime._freeExpressionListParam(ptr);
+            this.WasmFlowRuntime._freeExpressionListParam(ptr);
         }
 
         return values;
@@ -67,7 +75,7 @@ export class DashboardComponentContext implements IDashboardComponentContext {
 
     getInputValue<T = any>(inputName: string, expectedTypes?: ValueType[]) {
         const flowIndex = this.getFlowIndex();
-        const flow = WasmFlowRuntime.assetsMap.flows[flowIndex];
+        const flow = this.WasmFlowRuntime.assetsMap.flows[flowIndex];
         const componentIndex = this.getComponentIndex();
         const component = flow.components[componentIndex];
         const inputIndex = component.inputIndexes[inputName];
@@ -76,14 +84,14 @@ export class DashboardComponentContext implements IDashboardComponentContext {
             return undefined;
         }
 
-        const valuePtr = WasmFlowRuntime._getInputValue(
+        const valuePtr = this.WasmFlowRuntime._getInputValue(
             this.flowStateIndex,
             inputIndex
         );
         if (!valuePtr) {
             return undefined;
         }
-        const result = getValue(valuePtr);
+        const result = getValue(this.WasmFlowRuntime, valuePtr);
         if (expectedTypes && expectedTypes.indexOf(result.valueType) == -1) {
             return undefined;
         }
@@ -92,7 +100,7 @@ export class DashboardComponentContext implements IDashboardComponentContext {
 
     clearInputValue(inputName: string) {
         const flowIndex = this.getFlowIndex();
-        const flow = WasmFlowRuntime.assetsMap.flows[flowIndex];
+        const flow = this.WasmFlowRuntime.assetsMap.flows[flowIndex];
         const componentIndex = this.getComponentIndex();
         const component = flow.components[componentIndex];
         const inputIndex = component.inputIndexes[inputName];
@@ -101,7 +109,7 @@ export class DashboardComponentContext implements IDashboardComponentContext {
             return;
         }
 
-        WasmFlowRuntime._clearInputValue(this.flowStateIndex, inputIndex);
+        this.WasmFlowRuntime._clearInputValue(this.flowStateIndex, inputIndex);
     }
 
     evalProperty<T = any>(
@@ -109,7 +117,7 @@ export class DashboardComponentContext implements IDashboardComponentContext {
         expectedTypes?: ValueType | ValueType[]
     ) {
         const flowIndex = this.getFlowIndex();
-        const flow = WasmFlowRuntime.assetsMap.flows[flowIndex];
+        const flow = this.WasmFlowRuntime.assetsMap.flows[flowIndex];
         const componentIndex = this.getComponentIndex();
         const component = flow.components[componentIndex];
         const propertyIndex = component.propertyIndexes[propertyName];
@@ -117,7 +125,7 @@ export class DashboardComponentContext implements IDashboardComponentContext {
             this.throwError(`Property "${propertyName}" not found`);
         }
 
-        const valuePtr = WasmFlowRuntime._evalProperty(
+        const valuePtr = this.WasmFlowRuntime._evalProperty(
             this.flowStateIndex,
             this.componentIndex,
             propertyIndex,
@@ -128,9 +136,9 @@ export class DashboardComponentContext implements IDashboardComponentContext {
             return undefined;
         }
 
-        const result = getValue(valuePtr);
+        const result = getValue(this.WasmFlowRuntime, valuePtr);
 
-        WasmFlowRuntime._valueFree(valuePtr);
+        this.WasmFlowRuntime._valueFree(valuePtr);
 
         if (
             expectedTypes &&
@@ -146,7 +154,7 @@ export class DashboardComponentContext implements IDashboardComponentContext {
 
     setPropertyField(propertyName: string, fieldName: string, value: any) {
         const flowIndex = this.getFlowIndex();
-        const flow = WasmFlowRuntime.assetsMap.flows[flowIndex];
+        const flow = this.WasmFlowRuntime.assetsMap.flows[flowIndex];
         const componentIndex = this.getComponentIndex();
         const component = flow.components[componentIndex];
         const propertyIndex = component.propertyIndexes[propertyName];
@@ -155,7 +163,7 @@ export class DashboardComponentContext implements IDashboardComponentContext {
         }
         const valueTypeIndex =
             component.properties[propertyIndex].valueTypeIndex;
-        const type = WasmFlowRuntime.assetsMap.types[valueTypeIndex];
+        const type = this.WasmFlowRuntime.assetsMap.types[valueTypeIndex];
         if (type.kind != "object") {
             throw `property "${propertyName}" is not object`;
         }
@@ -165,9 +173,9 @@ export class DashboardComponentContext implements IDashboardComponentContext {
             throw `property "${propertyName}" has no field "${fieldName}"`;
         }
 
-        const valuePtr = createWasmValue(value);
+        const valuePtr = createWasmValue(this.WasmFlowRuntime, value);
 
-        WasmFlowRuntime._setPropertyField(
+        this.WasmFlowRuntime._setPropertyField(
             this.flowStateIndex,
             this.componentIndex,
             propertyIndex,
@@ -175,12 +183,12 @@ export class DashboardComponentContext implements IDashboardComponentContext {
             valuePtr
         );
 
-        WasmFlowRuntime._valueFree(valuePtr);
+        this.WasmFlowRuntime._valueFree(valuePtr);
     }
 
     propagateValue(outputName: string, value: any) {
         const flowIndex = this.getFlowIndex();
-        const flow = WasmFlowRuntime.assetsMap.flows[flowIndex];
+        const flow = this.WasmFlowRuntime.assetsMap.flows[flowIndex];
         const componentIndex = this.getComponentIndex();
         const component = flow.components[componentIndex];
         const outputIndex = component.outputIndexes[outputName];
@@ -195,50 +203,55 @@ export class DashboardComponentContext implements IDashboardComponentContext {
             return;
         }
 
-        let valuePtr = createWasmValue(value, valueTypeIndex);
+        let valuePtr = createWasmValue(
+            this.WasmFlowRuntime,
+            value,
+            valueTypeIndex
+        );
 
         if (!valuePtr) {
             this.throwError("Out of memory");
             return;
         }
 
-        WasmFlowRuntime._propagateValue(
+        this.WasmFlowRuntime._propagateValue(
             this.flowStateIndex,
             this.componentIndex,
             outputIndex,
             valuePtr
         );
-        WasmFlowRuntime._valueFree(valuePtr);
+        this.WasmFlowRuntime._valueFree(valuePtr);
     }
 
     propagateValueThroughSeqout(): void {
-        WasmFlowRuntime._propagateValueThroughSeqout(
+        this.WasmFlowRuntime._propagateValueThroughSeqout(
             this.flowStateIndex,
             this.componentIndex
         );
     }
 
     startAsyncExecution() {
-        WasmFlowRuntime._startAsyncExecution(
+        this.WasmFlowRuntime._startAsyncExecution(
             this.flowStateIndex,
             this.componentIndex
         );
 
         return new DashboardComponentContext(
+            this.WasmFlowRuntime,
             this.flowStateIndex,
             this.componentIndex
         );
     }
 
     endAsyncExecution() {
-        WasmFlowRuntime._endAsyncExecution(
+        this.WasmFlowRuntime._endAsyncExecution(
             this.flowStateIndex,
             this.componentIndex
         );
     }
 
     executeCallAction(flowIndex: number) {
-        WasmFlowRuntime._executeCallAction(
+        this.WasmFlowRuntime._executeCallAction(
             this.flowStateIndex,
             this.componentIndex,
             flowIndex
@@ -246,10 +259,10 @@ export class DashboardComponentContext implements IDashboardComponentContext {
     }
 
     sendMessageToComponent(message: any, callback?: (result: any) => void) {
-        if (WasmFlowRuntime.componentMessages == undefined) {
-            WasmFlowRuntime.componentMessages = [];
+        if (this.WasmFlowRuntime.componentMessages == undefined) {
+            this.WasmFlowRuntime.componentMessages = [];
         }
-        WasmFlowRuntime.componentMessages.push({
+        this.WasmFlowRuntime.componentMessages.push({
             id: nextWidgetMessageId++,
             flowStateIndex: this.flowStateIndex,
             componentIndex: this.componentIndex,
@@ -259,23 +272,23 @@ export class DashboardComponentContext implements IDashboardComponentContext {
     }
 
     logInfo(infoMessage: string) {
-        const infoMessagePtr = WasmFlowRuntime.allocateUTF8(infoMessage);
-        WasmFlowRuntime._logInfo(
+        const infoMessagePtr = this.WasmFlowRuntime.allocateUTF8(infoMessage);
+        this.WasmFlowRuntime._logInfo(
             this.flowStateIndex,
             this.componentIndex,
             infoMessagePtr
         );
-        WasmFlowRuntime._free(infoMessagePtr);
+        this.WasmFlowRuntime._free(infoMessagePtr);
     }
 
     throwError(errorMessage: string) {
-        const errorMessagePtr = WasmFlowRuntime.allocateUTF8(errorMessage);
-        WasmFlowRuntime._throwError(
+        const errorMessagePtr = this.WasmFlowRuntime.allocateUTF8(errorMessage);
+        this.WasmFlowRuntime._throwError(
             this.flowStateIndex,
             this.componentIndex,
             errorMessagePtr
         );
-        WasmFlowRuntime._free(errorMessagePtr);
+        this.WasmFlowRuntime._free(errorMessagePtr);
     }
 }
 
@@ -305,7 +318,9 @@ function wasmToComponentExecutionState<T>(wasmState: number) {
     return states.get(wasmState);
 }
 
-function freeComponentExecutionState(wasmState: number) {
+function freeComponentExecutionState(wasmModuleId: number, wasmState: number) {
+    console.log("freeComponentExecutionState", wasmModuleId);
+
     const state = states.has(wasmState);
     if (state) {
         wasmStates.delete(state);

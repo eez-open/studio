@@ -3,6 +3,7 @@ import { Stream } from "stream";
 import type {
     IObjectVariableType,
     IObjectVariableValueFieldDescription,
+    IWasmFlowRuntime,
     ValueType
 } from "eez-studio-types";
 import {
@@ -161,7 +162,10 @@ export function createJsArrayValue(
     );
 }
 
-export function createWasmArrayValue(arrayValue: ArrayValue) {
+export function createWasmArrayValue(
+    WasmFlowRuntime: IWasmFlowRuntime,
+    arrayValue: ArrayValue
+) {
     const arraySize = arrayValue.values.length;
     const arrayValuePtr = WasmFlowRuntime._createArrayValue(
         arraySize,
@@ -179,13 +183,13 @@ export function createWasmArrayValue(arrayValue: ArrayValue) {
             typeof value == "string" ||
             value instanceof Date
         ) {
-            valuePtr = createWasmValue(value);
+            valuePtr = createWasmValue(WasmFlowRuntime, value);
         } else {
             const type = WasmFlowRuntime.assetsMap.types[value.valueTypeIndex];
             valuePtr =
                 type.kind == "basic"
-                    ? createWasmValue(value)
-                    : createWasmArrayValue(value);
+                    ? createWasmValue(WasmFlowRuntime, value)
+                    : createWasmArrayValue(WasmFlowRuntime, value);
         }
 
         WasmFlowRuntime._arrayValueSetElementValue(arrayValuePtr, i, valuePtr);
@@ -195,6 +199,7 @@ export function createWasmArrayValue(arrayValue: ArrayValue) {
 }
 
 export function createWasmValue(
+    WasmFlowRuntime: IWasmFlowRuntime,
     value: undefined | null | number | boolean | string | ArrayValue,
     valueTypeIndex?: number
 ) {
@@ -243,11 +248,11 @@ export function createWasmValue(
             WasmFlowRuntime.assetsMap,
             undefined
         );
-        return createWasmArrayValue(arrayValue);
+        return createWasmArrayValue(WasmFlowRuntime, arrayValue);
     }
 
     if (value.valueTypeIndex != undefined) {
-        return createWasmArrayValue(value);
+        return createWasmArrayValue(WasmFlowRuntime, value);
     }
 
     console.error("unsupported WASM value");
@@ -257,7 +262,10 @@ export function createWasmValue(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function getValue(offset: number): ValueWithType {
+export function getValue(
+    WasmFlowRuntime: IWasmFlowRuntime,
+    offset: number
+): ValueWithType {
     const type = WasmFlowRuntime.HEAPU8[offset];
     offset += 8;
     if (type == FLOW_VALUE_TYPE_UNDEFINED) {
@@ -317,7 +325,7 @@ export function getValue(offset: number): ValueWithType {
         };
     } else if (type == FLOW_VALUE_TYPE_ARRAY) {
         const ptr = WasmFlowRuntime.HEAP32[offset >> 2];
-        return getArrayValue(ptr);
+        return getArrayValue(WasmFlowRuntime, ptr);
     } else if (type == FLOW_VALUE_TYPE_STRING_REF) {
         const refPtr = WasmFlowRuntime.HEAP32[offset >> 2];
         const ptr = WasmFlowRuntime.HEAP32[(refPtr >> 2) + 2];
@@ -328,7 +336,7 @@ export function getValue(offset: number): ValueWithType {
     } else if (type == FLOW_VALUE_TYPE_ARRAY_REF) {
         const refPtr = WasmFlowRuntime.HEAP32[offset >> 2];
         const ptr = refPtr + 8;
-        return getArrayValue(ptr);
+        return getArrayValue(WasmFlowRuntime, ptr);
     } else if (type == FLOW_VALUE_TYPE_BLOB_REF) {
         const refPtr = WasmFlowRuntime.HEAP32[offset >> 2];
         const ptr = WasmFlowRuntime.HEAP32[(refPtr >> 2) + 2];
@@ -358,6 +366,7 @@ export function getValue(offset: number): ValueWithType {
 }
 
 export function getArrayValue(
+    WasmFlowRuntime: IWasmFlowRuntime,
     offset: number,
     expectedTypes?: ValueType[]
 ): ObjectOrArrayValueWithType {
@@ -378,7 +387,7 @@ export function getArrayValue(
 
         const value: Value[] = [];
         for (let i = 0; i < arraySize; i++) {
-            value.push(getValue(offset + 8 + i * 16).value);
+            value.push(getValue(WasmFlowRuntime, offset + 8 + i * 16).value);
         }
         return {
             value,
@@ -402,7 +411,10 @@ export function getArrayValue(
                 break;
             }
             const field = type.fields[i];
-            value[field.name] = getValue(offset + 8 + i * 16).value;
+            value[field.name] = getValue(
+                WasmFlowRuntime,
+                offset + 8 + i * 16
+            ).value;
         }
 
         return {

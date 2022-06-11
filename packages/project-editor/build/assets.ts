@@ -1156,9 +1156,12 @@ function buildHeaderData(
     dataBuffer.writeUint8(0); // PROJECT MINOR VERSION: 0
 
     // assetsType
-    dataBuffer.writeUint16(
+    dataBuffer.writeUint8(
         assets.DocumentStore.project.settings.general.getProjectTypeAsNumber()
     );
+
+    // reserved
+    dataBuffer.writeUint8(0);
 
     // decompressedSize
     dataBuffer.writeUint32(decompressedSize);

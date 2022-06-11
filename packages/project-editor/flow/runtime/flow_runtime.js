@@ -20,17 +20,20 @@ var objAssign = Object.assign;
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-Module = {};
+module["exports"] = function (postWorkerToRendererMessage) {
+
+var Module = {};
+
+Module.postWorkerToRendererMessage = postWorkerToRendererMessage;
 
 Module.onRuntimeInitialized = function () {
-    postMessage({ init: {} });
-};
+    postWorkerToRendererMessage({ init: {} });
+}
 
 Module.print = function (args) {
     console.log("From WASM flow runtime:", args);
 };
 
-WasmFlowRuntime = Module;
 
 
 // Sometimes an existing Module object exists with properties
@@ -1722,15 +1725,15 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  55468: function($0) {freeComponentExecutionState($0);},  
- 55505: function($0, $1, $2, $3) {executeScpi($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2), $3);},  
- 55576: function() {FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; });},  
- 55737: function() {startToDebuggerMessage();},  
- 55767: function($0, $1) {writeDebuggerBuffer(new Uint8Array(Module.HEAPU8.buffer, $0, $1));},  
- 55838: function() {finishToDebuggerMessage();},  
- 55869: function($0, $1, $2) {executeDashboardComponent($0, $1, $2);},  
- 55912: function($0) {onArrayValueFree($0);},  
- 55938: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
+  55484: function($0, $1) {freeComponentExecutionState($0, $1);},  
+ 55525: function($0, $1, $2, $3, $4) {executeScpi($0, $1, new Uint8Array(Module.HEAPU8.buffer, $2, $3), $4);},  
+ 55600: function() {FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; });},  
+ 55761: function($0) {startToDebuggerMessage($0);},  
+ 55793: function($0, $1, $2) {writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2));},  
+ 55868: function($0) {finishToDebuggerMessage($0);},  
+ 55901: function($0, $1, $2, $3) {executeDashboardComponent($0, $1, $2, $3);},  
+ 55948: function($0, $1) {onArrayValueFree($0, $1);},  
+ 55978: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
 };
 
 
@@ -6779,3 +6782,5 @@ run();
 
 
 
+return Module;
+};

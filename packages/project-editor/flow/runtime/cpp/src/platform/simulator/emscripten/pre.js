@@ -1,11 +1,14 @@
-Module = {};
+module["exports"] = function (postWorkerToRendererMessage) {
+
+var Module = {};
+
+Module.postWorkerToRendererMessage = postWorkerToRendererMessage;
 
 Module.onRuntimeInitialized = function () {
-    postMessage({ init: {} });
-};
+    postWorkerToRendererMessage({ init: {} });
+}
 
 Module.print = function (args) {
     console.log("From WASM flow runtime:", args);
 };
 
-WasmFlowRuntime = Module;

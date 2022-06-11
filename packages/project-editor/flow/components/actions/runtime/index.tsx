@@ -56,7 +56,7 @@ registerExecuteFunction(
         }
 
         const flowIndex =
-            WasmFlowRuntime.assetsMap.actionFlowIndexes[actionName];
+            context.WasmFlowRuntime.assetsMap.actionFlowIndexes[actionName];
         if (flowIndex == undefined) {
             context.throwError(`Invalid action name: ${actionName}`);
             return;
@@ -89,7 +89,7 @@ registerExecuteFunction(
             connectToInstrumentId: instrument.id
         };
 
-        postMessage(data);
+        context.WasmFlowRuntime.postWorkerToRendererMessage(data);
 
         context.propagateValueThroughSeqout();
     }

@@ -1,5 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
+import { WorkerToRenderMessage } from "project-editor/flow/runtime/wasm-worker-interfaces";
+
 export type BasicType =
     | "integer"
     | "float"
@@ -244,7 +246,104 @@ export interface IActionComponentDefinition {
     ): void;
 }
 
+// prettier-ignore
+export interface IWasmFlowRuntime {
+    // emscripten API
+    HEAP8: Uint8Array;
+    HEAPU8: Uint8Array;
+    HEAP16: Uint8Array;
+    HEAPU16: Uint8Array;
+    HEAP32: Uint32Array;
+    HEAPU32: Uint32Array;
+
+    HEAPF32: Float32Array;
+    HEAPF64: Float64Array;
+
+    allocateUTF8(str: string): number;
+    UTF8ToString(ptr: number): string;
+    AsciiToString(ptr: number): string;
+
+    _malloc(size: number): number;
+    _free(ptr: number): void;
+
+    //
+    assetsMap: AssetsMap;
+    componentMessages: IMessageFromWorker[] | undefined;
+
+    postWorkerToRendererMessage: (workerToRenderMessage: WorkerToRenderMessage) => void
+
+    // eez framework API
+    _init(wasmModuleId: number, assets: number, assetsSize: number);
+    _startFlow();
+    _mainLoop();
+    _getSyncedBuffer(): number;
+    _onMouseWheelEvent(wheelDeltaY: number, wheelClicked: number);
+    _onPointerEvent(x: number, y: number, pressed: number);
+    _onMessageFromDebugger(messageData: number, messageDataSize: number);
+
+    // eez flow API for Dashboard projects
+
+    _createUndefinedValue(): number;
+    _createNullValue(): number;
+    _createIntValue(value: number): number;
+    _createDoubleValue(value: number): number;
+    _createBooleanValue(value: number): number;
+    _createStringValue(value: number): number;
+    _createArrayValue(arraySize: number, arrayType: number): number;
+    _createStreamValue(value: number): number;
+    _createDateValue(value: number): number;
+
+    _arrayValueSetElementValue(arrayValuePtr: number, elementIndex: number, value: number): void;
+
+    _valueFree(valuePtr: number): void;
+
+    _setGlobalVariable(globalVariableIndex: number, valuePtr: number);
+    _updateGlobalVariable(globalVariableIndex: number, valuePtr: number);
+
+    _getFlowIndex(flowStateIndex: number): number;
+
+    _getComponentExecutionState(flowStateIndex: number, componentIndex: number): number;
+    _setComponentExecutionState(flowStateIndex: number, componentIndex: number, state: number): void;
+
+    _getStringParam(flowStateIndex: number, componentIndex: number, offset: number): number;
+    _getExpressionListParam(flowStateIndex: number, componentIndex: number, offset: number): number;
+    _freeExpressionListParam(ptr: number);
+
+    _getInputValue(flowStateIndex: number, inputIndex: number): number;
+    _clearInputValue(flowStateIndex: number, inputIndex: number);
+
+    _evalProperty(flowStateIndex: number, componentIndex: number, propertyIndex: number, iteratorsPtr: number): number;
+    _assignProperty(flowStateIndex: number, componentIndex: number, propertyIndex: number, iteratorsPtr: number, valuePtr: number): number;
+
+    _setPropertyField(flowStateIndex: number, componentIndex: number, propertyIndex: number, fieldIndex: number, valuePtr: number);
+
+    _propagateValue(flowStateIndex: number, componentIndex: number, outputIndex: number, valuePtr: number);
+    _propagateValueThroughSeqout(flowStateIndex: number, componentIndex: number);
+
+    _startAsyncExecution(flowStateIndex: number, componentIndex: number): number;
+    _endAsyncExecution(flowStateIndex: number, componentIndex: number);
+
+    _executeCallAction(flowStateIndex: number, componentIndex: number, flowIndex: number);
+
+    _logInfo(flowStateIndex: number, componentIndex: number, infoMessage: number);
+    _throwError(flowStateIndex: number, componentIndex: number, errorMessage: number);
+
+    _onScpiResult(errorMessage: number, result: number, resultLen: number, resultIsBlob: number);
+
+    _getFirstRootFlowState(): number;
+    _getFirstChildFlowState(flowStateIndex: number): number;
+    _getNextSiblingFlowState(flowStateIndex: number): number;
+
+    _getFlowStateFlowIndex(flowStateIndex: number): number;
+
+    _stopScript(): void;
+
+    _isRTL(): boolean;
+}
+
 export interface IDashboardComponentContext {
+    WasmFlowRuntime: IWasmFlowRuntime;
+
     getFlowIndex: () => number;
     getComponentIndex: () => number;
 
