@@ -3347,6 +3347,7 @@ const TimelineKeyframePropertyUI = observer(
                                 <a>
                                     <Icon
                                         icon="material:info"
+                                        title="Open easing functions help page in the system browser"
                                         style={{ cursor: "pointer" }}
                                         onClick={async () => {
                                             const { shell } = await import(

@@ -14,6 +14,7 @@ export const Icon = observer(
             onClick?: (event: React.MouseEvent) => void;
             overlayText?: string;
             attention?: boolean;
+            title?: string;
         },
         {}
     > {
@@ -44,6 +45,7 @@ export const Icon = observer(
                             className={iconClassName}
                             style={iconStyle}
                             onClick={onClick}
+                            title={this.props.title}
                         >
                             {icon.slice(MATERIAL_PREFIX.length)}
                         </i>
@@ -77,6 +79,7 @@ export const Icon = observer(
                             className={className}
                             style={iconStyle}
                             onClick={onClick}
+                            title={this.props.title}
                         />
                     );
                 }
@@ -86,7 +89,8 @@ export const Icon = observer(
                     style,
                     width: iconSize,
                     height: iconSize,
-                    onClick: onClick
+                    onClick: onClick,
+                    title: this.props.title
                 });
             }
 
