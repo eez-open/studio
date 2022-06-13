@@ -800,6 +800,7 @@ export class Style extends EezObject {
     direction?: string;
     color?: string;
     backgroundColor?: string;
+    backgroundImage?: string;
     activeColor?: string;
     activeBackgroundColor?: string;
     focusColor?: string;
@@ -835,6 +836,7 @@ export class Style extends EezObject {
             direction: observable,
             color: observable,
             backgroundColor: observable,
+            backgroundImage: observable,
             activeColor: observable,
             activeBackgroundColor: observable,
             focusColor: observable,
@@ -1884,6 +1886,7 @@ export class Style extends EezObject {
                     "background-image",
                     `url(${bitmap.image})`
                 ]);
+                spec[0].attrs.push(["background-repeat", `no-repeat`]);
             }
         }
 
