@@ -2,6 +2,8 @@ import { settingsController } from "home/settings";
 import type { ConnectionLine } from "project-editor/flow/flow";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
+const MAX_ACTIVE_CONNECTION_LINES = 20;
+
 const CIRCLE_RADIUS = "4";
 const CIRCLE_FILL_COLOR_LIGHT = "#333";
 const CIRCLE_FILL_COLOR_DARK = "#FFF";
@@ -68,6 +70,12 @@ export function unregisterPath(
 }
 
 export function activateConnectionLine(connectionLine: ConnectionLine) {
+    if (activeConnectionLines.length > MAX_ACTIVE_CONNECTION_LINES) {
+        for (const circle of activeConnectionLines[0].circles.values()) {
+            circle.remove();
+        }
+        activeConnectionLines.splice(0, 1);
+    }
     activeConnectionLines.push({
         connectionLine,
         started: Date.now(),
