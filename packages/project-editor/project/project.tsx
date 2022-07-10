@@ -85,7 +85,8 @@ import { Flow } from "project-editor/flow/flow";
 import { FlowEditor } from "project-editor/flow/editor/editor";
 import {
     ContainerWidget,
-    LayoutViewWidget
+    LayoutViewWidget,
+    SelectWidget
 } from "project-editor/flow/components/widgets";
 import { Widget } from "project-editor/flow/component";
 import {
@@ -94,6 +95,9 @@ import {
 } from "project-editor/features/page/PagesNavigation";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Texts } from "project-editor/features/texts";
+import { resizeWidget } from "project-editor/flow/editor/resizing-widget-property";
+import { Rect } from "eez-studio-shared/geometry";
+import { PageTabState } from "project-editor/features/page/PageEditor";
 
 export { ProjectType } from "project-editor/core/object";
 
@@ -2136,5 +2140,207 @@ export const commands = [
                 })
                 .catch(() => {});
         }
+    }),
+
+    new Command("Resize", (DocumentStore: DocumentStoreClass) => {
+        const selectedPanel = DocumentStore.navigationStore.selectedPanel;
+
+        const page: Page | undefined = (() => {
+            if (
+                selectedPanel instanceof FlowEditor &&
+                selectedPanel.flowContext.flow instanceof Page
+            ) {
+                return selectedPanel.flowContext.flow;
+            } else if (selectedPanel instanceof PageStructure) {
+                if (selectedPanel.selectedObjects.length == 1) {
+                    return selectedPanel.selectedObjects[0] as Page;
+                }
+            }
+            return undefined;
+        })();
+
+        if (!page) {
+            return;
+        }
+
+        showGenericDialog({
+            dialogDefinition: {
+                fields: [
+                    {
+                        name: "width",
+                        type: "number"
+                    },
+                    {
+                        name: "height",
+                        type: "number"
+                    }
+                ]
+            },
+
+            values: {
+                width: DocumentStore.project.settings.general.displayWidth,
+                height: DocumentStore.project.settings.general.displayHeight
+            }
+        })
+            .then(result => {
+                const pageTabState =
+                    DocumentStore.editorsStore.activeEditor?.state;
+                let pageEditorState: PageTabState | undefined = undefined;
+                if (pageTabState instanceof PageTabState) {
+                    pageEditorState = pageTabState as PageTabState;
+                }
+
+                let savedIsTimelineEditorActive: boolean = false;
+                if (pageEditorState) {
+                    savedIsTimelineEditorActive =
+                        pageEditorState.timeline.isEditorActive;
+                    pageEditorState.timeline.isEditorActive = false;
+                }
+
+                const rectContainerOriginal = page.rect;
+
+                const rectContainer = {
+                    left: rectContainerOriginal.left,
+                    top: rectContainerOriginal.top,
+                    width: result.values.width,
+                    height: result.values.height
+                };
+
+                DocumentStore.undoManager.setCombineCommands(true);
+
+                DocumentStore.updateObject(page, rectContainer);
+
+                function resizeWidgets(
+                    widgets: Widget[],
+                    rectContainerOriginal: Rect,
+                    rectContainer: Rect
+                ) {
+                    for (let i = 0; i < widgets.length; i++) {
+                        const widget = widgets[i];
+
+                        const rect = resizeWidget(
+                            widget.rect,
+                            rectContainerOriginal,
+                            rectContainer,
+                            widget.resizing
+                        );
+
+                        if (
+                            widget instanceof ContainerWidget ||
+                            widget instanceof SelectWidget
+                        ) {
+                            resizeWidgets(widget.widgets, widget.rect, rect);
+                        }
+
+                        if (widget.timeline && widget.timeline.length > 0) {
+                            const rectKeyframes: Rect[] = [];
+
+                            for (let j = 0; j < widget.timeline.length; j++) {
+                                const keyframe = widget.timeline[j];
+
+                                const rectKeyframeOriginal =
+                                    widget.getTimelineRect(keyframe.end);
+
+                                const rectKeyframe = resizeWidget(
+                                    rectKeyframeOriginal,
+                                    rectContainerOriginal,
+                                    rectContainer,
+                                    widget.resizing
+                                );
+
+                                rectKeyframes.push({
+                                    left: Math.round(rectKeyframe.left),
+                                    top: Math.round(rectKeyframe.top),
+                                    width: Math.round(rectKeyframe.width),
+                                    height: Math.round(rectKeyframe.height)
+                                });
+                            }
+
+                            for (let j = 0; j < widget.timeline.length; j++) {
+                                const keyframe = widget.timeline[j];
+
+                                const rectKeyframe = rectKeyframes[j];
+
+                                const rectPreviousKeyframe =
+                                    j > 0 ? rectKeyframes[j - 1] : widget.rect;
+
+                                DocumentStore.updateObject(keyframe, {
+                                    left:
+                                        keyframe.left.enabled != undefined ||
+                                        rectKeyframe.left !=
+                                            rectPreviousKeyframe.left
+                                            ? {
+                                                  enabled: true,
+                                                  value: rectKeyframe.left,
+                                                  easingFunction:
+                                                      keyframe.left
+                                                          .easingFunction
+                                              }
+                                            : undefined,
+                                    top:
+                                        keyframe.top.enabled != undefined ||
+                                        rectKeyframe.top !=
+                                            rectPreviousKeyframe.top
+                                            ? {
+                                                  enabled: true,
+                                                  value: rectKeyframe.top,
+                                                  easingFunction:
+                                                      keyframe.top
+                                                          .easingFunction
+                                              }
+                                            : undefined,
+                                    width:
+                                        keyframe.width.enabled != undefined ||
+                                        rectKeyframe.width !=
+                                            rectPreviousKeyframe.width
+                                            ? {
+                                                  enabled: true,
+                                                  value: rectKeyframe.width,
+                                                  easingFunction:
+                                                      keyframe.width
+                                                          .easingFunction
+                                              }
+                                            : undefined,
+                                    height:
+                                        keyframe.height.enabled != undefined ||
+                                        rectKeyframe.height !=
+                                            rectPreviousKeyframe.height
+                                            ? {
+                                                  enabled: true,
+                                                  value: rectKeyframe.height,
+                                                  easingFunction:
+                                                      keyframe.height
+                                                          .easingFunction
+                                              }
+                                            : undefined
+                                });
+                            }
+                        }
+
+                        DocumentStore.updateObject(widget, {
+                            left: Math.round(rect.left),
+                            top: Math.round(rect.top),
+                            width: Math.round(rect.width),
+                            height: Math.round(rect.height)
+                        });
+                    }
+                }
+
+                resizeWidgets(
+                    page.components.filter(
+                        component => component instanceof Widget
+                    ) as Widget[],
+                    rectContainerOriginal,
+                    rectContainer
+                );
+
+                DocumentStore.undoManager.setCombineCommands(false);
+
+                if (pageEditorState) {
+                    pageEditorState.timeline.isEditorActive =
+                        savedIsTimelineEditorActive;
+                }
+            })
+            .catch(() => {});
     })
 ];

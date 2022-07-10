@@ -352,8 +352,14 @@ export class Page extends Flow {
                     name: result.values.name,
                     left: 0,
                     top: 0,
-                    width: 480,
-                    height: 272,
+                    width: project.isDashboardProject
+                        ? 800
+                        : project._DocumentStore.project.settings.general
+                              .displayWidth ?? 480,
+                    height: project.isDashboardProject
+                        ? 450
+                        : project._DocumentStore.project.settings.general
+                              .displayHeight ?? 272,
                     widgets: []
                 });
             });
