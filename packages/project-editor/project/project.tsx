@@ -95,6 +95,7 @@ import {
 } from "project-editor/features/page/PagesNavigation";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Texts } from "project-editor/features/texts";
+import { Readme } from "project-editor/features/readme";
 import { resizeWidget } from "project-editor/flow/editor/resizing-widget-property";
 import { Rect } from "eez-studio-shared/geometry";
 import { PageTabState } from "project-editor/features/page/PageEditor";
@@ -1458,6 +1459,7 @@ export class Project extends EezObject {
     styles: Style[];
     fonts: Font[];
     texts: Texts;
+    readme: Readme;
     bitmaps: Bitmap[];
     scpi: Scpi;
     shortcuts: Shortcuts;
@@ -1478,6 +1480,7 @@ export class Project extends EezObject {
             styles: observable,
             fonts: observable,
             texts: observable,
+            readme: observable,
             bitmaps: observable,
             scpi: observable,
             shortcuts: observable,

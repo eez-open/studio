@@ -21,6 +21,7 @@ import { Page } from "project-editor/features/page/page";
 import { Font } from "project-editor/features/font/font";
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import { getAncestorOfType } from "project-editor/store";
+import { ReadmeEditor } from "project-editor/features/readme/navigation";
 
 export function getEditorComponent(object: IEezObject):
     | {
@@ -68,6 +69,14 @@ export function getEditorComponent(object: IEezObject):
             object: project.settings,
             subObject: object,
             EditorComponent: SettingsEditor
+        };
+    }
+
+    if (isAncestor(object, project.readme)) {
+        return {
+            object: project.readme,
+            subObject: object,
+            EditorComponent: ReadmeEditor
         };
     }
 

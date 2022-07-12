@@ -170,6 +170,8 @@ export const Tree = observer(
             rootNode: ITreeNode;
             selectNode: (node: ITreeNode) => void;
             onDoubleClick?: () => void;
+            className?: string;
+            style?: React.CSSProperties;
         },
         {}
     > {
@@ -195,7 +197,14 @@ export const Tree = observer(
 
         render() {
             return (
-                <div className="EezStudio_SimpleTree" tabIndex={0}>
+                <div
+                    className={classNames(
+                        "EezStudio_SimpleTree",
+                        this.props.className
+                    )}
+                    tabIndex={0}
+                    style={this.props.style}
+                >
                     <TreeRow
                         showOnlyChildren={this.props.showOnlyChildren}
                         node={this.props.rootNode}

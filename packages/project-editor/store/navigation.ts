@@ -55,16 +55,39 @@ export class NavigationStore {
     }
 
     loadState(state: any) {
-        let selectedRootObject;
+        let selectedRootObject: IEezObject | undefined;
+
         if (state && state.selectedRootObject) {
             selectedRootObject = this.DocumentStore.getObjectFromStringPath(
                 state.selectedRootObject
             );
         }
+
         if (!selectedRootObject) {
             selectedRootObject =
+                this.DocumentStore.project.readme ||
                 this.DocumentStore.project.pages ||
                 this.DocumentStore.project.settings;
+
+            let editorObject: IEezObject | undefined;
+            if (this.DocumentStore.project.readme) {
+                selectedRootObject = this.DocumentStore.project.readme;
+                editorObject = selectedRootObject;
+            } else if (this.DocumentStore.project.pages) {
+                selectedRootObject = this.DocumentStore.project.pages;
+                if (this.DocumentStore.project.pages.length > 0) {
+                    editorObject = this.DocumentStore.project.pages[0];
+                }
+            } else {
+                selectedRootObject = this.DocumentStore.project.settings;
+                editorObject = selectedRootObject;
+            }
+
+            if (editorObject) {
+                setTimeout(() => {
+                    this.showObjects([editorObject!], true, true, true);
+                }, 50);
+            }
         }
         this.selectedRootObject.set(selectedRootObject);
 

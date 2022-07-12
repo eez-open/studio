@@ -9,16 +9,21 @@ import {
     reaction,
     observable,
     runInAction,
-    makeObservable
+    makeObservable,
+    computed
 } from "mobx";
 import { observer } from "mobx-react";
 
-import { getHomePath, isDev } from "eez-studio-shared/util-electron";
+import {
+    getHomePath,
+    isDev,
+    readJsObjectFromFile
+} from "eez-studio-shared/util-electron";
 import { sourceRootDir } from "eez-studio-shared/util";
 
 import { BootstrapDialog, showDialog } from "eez-studio-ui/dialog";
-import { List, IListNode, ListItem } from "eez-studio-ui/list";
 import { Loader } from "eez-studio-ui/loader";
+import { ITreeNode, Tree } from "eez-studio-ui/tree";
 
 class NameInput extends React.Component<{
     value: string | undefined;
@@ -117,6 +122,15 @@ class FileBrowserInput extends React.Component<{
     }
 }
 
+interface TemplateProject {
+    clone_url: string;
+    description: string;
+    full_name: string;
+    html_url: string;
+    name: string;
+    _image_url: string;
+}
+
 const RESOURCE_PROJECT_NAME = "MicroPython resource";
 
 const NewProjectWizard = observer(
@@ -144,6 +158,10 @@ const NewProjectWizard = observer(
 
         projectVersion: string = "v3";
 
+        templateProjects: TemplateProject[] = [];
+
+        projectCreationError: React.ReactNode | undefined;
+
         constructor(props: any) {
             super(props);
 
@@ -162,6 +180,9 @@ const NewProjectWizard = observer(
                 bb3ProjectFile: observable,
                 bb3ProjectFileError: observable,
                 projectVersion: observable,
+                templateProjects: observable,
+                projectCreationError: observable,
+                selectedTemplateProject: computed,
                 validateName: action,
                 validateLocation: action,
                 validateBB3ProjectFile: action
@@ -204,6 +225,26 @@ const NewProjectWizard = observer(
             );
         }
 
+        componentDidMount() {
+            fetch(
+                "https://envox.hr/gitea/api/v1/repos/search?q=eez-flow-template&topic=true"
+            )
+                .then(response => response.json())
+                .then(data => {
+                    runInAction(() => {
+                        console.log(data.data);
+                        this.templateProjects = data.data.map(
+                            (templateProject: TemplateProject) =>
+                                Object.assign({}, templateProject, {
+                                    _image_url:
+                                        templateProject.html_url +
+                                        "/raw/branch/master/template/image.png"
+                                })
+                        );
+                    });
+                });
+        }
+
         saveOptions() {
             window.localStorage.setItem(
                 "project-wizard",
@@ -219,6 +260,112 @@ const NewProjectWizard = observer(
             );
         }
 
+        get projectTypes(): ITreeNode {
+            return {
+                id: "_root",
+                label: "Root",
+                children: [
+                    {
+                        id: "_standard",
+                        label: "Builtin templates",
+                        children: [
+                            {
+                                id: "firmware",
+                                label: "Firmware",
+                                children: [],
+                                selected: this.type === "firmware",
+                                expanded: false,
+                                data: undefined
+                            },
+                            {
+                                id: "dashboard",
+                                label: "Dashboard",
+                                children: [],
+                                selected: this.type === "dashboard",
+                                expanded: false,
+                                data: undefined
+                            },
+                            {
+                                id: "applet",
+                                label: "Applet",
+                                children: [],
+                                selected: this.type === "applet",
+                                expanded: false,
+                                data: undefined
+                            },
+                            {
+                                id: "resource",
+                                label: RESOURCE_PROJECT_NAME,
+                                children: [],
+                                selected: this.type === "resource",
+                                expanded: false,
+                                data: undefined
+                            },
+                            {
+                                id: "empty",
+                                label: "Empty",
+                                children: [],
+                                selected: this.type === "empty",
+                                expanded: false,
+                                data: undefined
+                            }
+                        ],
+                        selected: false,
+                        expanded: true,
+                        data: undefined
+                    },
+                    {
+                        id: "_templates",
+                        label: (
+                            <span>
+                                Templates from{" "}
+                                <a
+                                    href="#"
+                                    onClick={event => {
+                                        event.preventDefault();
+                                        openLink(
+                                            "https://envox.hr/gitea/explore/repos?q=eez-flow-template&topic=1"
+                                        );
+                                    }}
+                                >
+                                    envox.hr/gitea
+                                </a>
+                            </span>
+                        ),
+                        children: this.templateProjects.map(
+                            templateProject => ({
+                                id: templateProject.clone_url,
+                                label: templateProject.name.startsWith(
+                                    "eez-flow-template-"
+                                )
+                                    ? templateProject.name.substring(
+                                          "eez-flow-template-".length
+                                      )
+                                    : templateProject.name,
+                                children: [],
+                                selected:
+                                    this.type === templateProject.clone_url,
+                                expanded: false,
+                                data: templateProject
+                            })
+                        ),
+                        selected: false,
+                        expanded: true,
+                        data: undefined
+                    }
+                ],
+                selected: false,
+                expanded: false,
+                data: undefined
+            };
+        }
+
+        get selectedTemplateProject(): TemplateProject | undefined {
+            return this.templateProjects.find(
+                templateProject => templateProject.clone_url == this.type
+            );
+        }
+
         get numSteps() {
             if (this.type == "applet") {
                 return 2;
@@ -227,41 +374,6 @@ const NewProjectWizard = observer(
                 return 3;
             }
             return 1;
-        }
-
-        get projectTypes(): IListNode[] {
-            return [
-                {
-                    id: "firmware",
-                    label: "Firmware",
-                    selected: this.type === "firmware",
-                    data: undefined
-                },
-                {
-                    id: "dashboard",
-                    label: "Dashboard",
-                    selected: this.type === "dashboard",
-                    data: undefined
-                },
-                {
-                    id: "applet",
-                    label: "Applet",
-                    selected: this.type === "applet",
-                    data: undefined
-                },
-                {
-                    id: "resource",
-                    label: RESOURCE_PROJECT_NAME,
-                    selected: this.type === "resource",
-                    data: undefined
-                },
-                {
-                    id: "empty",
-                    label: "Empty",
-                    selected: this.type === "empty",
-                    data: undefined
-                }
-            ];
         }
 
         async loadProjectTemplate() {
@@ -327,7 +439,7 @@ const NewProjectWizard = observer(
             if (!this.location || !this.name) {
                 return undefined;
             }
-            if (this.createDirectory) {
+            if (this.selectedTemplateProject || this.createDirectory) {
                 return `${this.location}${path.sep}${this.name}`;
             } else {
                 return this.location;
@@ -348,6 +460,10 @@ const NewProjectWizard = observer(
                 return;
             }
 
+            if (!name.match(/[a-zA-Z_\-][a-zA-Z_\-0-9]*/)) {
+                this.nameError = "Invalid project name";
+            }
+
             this.nameError = undefined;
             return true;
         }
@@ -359,10 +475,17 @@ const NewProjectWizard = observer(
                 return;
             }
 
-            if (this.projectFilePath && fs.existsSync(this.projectFilePath)) {
-                this.locationError =
-                    "Project with the same name already exists at this location.";
-                return;
+            if (this.selectedTemplateProject || this.createDirectory) {
+                if (fs.existsSync(this.projectDirPath!)) {
+                    this.locationError = `Folder "${this.projectDirPath}" already exists.`;
+                    return;
+                }
+            } else {
+                if (fs.existsSync(this.projectFilePath!)) {
+                    this.locationError =
+                        "Project with the same name already exists at this location.";
+                    return;
+                }
             }
 
             this.locationError = undefined;
@@ -433,8 +556,22 @@ const NewProjectWizard = observer(
             });
         }
 
+        postSDL(
+            dir: string,
+            params: {
+                name: string;
+            }
+        ) {}
+
         onOk = async () => {
-            runInAction(() => (this.disableButtons = true));
+            if (this.disableButtons) {
+                return;
+            }
+
+            runInAction(() => {
+                this.disableButtons = true;
+                this.projectCreationError = undefined;
+            });
 
             try {
                 if (this.step == 0) {
@@ -452,104 +589,182 @@ const NewProjectWizard = observer(
                     }
                 }
 
-                if (this.step + 1 < this.numSteps) {
-                    runInAction(() => this.step++);
-                    return;
-                }
+                let projectFilePath;
 
-                try {
-                    await fs.promises.mkdir(this.projectDirPath!, {
-                        recursive: true
-                    });
-                } catch (err) {
-                    runInAction(() => {
-                        this.step = 0;
-                        this.locationError = err.toString();
-                    });
-                    return;
-                }
+                if (this.selectedTemplateProject) {
+                    const commandExists = require("command-exists").sync;
+                    if (!commandExists("git")) {
+                        this.projectCreationError = (
+                            <div>
+                                Git not installed. Install Git from{" "}
+                                <a
+                                    href="#"
+                                    onClick={event => {
+                                        event.preventDefault();
+                                        openLink(
+                                            "https://git-scm.com/downloads"
+                                        );
+                                    }}
+                                >
+                                    git-scm.com/downloads
+                                </a>
+                                .
+                            </div>
+                        );
+                        return;
+                    }
 
-                const projectFilePath = this.projectFilePath!;
+                    const projectDirPath =
+                        this.projectDirPath! + "/" + this.name;
 
-                const projectTemplate = await this.loadProjectTemplate();
+                    // do git stuff
+                    const { simpleGit } = await import("simple-git");
 
-                // set projectVersion
-                projectTemplate.settings.general.projectVersion =
-                    this.type == "resource" ? this.projectVersion : "v3";
-
-                if (this.type == "applet" || this.type == "resource") {
-                    // set masterProject
-                    if (this.bb3ProjectOption == "download") {
-                        try {
-                            await this.downloadBB3ProjectFile();
-                        } catch (err) {
-                            runInAction(() => {
-                                this.step = 1;
-                                this.bb3ProjectFileDownloadError =
-                                    err.toString();
-                            });
-                            return;
+                    await simpleGit().clone(
+                        this.selectedTemplateProject.html_url,
+                        projectDirPath,
+                        {
+                            "--recurse-submodules": null
                         }
-                        projectTemplate.settings.general.masterProject =
-                            "." + path.sep + "modular-psu-firmware.eez-project";
-                    } else {
-                        projectTemplate.settings.general.masterProject =
-                            path.relative(
-                                projectFilePath,
-                                this.bb3ProjectFile!
-                            );
-                    }
-
-                    // set title bar text
-                    if (this.type == "applet") {
-                        projectTemplate.pages[0].components[1].widgets[1].data = `"${this.name}"`;
-                    } else {
-                        projectTemplate.pages[0].components[1].widgets[1].text =
-                            this.name;
-
-                        projectTemplate.micropython.code =
-                            projectTemplate.micropython.code.replace(
-                                "Scripts/resource.res",
-                                `Scripts/${this.name}.res`
-                            );
-                    }
-                } else if (this.type == "firmware") {
-                    projectTemplate.settings.general.imports[0].projectFilePath = `${this.name}-gui.eez-project`;
-                }
-
-                try {
-                    await fs.promises.writeFile(
-                        projectFilePath,
-                        JSON.stringify(projectTemplate, undefined, 2),
-                        "utf8"
                     );
 
-                    fs.promises.copyFile(this.uiStateSrc, this.uiStateDst);
-                } catch (err) {
-                    runInAction(() => {
-                        this.step = 0;
-                        this.nameError = err.toString();
+                    await fs.promises.rm(projectDirPath + "/.git", {
+                        recursive: true,
+                        force: true
                     });
-                    return;
-                }
 
-                if (this.type == "firmware") {
+                    // execute template post processing
+                    const postProcessing = require(projectDirPath +
+                        "/template/post.js");
+                    await postProcessing({
+                        projectDirPath: projectDirPath,
+                        projectName: this.name,
+                        renameFile: async (
+                            fileSrcRelativePath: string,
+                            fileDstRelativePath: string
+                        ) => {
+                            await fs.promises.rename(
+                                projectDirPath + "/" + fileSrcRelativePath,
+                                projectDirPath + "/" + fileDstRelativePath
+                            );
+                        },
+                        replaceInFile: async (
+                            fileRelativePath: string,
+                            searchValue: string,
+                            newValue: string
+                        ) => {
+                            let content = await fs.promises.readFile(
+                                projectDirPath + "/" + fileRelativePath,
+                                "utf-8"
+                            );
+
+                            function escapeRegExp(str: string) {
+                                return str.replace(
+                                    /[.*+?^${}()|[\]\\]/g,
+                                    "\\$&"
+                                ); // $& means the whole matched string
+                            }
+
+                            content = content.replace(
+                                new RegExp(escapeRegExp(searchValue), "g"),
+                                newValue
+                            );
+
+                            await fs.promises.writeFile(
+                                projectDirPath + "/" + fileRelativePath,
+                                content,
+                                "utf-8"
+                            );
+                        }
+                    });
+
+                    // get projectFilePath from manifest.json
+                    const manifestJson = await readJsObjectFromFile(
+                        projectDirPath + "/template/manifest.json"
+                    );
+                    projectFilePath =
+                        projectDirPath + "/" + manifestJson["eez-project-path"];
+
+                    projectFilePath = projectFilePath.replace(
+                        /(\/|\\\\)/g,
+                        path.sep
+                    );
+                } else {
+                    if (this.step + 1 < this.numSteps) {
+                        runInAction(() => this.step++);
+                        return;
+                    }
+
                     try {
-                        const guiProjectTemplate =
-                            await this.loadGuiProjectTemplate();
+                        await fs.promises.mkdir(this.projectDirPath!, {
+                            recursive: true
+                        });
+                    } catch (err) {
+                        runInAction(() => {
+                            this.step = 0;
+                            this.locationError = err.toString();
+                        });
+                        return;
+                    }
 
+                    projectFilePath = this.projectFilePath!;
+
+                    const projectTemplate = await this.loadProjectTemplate();
+
+                    // set projectVersion
+                    projectTemplate.settings.general.projectVersion =
+                        this.type == "resource" ? this.projectVersion : "v3";
+
+                    if (this.type == "applet" || this.type == "resource") {
+                        // set masterProject
+                        if (this.bb3ProjectOption == "download") {
+                            try {
+                                await this.downloadBB3ProjectFile();
+                            } catch (err) {
+                                runInAction(() => {
+                                    this.step = 1;
+                                    this.bb3ProjectFileDownloadError =
+                                        err.toString();
+                                });
+                                return;
+                            }
+                            projectTemplate.settings.general.masterProject =
+                                "." +
+                                path.sep +
+                                "modular-psu-firmware.eez-project";
+                        } else {
+                            projectTemplate.settings.general.masterProject =
+                                path.relative(
+                                    projectFilePath,
+                                    this.bb3ProjectFile!
+                                );
+                        }
+
+                        // set title bar text
+                        if (this.type == "applet") {
+                            projectTemplate.pages[0].components[1].widgets[1].data = `"${this.name}"`;
+                        } else {
+                            projectTemplate.pages[0].components[1].widgets[1].text =
+                                this.name;
+
+                            projectTemplate.micropython.code =
+                                projectTemplate.micropython.code.replace(
+                                    "Scripts/resource.res",
+                                    `Scripts/${this.name}.res`
+                                );
+                        }
+                    } else if (this.type == "firmware") {
+                        projectTemplate.settings.general.imports[0].projectFilePath = `${this.name}-gui.eez-project`;
+                    }
+
+                    try {
                         await fs.promises.writeFile(
                             projectFilePath,
                             JSON.stringify(projectTemplate, undefined, 2),
                             "utf8"
                         );
-                        guiProjectTemplate.settings.general.imports[0].projectFilePath = `${this.name}.eez-project`;
 
-                        await fs.promises.writeFile(
-                            this.guiProjectDst,
-                            JSON.stringify(guiProjectTemplate, undefined, 2),
-                            "utf8"
-                        );
+                        fs.promises.copyFile(this.uiStateSrc, this.uiStateDst);
                     } catch (err) {
                         runInAction(() => {
                             this.step = 0;
@@ -558,17 +773,47 @@ const NewProjectWizard = observer(
                         return;
                     }
 
-                    try {
-                        fs.promises.copyFile(
-                            this.guiProjectStateSrc,
-                            this.guiProjectStateDst
-                        );
-                    } catch (err) {
-                        runInAction(() => {
-                            this.step = 0;
-                            this.nameError = err.toString();
-                        });
-                        return;
+                    if (this.type == "firmware") {
+                        try {
+                            const guiProjectTemplate =
+                                await this.loadGuiProjectTemplate();
+
+                            await fs.promises.writeFile(
+                                projectFilePath,
+                                JSON.stringify(projectTemplate, undefined, 2),
+                                "utf8"
+                            );
+                            guiProjectTemplate.settings.general.imports[0].projectFilePath = `${this.name}.eez-project`;
+
+                            await fs.promises.writeFile(
+                                this.guiProjectDst,
+                                JSON.stringify(
+                                    guiProjectTemplate,
+                                    undefined,
+                                    2
+                                ),
+                                "utf8"
+                            );
+                        } catch (err) {
+                            runInAction(() => {
+                                this.step = 0;
+                                this.nameError = err.toString();
+                            });
+                            return;
+                        }
+
+                        try {
+                            fs.promises.copyFile(
+                                this.guiProjectStateSrc,
+                                this.guiProjectStateDst
+                            );
+                        } catch (err) {
+                            runInAction(() => {
+                                this.step = 0;
+                                this.nameError = err.toString();
+                            });
+                            return;
+                        }
                     }
                 }
 
@@ -576,15 +821,20 @@ const NewProjectWizard = observer(
 
                 ipcRenderer.send("open-file", projectFilePath);
 
-                this.open = false;
-
                 this.saveOptions();
+            } catch (err) {
+                console.error(err);
+                this.projectCreationError = "Failed to create a new project!";
             } finally {
                 runInAction(() => (this.disableButtons = false));
             }
         };
 
         onCancel = action(() => {
+            if (this.disableButtons) {
+                return;
+            }
+
             if (this.step > 0) {
                 this.step--;
             } else {
@@ -606,8 +856,8 @@ const NewProjectWizard = observer(
                     size={"large"}
                     onSubmit={this.onOk}
                     onCancel={this.onCancel}
-                    cancelDisabled={false}
-                    okEnabled={() => false}
+                    cancelDisabled={this.disableButtons}
+                    okEnabled={() => !this.disableButtons}
                     disableButtons={this.disableButtons}
                     backdrop="static"
                     buttons={[
@@ -616,7 +866,7 @@ const NewProjectWizard = observer(
                             type: "secondary",
                             position: "right",
                             onClick: this.onCancel,
-                            disabled: false,
+                            disabled: this.disableButtons,
                             style: {},
                             text: this.step == 0 ? "Cancel" : "Back"
                         },
@@ -625,117 +875,162 @@ const NewProjectWizard = observer(
                             type: "primary",
                             position: "right",
                             onClick: this.onOk,
-                            disabled: false,
+                            disabled: this.disableButtons,
                             style: {},
                             text: this.step + 1 == this.numSteps ? "OK" : "Next"
                         }
                     ]}
-                    additionalFooterControl={this.disableButtons && <Loader />}
+                    additionalFooterControl={
+                        this.disableButtons ? (
+                            <Loader />
+                        ) : this.projectCreationError ? (
+                            <div
+                                className="alert alert-danger"
+                                style={{ flex: 1 }}
+                            >
+                                {this.projectCreationError}
+                            </div>
+                        ) : undefined
+                    }
                 >
                     {this.step == 0 && (
-                        <>
-                            <div className="mb-3 row">
-                                <label className="col-sm-2 col-form-label">
-                                    Type
-                                </label>
-                                <div className="col-sm-10">
-                                    <List
-                                        nodes={this.projectTypes}
-                                        renderNode={node => {
-                                            return (
-                                                <ListItem label={node.label} />
-                                            );
-                                        }}
-                                        selectNode={action(
-                                            node => (this.type = node.id)
-                                        )}
-                                        className="overflow-auto border rounded-1"
-                                        style={{ width: 240 }}
-                                        tabIndex={0}
-                                    />
-                                </div>
+                        <div className="d-flex flex-row">
+                            <div className="pe-3">
+                                <Tree
+                                    rootNode={this.projectTypes}
+                                    selectNode={action(node => {
+                                        if (node.id.startsWith("_")) {
+                                            return;
+                                        }
+                                        this.type = node.id;
+                                    })}
+                                    showOnlyChildren={true}
+                                    className="overflow-auto border rounded-1"
+                                    style={{ width: 240, height: 480 }}
+                                />
                             </div>
 
-                            <div className="mb-3 row">
-                                <label className="col-sm-2 col-form-label">
-                                    Name
-                                </label>
-                                <div className="col-sm-10">
-                                    <NameInput
-                                        value={this.name}
-                                        onChange={action(
-                                            (value: string | undefined) =>
-                                                (this.name = value)
-                                        )}
-                                    />
-                                    {this.nameError && (
-                                        <div className="text-danger">
-                                            {this.nameError}
+                            <div className="flex-fill">
+                                {this.selectedTemplateProject && (
+                                    <div className="mb-3 row">
+                                        <img
+                                            className="col-sm-12"
+                                            src={
+                                                this.selectedTemplateProject
+                                                    ._image_url
+                                            }
+                                        />
+                                    </div>
+                                )}
+
+                                {this.selectedTemplateProject && (
+                                    <div className="mb-3 row">
+                                        <label className="col-sm-3 col-form-label">
+                                            Description
+                                        </label>
+                                        <div className="col-sm-9">
+                                            <div className="form-control">
+                                                {
+                                                    this.selectedTemplateProject
+                                                        .description
+                                                }
+                                            </div>
                                         </div>
-                                    )}
-                                </div>
-                            </div>
+                                    </div>
+                                )}
 
-                            <div className="mb-3 row">
-                                <label className="col-sm-2 col-form-label">
-                                    Location
-                                </label>
-                                <div className="col-sm-10">
-                                    <DirectoryBrowserInput
-                                        value={this.location}
-                                        onChange={action(
-                                            (value: string | undefined) =>
-                                                (this.location = value)
-                                        )}
-                                    />
-                                    {this.locationError && (
-                                        <div className="text-danger">
-                                            {this.locationError}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="mb-3 row">
-                                <div className="col-sm-2"></div>
-                                <div className="col-sm-10">
-                                    <div className="form-check">
-                                        <input
-                                            id="new-project-wizard-create-directory-checkbox"
-                                            className="form-check-input"
-                                            type="checkbox"
-                                            checked={this.createDirectory}
+                                <div className="mb-3 row">
+                                    <label className="col-sm-3 col-form-label">
+                                        Name
+                                    </label>
+                                    <div className="col-sm-9">
+                                        <NameInput
+                                            value={this.name || ""}
                                             onChange={action(
-                                                event =>
-                                                    (this.createDirectory =
-                                                        event.target.checked)
+                                                (value: string | undefined) =>
+                                                    (this.name = value)
                                             )}
                                         />
-                                        <label
-                                            className="form-check-label"
-                                            htmlFor="new-project-wizard-create-directory-checkbox"
-                                        >
-                                            Create directory
-                                        </label>
+                                        {this.nameError && (
+                                            <div className="text-danger">
+                                                {this.nameError}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="mb-3 row">
+                                    <label className="col-sm-3 col-form-label">
+                                        Location
+                                    </label>
+                                    <div className="col-sm-9">
+                                        <DirectoryBrowserInput
+                                            value={this.location || ""}
+                                            onChange={action(
+                                                (value: string | undefined) =>
+                                                    (this.location = value)
+                                            )}
+                                        />
+                                        {this.locationError && (
+                                            <div className="text-danger">
+                                                {this.locationError}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {!this.selectedTemplateProject && (
+                                    <div className="mb-3 row">
+                                        <div className="col-sm-3"></div>
+                                        <div className="col-sm-9">
+                                            <div className="form-check">
+                                                <input
+                                                    id="new-project-wizard-create-directory-checkbox"
+                                                    className="form-check-input"
+                                                    type="checkbox"
+                                                    checked={
+                                                        this.createDirectory
+                                                    }
+                                                    onChange={action(
+                                                        event =>
+                                                            (this.createDirectory =
+                                                                event.target.checked)
+                                                    )}
+                                                />
+                                                <label
+                                                    className="form-check-label"
+                                                    htmlFor="new-project-wizard-create-directory-checkbox"
+                                                >
+                                                    Create directory
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="mb-3 row">
+                                    <label className="col-sm-3 col-form-label">
+                                        {this.selectedTemplateProject
+                                            ? "Project folder path"
+                                            : "Project file path"}
+                                    </label>
+                                    <div className="col-sm-9">
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            value={
+                                                this.selectedTemplateProject
+                                                    ? this.projectDirPath
+                                                    : this.projectFilePath || ""
+                                            }
+                                            onChange={() => {}}
+                                            readOnly
+                                            spellCheck={false}
+                                        />
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="mb-3 row">
-                                <label className="col-sm-2 col-form-label">
-                                    Project path
-                                </label>
-                                <div className="col-sm-10">
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={this.projectFilePath || ""}
-                                        readOnly
-                                        spellCheck={false}
-                                    />
-                                </div>
-                            </div>
-                        </>
+                        </div>
                     )}
 
                     {this.step == 1 && (
@@ -930,4 +1225,9 @@ const NewProjectWizard = observer(
 
 export function showNewProjectWizard() {
     showDialog(<NewProjectWizard />);
+}
+
+function openLink(url: string) {
+    const { shell } = require("electron");
+    shell.openExternal(url);
 }

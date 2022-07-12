@@ -215,26 +215,28 @@ export class EditorsStore {
         editor.subObject = subObject;
         editor.state = ProjectEditor.createEditorState(object);
 
-        const tabNode = this.tabsModel.doAction(
-            FlexLayout.Actions.addNode(
-                {
-                    type: "tab",
-                    name: editor.title,
-                    component: "editor",
-                    config: getObjectPathAsString(editor.object)
-                },
-                this.tabsSet.getId(),
-                FlexLayout.DockLocation.CENTER,
-                0,
-                true
-            )
-        ) as FlexLayout.TabNode;
+        try {
+            const tabNode = this.tabsModel.doAction(
+                FlexLayout.Actions.addNode(
+                    {
+                        type: "tab",
+                        name: editor.title,
+                        component: "editor",
+                        config: getObjectPathAsString(editor.object)
+                    },
+                    this.tabsSet.getId(),
+                    FlexLayout.DockLocation.CENTER,
+                    0,
+                    true
+                )
+            ) as FlexLayout.TabNode;
 
-        editor.tabId = tabNode.getId();
+            editor.tabId = tabNode.getId();
 
-        this.tabIdToEditorMap.set(editor.tabId, editor);
+            this.tabIdToEditorMap.set(editor.tabId, editor);
 
-        this.tabsModel.doAction(FlexLayout.Actions.selectTab(editor.tabId));
+            this.tabsModel.doAction(FlexLayout.Actions.selectTab(editor.tabId));
+        } catch (err) {}
 
         return editor;
     }

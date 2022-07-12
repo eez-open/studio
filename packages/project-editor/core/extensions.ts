@@ -21,6 +21,7 @@ import scpiFeature from "project-editor/features/scpi/scpi";
 import shortcutsFeature from "project-editor/features/shortcuts/project-shortcuts";
 import microPythonFeature from "project-editor/features/micropython/micropython";
 import textsFeature from "project-editor/features/texts";
+import readmeFeature from "project-editor/features/readme";
 
 export type BuildResult = { [key: string]: string };
 
@@ -70,7 +71,8 @@ let extensions: Extension[] = [
     microPythonFeature,
     extensionDefinitionsFeature,
     scpiFeature,
-    shortcutsFeature
+    shortcutsFeature,
+    readmeFeature
 ];
 
 export function getProjectFeatures() {

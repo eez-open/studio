@@ -41,6 +41,7 @@ import { ScpiEnum } from "project-editor/features/scpi/enum";
 import { ConnectionLine } from "project-editor/flow/flow";
 import { TextsNavigation } from "project-editor/features/texts/navigation";
 import { Language, TextResource } from "project-editor/features/texts";
+import { ReadmeNavigation } from "project-editor/features/readme/navigation";
 
 export function getNavigationComponentId(object: IEezObject) {
     const project = getProject(object);
@@ -113,6 +114,10 @@ export function getNavigationComponent(
 
     if (object == project.texts) {
         return TextsNavigation;
+    }
+
+    if (object == project.readme) {
+        return ReadmeNavigation;
     }
 
     return undefined;
