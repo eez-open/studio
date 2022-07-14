@@ -29,12 +29,16 @@ The EEZ Studio is an open source cross-platform modular visual low-code developm
 
 ![Flow](images/EEZ_Flow_M1_intro.png)
 
-New functionality is under development thanks to the sponsorship of the [NGI0 PET](https://nlnet.nl/project/EEZ-DIB/) fund from NLnet, which will enable quick and easy creation of flow diagrams using ready-made components. The target for executing the flow chart can be PC or EEZ BB3. This will be realized in five milestones:
+New functionality is under development thanks to the sponsorship of the [NGI0 PET](https://nlnet.nl/project/EEZ-DIB/) fund from NLnet, which will enable quick and easy creation of flow diagrams using ready-made components. The target for executing the flow chart can be PC or EEZ BB3. This will be realized in the  following milestones:
 * [M1](https://github.com/eez-open/studio/issues/102) - Visual editor
 * [M2](https://github.com/eez-open/studio/issues/103) - Interpreter for PC
 * [M3](https://github.com/eez-open/studio/issues/104) - Interpreter for BB3
 * [M4](https://github.com/eez-open/studio/issues/134) - Debugger for PC
 * [M5](https://github.com/eez-open/studio/issues/135) - Debugger for BB3
+* [M6](https://github.com/eez-open/studio/releases/tag/0.9.90) - EEZ flow engine unification
+* [M7](https://github.com/eez-open/studio/releases/tag/0.9.91) - Multilanguage support in project
+* [M8](https://github.com/eez-open/studio/releases/tag/0.9.92) - Widgets advanced control
+* [M9](https://github.com/eez-open/studio/releases/tag/0.9.93) - Project templates
 
 Interpreting the flowchart on a PC will allow the creation of a dashboard for remote control of various T&M instruments (including EEZ BB3). The debugger will simplify and speed up the development of flowcharts as it will allow step-by-step execution, setting breakpoints, etc.
 Adding a flow chart interpretation on EEZ BB3 will open up entirely new possibilities for quickly creating different test scenarios, automating measurement data collection, and more.
@@ -77,7 +81,8 @@ Adding a flow chart interpretation on EEZ BB3 will open up entirely new possibil
 
 ### Linux
 
-Download `eezstudio-linux-x64.tar.gz`, unpack and select `eezstudio`.
+Download `eezstudio-linux-x64.tar.gz`, unpack and select `eezstudio`.  
+Optionally if you experience issue on start with your Linux distribution try to run AppImage version using the `--no-sandbox` options, i.e. `./EEZ-Studio-[version].AppImage --no-sandbox`
 
 ### Mac
 
