@@ -322,9 +322,26 @@ const PaletteItem = observer(
             let protoObject = new this.props.componentClass.objectClass();
 
             const componentClass = getClass(protoObject);
-            const defaultValue = objectClone(
-                componentClass.classInfo.defaultValue!
-            );
+
+            let defaultValue: any = {};
+
+            if (componentClass.classInfo.defaultValue) {
+                Object.assign(
+                    defaultValue,
+                    objectClone(componentClass.classInfo.defaultValue)
+                );
+            }
+
+            if (componentClass.classInfo.componentDefaultValue) {
+                Object.assign(
+                    defaultValue,
+                    objectClone(
+                        componentClass.classInfo.componentDefaultValue(
+                            this.context
+                        )
+                    )
+                );
+            }
 
             defaultValue.type = this.props.componentClass.name;
 

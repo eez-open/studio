@@ -20,6 +20,7 @@ import {
     getId
 } from "project-editor/core/object";
 import {
+    DocumentStoreClass,
     isDashboardOrAppletOrFirmwareWithFlowSupportProject,
     isNotV1Project,
     isV3OrNewerProject,
@@ -1997,8 +1998,8 @@ export class TextWidget extends Widget {
                 } catch (err) {}
 
                 return {
-                    text: this.data,
-                    node: <span className="expression">{this.data}</span>
+                    text: `{${this.data}}`,
+                    node: <span className="expression">{`{${this.data}}`}</span>
                 };
             }
 
@@ -2963,7 +2964,21 @@ export class ButtonWidget extends Widget {
             left: 0,
             top: 0,
             width: 64,
-            height: 32
+            height: 40,
+            asOutputProperties: ["action"]
+        },
+
+        componentDefaultValue: (DocumentStore: DocumentStoreClass) => {
+            return DocumentStore.project.isFirmwareProject
+                ? {
+                      style: {
+                          inheritFrom: "button"
+                      },
+                      disabledStyle: {
+                          inheritFrom: "button_disabled"
+                      }
+                  }
+                : {};
         },
 
         icon: "../home/_images/widgets/Button.png",
@@ -4177,21 +4192,52 @@ export class AppViewWidget extends Widget {
     }
 
     render(flowContext: IFlowContext, width: number, height: number) {
-        if (!this.data) {
-            return null;
-        }
+        let element;
 
-        const pageName = flowContext.dataContext.get(this.data);
-        if (!pageName) {
-            return null;
+        if (this.data) {
+            const pageName = flowContext.dataContext.get(this.data);
+            if (pageName) {
+                const page = findPage(getProject(this), pageName);
+                if (page) {
+                    element = (
+                        <ComponentEnclosure
+                            component={page}
+                            flowContext={
+                                flowContext.flowState
+                                    ? flowContext.overrideFlowState(this)
+                                    : flowContext
+                            }
+                            width={width}
+                            height={height}
+                        />
+                    );
+                }
+            }
         }
-
-        const page = findPage(getProject(this), pageName);
-        if (!page) {
-            return null;
-        }
-
-        return page.render(flowContext, width, height);
+        return (
+            <>
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                    <ComponentCanvas
+                        component={this}
+                        width={width}
+                        height={height}
+                        draw={(ctx: CanvasRenderingContext2D) => {
+                            draw.drawBackground(
+                                ctx,
+                                0,
+                                0,
+                                width,
+                                height,
+                                this.style,
+                                true
+                            );
+                        }}
+                    />
+                )}
+                {element}
+                {super.render(flowContext, width, height)}
+            </>
+        );
     }
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
@@ -5404,6 +5450,15 @@ export class TextInputWidget extends Widget {
             height: 32,
             title: ""
         },
+        componentDefaultValue: (DocumentStore: DocumentStoreClass) => {
+            return DocumentStore.project.isFirmwareProject
+                ? {
+                      style: {
+                          inheritFrom: "text_input"
+                      }
+                  }
+                : {};
+        },
 
         icon: (
             <svg
@@ -5725,8 +5780,24 @@ export class RollerWidget extends Widget {
         defaultValue: {
             left: 0,
             top: 0,
-            width: 64,
-            height: 64
+            width: 40,
+            height: 120
+        },
+
+        componentDefaultValue: (DocumentStore: DocumentStoreClass) => {
+            return DocumentStore.project.isFirmwareProject
+                ? {
+                      style: {
+                          inheritFrom: "roller_widget"
+                      },
+                      selectedValueStyle: {
+                          inheritFrom: "roller_widget_selected_value"
+                      },
+                      unselectedValueStyle: {
+                          inheritFrom: "roller_widget_unselected_value"
+                      }
+                  }
+                : {};
         },
 
         icon: (
@@ -5858,6 +5929,16 @@ export class SwitchWidget extends Widget {
             height: 32
         },
 
+        componentDefaultValue: (DocumentStore: DocumentStoreClass) => {
+            return DocumentStore.project.isFirmwareProject
+                ? {
+                      style: {
+                          inheritFrom: "switch_widget"
+                      }
+                  }
+                : {};
+        },
+
         icon: (
             <svg
                 width="24"
@@ -5964,8 +6045,18 @@ export class SliderWidget extends Widget {
         defaultValue: {
             left: 0,
             top: 0,
-            width: 64,
+            width: 120,
             height: 32
+        },
+
+        componentDefaultValue: (DocumentStore: DocumentStoreClass) => {
+            return DocumentStore.project.isFirmwareProject
+                ? {
+                      style: {
+                          inheritFrom: "slider_widget"
+                      }
+                  }
+                : {};
         },
 
         icon: (
@@ -6025,16 +6116,11 @@ export class SliderWidget extends Widget {
                                 this.style.paddingRect.top -
                                 this.style.paddingRect.bottom;
 
-                            let knobH = h;
-                            let knobW = h;
-                            let knobY = y + (h - knobH) / 2;
-                            let knobBorderRadius = knobH / 2 + 2;
-
-                            let barH = (knobH * 8) / 20;
-                            let barW = w - (knobH - barH);
-                            let barX = x + (w - barW) / 2;
-                            let barY = y + (h - barH) / 2;
-                            let barBorderRadius = barH / 2;
+                            const barX = x + h / 2.0;
+                            const barW = w - h;
+                            const barH = (h * 8.0) / 20.0;
+                            const barY = y + (h - barH) / 2;
+                            const barBorderRadius = barH / 2.0;
 
                             let value = getNumberValue(
                                 flowContext,
@@ -6054,21 +6140,31 @@ export class SliderWidget extends Widget {
                                 "max",
                                 1.0
                             );
-                            let knobPosition = (value - min) / (max - min);
-                            if (knobPosition < 0) knobPosition = 0;
-                            if (knobPosition > 1.0) knobPosition = 1.0;
 
-                            let knobX =
-                                barX + knobPosition * (barW - 1) - knobW / 2;
+                            let knobRelativePosition =
+                                (value - min) / (max - min);
+                            if (knobRelativePosition < 0)
+                                knobRelativePosition = 0;
+                            if (knobRelativePosition > 1.0)
+                                knobRelativePosition = 1.0;
+
+                            const knobPosition =
+                                barX + knobRelativePosition * (barW - 1);
+
+                            const knobRadius = h / 2;
+                            const knobX = knobPosition;
+                            const knobY = y;
+                            const knobW = h;
+                            const knobH = h;
 
                             draw.setBackColor(
                                 this.style.backgroundColorProperty
                             );
                             draw.fillRoundedRect(
                                 ctx,
-                                barX,
+                                barX - barBorderRadius,
                                 barY,
-                                barX + barW - 1,
+                                barX + barW + barBorderRadius - 1,
                                 barY + barH - 1,
                                 0,
                                 barBorderRadius
@@ -6077,12 +6173,12 @@ export class SliderWidget extends Widget {
                             draw.setBackColor(this.style.colorProperty);
                             draw.fillRoundedRect(
                                 ctx,
-                                knobX,
+                                knobX - knobRadius,
                                 knobY,
-                                knobX + knobW - 1,
+                                knobX - knobRadius + knobW - 1,
                                 knobY + knobH - 1,
                                 0,
-                                knobBorderRadius
+                                knobRadius
                             );
                         }}
                     />

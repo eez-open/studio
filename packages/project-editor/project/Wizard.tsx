@@ -162,6 +162,8 @@ const NewProjectWizard = observer(
 
         projectCreationError: React.ReactNode | undefined;
 
+        gitInit: boolean = false;
+
         constructor(props: any) {
             super(props);
 
@@ -182,6 +184,7 @@ const NewProjectWizard = observer(
                 projectVersion: observable,
                 templateProjects: observable,
                 projectCreationError: observable,
+                gitInit: observable,
                 selectedTemplateProject: computed,
                 validateName: action,
                 validateLocation: action,
@@ -199,6 +202,7 @@ const NewProjectWizard = observer(
                         this.bb3ProjectOption = options.bb3ProjectOption;
                         this.bb3ProjectFile = options.bb3ProjectFile;
                         this.projectVersion = options.projectVersion;
+                        this.gitInit = options.gitInit;
                     }
                 } catch (err) {
                     console.error(err);
@@ -255,7 +259,8 @@ const NewProjectWizard = observer(
                     createDirectory: this.createDirectory,
                     bb3ProjectOption: this.bb3ProjectOption,
                     bb3ProjectFile: this.bb3ProjectFile,
-                    projectVersion: this.projectVersion
+                    projectVersion: this.projectVersion,
+                    gitInit: this.gitInit
                 })
             );
         }
@@ -614,8 +619,7 @@ const NewProjectWizard = observer(
                         return;
                     }
 
-                    const projectDirPath =
-                        this.projectDirPath! + "/" + this.name;
+                    const projectDirPath = this.projectDirPath!;
 
                     // do git stuff
                     const { simpleGit } = await import("simple-git");
@@ -623,9 +627,11 @@ const NewProjectWizard = observer(
                     await simpleGit().clone(
                         this.selectedTemplateProject.html_url,
                         projectDirPath,
-                        {
-                            "--recurse-submodules": null
-                        }
+                        this.gitInit
+                            ? {}
+                            : {
+                                  "--recurse-submodules": null
+                              }
                     );
 
                     await fs.promises.rm(projectDirPath + "/.git", {
@@ -678,10 +684,33 @@ const NewProjectWizard = observer(
                         }
                     });
 
-                    // get projectFilePath from manifest.json
+                    // git init
                     const manifestJson = await readJsObjectFromFile(
                         projectDirPath + "/template/manifest.json"
                     );
+
+                    if (this.gitInit) {
+                        await fs.promises.rm(
+                            projectDirPath +
+                                "/" +
+                                manifestJson["eez-framework-location"],
+                            {
+                                recursive: true,
+                                force: true
+                            }
+                        );
+
+                        await simpleGit(projectDirPath)
+                            .init()
+                            .submoduleAdd(
+                                "https://github.com/eez-open/eez-framework",
+                                manifestJson["eez-framework-location"]
+                            )
+                            .add(".")
+                            .commit("Inital commit");
+                    }
+
+                    // get projectFilePath from manifest.json
                     projectFilePath =
                         projectDirPath + "/" + manifestJson["eez-project-path"];
 
@@ -913,6 +942,17 @@ const NewProjectWizard = observer(
                             <div className="flex-fill">
                                 {this.selectedTemplateProject && (
                                     <div className="mb-3 row">
+                                        <h6 className="col-sm-12">
+                                            {
+                                                this.selectedTemplateProject
+                                                    .description
+                                            }
+                                        </h6>
+                                    </div>
+                                )}
+
+                                {this.selectedTemplateProject && (
+                                    <div className="mb-3 row">
                                         <img
                                             className="col-sm-12"
                                             src={
@@ -920,22 +960,6 @@ const NewProjectWizard = observer(
                                                     ._image_url
                                             }
                                         />
-                                    </div>
-                                )}
-
-                                {this.selectedTemplateProject && (
-                                    <div className="mb-3 row">
-                                        <label className="col-sm-3 col-form-label">
-                                            Description
-                                        </label>
-                                        <div className="col-sm-9">
-                                            <div className="form-control">
-                                                {
-                                                    this.selectedTemplateProject
-                                                        .description
-                                                }
-                                            </div>
-                                        </div>
                                     </div>
                                 )}
 
@@ -1020,7 +1044,7 @@ const NewProjectWizard = observer(
                                             className="form-control"
                                             value={
                                                 this.selectedTemplateProject
-                                                    ? this.projectDirPath
+                                                    ? this.projectDirPath || ""
                                                     : this.projectFilePath || ""
                                             }
                                             onChange={() => {}}
@@ -1029,6 +1053,33 @@ const NewProjectWizard = observer(
                                         />
                                     </div>
                                 </div>
+
+                                {this.selectedTemplateProject && (
+                                    <div className="mb-3 row">
+                                        <div className="col-sm-3"></div>
+                                        <div className="col-sm-9">
+                                            <div className="form-check">
+                                                <input
+                                                    id="new-project-wizard-git-init-checkbox"
+                                                    className="form-check-input"
+                                                    type="checkbox"
+                                                    checked={this.gitInit}
+                                                    onChange={action(
+                                                        event =>
+                                                            (this.gitInit =
+                                                                event.target.checked)
+                                                    )}
+                                                />
+                                                <label
+                                                    className="form-check-label"
+                                                    htmlFor="new-project-wizard-git-init-checkbox"
+                                                >
+                                                    Initialize as Git repository
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}

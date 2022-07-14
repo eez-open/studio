@@ -390,7 +390,13 @@ export class Page extends Flow {
             }
 
             if (DocumentStore.project.isFirmwareWithFlowSupportProject) {
+                const isSimulatorPage =
+                    page.usedIn &&
+                    page.usedIn.length == 1 &&
+                    page.usedIn[0].toLowerCase() == "simulator";
+
                 if (
+                    !isSimulatorPage &&
                     page.width !=
                         DocumentStore.project.settings.general.displayWidth &&
                     !(page.scaleToFit || page.isUsedAsCustomWidget)
@@ -415,6 +421,7 @@ export class Page extends Flow {
                 }
 
                 if (
+                    !isSimulatorPage &&
                     page.height !=
                         DocumentStore.project.settings.general.displayHeight &&
                     !(page.scaleToFit || page.isUsedAsCustomWidget)

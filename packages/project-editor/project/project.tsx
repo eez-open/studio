@@ -1524,6 +1524,13 @@ export class Project extends EezObject {
         throw "unknown project";
     }
 
+    get isFirmwareProject() {
+        return (
+            this.settings.general.projectType === ProjectType.FIRMWARE ||
+            this.settings.general.projectType === ProjectType.FIRMWARE_MODULE
+        );
+    }
+
     get isFirmwareWithFlowSupportProject() {
         return (
             (this.settings.general.projectType === ProjectType.FIRMWARE ||

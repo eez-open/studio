@@ -1090,22 +1090,22 @@ const AlignAndDistributePropertyGridUI = observer(
                 parentPosition = { x: 0, y: 0 };
             }
 
+            if (props.left != undefined) {
+                props.left -= parentPosition.x;
+            }
+
+            if (props.top != undefined) {
+                props.top -= parentPosition.y;
+            }
+
             const classInfo = getClassInfo(componentAdapter.component);
 
             if (classInfo.setRect) {
                 classInfo.setRect(componentAdapter.component, props);
             } else {
-                if (props.left != undefined) {
-                    this.context.updateObject(componentAdapter.component, {
-                        left: props.left - parentPosition.x
-                    });
-                }
-
-                if (props.top != undefined) {
-                    this.context.updateObject(componentAdapter.component, {
-                        top: props.top - parentPosition.y
-                    });
-                }
+                this.context.updateObject(componentAdapter.component, {
+                    left: props.left
+                });
             }
         }
 
