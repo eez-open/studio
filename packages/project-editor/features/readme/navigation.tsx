@@ -98,6 +98,7 @@ export const ReadmeEditor = observer(
             return (
                 <div
                     ref={this.divRef}
+                    className="EeezStudio_Readme_Container"
                     onFocus={this.onFocus}
                     tabIndex={0}
                     dangerouslySetInnerHTML={html}
