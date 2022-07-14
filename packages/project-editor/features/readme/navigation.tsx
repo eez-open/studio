@@ -36,16 +36,31 @@ export const ReadmeEditor = observer(
             });
         }
 
-        componentDidMount() {
+        async componentDidMount() {
             if (this.divRef.current) {
                 this.divRef.current.focus();
             }
+
             this.loadText();
         }
 
         componentDidUpdate() {
-            this.loadText();
+            if (this.divRef.current) {
+                $(this.divRef.current).find("a").on("click", this.onClick);
+            }
         }
+
+        componentWillUnmount() {
+            if (this.divRef.current) {
+                $(this.divRef.current).find("a").off("click", this.onClick);
+            }
+        }
+
+        onClick = (event: JQuery.ClickEvent<HTMLAnchorElement>) => {
+            event.preventDefault();
+            event.stopPropagation();
+            openLink(event.target.href);
+        };
 
         async loadText() {
             let text: string | undefined;
@@ -108,3 +123,8 @@ export const ReadmeEditor = observer(
         }
     }
 );
+
+function openLink(url: string) {
+    const { shell } = require("electron");
+    shell.openExternal(url);
+}
