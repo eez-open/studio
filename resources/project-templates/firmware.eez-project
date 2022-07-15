@@ -52,7 +52,8 @@
           "data": "\"Hello, world!\"",
           "style": {
             "inheritFrom": "default"
-          }
+          },
+          "timeline": []
         }
       ],
       "connectionLines": [],
@@ -69,7 +70,9 @@
   "styles": [],
   "fonts": [
     {
+      "id": 1,
       "name": "medium",
+      "renderingEngine": "freetype",
       "source": {
         "filePath": "Oswald-Medium.ttf",
         "size": 12

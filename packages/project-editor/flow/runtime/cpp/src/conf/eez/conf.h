@@ -24,4 +24,4 @@ static const char *ICON = "min_eez_sample.png";
 static const uint32_t GUI_STATE_BUFFER_SIZE = 128 * 1024;
 
 #define OPTION_KEYPAD 1
-#define OPTION_TOUCH_CALIBRATION 1
+

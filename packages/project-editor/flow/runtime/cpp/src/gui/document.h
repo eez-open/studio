@@ -9,25 +9,23 @@ namespace gui {
 enum DataEnum {
     DATA_ID_NONE = 0,
     DATA_ID_ALERT_MESSAGE = 1,
-    DATA_ID_TOUCH_CALIBRATION_POINT = 2,
-    DATA_ID_KEYPAD_TEXT = 3,
-    DATA_ID_KEYPAD_EDIT_UNIT = 4,
-    DATA_ID_KEYPAD_SIGN_ENABLED = 5,
-    DATA_ID_KEYPAD_UNIT_ENABLED = 6,
-    DATA_ID_KEYPAD_DOT_ENABLED = 7,
-    DATA_ID_KEYPAD_OPTION1_ENABLED = 8,
-    DATA_ID_KEYPAD_OPTION1_TEXT = 9,
-    DATA_ID_KEYPAD_OPTION2_ENABLED = 10,
-    DATA_ID_KEYPAD_OPTION2_TEXT = 11,
-    DATA_ID_KEYPAD_OPTION3_ENABLED = 12,
-    DATA_ID_KEYPAD_OPTION3_TEXT = 13,
-    DATA_ID_KEYPAD_MODE = 14,
-    DATA_ID_KEYPAD_OK_ENABLED = 15
+    DATA_ID_KEYPAD_TEXT = 2,
+    DATA_ID_KEYPAD_EDIT_UNIT = 3,
+    DATA_ID_KEYPAD_SIGN_ENABLED = 4,
+    DATA_ID_KEYPAD_UNIT_ENABLED = 5,
+    DATA_ID_KEYPAD_DOT_ENABLED = 6,
+    DATA_ID_KEYPAD_OPTION1_ENABLED = 7,
+    DATA_ID_KEYPAD_OPTION1_TEXT = 8,
+    DATA_ID_KEYPAD_OPTION2_ENABLED = 9,
+    DATA_ID_KEYPAD_OPTION2_TEXT = 10,
+    DATA_ID_KEYPAD_OPTION3_ENABLED = 11,
+    DATA_ID_KEYPAD_OPTION3_TEXT = 12,
+    DATA_ID_KEYPAD_MODE = 13,
+    DATA_ID_KEYPAD_OK_ENABLED = 14
 };
 
 void data_none(DataOperationEnum operation, const WidgetCursor &cursor, Value &value);
 void data_alert_message(DataOperationEnum operation, const WidgetCursor &cursor, Value &value);
-void data_touch_calibration_point(DataOperationEnum operation, const WidgetCursor &cursor, Value &value);
 void data_keypad_text(DataOperationEnum operation, const WidgetCursor &cursor, Value &value);
 void data_keypad_edit_unit(DataOperationEnum operation, const WidgetCursor &cursor, Value &value);
 void data_keypad_sign_enabled(DataOperationEnum operation, const WidgetCursor &cursor, Value &value);
@@ -89,9 +87,8 @@ extern ActionExecFunc g_actionExecFunctions[];
 
 enum FontsEnum {
     FONT_ID_NONE = 0,
-    FONT_ID_SHADOW = 1,
-    FONT_ID_MEDIUM = 2,
-    FONT_ID_GUI_ICONS = 3
+    FONT_ID_MEDIUM = 1,
+    FONT_ID_SHADOW = 2
 };
 
 enum BitmapsEnum {
@@ -114,15 +111,16 @@ enum StylesEnum {
     STYLE_ID_MENU_WITH_BUTTONS_CONTAINER = 12,
     STYLE_ID_MENU_WITH_BUTTONS_BUTTON = 13,
     STYLE_ID_FPS_GRAPH = 14,
-    STYLE_ID_BACKGROUND = 15,
-    STYLE_ID_BUTTON = 16,
-    STYLE_ID_BUTTON_DISABLED = 17,
-    STYLE_ID_VALUE = 18,
-    STYLE_ID_SLIDER_WIDGET = 19,
-    STYLE_ID_VALUE_LABEL = 20,
-    STYLE_ID_TOUCH_CALIBRATION = 21,
-    STYLE_ID_NOTE_M = 22,
-    STYLE_ID_TOUCH_CALIBRATION_POINT = 23
+    STYLE_ID_SLIDER_WIDGET = 15,
+    STYLE_ID_SWITCH_WIDGET = 16,
+    STYLE_ID_DROP_DOWN_LIST = 17,
+    STYLE_ID_ROLLER_WIDGET = 18,
+    STYLE_ID_ROLLER_WIDGET_SELECTED_VALUE = 19,
+    STYLE_ID_ROLLER_WIDGET_UNSELECTED_VALUE = 20,
+    STYLE_ID_BACKGROUND = 21,
+    STYLE_ID_BUTTON = 22,
+    STYLE_ID_BUTTON_DISABLED = 23,
+    STYLE_ID_NOTE_M = 24
 };
 
 enum ThemesEnum {
@@ -162,22 +160,20 @@ enum ColorsEnum {
     COLOR_ID_TEXT_INPUT_BACKGROUND = 28,
     COLOR_ID_TEXT_INPUT_ACTIVE_BACKGROUND = 29,
     COLOR_ID_TEXT_INPUT_BORDER = 30,
-	COLOR_ID_CUSTOM_UNDEFINED = 31,
-	COLOR_ID_CUSTOM_000000 = 32,
-	COLOR_ID_CUSTOM_00FF1E = 33,
-	COLOR_ID_CUSTOM_FFFFFF = 34,
-	COLOR_ID_CUSTOM_00FF00 = 35
+    COLOR_ID_DROP_DOWN_LIST_ACTIVE_BACKGROUND = 31,
+	COLOR_ID_CUSTOM_UNDEFINED = 32,
+	COLOR_ID_CUSTOM_000000 = 33,
+	COLOR_ID_CUSTOM_00FF1E = 34,
+	COLOR_ID_CUSTOM_C0C0C0 = 35,
+	COLOR_ID_CUSTOM_808080 = 36
 };
 
 enum PagesEnum {
     PAGE_ID_NONE = 0,
-    PAGE_ID_MAIN = 1,
-    PAGE_ID_TOUCH_CALIBRATION = 2,
-    PAGE_ID_TOUCH_CALIBRATION_YES_NO = 3,
-    PAGE_ID_PAGE2 = 4
+    PAGE_ID_MAIN = 1
 };
 
-extern const uint8_t assets[10910];
+extern const uint8_t assets[8451];
 
 } // namespace gui
 } // namespace eez
