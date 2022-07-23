@@ -120,7 +120,7 @@
         "deep-equal": "^2.0.5",
         "ffi-napi": "^4.0.3",
         "fft-windowing": "^0.1.4",
-        "file-type": "^8.0.0",
+        "file-type": "^16.5.4",
         "flexlayout-react": "^0.6.9",
         "fourier-transform": "^1.1.2",
         "fs-extra": "^6.0.1",
