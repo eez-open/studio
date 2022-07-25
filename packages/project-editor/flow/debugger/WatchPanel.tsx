@@ -10,7 +10,7 @@ import {
     makeObservable
 } from "mobx";
 
-import { Panel } from "project-editor/components/Panel";
+import { Panel } from "project-editor/ui-components/Panel";
 import { IColumn, ITreeNode, TreeTable } from "eez-studio-ui/tree-table";
 import type { IDataContext } from "project-editor/flow/flow-interfaces";
 import type { Variable } from "project-editor/features/variable/variable";
@@ -65,11 +65,11 @@ export const WatchPanel = observer(
                     ]
                 },
                 values: {},
-                dialogContext: this.props.runtime.DocumentStore.project
+                dialogContext: this.props.runtime.projectEditorStore.project
             });
 
             runInAction(() =>
-                this.props.runtime.DocumentStore.uiStateStore.watchExpressions.push(
+                this.props.runtime.projectEditorStore.uiStateStore.watchExpressions.push(
                     result.values.expression
                 )
             );
@@ -94,15 +94,15 @@ export const WatchPanel = observer(
                 },
                 values: {
                     expression:
-                        this.props.runtime.DocumentStore.uiStateStore
+                        this.props.runtime.projectEditorStore.uiStateStore
                             .watchExpressions[i]
                 },
-                dialogContext: this.props.runtime.DocumentStore.project
+                dialogContext: this.props.runtime.projectEditorStore.project
             });
 
             runInAction(
                 () =>
-                    (this.props.runtime.DocumentStore.uiStateStore.watchExpressions[
+                    (this.props.runtime.projectEditorStore.uiStateStore.watchExpressions[
                         i
                     ] = result.values.expression)
             );
@@ -115,7 +115,7 @@ export const WatchPanel = observer(
             }
 
             runInAction(() =>
-                this.props.runtime.DocumentStore.uiStateStore.watchExpressions.splice(
+                this.props.runtime.projectEditorStore.uiStateStore.watchExpressions.splice(
                     i,
                     1
                 )
@@ -235,7 +235,7 @@ const WatchTable = observer(
                             const name = `[${i}]`;
                             const type = elementType ?? typeof elementValue;
                             const valueLabel = getValueLabel(
-                                this.props.runtime.DocumentStore.project,
+                                this.props.runtime.projectEditorStore.project,
                                 elementValue,
                                 type
                             );
@@ -267,7 +267,7 @@ const WatchTable = observer(
                         let structure;
                         if (type) {
                             structure = getStructureFromType(
-                                this.props.runtime.DocumentStore.project,
+                                this.props.runtime.projectEditorStore.project,
                                 type
                             );
                         }
@@ -287,7 +287,7 @@ const WatchTable = observer(
                             }
 
                             const valueLabel = getValueLabel(
-                                this.props.runtime.DocumentStore.project,
+                                this.props.runtime.projectEditorStore.project,
                                 propertyValue,
                                 fieldType
                             );
@@ -330,7 +330,7 @@ const WatchTable = observer(
                 value: undefined,
                 type: "",
                 children: () =>
-                    this.props.runtime.DocumentStore.uiStateStore.watchExpressions.map(
+                    this.props.runtime.projectEditorStore.uiStateStore.watchExpressions.map(
                         (expression, i) => {
                             let watchExpressionLabel;
                             let value;
@@ -346,7 +346,7 @@ const WatchTable = observer(
                                         ));
 
                                     watchExpressionLabel = getValueLabel(
-                                        this.props.runtime.DocumentStore
+                                        this.props.runtime.projectEditorStore
                                             .project,
                                         value,
                                         type
@@ -392,12 +392,13 @@ const WatchTable = observer(
                 if (flowState) {
                     dataContext = flowState.dataContext;
                 } else {
-                    dataContext = this.props.runtime.DocumentStore.dataContext;
+                    dataContext =
+                        this.props.runtime.projectEditorStore.dataContext;
                 }
 
                 const value = dataContext.get(variable.name);
                 const valueLabel = getValueLabel(
-                    this.props.runtime.DocumentStore.project,
+                    this.props.runtime.projectEditorStore.project,
                     value,
                     variable.type
                 );
@@ -425,7 +426,7 @@ const WatchTable = observer(
                 type: "",
                 children: () =>
                     this.getVariableTreeNodes(
-                        this.props.runtime.DocumentStore.project
+                        this.props.runtime.projectEditorStore.project
                             .allGlobalVariables
                     ),
                 selected: false,
@@ -459,7 +460,7 @@ const WatchTable = observer(
                 let value = componentState.getInputValue(input.name);
 
                 let valueLabel = getValueLabel(
-                    this.props.runtime.DocumentStore.project,
+                    this.props.runtime.projectEditorStore.project,
                     value,
                     null
                 );
@@ -489,7 +490,7 @@ const WatchTable = observer(
             }
 
             const editorState =
-                this.props.runtime.DocumentStore.editorsStore.activeEditor
+                this.props.runtime.projectEditorStore.editorsStore.activeEditor
                     ?.state;
             if (!(editorState instanceof FlowTabState)) {
                 return undefined;
@@ -559,7 +560,7 @@ const WatchTable = observer(
                     const children: ITreeNode[] = [];
 
                     if (
-                        this.props.runtime.DocumentStore.uiStateStore
+                        this.props.runtime.projectEditorStore.uiStateStore
                             .watchExpressions.length > 0
                     ) {
                         children.push(this.watchExpressions);

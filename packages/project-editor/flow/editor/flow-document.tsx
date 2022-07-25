@@ -25,7 +25,7 @@ export class FlowDocument implements IDocument {
             selectedConnectionLines: computed,
             selectedAndHoveredConnectionLines: computed,
             nonSelectedConnectionLines: computed,
-            DocumentStore: computed
+            projectEditorStore: computed
         });
     }
 
@@ -134,13 +134,13 @@ export class FlowDocument implements IDocument {
     }
 
     duplicateSelection = () => {
-        this.DocumentStore.undoManager.setCombineCommands(true);
+        this.projectEditorStore.undoManager.setCombineCommands(true);
 
         this.flow.duplicateSelection();
 
         this.flowContext.viewState.selectedObjects.forEach(objectAdapter => {
             if (objectAdapter.object instanceof Component) {
-                this.flowContext.DocumentStore.updateObject(
+                this.flowContext.projectEditorStore.updateObject(
                     objectAdapter.object,
                     {
                         left: objectAdapter.object.left + 20,
@@ -150,11 +150,11 @@ export class FlowDocument implements IDocument {
             }
         });
 
-        this.DocumentStore.undoManager.setCombineCommands(false);
+        this.projectEditorStore.undoManager.setCombineCommands(false);
     };
 
     pasteSelection = () => {
-        this.DocumentStore.undoManager.setCombineCommands(true);
+        this.projectEditorStore.undoManager.setCombineCommands(true);
 
         this.flow.pasteSelection();
 
@@ -170,7 +170,7 @@ export class FlowDocument implements IDocument {
 
         this.flowContext.viewState.selectedObjects.forEach(objectAdapter => {
             if (objectAdapter.object instanceof Component) {
-                this.flowContext.DocumentStore.updateObject(
+                this.flowContext.projectEditorStore.updateObject(
                     objectAdapter.object,
                     {
                         left:
@@ -182,19 +182,19 @@ export class FlowDocument implements IDocument {
             }
         });
 
-        this.DocumentStore.undoManager.setCombineCommands(false);
+        this.projectEditorStore.undoManager.setCombineCommands(false);
     };
 
-    get DocumentStore() {
+    get projectEditorStore() {
         return getDocumentStore(this.flow.object);
     }
 
     onDragStart(): void {
-        this.DocumentStore.undoManager.setCombineCommands(true);
+        this.projectEditorStore.undoManager.setCombineCommands(true);
     }
 
     onDragEnd(): void {
-        this.DocumentStore.undoManager.setCombineCommands(false);
+        this.projectEditorStore.undoManager.setCombineCommands(false);
     }
 
     connectionExists(
@@ -205,10 +205,10 @@ export class FlowDocument implements IDocument {
     ): boolean {
         const flow = this.flow.object as Flow;
 
-        const sourceObject = this.DocumentStore.getObjectFromObjectId(
+        const sourceObject = this.projectEditorStore.getObjectFromObjectId(
             sourceObjectId
         ) as Component;
-        const targetObject = this.DocumentStore.getObjectFromObjectId(
+        const targetObject = this.projectEditorStore.getObjectFromObjectId(
             targetObjectId
         ) as Component;
 
@@ -229,14 +229,14 @@ export class FlowDocument implements IDocument {
     ) {
         const flow = this.flow.object as Flow;
 
-        const sourceObject = this.DocumentStore.getObjectFromObjectId(
+        const sourceObject = this.projectEditorStore.getObjectFromObjectId(
             sourceObjectId
         ) as Component;
-        const targetObject = this.DocumentStore.getObjectFromObjectId(
+        const targetObject = this.projectEditorStore.getObjectFromObjectId(
             targetObjectId
         ) as Component;
 
-        this.DocumentStore.addObject(flow.connectionLines, {
+        this.projectEditorStore.addObject(flow.connectionLines, {
             source: sourceObject.wireID,
             output: connectionOutput,
             target: targetObject.wireID,

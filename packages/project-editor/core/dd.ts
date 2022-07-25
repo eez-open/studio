@@ -1,7 +1,7 @@
 import { observable, action, makeObservable } from "mobx";
 
 import type { IEezObject } from "project-editor/core/object";
-import type { DocumentStoreClass, UndoManager } from "project-editor/store";
+import type { ProjectEditorStore, UndoManager } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -12,7 +12,7 @@ interface IDropObject {}
 export class DragAndDropManagerClass {
     dragObject: IEezObject | undefined;
     dropObject: IDropObject | undefined;
-    DocumentStore: DocumentStoreClass;
+    projectEditorStore: ProjectEditorStore;
     dragItemDeleted: boolean;
     dropEffect: string | undefined;
     blankDragImage: HTMLImageElement;
@@ -38,12 +38,12 @@ export class DragAndDropManagerClass {
     start(
         event: any,
         dragObject: IEezObject,
-        DocumentStore: DocumentStoreClass
+        projectEditorStore: ProjectEditorStore
     ) {
         this.dragObject = dragObject;
         this.dragItemDeleted = false;
 
-        this.undoManager = DocumentStore.undoManager;
+        this.undoManager = projectEditorStore.undoManager;
         this.undoManager.setCombineCommands(true);
     }
 
@@ -68,7 +68,7 @@ export class DragAndDropManagerClass {
     deleteDragItem(options?: { dropPlace?: IEezObject }) {
         if (this.dropObject && this.dropEffect == "move") {
             if (this.dragObject) {
-                this.undoManager?.DocumentStore.deleteObject(
+                this.undoManager?.projectEditorStore.deleteObject(
                     this.dragObject,
                     options
                 );

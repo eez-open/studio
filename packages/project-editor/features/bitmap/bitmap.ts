@@ -18,12 +18,12 @@ import { getThemedColor } from "project-editor/features/style/theme";
 
 import { showGenericDialog } from "project-editor/core/util";
 
-import { RelativeFileInput } from "project-editor/components/FileInput";
+import { RelativeFileInput } from "project-editor/ui-components/FileInput";
 import { getProject, Project } from "project-editor/project/project";
 
 import { metrics } from "project-editor/features/bitmap/metrics";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { generalGroup } from "project-editor/components/PropertyGrid/groups";
+import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -97,10 +97,10 @@ export class Bitmap extends EezObject {
         check: (bitmap: Bitmap) => {
             let messages: Message[] = [];
 
-            const DocumentStore = getDocumentStore(bitmap);
+            const projectEditorStore = getDocumentStore(bitmap);
 
             ProjectEditor.checkAssetId(
-                DocumentStore,
+                projectEditorStore,
                 "bitmaps",
                 bitmap,
                 messages
@@ -109,9 +109,9 @@ export class Bitmap extends EezObject {
             return messages;
         },
         newItem: (parent: IEezObject) => {
-            const DocumentStore = getDocumentStore(parent);
+            const projectEditorStore = getDocumentStore(parent);
 
-            return showGenericDialog(DocumentStore, {
+            return showGenericDialog(projectEditorStore, {
                 dialogDefinition: {
                     title: "New Bitmap",
                     fields: [

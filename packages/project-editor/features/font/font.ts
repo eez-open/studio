@@ -7,7 +7,7 @@ import { validators } from "eez-studio-shared/validation";
 
 import * as notification from "eez-studio-ui/notification";
 
-import { RelativeFileInput } from "project-editor/components/FileInput";
+import { RelativeFileInput } from "project-editor/ui-components/FileInput";
 
 import {
     ClassInfo,
@@ -47,7 +47,7 @@ import {
     resizeGlyphBitmap,
     serializePixelArray
 } from "project-editor/features/font/utils";
-import { generalGroup } from "project-editor/components/PropertyGrid/groups";
+import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1012,9 +1012,14 @@ export class Font extends EezObject {
         check: (font: Font) => {
             let messages: Message[] = [];
 
-            const DocumentStore = getDocumentStore(font);
+            const projectEditorStore = getDocumentStore(font);
 
-            ProjectEditor.checkAssetId(DocumentStore, "fonts", font, messages);
+            ProjectEditor.checkAssetId(
+                projectEditorStore,
+                "fonts",
+                font,
+                messages
+            );
 
             return messages;
         },

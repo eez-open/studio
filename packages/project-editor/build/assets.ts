@@ -1,4 +1,4 @@
-import type { BuildResult } from "project-editor/core/extensions";
+import type { BuildResult } from "project-editor/store/features";
 
 import { getProperty, MessageType } from "project-editor/core/object";
 
@@ -146,7 +146,7 @@ export class Assets {
         [componentType: number]: string;
     } = {};
 
-    get DocumentStore() {
+    get projectEditorStore() {
         return this.rootProject._DocumentStore;
     }
 
@@ -181,7 +181,7 @@ export class Assets {
         buildConfiguration: BuildConfiguration | undefined,
         public option: "check" | "buildAssets" | "buildFiles"
     ) {
-        this.DocumentStore.typesStore.reset();
+        this.projectEditorStore.typesStore.reset();
 
         this.getConstantIndex(undefined, "undefined"); // undefined has value index 0
         this.getConstantIndex(null, "null"); // null has value index 1
@@ -211,7 +211,7 @@ export class Assets {
 
         for (let i = 0; i < this.pages.length; i++) {
             if (!this.pages[i]) {
-                this.DocumentStore.outputSectionsStore.write(
+                this.projectEditorStore.outputSectionsStore.write(
                     Section.OUTPUT,
                     MessageType.WARNING,
                     `Missing page with ID = ${i + 1}`,
@@ -275,7 +275,7 @@ export class Assets {
 
         for (let i = 0; i < nativeVariables.length; i++) {
             if (!nativeVariables[i]) {
-                this.DocumentStore.outputSectionsStore.write(
+                this.projectEditorStore.outputSectionsStore.write(
                     Section.OUTPUT,
                     MessageType.WARNING,
                     `Missing global variable with ID = ${i + 1}`,
@@ -329,7 +329,7 @@ export class Assets {
 
         for (let i = 0; i < nativeActions.length; i++) {
             if (!nativeActions[i]) {
-                this.DocumentStore.outputSectionsStore.write(
+                this.projectEditorStore.outputSectionsStore.write(
                     Section.OUTPUT,
                     MessageType.WARNING,
                     `Missing action with ID = ${i + 1}`,
@@ -355,7 +355,7 @@ export class Assets {
         // styles
         //
         this.styles = [];
-        if (!this.DocumentStore.project.isDashboardProject) {
+        if (!this.projectEditorStore.project.isDashboardProject) {
             this.getAssets<Style>(
                 project => project.styles,
                 style => style.id != undefined
@@ -366,7 +366,7 @@ export class Assets {
             ).forEach(style => this.styles.push(style));
             for (let i = 0; i < this.styles.length; i++) {
                 if (!this.styles[i]) {
-                    this.DocumentStore.outputSectionsStore.write(
+                    this.projectEditorStore.outputSectionsStore.write(
                         Section.OUTPUT,
                         MessageType.WARNING,
                         `Missing style with ID = ${i + 1}`,
@@ -386,7 +386,7 @@ export class Assets {
         // fonts
         //
         this.fonts = [];
-        if (!this.DocumentStore.project.isDashboardProject) {
+        if (!this.projectEditorStore.project.isDashboardProject) {
             this.getAssets<Font>(
                 project => project.fonts,
                 font => font.id != undefined
@@ -397,7 +397,7 @@ export class Assets {
             ).forEach(font => this.fonts.push(font));
             for (let i = 0; i < this.fonts.length; i++) {
                 if (!this.fonts[i]) {
-                    this.DocumentStore.outputSectionsStore.write(
+                    this.projectEditorStore.outputSectionsStore.write(
                         Section.OUTPUT,
                         MessageType.WARNING,
                         `Missing font with ID = ${i + 1}`,
@@ -416,7 +416,7 @@ export class Assets {
         // bitmaps
         //
         this.bitmaps = [];
-        if (!this.DocumentStore.project.isDashboardProject) {
+        if (!this.projectEditorStore.project.isDashboardProject) {
             this.getAssets<Bitmap>(
                 project => project.bitmaps,
                 bitmap => bitmap.id != undefined
@@ -427,7 +427,7 @@ export class Assets {
             ).forEach(bitmap => this.bitmaps.push(bitmap));
             for (let i = 0; i < this.bitmaps.length; i++) {
                 if (!this.bitmaps[i]) {
-                    this.DocumentStore.outputSectionsStore.write(
+                    this.projectEditorStore.outputSectionsStore.write(
                         Section.OUTPUT,
                         MessageType.WARNING,
                         `Missing bitmap with ID = ${i + 1}`,
@@ -455,8 +455,8 @@ export class Assets {
 
     get utf8Support() {
         return (
-            this.DocumentStore.project.isDashboardProject ||
-            this.DocumentStore.project.isFirmwareWithFlowSupportProject
+            this.projectEditorStore.project.isDashboardProject ||
+            this.projectEditorStore.project.isFirmwareWithFlowSupportProject
         );
     }
 
@@ -474,8 +474,8 @@ export class Assets {
             let assetIndex = collection.indexOf(asset);
             if (assetIndex == -1) {
                 const isMasterProjectAsset =
-                    this.DocumentStore.masterProject &&
-                    getProject(asset) == this.DocumentStore.masterProject;
+                    this.projectEditorStore.masterProject &&
+                    getProject(asset) == this.projectEditorStore.masterProject;
 
                 if (isMasterProjectAsset) {
                     // TODO
@@ -486,12 +486,14 @@ export class Assets {
                 }
             }
             assetIndex++;
-            return this.DocumentStore.masterProject ? -assetIndex : assetIndex;
+            return this.projectEditorStore.masterProject
+                ? -assetIndex
+                : assetIndex;
         }
 
         if (assetName != undefined) {
             const message = propertyNotFoundMessage(object, propertyName);
-            this.DocumentStore.outputSectionsStore.write(
+            this.projectEditorStore.outputSectionsStore.write(
                 Section.OUTPUT,
                 message.type,
                 message.text,
@@ -504,8 +506,8 @@ export class Assets {
 
     getWidgetDataItemIndex(object: any, propertyName: string) {
         if (
-            this.DocumentStore.project.isAppletProject ||
-            this.DocumentStore.project.isFirmwareWithFlowSupportProject
+            this.projectEditorStore.project.isAppletProject ||
+            this.projectEditorStore.project.isFirmwareWithFlowSupportProject
         ) {
             return this.getFlowWidgetDataItemIndex(object, propertyName);
         }
@@ -524,8 +526,8 @@ export class Assets {
 
     getWidgetActionIndex(object: any, propertyName: string) {
         if (
-            this.DocumentStore.project.isAppletProject ||
-            this.DocumentStore.project.isFirmwareWithFlowSupportProject
+            this.projectEditorStore.project.isAppletProject ||
+            this.projectEditorStore.project.isFirmwareWithFlowSupportProject
         ) {
             return this.getFlowWidgetActionIndex(object, propertyName);
         }
@@ -556,7 +558,9 @@ export class Assets {
             for (let i = 0; i < this.styles.length; i++) {
                 const style = this.styles[i];
                 if (style && style.name == styleName) {
-                    return this.DocumentStore.masterProject ? -(i + 1) : i + 1;
+                    return this.projectEditorStore.masterProject
+                        ? -(i + 1)
+                        : i + 1;
                 }
             }
 
@@ -567,10 +571,10 @@ export class Assets {
                 }
 
                 const isMasterProjectStyle =
-                    this.DocumentStore.masterProject &&
-                    getProject(style) == this.DocumentStore.masterProject;
+                    this.projectEditorStore.masterProject &&
+                    getProject(style) == this.projectEditorStore.masterProject;
                 if (isMasterProjectStyle) {
-                    this.DocumentStore.outputSectionsStore.write(
+                    this.projectEditorStore.outputSectionsStore.write(
                         Section.OUTPUT,
                         MessageType.WARNING,
                         `master project style without ID can not be used`,
@@ -578,7 +582,7 @@ export class Assets {
                     );
                 } else {
                     this.styles.push(style);
-                    return this.DocumentStore.masterProject
+                    return this.projectEditorStore.masterProject
                         ? -this.styles.length
                         : this.styles.length;
                 }
@@ -601,18 +605,20 @@ export class Assets {
             for (let i = 0; i < this.styles.length; i++) {
                 const s = this.styles[i];
                 if (s && style.compareTo(s)) {
-                    return this.DocumentStore.masterProject ? -(i + 1) : i + 1;
+                    return this.projectEditorStore.masterProject
+                        ? -(i + 1)
+                        : i + 1;
                 }
             }
 
             const isMasterProjectStyle =
-                this.DocumentStore.masterProject &&
-                getProject(style) == this.DocumentStore.masterProject;
+                this.projectEditorStore.masterProject &&
+                getProject(style) == this.projectEditorStore.masterProject;
             if (isMasterProjectStyle) {
                 if (style.id) {
                     return style.id;
                 } else {
-                    this.DocumentStore.outputSectionsStore.write(
+                    this.projectEditorStore.outputSectionsStore.write(
                         Section.OUTPUT,
                         MessageType.WARNING,
                         `master project style without ID can not be used`,
@@ -621,7 +627,7 @@ export class Assets {
                 }
             } else {
                 this.styles.push(style);
-                return this.DocumentStore.masterProject
+                return this.projectEditorStore.masterProject
                     ? -this.styles.length
                     : this.styles.length;
             }
@@ -650,25 +656,27 @@ export class Assets {
         const project = getProject(object);
 
         let font = findFont(project, fontName);
-        if (!font && project != this.DocumentStore.project) {
-            font = findFont(this.DocumentStore.project, fontName);
+        if (!font && project != this.projectEditorStore.project) {
+            font = findFont(this.projectEditorStore.project, fontName);
         }
 
         if (font) {
             for (let i = 0; i < this.fonts.length; i++) {
                 if (font == this.fonts[i]) {
-                    return this.DocumentStore.masterProject ? -(i + 1) : i + 1;
+                    return this.projectEditorStore.masterProject
+                        ? -(i + 1)
+                        : i + 1;
                 }
             }
 
             const isMasterProjectFont =
-                this.DocumentStore.masterProject &&
-                getProject(font) == this.DocumentStore.masterProject;
+                this.projectEditorStore.masterProject &&
+                getProject(font) == this.projectEditorStore.masterProject;
             if (isMasterProjectFont) {
                 if (font.id) {
                     return font.id;
                 } else {
-                    this.DocumentStore.outputSectionsStore.write(
+                    this.projectEditorStore.outputSectionsStore.write(
                         Section.OUTPUT,
                         MessageType.WARNING,
                         `master project font without ID can not be used`,
@@ -677,7 +685,7 @@ export class Assets {
                 }
             } else {
                 this.fonts.push(font);
-                return this.DocumentStore.masterProject
+                return this.projectEditorStore.masterProject
                     ? -this.fonts.length
                     : this.fonts.length;
             }
@@ -691,25 +699,27 @@ export class Assets {
         const project = getProject(object);
 
         let bitmap = findBitmap(project, bitmapName);
-        if (!bitmap && project != this.DocumentStore.project) {
-            bitmap = findBitmap(this.DocumentStore.project, bitmapName);
+        if (!bitmap && project != this.projectEditorStore.project) {
+            bitmap = findBitmap(this.projectEditorStore.project, bitmapName);
         }
 
         if (bitmap) {
             for (let i = 0; i < this.bitmaps.length; i++) {
                 if (bitmap == this.bitmaps[i]) {
-                    return this.DocumentStore.masterProject ? -(i + 1) : i + 1;
+                    return this.projectEditorStore.masterProject
+                        ? -(i + 1)
+                        : i + 1;
                 }
             }
 
             const isMasterProjectBitmap =
-                this.DocumentStore.masterProject &&
-                getProject(bitmap) == this.DocumentStore.masterProject;
+                this.projectEditorStore.masterProject &&
+                getProject(bitmap) == this.projectEditorStore.masterProject;
             if (isMasterProjectBitmap) {
                 if (bitmap.id) {
                     return bitmap.id;
                 } else {
-                    this.DocumentStore.outputSectionsStore.write(
+                    this.projectEditorStore.outputSectionsStore.write(
                         Section.OUTPUT,
                         MessageType.WARNING,
                         `master project bitmap without ID can not be used`,
@@ -718,7 +728,7 @@ export class Assets {
                 }
             } else {
                 this.bitmaps.push(bitmap);
-                return this.DocumentStore.masterProject
+                return this.projectEditorStore.masterProject
                     ? -this.bitmaps.length
                     : this.bitmaps.length;
             }
@@ -746,9 +756,9 @@ export class Assets {
         // TODO: currently all colors are available from master project,
         // we should add support for exporting colors (internal and exported),
         // like we are doing for styles
-        let colors = this.DocumentStore.project.masterProject
-            ? this.DocumentStore.project.masterProject.buildColors
-            : this.DocumentStore.project.buildColors;
+        let colors = this.projectEditorStore.project.masterProject
+            ? this.projectEditorStore.project.masterProject.buildColors
+            : this.projectEditorStore.project.buildColors;
 
         for (let i = 0; i < colors.length; i++) {
             if (colors[i].name === color) {
@@ -756,7 +766,7 @@ export class Assets {
             }
         }
 
-        if (this.DocumentStore.project.masterProject) {
+        if (this.projectEditorStore.project.masterProject) {
             return 0;
         }
 
@@ -773,7 +783,7 @@ export class Assets {
 
     getTypeIndex(valueType: ValueType) {
         const index =
-            this.DocumentStore.typesStore.getValueTypeIndex(valueType);
+            this.projectEditorStore.typesStore.getValueTypeIndex(valueType);
         if (index == undefined) {
             return -1;
         }
@@ -811,7 +821,7 @@ export class Assets {
                             return false;
                         })
                     ) {
-                        this.DocumentStore.outputSectionsStore.write(
+                        this.projectEditorStore.outputSectionsStore.write(
                             Section.OUTPUT,
                             MessageType.INFO,
                             "Unused style: " + style.name,
@@ -824,7 +834,7 @@ export class Assets {
             if (project.fonts?.length > 0) {
                 project.fonts.forEach(font => {
                     if (this.fonts.indexOf(font) === -1) {
-                        this.DocumentStore.outputSectionsStore.write(
+                        this.projectEditorStore.outputSectionsStore.write(
                             Section.OUTPUT,
                             MessageType.INFO,
                             "Unused font: " + font.name,
@@ -837,7 +847,7 @@ export class Assets {
             if (project.bitmaps?.length > 0) {
                 project.bitmaps.forEach(bitmap => {
                     if (this.bitmaps.indexOf(bitmap) === -1) {
-                        this.DocumentStore.outputSectionsStore.write(
+                        this.projectEditorStore.outputSectionsStore.write(
                             Section.OUTPUT,
                             MessageType.INFO,
                             "Unused bitmap: " + bitmap.name,
@@ -961,7 +971,9 @@ export class Assets {
                 return 0;
             }
 
-            if (this.DocumentStore.project.isFirmwareWithFlowSupportProject) {
+            if (
+                this.projectEditorStore.project.isFirmwareWithFlowSupportProject
+            ) {
                 const action = this.actions.find(
                     action => action.name == actionName
                 );
@@ -1078,7 +1090,7 @@ export class Assets {
             });
         });
 
-        if (this.DocumentStore.project.isDashboardProject) {
+        if (this.projectEditorStore.project.isDashboardProject) {
             this.map.dashboardComponentTypeToNameMap =
                 this.dashboardComponentTypeToNameMap;
         }
@@ -1090,28 +1102,28 @@ export class Assets {
             );
         });
 
-        this.DocumentStore.project.actions.forEach(action => {
+        this.projectEditorStore.project.actions.forEach(action => {
             this.map.actionFlowIndexes[action.name] =
                 this.map.flowIndexes[getObjectPathAsString(action)];
         });
 
-        this.map.types = this.DocumentStore.typesStore.types;
-        this.map.typeIndexes = this.DocumentStore.typesStore.typeIndexes;
+        this.map.types = this.projectEditorStore.typesStore.types;
+        this.map.typeIndexes = this.projectEditorStore.typesStore.typeIndexes;
     }
 
     get displayWidth() {
-        if (this.DocumentStore.project.isDashboardProject) {
+        if (this.projectEditorStore.project.isDashboardProject) {
             return 1;
         }
 
         const maxPageWidth = Math.max(
-            ...this.DocumentStore.project.pages.map(page => page.width)
+            ...this.projectEditorStore.project.pages.map(page => page.width)
         );
 
-        if (this.DocumentStore.project.isFirmwareWithFlowSupportProject) {
+        if (this.projectEditorStore.project.isFirmwareWithFlowSupportProject) {
             return Math.max(
                 maxPageWidth,
-                this.DocumentStore.project.settings.general.displayWidth
+                this.projectEditorStore.project.settings.general.displayWidth
             );
         } else {
             return maxPageWidth;
@@ -1119,18 +1131,18 @@ export class Assets {
     }
 
     get displayHeight() {
-        if (this.DocumentStore.project.isDashboardProject) {
+        if (this.projectEditorStore.project.isDashboardProject) {
             return 1;
         }
 
         const maxPageHeight = Math.max(
-            ...this.DocumentStore.project.pages.map(page => page.height)
+            ...this.projectEditorStore.project.pages.map(page => page.height)
         );
 
-        if (this.DocumentStore.project.isFirmwareWithFlowSupportProject) {
+        if (this.projectEditorStore.project.isFirmwareWithFlowSupportProject) {
             return Math.max(
                 maxPageHeight,
-                this.DocumentStore.project.settings.general.displayHeight
+                this.projectEditorStore.project.settings.general.displayHeight
             );
         } else {
             return maxPageHeight;
@@ -1157,7 +1169,7 @@ function buildHeaderData(
 
     // assetsType
     dataBuffer.writeUint8(
-        assets.DocumentStore.project.settings.general.getProjectTypeAsNumber()
+        assets.projectEditorStore.project.settings.general.getProjectTypeAsNumber()
     );
 
     // reserved
@@ -1171,14 +1183,14 @@ function buildHeaderData(
 
 function buildLanguages(assets: Assets, dataBuffer: DataBuffer) {
     dataBuffer.writeArray(
-        assets.DocumentStore.project.texts?.languages ?? [],
+        assets.projectEditorStore.project.texts?.languages ?? [],
         language => {
             dataBuffer.writeObjectOffset(() => {
                 dataBuffer.writeString(language.languageID);
             });
 
             dataBuffer.writeArray(
-                assets.DocumentStore.project.texts.resources,
+                assets.projectEditorStore.project.texts.resources,
                 textResource => {
                     const translation = textResource.translations.find(
                         translation =>
@@ -1228,13 +1240,13 @@ export async function buildGuiAssetsData(assets: Assets) {
     headerBuffer.buffer.copy(allData, 0, 0, headerBuffer.size);
     compressedBuffer.copy(allData, headerBuffer.size, 0, compressedSize);
 
-    assets.DocumentStore.outputSectionsStore.write(
+    assets.projectEditorStore.outputSectionsStore.write(
         Section.OUTPUT,
         MessageType.INFO,
         "Uncompressed size: " + decompressedSize
     );
 
-    assets.DocumentStore.outputSectionsStore.write(
+    assets.projectEditorStore.outputSectionsStore.write(
         Section.OUTPUT,
         MessageType.INFO,
         "Compressed size: " + compressedSize

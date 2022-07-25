@@ -6,7 +6,7 @@ import * as notification from "eez-studio-ui/notification";
 import { ProjectContext } from "project-editor/project/context";
 import { NavigationComponent } from "project-editor/project/NavigationComponent";
 import { LayoutModels } from "project-editor/store";
-import { ListNavigation } from "project-editor/components/ListNavigation";
+import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { observer } from "mobx-react";
 import { TextAction } from "eez-studio-ui/action";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
@@ -14,7 +14,7 @@ import { validators } from "eez-studio-shared/validation";
 import {
     AbsoluteFileInput,
     AbsoluteFileSaveInput
-} from "project-editor/components/FileInput";
+} from "project-editor/ui-components/FileInput";
 import { readTextFile, writeTextFile } from "eez-studio-shared/util-electron";
 import { LabelWithProgress } from "./LabelWithProgress";
 import { LabelWithInfo } from "./LabelWithInfo";

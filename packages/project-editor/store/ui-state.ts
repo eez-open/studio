@@ -7,7 +7,7 @@ import * as notification from "eez-studio-ui/notification";
 import { IEezObject } from "project-editor/core/object";
 import type { Component } from "project-editor/flow/component";
 import { getObjectPathAsString } from "project-editor/store/helper";
-import type { DocumentStoreClass } from "project-editor/store";
+import type { ProjectEditorStore } from "project-editor/store";
 import { Section } from "project-editor/store/output-sections";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -37,8 +37,8 @@ export class UIStateStore {
     }
 
     get pageRuntimeFrontFace() {
-        return this.DocumentStore.runtime &&
-            !this.DocumentStore.runtime.isDebuggerActive
+        return this.projectEditorStore.runtime &&
+            !this.projectEditorStore.runtime.isDebuggerActive
             ? true
             : this._pageRuntimeFrontFace;
     }
@@ -47,7 +47,7 @@ export class UIStateStore {
         runInAction(() => (this._pageRuntimeFrontFace = value));
     }
 
-    constructor(public DocumentStore: DocumentStoreClass) {
+    constructor(public projectEditorStore: ProjectEditorStore) {
         makeObservable(this, {
             selectedBuildConfiguration: observable,
             features: observable,
@@ -84,8 +84,8 @@ export class UIStateStore {
     }
 
     getUIStateFilePath() {
-        if (this.DocumentStore.filePath) {
-            return this.DocumentStore.filePath + "-ui-state";
+        if (this.projectEditorStore.filePath) {
+            return this.projectEditorStore.filePath + "-ui-state";
         }
         return undefined;
     }
@@ -107,11 +107,13 @@ export class UIStateStore {
         } catch (err) {}
 
         runInAction(() => {
-            this.DocumentStore.navigationStore.loadState(uiState.navigation);
+            this.projectEditorStore.navigationStore.loadState(
+                uiState.navigation
+            );
 
             this.loadObjects(uiState.objects);
 
-            this.DocumentStore.layoutModels.load(uiState.layoutModel);
+            this.projectEditorStore.layoutModels.load(uiState.layoutModel);
 
             this.selectedBuildConfiguration =
                 uiState.selectedBuildConfiguration || "Default";
@@ -128,7 +130,7 @@ export class UIStateStore {
             if (uiState.breakpoints) {
                 for (const key in uiState.breakpoints) {
                     const component =
-                        this.DocumentStore.getObjectFromStringPath(
+                        this.projectEditorStore.getObjectFromStringPath(
                             key
                         ) as Component;
                     if (component) {
@@ -162,7 +164,7 @@ export class UIStateStore {
     }
 
     get objectsJS() {
-        this.DocumentStore.editorsStore.saveState();
+        this.projectEditorStore.editorsStore.saveState();
 
         let map: any = {};
         for (let [key, value] of this.objectUIStates) {
@@ -173,7 +175,7 @@ export class UIStateStore {
             } else {
                 objectPath = key;
             }
-            if (this.DocumentStore.getObjectFromStringPath(objectPath)) {
+            if (this.projectEditorStore.getObjectFromStringPath(objectPath)) {
                 map[key] = value;
             }
         }
@@ -182,9 +184,9 @@ export class UIStateStore {
 
     get toJS() {
         const state = {
-            navigation: this.DocumentStore.navigationStore.saveState(),
-            editors: this.DocumentStore.editorsStore.saveState(),
-            layoutModel: this.DocumentStore.layoutModels.save(),
+            navigation: this.projectEditorStore.navigationStore.saveState(),
+            editors: this.projectEditorStore.editorsStore.saveState(),
+            layoutModel: this.projectEditorStore.layoutModels.save(),
             selectedBuildConfiguration: this.selectedBuildConfiguration,
             features: this.featuresJS,
             objects: this.objectsJS,
@@ -280,29 +282,29 @@ export class UIStateStore {
 
     addBreakpoint(component: Component) {
         this.breakpoints.set(component, true);
-        if (this.DocumentStore.runtime) {
-            this.DocumentStore.runtime.onBreakpointAdded(component);
+        if (this.projectEditorStore.runtime) {
+            this.projectEditorStore.runtime.onBreakpointAdded(component);
         }
     }
 
     removeBreakpoint(component: Component) {
         this.breakpoints.delete(component);
-        if (this.DocumentStore.runtime) {
-            this.DocumentStore.runtime.onBreakpointRemoved(component);
+        if (this.projectEditorStore.runtime) {
+            this.projectEditorStore.runtime.onBreakpointRemoved(component);
         }
     }
 
     enableBreakpoint(component: Component) {
         this.breakpoints.set(component, true);
-        if (this.DocumentStore.runtime) {
-            this.DocumentStore.runtime.onBreakpointEnabled(component);
+        if (this.projectEditorStore.runtime) {
+            this.projectEditorStore.runtime.onBreakpointEnabled(component);
         }
     }
 
     disableBreakpoint(component: Component) {
         this.breakpoints.set(component, false);
-        if (this.DocumentStore.runtime) {
-            this.DocumentStore.runtime.onBreakpointDisabled(component);
+        if (this.projectEditorStore.runtime) {
+            this.projectEditorStore.runtime.onBreakpointDisabled(component);
         }
     }
 
@@ -313,11 +315,11 @@ export class UIStateStore {
 
     ////////////////////////////////////////
     get selectedLanguage() {
-        let language = this.DocumentStore.project.texts?.languages.find(
+        let language = this.projectEditorStore.project.texts?.languages.find(
             language => language.languageID == this.selectedLanguageID
         );
         if (!language) {
-            language = this.DocumentStore.project.texts?.languages[0];
+            language = this.projectEditorStore.project.texts?.languages[0];
         }
         return language;
     }

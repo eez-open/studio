@@ -42,7 +42,7 @@ import {
     generalGroup,
     styleGroup,
     geometryGroup
-} from "project-editor/components/PropertyGrid/groups";
+} from "project-editor/ui-components/PropertyGrid/groups";
 
 import { findStyle } from "project-editor/features/style/style";
 import { getThemedColor } from "project-editor/features/style/theme";
@@ -368,9 +368,14 @@ export class Page extends Flow {
         check: (page: Page) => {
             let messages: Message[] = [];
 
-            const DocumentStore = getDocumentStore(page);
+            const projectEditorStore = getDocumentStore(page);
 
-            ProjectEditor.checkAssetId(DocumentStore, "pages", page, messages);
+            ProjectEditor.checkAssetId(
+                projectEditorStore,
+                "pages",
+                page,
+                messages
+            );
 
             if (page.dataContextOverrides) {
                 try {
@@ -385,11 +390,14 @@ export class Page extends Flow {
                 }
             }
 
-            if (page.style && !findStyle(DocumentStore.project, page.style)) {
+            if (
+                page.style &&
+                !findStyle(projectEditorStore.project, page.style)
+            ) {
                 messages.push(propertyNotFoundMessage(page, "style"));
             }
 
-            if (DocumentStore.project.isFirmwareWithFlowSupportProject) {
+            if (projectEditorStore.project.isFirmwareWithFlowSupportProject) {
                 const isSimulatorPage =
                     page.usedIn &&
                     page.usedIn.length == 1 &&
@@ -398,13 +406,14 @@ export class Page extends Flow {
                 if (
                     !isSimulatorPage &&
                     page.width !=
-                        DocumentStore.project.settings.general.displayWidth &&
+                        projectEditorStore.project.settings.general
+                            .displayWidth &&
                     !(page.scaleToFit || page.isUsedAsCustomWidget)
                 ) {
                     messages.push(
                         new Message(
                             MessageType.WARNING,
-                            `Width (${page.width}) is different from display width (${DocumentStore.project.settings.general.displayWidth})`,
+                            `Width (${page.width}) is different from display width (${projectEditorStore.project.settings.general.displayWidth})`,
                             getChildOfObject(page, "width")
                         )
                     );
@@ -423,13 +432,14 @@ export class Page extends Flow {
                 if (
                     !isSimulatorPage &&
                     page.height !=
-                        DocumentStore.project.settings.general.displayHeight &&
+                        projectEditorStore.project.settings.general
+                            .displayHeight &&
                     !(page.scaleToFit || page.isUsedAsCustomWidget)
                 ) {
                     messages.push(
                         new Message(
                             MessageType.WARNING,
-                            `Height (${page.height}) is different from display height (${DocumentStore.project.settings.general.displayHeight})`,
+                            `Height (${page.height}) is different from display height (${projectEditorStore.project.settings.general.displayHeight})`,
                             getChildOfObject(page, "height")
                         )
                     );
@@ -513,21 +523,22 @@ export class Page extends Flow {
     }
 
     get isRuntimeSelectedPage() {
-        const DocumentStore = getDocumentStore(this);
+        const projectEditorStore = getDocumentStore(this);
         return (
-            DocumentStore.runtime &&
-            DocumentStore.runtime instanceof ProjectEditor.WasmRuntimeClass &&
-            DocumentStore.runtime.selectedPage == this &&
-            !DocumentStore.project.isDashboardProject
+            projectEditorStore.runtime &&
+            projectEditorStore.runtime instanceof
+                ProjectEditor.WasmRuntimeClass &&
+            projectEditorStore.runtime.selectedPage == this &&
+            !projectEditorStore.project.isDashboardProject
         );
     }
 
     renderWidgetComponents(flowContext: IFlowContext) {
         const scaleToFit =
             this.scaleToFit &&
-            flowContext.DocumentStore.project.isDashboardProject &&
-            flowContext.DocumentStore.runtime &&
-            !flowContext.DocumentStore.runtime.isDebuggerActive;
+            flowContext.projectEditorStore.project.isDashboardProject &&
+            flowContext.projectEditorStore.runtime &&
+            !flowContext.projectEditorStore.runtime.isDebuggerActive;
 
         let width: number | undefined;
         let height: number | undefined;
@@ -540,7 +551,7 @@ export class Page extends Flow {
             <>
                 {this.isRuntimeSelectedPage ? (
                     (
-                        flowContext.DocumentStore.runtime! as WasmRuntime
+                        flowContext.projectEditorStore.runtime! as WasmRuntime
                     ).renderPage()
                 ) : (
                     <ComponentEnclosure
@@ -584,11 +595,11 @@ export class Page extends Flow {
 
         const isLayoutViewWidgetPage =
             !flowContext.document.findObjectById(getId(this)) &&
-            !flowContext.DocumentStore.runtime;
+            !flowContext.projectEditorStore.runtime;
 
         let pageBackground;
         if (
-            !flowContext.DocumentStore.project.isDashboardProject &&
+            !flowContext.projectEditorStore.project.isDashboardProject &&
             !isLayoutViewWidgetPage
         ) {
             pageBackground = (
@@ -632,8 +643,8 @@ export class Page extends Flow {
                     width={width}
                     height={height}
                     isRTL={
-                        flowContext.DocumentStore.runtime
-                            ? flowContext.DocumentStore.runtime.isRTL
+                        flowContext.projectEditorStore.runtime
+                            ? flowContext.projectEditorStore.runtime.isRTL
                             : undefined
                     }
                 />
@@ -649,7 +660,7 @@ export class Page extends Flow {
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
         const isLayoutViewWidgetPage =
             !flowContext.document.findObjectById(getId(this)) &&
-            !flowContext.DocumentStore.runtime;
+            !flowContext.projectEditorStore.runtime;
         if (isLayoutViewWidgetPage) {
             // this is LayoutViewWidget page, forbid interaction with the content
             // and do not draw background (it is drawn by LayoutViewWidget)
@@ -663,7 +674,7 @@ export class Page extends Flow {
             if (pageStyle && pageStyle.backgroundColorProperty) {
                 style.backgroundColor = to16bitsColor(
                     getThemedColor(
-                        flowContext.DocumentStore,
+                        flowContext.projectEditorStore,
                         pageStyle.backgroundColorProperty
                     )
                 );
@@ -677,7 +688,7 @@ export class Page extends Flow {
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
         // widgets
-        const widgets = assets.DocumentStore.project.isDashboardProject
+        const widgets = assets.projectEditorStore.project.isDashboardProject
             ? []
             : (this.components.filter(
                   widget => widget instanceof Widget

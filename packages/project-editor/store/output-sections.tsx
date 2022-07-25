@@ -18,7 +18,7 @@ import {
 } from "project-editor/store/helper";
 
 import { IPanel } from "project-editor/store/navigation";
-import type { DocumentStoreClass } from "project-editor/store";
+import type { ProjectEditorStore } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -117,7 +117,7 @@ export class OutputSection implements IPanel {
     selectedMessage: Message | undefined;
 
     constructor(
-        public DocumentStore: DocumentStoreClass,
+        public projectEditorStore: ProjectEditorStore,
         public id: number,
         public name: string,
         public scrollToBottom: boolean,
@@ -138,7 +138,9 @@ export class OutputSection implements IPanel {
     }
 
     get active() {
-        return this.DocumentStore.uiStateStore.activeOutputSection === this.id;
+        return (
+            this.projectEditorStore.uiStateStore.activeOutputSection === this.id
+        );
     }
 
     get title(): string | React.ReactNode {
@@ -175,7 +177,7 @@ export class OutputSection implements IPanel {
 
         if (
             this.id == Section.SEARCH &&
-            (this.DocumentStore.uiStateStore.searchPattern ||
+            (this.projectEditorStore.uiStateStore.searchPattern ||
                 this.messages.length > 0)
         ) {
             return `${this.name} (${this.messages.length})`;
@@ -242,7 +244,7 @@ export class OutputSection implements IPanel {
         }
 
         if (message.object) {
-            this.DocumentStore.navigationStore.showObjects(
+            this.projectEditorStore.navigationStore.showObjects(
                 [message.object],
                 true,
                 true,
@@ -255,7 +257,7 @@ export class OutputSection implements IPanel {
 export class OutputSections {
     sections: OutputSection[] = [];
 
-    constructor(public DocumentStore: DocumentStoreClass) {
+    constructor(public projectEditorStore: ProjectEditorStore) {
         makeObservable(this, {
             setLoading: action,
             clear: action,
@@ -264,21 +266,21 @@ export class OutputSections {
         });
 
         this.sections[Section.CHECKS] = new OutputSection(
-            DocumentStore,
+            projectEditorStore,
             Section.CHECKS,
             "Checks",
             false,
             "CHECKS"
         );
         this.sections[Section.OUTPUT] = new OutputSection(
-            DocumentStore,
+            projectEditorStore,
             Section.OUTPUT,
             "Output",
             true,
             "OUTPUT"
         );
         this.sections[Section.SEARCH] = new OutputSection(
-            DocumentStore,
+            projectEditorStore,
             Section.SEARCH,
             "Search results",
             false,

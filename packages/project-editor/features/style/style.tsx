@@ -46,7 +46,7 @@ import type { Project } from "project-editor/project/project";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import { MenuItem } from "@electron/remote";
-import { generalGroup } from "project-editor/components/PropertyGrid/groups";
+import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
 export type BorderRadiusSpec = {
     topLeftX: number;
@@ -168,7 +168,7 @@ const inheritFromProperty: PropertyInfo = {
     type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: "styles",
     propertyMenu: (props: PropertyProps): Electron.MenuItem[] => {
-        const DocumentStore = getDocumentStore(props.objects[0]);
+        const projectEditorStore = getDocumentStore(props.objects[0]);
 
         let menuItems: Electron.MenuItem[] = [];
 
@@ -206,7 +206,8 @@ const inheritFromProperty: PropertyInfo = {
                                                 validators.required,
                                                 validators.unique(
                                                     {},
-                                                    DocumentStore.project.styles
+                                                    projectEditorStore.project
+                                                        .styles
                                                 )
                                             ]
                                         }
@@ -214,7 +215,7 @@ const inheritFromProperty: PropertyInfo = {
                                 },
                                 values: {}
                             }).then(result => {
-                                DocumentStore.undoManager.setCombineCommands(
+                                projectEditorStore.undoManager.setCombineCommands(
                                     true
                                 );
 
@@ -234,16 +235,16 @@ const inheritFromProperty: PropertyInfo = {
                                 objectPropertyValues.inheritFrom =
                                     result.values.name;
 
-                                DocumentStore.addObject(
-                                    DocumentStore.project.styles,
+                                projectEditorStore.addObject(
+                                    projectEditorStore.project.styles,
                                     stylePropertyValues
                                 );
-                                DocumentStore.updateObject(
+                                projectEditorStore.updateObject(
                                     object,
                                     objectPropertyValues
                                 );
 
-                                DocumentStore.undoManager.setCombineCommands(
+                                projectEditorStore.undoManager.setCombineCommands(
                                     false
                                 );
                             });
@@ -252,7 +253,7 @@ const inheritFromProperty: PropertyInfo = {
                 );
 
                 const style = findStyle(
-                    DocumentStore.project,
+                    projectEditorStore.project,
                     (props.objects[0] as Style).inheritFrom
                 );
                 if (style) {
@@ -260,7 +261,7 @@ const inheritFromProperty: PropertyInfo = {
                         new MenuItem({
                             label: "Update Style",
                             click: () => {
-                                DocumentStore.undoManager.setCombineCommands(
+                                projectEditorStore.undoManager.setCombineCommands(
                                     true
                                 );
 
@@ -286,16 +287,16 @@ const inheritFromProperty: PropertyInfo = {
                                     }
                                 });
 
-                                DocumentStore.updateObject(
+                                projectEditorStore.updateObject(
                                     style,
                                     stylePropertyValues
                                 );
-                                DocumentStore.updateObject(
+                                projectEditorStore.updateObject(
                                     object,
                                     objectPropertyValues
                                 );
 
-                                DocumentStore.undoManager.setCombineCommands(
+                                projectEditorStore.undoManager.setCombineCommands(
                                     false
                                 );
                             }
@@ -1039,12 +1040,15 @@ export class Style extends EezObject {
         check: (style: Style) => {
             let messages: Message[] = [];
 
-            const DocumentStore = getDocumentStore(style);
+            const projectEditorStore = getDocumentStore(style);
 
             function checkColor(propertyName: string) {
                 const color = (style as any)[propertyName];
                 if (color) {
-                    const colorValue = getThemedColor(DocumentStore, color);
+                    const colorValue = getThemedColor(
+                        projectEditorStore,
+                        color
+                    );
                     if (!isValid(colorValue)) {
                         messages.push(
                             new Message(
@@ -1065,10 +1069,10 @@ export class Style extends EezObject {
             checkColor("focusBackgroundColor");
             checkColor("borderColor");
 
-            if (DocumentStore.project.isDashboardProject) {
+            if (projectEditorStore.project.isDashboardProject) {
                 if (
                     style.inheritFrom &&
-                    !findStyle(DocumentStore.project, style.inheritFrom)
+                    !findStyle(projectEditorStore.project, style.inheritFrom)
                 ) {
                     messages.push(
                         propertyNotFoundMessage(style, "inheritFrom")
@@ -1078,7 +1082,7 @@ export class Style extends EezObject {
                 // TODO
             } else {
                 ProjectEditor.checkAssetId(
-                    DocumentStore,
+                    projectEditorStore,
                     "styles",
                     style,
                     messages
@@ -1086,7 +1090,7 @@ export class Style extends EezObject {
 
                 if (
                     style.inheritFrom &&
-                    !findStyle(DocumentStore.project, style.inheritFrom)
+                    !findStyle(projectEditorStore.project, style.inheritFrom)
                 ) {
                     messages.push(
                         propertyNotFoundMessage(style, "inheritFrom")
@@ -1180,7 +1184,7 @@ export class Style extends EezObject {
                     }
 
                     if (
-                        DocumentStore.project.settings.general
+                        projectEditorStore.project.settings.general
                             .projectVersion !== "v1"
                     ) {
                         if (isNaN(style.activeColor16)) {
@@ -1724,7 +1728,7 @@ export class Style extends EezObject {
     }
 
     get cssDeclarations() {
-        const DocumentStore = getDocumentStore(this);
+        const projectEditorStore = getDocumentStore(this);
 
         let spec = [
             {
@@ -1736,17 +1740,21 @@ export class Style extends EezObject {
                     ["font-style", this.fontStyle],
                     [
                         "color",
-                        this.color && getThemedColor(DocumentStore, this.color)
+                        this.color &&
+                            getThemedColor(projectEditorStore, this.color)
                     ],
                     [
                         "background-color",
                         this.backgroundColor &&
-                            getThemedColor(DocumentStore, this.backgroundColor)
+                            getThemedColor(
+                                projectEditorStore,
+                                this.backgroundColor
+                            )
                     ],
                     [
                         "border-color",
                         this.borderColor &&
-                            getThemedColor(DocumentStore, this.borderColor)
+                            getThemedColor(projectEditorStore, this.borderColor)
                     ],
                     ["border-style", this.borderStyle],
                     ["box-shadow", this.boxShadow]
@@ -1758,13 +1766,13 @@ export class Style extends EezObject {
                     [
                         "color",
                         this.activeColor &&
-                            getThemedColor(DocumentStore, this.activeColor)
+                            getThemedColor(projectEditorStore, this.activeColor)
                     ],
                     [
                         "background-color",
                         this.activeBackgroundColor &&
                             getThemedColor(
-                                DocumentStore,
+                                projectEditorStore,
                                 this.activeBackgroundColor
                             )
                     ]
@@ -1776,13 +1784,13 @@ export class Style extends EezObject {
                     [
                         "color",
                         this.focusColor &&
-                            getThemedColor(DocumentStore, this.focusColor)
+                            getThemedColor(projectEditorStore, this.focusColor)
                     ],
                     [
                         "background-color",
                         this.focusBackgroundColor &&
                             getThemedColor(
-                                DocumentStore,
+                                projectEditorStore,
                                 this.focusBackgroundColor
                             )
                     ]

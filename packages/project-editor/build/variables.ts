@@ -1,4 +1,4 @@
-import type { BuildResult } from "project-editor/core/extensions";
+import type { BuildResult } from "project-editor/store/features";
 
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 
@@ -66,7 +66,9 @@ export function buildVariables(
 
         let projectVariables = assets.globalVariables;
 
-        if (assets.DocumentStore.project.isFirmwareWithFlowSupportProject) {
+        if (
+            assets.projectEditorStore.project.isFirmwareWithFlowSupportProject
+        ) {
             // only native
             projectVariables = projectVariables.filter(
                 variable => assets.option == "buildFiles" && variable.native
@@ -95,7 +97,7 @@ export function buildVariables(
 
 export function buildVariableNames(assets: Assets, dataBuffer: DataBuffer) {
     dataBuffer.writeArray(
-        assets.DocumentStore.masterProject ? assets.globalVariables : [],
+        assets.projectEditorStore.masterProject ? assets.globalVariables : [],
         variable => {
             dataBuffer.writeString(variable.name);
         }

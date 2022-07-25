@@ -39,7 +39,7 @@ import type * as ProjectEditorModule from "project-editor/project/ProjectEditor"
 
 import { Loader } from "eez-studio-ui/loader";
 
-import { DocumentStoreClass } from "project-editor/store";
+import { ProjectEditorStore } from "project-editor/store";
 
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditorView } from "project-editor/project/ProjectEditor";
@@ -437,7 +437,7 @@ export class ProjectEditorTab implements IHomeTab {
     constructor(public tabs: Tabs, public _filePath: string | undefined) {
         makeObservable(this, {
             _active: observable,
-            DocumentStore: observable,
+            projectEditorStore: observable,
             error: observable,
             makeActive: action,
             showCommandPalette: action
@@ -448,11 +448,11 @@ export class ProjectEditorTab implements IHomeTab {
     _active: boolean = false;
     loading: boolean = false;
 
-    DocumentStore: DocumentStoreClass | undefined;
+    projectEditorStore: ProjectEditorStore | undefined;
 
     error: string | undefined;
 
-    ProjectContext: React.Context<DocumentStoreClass>;
+    ProjectContext: React.Context<ProjectEditorStore>;
     ProjectEditor: typeof ProjectEditorModule.ProjectEditorView;
 
     closed: boolean = false;
@@ -464,28 +464,28 @@ export class ProjectEditorTab implements IHomeTab {
             this.ProjectEditor = ProjectEditorView;
 
             await initProjectEditor(tabs, ProjectEditorTab);
-            const DocumentStore = await DocumentStoreClass.create();
+            const projectEditorStore = await ProjectEditorStore.create();
 
             if (this._filePath) {
-                await DocumentStore.openFile(this._filePath);
+                await projectEditorStore.openFile(this._filePath);
             } else {
-                await DocumentStore.newProject();
+                await projectEditorStore.newProject();
             }
 
-            await DocumentStore.loadAllExternalProjects();
+            await projectEditorStore.loadAllExternalProjects();
             runInAction(() => {
-                DocumentStore.project._fullyLoaded = true;
+                projectEditorStore.project._fullyLoaded = true;
             });
 
-            if (!DocumentStore.project._isDashboardBuild) {
-                DocumentStore.startBackgroundCheck();
+            if (!projectEditorStore.project._isDashboardBuild) {
+                projectEditorStore.startBackgroundCheck();
             } else {
-                DocumentStore.setRuntimeMode(false);
+                projectEditorStore.setRuntimeMode(false);
             }
 
             if (!this.closed) {
                 runInAction(() => {
-                    this.DocumentStore = DocumentStore;
+                    this.projectEditorStore = projectEditorStore;
                 });
             }
         } catch (err) {
@@ -517,12 +517,12 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     async addListeners() {
-        if (!this.DocumentStore && !this.error) {
+        if (!this.projectEditorStore && !this.error) {
             await this.loadProject();
         }
 
-        const DocumentStore = this.DocumentStore;
-        if (!DocumentStore) {
+        const projectEditorStore = this.projectEditorStore;
+        if (!projectEditorStore) {
             return;
         }
 
@@ -532,43 +532,43 @@ export class ProjectEditorTab implements IHomeTab {
         }
 
         const save = () => {
-            DocumentStore.save();
+            projectEditorStore.save();
         };
         const saveAs = () => {
-            DocumentStore.saveAs();
+            projectEditorStore.saveAs();
         };
         const check = () => {
-            DocumentStore.check();
+            projectEditorStore.check();
         };
         const build = () => {
-            DocumentStore.build();
+            projectEditorStore.build();
         };
         const buildExtensions = () => {
-            DocumentStore.buildExtensions();
+            projectEditorStore.buildExtensions();
         };
         const undo = () => {
-            DocumentStore.undoManager.undo();
+            projectEditorStore.undoManager.undo();
         };
         const redo = () => {
-            DocumentStore.undoManager.redo();
+            projectEditorStore.undoManager.redo();
         };
         const cut = () => {
-            if (DocumentStore.navigationStore.selectedPanel)
-                DocumentStore.navigationStore.selectedPanel.cutSelection();
+            if (projectEditorStore.navigationStore.selectedPanel)
+                projectEditorStore.navigationStore.selectedPanel.cutSelection();
         };
         const copy = () => {
-            if (DocumentStore.navigationStore.selectedPanel)
-                DocumentStore.navigationStore.selectedPanel.copySelection();
+            if (projectEditorStore.navigationStore.selectedPanel)
+                projectEditorStore.navigationStore.selectedPanel.copySelection();
         };
         const paste = () => {
-            if (DocumentStore.navigationStore.selectedPanel)
-                DocumentStore.navigationStore.selectedPanel.pasteSelection();
+            if (projectEditorStore.navigationStore.selectedPanel)
+                projectEditorStore.navigationStore.selectedPanel.pasteSelection();
         };
         const deleteSelection = () => {
-            if (DocumentStore.navigationStore.selectedPanel)
-                DocumentStore.navigationStore.selectedPanel.deleteSelection();
+            if (projectEditorStore.navigationStore.selectedPanel)
+                projectEditorStore.navigationStore.selectedPanel.deleteSelection();
         };
-        const showMetrics = () => DocumentStore.showMetrics();
+        const showMetrics = () => projectEditorStore.showMetrics();
 
         ipcRenderer.on("save", save);
         ipcRenderer.on("saveAs", saveAs);
@@ -601,7 +601,7 @@ export class ProjectEditorTab implements IHomeTab {
 
     get filePath() {
         return (
-            (this.DocumentStore && this.DocumentStore.filePath) ||
+            (this.projectEditorStore && this.projectEditorStore.filePath) ||
             this._filePath ||
             ""
         );
@@ -612,8 +612,8 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     get title() {
-        if (this.DocumentStore) {
-            return this.DocumentStore.title;
+        if (this.projectEditorStore) {
+            return this.projectEditorStore.title;
         }
 
         if (this.filePath) {
@@ -641,7 +641,7 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     render() {
-        if (!this.DocumentStore) {
+        if (!this.projectEditorStore) {
             return (
                 <div
                     style={{
@@ -660,7 +660,7 @@ export class ProjectEditorTab implements IHomeTab {
         }
 
         return (
-            <this.ProjectContext.Provider value={this.DocumentStore}>
+            <this.ProjectContext.Provider value={this.projectEditorStore}>
                 <this.ProjectEditor />
             </this.ProjectContext.Provider>
         );
@@ -671,12 +671,12 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     async close() {
-        if (this.DocumentStore) {
-            if (await this.DocumentStore.closeWindow()) {
+        if (this.projectEditorStore) {
+            if (await this.projectEditorStore.closeWindow()) {
                 this.tabs.removeTab(this);
-                this.DocumentStore.unmount();
+                this.projectEditorStore.unmount();
                 runInAction(() => {
-                    this.DocumentStore = undefined;
+                    this.projectEditorStore = undefined;
                 });
             }
         } else {
@@ -686,22 +686,22 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     async beforeAppClose() {
-        if (this.DocumentStore) {
-            return await this.DocumentStore.closeWindow();
+        if (this.projectEditorStore) {
+            return await this.projectEditorStore.closeWindow();
         }
 
         return true;
     }
 
     showCommandPalette() {
-        if (this.DocumentStore) {
-            this.DocumentStore.uiStateStore.showCommandPalette = true;
+        if (this.projectEditorStore) {
+            this.projectEditorStore.uiStateStore.showCommandPalette = true;
         }
     }
 
     loadDebugInfo(filePath: string) {
-        if (this.DocumentStore) {
-            this.DocumentStore.loadDebugInfo(filePath);
+        if (this.projectEditorStore) {
+            this.projectEditorStore.loadDebugInfo(filePath);
         }
     }
 }

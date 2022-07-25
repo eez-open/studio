@@ -117,17 +117,18 @@ export class PageTabState extends FlowTabState {
 
     get frontFace() {
         return this.isRuntime
-            ? this.DocumentStore.uiStateStore.pageRuntimeFrontFace
-            : this.DocumentStore.uiStateStore.pageEditorFrontFace;
+            ? this.projectEditorStore.uiStateStore.pageRuntimeFrontFace
+            : this.projectEditorStore.uiStateStore.pageEditorFrontFace;
     }
 
     set frontFace(frontFace: boolean) {
         runInAction(() => {
             if (this.isRuntime) {
-                this.DocumentStore.uiStateStore.pageRuntimeFrontFace =
+                this.projectEditorStore.uiStateStore.pageRuntimeFrontFace =
                     frontFace;
             } else {
-                this.DocumentStore.uiStateStore.pageEditorFrontFace = frontFace;
+                this.projectEditorStore.uiStateStore.pageEditorFrontFace =
+                    frontFace;
             }
         });
     }
@@ -155,7 +156,7 @@ export class PageTabState extends FlowTabState {
             return;
         }
 
-        const state = this.DocumentStore.uiStateStore.getObjectUIState(
+        const state = this.projectEditorStore.uiStateStore.getObjectUIState(
             this.flow,
             "flow-state"
         );
@@ -200,7 +201,7 @@ export class PageTabState extends FlowTabState {
             timeline: this.timeline.saveState()
         };
 
-        this.DocumentStore.uiStateStore.updateObjectUIState(
+        this.projectEditorStore.uiStateStore.updateObjectUIState(
             this.flow,
             "flow-state",
             state

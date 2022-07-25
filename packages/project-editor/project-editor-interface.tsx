@@ -1,5 +1,5 @@
 import type { ProjectEditorTab, Tabs } from "home/tabs-store";
-import type { Extension } from "project-editor/core/extensions";
+import type { ProjectEditorFeature } from "project-editor/store/features";
 import type { IDocumentSearch } from "project-editor/core/search";
 import type { DataContext } from "project-editor/features/variable/variable";
 import type { RemoteRuntime } from "project-editor/flow/remote-runtime";
@@ -57,7 +57,7 @@ export interface IProjectEditor {
     homeTabs: Tabs;
     ProjectEditorTabClass: typeof ProjectEditorTab;
     DataContextClass: typeof DataContext;
-    extensions: Extension[];
+    extensions: ProjectEditorFeature[];
     documentSearch: IDocumentSearch;
     RemoteRuntimeClass: typeof RemoteRuntime;
     WasmRuntimeClass: typeof WasmRuntime;

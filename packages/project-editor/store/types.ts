@@ -5,7 +5,7 @@ import type {
 } from "eez-studio-types";
 
 import type { Structure } from "project-editor/features/variable/variable";
-import type { DocumentStoreClass } from "project-editor/store";
+import type { ProjectEditorStore } from "project-editor/store";
 import {
     getStructureFromType,
     isObjectType,
@@ -32,7 +32,7 @@ export class TypesStore {
     _numDynamicTypes: number = 0;
     lastChangeTime: number;
 
-    constructor(public DocumentStore: DocumentStoreClass) {
+    constructor(public projectEditorStore: ProjectEditorStore) {
         makeObservable(this, {
             allValueTypes: computed,
             lastChangeTime: observable
@@ -86,12 +86,14 @@ export class TypesStore {
             allValueTypes.push(`array:${basicTypeName}`);
         });
 
-        this.DocumentStore.project.variables.structsMap.forEach(structure => {
-            allValueTypes.push(`struct:${structure.name}`);
-            allValueTypes.push(`array:struct:${structure.name}`);
-        });
+        this.projectEditorStore.project.variables.structsMap.forEach(
+            structure => {
+                allValueTypes.push(`struct:${structure.name}`);
+                allValueTypes.push(`array:struct:${structure.name}`);
+            }
+        );
 
-        this.DocumentStore.project.variables.enumsMap.forEach(enumDef => {
+        this.projectEditorStore.project.variables.enumsMap.forEach(enumDef => {
             allValueTypes.push(`enum:${enumDef.name}`);
             allValueTypes.push(`array:enum:${enumDef.name}`);
         });
@@ -223,7 +225,7 @@ export class TypesStore {
 
         if (isStructType(valueType)) {
             const structure = getStructureFromType(
-                this.DocumentStore.project,
+                this.projectEditorStore.project,
                 valueType
             );
             if (structure) {

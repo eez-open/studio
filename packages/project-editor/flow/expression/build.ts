@@ -151,11 +151,11 @@ function buildExpressionNode(
     }
 
     if (node.type == "TextResource") {
-        if (assets.DocumentStore.project.texts) {
+        if (assets.projectEditorStore.project.texts) {
             return [
                 makePushConstantInstruction(
                     assets,
-                    assets.DocumentStore.project.texts.resources.findIndex(
+                    assets.projectEditorStore.project.texts.resources.findIndex(
                         textResource => textResource.resourceID == node.value
                     ),
                     "integer"
@@ -360,7 +360,7 @@ function buildExpressionNode(
                 return [
                     makePushConstantInstruction(
                         assets,
-                        buildInConstantValue.value(assets.DocumentStore),
+                        buildInConstantValue.value(assets.projectEditorStore),
                         buildInConstantValue.valueType
                     )
                 ];
@@ -385,10 +385,11 @@ function buildExpressionNode(
             ];
         } else {
             const fieldName = (node.property as IdentifierExpressionNode).name;
-            const fieldIndex = assets.DocumentStore.typesStore.getFieldIndex(
-                node.object.valueType,
-                fieldName
-            );
+            const fieldIndex =
+                assets.projectEditorStore.typesStore.getFieldIndex(
+                    node.object.valueType,
+                    fieldName
+                );
 
             if (fieldIndex == undefined) {
                 throw `field not found: "${node.object.valueType}"."${fieldName}"`;
@@ -434,7 +435,9 @@ function buildExpressionNode(
     }
 
     if (node.type == "ObjectExpression") {
-        const type = assets.DocumentStore.typesStore.getType(node.valueType);
+        const type = assets.projectEditorStore.typesStore.getType(
+            node.valueType
+        );
         if (!type || type.kind != "object") {
             throw `Can't build ObjectExpression for type: ${node.valueType}`;
         }

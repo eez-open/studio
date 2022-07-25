@@ -60,7 +60,7 @@ import {
     ValueType,
     VariableTypeUI
 } from "project-editor/features/variable/value-type";
-import { specificGroup } from "project-editor/components/PropertyGrid/groups";
+import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import {
     COMPONENT_TYPE_START_ACTION,
     COMPONENT_TYPE_END_ACTION,
@@ -698,7 +698,7 @@ export class EvalJSExprActionComponent extends ActionComponent {
                 // as property
                 buildExpression(assets, dataBuffer, this, valueExpression);
             } catch (err) {
-                assets.DocumentStore.outputSectionsStore.write(
+                assets.projectEditorStore.outputSectionsStore.write(
                     Section.OUTPUT,
                     MessageType.ERROR,
                     err,
@@ -1478,7 +1478,7 @@ export class ConstantActionComponent extends ActionComponent {
             );
             dataBuffer.writeUint16(assets.getConstantIndex(value, valueType));
         } catch (err) {
-            assets.DocumentStore.outputSectionsStore.write(
+            assets.projectEditorStore.outputSectionsStore.write(
                 Section.OUTPUT,
                 MessageType.ERROR,
                 err.toString(),
@@ -3522,8 +3522,8 @@ export class CommentActionComponent extends ActionComponent {
                 flowContext={flowContext}
                 value={this.text}
                 setValue={action((value: string) => {
-                    const DocumentStore = getDocumentStore(this);
-                    DocumentStore.updateObject(this, {
+                    const projectEditorStore = getDocumentStore(this);
+                    projectEditorStore.updateObject(this, {
                         text: value
                     });
                 })}

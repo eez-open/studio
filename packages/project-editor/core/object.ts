@@ -6,7 +6,7 @@ import { humanize } from "eez-studio-shared/string";
 import { Rect } from "eez-studio-shared/geometry";
 
 import type {
-    DocumentStoreClass,
+    ProjectEditorStore,
     IContextMenuContext
 } from "project-editor/store";
 
@@ -209,7 +209,7 @@ export interface ClassInfo {
         propertyName: string
     ) => InheritedValue;
     defaultValue?: any;
-    componentDefaultValue?: (DocumentStore: DocumentStoreClass) => any;
+    componentDefaultValue?: (projectEditorStore: ProjectEditorStore) => any;
     findPastePlaceInside?: (
         object: IEezObject,
         classInfo: ClassInfo,

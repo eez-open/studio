@@ -8,7 +8,7 @@ import AutoSizer from "react-virtualized-auto-sizer";
 import { IconAction } from "eez-studio-ui/action";
 
 import { IEezObject } from "project-editor/core/object";
-import { Panel } from "project-editor/components/Panel";
+import { Panel } from "project-editor/ui-components/Panel";
 import { LogItem } from "project-editor/flow/debugger/logs";
 import { RuntimeBase } from "project-editor/flow/runtime";
 import { ProjectContext } from "project-editor/project/context";

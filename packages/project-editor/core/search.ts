@@ -17,7 +17,7 @@ import {
     getClassInfo,
     EezValueObject,
     Section,
-    DocumentStoreClass,
+    ProjectEditorStore,
     getDocumentStore,
     objectToString
 } from "project-editor/store";
@@ -365,7 +365,7 @@ export class CurrentSearch {
 
     searchCallback?: SearchCallback;
 
-    constructor(public DocumentStore: DocumentStoreClass) {}
+    constructor(public projectEditorStore: ProjectEditorStore) {}
 
     finishSearch() {
         if (this.searchCallback) {
@@ -378,7 +378,7 @@ export class CurrentSearch {
             this.interval = undefined;
         }
 
-        this.DocumentStore.outputSectionsStore.setLoading(
+        this.projectEditorStore.outputSectionsStore.setLoading(
             Section.SEARCH,
             false
         );
@@ -390,13 +390,13 @@ export class CurrentSearch {
         matchWholeWord: boolean,
         searchCallback?: SearchCallback
     ) {
-        this.DocumentStore.outputSectionsStore.clear(Section.SEARCH);
+        this.projectEditorStore.outputSectionsStore.clear(Section.SEARCH);
 
         this.finishSearch();
 
         this.searchCallback = searchCallback;
 
-        const root = this.DocumentStore.project;
+        const root = this.projectEditorStore.project;
 
         if (
             root &&
@@ -417,7 +417,7 @@ export class CurrentSearch {
                     ? searchForReference(root, patternOrObject, true)
                     : searchForAllReferences(root, true);
 
-            this.DocumentStore.outputSectionsStore.setLoading(
+            this.projectEditorStore.outputSectionsStore.setLoading(
                 Section.SEARCH,
                 true
             );
@@ -442,7 +442,7 @@ export class CurrentSearch {
                                 return;
                             }
                         } else {
-                            this.DocumentStore.outputSectionsStore.write(
+                            this.projectEditorStore.outputSectionsStore.write(
                                 Section.SEARCH,
                                 MessageType.INFO,
                                 objectToString(valueObject),
@@ -471,13 +471,13 @@ export interface IDocumentSearch {
 ////////////////////////////////////////////////////////////////////////////////
 
 function startNewSearch(
-    DocumentStore: DocumentStoreClass,
+    projectEditorStore: ProjectEditorStore,
     patternOrObject: string | IEezObject | undefined,
     matchCase: boolean,
     matchWholeWord: boolean,
     searchCallback?: SearchCallback
 ) {
-    DocumentStore.currentSearch.startNewSearch(
+    projectEditorStore.currentSearch.startNewSearch(
         patternOrObject || "",
         matchCase,
         matchWholeWord,
@@ -486,24 +486,24 @@ function startNewSearch(
 }
 
 export function startSearch(
-    DocumentStore: DocumentStoreClass,
+    projectEditorStore: ProjectEditorStore,
     pattern: string,
     matchCase: boolean,
     matchWholeWord: boolean
 ) {
-    startNewSearch(DocumentStore, pattern, matchCase, matchWholeWord);
+    startNewSearch(projectEditorStore, pattern, matchCase, matchWholeWord);
 }
 
 export function findAllReferences(object: IEezObject) {
-    const DocumentStore = getDocumentStore(object);
-    startNewSearch(DocumentStore, object, true, true);
+    const projectEditorStore = getDocumentStore(object);
+    startNewSearch(projectEditorStore, object, true, true);
 }
 
 export function usage(
-    DocumentStore: DocumentStoreClass,
+    projectEditorStore: ProjectEditorStore,
     searchCallback: SearchCallback
 ) {
-    startNewSearch(DocumentStore, undefined, true, true, searchCallback);
+    startNewSearch(projectEditorStore, undefined, true, true, searchCallback);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -14,7 +14,7 @@ import {
 import { expressionParser } from "./grammar";
 import { ValueType } from "project-editor/features/variable/value-type";
 import type { IDataContext, IFlowState } from "../flow-interfaces";
-import type { DocumentStoreClass } from "project-editor/store";
+import type { ProjectEditorStore } from "project-editor/store";
 import {
     findValueTypeInExpressionNode,
     checkArity
@@ -47,7 +47,7 @@ export function evalConstantExpression(project: Project, expression: string) {
 export interface IExpressionContext {
     dataContext: IDataContext;
     flowState?: IFlowState;
-    DocumentStore: DocumentStoreClass;
+    projectEditorStore: ProjectEditorStore;
 }
 
 export function evalExpression(
@@ -438,7 +438,7 @@ function evalExpressionWithContext(
                 node.property.type == "Identifier"
             ) {
                 const enumDef =
-                    expressionContext.DocumentStore.project.variables.enumsMap.get(
+                    expressionContext.projectEditorStore.project.variables.enumsMap.get(
                         node.object.name
                     );
                 if (enumDef) {
@@ -456,7 +456,7 @@ function evalExpressionWithContext(
                     builtInConstants[builtInConstantName];
                 if (buildInConstantValue != undefined) {
                     return buildInConstantValue.value(
-                        expressionContext.DocumentStore
+                        expressionContext.projectEditorStore
                     );
                 }
             }
@@ -597,7 +597,7 @@ function evalAssignableExpressionWithContext(
             }
 
             let globalVariable =
-                expressionContext.DocumentStore.project.allGlobalVariables.find(
+                expressionContext.projectEditorStore.project.allGlobalVariables.find(
                     globalVariable => globalVariable.name == node.name
                 );
             if (globalVariable) {

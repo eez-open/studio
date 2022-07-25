@@ -12,7 +12,7 @@ import {
     isObjectExists,
     objectToString
 } from "project-editor/store/helper";
-import type { DocumentStoreClass } from "project-editor/store";
+import type { ProjectEditorStore } from "project-editor/store";
 import { LayoutModels } from "project-editor/store/layout-models";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -25,7 +25,7 @@ export class Editor implements IEditor {
 
     loading = false;
 
-    constructor(public DocumentStore: DocumentStoreClass) {
+    constructor(public projectEditorStore: ProjectEditorStore) {
         makeObservable(this, {
             object: observable,
             subObject: observable,
@@ -40,11 +40,11 @@ export class Editor implements IEditor {
     }
 
     makeActive() {
-        this.DocumentStore.editorsStore.activateEditor(this);
-        if (this.DocumentStore.runtime) {
+        this.projectEditorStore.editorsStore.activateEditor(this);
+        if (this.projectEditorStore.runtime) {
             const flow = ProjectEditor.getFlow(this.object);
             if (flow) {
-                this.DocumentStore.runtime.selectFlowStateForFlow(flow);
+                this.projectEditorStore.runtime.selectFlowStateForFlow(flow);
             }
         }
     }
@@ -58,7 +58,7 @@ export class EditorsStore {
 
     dispose1: mobx.IReactionDisposer;
 
-    constructor(public DocumentStore: DocumentStoreClass) {
+    constructor(public projectEditorStore: ProjectEditorStore) {
         makeObservable(this, {
             editors: observable,
             activeEditor: observable,
@@ -87,7 +87,7 @@ export class EditorsStore {
 
     get tabsModel() {
         return (
-            this.DocumentStore.layoutModels.editors
+            this.projectEditorStore.layoutModels.editors
                 .getNodeById(LayoutModels.EDITORS_TABSET_ID)
                 .getChildren()[0] as FlexLayout.TabNode
         ).getExtraData().model as FlexLayout.Model;
@@ -125,7 +125,7 @@ export class EditorsStore {
             const tabId = tab.getId();
             const tabConfig = tab.getConfig();
             const object = getObjectFromStringPath(
-                this.DocumentStore.project,
+                this.projectEditorStore.project,
                 tabConfig
             );
 
@@ -136,7 +136,7 @@ export class EditorsStore {
 
             let editor = this.tabIdToEditorMap.get(tabId);
             if (!editor) {
-                editor = new Editor(this.DocumentStore);
+                editor = new Editor(this.projectEditorStore);
 
                 editor.tabId = tabId;
                 editor.object = object;
@@ -167,7 +167,7 @@ export class EditorsStore {
             if (showActiveEditor) {
                 const activeEditor = this.activeEditor;
                 if (activeEditor) {
-                    this.DocumentStore.navigationStore.showObjects(
+                    this.projectEditorStore.navigationStore.showObjects(
                         [activeEditor.subObject ?? activeEditor.object],
                         false,
                         false,
@@ -208,7 +208,7 @@ export class EditorsStore {
             return editorFound;
         }
 
-        let editor = new Editor(this.DocumentStore);
+        let editor = new Editor(this.projectEditorStore);
         this.editors.push(editor);
 
         editor.object = object;
@@ -266,7 +266,7 @@ export class EditorsStore {
                 this.activeEditor = editor;
             });
 
-            this.DocumentStore.layoutModels.selectTab(
+            this.projectEditorStore.layoutModels.selectTab(
                 this.tabsModel,
                 editor.tabId
             );

@@ -20,7 +20,7 @@ import {
     getId
 } from "project-editor/core/object";
 import {
-    DocumentStoreClass,
+    ProjectEditorStore,
     isDashboardOrAppletOrFirmwareWithFlowSupportProject,
     isNotV1Project,
     isV3OrNewerProject,
@@ -82,7 +82,7 @@ import {
 import * as draw from "project-editor/flow/editor/draw";
 import { Font } from "project-editor/features/font/font";
 
-import { BootstrapButton } from "project-editor/components/BootstrapButton";
+import { BootstrapButton } from "project-editor/ui-components/BootstrapButton";
 
 import {
     Widget,
@@ -145,7 +145,7 @@ import {
     generalGroup,
     indentationGroup,
     specificGroup
-} from "project-editor/components/PropertyGrid/groups";
+} from "project-editor/ui-components/PropertyGrid/groups";
 import {
     getBooleanValue,
     evalProperty,
@@ -309,8 +309,8 @@ export class ContainerWidget extends Widget {
                 offset += width;
 
                 if (
-                    flowContext.DocumentStore.runtime &&
-                    flowContext.DocumentStore.runtime.isRTL
+                    flowContext.projectEditorStore.runtime &&
+                    flowContext.projectEditorStore.runtime.isRTL
                 ) {
                     left = containerWidth - (left + width);
                 }
@@ -350,8 +350,8 @@ export class ContainerWidget extends Widget {
                 offset += height;
 
                 if (
-                    flowContext.DocumentStore.runtime &&
-                    flowContext.DocumentStore.runtime.isRTL
+                    flowContext.projectEditorStore.runtime &&
+                    flowContext.projectEditorStore.runtime.isRTL
                 ) {
                     left = containerWidth - (left + width);
                 }
@@ -377,8 +377,8 @@ export class ContainerWidget extends Widget {
                     width={containerWidth}
                     height={containerHeight}
                     isRTL={
-                        flowContext.DocumentStore.runtime
-                            ? flowContext.DocumentStore.runtime.isRTL
+                        flowContext.projectEditorStore.runtime
+                            ? flowContext.projectEditorStore.runtime.isRTL
                             : undefined
                     }
                 />
@@ -387,7 +387,8 @@ export class ContainerWidget extends Widget {
 
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.projectEditorStore.project
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         width={containerWidth}
@@ -565,10 +566,10 @@ export class ListWidget extends Widget {
         let dataValue;
         if (this.data) {
             if (
-                flowContext.DocumentStore.project.isAppletProject ||
-                flowContext.DocumentStore.project
+                flowContext.projectEditorStore.project.isAppletProject ||
+                flowContext.projectEditorStore.project
                     .isFirmwareWithFlowSupportProject ||
-                flowContext.DocumentStore.project.isDashboardProject
+                flowContext.projectEditorStore.project.isDashboardProject
             ) {
                 try {
                     dataValue = evalProperty(flowContext, this, "data");
@@ -1076,7 +1077,8 @@ export class SelectWidget extends Widget {
 
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.projectEditorStore.project
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -1429,7 +1431,8 @@ export class LayoutViewWidget extends Widget {
 
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.projectEditorStore.project
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -1480,12 +1483,12 @@ export class LayoutViewWidget extends Widget {
             containerWidgetJsObject.width = this.width;
             containerWidgetJsObject.height = this.height;
 
-            const DocumentStore = getDocumentStore(this);
+            const projectEditorStore = getDocumentStore(this);
 
-            return DocumentStore.replaceObject(
+            return projectEditorStore.replaceObject(
                 this,
                 loadObject(
-                    DocumentStore,
+                    projectEditorStore,
                     getParent(this),
                     containerWidgetJsObject,
                     Widget
@@ -1654,9 +1657,10 @@ export class DisplayDataWidget extends Widget {
         flowContext: IFlowContext
     ): { text: string; node: React.ReactNode } | string {
         if (
-            flowContext.DocumentStore.project.isDashboardProject ||
-            flowContext.DocumentStore.project.isAppletProject ||
-            flowContext.DocumentStore.project.isFirmwareWithFlowSupportProject
+            flowContext.projectEditorStore.project.isDashboardProject ||
+            flowContext.projectEditorStore.project.isAppletProject ||
+            flowContext.projectEditorStore.project
+                .isFirmwareWithFlowSupportProject
         ) {
             if (this.data) {
                 if (flowContext.flowState) {
@@ -1673,7 +1677,7 @@ export class DisplayDataWidget extends Widget {
                     }
                 }
 
-                if (flowContext.DocumentStore.runtime) {
+                if (flowContext.projectEditorStore.runtime) {
                     return "";
                 }
 
@@ -1787,7 +1791,7 @@ export class DisplayDataWidget extends Widget {
 
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? (
+                {flowContext.projectEditorStore.project.isDashboardProject ? (
                     node || text
                 ) : (
                     <ComponentCanvas
@@ -1957,9 +1961,10 @@ export class TextWidget extends Widget {
         flowContext: IFlowContext
     ): { text: string; node: React.ReactNode } | string {
         if (
-            flowContext.DocumentStore.project.isDashboardProject ||
-            flowContext.DocumentStore.project.isAppletProject ||
-            flowContext.DocumentStore.project.isFirmwareWithFlowSupportProject
+            flowContext.projectEditorStore.project.isDashboardProject ||
+            flowContext.projectEditorStore.project.isAppletProject ||
+            flowContext.projectEditorStore.project
+                .isFirmwareWithFlowSupportProject
         ) {
             if (this.data) {
                 if (flowContext.flowState) {
@@ -1979,7 +1984,7 @@ export class TextWidget extends Widget {
                     }
                 }
 
-                if (flowContext.DocumentStore.runtime) {
+                if (flowContext.projectEditorStore.runtime) {
                     return "";
                 }
 
@@ -1989,7 +1994,7 @@ export class TextWidget extends Widget {
 
                 try {
                     const result = evalConstantExpression(
-                        flowContext.DocumentStore.project,
+                        flowContext.projectEditorStore.project,
                         this.data
                     );
                     if (typeof result.value === "string") {
@@ -2051,15 +2056,15 @@ export class TextWidget extends Widget {
 
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? (
+                {flowContext.projectEditorStore.project.isDashboardProject ? (
                     <span
                         className={classNames(this.style.classNames)}
                         onClick={event => {
                             event.preventDefault();
                             event.stopPropagation();
 
-                            if (flowContext.DocumentStore.runtime) {
-                                flowContext.DocumentStore.runtime.executeWidgetAction(
+                            if (flowContext.projectEditorStore.runtime) {
+                                flowContext.projectEditorStore.runtime.executeWidgetAction(
                                     flowContext,
                                     this,
                                     "action",
@@ -2473,7 +2478,7 @@ export class MultilineTextWidget extends Widget {
 
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? (
+                {flowContext.projectEditorStore.project.isDashboardProject ? (
                     node || text
                 ) : (
                     <ComponentCanvas
@@ -2576,7 +2581,8 @@ export class RectangleWidget extends Widget {
 
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.projectEditorStore.project
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -2804,7 +2810,7 @@ export class BitmapWidget extends Widget {
 
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? (
+                {flowContext.projectEditorStore.project.isDashboardProject ? (
                     bitmap ? (
                         bitmap instanceof Bitmap ? (
                             <img src={bitmap.image} />
@@ -2968,8 +2974,8 @@ export class ButtonWidget extends Widget {
             asOutputProperties: ["action"]
         },
 
-        componentDefaultValue: (DocumentStore: DocumentStoreClass) => {
-            return DocumentStore.project.isFirmwareProject
+        componentDefaultValue: (projectEditorStore: ProjectEditorStore) => {
+            return projectEditorStore.project.isFirmwareProject
                 ? {
                       style: {
                           inheritFrom: "button"
@@ -3055,7 +3061,7 @@ export class ButtonWidget extends Widget {
 
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? (
+                {flowContext.projectEditorStore.project.isDashboardProject ? (
                     <button
                         className={classNames(style.classNames)}
                         disabled={!buttonEnabled}
@@ -3063,8 +3069,8 @@ export class ButtonWidget extends Widget {
                             event.preventDefault();
                             event.stopPropagation();
 
-                            if (flowContext.DocumentStore.runtime) {
-                                flowContext.DocumentStore.runtime.executeWidgetAction(
+                            if (flowContext.projectEditorStore.runtime) {
+                                flowContext.projectEditorStore.runtime.executeWidgetAction(
                                     flowContext,
                                     this,
                                     "action",
@@ -3179,7 +3185,8 @@ export class ToggleButtonWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.projectEditorStore.project
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -3258,7 +3265,8 @@ export class ButtonGroupWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.projectEditorStore.project
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -3490,7 +3498,8 @@ export class BarGraphWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.projectEditorStore.project
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -3833,7 +3842,8 @@ export class YTGraphWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.projectEditorStore.project
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -3927,7 +3937,8 @@ export class UpDownWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.projectEditorStore.project
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -4107,7 +4118,8 @@ export class ListGraphWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.projectEditorStore.project
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -4216,7 +4228,8 @@ export class AppViewWidget extends Widget {
         }
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.projectEditorStore.project
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -4310,7 +4323,8 @@ export class ScrollBarWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.projectEditorStore.project
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -4527,9 +4541,10 @@ export class ProgressWidget extends Widget {
 
     getPercent(flowContext: IFlowContext) {
         if (
-            flowContext.DocumentStore.project.isDashboardProject ||
-            flowContext.DocumentStore.project.isAppletProject ||
-            flowContext.DocumentStore.project.isFirmwareWithFlowSupportProject
+            flowContext.projectEditorStore.project.isDashboardProject ||
+            flowContext.projectEditorStore.project.isAppletProject ||
+            flowContext.projectEditorStore.project
+                .isFirmwareWithFlowSupportProject
         ) {
             if (flowContext.flowState) {
                 try {
@@ -4568,7 +4583,7 @@ export class ProgressWidget extends Widget {
 
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? (
+                {flowContext.projectEditorStore.project.isDashboardProject ? (
                     <div
                         className="progress"
                         style={{
@@ -4582,8 +4597,9 @@ export class ProgressWidget extends Widget {
                             role="progressbar"
                             style={
                                 isHorizontal
-                                    ? flowContext.DocumentStore.runtime &&
-                                      flowContext.DocumentStore.runtime.isRTL
+                                    ? flowContext.projectEditorStore.runtime &&
+                                      flowContext.projectEditorStore.runtime
+                                          .isRTL
                                         ? {
                                               display: "block",
                                               position: "absolute",
@@ -4711,7 +4727,8 @@ export class CanvasWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.projectEditorStore.project
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -5139,7 +5156,8 @@ export class GaugeEmbeddedWidget extends Widget {
 
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.projectEditorStore.project
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         width={width}
                         height={height}
@@ -5322,7 +5340,8 @@ export class InputEmbeddedWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.projectEditorStore.project
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -5450,8 +5469,8 @@ export class TextInputWidget extends Widget {
             height: 32,
             title: ""
         },
-        componentDefaultValue: (DocumentStore: DocumentStoreClass) => {
-            return DocumentStore.project.isFirmwareProject
+        componentDefaultValue: (projectEditorStore: ProjectEditorStore) => {
+            return projectEditorStore.project.isFirmwareProject
                 ? {
                       style: {
                           inheritFrom: "text_input"
@@ -5498,9 +5517,10 @@ export class TextInputWidget extends Widget {
 
     getValue(flowContext: IFlowContext) {
         if (
-            flowContext.DocumentStore.project.isDashboardProject ||
-            flowContext.DocumentStore.project.isAppletProject ||
-            flowContext.DocumentStore.project.isFirmwareWithFlowSupportProject
+            flowContext.projectEditorStore.project.isDashboardProject ||
+            flowContext.projectEditorStore.project.isAppletProject ||
+            flowContext.projectEditorStore.project
+                .isFirmwareWithFlowSupportProject
         ) {
             if (this.data) {
                 try {
@@ -5623,9 +5643,10 @@ export class CheckboxWidget extends Widget {
 
     getChecked(flowContext: IFlowContext) {
         if (
-            flowContext.DocumentStore.project.isDashboardProject ||
-            flowContext.DocumentStore.project.isAppletProject ||
-            flowContext.DocumentStore.project.isFirmwareWithFlowSupportProject
+            flowContext.projectEditorStore.project.isDashboardProject ||
+            flowContext.projectEditorStore.project.isAppletProject ||
+            flowContext.projectEditorStore.project
+                .isFirmwareWithFlowSupportProject
         ) {
             if (this.data) {
                 try {
@@ -5647,9 +5668,10 @@ export class CheckboxWidget extends Widget {
 
     getLabel(flowContext: IFlowContext) {
         if (
-            flowContext.DocumentStore.project.isDashboardProject ||
-            flowContext.DocumentStore.project.isAppletProject ||
-            flowContext.DocumentStore.project.isFirmwareWithFlowSupportProject
+            flowContext.projectEditorStore.project.isDashboardProject ||
+            flowContext.projectEditorStore.project.isAppletProject ||
+            flowContext.projectEditorStore.project
+                .isFirmwareWithFlowSupportProject
         ) {
             if (this.label) {
                 try {
@@ -5784,8 +5806,8 @@ export class RollerWidget extends Widget {
             height: 120
         },
 
-        componentDefaultValue: (DocumentStore: DocumentStoreClass) => {
-            return DocumentStore.project.isFirmwareProject
+        componentDefaultValue: (projectEditorStore: ProjectEditorStore) => {
+            return projectEditorStore.project.isFirmwareProject
                 ? {
                       style: {
                           inheritFrom: "roller_widget"
@@ -5851,7 +5873,8 @@ export class RollerWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.projectEditorStore.project
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -5929,8 +5952,8 @@ export class SwitchWidget extends Widget {
             height: 32
         },
 
-        componentDefaultValue: (DocumentStore: DocumentStoreClass) => {
-            return DocumentStore.project.isFirmwareProject
+        componentDefaultValue: (projectEditorStore: ProjectEditorStore) => {
+            return projectEditorStore.project.isFirmwareProject
                 ? {
                       style: {
                           inheritFrom: "switch_widget"
@@ -5964,7 +5987,8 @@ export class SwitchWidget extends Widget {
 
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.projectEditorStore.project
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -6049,8 +6073,8 @@ export class SliderWidget extends Widget {
             height: 32
         },
 
-        componentDefaultValue: (DocumentStore: DocumentStoreClass) => {
-            return DocumentStore.project.isFirmwareProject
+        componentDefaultValue: (projectEditorStore: ProjectEditorStore) => {
+            return projectEditorStore.project.isFirmwareProject
                 ? {
                       style: {
                           inheritFrom: "slider_widget"
@@ -6099,7 +6123,8 @@ export class SliderWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.projectEditorStore.project
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -6249,15 +6274,15 @@ export class DropDownListWidget extends Widget {
                     event.preventDefault();
                     event.stopPropagation();
 
-                    if (flowContext.DocumentStore.runtime) {
-                        flowContext.DocumentStore.runtime.assignProperty(
+                    if (flowContext.projectEditorStore.runtime) {
+                        flowContext.projectEditorStore.runtime.assignProperty(
                             flowContext,
                             this,
                             "data",
                             event.target.selectedIndex
                         );
 
-                        flowContext.DocumentStore.runtime.executeWidgetAction(
+                        flowContext.projectEditorStore.runtime.executeWidgetAction(
                             flowContext,
                             this,
                             "action",
@@ -6284,7 +6309,7 @@ export class DropDownListWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? (
+                {flowContext.projectEditorStore.project.isDashboardProject ? (
                     this.renderDashboard(flowContext)
                 ) : (
                     <ComponentCanvas

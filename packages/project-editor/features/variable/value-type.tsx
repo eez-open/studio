@@ -17,7 +17,7 @@ import {
 import type { Project } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 import { humanize } from "eez-studio-shared/string";
-import { getPropertyValue } from "project-editor/components/PropertyGrid/utils";
+import { getPropertyValue } from "project-editor/ui-components/PropertyGrid/utils";
 import type {
     IFlowContext,
     IVariable

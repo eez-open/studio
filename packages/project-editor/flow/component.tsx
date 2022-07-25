@@ -110,7 +110,7 @@ import {
     styleGroup,
     timelineGroup,
     topGroup
-} from "project-editor/components/PropertyGrid/groups";
+} from "project-editor/ui-components/PropertyGrid/groups";
 import { IconAction } from "eez-studio-ui/action";
 import { observer } from "mobx-react";
 import {
@@ -131,7 +131,7 @@ import {
 } from "./align_and_distribute_icons";
 import { ProjectContext } from "project-editor/project/context";
 import type { PageTabState } from "project-editor/features/page/PageEditor";
-import { BootstrapButton } from "project-editor/components/BootstrapButton";
+import { BootstrapButton } from "project-editor/ui-components/BootstrapButton";
 //import { PropertyGrid } from "project-editor/components/PropertyGrid";
 import { easingFunctions } from "./easing-functions";
 import { humanize } from "eez-studio-shared/string";
@@ -373,11 +373,11 @@ export function makeExpressionProperty(
                             new MenuItem({
                                 label: "Convert to input",
                                 click: () => {
-                                    const DocumentStore = getDocumentStore(
+                                    const projectEditorStore = getDocumentStore(
                                         props.objects[0]
                                     );
 
-                                    DocumentStore.undoManager.setCombineCommands(
+                                    projectEditorStore.undoManager.setCombineCommands(
                                         true
                                     );
 
@@ -387,17 +387,17 @@ export function makeExpressionProperty(
                                         props.propertyInfo.expressionType ||
                                         "any";
 
-                                    DocumentStore.addObject(
+                                    projectEditorStore.addObject(
                                         component.customInputs,
                                         customInput
                                     );
 
-                                    DocumentStore.updateObject(component, {
+                                    projectEditorStore.updateObject(component, {
                                         [props.propertyInfo.name]:
                                             props.propertyInfo.name
                                     });
 
-                                    DocumentStore.undoManager.setCombineCommands(
+                                    projectEditorStore.undoManager.setCombineCommands(
                                         false
                                     );
                                 }
@@ -495,11 +495,13 @@ export function makeToggablePropertyToOutput(
                                 ? "Convert to output"
                                 : "Convert to property",
                         click: () => {
-                            const DocumentStore = getDocumentStore(
+                            const projectEditorStore = getDocumentStore(
                                 props.objects[0]
                             );
 
-                            DocumentStore.undoManager.setCombineCommands(true);
+                            projectEditorStore.undoManager.setCombineCommands(
+                                true
+                            );
 
                             if (i === -1) {
                                 asOutputProperties.push(
@@ -518,12 +520,14 @@ export function makeToggablePropertyToOutput(
 
                             asOutputProperties.sort();
 
-                            DocumentStore.updateObject(component, {
+                            projectEditorStore.updateObject(component, {
                                 asOutputProperties,
                                 [props.propertyInfo.name]: undefined
                             });
 
-                            DocumentStore.undoManager.setCombineCommands(false);
+                            projectEditorStore.undoManager.setCombineCommands(
+                                false
+                            );
                         }
                     })
                 );
@@ -958,14 +962,14 @@ function addBreakpointMenuItems(
 
     var additionalMenuItems: Electron.MenuItem[] = [];
 
-    const DocumentStore = getDocumentStore(component);
+    const projectEditorStore = getDocumentStore(component);
 
-    const uiStateStore = DocumentStore.uiStateStore;
+    const uiStateStore = projectEditorStore.uiStateStore;
 
     if (
-        DocumentStore.project.isAppletProject ||
-        DocumentStore.project.isFirmwareWithFlowSupportProject ||
-        DocumentStore.project.isDashboardProject
+        projectEditorStore.project.isAppletProject ||
+        projectEditorStore.project.isFirmwareWithFlowSupportProject ||
+        projectEditorStore.project.isDashboardProject
     ) {
         if (uiStateStore.isBreakpointAddedForComponent(component)) {
             additionalMenuItems.push(
@@ -1683,10 +1687,10 @@ export class Component extends EezObject {
                 computed: true,
                 propertyGridRowComponent: AlignAndDistributePropertyGridUI,
                 hideInPropertyGrid: (widget: Widget) => {
-                    const DocumentStore =
+                    const projectEditorStore =
                         ProjectEditor.getProject(widget)._DocumentStore;
                     const propertyGridObjects =
-                        DocumentStore.navigationStore.propertyGridObjects;
+                        projectEditorStore.navigationStore.propertyGridObjects;
 
                     if (propertyGridObjects.length < 2) {
                         return true;
@@ -1741,10 +1745,10 @@ export class Component extends EezObject {
                 computed: true,
                 propertyGridRowComponent: CenterWidgetUI,
                 hideInPropertyGrid: (widget: Widget) => {
-                    const DocumentStore =
+                    const projectEditorStore =
                         ProjectEditor.getProject(widget)._DocumentStore;
                     const propertyGridObjects =
-                        DocumentStore.navigationStore.propertyGridObjects;
+                        projectEditorStore.navigationStore.propertyGridObjects;
                     return !(
                         propertyGridObjects.length == 1 &&
                         propertyGridObjects[0] instanceof Widget
@@ -1864,7 +1868,7 @@ export class Component extends EezObject {
             return object.rect;
         },
         setRect: (object: Component, value: Partial<Rect>) => {
-            const DocumentStore = getDocumentStore(object);
+            const projectEditorStore = getDocumentStore(object);
 
             const timelineEditorState = getTimelineEditorState(object);
             if (timelineEditorState) {
@@ -1940,7 +1944,7 @@ export class Component extends EezObject {
                     const keyframe = widget.timeline[i];
 
                     if (time == keyframe.end) {
-                        DocumentStore.updateObject(keyframe, {
+                        projectEditorStore.updateObject(keyframe, {
                             left: {
                                 enabled: true,
                                 value: newKeyframe.left.value,
@@ -2004,33 +2008,43 @@ export class Component extends EezObject {
                         );
 
                         const combineCommands =
-                            DocumentStore.undoManager.combineCommands;
+                            projectEditorStore.undoManager.combineCommands;
 
                         if (!combineCommands) {
-                            DocumentStore.undoManager.setCombineCommands(true);
+                            projectEditorStore.undoManager.setCombineCommands(
+                                true
+                            );
                         }
 
-                        DocumentStore.updateObject(keyframe, {
+                        projectEditorStore.updateObject(keyframe, {
                             start: time
                         });
 
-                        DocumentStore.insertObjectBefore(keyframe, newKeyframe);
+                        projectEditorStore.insertObjectBefore(
+                            keyframe,
+                            newKeyframe
+                        );
 
                         if (!combineCommands) {
-                            DocumentStore.undoManager.setCombineCommands(false);
+                            projectEditorStore.undoManager.setCombineCommands(
+                                false
+                            );
                         }
 
                         return;
                     }
 
                     if (time <= keyframe.start) {
-                        DocumentStore.insertObjectBefore(keyframe, newKeyframe);
+                        projectEditorStore.insertObjectBefore(
+                            keyframe,
+                            newKeyframe
+                        );
 
                         return;
                     }
                 }
 
-                DocumentStore.addObject(widget.timeline, newKeyframe);
+                projectEditorStore.addObject(widget.timeline, newKeyframe);
 
                 return;
             }
@@ -2060,7 +2074,7 @@ export class Component extends EezObject {
                 }
             }
 
-            DocumentStore.updateObject(object, props);
+            projectEditorStore.updateObject(object, props);
         },
         isMoveable: (object: Component) => {
             return object.isMoveable;
@@ -2227,12 +2241,12 @@ export class Component extends EezObject {
                 // }
             });
 
-            const DocumentStore = getDocumentStore(component);
+            const projectEditorStore = getDocumentStore(component);
 
             if (
-                DocumentStore.project.isAppletProject ||
-                DocumentStore.project.isFirmwareWithFlowSupportProject ||
-                DocumentStore.project.isDashboardProject
+                projectEditorStore.project.isAppletProject ||
+                projectEditorStore.project.isFirmwareWithFlowSupportProject ||
+                projectEditorStore.project.isDashboardProject
             ) {
                 // check properties
                 for (const propertyInfo of getClassInfo(component).properties) {
@@ -2248,7 +2262,7 @@ export class Component extends EezObject {
                                     propertyInfo.expressionIsConstant === true
                                 ) {
                                     evalConstantExpression(
-                                        DocumentStore.project,
+                                        projectEditorStore.project,
                                         value
                                     );
                                 } else {
@@ -2571,7 +2585,7 @@ export class Component extends EezObject {
     }
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
-        // if (!flowContext.DocumentStore.project.isDashboardProject) {
+        // if (!flowContext.projectEditorStore.project.isDashboardProject) {
         //     const backgroundColor = this.style.backgroundColorProperty;
         //     style.backgroundColor = to16bitsColor(backgroundColor);
         // }
@@ -3686,12 +3700,12 @@ export class Widget extends Component {
                 }
             }
 
-            const DocumentStore = getDocumentStore(object);
+            const projectEditorStore = getDocumentStore(object);
 
             if (
-                !DocumentStore.project.isAppletProject &&
-                !DocumentStore.project.isFirmwareWithFlowSupportProject &&
-                !DocumentStore.project.isDashboardProject
+                !projectEditorStore.project.isAppletProject &&
+                !projectEditorStore.project.isFirmwareWithFlowSupportProject &&
+                !projectEditorStore.project.isDashboardProject
             ) {
                 ProjectEditor.documentSearch.checkObjectReference(
                     object,
@@ -3765,12 +3779,12 @@ export class Widget extends Component {
 
         selectWidgetJsObject.widgets = [thisWidgetJsObject];
 
-        const DocumentStore = getDocumentStore(this);
+        const projectEditorStore = getDocumentStore(this);
 
-        return DocumentStore.replaceObject(
+        return projectEditorStore.replaceObject(
             this,
             loadObject(
-                DocumentStore,
+                projectEditorStore,
                 getParent(this),
                 selectWidgetJsObject,
                 Component
@@ -3831,12 +3845,12 @@ export class Widget extends Component {
         containerWidgetJsObject.width = createWidgetsResult.width;
         containerWidgetJsObject.height = createWidgetsResult.height;
 
-        const DocumentStore = getDocumentStore(fromWidgets[0]);
+        const projectEditorStore = getDocumentStore(fromWidgets[0]);
 
-        return DocumentStore.replaceObjects(
+        return projectEditorStore.replaceObjects(
             fromWidgets,
             loadObject(
-                DocumentStore,
+                projectEditorStore,
                 getParent(fromWidgets[0]),
                 containerWidgetJsObject,
                 Component
@@ -3885,12 +3899,12 @@ export class Widget extends Component {
         containerWidgetJsObject.left = 0;
         containerWidgetJsObject.top = 0;
 
-        const DocumentStore = getDocumentStore(fromWidgets[0]);
+        const projectEditorStore = getDocumentStore(fromWidgets[0]);
 
-        return DocumentStore.replaceObjects(
+        return projectEditorStore.replaceObjects(
             fromWidgets,
             loadObject(
-                DocumentStore,
+                projectEditorStore,
                 getParent(fromWidgets[0]),
                 listWidgetJsObject,
                 Component
@@ -3899,8 +3913,8 @@ export class Widget extends Component {
     }
 
     static async createCustomWidget(fromWidgets: Component[]) {
-        const DocumentStore = getDocumentStore(fromWidgets[0]);
-        const customWidgets = DocumentStore.project.pages;
+        const projectEditorStore = getDocumentStore(fromWidgets[0]);
+        const customWidgets = projectEditorStore.project.pages;
 
         try {
             const result = await showGenericDialog({
@@ -3926,10 +3940,10 @@ export class Widget extends Component {
 
             const createWidgetsResult = Widget.createWidgets(fromWidgets);
 
-            DocumentStore.addObject(
+            projectEditorStore.addObject(
                 customWidgets,
                 loadObject(
-                    DocumentStore,
+                    projectEditorStore,
                     undefined,
                     {
                         name: customWidgetName,
@@ -3944,10 +3958,10 @@ export class Widget extends Component {
                 )
             );
 
-            return DocumentStore.replaceObjects(
+            return projectEditorStore.replaceObjects(
                 fromWidgets,
                 loadObject(
-                    DocumentStore,
+                    projectEditorStore,
                     getParent(fromWidgets[0]),
                     {
                         type: "LayoutView",
@@ -4073,7 +4087,7 @@ export class Widget extends Component {
                 timelinePosition = flowContext.flowState.timelinePosition;
             } else {
                 const editor =
-                    flowContext.DocumentStore.editorsStore.activeEditor;
+                    flowContext.projectEditorStore.editorsStore.activeEditor;
                 if (editor) {
                     if (editor.object instanceof ProjectEditor.PageClass) {
                         const pageTabState = editor.state as PageTabState;
@@ -4954,8 +4968,8 @@ export function registerActionComponents(
 
 function getTimelineEditorState(component: Component) {
     if (component instanceof Widget) {
-        const DocumentStore = getDocumentStore(component);
-        const editor = DocumentStore.editorsStore.activeEditor;
+        const projectEditorStore = getDocumentStore(component);
+        const editor = projectEditorStore.editorsStore.activeEditor;
         if (editor) {
             if (editor.object instanceof ProjectEditor.PageClass) {
                 const pageTabState = editor.state as PageTabState;

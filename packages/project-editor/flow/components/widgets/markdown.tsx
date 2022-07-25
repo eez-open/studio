@@ -15,7 +15,7 @@ import {
 } from "project-editor/flow/expression";
 import { observable, makeObservable } from "mobx";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { specificGroup } from "project-editor/components/PropertyGrid/groups";
+import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -69,7 +69,7 @@ export class MarkdownWidget extends Widget {
     }
 
     getText(flowContext: IFlowContext): { __html: string } | string {
-        if (flowContext.DocumentStore.project.isDashboardProject) {
+        if (flowContext.projectEditorStore.project.isDashboardProject) {
             if (this.text) {
                 if (flowContext.flowState) {
                     try {
@@ -89,7 +89,7 @@ export class MarkdownWidget extends Widget {
                     }
                 }
 
-                if (flowContext.DocumentStore.runtime) {
+                if (flowContext.projectEditorStore.runtime) {
                     return "";
                 }
 

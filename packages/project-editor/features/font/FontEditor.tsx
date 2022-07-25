@@ -30,7 +30,7 @@ import {
 } from "project-editor/features/font/utils";
 import { Glyphs } from "./Glyphs";
 
-import { RelativeFileInput } from "project-editor/components/FileInput";
+import { RelativeFileInput } from "project-editor/ui-components/FileInput";
 import { showGenericDialog } from "project-editor/core/util";
 import { GlyphSelectFieldType } from "project-editor/features/font/GlyphSelectFieldType";
 import { Font, Glyph } from "project-editor/features/font/font";
@@ -743,9 +743,9 @@ export function browseGlyph(glyph: Glyph) {
 
     const title = "Select Glyph";
 
-    const DocumentStore = getDocumentStore(glyph);
+    const projectEditorStore = getDocumentStore(glyph);
 
-    return showGenericDialog(DocumentStore, {
+    return showGenericDialog(projectEditorStore, {
         dialogDefinition: {
             title,
             size: "large",

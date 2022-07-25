@@ -13,7 +13,7 @@ import {
     makeObservable
 } from "mobx";
 import {
-    DocumentStoreClass,
+    ProjectEditorStore,
     getLabel,
     getObjectFromStringPath,
     getObjectPathAsString,
@@ -140,7 +140,7 @@ export abstract class RuntimeBase {
             this.state == State.STARTING ||
             (this.isDebuggerActive && !this.isPaused)
         ) {
-            this.DocumentStore.editorsStore.openEditor(this.selectedPage);
+            this.projectEditorStore.editorsStore.openEditor(this.selectedPage);
         }
     }
 
@@ -149,12 +149,12 @@ export abstract class RuntimeBase {
     }
 
     setActiveConnectionLine(connectionLine: ConnectionLine) {
-        if (!this.DocumentStore.uiStateStore.pageRuntimeFrontFace) {
+        if (!this.projectEditorStore.uiStateStore.pageRuntimeFrontFace) {
             connectionLine.setActive();
         }
     }
 
-    constructor(public DocumentStore: DocumentStoreClass) {
+    constructor(public projectEditorStore: ProjectEditorStore) {
         makeObservable<RuntimeBase, "setState">(this, {
             state: observable,
             isDebuggerActive: observable,
@@ -175,11 +175,11 @@ export abstract class RuntimeBase {
             isRTL: observable
         });
 
-        this.selectedPage = this.DocumentStore.project.pages[0];
+        this.selectedPage = this.projectEditorStore.project.pages[0];
     }
 
     startRuntime(isDebuggerActive: boolean) {
-        this.DocumentStore.dataContext.clear();
+        this.projectEditorStore.dataContext.clear();
 
         if (isDebuggerActive) {
             this.transition(StateMachineAction.START_WITH_DEBUGGER);
@@ -218,7 +218,7 @@ export abstract class RuntimeBase {
 
         if (this.state == State.PAUSED) {
             if (!this.isDebuggerActive) {
-                this.DocumentStore.onSetDebuggerMode();
+                this.projectEditorStore.onSetDebuggerMode();
             }
             this.showNextQueueTask();
         }
@@ -226,14 +226,14 @@ export abstract class RuntimeBase {
         if (this.state == State.STOPPED) {
             if (this.error) {
                 if (!this.isDebuggerActive) {
-                    this.DocumentStore.onSetDebuggerMode();
-                    this.DocumentStore.layoutModels.selectTab(
-                        this.DocumentStore.layoutModels.root,
+                    this.projectEditorStore.onSetDebuggerMode();
+                    this.projectEditorStore.layoutModels.selectTab(
+                        this.projectEditorStore.layoutModels.root,
                         LayoutModels.DEBUGGER_TAB_ID
                     );
                 }
             } else {
-                this.DocumentStore.setEditorMode();
+                this.projectEditorStore.setEditorMode();
             }
         }
     }
@@ -244,10 +244,12 @@ export abstract class RuntimeBase {
         if (this.state == State.STARTING) {
             if (action == StateMachineAction.START_WITHOUT_DEBUGGER) {
                 this.setState(State.STARTING_WITHOUT_DEBUGGER);
-                this.DocumentStore.uiStateStore.pageRuntimeFrontFace = true;
+                this.projectEditorStore.uiStateStore.pageRuntimeFrontFace =
+                    true;
             } else if (action == StateMachineAction.START_WITH_DEBUGGER) {
                 this.setState(State.STARTING_WITH_DEBUGGER);
-                this.DocumentStore.uiStateStore.pageRuntimeFrontFace = false;
+                this.projectEditorStore.uiStateStore.pageRuntimeFrontFace =
+                    false;
             }
         } else if (this.state == State.STARTING_WITHOUT_DEBUGGER) {
             if (
@@ -285,7 +287,8 @@ export abstract class RuntimeBase {
         } else if (this.state == State.STOPPED) {
             if (action == StateMachineAction.PAUSE) {
                 this.isDebuggerActive = true;
-                this.DocumentStore.uiStateStore.pageRuntimeFrontFace = false;
+                this.projectEditorStore.uiStateStore.pageRuntimeFrontFace =
+                    false;
                 this.onDebuggerActiveChanged();
                 return;
             }
@@ -452,7 +455,7 @@ export abstract class RuntimeBase {
         } else {
             // deselect all objects
             const editorState =
-                this.DocumentStore.editorsStore.activeEditor?.state;
+                this.projectEditorStore.editorsStore.activeEditor?.state;
             if (editorState instanceof FlowTabState) {
                 editorState.selectObjects([]);
             }
@@ -462,7 +465,7 @@ export abstract class RuntimeBase {
     showSelectedFlowState() {
         const flowState = this.selectedFlowState;
         if (flowState) {
-            this.DocumentStore.navigationStore.showObjects(
+            this.projectEditorStore.navigationStore.showObjects(
                 [flowState.flow],
                 true,
                 false,
@@ -472,7 +475,7 @@ export abstract class RuntimeBase {
     }
 
     showComponent(component: Component) {
-        this.DocumentStore.navigationStore.showObjects(
+        this.projectEditorStore.navigationStore.showObjects(
             [component],
             true,
             false,
@@ -495,7 +498,7 @@ export abstract class RuntimeBase {
             objects.push(queueTask.component);
         }
 
-        this.DocumentStore.navigationStore.showObjects(
+        this.projectEditorStore.navigationStore.showObjects(
             objects,
             true,
             false,
@@ -580,7 +583,7 @@ export abstract class RuntimeBase {
                     : undefined
             })),
             logs: this.logs.debugInfo,
-            dataContext: this.DocumentStore.dataContext.debugInfo
+            dataContext: this.projectEditorStore.dataContext.debugInfo
         };
     }
 
@@ -596,7 +599,7 @@ export abstract class RuntimeBase {
 
             for (const queueTask of debugInfo.queue) {
                 const component = getObjectFromStringPath(
-                    this.DocumentStore.project,
+                    this.projectEditorStore.project,
                     queueTask.component
                 ) as Component;
                 if (!component) {
@@ -613,7 +616,7 @@ export abstract class RuntimeBase {
                 let connectionLine;
                 if (queueTask.connectionLine) {
                     connectionLine = getObjectFromStringPath(
-                        this.DocumentStore.project,
+                        this.projectEditorStore.project,
                         queueTask.connectionLine
                     ) as ConnectionLine;
                     if (!connectionLine) {
@@ -635,14 +638,15 @@ export abstract class RuntimeBase {
 
             this.logs.loadDebugInfo(this, debugInfo.logs);
 
-            this.DocumentStore.dataContext.debugInfo = debugInfo.dataContext;
+            this.projectEditorStore.dataContext.debugInfo =
+                debugInfo.dataContext;
         });
     }
 
     loadFlowStatesFromDebugInfo(flowStates: FlowState[], flowStatesJS: any) {
         for (const flowStateJS of flowStatesJS) {
             const flow = getObjectFromStringPath(
-                this.DocumentStore.project,
+                this.projectEditorStore.project,
                 flowStateJS.flow
             ) as Flow;
             if (!flow) {
@@ -653,7 +657,7 @@ export abstract class RuntimeBase {
             let component;
             if (flowStateJS.component) {
                 component = getObjectFromStringPath(
-                    this.DocumentStore.project,
+                    this.projectEditorStore.project,
                     flowStateJS.component
                 ) as Component;
                 if (!component) {
@@ -709,14 +713,14 @@ export abstract class RuntimeBase {
 
     async saveDebugInfo() {
         let defaultPath;
-        if (this.DocumentStore.filePath?.endsWith(".eez-project")) {
+        if (this.projectEditorStore.filePath?.endsWith(".eez-project")) {
             defaultPath = path.basename(
-                this.DocumentStore.filePath!,
+                this.projectEditorStore.filePath!,
                 ".eez-project"
             );
         } else {
             defaultPath = path.basename(
-                this.DocumentStore.filePath!,
+                this.projectEditorStore.filePath!,
                 ".eez-dashboard"
             );
         }
@@ -819,13 +823,13 @@ export class FlowState {
         });
 
         this.dataContext =
-            this.runtime.DocumentStore.dataContext.createWithLocalVariables(
+            this.runtime.projectEditorStore.dataContext.createWithLocalVariables(
                 flow.localVariables
             );
     }
 
-    get DocumentStore() {
-        return this.runtime.DocumentStore;
+    get projectEditorStore() {
+        return this.runtime.projectEditorStore;
     }
 
     get flowState() {
@@ -1005,7 +1009,7 @@ export class FlowState {
 
             for (const componentStateJS of debugInfo.componentStates) {
                 const component = getObjectFromStringPath(
-                    this.DocumentStore.project,
+                    this.projectEditorStore.project,
                     componentStateJS.component
                 ) as Component;
                 if (!component) {

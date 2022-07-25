@@ -294,9 +294,9 @@ export const ComponentEnclosure = observer(
             }
 
             // className
-            const DocumentStore = flowContext.DocumentStore;
-            const uiStateStore = DocumentStore.uiStateStore;
-            const runtime = DocumentStore.runtime;
+            const projectEditorStore = flowContext.projectEditorStore;
+            const uiStateStore = projectEditorStore.uiStateStore;
+            const runtime = projectEditorStore.runtime;
 
             let breakpointClass;
             if (component instanceof ProjectEditor.ComponentClass) {
@@ -342,10 +342,10 @@ export const ComponentEnclosure = observer(
                         component instanceof
                             ProjectEditor.ActionComponentClass &&
                             component.description &&
-                            flowContext.DocumentStore.uiStateStore
+                            flowContext.projectEditorStore.uiStateStore
                                 .showComponentDescriptions &&
-                            (flowContext.DocumentStore.runtime
-                                ? flowContext.DocumentStore.runtime
+                            (flowContext.projectEditorStore.runtime
+                                ? flowContext.projectEditorStore.runtime
                                       .isDebuggerActive &&
                                   !flowContext.frontFace
                                 : true) && (

@@ -133,10 +133,10 @@ export function isHighlightedProperty(
     object: IEezObject,
     propertyInfo: PropertyInfo
 ) {
-    const DocumentStore = getDocumentStore(object);
+    const projectEditorStore = getDocumentStore(object);
     const selectedObject =
-        DocumentStore.navigationStore.selectedPanel &&
-        DocumentStore.navigationStore.selectedPanel.selectedObject;
+        projectEditorStore.navigationStore.selectedPanel &&
+        projectEditorStore.navigationStore.selectedPanel.selectedObject;
     return !!(
         selectedObject &&
         ((getParent(selectedObject) === object &&

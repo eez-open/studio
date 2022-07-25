@@ -24,7 +24,7 @@ import { Flow } from "project-editor/flow/flow";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { ComponentsContainerEnclosure } from "project-editor/flow/editor/render";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { generalGroup } from "project-editor/components/PropertyGrid/groups";
+import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -97,10 +97,10 @@ export class Action extends Flow {
         check: (action: Action) => {
             let messages: Message[] = [];
 
-            const DocumentStore = getDocumentStore(action);
+            const projectEditorStore = getDocumentStore(action);
 
             ProjectEditor.checkAssetId(
-                DocumentStore,
+                projectEditorStore,
                 "actions",
                 action,
                 messages
@@ -139,15 +139,15 @@ export class Action extends Flow {
                 },
                 values: {}
             }).then(result => {
-                const DocumentStore = getDocumentStore(parent);
+                const projectEditorStore = getDocumentStore(parent);
                 return Promise.resolve(
                     Object.assign(
                         {
                             name: result.values.name
                         },
-                        DocumentStore.project.isDashboardProject ||
-                            DocumentStore.project.isAppletProject ||
-                            DocumentStore.project
+                        projectEditorStore.project.isDashboardProject ||
+                            projectEditorStore.project.isAppletProject ||
+                            projectEditorStore.project
                                 .isFirmwareWithFlowSupportProject
                             ? ({
                                   implementationType: "flow",

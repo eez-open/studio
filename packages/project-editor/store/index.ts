@@ -83,7 +83,7 @@ export * from "project-editor/store/clipboard";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class DocumentStoreClass {
+export class ProjectEditorStore {
     undoManager = new UndoManager(this);
     navigationStore = new NavigationStore(this);
     editorsStore = new EditorsStore(this);
@@ -122,11 +122,11 @@ export class DocumentStoreClass {
     watcher: FSWatcher | undefined = undefined;
 
     static async create() {
-        return new DocumentStoreClass();
+        return new ProjectEditorStore();
     }
 
     constructor() {
-        makeObservable<DocumentStoreClass, "_project">(this, {
+        makeObservable<ProjectEditorStore, "_project">(this, {
             runtime: observable,
             _project: observable,
             modified: observable,
@@ -649,7 +649,7 @@ export class DocumentStoreClass {
     }
 
     addObject(parentObject: IEezObject, object: any) {
-        const undoManager = getDocumentStore(parentObject).undoManager;
+        const undoManager = this.undoManager;
 
         let closeCombineCommands = false;
 
@@ -926,39 +926,39 @@ export class DocumentStoreClass {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function isDashboardProject(object: IEezObject) {
-    const documentStore = getDocumentStore(object);
-    return documentStore.project.isDashboardProject;
+    const projectEditorStore = getDocumentStore(object);
+    return projectEditorStore.project.isDashboardProject;
 }
 
 export function isNotDashboardProject(object: IEezObject) {
-    const documentStore = getDocumentStore(object);
-    return !documentStore.project.isDashboardProject;
+    const projectEditorStore = getDocumentStore(object);
+    return !projectEditorStore.project.isDashboardProject;
 }
 
 export function isAppletOrFirmwareWithFlowSupportProject(object: IEezObject) {
-    const documentStore = getDocumentStore(object);
+    const projectEditorStore = getDocumentStore(object);
     return (
-        documentStore.project.isAppletProject ||
-        documentStore.project.isFirmwareWithFlowSupportProject
+        projectEditorStore.project.isAppletProject ||
+        projectEditorStore.project.isFirmwareWithFlowSupportProject
     );
 }
 
 export function isDashboardOrApplet(object: IEezObject) {
-    const documentStore = getDocumentStore(object);
+    const projectEditorStore = getDocumentStore(object);
     return (
-        documentStore.project.isDashboardProject ||
-        documentStore.project.isAppletProject
+        projectEditorStore.project.isDashboardProject ||
+        projectEditorStore.project.isAppletProject
     );
 }
 
 export function isDashboardOrAppletOrFirmwareWithFlowSupportProject(
     object: IEezObject
 ) {
-    const documentStore = getDocumentStore(object);
+    const projectEditorStore = getDocumentStore(object);
     return (
-        documentStore.project.isDashboardProject ||
-        documentStore.project.isAppletProject ||
-        documentStore.project.isFirmwareWithFlowSupportProject
+        projectEditorStore.project.isDashboardProject ||
+        projectEditorStore.project.isAppletProject ||
+        projectEditorStore.project.isFirmwareWithFlowSupportProject
     );
 }
 
@@ -969,32 +969,32 @@ export function isNotDashboardOrAppletOrFirmwareWithFlowSupportProject(
 }
 
 export function isV1Project(object: IEezObject) {
-    const documentStore = getDocumentStore(object);
-    return documentStore.project.settings.general.projectVersion === "v1";
+    const projectEditorStore = getDocumentStore(object);
+    return projectEditorStore.project.settings.general.projectVersion === "v1";
 }
 
 export function isNotV1Project(object: IEezObject) {
-    const documentStore = getDocumentStore(object);
-    return documentStore.project.settings.general.projectVersion !== "v1";
+    const projectEditorStore = getDocumentStore(object);
+    return projectEditorStore.project.settings.general.projectVersion !== "v1";
 }
 
 export function isV3OrNewerProject(object: IEezObject) {
-    const documentStore = getDocumentStore(object);
+    const projectEditorStore = getDocumentStore(object);
     return (
-        documentStore.project.settings.general.projectVersion !== "v1" &&
-        documentStore.project.settings.general.projectVersion !== "v2"
+        projectEditorStore.project.settings.general.projectVersion !== "v1" &&
+        projectEditorStore.project.settings.general.projectVersion !== "v2"
     );
 }
 
 export function isNotFirmwareWithFlowSupportProject(object: IEezObject) {
-    const documentStore = getDocumentStore(object);
-    return !documentStore.project.isFirmwareWithFlowSupportProject;
+    const projectEditorStore = getDocumentStore(object);
+    return !projectEditorStore.project.isFirmwareWithFlowSupportProject;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export async function load(
-    DocumentStore: DocumentStoreClass,
+    projectEditorStore: ProjectEditorStore,
     filePath: string
 ) {
     let fileData: Buffer;
@@ -1016,7 +1016,7 @@ export async function load(
     }
 
     const project: Project = loadObject(
-        DocumentStore,
+        projectEditorStore,
         undefined,
         projectJs,
         ProjectEditor.ProjectClass
@@ -1028,7 +1028,7 @@ export async function load(
 }
 
 export function getJSON(
-    DocumentStore: DocumentStoreClass,
+    projectEditorStore: ProjectEditorStore,
     tabWidth: number = 2
 ) {
     const toJsHook = (jsObject: any, object: IEezObject) => {
@@ -1046,17 +1046,17 @@ export function getJSON(
         }
     };
 
-    (DocumentStore.project as any)._DocumentStore = undefined;
+    (projectEditorStore.project as any)._DocumentStore = undefined;
 
-    const json = objectToJson(DocumentStore.project, tabWidth, toJsHook);
+    const json = objectToJson(projectEditorStore.project, tabWidth, toJsHook);
 
-    DocumentStore.project._DocumentStore = DocumentStore;
+    projectEditorStore.project._DocumentStore = projectEditorStore;
 
     return json;
 }
 
-export function save(DocumentStore: DocumentStoreClass, filePath: string) {
-    const json = getJSON(DocumentStore);
+export function save(projectEditorStore: ProjectEditorStore, filePath: string) {
+    const json = getJSON(projectEditorStore);
 
     return new Promise<void>((resolve, reject) => {
         fs.writeFile(filePath, json, "utf8", (err: any) => {

@@ -22,7 +22,7 @@ import {
     Message,
     propertyNotSetMessage
 } from "project-editor/store";
-import { DocumentStoreClass } from "project-editor/store";
+import { ProjectEditorStore } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -161,10 +161,10 @@ export class ScpiEnum extends EezObject {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function findScpiEnum(
-    DocumentStore: DocumentStoreClass,
+    projectEditorStore: ProjectEditorStore,
     enumeration: string
 ) {
-    const scpi = DocumentStore.project.scpi;
+    const scpi = projectEditorStore.project.scpi;
 
     for (let i = 0; i < scpi.enums.length; ++i) {
         if (scpi.enums[i].name === enumeration) {
@@ -176,9 +176,9 @@ export function findScpiEnum(
 }
 
 export function getScpiEnumsAsDialogEnumItems(
-    DocumentStore: DocumentStoreClass
+    projectEditorStore: ProjectEditorStore
 ): EnumItems {
-    return DocumentStore.project.scpi.enums
+    return projectEditorStore.project.scpi.enums
         .slice()
         .sort((a, b) => stringCompare(getLabel(a), getLabel(b)))
         .map(scpiEnum => ({

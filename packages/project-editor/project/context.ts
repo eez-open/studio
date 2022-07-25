@@ -1,7 +1,7 @@
 import React from "react";
 
-import type { DocumentStoreClass } from "project-editor/store";
+import type { ProjectEditorStore } from "project-editor/store";
 
-export const ProjectContext = React.createContext<DocumentStoreClass>(
+export const ProjectContext = React.createContext<ProjectEditorStore>(
     undefined as any
 );

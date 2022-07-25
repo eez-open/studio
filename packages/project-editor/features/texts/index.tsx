@@ -28,7 +28,7 @@ import classNames from "classnames";
 import {
     isHighlightedProperty,
     isPropertyInError
-} from "project-editor/components/PropertyGrid/utils";
+} from "project-editor/ui-components/PropertyGrid/utils";
 import { LabelWithProgress } from "./LabelWithProgress";
 
 ////////////////////////////////////////////////////////////////////////////////

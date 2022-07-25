@@ -20,7 +20,7 @@ import {
 } from "project-editor/store/helper";
 
 import { loadObject, objectToJson } from "project-editor/store/serialization";
-import type { DocumentStoreClass } from "project-editor/store";
+import type { ProjectEditorStore } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -41,7 +41,7 @@ export function objectsToClipboardData(objects: IEezObject[]): string {
 }
 
 export function clipboardDataToObject(
-    DocumentStore: DocumentStoreClass,
+    projectEditorStore: ProjectEditorStore,
     data: string
 ) {
     let serializedData: SerializedData = JSON.parse(data);
@@ -51,14 +51,14 @@ export function clipboardDataToObject(
         serializedData.classInfo = aClass.classInfo;
         if (serializedData.object) {
             serializedData.object = loadObject(
-                DocumentStore,
+                projectEditorStore,
                 undefined,
                 serializedData.object,
                 aClass
             );
         } else if (serializedData.objects) {
             serializedData.objects = serializedData.objects.map(object =>
-                loadObject(DocumentStore, undefined, object, aClass)
+                loadObject(projectEditorStore, undefined, object, aClass)
             );
         }
     }
@@ -74,7 +74,7 @@ export function setClipboardData(event: any, value: string) {
 }
 
 export function getEezStudioDataFromDragEvent(
-    DocumentStore: DocumentStoreClass,
+    projectEditorStore: ProjectEditorStore,
     event: any
 ) {
     let data = event.dataTransfer.getData(CLIPOARD_DATA_ID);
@@ -82,7 +82,7 @@ export function getEezStudioDataFromDragEvent(
         data = clipboardData;
     }
     if (data) {
-        return clipboardDataToObject(DocumentStore, data);
+        return clipboardDataToObject(projectEditorStore, data);
     }
     return undefined;
 }
@@ -155,12 +155,12 @@ export function findPastePlaceInsideAndOutside(
 }
 
 export function checkClipboard(
-    DocumentStore: DocumentStoreClass,
+    projectEditorStore: ProjectEditorStore,
     object: IEezObject
 ) {
     let text = pasteFromClipboard();
     if (text) {
-        let serializedData = clipboardDataToObject(DocumentStore, text);
+        let serializedData = clipboardDataToObject(projectEditorStore, text);
         if (serializedData) {
             let pastePlace = findPastePlaceInsideAndOutside(
                 object,

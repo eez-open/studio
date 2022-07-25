@@ -22,7 +22,7 @@ import {
 
 import { metrics } from "project-editor/features/extension-definitions/metrics";
 import { ProjectContext } from "project-editor/project/context";
-import { ListNavigation } from "project-editor/components/ListNavigation";
+import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { NavigationComponent } from "project-editor/project/NavigationComponent";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -234,10 +234,10 @@ export class ExtensionDefinition extends EezObject {
                 );
             }
 
-            const DocumentStore = getDocumentStore(object);
+            const projectEditorStore = getDocumentStore(object);
 
             let extensionDefinitions =
-                DocumentStore.project.extensionDefinitions;
+                projectEditorStore.project.extensionDefinitions;
             if (
                 extensionDefinitions.find(
                     extensionDefinition =>

@@ -20,7 +20,7 @@ export class FlowDocument implements IDocument {
             connectionLines: computed,
             selectedConnectionLines: computed,
             nonSelectedConnectionLines: computed,
-            DocumentStore: computed
+            projectEditorStore: computed
         });
     }
 
@@ -33,11 +33,11 @@ export class FlowDocument implements IDocument {
 
     get selectedConnectionLines() {
         if (
-            this.DocumentStore.runtime &&
-            (!this.DocumentStore.runtime.isDebuggerActive ||
+            this.projectEditorStore.runtime &&
+            (!this.projectEditorStore.runtime.isDebuggerActive ||
                 !(
-                    this.DocumentStore.runtime.isPaused ||
-                    this.DocumentStore.runtime.isStopped
+                    this.projectEditorStore.runtime.isPaused ||
+                    this.projectEditorStore.runtime.isStopped
                 ))
         ) {
             return [];
@@ -50,11 +50,11 @@ export class FlowDocument implements IDocument {
 
     get nonSelectedConnectionLines() {
         if (
-            this.DocumentStore.runtime &&
-            (!this.DocumentStore.runtime.isDebuggerActive ||
+            this.projectEditorStore.runtime &&
+            (!this.projectEditorStore.runtime.isDebuggerActive ||
                 !(
-                    this.DocumentStore.runtime.isPaused ||
-                    this.DocumentStore.runtime.isStopped
+                    this.projectEditorStore.runtime.isPaused ||
+                    this.projectEditorStore.runtime.isStopped
                 ))
         ) {
             return this.connectionLines;
@@ -98,7 +98,7 @@ export class FlowDocument implements IDocument {
 
     pasteSelection() {}
 
-    get DocumentStore() {
+    get projectEditorStore() {
         return getDocumentStore(this.flow.object);
     }
 

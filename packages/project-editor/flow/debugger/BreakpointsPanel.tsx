@@ -1,7 +1,7 @@
 import React from "react";
 import { observer } from "mobx-react";
 import { IListNode, List } from "eez-studio-ui/list";
-import { Panel } from "project-editor/components/Panel";
+import { Panel } from "project-editor/ui-components/Panel";
 import { action, computed, IObservableValue, makeObservable } from "mobx";
 import { getId } from "project-editor/core/object";
 import type { Component } from "project-editor/flow/component";

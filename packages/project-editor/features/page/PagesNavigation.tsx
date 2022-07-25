@@ -12,8 +12,8 @@ import {
 } from "project-editor/core/objectAdapter";
 import { IPanel, LayoutModels } from "project-editor/store";
 
-import { ListNavigation } from "project-editor/components/ListNavigation";
-import { Tree } from "project-editor/components/Tree";
+import { ListNavigation } from "project-editor/ui-components/ListNavigation";
+import { Tree } from "project-editor/ui-components/Tree";
 
 import { ProjectContext } from "project-editor/project/context";
 

@@ -5,7 +5,7 @@ import * as notification from "eez-studio-ui/notification";
 
 import { ProjectContext } from "project-editor/project/context";
 import {
-    DocumentStoreClass,
+    ProjectEditorStore,
     getClassInfo,
     getObjectFromStringPath,
     getObjectPathAsString,
@@ -120,26 +120,27 @@ export class WasmRuntime extends RemoteRuntime {
 
     ////////////////////////////////////////////////////////////////////////////////
 
-    constructor(public DocumentStore: DocumentStoreClass) {
-        super(DocumentStore);
+    constructor(public projectEditorStore: ProjectEditorStore) {
+        super(projectEditorStore);
     }
 
     ////////////////////////////////////////////////////////////////////////////////
 
     async doStartRuntime(isDebuggerActive: boolean) {
-        const result = await this.DocumentStore.buildAssets();
+        const result = await this.projectEditorStore.buildAssets();
 
-        const outputSection = this.DocumentStore.outputSectionsStore.getSection(
-            Section.OUTPUT
-        );
+        const outputSection =
+            this.projectEditorStore.outputSectionsStore.getSection(
+                Section.OUTPUT
+            );
         if (outputSection.numErrors > 0 || outputSection.numWarnings > 0) {
-            this.DocumentStore.layoutModels.selectTab(
-                this.DocumentStore.layoutModels.root,
+            this.projectEditorStore.layoutModels.selectTab(
+                this.projectEditorStore.layoutModels.root,
                 LayoutModels.OUTPUT_TAB_ID
             );
             if (outputSection.numErrors > 0) {
                 this.stopRuntimeWithError("Build error");
-                this.DocumentStore.setEditorMode();
+                this.projectEditorStore.setEditorMode();
                 return;
             }
         }
@@ -147,7 +148,7 @@ export class WasmRuntime extends RemoteRuntime {
         this.assetsMap = result.GUI_ASSETS_DATA_MAP_JS as AssetsMap;
         if (!this.assetsMap) {
             this.stopRuntimeWithError("Build error");
-            this.DocumentStore.setEditorMode();
+            this.projectEditorStore.setEditorMode();
             return;
         }
 
@@ -156,7 +157,7 @@ export class WasmRuntime extends RemoteRuntime {
 
         this.assetsData = result.GUI_ASSETS_DATA;
 
-        if (this.DocumentStore.project.isDashboardProject) {
+        if (this.projectEditorStore.project.isDashboardProject) {
             await this.loadGlobalVariables();
         }
 
@@ -197,7 +198,7 @@ export class WasmRuntime extends RemoteRuntime {
 
         setTimeout(() => {
             if (!this.isStopped) {
-                this.DocumentStore.setEditorMode();
+                this.projectEditorStore.setEditorMode();
             }
         }, 500);
     }
@@ -209,7 +210,7 @@ export class WasmRuntime extends RemoteRuntime {
             const message: RendererToWorkerMessage = {};
 
             let globalVariableValues: IGlobalVariable[];
-            if (this.DocumentStore.project.isDashboardProject) {
+            if (this.projectEditorStore.project.isDashboardProject) {
                 globalVariableValues = this.globalVariables.map(
                     globalVariable => {
                         if (globalVariable.kind == "basic") {
@@ -281,7 +282,7 @@ export class WasmRuntime extends RemoteRuntime {
                         const { flowState, flowIndex } = flowStateAndIndex;
 
                         const component = getObjectFromStringPath(
-                            this.DocumentStore.project,
+                            this.projectEditorStore.project,
                             this.assetsMap.flows[flowIndex].components[
                                 componentMessage.componentIndex
                             ].path
@@ -395,9 +396,10 @@ export class WasmRuntime extends RemoteRuntime {
     ////////////////////////////////////////////////////////////////////////////////
 
     async loadGlobalVariables() {
-        await this.DocumentStore.runtimeSettings.loadPersistentVariables();
+        await this.projectEditorStore.runtimeSettings.loadPersistentVariables();
 
-        for (const variable of this.DocumentStore.project.allGlobalVariables) {
+        for (const variable of this.projectEditorStore.project
+            .allGlobalVariables) {
             const globalVariableInAssetsMap =
                 this.assetsMap.globalVariables.find(
                     globalVariableInAssetsMap =>
@@ -406,7 +408,7 @@ export class WasmRuntime extends RemoteRuntime {
 
             const globalVariableIndex = globalVariableInAssetsMap!.index;
 
-            let value = this.DocumentStore.dataContext.get(variable.name);
+            let value = this.projectEditorStore.dataContext.get(variable.name);
 
             const objectVariableType = getObjectVariableTypeFromType(
                 variable.type
@@ -426,7 +428,7 @@ export class WasmRuntime extends RemoteRuntime {
                                 true
                             );
 
-                            this.DocumentStore.dataContext.set(
+                            this.projectEditorStore.dataContext.set(
                                 variable.name,
                                 value
                             );
@@ -531,14 +533,14 @@ export class WasmRuntime extends RemoteRuntime {
         for (let i = 0; i < this.globalVariables.length; i++) {
             const globalVariable = this.globalVariables[i];
             if (globalVariable.kind == "object") {
-                this.DocumentStore.dataContext.set(
+                this.projectEditorStore.dataContext.set(
                     globalVariable.variable.name,
                     globalVariable.objectVariableValue
                 );
             }
         }
 
-        await this.DocumentStore.runtimeSettings.savePersistentVariables();
+        await this.projectEditorStore.runtimeSettings.savePersistentVariables();
 
         for (let i = 0; i < this.globalVariables.length; i++) {
             const globalVariable = this.globalVariables[i];

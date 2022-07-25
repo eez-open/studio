@@ -5,16 +5,16 @@ import { makeFolder } from "eez-studio-shared/util-electron";
 import type { IdfProperties as InstrumentIdfProperties } from "instrument/export";
 import { getProperty, MessageType } from "project-editor/core/object";
 import { objectToJS, Section } from "project-editor/store";
-import type { DocumentStoreClass } from "project-editor/store";
+import type { ProjectEditorStore } from "project-editor/store";
 
 import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 function getInstrumentExtensionProperties(
-    DocumentStore: DocumentStoreClass,
+    projectEditorStore: ProjectEditorStore,
     extensionDefinition: ExtensionDefinition
 ) {
-    const project = DocumentStore.project;
+    const project = projectEditorStore.project;
 
     let instrumentExtensionProperties: any = {};
 
@@ -40,8 +40,8 @@ function getInstrumentExtensionProperties(
     return instrumentExtensionProperties;
 }
 
-function getExtensionsToBuild(DocumentStore: DocumentStoreClass) {
-    let extensionDefinitions = DocumentStore.project.extensionDefinitions;
+function getExtensionsToBuild(projectEditorStore: ProjectEditorStore) {
+    let extensionDefinitions = projectEditorStore.project.extensionDefinitions;
 
     return (
         extensionDefinitions &&
@@ -57,15 +57,15 @@ function getExtensionsToBuild(DocumentStore: DocumentStoreClass) {
 }
 
 export function extensionDefinitionAnythingToBuild(
-    DocumentStore: DocumentStoreClass
+    projectEditorStore: ProjectEditorStore
 ) {
-    return getExtensionsToBuild(DocumentStore).length > 0;
+    return getExtensionsToBuild(projectEditorStore).length > 0;
 }
 
 export async function extensionDefinitionBuild(
-    DocumentStore: DocumentStoreClass
+    projectEditorStore: ProjectEditorStore
 ) {
-    const extensionsToBuild = getExtensionsToBuild(DocumentStore);
+    const extensionsToBuild = getExtensionsToBuild(projectEditorStore);
 
     if (!extensionsToBuild) {
         return;
@@ -81,7 +81,7 @@ export async function extensionDefinitionBuild(
 
         // from configuration
         const configuration =
-            DocumentStore.project.settings.build.configurations.find(
+            projectEditorStore.project.settings.build.configurations.find(
                 configuration =>
                     configuration.name == extensionDefinition.buildConfiguration
             );
@@ -105,7 +105,7 @@ export async function extensionDefinitionBuild(
             {
                 properties
             },
-            getInstrumentExtensionProperties(DocumentStore, idfFromProject)
+            getInstrumentExtensionProperties(projectEditorStore, idfFromProject)
         );
 
         if (configuration) {
@@ -117,7 +117,7 @@ export async function extensionDefinitionBuild(
 
             let idfFilePath;
             if (extensionDefinition.buildFolder) {
-                let buildFolderPath = DocumentStore.getAbsoluteFilePath(
+                let buildFolderPath = projectEditorStore.getAbsoluteFilePath(
                     extensionDefinition.buildFolder
                 );
 
@@ -129,10 +129,11 @@ export async function extensionDefinitionBuild(
 
                 idfFilePath = buildFolderPath + "/" + idfFileName;
             } else {
-                idfFilePath = DocumentStore.getAbsoluteFilePath(idfFileName);
+                idfFilePath =
+                    projectEditorStore.getAbsoluteFilePath(idfFileName);
             }
 
-            const scpi = DocumentStore.project.scpi;
+            const scpi = projectEditorStore.project.scpi;
             const subsystems = objectToJS(scpi.subsystems);
             const enums = objectToJS(scpi.enums);
 
@@ -150,19 +151,20 @@ export async function extensionDefinitionBuild(
                 idfFilePath,
 
                 instrumentIdf.image &&
-                    DocumentStore.getAbsoluteFilePath(instrumentIdf.image),
+                    projectEditorStore.getAbsoluteFilePath(instrumentIdf.image),
 
-                DocumentStore.project.settings.general.scpiDocFolder &&
-                    DocumentStore.getAbsoluteFilePath(
-                        DocumentStore.project.settings.general.scpiDocFolder
+                projectEditorStore.project.settings.general.scpiDocFolder &&
+                    projectEditorStore.getAbsoluteFilePath(
+                        projectEditorStore.project.settings.general
+                            .scpiDocFolder
                     ),
 
-                DocumentStore.getAbsoluteFilePath("."),
+                projectEditorStore.getAbsoluteFilePath("."),
 
                 properties
             );
 
-            DocumentStore.outputSectionsStore.write(
+            projectEditorStore.outputSectionsStore.write(
                 Section.OUTPUT,
                 MessageType.INFO,
                 `Instrument definition file "${idfFileName}" builded.`

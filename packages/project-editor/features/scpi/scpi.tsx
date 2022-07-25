@@ -167,7 +167,7 @@ export class ScpiParameter extends EezObject {
                     object: ScpiParameter,
                     propertyInfo: PropertyInfo
                 ) => {
-                    const DocumentStore = getDocumentStore(object);
+                    const projectEditorStore = getDocumentStore(object);
                     const result = await showGenericDialog({
                         dialogDefinition: {
                             title: "Select one or more type",
@@ -233,7 +233,7 @@ export class ScpiParameter extends EezObject {
                                     type: "enum",
                                     enumItems: () => {
                                         return getScpiEnumsAsDialogEnumItems(
-                                            DocumentStore
+                                            projectEditorStore
                                         );
                                     },
                                     visible: (values: any) => {
@@ -467,7 +467,7 @@ export class ScpiResponse extends EezObject {
                     object: ScpiResponse,
                     propertyInfo: PropertyInfo
                 ) => {
-                    const DocumentStore = getDocumentStore(object);
+                    const projectEditorStore = getDocumentStore(object);
                     const result = await showGenericDialog({
                         dialogDefinition: {
                             title: "Select one or more type",
@@ -547,7 +547,7 @@ export class ScpiResponse extends EezObject {
                                     type: "enum",
                                     enumItems: () => {
                                         return getScpiEnumsAsDialogEnumItems(
-                                            DocumentStore
+                                            projectEditorStore
                                         );
                                     },
                                     visible: (values: any) => {

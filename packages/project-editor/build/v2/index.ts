@@ -1,6 +1,6 @@
 import { strToColor16 } from "eez-studio-shared/color";
 
-import type { BuildResult } from "project-editor/core/extensions";
+import type { BuildResult } from "project-editor/store/features";
 
 import {
     TAB,
@@ -553,7 +553,7 @@ function buildGuiFontsEnum(assets: Assets) {
 }
 
 async function buildGuiFontsData(assets: Assets, dataBuffer: DataBuffer) {
-    if (!assets.DocumentStore.masterProject) {
+    if (!assets.projectEditorStore.masterProject) {
         await dataBuffer.packRegions(assets.fonts.length, async (i: number) => {
             getFontData(assets.fonts[i], dataBuffer);
         });
@@ -797,7 +797,7 @@ function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer | null) {
 
     return buildListData((document: Struct) => {
         let styles = new ObjectList();
-        if (!assets.DocumentStore.masterProject) {
+        if (!assets.projectEditorStore.masterProject) {
             const assetStyles = assets.styles.filter(
                 style => !!style
             ) as Style[];
@@ -1424,7 +1424,7 @@ function buildGuiColors(assets: Assets, dataBuffer: DataBuffer) {
     return buildListData((document: Struct) => {
         let themes = new ObjectList();
 
-        if (!assets.DocumentStore.masterProject) {
+        if (!assets.projectEditorStore.masterProject) {
             assets.rootProject.themes.forEach(theme => {
                 themes.addItem(buildTheme(theme));
             });
@@ -1434,7 +1434,7 @@ function buildGuiColors(assets: Assets, dataBuffer: DataBuffer) {
 
         let colors = new ObjectList();
 
-        if (!assets.DocumentStore.masterProject) {
+        if (!assets.projectEditorStore.masterProject) {
             assets.colors.forEach(color => {
                 colors.addItem(buildColor(color));
             });
@@ -1468,7 +1468,7 @@ async function buildGuiAssetsData(assets: Assets) {
     const dataBuffer = new DataBuffer();
 
     await dataBuffer.packRegions(
-        assets.DocumentStore.masterProject ? 7 : 5,
+        assets.projectEditorStore.masterProject ? 7 : 5,
         async i => {
             if (i == 0) {
                 buildGuiDocumentData(assets, dataBuffer);
@@ -1505,13 +1505,13 @@ async function buildGuiAssetsData(assets: Assets) {
     compressedData.writeUInt32LE(inputBuffer.length, 0); // write uncomprresed size at the beginning
     outputBuffer.copy(compressedData, 4, 0, compressedSize);
 
-    assets.DocumentStore.outputSectionsStore.write(
+    assets.projectEditorStore.outputSectionsStore.write(
         Section.OUTPUT,
         MessageType.INFO,
         "Uncompressed size: " + inputBuffer.length
     );
 
-    assets.DocumentStore.outputSectionsStore.write(
+    assets.projectEditorStore.outputSectionsStore.write(
         Section.OUTPUT,
         MessageType.INFO,
         "Compressed size: " + compressedSize
@@ -1543,7 +1543,7 @@ class Assets {
     bitmaps: Bitmap[] = [];
     colors: string[] = [];
 
-    get DocumentStore() {
+    get projectEditorStore() {
         return this.rootProject._DocumentStore;
     }
 
@@ -1602,7 +1602,7 @@ class Assets {
         }
 
         this.styles = [undefined];
-        if (!this.DocumentStore.masterProject) {
+        if (!this.projectEditorStore.masterProject) {
             this.getAssets<Style>(
                 project => project.styles || [],
                 style => style.id != undefined
@@ -1650,11 +1650,13 @@ class Assets {
                 assetIndex = collection.length - 1;
             }
             assetIndex++;
-            return this.DocumentStore.masterProject ? -assetIndex : assetIndex;
+            return this.projectEditorStore.masterProject
+                ? -assetIndex
+                : assetIndex;
         }
 
         const message = propertyNotFoundMessage(object, propertyName);
-        this.DocumentStore.outputSectionsStore.write(
+        this.projectEditorStore.outputSectionsStore.write(
             Section.OUTPUT,
             message.type,
             message.text,
@@ -1707,7 +1709,7 @@ class Assets {
         project: Project,
         styleNameOrObject: string | Style
     ): number {
-        if (this.DocumentStore.masterProject) {
+        if (this.projectEditorStore.masterProject) {
             if (typeof styleNameOrObject === "string") {
                 const styleName = styleNameOrObject;
                 const style = findStyle(project, styleName);
@@ -1814,7 +1816,7 @@ class Assets {
     ) {
         let color = getStyleProperty(style, propertyName, false);
 
-        let colors = this.DocumentStore.project.colors;
+        let colors = this.projectEditorStore.project.colors;
 
         for (let i = 0; i < colors.length; i++) {
             if (colors[i].name === color) {
@@ -1863,7 +1865,7 @@ class Assets {
                         return false;
                     })
                 ) {
-                    this.DocumentStore.outputSectionsStore.write(
+                    this.projectEditorStore.outputSectionsStore.write(
                         Section.OUTPUT,
                         MessageType.INFO,
                         "Unused style: " + style.name,
@@ -1874,7 +1876,7 @@ class Assets {
 
             project.fonts?.forEach(font => {
                 if (this.fonts.indexOf(font) === -1) {
-                    this.DocumentStore.outputSectionsStore.write(
+                    this.projectEditorStore.outputSectionsStore.write(
                         Section.OUTPUT,
                         MessageType.INFO,
                         "Unused font: " + font.name,
@@ -1885,7 +1887,7 @@ class Assets {
 
             project.bitmaps?.forEach(bitmap => {
                 if (this.bitmaps.indexOf(bitmap) === -1) {
-                    this.DocumentStore.outputSectionsStore.write(
+                    this.projectEditorStore.outputSectionsStore.write(
                         Section.OUTPUT,
                         MessageType.INFO,
                         "Unused bitmap: " + bitmap.name,

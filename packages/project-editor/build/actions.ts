@@ -1,4 +1,4 @@
-import type { BuildResult } from "project-editor/core/extensions";
+import type { BuildResult } from "project-editor/store/features";
 
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 
@@ -88,7 +88,7 @@ export function buildActions(
 
         if (
             assets.option == "buildFiles" &&
-            assets.DocumentStore.project.isFirmwareWithFlowSupportProject
+            assets.projectEditorStore.project.isFirmwareWithFlowSupportProject
         ) {
             // only native
             projectActions = projectActions.filter(
@@ -128,7 +128,7 @@ export function buildActions(
 
 export function buildActionNames(assets: Assets, dataBuffer: DataBuffer) {
     dataBuffer.writeArray(
-        assets.DocumentStore.masterProject ? assets.actions : [],
+        assets.projectEditorStore.masterProject ? assets.actions : [],
         action => {
             dataBuffer.writeString(action.name);
         }

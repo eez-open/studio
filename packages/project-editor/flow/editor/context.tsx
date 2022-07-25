@@ -65,7 +65,8 @@ class ViewState implements IViewState {
     }
 
     getResizeHandlers(): IResizeHandler[] | undefined {
-        const isEditor = this.document && !this.document.DocumentStore.runtime;
+        const isEditor =
+            this.document && !this.document.projectEditorStore.runtime;
 
         if (
             !isEditor ||
@@ -211,9 +212,9 @@ class ViewState implements IViewState {
             widget => getWidgetParent(widget) !== getWidgetParent(components[0])
         );
 
-        const DocumentStore = getDocumentStore(components[0]);
+        const projectEditorStore = getDocumentStore(components[0]);
 
-        DocumentStore.undoManager.setCombineCommands(true);
+        projectEditorStore.undoManager.setCombineCommands(true);
 
         components.forEach(component => {
             const classInfo = getClassInfo(component);
@@ -264,14 +265,14 @@ class ViewState implements IViewState {
             }
         });
 
-        DocumentStore.undoManager.setCombineCommands(false);
+        projectEditorStore.undoManager.setCombineCommands(false);
     }
 
     get hoveredConnectionLinesComponent() {
         if (!this.hoveredConnectionLines) {
             return undefined;
         }
-        return this.flowContext.DocumentStore.getObjectFromObjectId(
+        return this.flowContext.projectEditorStore.getObjectFromObjectId(
             this.hoveredConnectionLines.id
         ) as Component;
     }
@@ -310,8 +311,8 @@ export class EditorFlowContext implements IFlowContext {
         });
     }
 
-    get DocumentStore() {
-        return this.document.DocumentStore;
+    get projectEditorStore() {
+        return this.document.projectEditorStore;
     }
 
     get containerId() {
@@ -364,7 +365,7 @@ export class EditorFlowContext implements IFlowContext {
         this.editorOptions.filterSnapLines = filterSnapLines;
 
         this.dataContext =
-            this.document.DocumentStore.dataContext.createWithLocalVariables(
+            this.document.projectEditorStore.dataContext.createWithLocalVariables(
                 this.flow.localVariables
             );
     }

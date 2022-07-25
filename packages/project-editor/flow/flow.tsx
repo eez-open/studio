@@ -527,21 +527,21 @@ export abstract class Flow extends EezObject {
     }
 
     pasteFlowFragment(flowFragment: FlowFragment, object: IEezObject) {
-        const DocumentStore = getDocumentStore(this);
+        const projectEditorStore = getDocumentStore(this);
 
-        DocumentStore.undoManager.setCombineCommands(true);
+        projectEditorStore.undoManager.setCombineCommands(true);
 
         flowFragment.rewire();
 
         let components: IEezObject[];
 
         if (flowFragment.connectionLines.length > 0) {
-            DocumentStore.addObjects(
+            projectEditorStore.addObjects(
                 this.connectionLines,
                 flowFragment.connectionLines
             );
 
-            components = DocumentStore.addObjects(
+            components = projectEditorStore.addObjects(
                 this.components,
                 flowFragment.components
             );
@@ -553,19 +553,19 @@ export abstract class Flow extends EezObject {
                     component => component instanceof Widget
                 )
             ) {
-                components = DocumentStore.addObjects(
+                components = projectEditorStore.addObjects(
                     object.widgets,
                     flowFragment.components
                 );
             } else {
-                components = DocumentStore.addObjects(
+                components = projectEditorStore.addObjects(
                     this.components,
                     flowFragment.components
                 );
             }
         }
 
-        DocumentStore.undoManager.setCombineCommands(false);
+        projectEditorStore.undoManager.setCombineCommands(false);
 
         return components;
     }
@@ -712,12 +712,12 @@ export class FlowFragment extends EezObject {
         this.components = [];
         this.connectionLines = [];
 
-        const DocumentStore = getDocumentStore(flow);
+        const projectEditorStore = getDocumentStore(flow);
 
         const wireIDMap = new Set<string>();
 
         objects.forEach((object: Component) => {
-            const clone = cloneObject(DocumentStore, object) as Component;
+            const clone = cloneObject(projectEditorStore, object) as Component;
             this.components.push(clone);
 
             wireIDMap.add(object.wireID);
@@ -743,7 +743,7 @@ export class FlowFragment extends EezObject {
                 wireIDMap.has(connectionLine.target)
             ) {
                 const clone = cloneObject(
-                    DocumentStore,
+                    projectEditorStore,
                     connectionLine
                 ) as ConnectionLine;
                 this.connectionLines.push(clone);
@@ -796,7 +796,7 @@ export abstract class FlowTabState implements IEditorState {
     constructor(public flow: Flow) {
         makeObservable(this, {
             flowState: computed,
-            DocumentStore: computed,
+            projectEditorStore: computed,
             isRuntime: computed,
             resetTransform: action,
             selectedObject: computed,
@@ -807,18 +807,18 @@ export abstract class FlowTabState implements IEditorState {
     }
 
     get flowState() {
-        if (this.DocumentStore.runtime) {
-            return this.DocumentStore.runtime.getFlowState(this.flow);
+        if (this.projectEditorStore.runtime) {
+            return this.projectEditorStore.runtime.getFlowState(this.flow);
         }
         return undefined;
     }
 
-    get DocumentStore() {
+    get projectEditorStore() {
         return getDocumentStore(this.flow);
     }
 
     get isRuntime() {
-        return !!this.DocumentStore.runtime;
+        return !!this.projectEditorStore.runtime;
     }
 
     abstract loadState(state: any): void;

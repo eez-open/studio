@@ -23,7 +23,7 @@ import {
     FieldComponent
 } from "eez-studio-ui/generic-dialog";
 import { Tree } from "eez-studio-ui/tree";
-import { BootstrapButton } from "project-editor/components/BootstrapButton";
+import { BootstrapButton } from "project-editor/ui-components/BootstrapButton";
 
 import {
     ClassInfo,
@@ -48,7 +48,7 @@ import {
     propertyNotSetMessage,
     propertyNotFoundMessage,
     propertyInvalidValueMessage,
-    DocumentStoreClass,
+    ProjectEditorStore,
     getDocumentStore,
     isNotV1Project,
     LayoutModels,
@@ -446,9 +446,9 @@ class BuildAssetsUssage {
 function showUsage(importDirective: ImportDirective) {
     const buildAssetsUsage = new BuildAssetsUssage(importDirective);
 
-    const DocumentStore = getDocumentStore(importDirective);
+    const projectEditorStore = getDocumentStore(importDirective);
 
-    usage(DocumentStore, message => buildAssetsUsage.onMessage(message));
+    usage(projectEditorStore, message => buildAssetsUsage.onMessage(message));
 
     showGenericDialog({
         dialogDefinition: {
@@ -474,12 +474,12 @@ function showUsage(importDirective: ImportDirective) {
             action(result => {
                 const assetsUsage: IAssetsUsage = result.values.assetsUsage;
                 if (assetsUsage.selectedAsset) {
-                    DocumentStore.uiStateStore.searchPattern =
+                    projectEditorStore.uiStateStore.searchPattern =
                         assetsUsage.selectedAsset;
-                    DocumentStore.uiStateStore.searchMatchCase = true;
-                    DocumentStore.uiStateStore.searchMatchWholeWord = true;
+                    projectEditorStore.uiStateStore.searchMatchCase = true;
+                    projectEditorStore.uiStateStore.searchMatchWholeWord = true;
                     startSearch(
-                        DocumentStore,
+                        projectEditorStore,
                         assetsUsage.selectedAsset,
                         true,
                         true
@@ -491,10 +491,10 @@ function showUsage(importDirective: ImportDirective) {
 }
 
 function openProject(importDirective: ImportDirective) {
-    const DocumentStore = getDocumentStore(importDirective);
+    const projectEditorStore = getDocumentStore(importDirective);
     ipcRenderer.send(
         "open-file",
-        DocumentStore.getAbsoluteFilePath(importDirective.projectFilePath)
+        projectEditorStore.getAbsoluteFilePath(importDirective.projectFilePath)
     );
 }
 
@@ -604,27 +604,31 @@ export class ImportDirective {
     }
 
     get projectAbsoluteFilePath() {
-        const DocumentStore = getDocumentStore(this);
-        return DocumentStore.getAbsoluteFilePath(
+        const projectEditorStore = getDocumentStore(this);
+        return projectEditorStore.getAbsoluteFilePath(
             this.projectFilePath,
             getProject(this)
         );
     }
 
     async loadProject() {
-        const DocumentStore = getDocumentStore(this);
-        await DocumentStore.loadExternalProject(this.projectAbsoluteFilePath);
+        const projectEditorStore = getDocumentStore(this);
+        await projectEditorStore.loadExternalProject(
+            this.projectAbsoluteFilePath
+        );
     }
 
     get project(): Project | undefined {
-        const DocumentStore = getDocumentStore(this);
+        const projectEditorStore = getDocumentStore(this);
 
-        if (this.projectAbsoluteFilePath == DocumentStore.filePath) {
-            return DocumentStore.project;
+        if (this.projectAbsoluteFilePath == projectEditorStore.filePath) {
+            return projectEditorStore.project;
         }
 
         return this.projectFilePath
-            ? DocumentStore.externalProjects.get(this.projectAbsoluteFilePath)
+            ? projectEditorStore.externalProjects.get(
+                  this.projectAbsoluteFilePath
+              )
             : undefined;
     }
 
@@ -706,11 +710,11 @@ export class General extends EezObject {
                 typeClass: ImportDirective,
                 defaultValue: [],
                 hideInPropertyGrid: (general: General) => {
-                    const documentStore = getDocumentStore(general);
+                    const projectEditorStore = getDocumentStore(general);
                     return (
                         !!getProject(general).masterProject ||
-                        documentStore.project.isDashboardProject ||
-                        documentStore.project.isAppletProject
+                        projectEditorStore.project.isDashboardProject ||
+                        projectEditorStore.project.isAppletProject
                     );
                 }
             },
@@ -753,10 +757,12 @@ export class General extends EezObject {
             let messages: Message[] = [];
 
             if (general.masterProject) {
-                const DocumentStore = getDocumentStore(general);
+                const projectEditorStore = getDocumentStore(general);
                 if (
                     !fileExistsSync(
-                        DocumentStore.getAbsoluteFilePath(general.masterProject)
+                        projectEditorStore.getAbsoluteFilePath(
+                            general.masterProject
+                        )
                     )
                 ) {
                     messages.push(
@@ -769,9 +775,9 @@ export class General extends EezObject {
                 }
             }
 
-            const DocumentStore = getDocumentStore(general);
+            const projectEditorStore = getDocumentStore(general);
 
-            if (DocumentStore.project.isFirmwareWithFlowSupportProject) {
+            if (projectEditorStore.project.isFirmwareWithFlowSupportProject) {
                 if (general.displayWidth < 1 || general.displayWidth > 1280) {
                     messages.push(
                         new Message(
@@ -889,10 +895,10 @@ export class Settings extends EezObject {
                     object: IEezObject,
                     propertyInfo: PropertyInfo
                 ) => {
-                    const DocumentStore = getDocumentStore(object);
+                    const projectEditorStore = getDocumentStore(object);
                     return (
-                        !DocumentStore.project.isDashboardProject &&
-                        !DocumentStore.masterProjectEnabled
+                        !projectEditorStore.project.isDashboardProject &&
+                        !projectEditorStore.masterProjectEnabled
                     );
                 }
             },
@@ -1441,7 +1447,7 @@ class AssetsMap {
 }
 
 export class Project extends EezObject {
-    _DocumentStore!: DocumentStoreClass;
+    _DocumentStore!: ProjectEditorStore;
     _isReadOnly: boolean = false;
     _isDashboardBuild: boolean = false;
 
@@ -1839,7 +1845,7 @@ export function getNameProperty(object: IEezObject) {
 }
 
 export function checkAssetId(
-    DocumentStore: DocumentStoreClass,
+    projectEditorStore: ProjectEditorStore,
     assetType: AssetType,
     asset: {
         id: number | undefined;
@@ -1859,7 +1865,7 @@ export function checkAssetId(
             );
         } else {
             if (
-                DocumentStore.project._assetsMap["id"].allAssets.get(
+                projectEditorStore.project._assetsMap["id"].allAssets.get(
                     `${assetType}/${asset.id}`
                 )!.length > 1
             ) {
@@ -1874,13 +1880,13 @@ export function checkAssetId(
 export class Command {
     constructor(
         public name: string,
-        public callback: (DocumentStore: DocumentStoreClass) => void
+        public callback: (projectEditorStore: ProjectEditorStore) => void
     ) {}
 }
 
 export const commands = [
-    new Command("Padding", (DocumentStore: DocumentStoreClass) => {
-        const selectedPanel = DocumentStore.navigationStore.selectedPanel;
+    new Command("Padding", (projectEditorStore: ProjectEditorStore) => {
+        const selectedPanel = projectEditorStore.navigationStore.selectedPanel;
         if (
             !(selectedPanel instanceof FlowEditor) &&
             !(selectedPanel instanceof PagesNavigation)
@@ -1943,21 +1949,25 @@ export const commands = [
                             typeof right === "number" &&
                             typeof bottom === "number"
                         ) {
-                            DocumentStore.undoManager.setCombineCommands(true);
+                            projectEditorStore.undoManager.setCombineCommands(
+                                true
+                            );
 
                             widgets.forEach(widget => {
-                                DocumentStore.updateObject(widget, {
+                                projectEditorStore.updateObject(widget, {
                                     left: widget.left + padding - left,
                                     top: widget.top + padding - top
                                 });
                             });
 
-                            DocumentStore.updateObject(selectedObject, {
+                            projectEditorStore.updateObject(selectedObject, {
                                 width: right - left + 2 * padding,
                                 height: bottom - top + 2 * padding
                             });
 
-                            DocumentStore.undoManager.setCombineCommands(false);
+                            projectEditorStore.undoManager.setCombineCommands(
+                                false
+                            );
                         }
                     }
                 })
@@ -1965,8 +1975,8 @@ export const commands = [
         }
     }),
 
-    new Command("Fit Size", (DocumentStore: DocumentStoreClass) => {
-        const selectedPanel = DocumentStore.navigationStore.selectedPanel;
+    new Command("Fit Size", (projectEditorStore: ProjectEditorStore) => {
+        const selectedPanel = projectEditorStore.navigationStore.selectedPanel;
         if (
             !(selectedPanel instanceof FlowEditor) &&
             !(selectedPanel instanceof PagesNavigation)
@@ -1984,7 +1994,7 @@ export const commands = [
                 return;
             }
 
-            DocumentStore.updateObject(selectedObject, {
+            projectEditorStore.updateObject(selectedObject, {
                 width: selectedObject.layoutPage.width,
                 height: selectedObject.layoutPage.height
             });
@@ -2010,7 +2020,7 @@ export const commands = [
                     widgets.map(widget => widget.top + widget.height)
                 );
 
-                DocumentStore.updateObject(selectedObject, {
+                projectEditorStore.updateObject(selectedObject, {
                     width: width,
                     height: height
                 });
@@ -2018,75 +2028,86 @@ export const commands = [
         }
     }),
 
-    new Command("Horizontal Align", (DocumentStore: DocumentStoreClass) => {
-        const selectedPanel = DocumentStore.navigationStore.selectedPanel;
-        if (
-            !(selectedPanel instanceof FlowEditor) &&
-            !(selectedPanel instanceof PageStructure)
-        ) {
-            return;
-        }
+    new Command(
+        "Horizontal Align",
+        (projectEditorStore: ProjectEditorStore) => {
+            const selectedPanel =
+                projectEditorStore.navigationStore.selectedPanel;
+            if (
+                !(selectedPanel instanceof FlowEditor) &&
+                !(selectedPanel instanceof PageStructure)
+            ) {
+                return;
+            }
 
-        const selectedObjects = selectedPanel.selectedObjects;
-        if (selectedObjects.length === 0) {
-            return;
-        }
+            const selectedObjects = selectedPanel.selectedObjects;
+            if (selectedObjects.length === 0) {
+                return;
+            }
 
-        const parent = getParent(selectedObjects[0]);
+            const parent = getParent(selectedObjects[0]);
 
-        if (
-            !selectedObjects.find(
-                selectedObject =>
-                    !(selectedObject instanceof Widget) ||
-                    getParent(selectedObject) != parent
-            )
-        ) {
-            showGenericDialog({
-                dialogDefinition: {
-                    fields: [
-                        {
-                            name: "gap",
-                            type: "number"
-                        }
-                    ]
-                },
+            if (
+                !selectedObjects.find(
+                    selectedObject =>
+                        !(selectedObject instanceof Widget) ||
+                        getParent(selectedObject) != parent
+                )
+            ) {
+                showGenericDialog({
+                    dialogDefinition: {
+                        fields: [
+                            {
+                                name: "gap",
+                                type: "number"
+                            }
+                        ]
+                    },
 
-                values: {
-                    gap: 10
-                }
-            })
-                .then(result => {
-                    const gap = result.values.gap;
-
-                    let widgets = selectedObjects as Widget[];
-
-                    let left = _min(widgets.map(widget => widget.left));
-
-                    const top = _min(widgets.map(widget => widget.top));
-
-                    if (typeof left === "number" && typeof top === "number") {
-                        DocumentStore.undoManager.setCombineCommands(true);
-
-                        widgets
-                            .slice()
-                            .sort((a, b) => a.left - b.left)
-                            .forEach(widget => {
-                                DocumentStore.updateObject(widget, {
-                                    left: left,
-                                    top: top
-                                });
-                                left += widget.width + gap;
-                            });
-
-                        DocumentStore.undoManager.setCombineCommands(false);
+                    values: {
+                        gap: 10
                     }
                 })
-                .catch(() => {});
-        }
-    }),
+                    .then(result => {
+                        const gap = result.values.gap;
 
-    new Command("Vertical Align", (DocumentStore: DocumentStoreClass) => {
-        const selectedPanel = DocumentStore.navigationStore.selectedPanel;
+                        let widgets = selectedObjects as Widget[];
+
+                        let left = _min(widgets.map(widget => widget.left));
+
+                        const top = _min(widgets.map(widget => widget.top));
+
+                        if (
+                            typeof left === "number" &&
+                            typeof top === "number"
+                        ) {
+                            projectEditorStore.undoManager.setCombineCommands(
+                                true
+                            );
+
+                            widgets
+                                .slice()
+                                .sort((a, b) => a.left - b.left)
+                                .forEach(widget => {
+                                    projectEditorStore.updateObject(widget, {
+                                        left: left,
+                                        top: top
+                                    });
+                                    left += widget.width + gap;
+                                });
+
+                            projectEditorStore.undoManager.setCombineCommands(
+                                false
+                            );
+                        }
+                    })
+                    .catch(() => {});
+            }
+        }
+    ),
+
+    new Command("Vertical Align", (projectEditorStore: ProjectEditorStore) => {
+        const selectedPanel = projectEditorStore.navigationStore.selectedPanel;
         if (
             !(selectedPanel instanceof FlowEditor) &&
             !(selectedPanel instanceof PageStructure)
@@ -2132,28 +2153,30 @@ export const commands = [
                     let top = _min(widgets.map(widget => widget.top));
 
                     if (typeof left === "number" && typeof top === "number") {
-                        DocumentStore.undoManager.setCombineCommands(true);
+                        projectEditorStore.undoManager.setCombineCommands(true);
 
                         widgets
                             .slice()
                             .sort((a, b) => a.top - b.top)
                             .forEach(widget => {
-                                DocumentStore.updateObject(widget, {
+                                projectEditorStore.updateObject(widget, {
                                     left: left,
                                     top: top
                                 });
                                 top += widget.height + gap;
                             });
 
-                        DocumentStore.undoManager.setCombineCommands(false);
+                        projectEditorStore.undoManager.setCombineCommands(
+                            false
+                        );
                     }
                 })
                 .catch(() => {});
         }
     }),
 
-    new Command("Resize", (DocumentStore: DocumentStoreClass) => {
-        const selectedPanel = DocumentStore.navigationStore.selectedPanel;
+    new Command("Resize", (projectEditorStore: ProjectEditorStore) => {
+        const selectedPanel = projectEditorStore.navigationStore.selectedPanel;
 
         const page: Page | undefined = (() => {
             if (
@@ -2188,13 +2211,14 @@ export const commands = [
             },
 
             values: {
-                width: DocumentStore.project.settings.general.displayWidth,
-                height: DocumentStore.project.settings.general.displayHeight
+                width: projectEditorStore.project.settings.general.displayWidth,
+                height: projectEditorStore.project.settings.general
+                    .displayHeight
             }
         })
             .then(result => {
                 const pageTabState =
-                    DocumentStore.editorsStore.activeEditor?.state;
+                    projectEditorStore.editorsStore.activeEditor?.state;
                 let pageEditorState: PageTabState | undefined = undefined;
                 if (pageTabState instanceof PageTabState) {
                     pageEditorState = pageTabState as PageTabState;
@@ -2216,9 +2240,9 @@ export const commands = [
                     height: result.values.height
                 };
 
-                DocumentStore.undoManager.setCombineCommands(true);
+                projectEditorStore.undoManager.setCombineCommands(true);
 
-                DocumentStore.updateObject(page, rectContainer);
+                projectEditorStore.updateObject(page, rectContainer);
 
                 function resizeWidgets(
                     widgets: Widget[],
@@ -2274,7 +2298,7 @@ export const commands = [
                                 const rectPreviousKeyframe =
                                     j > 0 ? rectKeyframes[j - 1] : widget.rect;
 
-                                DocumentStore.updateObject(keyframe, {
+                                projectEditorStore.updateObject(keyframe, {
                                     left:
                                         keyframe.left.enabled != undefined ||
                                         rectKeyframe.left !=
@@ -2327,7 +2351,7 @@ export const commands = [
                             }
                         }
 
-                        DocumentStore.updateObject(widget, {
+                        projectEditorStore.updateObject(widget, {
                             left: Math.round(rect.left),
                             top: Math.round(rect.top),
                             width: Math.round(rect.width),
@@ -2344,7 +2368,7 @@ export const commands = [
                     rectContainer
                 );
 
-                DocumentStore.undoManager.setCombineCommands(false);
+                projectEditorStore.undoManager.setCombineCommands(false);
 
                 if (pageEditorState) {
                     pageEditorState.timeline.isEditorActive =

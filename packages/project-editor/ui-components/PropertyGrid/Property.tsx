@@ -21,7 +21,7 @@ import {
 import { info } from "project-editor/core/util";
 import { replaceObjectReference } from "project-editor/core/search";
 
-import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";
+import { ConfigurationReferencesPropertyValue } from "project-editor/ui-components/ConfigurationReferencesPropertyValue";
 
 import { ProjectContext } from "project-editor/project/context";
 import { parseIdentifier } from "project-editor/flow/expression";

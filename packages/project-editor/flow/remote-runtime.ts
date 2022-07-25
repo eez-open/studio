@@ -23,7 +23,7 @@ import {
     RuntimeBase,
     SingleStepMode
 } from "project-editor/flow/runtime";
-import { DocumentStoreClass } from "project-editor/store";
+import { ProjectEditorStore } from "project-editor/store";
 
 import net from "net";
 import { getObjectFromStringPath } from "project-editor/store";
@@ -113,17 +113,17 @@ export class RemoteRuntime extends RuntimeBase {
     transitionToRunningMode: boolean = false;
     resumeAtStart: boolean = false;
 
-    constructor(public DocumentStore: DocumentStoreClass) {
-        super(DocumentStore);
+    constructor(public projectEditorStore: ProjectEditorStore) {
+        super(projectEditorStore);
     }
 
     async doStartRuntime(isDebuggerActive: boolean) {
-        const partsPromise = this.DocumentStore.build();
+        const partsPromise = this.projectEditorStore.build();
 
         const instrument = await showSelectInstrumentDialog();
 
         if (!instrument) {
-            this.DocumentStore.setEditorMode();
+            this.projectEditorStore.setEditorMode();
             return;
         }
 
@@ -134,13 +134,13 @@ export class RemoteRuntime extends RuntimeBase {
             notification.error("Build error...", {
                 autoClose: false
             });
-            this.DocumentStore.setEditorMode();
+            this.projectEditorStore.setEditorMode();
             return;
         }
 
         this.assetsMap = parts["GUI_ASSETS_DATA_MAP_JS"] as AssetsMap;
         if (!this.assetsMap) {
-            this.DocumentStore.setEditorMode();
+            this.projectEditorStore.setEditorMode();
             return;
         }
 
@@ -164,7 +164,7 @@ export class RemoteRuntime extends RuntimeBase {
                 render: `Instrument not connected`,
                 autoClose: 1000
             });
-            this.DocumentStore.setEditorMode();
+            this.projectEditorStore.setEditorMode();
             return;
         }
 
@@ -189,7 +189,7 @@ export class RemoteRuntime extends RuntimeBase {
                 render: `Error: ${acquireError.toString()}`,
                 autoClose: 1000
             });
-            this.DocumentStore.setEditorMode();
+            this.projectEditorStore.setEditorMode();
             return;
         }
 
@@ -197,13 +197,13 @@ export class RemoteRuntime extends RuntimeBase {
             this.startDebugger();
 
             const destinationFolderPath =
-                this.DocumentStore.getAbsoluteFilePath(
-                    this.DocumentStore.project.settings.build
+                this.projectEditorStore.getAbsoluteFilePath(
+                    this.projectEditorStore.project.settings.build
                         .destinationFolder || "."
                 );
 
             const destinationFileName = `${path.basename(
-                this.DocumentStore.filePath || "",
+                this.projectEditorStore.filePath || "",
                 ".eez-project"
             )}.app`;
 
@@ -257,7 +257,7 @@ export class RemoteRuntime extends RuntimeBase {
                 autoClose: 1000
             });
 
-            this.DocumentStore.setEditorMode();
+            this.projectEditorStore.setEditorMode();
 
             return;
         } finally {
@@ -353,7 +353,8 @@ export class RemoteRuntime extends RuntimeBase {
 
             runInAction(() => {
                 this.isDebuggerActive = false;
-                this.DocumentStore.uiStateStore.pageRuntimeFrontFace = true;
+                this.projectEditorStore.uiStateStore.pageRuntimeFrontFace =
+                    true;
             });
         } else {
             this.pause();
@@ -383,7 +384,7 @@ export class RemoteRuntime extends RuntimeBase {
 
         runInAction(() => {
             this.isDebuggerActive = true;
-            this.DocumentStore.uiStateStore.pageRuntimeFrontFace = false;
+            this.projectEditorStore.uiStateStore.pageRuntimeFrontFace = false;
         });
     }
 
@@ -779,7 +780,7 @@ export abstract class DebuggerConnectionBase {
                         } else if (state == DEBUGGER_STATE_SINGLE_STEP) {
                             runtime.transition(StateMachineAction.SINGLE_STEP);
                         } else if (state == DEBUGGER_STATE_STOPPED) {
-                            runtime.DocumentStore.setEditorMode();
+                            runtime.projectEditorStore.setEditorMode();
                         }
                     }
                     break;
@@ -829,7 +830,7 @@ export abstract class DebuggerConnectionBase {
                         }
 
                         const targetComponent = getObjectFromStringPath(
-                            runtime.DocumentStore.project,
+                            runtime.projectEditorStore.project,
                             targetComponentInAssetsMap.path
                         ) as Component;
                         if (!targetComponent) {
@@ -850,7 +851,7 @@ export abstract class DebuggerConnectionBase {
                             }
 
                             const sourceComponent = getObjectFromStringPath(
-                                runtime.DocumentStore.project,
+                                runtime.projectEditorStore.project,
                                 sourceComponentInAssetsMap.path
                             ) as Component;
                             if (!sourceComponent) {
@@ -953,7 +954,7 @@ export abstract class DebuggerConnectionBase {
                         }
 
                         const globalVariable =
-                            runtime.DocumentStore.project.allGlobalVariables.find(
+                            runtime.projectEditorStore.project.allGlobalVariables.find(
                                 globalVariable =>
                                     globalVariable.name ==
                                     globalVariableInAssetsMap.name
@@ -1092,7 +1093,7 @@ export abstract class DebuggerConnectionBase {
                         }
 
                         const component = getObjectFromStringPath(
-                            runtime.DocumentStore.project,
+                            runtime.projectEditorStore.project,
                             componentInAssetsMap.path
                         ) as Component;
                         if (!component) {
@@ -1167,7 +1168,7 @@ export abstract class DebuggerConnectionBase {
                         }
 
                         const flow = getObjectFromStringPath(
-                            runtime.DocumentStore.project,
+                            runtime.projectEditorStore.project,
                             flowInAssetsMap.path
                         ) as Flow;
                         if (!flow) {
@@ -1211,7 +1212,7 @@ export abstract class DebuggerConnectionBase {
                                 }
 
                                 parentComponent = getObjectFromStringPath(
-                                    runtime.DocumentStore.project,
+                                    runtime.projectEditorStore.project,
                                     componentInAssetsMap.path
                                 ) as Component;
                                 if (!parentComponent) {
@@ -1340,7 +1341,7 @@ export abstract class DebuggerConnectionBase {
                             return;
                         }
                         component = getObjectFromStringPath(
-                            runtime.DocumentStore.project,
+                            runtime.projectEditorStore.project,
                             componentInAssetsMap.path
                         ) as Component;
                         if (!component) {
@@ -1383,7 +1384,7 @@ export abstract class DebuggerConnectionBase {
                                 return;
                             }
                             component = getObjectFromStringPath(
-                                runtime.DocumentStore.project,
+                                runtime.projectEditorStore.project,
                                 componentInAssetsMap.path
                             ) as Component;
                             if (!component) {
@@ -1430,7 +1431,7 @@ export abstract class DebuggerConnectionBase {
                         }
 
                         const page = getObjectFromStringPath(
-                            runtime.DocumentStore.project,
+                            runtime.projectEditorStore.project,
                             this.runtime.assetsMap.flows[pageId].path
                         );
 
@@ -1472,7 +1473,7 @@ export abstract class DebuggerConnectionBase {
                             return;
                         }
                         component = getObjectFromStringPath(
-                            runtime.DocumentStore.project,
+                            runtime.projectEditorStore.project,
                             componentInAssetsMap.path
                         ) as Component;
                         if (!component) {
@@ -1518,7 +1519,7 @@ export abstract class DebuggerConnectionBase {
                             return;
                         }
                         component = getObjectFromStringPath(
-                            runtime.DocumentStore.project,
+                            runtime.projectEditorStore.project,
                             componentInAssetsMap.path
                         ) as Component;
                         if (!component) {
@@ -1691,7 +1692,10 @@ class GlobalVariableValue implements DebuggerValue {
     ) {}
 
     set(value: any) {
-        this.runtime.DocumentStore.dataContext.set(this.variableName, value);
+        this.runtime.projectEditorStore.dataContext.set(
+            this.variableName,
+            value
+        );
     }
 }
 

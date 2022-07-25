@@ -25,7 +25,7 @@ import {
 } from "project-editor/core/object";
 import { objectToJS } from "project-editor/store";
 
-import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";
+import { ConfigurationReferencesPropertyValue } from "project-editor/ui-components/ConfigurationReferencesPropertyValue";
 
 import type { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 
@@ -54,28 +54,28 @@ export class ShortcutsEditor extends EditorComponent {
         let shortcutsMap = new Map<string, Shortcut>();
         shortcuts.forEach(shortcut => shortcutsMap.set(shortcut.id, shortcut));
 
-        const DocumentStore = this.context;
+        const projectEditorStore = this.context;
 
         return {
             shortcuts: observable.map(shortcutsMap),
 
             addShortcut(shortcut: Partial<IShortcut>) {
                 shortcut.id = guid();
-                DocumentStore.addObject(shortcuts, shortcut as any);
+                projectEditorStore.addObject(shortcuts, shortcut as any);
                 return shortcut.id;
             },
 
             updateShortcut(shortcut: Partial<IShortcut>): void {
                 let shortcutObject = shortcutsMap.get(shortcut.id!);
                 if (shortcutObject) {
-                    DocumentStore.updateObject(shortcutObject, shortcut);
+                    projectEditorStore.updateObject(shortcutObject, shortcut);
                 }
             },
 
             deleteShortcut(shortcut: Partial<IShortcut>): void {
                 let shortcutObject = shortcutsMap.get(shortcut.id!);
                 if (shortcutObject) {
-                    DocumentStore.deleteObject(shortcutObject);
+                    projectEditorStore.deleteObject(shortcutObject);
                 }
             },
 

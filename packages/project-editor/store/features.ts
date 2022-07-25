@@ -11,7 +11,7 @@ import type { Project } from "project-editor/project/project";
 import type { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 
 import actionFeature from "project-editor/features/action/action";
-import dataFeature from "project-editor/features/variable/variable";
+import variableFeature from "project-editor/features/variable/variable";
 import extensionDefinitionsFeature from "project-editor/features/extension-definitions/extension-definitions";
 import pageFeature from "project-editor/features/page/page";
 import styleFeature from "project-editor/features/style/style";
@@ -25,7 +25,7 @@ import readmeFeature from "project-editor/features/readme";
 
 export type BuildResult = { [key: string]: string };
 
-export interface ExtensionImplementation {
+export interface ProjectEditorFeatureImplementation {
     projectFeature: {
         mandatory: boolean;
         key: string;
@@ -48,7 +48,7 @@ export interface ExtensionImplementation {
     };
 }
 
-export interface Extension {
+export interface ProjectEditorFeature {
     name: string;
     version: string;
     description: string;
@@ -56,14 +56,14 @@ export interface Extension {
     authorLogo: string;
     eezStudioExtension: {
         displayName: string;
-        implementation: ExtensionImplementation;
+        implementation: ProjectEditorFeatureImplementation;
     };
 }
 
-let extensions: Extension[] = [
+let features: ProjectEditorFeature[] = [
     pageFeature,
     actionFeature,
-    dataFeature,
+    variableFeature,
     styleFeature,
     fontFeature,
     textsFeature,
@@ -76,5 +76,5 @@ let extensions: Extension[] = [
 ];
 
 export function getProjectFeatures() {
-    return extensions;
+    return features;
 }

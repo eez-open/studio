@@ -31,7 +31,7 @@ import {
 } from "project-editor/core/object";
 
 import type { Project } from "project-editor/project/project";
-import type { DocumentStoreClass } from "project-editor/store";
+import type { ProjectEditorStore } from "project-editor/store";
 
 import {
     checkClipboard,
@@ -59,9 +59,13 @@ export class EezValueObject extends EezObject {
     static create(object: IEezObject, propertyInfo: PropertyInfo, value: any) {
         const valueObject = new EezValueObject();
 
-        const DocumentStore = getDocumentStore(object);
+        const projectEditorStore = getDocumentStore(object);
 
-        setId(DocumentStore.objects, valueObject, DocumentStore.getChildId());
+        setId(
+            projectEditorStore.objects,
+            valueObject,
+            projectEditorStore.getChildId()
+        );
         setKey(valueObject, propertyInfo.name);
         setParent(valueObject, object);
 
@@ -612,11 +616,11 @@ export function canContainChildren(object: IEezObject) {
 }
 
 export function canPaste(
-    DocumentStore: DocumentStoreClass,
+    projectEditorStore: ProjectEditorStore,
     object: IEezObject
 ) {
     try {
-        return checkClipboard(DocumentStore, object);
+        return checkClipboard(projectEditorStore, object);
     } catch (e) {
         return undefined;
     }
@@ -657,12 +661,12 @@ export async function addItem(object: IEezObject) {
 
 export function pasteItem(object: IEezObject) {
     try {
-        const DocumentStore = getDocumentStore(object);
+        const projectEditorStore = getDocumentStore(object);
 
-        let c = checkClipboard(DocumentStore, object);
+        let c = checkClipboard(projectEditorStore, object);
         if (c) {
             if (typeof c.pastePlace === "string") {
-                DocumentStore.updateObject(object, {
+                projectEditorStore.updateObject(object, {
                     [c.pastePlace]: c.serializedData.object
                 });
             } else {
@@ -671,7 +675,7 @@ export function pasteItem(object: IEezObject) {
                         isArray(c.pastePlace as IEezObject) &&
                         getParent(object) === (c.pastePlace as IEezObject)
                     ) {
-                        return DocumentStore.insertObject(
+                        return projectEditorStore.insertObject(
                             c.pastePlace as IEezObject,
                             (c.pastePlace as IEezObject[]).indexOf(object) + 1,
                             objectToJS(c.serializedData.object)
@@ -685,13 +689,13 @@ export function pasteItem(object: IEezObject) {
                             return aClass.classInfo.pasteItemHook(object, c);
                         }
 
-                        return DocumentStore.addObject(
+                        return projectEditorStore.addObject(
                             c.pastePlace as IEezObject,
                             objectToJS(c.serializedData.object)
                         );
                     }
                 } else if (c.serializedData.objects) {
-                    return DocumentStore.addObjects(
+                    return projectEditorStore.addObjects(
                         c.pastePlace as IEezObject,
                         objectToJS(c.serializedData.objects)
                     );
@@ -737,7 +741,7 @@ export function createContextMenu(
 ) {
     let menuItems: Electron.MenuItem[] = [];
 
-    const DocumentStore = getDocumentStore(object);
+    const projectEditorStore = getDocumentStore(object);
 
     if (editable && canAdd(object)) {
         menuItems.push(
@@ -810,7 +814,7 @@ export function createContextMenu(
         );
     }
 
-    if (editable && canPaste(DocumentStore, object)) {
+    if (editable && canPaste(projectEditorStore, object)) {
         clipboardMenuItems.push(
             new MenuItem({
                 label: "Paste",
@@ -885,10 +889,10 @@ export function showContextMenu(
 ////////////////////////////////////////////////////////////////////////////////
 
 export function deleteItems(objects: IEezObject[], callback?: () => void) {
-    const DocumentStore = getDocumentStore(objects[0]);
+    const projectEditorStore = getDocumentStore(objects[0]);
 
     function doDelete() {
-        DocumentStore.deleteObjects(objects);
+        projectEditorStore.deleteObjects(objects);
         if (callback) {
             callback();
         }
@@ -931,11 +935,11 @@ export function objectToJS(object: IEezObject | IEezObject[]): any {
 }
 
 export function cloneObject(
-    DocumentStore: DocumentStoreClass,
+    projectEditorStore: ProjectEditorStore,
     obj: IEezObject
 ) {
     return loadObject(
-        DocumentStore,
+        projectEditorStore,
         undefined,
         objectToJson(obj),
         getClass(obj)

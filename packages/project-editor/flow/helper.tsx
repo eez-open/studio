@@ -18,7 +18,7 @@ export function evalProperty(
     }
 
     if (flowContext.flowState) {
-        return flowContext.DocumentStore.runtime!.evalProperty(
+        return flowContext.projectEditorStore.runtime!.evalProperty(
             flowContext,
             widget,
             propertyName
@@ -26,7 +26,7 @@ export function evalProperty(
     } else {
         try {
             return evalConstantExpression(
-                flowContext.DocumentStore.project,
+                flowContext.projectEditorStore.project,
                 expr
             ).value;
         } catch (err) {
@@ -113,9 +113,9 @@ export function getTextValue(
     let data = (widget as any)[propertyName];
 
     if (
-        flowContext.DocumentStore.project.isDashboardProject ||
-        flowContext.DocumentStore.project.isAppletProject ||
-        flowContext.DocumentStore.project.isFirmwareWithFlowSupportProject
+        flowContext.projectEditorStore.project.isDashboardProject ||
+        flowContext.projectEditorStore.project.isAppletProject ||
+        flowContext.projectEditorStore.project.isFirmwareWithFlowSupportProject
     ) {
         if (data) {
             if (flowContext.flowState) {
@@ -136,7 +136,7 @@ export function getTextValue(
                 }
             }
 
-            if (flowContext.DocumentStore.runtime) {
+            if (flowContext.projectEditorStore.runtime) {
                 return "";
             }
 

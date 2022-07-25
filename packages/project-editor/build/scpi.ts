@@ -6,7 +6,7 @@ import type {
 } from "project-editor/project/project";
 import { TAB } from "project-editor/build/helper";
 import type { ScpiCommand } from "project-editor/features/scpi/scpi";
-import type { BuildResult } from "project-editor/core/extensions";
+import type { BuildResult } from "project-editor/store/features";
 
 ////////////////////////////////////////////////////////////////////////////////
 

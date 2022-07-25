@@ -430,11 +430,11 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             return;
         }
 
-        const DocumentStore = getDocumentStore(this.object);
+        const projectEditorStore = getDocumentStore(this.object);
 
         const objects: IEezObject[] = [];
         for (const objectId of objectIds) {
-            const object = DocumentStore.getObjectFromObjectId(objectId);
+            const object = projectEditorStore.getObjectFromObjectId(objectId);
             if (object) {
                 objects.push(object);
             }
@@ -652,17 +652,17 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
     }
 
     canPaste() {
-        const DocumentStore = getDocumentStore(this.object);
+        const projectEditorStore = getDocumentStore(this.object);
 
         if (this.selectedItems.length == 0) {
-            if (canPaste(DocumentStore, this.object)) {
+            if (canPaste(projectEditorStore, this.object)) {
                 return true;
             }
             return false;
         }
 
         if (this.selectedItems.length == 1) {
-            if (canPaste(DocumentStore, this.selectedItems[0].object)) {
+            if (canPaste(projectEditorStore, this.selectedItems[0].object)) {
                 return true;
             }
             return false;
@@ -674,7 +674,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
                 getParent(this.selectedItems[0].object)
         );
         if (allObjectsAreFromTheSameParent) {
-            if (canPaste(DocumentStore, this.selectedItems[0].object)) {
+            if (canPaste(projectEditorStore, this.selectedItems[0].object)) {
                 return true;
             }
         }
@@ -1201,9 +1201,9 @@ export class TreeAdapter implements ITreeAdapter {
             0
         );
         // postpone render, otherwise we can receive onDragEnd immediatelly
-        const DocumentStore = getDocumentStore(this.rootItem.object);
+        const projectEditorStore = getDocumentStore(this.rootItem.object);
         setTimeout(() => {
-            DragAndDropManager.start(event, item.object, DocumentStore);
+            DragAndDropManager.start(event, item.object, projectEditorStore);
         });
     }
 
@@ -1246,13 +1246,13 @@ export class TreeAdapter implements ITreeAdapter {
 
             let aNewObject: IEezObject | undefined;
 
-            const DocumentStore = getDocumentStore(this.rootItem.object);
+            const projectEditorStore = getDocumentStore(this.rootItem.object);
 
             if (dropPosition == DropPosition.DROP_POSITION_BEFORE) {
                 DragAndDropManager.deleteDragItem({
                     dropPlace: getParent(dropItem.object)
                 });
-                aNewObject = DocumentStore.insertObjectBefore(
+                aNewObject = projectEditorStore.insertObjectBefore(
                     dropItem.object,
                     object
                 );
@@ -1260,7 +1260,7 @@ export class TreeAdapter implements ITreeAdapter {
                 DragAndDropManager.deleteDragItem({
                     dropPlace: getParent(dropItem.object)
                 });
-                aNewObject = DocumentStore.insertObjectAfter(
+                aNewObject = projectEditorStore.insertObjectAfter(
                     dropItem.object,
                     object
                 );
@@ -1276,9 +1276,12 @@ export class TreeAdapter implements ITreeAdapter {
                     });
 
                     if (isArray(dropPlace)) {
-                        aNewObject = DocumentStore.addObject(dropPlace, object);
+                        aNewObject = projectEditorStore.addObject(
+                            dropPlace,
+                            object
+                        );
                     } else {
-                        DocumentStore.updateObject(dropItem.object, {
+                        projectEditorStore.updateObject(dropItem.object, {
                             [(dropPlace as PropertyInfo).name]: object
                         });
                     }

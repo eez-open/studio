@@ -65,7 +65,7 @@ import {
 } from "project-editor/features/variable/defs";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import classNames from "classnames";
-import { generalGroup } from "project-editor/components/PropertyGrid/groups";
+import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -440,11 +440,11 @@ export class Variable extends EezObject {
         check: (variable: Variable) => {
             let messages: Message[] = [];
 
-            const DocumentStore = getDocumentStore(variable);
+            const projectEditorStore = getDocumentStore(variable);
 
             if (isGlobalVariable(variable)) {
                 ProjectEditor.checkAssetId(
-                    DocumentStore,
+                    projectEditorStore,
                     "variables/globalVariables",
                     variable,
                     messages
@@ -461,7 +461,7 @@ export class Variable extends EezObject {
                 );
             }
 
-            if (!isValidType(DocumentStore.project, variable.type)) {
+            if (!isValidType(projectEditorStore.project, variable.type)) {
                 messages.push(
                     new Message(MessageType.ERROR, `Invalid type`, variable)
                 );
@@ -471,18 +471,19 @@ export class Variable extends EezObject {
                 messages.push(propertyNotSetMessage(variable, "defaultValue"));
             } else {
                 if (
-                    DocumentStore.project.isAppletProject ||
-                    DocumentStore.project.isFirmwareWithFlowSupportProject ||
-                    DocumentStore.project.isDashboardProject
+                    projectEditorStore.project.isAppletProject ||
+                    projectEditorStore.project
+                        .isFirmwareWithFlowSupportProject ||
+                    projectEditorStore.project.isDashboardProject
                 ) {
                     try {
                         const { value } = evalConstantExpression(
-                            DocumentStore.project,
+                            projectEditorStore.project,
                             variable.defaultValue
                         );
 
                         const error = isValueTypeOf(
-                            DocumentStore.project,
+                            projectEditorStore.project,
                             value,
                             variable.type
                         );
@@ -972,8 +973,8 @@ export class StructureField extends EezObject implements IStructureField {
                 );
             }
 
-            const DocumentStore = getDocumentStore(structureField);
-            if (!isValidType(DocumentStore.project, structureField.type)) {
+            const projectEditorStore = getDocumentStore(structureField);
+            if (!isValidType(projectEditorStore.project, structureField.type)) {
                 messages.push(
                     new Message(
                         MessageType.ERROR,

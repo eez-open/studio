@@ -12,7 +12,7 @@ import {
     propertyNotFoundMessage,
     Section
 } from "project-editor/store";
-import type { BuildResult } from "project-editor/core/extensions";
+import type { BuildResult } from "project-editor/store/features";
 import { getDocumentStore } from "project-editor/store";
 
 import {

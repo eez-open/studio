@@ -7,7 +7,7 @@ import { IconAction } from "eez-studio-ui/action";
 import { IEezObject } from "project-editor/core/object";
 import { ProjectContext } from "project-editor/project/context";
 import { LayoutModels } from "project-editor/store";
-import { ListNavigation } from "project-editor/components/ListNavigation";
+import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { ScpiSubsystem, ScpiCommand } from "project-editor/features/scpi/scpi";
 import { showImportScpiDocDialog } from "project-editor/features/scpi/importScpiDoc";
 import { computed, makeObservable } from "mobx";

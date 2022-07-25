@@ -83,7 +83,7 @@ function getComponentIdOfComponent(assets: Assets, component: Component) {
 
     if (
         flowComponentId == undefined &&
-        assets.DocumentStore.project.isDashboardProject
+        assets.projectEditorStore.project.isDashboardProject
     ) {
         const eezClass = getClass(component);
         const name = getClassName(eezClass);
@@ -128,7 +128,7 @@ function buildComponent(
     if (flowComponentId != undefined) {
         dataBuffer.writeUint16(flowComponentId);
     } else {
-        assets.DocumentStore.outputSectionsStore.write(
+        assets.projectEditorStore.outputSectionsStore.write(
             Section.OUTPUT,
             MessageType.ERROR,
             "Component is not supported for the build target",
@@ -139,7 +139,7 @@ function buildComponent(
 
     // reserved
     dataBuffer.writeUint16(
-        assets.DocumentStore.uiStateStore.isBreakpointEnabledForComponent(
+        assets.projectEditorStore.uiStateStore.isBreakpointEnabledForComponent(
             component
         )
             ? 1
@@ -198,7 +198,7 @@ function buildComponent(
                     buildExpression(assets, dataBuffer, component, expression);
                 }
             } catch (err) {
-                assets.DocumentStore.outputSectionsStore.write(
+                assets.projectEditorStore.outputSectionsStore.write(
                     Section.OUTPUT,
                     MessageType.ERROR,
                     err,
@@ -294,7 +294,7 @@ function buildComponent(
     try {
         component.buildFlowComponentSpecific(assets, dataBuffer);
     } catch (err) {
-        assets.DocumentStore.outputSectionsStore.write(
+        assets.projectEditorStore.outputSectionsStore.write(
             Section.OUTPUT,
             MessageType.ERROR,
             err.toString(),
@@ -372,7 +372,7 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
             dataBuffer.writeInt16(componentPropertyValue.componentIndex);
             dataBuffer.writeInt16(componentPropertyValue.propertyValueIndex);
         } else {
-            assets.DocumentStore.outputSectionsStore.write(
+            assets.projectEditorStore.outputSectionsStore.write(
                 Section.OUTPUT,
                 MessageType.ERROR,
                 "Widget data item not found",
@@ -392,7 +392,7 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
             dataBuffer.writeInt16(componentOutput.componentIndex);
             dataBuffer.writeInt16(componentOutput.componentOutputIndex);
         } else {
-            assets.DocumentStore.outputSectionsStore.write(
+            assets.projectEditorStore.outputSectionsStore.write(
                 Section.OUTPUT,
                 MessageType.ERROR,
                 "Widget action output not found",
@@ -406,9 +406,9 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
 
 export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
     if (
-        assets.DocumentStore.project.isDashboardProject ||
-        assets.DocumentStore.project.isAppletProject ||
-        assets.DocumentStore.project.isFirmwareWithFlowSupportProject
+        assets.projectEditorStore.project.isDashboardProject ||
+        assets.projectEditorStore.project.isAppletProject ||
+        assets.projectEditorStore.project.isFirmwareWithFlowSupportProject
     ) {
         dataBuffer.writeObjectOffset(() => {
             // flows
@@ -548,7 +548,7 @@ export function buildFlowDefs(assets: Assets) {
                     name: structure.name
                 },
                 NamingConvention.UnderscoreUpperCase
-            )} = ${assets.DocumentStore.typesStore.getValueTypeIndex(
+            )} = ${assets.projectEditorStore.typesStore.getValueTypeIndex(
                 `struct:${structure.name}`
             )}`
         );
@@ -574,7 +574,7 @@ export function buildFlowDefs(assets: Assets) {
                         name: field.name
                     },
                     NamingConvention.UnderscoreUpperCase
-                )} = ${assets.DocumentStore.typesStore.getFieldIndex(
+                )} = ${assets.projectEditorStore.typesStore.getFieldIndex(
                     `struct:${structure.name}`,
                     field.name
                 )}`
@@ -608,7 +608,7 @@ export function buildFlowDefs(assets: Assets) {
                     name: basicType
                 },
                 NamingConvention.UnderscoreUpperCase
-            )} = ${assets.DocumentStore.typesStore.getValueTypeIndex(
+            )} = ${assets.projectEditorStore.typesStore.getValueTypeIndex(
                 `array:${basicType}` as ValueType
             )}`
         );

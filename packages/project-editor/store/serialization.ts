@@ -13,11 +13,11 @@ import {
 } from "project-editor/core/object";
 
 import { getClassInfo } from "project-editor/store/helper";
-import type { DocumentStoreClass } from "project-editor/store";
+import type { ProjectEditorStore } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let CurrentDocumentStore: DocumentStoreClass | undefined;
+let CurrentDocumentStore: ProjectEditorStore | undefined;
 
 function loadArrayObject(
     arrayObject: any,
@@ -45,13 +45,13 @@ function loadArrayObject(
 }
 
 export function loadObject(
-    DocumentStore: DocumentStoreClass,
+    projectEditorStore: ProjectEditorStore,
     parent: IEezObject | IEezObject[] | undefined,
     jsObjectOrString: any | string,
     aClass: EezClass,
     key?: string
 ): IEezObject {
-    CurrentDocumentStore = DocumentStore;
+    CurrentDocumentStore = projectEditorStore;
     const result = loadObjectInternal(parent, jsObjectOrString, aClass, key);
     CurrentDocumentStore = undefined;
     return result;

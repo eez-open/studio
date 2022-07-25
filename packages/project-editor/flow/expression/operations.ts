@@ -1,7 +1,7 @@
 import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
 import type { ValueType } from "project-editor/features/variable/value-type";
 import type { IExpressionContext } from "project-editor/flow/expression";
-import type { DocumentStoreClass } from "project-editor/store";
+import type { ProjectEditorStore } from "project-editor/store";
 
 function roundN(value: number, decimals: number) {
     return Number(Math.round(Number(value + "e" + decimals)) + "e-" + decimals);
@@ -450,7 +450,7 @@ export const builtInFunctions: {
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
         ) => {
-            const texts = expressionContext?.DocumentStore.project.texts;
+            const texts = expressionContext?.projectEditorStore.project.texts;
             if (texts) {
                 return texts.languages.map(language => language.languageID);
             }
@@ -467,7 +467,7 @@ export const builtInFunctions: {
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
         ) => {
-            const texts = expressionContext?.DocumentStore.project.texts;
+            const texts = expressionContext?.projectEditorStore.project.texts;
             if (texts) {
                 const textResource = texts.resources[args[0]];
                 if (textResource) {
@@ -838,17 +838,18 @@ export const builtInFunctions: {
 
 export const builtInConstants: {
     [name: string]: {
-        value: (DocumentStore: DocumentStoreClass) => any;
+        value: (projectEditorStore: ProjectEditorStore) => any;
         valueType: ValueType;
     };
 } = {
     "System.ProjectFolder": {
-        value: (DocumentStore: DocumentStoreClass) =>
-            DocumentStore.getAbsoluteProjectFolderPath(),
+        value: (projectEditorStore: ProjectEditorStore) =>
+            projectEditorStore.getAbsoluteProjectFolderPath(),
         valueType: "string"
     },
     "System.ProjectFile": {
-        value: (DocumentStore: DocumentStoreClass) => DocumentStore.filePath,
+        value: (projectEditorStore: ProjectEditorStore) =>
+            projectEditorStore.filePath,
         valueType: "string"
     },
 

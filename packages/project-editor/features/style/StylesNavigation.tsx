@@ -5,7 +5,7 @@ import classNames from "classnames";
 import * as FlexLayout from "flexlayout-react";
 
 import { LayoutModels } from "project-editor/store";
-import { ListNavigation } from "project-editor/components/ListNavigation";
+import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { ProjectContext } from "project-editor/project/context";
 import { NavigationComponent } from "project-editor/project/NavigationComponent";
 import { Style } from "./style";

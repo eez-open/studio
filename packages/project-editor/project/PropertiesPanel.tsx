@@ -5,7 +5,7 @@ import { observer } from "mobx-react";
 import { ProjectContext } from "project-editor/project/context";
 import { getParent } from "project-editor/core/object";
 import { EezValueObject, getLabel } from "project-editor/store";
-import { PropertyGrid } from "project-editor/components/PropertyGrid";
+import { PropertyGrid } from "project-editor/ui-components/PropertyGrid";
 
 export const PropertiesPanel = observer(
     class PropertiesPanel extends React.Component<{

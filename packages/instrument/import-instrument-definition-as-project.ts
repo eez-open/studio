@@ -15,7 +15,7 @@ import { Scpi } from "project-editor/features/scpi/scpi";
 
 import { loadCommandsFromExtensionFolder } from "instrument/import";
 import { splitCommandToMnemonics } from "instrument/commands-tree";
-import { DocumentStoreClass } from "project-editor/store";
+import { ProjectEditorStore } from "project-editor/store";
 import { ProjectEditorTab, tabs } from "home/tabs-store";
 import { initProjectEditor } from "project-editor/project-editor-bootstrap";
 
@@ -128,9 +128,9 @@ export async function importInstrumentDefinitionAsProject(
         }
 
         await initProjectEditor(tabs, ProjectEditorTab);
-        const DocumentStore = await DocumentStoreClass.create();
+        const projectEditorStore = await ProjectEditorStore.create();
 
-        const project = DocumentStore.getNewProject();
+        const project = projectEditorStore.getNewProject();
 
         project.settings.general.scpiDocFolder = extensionName;
         project.settings.build.destinationFolder = ".";

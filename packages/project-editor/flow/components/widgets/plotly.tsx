@@ -23,7 +23,7 @@ import { observer } from "mobx-react";
 
 import type * as PlotlyModule from "plotly.js-dist-min";
 import classNames from "classnames";
-import { specificGroup } from "project-editor/components/PropertyGrid/groups";
+import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { evalProperty, getNumberValue } from "project-editor/flow/helper";
 import { getChildOfObject, Message, Section } from "project-editor/store";
 import {
@@ -69,7 +69,7 @@ const LineChartElement = observer(
                 } else {
                     try {
                         name = evalConstantExpression(
-                            flowContext.DocumentStore.project,
+                            flowContext.projectEditorStore.project,
                             line.label
                         ).value;
                     } catch (err) {
@@ -243,7 +243,7 @@ const LineChartElement = observer(
                     height
                 }}
                 className={classNames("EezStudio_Plotly", {
-                    interactive: !!flowContext.DocumentStore.runtime
+                    interactive: !!flowContext.projectEditorStore.runtime
                 })}
             ></div>
         );
@@ -543,7 +543,7 @@ export class LineChartWidget extends Widget {
                 // as property
                 buildExpression(assets, dataBuffer, this, line.label);
             } catch (err) {
-                assets.DocumentStore.outputSectionsStore.write(
+                assets.projectEditorStore.outputSectionsStore.write(
                     Section.OUTPUT,
                     MessageType.ERROR,
                     err,
@@ -561,7 +561,7 @@ export class LineChartWidget extends Widget {
                 // as property
                 buildExpression(assets, dataBuffer, this, line.value);
             } catch (err) {
-                assets.DocumentStore.outputSectionsStore.write(
+                assets.projectEditorStore.outputSectionsStore.write(
                     Section.OUTPUT,
                     MessageType.ERROR,
                     err,
@@ -748,7 +748,7 @@ const GaugeElement = observer(
                     height
                 }}
                 className={classNames("EezStudio_Plotly", {
-                    interactive: !!flowContext.DocumentStore.runtime
+                    interactive: !!flowContext.projectEditorStore.runtime
                 })}
             ></div>
         );

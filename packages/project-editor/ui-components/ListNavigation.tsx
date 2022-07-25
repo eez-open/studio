@@ -27,7 +27,7 @@ import {
     isPartOfNavigation
 } from "project-editor/store";
 import { DragAndDropManagerClass } from "project-editor/core/dd";
-import { List } from "project-editor/components/List";
+import { List } from "project-editor/ui-components/List";
 
 import { ProjectContext } from "project-editor/project/context";
 import classNames from "classnames";

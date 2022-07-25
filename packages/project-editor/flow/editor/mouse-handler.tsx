@@ -1318,9 +1318,10 @@ export class MoveOutputConnectionLinesMouseHandler extends MouseHandler {
 
         const source = this.source;
         if (source) {
-            const sourceObject = context.DocumentStore.getObjectFromObjectId(
-                source.objectId
-            ) as Component;
+            const sourceObject =
+                context.projectEditorStore.getObjectFromObjectId(
+                    source.objectId
+                ) as Component;
 
             const changes = {
                 source: sourceObject.wireID,
@@ -1328,7 +1329,7 @@ export class MoveOutputConnectionLinesMouseHandler extends MouseHandler {
             };
 
             if (this.connectionLines.length > 0) {
-                context.DocumentStore.undoManager.setCombineCommands(true);
+                context.projectEditorStore.undoManager.setCombineCommands(true);
 
                 this.connectionLines.forEach(connectionLine => {
                     if (
@@ -1339,16 +1340,18 @@ export class MoveOutputConnectionLinesMouseHandler extends MouseHandler {
                             connectionLine.input
                         )
                     ) {
-                        context.DocumentStore.deleteObject(connectionLine);
+                        context.projectEditorStore.deleteObject(connectionLine);
                     } else {
-                        context.DocumentStore.updateObject(
+                        context.projectEditorStore.updateObject(
                             connectionLine,
                             changes
                         );
                     }
                 });
 
-                context.DocumentStore.undoManager.setCombineCommands(false);
+                context.projectEditorStore.undoManager.setCombineCommands(
+                    false
+                );
             }
 
             context.viewState.deselectAllObjects();
@@ -1559,9 +1562,10 @@ export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
 
         const target = this.target;
         if (target) {
-            const targetObject = context.DocumentStore.getObjectFromObjectId(
-                target.objectId
-            ) as Component;
+            const targetObject =
+                context.projectEditorStore.getObjectFromObjectId(
+                    target.objectId
+                ) as Component;
 
             const changes = {
                 target: targetObject.wireID,
@@ -1569,7 +1573,7 @@ export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
             };
 
             if (this.connectionLines.length > 0) {
-                context.DocumentStore.undoManager.setCombineCommands(true);
+                context.projectEditorStore.undoManager.setCombineCommands(true);
 
                 this.connectionLines.forEach(connectionLine => {
                     if (
@@ -1580,16 +1584,18 @@ export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
                             target.connectionInput
                         )
                     ) {
-                        context.DocumentStore.deleteObject(connectionLine);
+                        context.projectEditorStore.deleteObject(connectionLine);
                     } else {
-                        context.DocumentStore.updateObject(
+                        context.projectEditorStore.updateObject(
                             connectionLine,
                             changes
                         );
                     }
                 });
 
-                context.DocumentStore.undoManager.setCombineCommands(false);
+                context.projectEditorStore.undoManager.setCombineCommands(
+                    false
+                );
             }
 
             context.viewState.deselectAllObjects();

@@ -2,7 +2,7 @@ import React from "react";
 import { observer } from "mobx-react";
 
 import { ITreeAdapter } from "project-editor/core/objectAdapter";
-import { Tree } from "project-editor/components/Tree";
+import { Tree } from "project-editor/ui-components/Tree";
 
 ////////////////////////////////////////////////////////////////////////////////
 

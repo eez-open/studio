@@ -4,7 +4,7 @@ import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 import classNames from "classnames";
 
-import { Messages } from "project-editor/components/Output";
+import { Messages } from "project-editor/ui-components/Output";
 
 import { ProjectContext } from "project-editor/project/context";
 import { CommandPalette } from "project-editor/project/command-palette";
@@ -52,7 +52,7 @@ export const ProjectEditorView = observer(
             const activeTab = ProjectEditor.homeTabs.activeTab;
             if (
                 activeTab instanceof ProjectEditor.ProjectEditorTabClass &&
-                activeTab.DocumentStore == this.context &&
+                activeTab.projectEditorStore == this.context &&
                 this.context.runtime &&
                 this.context.runtime.isDebuggerActive &&
                 this.context.runtime.isPaused

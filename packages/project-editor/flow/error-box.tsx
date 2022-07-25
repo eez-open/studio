@@ -40,7 +40,7 @@ const ErrorBox = observer(
 
         onClose = () => {
             const tab = ProjectEditor.homeTabs.findProjectEditorTab(
-                this.props.runtime.DocumentStore.filePath!
+                this.props.runtime.projectEditorStore.filePath!
             );
             if (tab) {
                 ProjectEditor.homeTabs.removeTab(tab);
@@ -48,7 +48,7 @@ const ErrorBox = observer(
         };
 
         onRestart = () => {
-            this.props.runtime.DocumentStore.onRestart();
+            this.props.runtime.projectEditorStore.onRestart();
             return true;
         };
 

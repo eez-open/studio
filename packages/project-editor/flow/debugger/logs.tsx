@@ -239,13 +239,13 @@ export class RuntimeLogs {
                 runtime.findFlowStateById(logItemDebugInfo.flowState),
                 logItemDebugInfo.component
                     ? (getObjectFromStringPath(
-                          runtime.DocumentStore.project,
+                          runtime.projectEditorStore.project,
                           logItemDebugInfo.component
                       ) as Component)
                     : undefined,
                 logItemDebugInfo.connectionLine
                     ? (getObjectFromStringPath(
-                          runtime.DocumentStore.project,
+                          runtime.projectEditorStore.project,
                           logItemDebugInfo.connectionLine
                       ) as ConnectionLine)
                     : undefined

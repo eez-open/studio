@@ -11,12 +11,12 @@ import {
 } from "project-editor/store";
 
 import { confirm } from "project-editor/core/util";
-import type { Extension } from "project-editor/core/extensions";
+import type { ProjectEditorFeature } from "project-editor/store/features";
 
 import { BuildFile, ImportDirective } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
-import { Panel } from "project-editor/components/Panel";
-import { PropertyGrid } from "project-editor/components/PropertyGrid";
+import { Panel } from "project-editor/ui-components/Panel";
+import { PropertyGrid } from "project-editor/ui-components/PropertyGrid";
 import {
     ITreeObjectAdapter,
     TreeAdapter,
@@ -24,7 +24,7 @@ import {
 } from "project-editor/core/objectAdapter";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { IconAction } from "eez-studio-ui/action";
-import { Tree } from "project-editor/components/Tree";
+import { Tree } from "project-editor/ui-components/Tree";
 import { computed, makeObservable } from "mobx";
 import { CodeEditor } from "eez-studio-ui/code-editor";
 import { EditorComponent } from "project-editor/project/EditorComponent";
@@ -35,7 +35,7 @@ import { NavigationComponent } from "project-editor/project/NavigationComponent"
 const ProjectFeature = observer(
     class ProjectFeature extends React.Component<
         {
-            extension: Extension;
+            extension: ProjectEditorFeature;
         },
         {}
     > {

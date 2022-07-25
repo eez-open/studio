@@ -1,11 +1,11 @@
 import { getProperty } from "project-editor/core/object";
-import type { DocumentStoreClass } from "project-editor/store";
+import type { ProjectEditorStore } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
-export function getAllMetrics(DocumentStore: DocumentStoreClass) {
+export function getAllMetrics(projectEditorStore: ProjectEditorStore) {
     let allMetrics: any = {};
 
-    const project = DocumentStore.project;
+    const project = projectEditorStore.project;
     let projectFeatures = ProjectEditor.extensions;
     for (let projectFeature of projectFeatures) {
         if (

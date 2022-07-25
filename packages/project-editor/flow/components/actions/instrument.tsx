@@ -61,7 +61,7 @@ import {
     SCPI_PART_STRING
 } from "eez-studio-shared/scpi-parser";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { specificGroup } from "project-editor/components/PropertyGrid/groups";
+import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { COMPONENT_TYPE_SCPIACTION } from "project-editor/flow/components/component_types";
 
 ////////////////////////////////////////////////////////////////////////////////

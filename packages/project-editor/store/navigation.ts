@@ -3,7 +3,7 @@ import { observable, action } from "mobx";
 
 import { IEezObject, getParent } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import type { DocumentStoreClass } from "project-editor/store";
+import type { ProjectEditorStore } from "project-editor/store";
 import {
     isValue,
     getObjectPathAsString,
@@ -46,7 +46,7 @@ export class NavigationStore {
 
     editable = true;
 
-    constructor(public DocumentStore: DocumentStoreClass) {
+    constructor(public projectEditorStore: ProjectEditorStore) {
         makeObservable(this, {
             selectedPanel: observable,
             setSelectedPanel: action,
@@ -58,28 +58,29 @@ export class NavigationStore {
         let selectedRootObject: IEezObject | undefined;
 
         if (state && state.selectedRootObject) {
-            selectedRootObject = this.DocumentStore.getObjectFromStringPath(
-                state.selectedRootObject
-            );
+            selectedRootObject =
+                this.projectEditorStore.getObjectFromStringPath(
+                    state.selectedRootObject
+                );
         }
 
         if (!selectedRootObject) {
             selectedRootObject =
-                this.DocumentStore.project.readme ||
-                this.DocumentStore.project.pages ||
-                this.DocumentStore.project.settings;
+                this.projectEditorStore.project.readme ||
+                this.projectEditorStore.project.pages ||
+                this.projectEditorStore.project.settings;
 
             let editorObject: IEezObject | undefined;
-            if (this.DocumentStore.project.readme) {
-                selectedRootObject = this.DocumentStore.project.readme;
+            if (this.projectEditorStore.project.readme) {
+                selectedRootObject = this.projectEditorStore.project.readme;
                 editorObject = selectedRootObject;
-            } else if (this.DocumentStore.project.pages) {
-                selectedRootObject = this.DocumentStore.project.pages;
-                if (this.DocumentStore.project.pages.length > 0) {
-                    editorObject = this.DocumentStore.project.pages[0];
+            } else if (this.projectEditorStore.project.pages) {
+                selectedRootObject = this.projectEditorStore.project.pages;
+                if (this.projectEditorStore.project.pages.length > 0) {
+                    editorObject = this.projectEditorStore.project.pages[0];
                 }
             } else {
-                selectedRootObject = this.DocumentStore.project.settings;
+                selectedRootObject = this.projectEditorStore.project.settings;
                 editorObject = selectedRootObject;
             }
 
@@ -94,7 +95,7 @@ export class NavigationStore {
         if (state) {
             if (state.selectedPageObject) {
                 this.selectedPageObject.set(
-                    this.DocumentStore.getObjectFromStringPath(
+                    this.projectEditorStore.getObjectFromStringPath(
                         state.selectedPageObject
                     )
                 );
@@ -102,7 +103,7 @@ export class NavigationStore {
 
             if (state.selectedActionObject) {
                 this.selectedActionObject.set(
-                    this.DocumentStore.getObjectFromStringPath(
+                    this.projectEditorStore.getObjectFromStringPath(
                         state.selectedActionObject
                     )
                 );
@@ -110,7 +111,7 @@ export class NavigationStore {
 
             if (state.selectedGlobalVariableObject) {
                 this.selectedGlobalVariableObject.set(
-                    this.DocumentStore.getObjectFromStringPath(
+                    this.projectEditorStore.getObjectFromStringPath(
                         state.selectedGlobalVariableObject
                     )
                 );
@@ -118,7 +119,7 @@ export class NavigationStore {
 
             if (state.selectedStructureObject) {
                 this.selectedStructureObject.set(
-                    this.DocumentStore.getObjectFromStringPath(
+                    this.projectEditorStore.getObjectFromStringPath(
                         state.selectedStructureObject
                     )
                 );
@@ -126,7 +127,7 @@ export class NavigationStore {
 
             if (state.selectedEnumObject) {
                 this.selectedEnumObject.set(
-                    this.DocumentStore.getObjectFromStringPath(
+                    this.projectEditorStore.getObjectFromStringPath(
                         state.selectedEnumObject
                     )
                 );
@@ -134,7 +135,7 @@ export class NavigationStore {
 
             if (state.selectedStyleObject) {
                 this.selectedStyleObject.set(
-                    this.DocumentStore.getObjectFromStringPath(
+                    this.projectEditorStore.getObjectFromStringPath(
                         state.selectedStyleObject
                     )
                 );
@@ -142,7 +143,7 @@ export class NavigationStore {
 
             if (state.selectedThemeObject) {
                 this.selectedThemeObject.set(
-                    this.DocumentStore.getObjectFromStringPath(
+                    this.projectEditorStore.getObjectFromStringPath(
                         state.selectedThemeObject
                     )
                 );
@@ -150,7 +151,7 @@ export class NavigationStore {
 
             if (state.selectedThemeColorObject) {
                 this.selectedThemeColorObject.set(
-                    this.DocumentStore.getObjectFromStringPath(
+                    this.projectEditorStore.getObjectFromStringPath(
                         state.selectedThemeColorObject
                     )
                 );
@@ -158,7 +159,7 @@ export class NavigationStore {
 
             if (state.selectedFontObject) {
                 this.selectedFontObject.set(
-                    this.DocumentStore.getObjectFromStringPath(
+                    this.projectEditorStore.getObjectFromStringPath(
                         state.selectedFontObject
                     )
                 );
@@ -166,7 +167,7 @@ export class NavigationStore {
 
             if (state.selectedGlyphObject) {
                 this.selectedGlyphObject.set(
-                    this.DocumentStore.getObjectFromStringPath(
+                    this.projectEditorStore.getObjectFromStringPath(
                         state.selectedGlyphObject
                     )
                 );
@@ -174,7 +175,7 @@ export class NavigationStore {
 
             if (state.selectedBitmapObject) {
                 this.selectedBitmapObject.set(
-                    this.DocumentStore.getObjectFromStringPath(
+                    this.projectEditorStore.getObjectFromStringPath(
                         state.selectedBitmapObject
                     )
                 );
@@ -182,7 +183,7 @@ export class NavigationStore {
 
             if (state.selectedExtensionDefinitionObject) {
                 this.selectedExtensionDefinitionObject.set(
-                    this.DocumentStore.getObjectFromStringPath(
+                    this.projectEditorStore.getObjectFromStringPath(
                         state.selectedExtensionDefinitionObject
                     )
                 );
@@ -190,7 +191,7 @@ export class NavigationStore {
 
             if (state.selectedScpiSubsystemObject) {
                 this.selectedScpiSubsystemObject.set(
-                    this.DocumentStore.getObjectFromStringPath(
+                    this.projectEditorStore.getObjectFromStringPath(
                         state.selectedScpiSubsystemObject
                     )
                 );
@@ -198,7 +199,7 @@ export class NavigationStore {
 
             if (state.selectedScpiCommandObject) {
                 this.selectedScpiCommandObject.set(
-                    this.DocumentStore.getObjectFromStringPath(
+                    this.projectEditorStore.getObjectFromStringPath(
                         state.selectedScpiCommandObject
                     )
                 );
@@ -206,7 +207,7 @@ export class NavigationStore {
 
             if (state.selectedScpiEnumObject) {
                 this.selectedScpiEnumObject.set(
-                    this.DocumentStore.getObjectFromStringPath(
+                    this.projectEditorStore.getObjectFromStringPath(
                         state.selectedScpiEnumObject
                     )
                 );
@@ -214,7 +215,7 @@ export class NavigationStore {
 
             if (state.selectedTextResourceObject) {
                 this.selectedTextResourceObject.set(
-                    this.DocumentStore.getObjectFromStringPath(
+                    this.projectEditorStore.getObjectFromStringPath(
                         state.selectedTextResourceObject
                     )
                 );
@@ -222,7 +223,7 @@ export class NavigationStore {
 
             if (state.selectedLanguageObject) {
                 this.selectedLanguageObject.set(
-                    this.DocumentStore.getObjectFromStringPath(
+                    this.projectEditorStore.getObjectFromStringPath(
                         state.selectedLanguageObject
                     )
                 );
@@ -314,7 +315,7 @@ export class NavigationStore {
                 objects[0]
             );
             if (result) {
-                const editor = this.DocumentStore.editorsStore.openEditor(
+                const editor = this.projectEditorStore.editorsStore.openEditor(
                     result.object,
                     result.subObject
                 );

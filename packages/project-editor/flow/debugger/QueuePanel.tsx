@@ -1,7 +1,7 @@
 import React from "react";
 import { observer } from "mobx-react";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
-import { Panel } from "project-editor/components/Panel";
+import { Panel } from "project-editor/ui-components/Panel";
 import { action, computed, makeObservable } from "mobx";
 import { QueueTask, RuntimeBase } from "project-editor/flow/runtime";
 import { IconAction } from "eez-studio-ui/action";
@@ -156,7 +156,8 @@ export const QueuePanel = observer(
                                           }}
                                           title="Restart"
                                           onClick={
-                                              this.props.runtime.DocumentStore
+                                              this.props.runtime
+                                                  .projectEditorStore
                                                   .onRestartRuntimeWithDebuggerActive
                                           }
                                           enabled={this.props.runtime.isPaused}

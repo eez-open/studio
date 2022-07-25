@@ -6,7 +6,7 @@ import "project-editor/project/builtInFeatures";
 
 import type { ProjectEditorTab, Tabs } from "home/tabs-store";
 
-import { getProjectFeatures } from "project-editor/core/extensions";
+import { getProjectFeatures } from "project-editor/store/features";
 import {
     CurrentSearch,
     findAllReferences,
