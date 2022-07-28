@@ -12,6 +12,18 @@ import { Section } from "project-editor/store/output-sections";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const MEMORY_HASH = "memory";
+export const UNSTAGED_HASH = "unstaged";
+export const STAGED_HASH = "staged";
+
+export interface Revision {
+    hash: string;
+    message: string;
+    date?: string;
+    author_name?: string;
+    author_email?: string;
+}
+
 export class UIStateStore {
     selectedBuildConfiguration: string;
     features: any;
@@ -27,6 +39,9 @@ export class UIStateStore {
     selectedLanguageID: string;
 
     objectUIStates = new Map<string, any>();
+
+    revisions: Revision[] | undefined = undefined;
+    selectedRevisionHash: string | undefined;
 
     get pageEditorFrontFace() {
         return this._pageEditorFrontFace;
@@ -70,7 +85,9 @@ export class UIStateStore {
             enableBreakpoint: action,
             disableBreakpoint: action,
             watchExpressions: observable,
-            selectedLanguage: computed
+            selectedLanguage: computed,
+            revisions: observable,
+            selectedRevisionHash: observable
         });
     }
 
@@ -156,6 +173,8 @@ export class UIStateStore {
             if (uiState.selectedLanguageID != undefined) {
                 this.selectedLanguageID = uiState.selectedLanguageID;
             }
+
+            this.selectedRevisionHash = uiState.selectedRevisionHash;
         });
     }
 
@@ -202,7 +221,8 @@ export class UIStateStore {
             ),
             watchExpressions: toJS(this.watchExpressions),
             showComponentDescriptions: this.showComponentDescriptions,
-            selectedLanguageID: this.selectedLanguageID
+            selectedLanguageID: this.selectedLanguageID,
+            selectedRevisionHash: this.selectedRevisionHash
         };
 
         return state;

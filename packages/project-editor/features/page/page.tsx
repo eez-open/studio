@@ -1,5 +1,6 @@
 import React from "react";
 import { observable, computed, makeObservable } from "mobx";
+import classNames from "classnames";
 
 import { _find } from "eez-studio-shared/algorithm";
 import { to16bitsColor } from "eez-studio-shared/color";
@@ -51,11 +52,10 @@ import { metrics } from "project-editor/features/page/metrics";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
 import { buildWidget } from "project-editor/build/widgets";
 import { WIDGET_TYPE_CONTAINER } from "project-editor/flow/components/component_types";
-import classNames from "classnames";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
-import * as draw from "project-editor/flow/editor/draw";
+import { drawBackground } from "project-editor/flow/editor/draw";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -609,7 +609,7 @@ export class Page extends Flow {
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
                         if (pageStyle) {
-                            draw.drawBackground(
+                            drawBackground(
                                 ctx,
                                 0,
                                 0,
@@ -757,19 +757,12 @@ export default {
     description: "Pages support for your project",
     author: "EEZ",
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
-    eezStudioExtension: {
-        displayName: "Pages",
-        category: "project-feature",
-        implementation: {
-            projectFeature: {
-                mandatory: false,
-                key: "pages",
-                type: PropertyType.Array,
-                typeClass: Page,
-                icon: "filter",
-                create: () => [],
-                metrics
-            }
-        }
-    }
+    displayName: "Pages",
+    mandatory: false,
+    key: "pages",
+    type: PropertyType.Array,
+    typeClass: Page,
+    icon: "filter",
+    create: () => [],
+    metrics
 };

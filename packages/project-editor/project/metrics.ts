@@ -9,18 +9,10 @@ export function getAllMetrics(projectEditorStore: ProjectEditorStore) {
     let projectFeatures = ProjectEditor.extensions;
     for (let projectFeature of projectFeatures) {
         if (
-            projectFeature.eezStudioExtension.implementation.projectFeature
-                .metrics &&
-            getProperty(
-                project,
-                projectFeature.eezStudioExtension.implementation.projectFeature
-                    .key
-            )
+            projectFeature.metrics &&
+            getProperty(project, projectFeature.key)
         ) {
-            let featureMetrics =
-                projectFeature.eezStudioExtension.implementation.projectFeature.metrics(
-                    project
-                );
+            let featureMetrics = projectFeature.metrics(project);
             allMetrics = Object.assign(allMetrics, featureMetrics);
         }
     }

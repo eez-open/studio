@@ -21,15 +21,10 @@ function getInstrumentExtensionProperties(
     let projectFeatures = ProjectEditor.extensions;
     for (let projectFeature of projectFeatures) {
         if (
-            projectFeature.eezStudioExtension.implementation.projectFeature
-                .collectExtensionDefinitions &&
-            getProperty(
-                project,
-                projectFeature.eezStudioExtension.implementation.projectFeature
-                    .key
-            )
+            projectFeature.collectExtensionDefinitions &&
+            getProperty(project, projectFeature.key)
         ) {
-            projectFeature.eezStudioExtension.implementation.projectFeature.collectExtensionDefinitions(
+            projectFeature.collectExtensionDefinitions(
                 project,
                 extensionDefinition,
                 instrumentExtensionProperties

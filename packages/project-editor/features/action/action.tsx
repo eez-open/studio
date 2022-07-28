@@ -205,33 +205,27 @@ export default {
     description: "Project actions",
     author: "EEZ",
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
-    eezStudioExtension: {
-        displayName: "Action",
-        implementation: {
-            projectFeature: {
-                mandatory: false,
-                key: "actions",
-                type: PropertyType.Array,
-                typeClass: Action,
-                icon: "code",
-                create: () => [],
-                check: (object: IEezObject[]) => {
-                    let messages: Message[] = [];
+    displayName: "Action",
+    mandatory: false,
+    key: "actions",
+    type: PropertyType.Array,
+    typeClass: Action,
+    icon: "code",
+    create: () => [],
+    check: (object: IEezObject[]) => {
+        let messages: Message[] = [];
 
-                    if (object.length > 32000) {
-                        messages.push(
-                            new Message(
-                                MessageType.ERROR,
-                                "Max. 32000 actions are supported",
-                                object
-                            )
-                        );
-                    }
-
-                    return messages;
-                },
-                metrics: metrics
-            }
+        if (object.length > 32000) {
+            messages.push(
+                new Message(
+                    MessageType.ERROR,
+                    "Max. 32000 actions are supported",
+                    object
+                )
+            );
         }
-    }
+
+        return messages;
+    },
+    metrics: metrics
 };

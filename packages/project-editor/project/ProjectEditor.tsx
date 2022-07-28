@@ -597,15 +597,16 @@ const NavigationMenuObject = observer(
                 );
             }
 
-            console.log(1);
-
             if (this.props.object != this.context.project.readme) {
-                console.log(2);
                 this.context.editorsStore.closeEditorForObject(
                     this.context.project.readme
                 );
-            } else {
-                console.log(this.props.object);
+            }
+
+            if (this.props.object != this.context.project.changes) {
+                this.context.editorsStore.closeEditorForObject(
+                    this.context.project.changes
+                );
             }
         });
 

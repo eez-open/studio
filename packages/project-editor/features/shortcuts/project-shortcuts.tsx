@@ -268,48 +268,39 @@ export default {
         "This feature adds support for shortcut definitions into your project",
     author: "EEZ",
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
-    eezStudioExtension: {
-        displayName: "Shortcuts",
-        category: "project-feature",
-        implementation: {
-            projectFeature: {
-                mandatory: false,
-                key: "shortcuts",
-                type: PropertyType.Object,
-                typeClass: Shortcuts,
-                icon: "playlist_play",
-                create: () => {
-                    return {
-                        shortcuts: []
-                    };
-                },
-                metrics: metrics,
-                collectExtensionDefinitions: (
-                    project: Project,
-                    extensionDefinition: ExtensionDefinition,
-                    properties: any
-                ) => {
-                    let shortcuts = project.shortcuts;
-                    properties.shortcuts = objectToJS(
-                        shortcuts.shortcuts.filter(
-                            shortcut =>
-                                !shortcut.usedIn ||
-                                shortcut.usedIn.indexOf(
-                                    extensionDefinition.buildConfiguration
-                                ) != -1
-                        )
-                    ).map((shortcut: any) =>
-                        Object.assign(shortcut, {
-                            selected: undefined
-                        })
-                    );
+    displayName: "Shortcuts",
+    mandatory: false,
+    key: "shortcuts",
+    type: PropertyType.Object,
+    typeClass: Shortcuts,
+    icon: "playlist_play",
+    create: () => {
+        return {
+            shortcuts: []
+        };
+    },
+    metrics: metrics,
+    collectExtensionDefinitions: (
+        project: Project,
+        extensionDefinition: ExtensionDefinition,
+        properties: any
+    ) => {
+        let shortcuts = project.shortcuts;
+        properties.shortcuts = objectToJS(
+            shortcuts.shortcuts.filter(
+                shortcut =>
+                    !shortcut.usedIn ||
+                    shortcut.usedIn.indexOf(
+                        extensionDefinition.buildConfiguration
+                    ) != -1
+            )
+        ).map((shortcut: any) =>
+            Object.assign(shortcut, {
+                selected: undefined
+            })
+        );
 
-                    // we don't need usedIn property in package.json
-                    properties.shortcuts.forEach(
-                        (shortcut: any) => delete shortcut.usedIn
-                    );
-                }
-            }
-        }
+        // we don't need usedIn property in package.json
+        properties.shortcuts.forEach((shortcut: any) => delete shortcut.usedIn);
     }
 };

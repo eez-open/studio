@@ -2037,32 +2037,23 @@ export default {
     description: "Styles support for your project",
     author: "EEZ",
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
-    eezStudioExtension: {
-        displayName: "Styles",
-        category: "project-feature",
-        implementation: {
-            projectFeature: {
-                mandatory: false,
-                key: "styles",
-                type: PropertyType.Array,
-                typeClass: Style,
-                icon: "format_color_fill",
-                create: () => [],
-                metrics,
-                toJsHook: (jsObject: Project, project: Project) => {
-                    //
-                    jsObject.colors.forEach(
-                        (color: IColor) => delete color.colorId
-                    );
+    displayName: "Styles",
+    mandatory: false,
+    key: "styles",
+    type: PropertyType.Array,
+    typeClass: Style,
+    icon: "format_color_fill",
+    create: () => [],
+    metrics,
+    toJsHook: (jsObject: Project, project: Project) => {
+        //
+        jsObject.colors.forEach((color: IColor) => delete color.colorId);
 
-                    jsObject.themes.forEach((theme: ITheme, i: number) => {
-                        delete theme.themeId;
-                        theme.colors = project.themes[i].colors;
-                    });
+        jsObject.themes.forEach((theme: ITheme, i: number) => {
+            delete theme.themeId;
+            theme.colors = project.themes[i].colors;
+        });
 
-                    delete (jsObject as Partial<Project>).themeColors;
-                }
-            }
-        }
+        delete (jsObject as Partial<Project>).themeColors;
     }
 };

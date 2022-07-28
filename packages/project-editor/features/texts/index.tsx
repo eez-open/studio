@@ -421,30 +421,23 @@ export default {
     description: "Localized texts support for your project",
     author: "EEZ",
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
-    eezStudioExtension: {
-        displayName: "Texts",
-        category: "project-feature",
-        implementation: {
-            projectFeature: {
-                mandatory: false,
-                key: "texts",
-                type: PropertyType.Object,
-                typeClass: Texts,
-                icon: LANGUAGE_ICON,
-                create: () => ({
-                    languages: [],
-                    texts: []
-                }),
-                metrics: (
-                    project: Project
-                ): {
-                    [key: string]: string | number;
-                } => {
-                    return {
-                        Texts: 0
-                    };
-                }
-            }
-        }
+    displayName: "Texts",
+    mandatory: false,
+    key: "texts",
+    type: PropertyType.Object,
+    typeClass: Texts,
+    icon: LANGUAGE_ICON,
+    create: () => ({
+        languages: [],
+        texts: []
+    }),
+    metrics: (
+        project: Project
+    ): {
+        [key: string]: string | number;
+    } => {
+        return {
+            Texts: 0
+        };
     }
 };

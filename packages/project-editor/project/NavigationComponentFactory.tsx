@@ -42,6 +42,7 @@ import { ConnectionLine } from "project-editor/flow/flow";
 import { TextsNavigation } from "project-editor/features/texts/navigation";
 import { Language, TextResource } from "project-editor/features/texts";
 import { ReadmeNavigation } from "project-editor/features/readme/navigation";
+import { ChangesNavigation } from "project-editor/features/changes/navigation";
 
 export function getNavigationComponentId(object: IEezObject) {
     const project = getProject(object);
@@ -118,6 +119,10 @@ export function getNavigationComponent(
 
     if (object == project.readme) {
         return ReadmeNavigation;
+    }
+
+    if (object == project.changes) {
+        return ChangesNavigation;
     }
 
     return undefined;

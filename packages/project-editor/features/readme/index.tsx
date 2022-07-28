@@ -53,18 +53,11 @@ export default {
     description: "Readme file",
     author: "EEZ",
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
-    eezStudioExtension: {
-        displayName: "Readme",
-        category: "project-feature",
-        implementation: {
-            projectFeature: {
-                mandatory: false,
-                key: "readme",
-                type: PropertyType.Object,
-                typeClass: Readme,
-                icon: README_ICON,
-                create: () => ({})
-            }
-        }
-    }
+    displayName: "Readme",
+    mandatory: false,
+    key: "readme",
+    type: PropertyType.Object,
+    typeClass: Readme,
+    icon: README_ICON,
+    create: () => ({})
 };

@@ -300,24 +300,17 @@ export default {
         "This feature adds support for IEXT definitions into your project",
     author: "EEZ",
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
-    eezStudioExtension: {
-        displayName: "IEXT definitions",
-        implementation: {
-            projectFeature: {
-                mandatory: false,
-                key: "extensionDefinitions",
-                displayName: "IEXT defs",
-                type: PropertyType.Array,
-                typeClass: ExtensionDefinition,
-                icon: "extension",
-                create: () => {
-                    return [];
-                },
-                check: (object: IEezObject) => {
-                    return [];
-                },
-                metrics: metrics
-            }
-        }
-    }
+    displayName: "IEXT defs",
+    mandatory: false,
+    key: "extensionDefinitions",
+    type: PropertyType.Array,
+    typeClass: ExtensionDefinition,
+    icon: "extension",
+    create: () => {
+        return [];
+    },
+    check: (object: IEezObject) => {
+        return [];
+    },
+    metrics: metrics
 };

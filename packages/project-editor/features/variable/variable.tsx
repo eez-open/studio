@@ -1324,39 +1324,33 @@ export default {
     description: "Variables, Structures and Enums",
     author: "EEZ",
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
-    eezStudioExtension: {
-        displayName: "Variables",
-        implementation: {
-            projectFeature: {
-                mandatory: false,
-                key: "variables",
-                type: PropertyType.Object,
-                typeClass: ProjectVariables,
-                icon: VariableIcon,
-                create: () => {
-                    return {
-                        globalVariables: [],
-                        structures: [],
-                        enums: []
-                    };
-                },
-                check: (object: IEezObject[]) => {
-                    let messages: Message[] = [];
+    displayName: "Variables",
+    mandatory: false,
+    key: "variables",
+    type: PropertyType.Object,
+    typeClass: ProjectVariables,
+    icon: VariableIcon,
+    create: () => {
+        return {
+            globalVariables: [],
+            structures: [],
+            enums: []
+        };
+    },
+    check: (object: IEezObject[]) => {
+        let messages: Message[] = [];
 
-                    if (object.length > 32000) {
-                        messages.push(
-                            new Message(
-                                MessageType.ERROR,
-                                "Max. 32000 global variables are supported",
-                                object
-                            )
-                        );
-                    }
-
-                    return messages;
-                },
-                metrics: metrics
-            }
+        if (object.length > 32000) {
+            messages.push(
+                new Message(
+                    MessageType.ERROR,
+                    "Max. 32000 global variables are supported",
+                    object
+                )
+            );
         }
-    }
+
+        return messages;
+    },
+    metrics: metrics
 };

@@ -128,6 +128,7 @@
         "immutability-helper": "^3.1.1",
         "jquery": "^3.5.1",
         "json-stable-stringify": "^1.0.1",
+        "jsondiffpatch": "^0.4.1",
         "jspanel4": "^4.10.2",
         "lodash": "^4.17.21",
         "lz4": "0.6.5",

@@ -907,23 +907,17 @@ export default {
     description: "This feature adds SCPI support for your project",
     author: "EEZ",
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
-    eezStudioExtension: {
-        displayName: "SCPI",
-        implementation: {
-            projectFeature: {
-                mandatory: false,
-                key: "scpi",
-                type: PropertyType.Object,
-                typeClass: Scpi,
-                icon: "navigate_next",
-                create: () => {
-                    return {
-                        subsystems: [],
-                        enums: []
-                    };
-                },
-                metrics: metrics
-            }
-        }
-    }
+    displayName: "SCPI",
+    mandatory: false,
+    key: "scpi",
+    type: PropertyType.Object,
+    typeClass: Scpi,
+    icon: "navigate_next",
+    create: () => {
+        return {
+            subsystems: [],
+            enums: []
+        };
+    },
+    metrics: metrics
 };

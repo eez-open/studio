@@ -1213,49 +1213,38 @@ export default {
     description: "Fonts support for your project",
     author: "EEZ",
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
-    eezStudioExtension: {
-        displayName: "Fonts",
-        category: "project-feature",
-        implementation: {
-            projectFeature: {
-                mandatory: false,
-                key: "fonts",
-                type: PropertyType.Array,
-                typeClass: Font,
-                icon: "font_download",
-                create: () => [],
-                check: (object: IEezObject[]) => {
-                    let messages: Message[] = [];
+    displayName: "Fonts",
+    mandatory: false,
+    key: "fonts",
+    type: PropertyType.Array,
+    typeClass: Font,
+    icon: "font_download",
+    create: () => [],
+    check: (object: IEezObject[]) => {
+        let messages: Message[] = [];
 
-                    if (object.length > 255) {
-                        messages.push(
-                            new Message(
-                                MessageType.ERROR,
-                                "Max. 255 fonts are supported",
-                                object
-                            )
-                        );
-                    }
+        if (object.length > 255) {
+            messages.push(
+                new Message(
+                    MessageType.ERROR,
+                    "Max. 255 fonts are supported",
+                    object
+                )
+            );
+        }
 
-                    return messages;
-                },
-                metrics: metrics,
-                toJsHook: (jsObject: Project, project: Project) => {
-                    jsObject.fonts?.forEach(font =>
-                        font.glyphs.forEach(glyph => {
-                            if (
-                                glyph.glyphBitmap &&
-                                glyph.glyphBitmap.pixelArray
-                            ) {
-                                (glyph.glyphBitmap as any).pixelArray =
-                                    serializePixelArray(
-                                        glyph.glyphBitmap.pixelArray
-                                    );
-                            }
-                        })
+        return messages;
+    },
+    metrics: metrics,
+    toJsHook: (jsObject: Project, project: Project) => {
+        jsObject.fonts?.forEach(font =>
+            font.glyphs.forEach(glyph => {
+                if (glyph.glyphBitmap && glyph.glyphBitmap.pixelArray) {
+                    (glyph.glyphBitmap as any).pixelArray = serializePixelArray(
+                        glyph.glyphBitmap.pixelArray
                     );
                 }
-            }
-        }
+            })
+        );
     }
 };

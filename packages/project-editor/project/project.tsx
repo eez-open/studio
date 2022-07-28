@@ -96,6 +96,7 @@ import {
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Texts } from "project-editor/features/texts";
 import { Readme } from "project-editor/features/readme";
+import { Changes } from "project-editor/features/changes";
 import { resizeWidget } from "project-editor/flow/editor/resizing-widget-property";
 import { Rect } from "eez-studio-shared/geometry";
 import { PageTabState } from "project-editor/features/page/PageEditor";
@@ -1164,25 +1165,14 @@ function getProjectClassInfo() {
         let projectFeatureProperties: PropertyInfo[] = projectFeatures.map(
             projectFeature => {
                 return {
-                    name: projectFeature.eezStudioExtension.implementation
-                        .projectFeature.key,
-                    displayName:
-                        projectFeature.eezStudioExtension.implementation
-                            .projectFeature.displayName,
-                    type: projectFeature.eezStudioExtension.implementation
-                        .projectFeature.type,
-                    typeClass:
-                        projectFeature.eezStudioExtension.implementation
-                            .projectFeature.typeClass,
-                    isOptional:
-                        !projectFeature.eezStudioExtension.implementation
-                            .projectFeature.mandatory,
+                    name: projectFeature.key,
+                    displayName: projectFeature.displayName,
+                    type: projectFeature.type,
+                    typeClass: projectFeature.typeClass,
+                    isOptional: !projectFeature.mandatory,
                     hideInPropertyGrid: true,
-                    check: projectFeature.eezStudioExtension.implementation
-                        .projectFeature.check,
-                    enumerable:
-                        projectFeature.eezStudioExtension.implementation
-                            .projectFeature.enumerable
+                    check: projectFeature.check,
+                    enumerable: projectFeature.enumerable
                 };
             }
         );
@@ -1471,6 +1461,8 @@ export class Project extends EezObject {
     shortcuts: Shortcuts;
     micropython: MicroPython;
     extensionDefinitions: ExtensionDefinition[];
+    changes: Changes;
+
     colors: Color[];
     themes: Theme[];
 
@@ -1492,6 +1484,7 @@ export class Project extends EezObject {
             shortcuts: observable,
             micropython: observable,
             extensionDefinitions: observable,
+            changes: observable,
             colors: observable,
             themes: observable,
             projectName: computed,

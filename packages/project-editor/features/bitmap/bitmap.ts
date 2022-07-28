@@ -322,47 +322,40 @@ export default {
     description: "Bitmpas support for your project",
     author: "EEZ",
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
-    eezStudioExtension: {
-        displayName: "Bitmaps",
-        category: "project-feature",
-        implementation: {
-            projectFeature: {
-                mandatory: false,
-                key: "bitmaps",
-                type: PropertyType.Array,
-                typeClass: Bitmap,
-                icon: "image",
-                create: () => [],
-                check: (object: IEezObject[]) => {
-                    let messages: Message[] = [];
+    displayName: "Bitmaps",
+    mandatory: false,
+    key: "bitmaps",
+    type: PropertyType.Array,
+    typeClass: Bitmap,
+    icon: "image",
+    create: () => [],
+    check: (object: IEezObject[]) => {
+        let messages: Message[] = [];
 
-                    if (object.length > 255) {
-                        messages.push(
-                            new Message(
-                                MessageType.ERROR,
-                                "Max. 255 bitmaps are supported",
-                                object
-                            )
-                        );
-                    }
-
-                    if (
-                        !ProjectEditor.getProject(object).isDashboardProject &&
-                        !findStyle(getDocumentStore(object).project, "default")
-                    ) {
-                        messages.push(
-                            new Message(
-                                MessageType.ERROR,
-                                "'Default' style is missing.",
-                                object
-                            )
-                        );
-                    }
-
-                    return messages;
-                },
-                metrics
-            }
+        if (object.length > 255) {
+            messages.push(
+                new Message(
+                    MessageType.ERROR,
+                    "Max. 255 bitmaps are supported",
+                    object
+                )
+            );
         }
-    }
+
+        if (
+            !ProjectEditor.getProject(object).isDashboardProject &&
+            !findStyle(getDocumentStore(object).project, "default")
+        ) {
+            messages.push(
+                new Message(
+                    MessageType.ERROR,
+                    "'Default' style is missing.",
+                    object
+                )
+            );
+        }
+
+        return messages;
+    },
+    metrics
 };

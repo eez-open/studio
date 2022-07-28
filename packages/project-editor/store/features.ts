@@ -22,42 +22,34 @@ import shortcutsFeature from "project-editor/features/shortcuts/project-shortcut
 import microPythonFeature from "project-editor/features/micropython/micropython";
 import textsFeature from "project-editor/features/texts";
 import readmeFeature from "project-editor/features/readme";
+import diffFeature from "project-editor/features/changes";
 
 export type BuildResult = { [key: string]: string };
 
-export interface ProjectEditorFeatureImplementation {
-    projectFeature: {
-        mandatory: boolean;
-        key: string;
-        displayName?: string;
-        type: PropertyType;
-        typeClass: EezClass;
-        icon: string | React.ReactNode;
-        create: () => any;
-        check?: (object: IEezObject) => Message[];
-        collectExtensionDefinitions?: (
-            project: Project,
-            extensionDefinition: ExtensionDefinition,
-            properties: any
-        ) => void;
-        metrics?: (project: Project) => { [key: string]: string | number };
-        toJsHook?: (jsObject: any, object: IEezObject) => void;
-        enumerable?:
-            | boolean
-            | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
-    };
-}
-
 export interface ProjectEditorFeature {
     name: string;
+    displayName: string;
     version: string;
     description: string;
     author: string;
     authorLogo: string;
-    eezStudioExtension: {
-        displayName: string;
-        implementation: ProjectEditorFeatureImplementation;
-    };
+    mandatory: boolean;
+    key: string;
+    type: PropertyType;
+    typeClass: EezClass;
+    icon: string | React.ReactNode;
+    create: () => any;
+    check?: (object: IEezObject) => Message[];
+    collectExtensionDefinitions?: (
+        project: Project,
+        extensionDefinition: ExtensionDefinition,
+        properties: any
+    ) => void;
+    metrics?: (project: Project) => { [key: string]: string | number };
+    toJsHook?: (jsObject: any, object: IEezObject) => void;
+    enumerable?:
+        | boolean
+        | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
 }
 
 let features: ProjectEditorFeature[] = [
@@ -72,7 +64,8 @@ let features: ProjectEditorFeature[] = [
     extensionDefinitionsFeature,
     scpiFeature,
     shortcutsFeature,
-    readmeFeature
+    readmeFeature,
+    diffFeature
 ];
 
 export function getProjectFeatures() {

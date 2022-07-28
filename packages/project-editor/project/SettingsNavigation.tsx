@@ -35,7 +35,7 @@ import { NavigationComponent } from "project-editor/project/NavigationComponent"
 const ProjectFeature = observer(
     class ProjectFeature extends React.Component<
         {
-            extension: ProjectEditorFeature;
+            projectFeature: ProjectEditorFeature;
         },
         {}
     > {
@@ -46,16 +46,13 @@ const ProjectFeature = observer(
             let newFeatureObject = loadObject(
                 this.context,
                 this.context.project,
-                this.props.extension.eezStudioExtension.implementation.projectFeature.create(),
-                this.props.extension.eezStudioExtension.implementation
-                    .projectFeature.typeClass,
-                this.props.extension.eezStudioExtension.implementation
-                    .projectFeature.key
+                this.props.projectFeature.create(),
+                this.props.projectFeature.typeClass,
+                this.props.projectFeature.key
             );
 
             let changes = {
-                [this.props.extension.eezStudioExtension.implementation
-                    .projectFeature.key]: newFeatureObject
+                [this.props.projectFeature.key]: newFeatureObject
             };
 
             this.context.updateObject(this.context.project, changes);
@@ -68,8 +65,7 @@ const ProjectFeature = observer(
                 () => {
                     if (this.context.project) {
                         this.context.updateObject(this.context.project, {
-                            [this.props.extension.eezStudioExtension
-                                .implementation.projectFeature.key]: undefined
+                            [this.props.projectFeature.key]: undefined
                         });
                     }
                 }
@@ -79,16 +75,9 @@ const ProjectFeature = observer(
         render() {
             let button: JSX.Element | undefined;
             if (
-                getProperty(
-                    this.context.project,
-                    this.props.extension.eezStudioExtension.implementation
-                        .projectFeature.key
-                )
+                getProperty(this.context.project, this.props.projectFeature.key)
             ) {
-                if (
-                    this.props.extension.eezStudioExtension.implementation
-                        .projectFeature.mandatory
-                ) {
+                if (this.props.projectFeature.mandatory) {
                     button = (
                         <button
                             className="btn btn-secondary float-right"
@@ -136,16 +125,13 @@ const ProjectFeature = observer(
                                     marginRight: 5
                                 }}
                             >
-                                {
-                                    this.props.extension.eezStudioExtension
-                                        .implementation.projectFeature.icon
-                                }
+                                {this.props.projectFeature.icon}
                             </i>
-                            {this.props.extension.eezStudioExtension
-                                .displayName || this.props.extension.name}
+                            {this.props.projectFeature.displayName ||
+                                this.props.projectFeature.name}
                         </h5>
                         <p className="card-text">
-                            {this.props.extension.description}.
+                            {this.props.projectFeature.description}.
                         </p>
                         <div
                             style={{
@@ -257,7 +243,7 @@ export const SettingsEditor = observer(
                     extension => (
                         <ProjectFeature
                             key={extension.name}
-                            extension={extension}
+                            projectFeature={extension}
                         />
                     )
                 );

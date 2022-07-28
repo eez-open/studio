@@ -236,21 +236,15 @@ export default {
     description: "MicroPython",
     author: "EEZ",
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
-    eezStudioExtension: {
-        displayName: "MicroPython",
-        implementation: {
-            projectFeature: {
-                mandatory: false,
-                key: "micropython",
-                type: PropertyType.Object,
-                typeClass: MicroPython,
-                icon: ICON,
-                create: () => {
-                    return {
-                        code: ""
-                    };
-                }
-            }
-        }
+    displayName: "MicroPython",
+    mandatory: false,
+    key: "micropython",
+    type: PropertyType.Object,
+    typeClass: MicroPython,
+    icon: ICON,
+    create: () => {
+        return {
+            code: ""
+        };
     }
 };

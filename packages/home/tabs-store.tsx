@@ -35,8 +35,6 @@ import type * as ShortcutsModule from "home/shortcuts";
 import type * as ExtensionsManagerModule from "home/extensions-manager/extensions-manager";
 import type * as SettingsModule from "home/settings";
 
-import type * as ProjectEditorModule from "project-editor/project/ProjectEditor";
-
 import { Loader } from "eez-studio-ui/loader";
 
 import { ProjectEditorStore } from "project-editor/store";
@@ -453,7 +451,7 @@ export class ProjectEditorTab implements IHomeTab {
     error: string | undefined;
 
     ProjectContext: React.Context<ProjectEditorStore>;
-    ProjectEditor: typeof ProjectEditorModule.ProjectEditorView;
+    ProjectEditor: typeof ProjectEditorView;
 
     closed: boolean = false;
 

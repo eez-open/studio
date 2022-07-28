@@ -84,6 +84,8 @@ export * from "project-editor/store/clipboard";
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ProjectEditorStore {
+    project: Project;
+
     undoManager = new UndoManager(this);
     navigationStore = new NavigationStore(this);
     editorsStore = new EditorsStore(this);
@@ -95,7 +97,6 @@ export class ProjectEditorStore {
 
     runtime: RuntimeBase | undefined;
 
-    private _project: Project | undefined;
     modified: boolean = false;
 
     filePath: string | undefined;
@@ -126,9 +127,9 @@ export class ProjectEditorStore {
     }
 
     constructor() {
-        makeObservable<ProjectEditorStore, "_project">(this, {
+        makeObservable<ProjectEditorStore>(this, {
             runtime: observable,
-            _project: observable,
+            project: observable,
             modified: observable,
             filePath: observable,
             backgroundCheckEnabled: observable,
@@ -606,10 +607,6 @@ export class ProjectEditorStore {
         return (++this.lastChildId).toString();
     }
 
-    get project() {
-        return this._project!;
-    }
-
     getObjectFromPath(path: string[]) {
         return getObjectFromPath(this.project, path);
     }
@@ -631,7 +628,7 @@ export class ProjectEditorStore {
     }
 
     async setProject(project: Project, projectFilePath: string | undefined) {
-        this._project = project;
+        this.project = project;
         this.filePath = projectFilePath;
 
         project._DocumentStore = this;
@@ -1034,14 +1031,8 @@ export function getJSON(
     const toJsHook = (jsObject: any, object: IEezObject) => {
         let projectFeatures = ProjectEditor.extensions;
         for (let projectFeature of projectFeatures) {
-            if (
-                projectFeature.eezStudioExtension.implementation.projectFeature
-                    .toJsHook
-            ) {
-                projectFeature.eezStudioExtension.implementation.projectFeature.toJsHook(
-                    jsObject,
-                    object
-                );
+            if (projectFeature.toJsHook) {
+                projectFeature.toJsHook(jsObject, object);
             }
         }
     };
