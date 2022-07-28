@@ -1337,7 +1337,7 @@ export default {
             enums: []
         };
     },
-    check: (object: IEezObject[]) => {
+    check: (object: EezObject[]) => {
         let messages: Message[] = [];
 
         if (object.length > 32000) {

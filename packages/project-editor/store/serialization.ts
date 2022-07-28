@@ -18,7 +18,7 @@ import { getClassInfo, ProjectEditorStore } from "project-editor/store";
 
 export function loadObject(
     projectEditorStore: ProjectEditorStore,
-    parent: IEezObject | IEezObject[] | undefined,
+    parent: IEezObject | undefined,
     jsObjectOrString: any | string,
     aClass: EezClass,
     key?: string
@@ -30,7 +30,7 @@ export function loadObject(
 }
 
 export function objectToJson(
-    object: IEezObject | IEezObject[],
+    object: IEezObject,
     space?: number,
     toJsHook?: (jsObject: any, object: IEezObject) => void
 ) {
@@ -74,7 +74,7 @@ function loadArrayObject(
     parent: any,
     propertyInfo: PropertyInfo
 ) {
-    const eezArray: EezObject[] = observable([]);
+    const eezArray: IEezObject = observable([]);
 
     setId(currentDocumentStore!, eezArray, currentDocumentStore!.getChildId());
     setParent(eezArray, parent);
@@ -83,7 +83,11 @@ function loadArrayObject(
 
     arrayObject.forEach((object: any) =>
         eezArray.push(
-            loadObjectInternal(eezArray, object, propertyInfo.typeClass!)
+            loadObjectInternal(
+                eezArray,
+                object,
+                propertyInfo.typeClass!
+            ) as EezObject
         )
     );
 
@@ -91,7 +95,7 @@ function loadArrayObject(
 }
 
 function loadObjectInternal(
-    parent: IEezObject | IEezObject[] | undefined,
+    parent: IEezObject | undefined,
     jsObjectOrString: any | string,
     aClass: EezClass,
     key?: string

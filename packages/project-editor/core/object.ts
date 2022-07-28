@@ -180,8 +180,8 @@ export type InheritedValue =
 export interface SerializedData {
     objectClassName: string;
     classInfo?: ClassInfo;
-    object?: IEezObject;
-    objects?: IEezObject[];
+    object?: EezObject;
+    objects?: EezObject[];
 }
 
 export interface ClassInfo {
@@ -261,7 +261,7 @@ export interface ClassInfo {
 
     deleteObjectRefHook?: (
         object: IEezObject,
-        options?: { dropPlace?: IEezObject }
+        options?: { dropPlace?: IEezObject | PropertyInfo }
     ) => void;
     deleteObjectFilterHook?: (object: IEezObject) => boolean;
 
@@ -364,6 +364,8 @@ export type IEezObject = EezObject | EezObject[];
 
 export class EezObject {
     static classInfo: ClassInfo;
+
+    persistentObjectId: number;
 }
 
 export type EezClass = typeof EezObject;

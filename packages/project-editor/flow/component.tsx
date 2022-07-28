@@ -716,7 +716,12 @@ export class CustomInput extends EezObject implements ComponentInput {
                             type: "string",
                             validators: [
                                 validators.required,
-                                componentInputUnique({}, parent)
+                                componentInputUnique(
+                                    {
+                                        persistentObjectId: 0
+                                    },
+                                    parent
+                                )
                             ]
                         },
                         {
@@ -821,7 +826,10 @@ export class CustomOutput extends EezObject implements ComponentOutput {
                             name: "name",
                             type: "string",
                             validators: [
-                                componentOutputUnique({}, parent),
+                                componentOutputUnique(
+                                    { persistentObjectId: 0 },
+                                    parent
+                                ),
                                 validators.unique({}, parent)
                             ]
                         },
@@ -2372,14 +2380,14 @@ export class Component extends EezObject {
 
         deleteObjectRefHook: (
             component: Component,
-            options?: { dropPlace?: IEezObject }
+            options?: { dropPlace?: IEezObject | PropertyInfo }
         ) => {
             const flow = ProjectEditor.getFlow(component);
 
             let keepConnectionLines =
                 options &&
                 options.dropPlace &&
-                flow == ProjectEditor.getFlow(options.dropPlace);
+                flow == ProjectEditor.getFlow(options.dropPlace as any);
 
             if (!keepConnectionLines) {
                 flow.deleteConnectionLines(component);

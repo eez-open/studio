@@ -329,7 +329,7 @@ export default {
     typeClass: Bitmap,
     icon: "image",
     create: () => [],
-    check: (object: IEezObject[]) => {
+    check: (object: EezObject[]) => {
         let messages: Message[] = [];
 
         if (object.length > 255) {

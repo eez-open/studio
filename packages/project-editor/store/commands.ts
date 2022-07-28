@@ -7,7 +7,8 @@ import {
     getProperty,
     getParent,
     getKey,
-    PropertyType
+    PropertyType,
+    EezObject
 } from "project-editor/core/object";
 
 import {
@@ -55,14 +56,15 @@ export let addObject = action(
 );
 
 export let addObjects = action(
-    (parentObject: IEezObject, objects: IEezObject[]) => {
-        objects = objects.map(object =>
-            loadObject(
-                getDocumentStore(parentObject),
-                parentObject,
-                object,
-                getClass(parentObject)
-            )
+    (parentObject: IEezObject, objects: EezObject[]) => {
+        objects = objects.map(
+            object =>
+                loadObject(
+                    getDocumentStore(parentObject),
+                    parentObject,
+                    object,
+                    getClass(parentObject)
+                ) as EezObject
         );
         ensureUniqueProperties(parentObject, objects);
 

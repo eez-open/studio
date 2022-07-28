@@ -55,10 +55,16 @@ export function clipboardDataToObject(
                 undefined,
                 serializedData.object,
                 aClass
-            );
+            ) as EezObject;
         } else if (serializedData.objects) {
-            serializedData.objects = serializedData.objects.map(object =>
-                loadObject(projectEditorStore, undefined, object, aClass)
+            serializedData.objects = serializedData.objects.map(
+                object =>
+                    loadObject(
+                        projectEditorStore,
+                        undefined,
+                        object,
+                        aClass
+                    ) as EezObject
             );
         }
     }
@@ -147,7 +153,7 @@ export function findPastePlaceInsideAndOutside(
         !!serializedData.object
     );
     if (place) {
-        return place;
+        return place as EezObject;
     }
 
     let parent = getParent(object);

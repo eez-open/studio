@@ -1,6 +1,10 @@
 import type { BuildResult } from "project-editor/store/features";
 
-import { getProperty, MessageType } from "project-editor/core/object";
+import {
+    EezObject,
+    getProperty,
+    MessageType
+} from "project-editor/core/object";
 
 import {
     Project,
@@ -460,11 +464,11 @@ export class Assets {
         );
     }
 
-    getAssetIndex<T>(
+    getAssetIndex<T extends EezObject>(
         object: any,
         propertyName: string,
         findAsset: (project: Project, assetName: string) => T | undefined,
-        collection: T[]
+        collection: (T | undefined)[]
     ) {
         const project = getProject(object);
         const assetName = object[propertyName];

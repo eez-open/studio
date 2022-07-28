@@ -1,6 +1,6 @@
 import { observable, action, makeObservable } from "mobx";
 
-import type { IEezObject } from "project-editor/core/object";
+import type { IEezObject, PropertyInfo } from "project-editor/core/object";
 import type { ProjectEditorStore, UndoManager } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,7 +65,7 @@ export class DragAndDropManagerClass {
         event.dataTransfer.dropEffect = this.dropEffect;
     }
 
-    deleteDragItem(options?: { dropPlace?: IEezObject }) {
+    deleteDragItem(options?: { dropPlace?: IEezObject | PropertyInfo }) {
         if (this.dropObject && this.dropEffect == "move") {
             if (this.dragObject) {
                 this.undoManager?.projectEditorStore.deleteObject(

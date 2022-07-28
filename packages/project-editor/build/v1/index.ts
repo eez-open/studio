@@ -29,7 +29,8 @@ import {
 
 import {
     getData as getBitmapData,
-    BitmapData
+    BitmapData,
+    Bitmap
 } from "project-editor/features/bitmap/bitmap";
 import { Font } from "project-editor/features/font/font";
 import { Style } from "project-editor/features/style/style";
@@ -786,6 +787,7 @@ function buildGuiBitmapsDef(project: Project) {
             let bitmapsArray: string[] = [];
 
             let bitmaps: {
+                bitmap: Bitmap;
                 name: string;
                 width: number;
                 height: number;
@@ -793,6 +795,7 @@ function buildGuiBitmapsDef(project: Project) {
             }[] = [];
             for (let i = 0; i < project.bitmaps.length; i++) {
                 bitmaps.push({
+                    bitmap: project.bitmaps[i],
                     name: project.bitmaps[i].name,
                     width: bitmapsData[i].width,
                     height: bitmapsData[i].height,
@@ -806,7 +809,7 @@ function buildGuiBitmapsDef(project: Project) {
             bitmaps.forEach(bitmap => {
                 let bitmapPixelDataName = getName(
                     "bitmap_pixel_data_",
-                    bitmap,
+                    bitmap.bitmap,
                     NamingConvention.UnderscoreLowerCase
                 );
                 bitmapsPixelData.push(

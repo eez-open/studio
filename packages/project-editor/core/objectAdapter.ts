@@ -27,7 +27,8 @@ import {
     isPropertyEnumerable,
     PropertyInfo,
     getParent,
-    getId
+    getId,
+    EezObject
 } from "project-editor/core/object";
 
 import {
@@ -609,7 +610,9 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
 
     cutSelection() {
         if (this.canCut()) {
-            let objects = this.selectedItems.map(item => item.object);
+            let objects = this.selectedItems.map(
+                item => item.object as EezObject
+            );
             if (objects.length == 1) {
                 cutItem(objects[0]);
             } else {
@@ -640,7 +643,9 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
 
     copySelection() {
         if (this.canCopy()) {
-            let objects = this.selectedItems.map(item => item.object);
+            let objects = this.selectedItems.map(
+                item => item.object as EezObject
+            );
             // if (objects.length == 1) {
             //     copyItem(objects[0]);
             // } else {
@@ -1275,9 +1280,9 @@ export class TreeAdapter implements ITreeAdapter {
                         dropPlace
                     });
 
-                    if (isArray(dropPlace)) {
+                    if (isArray(dropPlace as any)) {
                         aNewObject = projectEditorStore.addObject(
-                            dropPlace,
+                            dropPlace as any,
                             object
                         );
                     } else {

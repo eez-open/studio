@@ -463,9 +463,7 @@ export function buildFlowDefs(assets: Assets) {
         (componentType, i) =>
             `${TAB}${getName(
                 "COMPONENT_TYPE_",
-                {
-                    name: getComponentName(componentType)
-                },
+                getComponentName(componentType),
                 NamingConvention.UnderscoreUpperCase
             )} = ${getComponentId(componentType)}`
     );
@@ -484,9 +482,7 @@ export function buildFlowDefs(assets: Assets) {
     componentTypes.forEach(componentType => {
         const componentName = getName(
             "",
-            {
-                name: componentType.objectClass.name
-            },
+            componentType.objectClass.name,
             NamingConvention.UnderscoreUpperCase
         );
 
@@ -504,9 +500,7 @@ export function buildFlowDefs(assets: Assets) {
             (propertyInfo, i) =>
                 `${TAB}${getName(
                     `${componentName}_PROPERTY_`,
-                    {
-                        name: propertyInfo.name
-                    },
+                    propertyInfo.name,
                     NamingConvention.UnderscoreUpperCase
                 )} = ${i}`
         );
@@ -527,9 +521,7 @@ export function buildFlowDefs(assets: Assets) {
             operationEnumItems.push(
                 `${TAB}${getName(
                     "OPERATION_TYPE_",
-                    {
-                        name: operationName
-                    },
+                    operationName,
                     NamingConvention.UnderscoreUpperCase
                 )} = ${operationIndexes[operationName]}`
             );
@@ -544,9 +536,7 @@ export function buildFlowDefs(assets: Assets) {
         systemStructureEnumItems.push(
             `${TAB}${getName(
                 "SYSTEM_STRUCTURE_",
-                {
-                    name: structure.name
-                },
+                structure.name,
                 NamingConvention.UnderscoreUpperCase
             )} = ${assets.projectEditorStore.typesStore.getValueTypeIndex(
                 `struct:${structure.name}`
@@ -564,15 +554,11 @@ export function buildFlowDefs(assets: Assets) {
             fieldEnumItems.push(
                 `${TAB}${getName(
                     "SYSTEM_STRUCTURE_",
-                    {
-                        name: structure.name
-                    },
+                    structure.name,
                     NamingConvention.UnderscoreUpperCase
                 )}_${getName(
                     "FIELD_",
-                    {
-                        name: field.name
-                    },
+                    field.name,
                     NamingConvention.UnderscoreUpperCase
                 )} = ${assets.projectEditorStore.typesStore.getFieldIndex(
                     `struct:${structure.name}`,
@@ -584,9 +570,7 @@ export function buildFlowDefs(assets: Assets) {
         fieldEnumItems.push(
             `${TAB}${getName(
                 "SYSTEM_STRUCTURE_",
-                {
-                    name: structure.name
-                },
+                structure.name,
                 NamingConvention.UnderscoreUpperCase
             )}_NUM_FIELDS`
         );
@@ -604,9 +588,7 @@ export function buildFlowDefs(assets: Assets) {
         arrayTypeEnumItems.push(
             `${TAB}${getName(
                 "ARRAY_TYPE_",
-                {
-                    name: basicType
-                },
+                basicType,
                 NamingConvention.UnderscoreUpperCase
             )} = ${assets.projectEditorStore.typesStore.getValueTypeIndex(
                 `array:${basicType}` as ValueType

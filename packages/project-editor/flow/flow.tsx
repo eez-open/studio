@@ -533,7 +533,7 @@ export abstract class Flow extends EezObject {
 
         flowFragment.rewire();
 
-        let components: IEezObject[];
+        let components: EezObject[];
 
         if (flowFragment.connectionLines.length > 0) {
             projectEditorStore.addObjects(

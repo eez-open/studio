@@ -24,7 +24,9 @@ import {
     PropertyType,
     getParent,
     getKey,
-    isEezObject
+    isEezObject,
+    EezObject,
+    PropertyInfo
 } from "project-editor/core/object";
 import type { CurrentSearch } from "project-editor/core/search";
 
@@ -725,7 +727,10 @@ export class ProjectEditorStore {
         updateObject(object, values);
     }
 
-    deleteObject(object: IEezObject, options?: { dropPlace?: IEezObject }) {
+    deleteObject(
+        object: IEezObject,
+        options?: { dropPlace?: IEezObject | PropertyInfo }
+    ) {
         let closeCombineCommands = false;
         if (!this.undoManager.combineCommands) {
             this.undoManager.setCombineCommands(true);
@@ -801,7 +806,7 @@ export class ProjectEditorStore {
         return insertObjectAfter(object, objectToInsert);
     }
 
-    objectsToClipboardData(objects: IEezObject[]) {
+    objectsToClipboardData(objects: EezObject[]) {
         const classInfo = getClassInfo(objects[0]);
         if (classInfo.objectsToClipboardData) {
             return classInfo.objectsToClipboardData(objects);

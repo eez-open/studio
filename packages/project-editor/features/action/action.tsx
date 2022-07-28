@@ -7,7 +7,8 @@ import {
     registerClass,
     IEezObject,
     PropertyType,
-    MessageType
+    MessageType,
+    EezObject
 } from "project-editor/core/object";
 import {
     isDashboardOrApplet,
@@ -212,7 +213,7 @@ export default {
     typeClass: Action,
     icon: "code",
     create: () => [],
-    check: (object: IEezObject[]) => {
+    check: (object: EezObject[]) => {
         let messages: Message[] = [];
 
         if (object.length > 32000) {

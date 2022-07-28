@@ -236,9 +236,7 @@ export function isObject(object: IEezObject | undefined) {
     return !!object && !isValue(object) && !isArray(object);
 }
 
-export function isArray(
-    object: IEezObject | undefined
-): object is IEezObject[] {
+export function isArray(object: IEezObject | undefined): object is EezObject[] {
     return !!object && !isValue(object) && Array.isArray(object);
 }
 
@@ -346,7 +344,7 @@ export function humanizePropertyName(object: IEezObject, propertyName: string) {
     return humanize(propertyName);
 }
 
-export function getAncestorOfType<T = IEezObject>(
+export function getAncestorOfType<T extends EezObject = EezObject>(
     object: IEezObject,
     classInfo: ClassInfo
 ): T | undefined {
@@ -366,7 +364,7 @@ export function getObjectPath(object: IEezObject): (string | number)[] {
     if (parent) {
         if (isArray(parent)) {
             return getObjectPath(parent).concat(
-                parent.indexOf(object as IEezObject)
+                parent.indexOf(object as EezObject)
             );
         } else {
             return getObjectPath(parent).concat(getKey(object));
@@ -383,7 +381,7 @@ export function isObjectExists(object: IEezObject) {
     let parent = getParent(object);
     if (parent) {
         if (isArray(parent)) {
-            if (parent.indexOf(object) === -1) {
+            if (parent.indexOf(object as EezObject) === -1) {
                 return false;
             }
         } else {
@@ -673,7 +671,7 @@ export function pasteItem(object: IEezObject) {
                     ) {
                         return projectEditorStore.insertObject(
                             c.pastePlace as IEezObject,
-                            (c.pastePlace as IEezObject[]).indexOf(object) + 1,
+                            (c.pastePlace as any).indexOf(object) + 1,
                             objectToJS(c.serializedData.object)
                         );
                     } else {
@@ -926,7 +924,7 @@ export function deleteItems(objects: IEezObject[], callback?: () => void) {
     }
 }
 
-export function objectToJS(object: IEezObject | IEezObject[]): any {
+export function objectToJS(object: IEezObject): any {
     return JSON.parse(objectToJson(object));
 }
 

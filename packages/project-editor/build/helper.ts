@@ -1,6 +1,7 @@
 import { _map } from "eez-studio-shared/algorithm";
 import { underscore } from "eez-studio-shared/string";
 import { formatNumber } from "eez-studio-shared/util";
+import { EezObject } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export const TAB = "    ";
@@ -11,7 +12,7 @@ export enum NamingConvention {
 }
 
 export function getName<
-    T extends {
+    T extends EezObject & {
         name: string;
     }
 >(

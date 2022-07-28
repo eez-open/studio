@@ -1220,7 +1220,7 @@ export default {
     typeClass: Font,
     icon: "font_download",
     create: () => [],
-    check: (object: IEezObject[]) => {
+    check: (object: EezObject[]) => {
         let messages: Message[] = [];
 
         if (object.length > 255) {

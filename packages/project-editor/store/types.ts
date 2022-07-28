@@ -4,7 +4,7 @@ import type {
     ValueType
 } from "eez-studio-types";
 
-import type { Structure } from "project-editor/features/variable/variable";
+import type { IStructure } from "project-editor/features/variable/variable";
 import type { ProjectEditorStore } from "project-editor/store";
 import {
     getStructureFromType,
@@ -256,7 +256,7 @@ export class TypesStore {
         return type;
     }
 
-    private structureToType(structure: Structure): IType {
+    private structureToType(structure: IStructure): IType {
         const fields: IField[] = structure.fields.map(field => ({
             name: field.name,
             valueType: field.type

@@ -7,6 +7,7 @@ import {
     getParent,
     IEezObject,
     MessageType,
+    PropertyInfo,
     PropertyProps,
     PropertyType,
     registerClass
@@ -21,6 +22,7 @@ import {
     addObject,
     deleteObject,
     getChildOfObject,
+    loadObject,
     Message,
     updateObject
 } from "project-editor/store";
@@ -116,7 +118,7 @@ export class Language extends EezObject {
         },
         deleteObjectRefHook: (
             language: Language,
-            options?: { dropPlace?: IEezObject }
+            options?: { dropPlace?: IEezObject | PropertyInfo }
         ) => {
             if (options?.dropPlace) {
                 return;
@@ -382,10 +384,19 @@ export class Texts extends EezObject {
                 ) => {
                     const project = ProjectEditor.getProject(languages);
                     for (const textResource of project.texts.resources) {
-                        addObject(textResource.translations, {
-                            languageID: language.languageID,
-                            text: ""
-                        });
+                        addObject(
+                            textResource.translations,
+                            loadObject(
+                                project._DocumentStore,
+                                undefined,
+                                {
+                                    persistentObjectId: 0,
+                                    languageID: language.languageID,
+                                    text: ""
+                                },
+                                Language
+                            )
+                        );
                     }
                     return language;
                 }

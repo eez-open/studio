@@ -13,7 +13,8 @@ import {
     getParent,
     getId,
     isPropertyReadOnly,
-    getObjectPropertyDisplayName
+    getObjectPropertyDisplayName,
+    EezObject
 } from "project-editor/core/object";
 import {
     isValue,
@@ -143,12 +144,12 @@ export const ArrayProperty = observer(
         get value() {
             return (this.props.objects[0] as any)[
                 this.props.propertyInfo.name
-            ] as IEezObject[] | undefined;
+            ] as EezObject[] | undefined;
         }
 
-        selectedObject: IEezObject | undefined;
+        selectedObject: EezObject | undefined;
 
-        selectObject = action((object: IEezObject) => {
+        selectObject = action((object: EezObject) => {
             this.selectedObject = object;
         });
 
@@ -165,7 +166,7 @@ export const ArrayProperty = observer(
 
                 value = (this.props.objects[0] as any)[
                     this.props.propertyInfo.name
-                ] as IEezObject[];
+                ] as EezObject[];
             }
 
             const typeClass = this.props.propertyInfo.typeClass!;

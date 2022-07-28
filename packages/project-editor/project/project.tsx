@@ -521,7 +521,7 @@ const ImportDirectiveCustomUI = observer((props: PropertyProps) => {
     );
 });
 
-export class ImportDirective {
+export class ImportDirective extends EezObject {
     projectFilePath: string;
 
     static classInfo: ClassInfo = {
@@ -597,6 +597,8 @@ export class ImportDirective {
     };
 
     constructor() {
+        super();
+
         makeObservable(this, {
             projectFilePath: observable,
             project: computed({ keepAlive: true }),
@@ -1333,7 +1335,7 @@ class AssetsMap {
     }
 
     addToMap<
-        T extends {
+        T extends EezObject & {
             id: number | undefined;
             name: string;
         }
@@ -1840,7 +1842,7 @@ export function getNameProperty(object: IEezObject) {
 export function checkAssetId(
     projectEditorStore: ProjectEditorStore,
     assetType: AssetType,
-    asset: {
+    asset: EezObject & {
         id: number | undefined;
     },
     messages: Message[],
