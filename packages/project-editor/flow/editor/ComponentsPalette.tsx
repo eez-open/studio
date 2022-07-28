@@ -25,6 +25,7 @@ import {
     setClipboardData
 } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { COMPONENT_PALETTE_ITEM_ID } from "./consts";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -369,7 +370,7 @@ const PaletteItem = observer(
                 object.height = 0;
             }
 
-            setId(this.context.objects, object, "ComponentPaletteItem");
+            setId(this.context, object, COMPONENT_PALETTE_ITEM_ID);
 
             setClipboardData(event, objectToClipboardData(object));
 

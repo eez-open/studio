@@ -16,11 +16,11 @@ import {
     getClass,
     getClassInfo,
     isArray,
-    isObject
-} from "project-editor/store/helper";
-
-import { loadObject, objectToJson } from "project-editor/store/serialization";
-import type { ProjectEditorStore } from "project-editor/store";
+    isObject,
+    loadObject,
+    objectToJson,
+    ProjectEditorStore
+} from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 

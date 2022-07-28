@@ -13,6 +13,7 @@ import type { IMouseHandler } from "project-editor/flow/editor/mouse-handler";
 import { isSelectionMoveable } from "project-editor/flow/editor/mouse-handler";
 import { getObjectBoundingRect } from "project-editor/flow/editor/bounding-rects";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { COMPONENT_PALETTE_ITEM_ID } from "./consts";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -204,7 +205,7 @@ export const Selection = observer(
 
             const isSelectedObjectComponentPaletteItem =
                 selectedObjects.length === 1 &&
-                selectedObjects[0].id === "ComponentPaletteItem";
+                selectedObjects[0].id === COMPONENT_PALETTE_ITEM_ID;
 
             let selectedObjectRectsElement;
             let selectedObjectsBoundingRectElement;

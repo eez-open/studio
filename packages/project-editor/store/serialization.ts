@@ -12,12 +12,62 @@ import {
     setPropertyInfo
 } from "project-editor/core/object";
 
-import { getClassInfo } from "project-editor/store/helper";
-import type { ProjectEditorStore } from "project-editor/store";
+import { getClassInfo, ProjectEditorStore } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let CurrentDocumentStore: ProjectEditorStore | undefined;
+export function loadObject(
+    projectEditorStore: ProjectEditorStore,
+    parent: IEezObject | IEezObject[] | undefined,
+    jsObjectOrString: any | string,
+    aClass: EezClass,
+    key?: string
+): IEezObject {
+    currentDocumentStore = projectEditorStore;
+    const result = loadObjectInternal(parent, jsObjectOrString, aClass, key);
+    currentDocumentStore = undefined;
+    return result;
+}
+
+export function objectToJson(
+    object: IEezObject | IEezObject[],
+    space?: number,
+    toJsHook?: (jsObject: any, object: IEezObject) => void
+) {
+    const saved = {
+        _eez_parent: (object as any)._eez_parent,
+        _eez_propertyInfo: (object as any)._eez_propertyInfo,
+        _eez_id: (object as any)._eez_id,
+        _eez_key: (object as any)._eez_key
+    };
+    delete (object as any)._eez_parent;
+    delete (object as any)._eez_propertyInfo;
+    delete (object as any)._eez_id;
+    delete (object as any)._eez_key;
+
+    let jsObject = toJS(object);
+
+    Object.assign(object, saved);
+
+    if (toJsHook) {
+        toJsHook(jsObject, object);
+    }
+
+    return JSON.stringify(
+        jsObject,
+        (key: string | number, value: any) => {
+            if (typeof key === "string" && key[0] === "_") {
+                return undefined;
+            }
+            return value;
+        },
+        space
+    );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+let currentDocumentStore: ProjectEditorStore | undefined;
 
 function loadArrayObject(
     arrayObject: any,
@@ -26,11 +76,7 @@ function loadArrayObject(
 ) {
     const eezArray: EezObject[] = observable([]);
 
-    setId(
-        CurrentDocumentStore!.objects,
-        eezArray,
-        CurrentDocumentStore!.getChildId()
-    );
+    setId(currentDocumentStore!, eezArray, currentDocumentStore!.getChildId());
     setParent(eezArray, parent);
     setKey(eezArray, propertyInfo.name);
     setPropertyInfo(eezArray, propertyInfo);
@@ -42,19 +88,6 @@ function loadArrayObject(
     );
 
     return eezArray;
-}
-
-export function loadObject(
-    projectEditorStore: ProjectEditorStore,
-    parent: IEezObject | IEezObject[] | undefined,
-    jsObjectOrString: any | string,
-    aClass: EezClass,
-    key?: string
-): IEezObject {
-    CurrentDocumentStore = projectEditorStore;
-    const result = loadObjectInternal(parent, jsObjectOrString, aClass, key);
-    CurrentDocumentStore = undefined;
-    return result;
 }
 
 function loadObjectInternal(
@@ -90,11 +123,7 @@ function loadObjectInternal(
 
     const classInfo = getClassInfo(object);
 
-    setId(
-        CurrentDocumentStore!.objects,
-        object,
-        CurrentDocumentStore!.getChildId()
-    );
+    setId(currentDocumentStore!, object, currentDocumentStore!.getChildId());
     setParent(object, parent as IEezObject);
 
     if (classInfo.beforeLoadHook) {
@@ -150,42 +179,4 @@ function loadObjectInternal(
     }
 
     return object;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function objectToJson(
-    object: IEezObject | IEezObject[],
-    space?: number,
-    toJsHook?: (jsObject: any, object: IEezObject) => void
-) {
-    const saved = {
-        _eez_parent: (object as any)._eez_parent,
-        _eez_propertyInfo: (object as any)._eez_propertyInfo,
-        _eez_id: (object as any)._eez_id,
-        _eez_key: (object as any)._eez_key
-    };
-    delete (object as any)._eez_parent;
-    delete (object as any)._eez_propertyInfo;
-    delete (object as any)._eez_id;
-    delete (object as any)._eez_key;
-
-    let jsObject = toJS(object);
-
-    Object.assign(object, saved);
-
-    if (toJsHook) {
-        toJsHook(jsObject, object);
-    }
-
-    return JSON.stringify(
-        jsObject,
-        (key: string | number, value: any) => {
-            if (typeof key === "string" && key[0] === "_") {
-                return undefined;
-            }
-            return value;
-        },
-        space
-    );
 }

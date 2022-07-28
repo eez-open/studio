@@ -21,13 +21,13 @@ import {
     getPropertyInfo,
     getAncestors,
     getObjectPropertyDisplayName,
-    setId,
     setKey,
     setParent,
     registerClass,
     EezObject,
     getRootObject,
-    getClassByName
+    getClassByName,
+    setId
 } from "project-editor/core/object";
 
 import type { Project } from "project-editor/project/project";
@@ -61,11 +61,7 @@ export class EezValueObject extends EezObject {
 
         const projectEditorStore = getDocumentStore(object);
 
-        setId(
-            projectEditorStore.objects,
-            valueObject,
-            projectEditorStore.getChildId()
-        );
+        setId(projectEditorStore, valueObject, projectEditorStore.getChildId());
         setKey(valueObject, propertyInfo.name);
         setParent(valueObject, object);
 

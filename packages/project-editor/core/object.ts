@@ -462,12 +462,12 @@ export function getId(object: IEezObject) {
 }
 
 export function setId(
-    objects: Map<string, IEezObject>,
+    projectEditorStore: ProjectEditorStore,
     object: IEezObject,
     id: string
 ) {
     (object as any)._eez_id = id;
-    objects.set(id, object);
+    projectEditorStore.objects.set(id, object);
 }
 
 export function getParent(object: IEezObject): IEezObject {
