@@ -30,7 +30,7 @@ import {
     setId
 } from "project-editor/core/object";
 
-import type { Project } from "project-editor/project/project";
+import { getProject, Project } from "project-editor/project/project";
 import type { ProjectEditorStore } from "project-editor/store";
 
 import {
@@ -40,7 +40,11 @@ import {
 } from "project-editor/store/clipboard";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { loadObject, objectToJson } from "project-editor/store/serialization";
+import {
+    createObject,
+    loadObject,
+    objectToJson
+} from "project-editor/store/serialization";
 import { confirm, onAfterPaste } from "project-editor/core/util";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -633,9 +637,9 @@ export async function addItem(object: IEezObject) {
         return null;
     }
 
-    let newObjectProperties;
+    let newObject;
     try {
-        newObjectProperties = await parentClassInfo.newItem(parent);
+        newObject = await parentClassInfo.newItem(parent);
     } catch (err) {
         if (err !== undefined) {
             notification.error(
@@ -645,19 +649,19 @@ export async function addItem(object: IEezObject) {
         return null;
     }
 
-    if (!newObjectProperties) {
+    if (!newObject) {
         console.log(`Canceled adding ${getClass(parent).name}`);
         return null;
     }
 
-    return getDocumentStore(object).addObject(parent, newObjectProperties);
+    return getDocumentStore(object).addObject(parent, newObject);
 }
 
 export function pasteItem(object: IEezObject) {
     try {
         const projectEditorStore = getDocumentStore(object);
 
-        let c = checkClipboard(projectEditorStore, object);
+        const c = checkClipboard(projectEditorStore, object);
         if (c) {
             if (typeof c.pastePlace === "string") {
                 projectEditorStore.updateObject(object, {
@@ -685,7 +689,7 @@ export function pasteItem(object: IEezObject) {
 
                         return projectEditorStore.addObject(
                             c.pastePlace as IEezObject,
-                            objectToJS(c.serializedData.object)
+                            c.serializedData.object
                         );
                     }
                 } else if (c.serializedData.objects) {
@@ -720,7 +724,16 @@ export function copyItem(object: IEezObject) {
 
 function duplicateItem(object: IEezObject) {
     let parent = getParent(object) as IEezObject;
-    return getDocumentStore(object).addObject(parent, toJS(object));
+
+    const project = getProject(object);
+
+    const duplicateObject = createObject(
+        project._DocumentStore,
+        toJS(object) as any,
+        getClass(object)
+    );
+
+    return getDocumentStore(object).addObject(parent, duplicateObject);
 }
 
 export interface IContextMenuContext {

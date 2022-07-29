@@ -22,7 +22,8 @@ import {
     getChildOfObject,
     Message,
     propertyNotSetMessage,
-    propertyNotFoundMessage
+    propertyNotFoundMessage,
+    createObject
 } from "project-editor/store";
 
 import type {
@@ -38,6 +39,7 @@ import {
     findScpiEnum,
     getScpiEnumsAsDialogEnumItems
 } from "project-editor/features/scpi/enum";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -756,8 +758,8 @@ export class ScpiCommand extends EezObject {
                 defaultValue: false
             }
         ],
-        newItem: (parent: IEezObject) => {
-            return showGenericDialog({
+        newItem: async (parent: IEezObject) => {
+            const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Command",
                     fields: [
@@ -772,11 +774,21 @@ export class ScpiCommand extends EezObject {
                     ]
                 },
                 values: {}
-            }).then(result => {
-                return Promise.resolve({
-                    name: result.values.name
-                });
             });
+
+            const scpiCommandProperties: Partial<ScpiCommand> = {
+                name: result.values.name
+            };
+
+            const project = ProjectEditor.getProject(parent);
+
+            const scpiCommand = createObject<ScpiCommand>(
+                project._DocumentStore,
+                scpiCommandProperties,
+                ScpiCommand
+            );
+
+            return scpiCommand;
         }
     };
 
@@ -823,8 +835,8 @@ export class ScpiSubsystem extends EezObject {
                 hideInPropertyGrid: true
             }
         ],
-        newItem: (parent: IEezObject) => {
-            return showGenericDialog({
+        newItem: async (parent: IEezObject) => {
+            const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Subsystem",
                     fields: [
@@ -839,12 +851,22 @@ export class ScpiSubsystem extends EezObject {
                     ]
                 },
                 values: {}
-            }).then(result => {
-                return Promise.resolve({
-                    name: result.values.name,
-                    commands: []
-                });
             });
+
+            const scpiSubsystemProperties: Partial<ScpiSubsystem> = {
+                name: result.values.name,
+                commands: []
+            };
+
+            const project = ProjectEditor.getProject(parent);
+
+            const scpiCommand = createObject<ScpiSubsystem>(
+                project._DocumentStore,
+                scpiSubsystemProperties,
+                ScpiSubsystem
+            );
+
+            return scpiCommand;
         }
     };
 

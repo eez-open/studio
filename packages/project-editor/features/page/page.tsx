@@ -17,6 +17,7 @@ import {
     MessageType
 } from "project-editor/core/object";
 import {
+    createObject,
     getChildOfObject,
     getDocumentStore,
     getLabel,
@@ -327,10 +328,10 @@ export class Page extends Flow {
             }
         },
         isPropertyMenuSupported: true,
-        newItem: (parent: IEezObject) => {
+        newItem: async (parent: IEezObject) => {
             const project = ProjectEditor.getProject(parent);
 
-            return showGenericDialog({
+            const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Page",
                     fields: [
@@ -347,22 +348,30 @@ export class Page extends Flow {
                 values: {
                     name: project.pages.length == 0 ? "Main" : ""
                 }
-            }).then(result => {
-                return Promise.resolve({
-                    name: result.values.name,
-                    left: 0,
-                    top: 0,
-                    width: project.isDashboardProject
-                        ? 800
-                        : project._DocumentStore.project.settings.general
-                              .displayWidth ?? 480,
-                    height: project.isDashboardProject
-                        ? 450
-                        : project._DocumentStore.project.settings.general
-                              .displayHeight ?? 272,
-                    widgets: []
-                });
             });
+
+            const pageProperties: Partial<Page> = {
+                name: result.values.name,
+                left: 0,
+                top: 0,
+                width: project.isDashboardProject
+                    ? 800
+                    : project._DocumentStore.project.settings.general
+                          .displayWidth ?? 480,
+                height: project.isDashboardProject
+                    ? 450
+                    : project._DocumentStore.project.settings.general
+                          .displayHeight ?? 272,
+                components: []
+            };
+
+            const page = createObject<Page>(
+                project._DocumentStore,
+                pageProperties,
+                Page
+            );
+
+            return page;
         },
         icon: "filter",
         check: (page: Page) => {

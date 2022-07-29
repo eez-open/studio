@@ -11,6 +11,7 @@ import {
     EezObject
 } from "project-editor/core/object";
 import {
+    createObject,
     isDashboardOrApplet,
     isNotFirmwareWithFlowSupportProject,
     isNotV1Project,
@@ -123,8 +124,8 @@ export class Action extends Flow {
                 jsObject.implementationType = "flow";
             }
         },
-        newItem: (parent: IEezObject) => {
-            return showGenericDialog({
+        newItem: async (parent: IEezObject) => {
+            const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Action",
                     fields: [
@@ -139,26 +140,32 @@ export class Action extends Flow {
                     ]
                 },
                 values: {}
-            }).then(result => {
-                const projectEditorStore = getDocumentStore(parent);
-                return Promise.resolve(
-                    Object.assign(
-                        {
-                            name: result.values.name
-                        },
-                        projectEditorStore.project.isDashboardProject ||
-                            projectEditorStore.project.isAppletProject ||
-                            projectEditorStore.project
-                                .isFirmwareWithFlowSupportProject
-                            ? ({
-                                  implementationType: "flow",
-                                  components: [],
-                                  connectionLine: []
-                              } as Partial<Action>)
-                            : {}
-                    )
-                );
             });
+
+            const projectEditorStore = getDocumentStore(parent);
+
+            const actionProperties: Partial<Action> = Object.assign(
+                {
+                    name: result.values.name
+                },
+                projectEditorStore.project.isDashboardProject ||
+                    projectEditorStore.project.isAppletProject ||
+                    projectEditorStore.project.isFirmwareWithFlowSupportProject
+                    ? ({
+                          implementationType: "flow",
+                          components: [],
+                          connectionLine: []
+                      } as Partial<Action>)
+                    : {}
+            );
+
+            const action = createObject<Action>(
+                projectEditorStore,
+                actionProperties,
+                Action
+            );
+
+            return action;
         },
         icon: "code"
     });

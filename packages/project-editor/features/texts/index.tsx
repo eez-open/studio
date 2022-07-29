@@ -20,9 +20,9 @@ import { observer } from "mobx-react";
 import { ProjectContext } from "project-editor/project/context";
 import {
     addObject,
+    createObject,
     deleteObject,
     getChildOfObject,
-    loadObject,
     Message,
     updateObject
 } from "project-editor/store";
@@ -76,8 +76,8 @@ export class Language extends EezObject {
                 ></LabelWithProgress>
             );
         },
-        newItem: (parent: IEezObject) => {
-            return showGenericDialog({
+        newItem: async (parent: IEezObject) => {
+            const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Language",
                     fields: [
@@ -93,11 +93,21 @@ export class Language extends EezObject {
                 },
                 values: {},
                 dialogContext: ProjectEditor.getProject(parent)
-            }).then(result => {
-                return Promise.resolve({
-                    languageID: result.values.name
-                });
             });
+
+            const languageProperties: Partial<Language> = {
+                languageID: result.values.name
+            };
+
+            const project = ProjectEditor.getProject(parent);
+
+            const language = createObject<Language>(
+                project._DocumentStore,
+                languageProperties,
+                Language
+            );
+
+            return language;
         },
         updateObjectValueHook: (
             language: Language,
@@ -310,8 +320,8 @@ export class TextResource extends EezObject {
                 ></LabelWithProgress>
             );
         },
-        newItem: (parent: IEezObject) => {
-            return showGenericDialog({
+        newItem: async (parent: IEezObject) => {
+            const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Text Resource",
                     fields: [
@@ -327,22 +337,30 @@ export class TextResource extends EezObject {
                 },
                 values: {},
                 dialogContext: ProjectEditor.getProject(parent)
-            }).then(result => {
-                const project = ProjectEditor.getProject(parent);
-
-                const translations = [];
-                for (const language of project.texts.languages) {
-                    translations.push({
-                        languageID: language.languageID,
-                        text: ""
-                    });
-                }
-
-                return Promise.resolve({
-                    resourceID: result.values.name,
-                    translations
-                });
             });
+
+            const project = ProjectEditor.getProject(parent);
+
+            const translations = [];
+            for (const language of project.texts.languages) {
+                translations.push({
+                    languageID: language.languageID,
+                    text: ""
+                });
+            }
+
+            const textResourceProperties: Partial<TextResource> = {
+                resourceID: result.values.name,
+                translations: translations as any
+            };
+
+            const textResource = createObject<TextResource>(
+                project._DocumentStore,
+                textResourceProperties,
+                TextResource
+            );
+
+            return textResource;
         }
     };
 
@@ -386,15 +404,13 @@ export class Texts extends EezObject {
                     for (const textResource of project.texts.resources) {
                         addObject(
                             textResource.translations,
-                            loadObject(
+                            createObject<Translation>(
                                 project._DocumentStore,
-                                undefined,
                                 {
-                                    persistentObjectId: 0,
                                     languageID: language.languageID,
                                     text: ""
                                 },
-                                Language
+                                Translation
                             )
                         );
                     }

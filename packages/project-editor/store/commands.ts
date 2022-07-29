@@ -8,7 +8,8 @@ import {
     getParent,
     getKey,
     PropertyType,
-    EezObject
+    EezObject,
+    setParent
 } from "project-editor/core/object";
 
 import {
@@ -29,12 +30,8 @@ import { guid } from "eez-studio-shared/guid";
 
 export let addObject = action(
     (parentObject: IEezObject, object: IEezObject) => {
-        object = loadObject(
-            getDocumentStore(parentObject),
-            parentObject,
-            object,
-            getClass(parentObject)
-        );
+        setParent(object, parentObject);
+
         ensureUniqueProperties(parentObject, [object]);
 
         getDocumentStore(parentObject).undoManager.executeCommand({
@@ -57,15 +54,8 @@ export let addObject = action(
 
 export let addObjects = action(
     (parentObject: IEezObject, objects: EezObject[]) => {
-        objects = objects.map(
-            object =>
-                loadObject(
-                    getDocumentStore(parentObject),
-                    parentObject,
-                    object,
-                    getClass(parentObject)
-                ) as EezObject
-        );
+        objects.forEach(object => setParent(object, parentObject));
+
         ensureUniqueProperties(parentObject, objects);
 
         getDocumentStore(parentObject).undoManager.executeCommand({

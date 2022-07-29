@@ -17,12 +17,14 @@ import {
     MessageType
 } from "project-editor/core/object";
 import {
+    createObject,
     getChildOfObject,
     getLabel,
     Message,
     propertyNotSetMessage
 } from "project-editor/store";
 import { ProjectEditorStore } from "project-editor/store";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -112,8 +114,8 @@ export class ScpiEnum extends EezObject {
                 typeClass: ScpiEnumMember
             }
         ],
-        newItem: (parent: IEezObject) => {
-            return showGenericDialog({
+        newItem: async (parent: IEezObject) => {
+            const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Enumeration",
                     fields: [
@@ -128,11 +130,21 @@ export class ScpiEnum extends EezObject {
                     ]
                 },
                 values: {}
-            }).then(result => {
-                return Promise.resolve({
-                    name: result.values.name
-                });
             });
+
+            const scpiEnumProperties: Partial<ScpiEnum> = {
+                name: result.values.name
+            };
+
+            const project = ProjectEditor.getProject(parent);
+
+            const scpiEnum = createObject<ScpiEnum>(
+                project._DocumentStore,
+                scpiEnumProperties,
+                ScpiEnum
+            );
+
+            return scpiEnum;
         },
         check: (object: ScpiEnum) => {
             const messages: Message[] = [];

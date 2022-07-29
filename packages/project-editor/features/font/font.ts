@@ -25,7 +25,8 @@ import {
     getLabel,
     getDocumentStore,
     Message,
-    isNotV1Project
+    isNotV1Project,
+    createObject
 } from "project-editor/store";
 import type { Project } from "project-editor/project/project";
 
@@ -1023,7 +1024,7 @@ export class Font extends EezObject {
 
             return messages;
         },
-        newItem: (parent: IEezObject) => {
+        newItem: async (parent: IEezObject) => {
             function is1BitPerPixel(obj: IEezObject) {
                 return getProperty(obj, "bpp") === 1;
             }
@@ -1032,91 +1033,95 @@ export class Font extends EezObject {
                 return getProperty(obj, "createGlyphs");
             }
 
-            return showGenericDialog(getDocumentStore(parent), {
-                dialogDefinition: {
-                    title: "New Font",
-                    fields: [
-                        {
-                            name: "name",
-                            type: "string",
-                            validators: [
-                                validators.required,
-                                validators.unique(undefined, parent)
-                            ]
-                        },
-                        {
-                            name: "filePath",
-                            displayName: "Based on font",
-                            type: RelativeFileInput,
-                            validators: [validators.required],
-                            options: {
-                                filters: [
-                                    {
-                                        name: "Font files",
-                                        extensions: ["ttf", "otf"]
-                                    },
-                                    { name: "All Files", extensions: ["*"] }
+            const projectEditorStore = getDocumentStore(parent);
+
+            try {
+                const result = await showGenericDialog(projectEditorStore, {
+                    dialogDefinition: {
+                        title: "New Font",
+                        fields: [
+                            {
+                                name: "name",
+                                type: "string",
+                                validators: [
+                                    validators.required,
+                                    validators.unique(undefined, parent)
                                 ]
+                            },
+                            {
+                                name: "filePath",
+                                displayName: "Based on font",
+                                type: RelativeFileInput,
+                                validators: [validators.required],
+                                options: {
+                                    filters: [
+                                        {
+                                            name: "Font files",
+                                            extensions: ["ttf", "otf"]
+                                        },
+                                        { name: "All Files", extensions: ["*"] }
+                                    ]
+                                }
+                            },
+                            {
+                                name: "renderingEngine",
+                                displayName: "Rendering engine",
+                                type: "enum",
+                                enumItems: [
+                                    { id: "freetype", label: "FreeType" },
+                                    { id: "opentype", label: "OpenType" }
+                                ]
+                            },
+                            {
+                                name: "bpp",
+                                displayName: "Bits per pixel",
+                                type: "enum",
+                                enumItems: [1, 8]
+                            },
+                            {
+                                name: "size",
+                                type: "number"
+                            },
+                            {
+                                name: "threshold",
+                                type: "number",
+                                visible: is1BitPerPixel
+                            },
+                            {
+                                name: "createGlyphs",
+                                type: "boolean"
+                            },
+                            {
+                                name: "fromGlyph",
+                                type: "number",
+                                visible: isCreateGlyphs
+                            },
+                            {
+                                name: "toGlyph",
+                                type: "number",
+                                visible: isCreateGlyphs
+                            },
+                            {
+                                name: "createBlankGlyphs",
+                                type: "boolean",
+                                visible: isCreateGlyphs
                             }
-                        },
-                        {
-                            name: "renderingEngine",
-                            displayName: "Rendering engine",
-                            type: "enum",
-                            enumItems: [
-                                { id: "freetype", label: "FreeType" },
-                                { id: "opentype", label: "OpenType" }
-                            ]
-                        },
-                        {
-                            name: "bpp",
-                            displayName: "Bits per pixel",
-                            type: "enum",
-                            enumItems: [1, 8]
-                        },
-                        {
-                            name: "size",
-                            type: "number"
-                        },
-                        {
-                            name: "threshold",
-                            type: "number",
-                            visible: is1BitPerPixel
-                        },
-                        {
-                            name: "createGlyphs",
-                            type: "boolean"
-                        },
-                        {
-                            name: "fromGlyph",
-                            type: "number",
-                            visible: isCreateGlyphs
-                        },
-                        {
-                            name: "toGlyph",
-                            type: "number",
-                            visible: isCreateGlyphs
-                        },
-                        {
-                            name: "createBlankGlyphs",
-                            type: "boolean",
-                            visible: isCreateGlyphs
-                        }
-                    ]
-                },
-                values: {
-                    renderingEngine: "opentype",
-                    size: 14,
-                    bpp: 8,
-                    threshold: 128,
-                    fromGlyph: 32,
-                    toGlyph: 127,
-                    createGlyphs: true,
-                    createBlankGlyphs: false
-                }
-            })
-                .then(result => {
-                    return extractFont({
+                        ]
+                    },
+                    values: {
+                        renderingEngine: "opentype",
+                        size: 14,
+                        bpp: 8,
+                        threshold: 128,
+                        fromGlyph: 32,
+                        toGlyph: 127,
+                        createGlyphs: true,
+                        createBlankGlyphs: false
+                    }
+                });
+
+                try {
+                    const fontProperties = await extractFont({
                         name: result.values.name,
                         absoluteFilePath: getDocumentStore(
                             parent
@@ -1137,40 +1142,41 @@ export class Font extends EezObject {
                             : [],
                         createBlankGlyphs: result.values.createBlankGlyphs,
                         doNotAddGlyphIfNotFound: false
-                    })
-                        .then(font => {
-                            notification.info(
-                                `Added ${result.values.name} font.`
-                            );
-                            return font;
-                        })
-                        .catch(err => {
-                            let errorMessage;
-                            if (err) {
-                                if (err.message) {
-                                    errorMessage = err.message;
-                                } else {
-                                    errorMessage = err.toString();
-                                }
-                            }
+                    });
 
-                            if (errorMessage) {
-                                notification.error(
-                                    `Adding ${Font.name} failed: ${errorMessage}!`
-                                );
-                            } else {
-                                notification.error(
-                                    `Adding ${Font.name} failed!`
-                                );
-                            }
+                    const font = createObject<Font>(
+                        projectEditorStore,
+                        fontProperties as any,
+                        Font
+                    );
 
-                            return false;
-                        });
-                })
-                .catch(() => {
-                    // canceled
-                    return false;
-                });
+                    notification.info(`Added ${result.values.name} font.`);
+
+                    return font;
+                } catch (err) {
+                    let errorMessage;
+                    if (err) {
+                        if (err.message) {
+                            errorMessage = err.message;
+                        } else {
+                            errorMessage = err.toString();
+                        }
+                    }
+
+                    if (errorMessage) {
+                        notification.error(
+                            `Adding ${Font.name} failed: ${errorMessage}!`
+                        );
+                    } else {
+                        notification.error(`Adding ${Font.name} failed!`);
+                    }
+
+                    return undefined;
+                }
+            } catch (err) {
+                // canceled
+                return undefined;
+            }
         },
         icon: "font_download"
     };

@@ -53,8 +53,7 @@ import {
     isArrayElement,
     isObjectInstanceOf,
     getClassInfo,
-    getLabel,
-    objectToJson
+    getLabel
 } from "project-editor/store";
 
 import { DragAndDropManager } from "project-editor/core/dd";
@@ -1208,7 +1207,7 @@ export class TreeAdapter implements ITreeAdapter {
         // postpone render, otherwise we can receive onDragEnd immediatelly
         const projectEditorStore = getDocumentStore(this.rootItem.object);
         setTimeout(() => {
-            DragAndDropManager.start(event, item.object, projectEditorStore);
+            DragAndDropManager.start(event, item.object as any, projectEditorStore);
         });
     }
 
@@ -1243,10 +1242,6 @@ export class TreeAdapter implements ITreeAdapter {
         event.preventDefault();
 
         if (DragAndDropManager.dragObject) {
-            let object = JSON.parse(
-                objectToJson(DragAndDropManager.dragObject)
-            );
-
             let dropItem = DragAndDropManager.dropObject as ITreeObjectAdapter;
 
             let aNewObject: IEezObject | undefined;
@@ -1259,7 +1254,7 @@ export class TreeAdapter implements ITreeAdapter {
                 });
                 aNewObject = projectEditorStore.insertObjectBefore(
                     dropItem.object,
-                    object
+                    DragAndDropManager.dragObject
                 );
             } else if (dropPosition == DropPosition.DROP_POSITION_AFTER) {
                 DragAndDropManager.deleteDragItem({
@@ -1267,7 +1262,7 @@ export class TreeAdapter implements ITreeAdapter {
                 });
                 aNewObject = projectEditorStore.insertObjectAfter(
                     dropItem.object,
-                    object
+                    DragAndDropManager.dragObject
                 );
             } else if (dropPosition == DropPosition.DROP_POSITION_INSIDE) {
                 let dropPlace = findPastePlaceInside(
@@ -1283,11 +1278,12 @@ export class TreeAdapter implements ITreeAdapter {
                     if (isArray(dropPlace as any)) {
                         aNewObject = projectEditorStore.addObject(
                             dropPlace as any,
-                            object
+                            DragAndDropManager.dragObject
                         );
                     } else {
                         projectEditorStore.updateObject(dropItem.object, {
-                            [(dropPlace as PropertyInfo).name]: object
+                            [(dropPlace as PropertyInfo).name]:
+                                DragAndDropManager.dragObject
                         });
                     }
                 }

@@ -92,7 +92,12 @@ import {
 import { browseGlyph } from "project-editor/features/font/FontEditor";
 import { Variable } from "project-editor/features/variable/variable";
 import { CallActionActionComponent } from "project-editor/flow/components/actions";
-import { LayoutViewWidget } from "project-editor/flow/components/widgets";
+import {
+    ContainerWidget,
+    LayoutViewWidget,
+    ListWidget,
+    SelectWidget
+} from "project-editor/flow/components/widgets";
 
 let extensionsInitialized = false;
 
@@ -175,6 +180,9 @@ export async function initProjectEditor(
         WidgetClass: Widget,
         ConnectionLineClass: ConnectionLine,
         LayoutViewWidgetClass: LayoutViewWidget,
+        SelectWidgetClass: SelectWidget,
+        ContainerWidgetClass: ContainerWidget,
+        ListWidgetClass: ListWidget,
         CallActionActionComponentClass: CallActionActionComponent,
         VariableClass: Variable,
         GlyphClass: Glyph,

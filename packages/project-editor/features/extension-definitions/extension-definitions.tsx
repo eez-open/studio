@@ -13,6 +13,7 @@ import {
     PropertyType
 } from "project-editor/core/object";
 import {
+    createObject,
     getDocumentStore,
     Message,
     propertyInvalidValueMessage,
@@ -189,8 +190,8 @@ export class ExtensionDefinition extends EezObject {
                 defaultValue: undefined
             }
         ],
-        newItem: (parent: IEezObject) => {
-            return showGenericDialog({
+        newItem: async (parent: IEezObject) => {
+            const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Instrument Definition File",
                     fields: [
@@ -205,11 +206,22 @@ export class ExtensionDefinition extends EezObject {
                     ]
                 },
                 values: {}
-            }).then(result => {
-                return Promise.resolve({
-                    name: result.values.name
-                });
             });
+
+            const projectEditorStore = getDocumentStore(parent);
+
+            const extensionDefinitionProperties: Partial<ExtensionDefinition> =
+                {
+                    name: result.values.name
+                };
+
+            const extensionDefinition = createObject<ExtensionDefinition>(
+                projectEditorStore,
+                extensionDefinitionProperties,
+                ExtensionDefinition
+            );
+
+            return extensionDefinition;
         },
         hideInProperties: true,
         icon: "extension",

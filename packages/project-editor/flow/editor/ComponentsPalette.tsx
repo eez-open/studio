@@ -10,7 +10,7 @@ import {
     getClassesDerivedFrom,
     IObjectClassInfo
 } from "project-editor/core/object";
-import { loadObject } from "project-editor/store";
+import { createObject } from "project-editor/store";
 import { DragAndDropManager } from "project-editor/core/dd";
 
 import type { Component } from "project-editor/flow/component";
@@ -324,7 +324,7 @@ const PaletteItem = observer(
 
             const componentClass = getClass(protoObject);
 
-            let defaultValue: any = {};
+            let defaultValue: Partial<Component> = {};
 
             if (componentClass.classInfo.defaultValue) {
                 Object.assign(
@@ -348,12 +348,11 @@ const PaletteItem = observer(
 
             Object.assign(defaultValue, this.props.componentClass.props);
 
-            let object = loadObject(
+            let object = createObject<Component>(
                 this.context,
-                undefined,
                 defaultValue,
                 this.props.componentClass.objectClass
-            ) as Component;
+            );
 
             object.wireID = guid();
 

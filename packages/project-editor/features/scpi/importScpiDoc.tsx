@@ -22,16 +22,16 @@ import {
 
 import { Loader } from "eez-studio-ui/loader";
 
-import { getProperty } from "project-editor/core/object";
-import { objectToJS, ProjectEditorStore } from "project-editor/store";
+import {
+    createObject,
+    objectToJS,
+    ProjectEditorStore
+} from "project-editor/store";
 
 import type { IParameter, IParameterType, IEnum } from "instrument/scpi";
 
-import type {
-    ScpiCommand,
-    ScpiSubsystem
-} from "project-editor/features/scpi/scpi";
-import type { ScpiEnum } from "project-editor/features/scpi/enum";
+import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
+import { ScpiEnum } from "project-editor/features/scpi/enum";
 import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1119,11 +1119,20 @@ export const ImportScpiDocDialog = observer(
                     return existingSubsystem;
                 }
 
-                return this.context.addObject(existingSubsystems, {
-                    name: subsystem.name,
-                    helpLink: subsystem.helpLink,
-                    commands: []
-                });
+                const scpiSubsystem = createObject<ScpiSubsystem>(
+                    this.context,
+                    {
+                        name: subsystem.name,
+                        helpLink: subsystem.helpLink,
+                        commands: []
+                    },
+                    ScpiSubsystem
+                );
+
+                return this.context.addObject(
+                    existingSubsystems,
+                    scpiSubsystem
+                ) as ScpiSubsystem;
             };
 
             this.changes.subsystems.forEach(subsystem =>
@@ -1133,10 +1142,13 @@ export const ImportScpiDocDialog = observer(
             this.selectedChanges.added.forEach(commandDefinition => {
                 let subsystem = getOrAddSubsystem(commandDefinition.subsystem);
 
-                this.context.addObject(
-                    getProperty(subsystem, "commands"),
-                    commandDefinition.command
+                const command = createObject<ScpiCommand>(
+                    this.context,
+                    commandDefinition.command as any,
+                    ScpiCommand
                 );
+
+                this.context.addObject(subsystem.commands, command);
             });
 
             this.selectedChanges.deleted.forEach(commandDefinition => {
@@ -1164,15 +1176,19 @@ export const ImportScpiDocDialog = observer(
                         commandDefinition.toSubsystem
                     );
 
-                    this.context.addObject(
-                        getProperty(subsystem, "commands"),
-                        command
-                    );
+                    this.context.addObject(subsystem.commands, command);
                 }
             });
 
             this.selectedChanges.newEnums.forEach(newEnum => {
-                this.context.addObject(scpi.enums, newEnum as any);
+                this.context.addObject(
+                    scpi.enums,
+                    createObject<ScpiEnum>(
+                        this.context,
+                        newEnum as any,
+                        ScpiEnum
+                    )
+                );
             });
 
             this.selectedChanges.updated.forEach(commandDefinition => {

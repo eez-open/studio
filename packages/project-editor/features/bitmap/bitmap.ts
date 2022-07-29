@@ -11,7 +11,7 @@ import {
 } from "project-editor/core/object";
 import { validators } from "eez-studio-shared/validation";
 
-import { getDocumentStore, Message } from "project-editor/store";
+import { createObject, getDocumentStore, Message } from "project-editor/store";
 
 import { findStyle } from "project-editor/features/style/style";
 import { getThemedColor } from "project-editor/features/style/theme";
@@ -108,10 +108,10 @@ export class Bitmap extends EezObject {
 
             return messages;
         },
-        newItem: (parent: IEezObject) => {
+        newItem: async (parent: IEezObject) => {
             const projectEditorStore = getDocumentStore(parent);
 
-            return showGenericDialog(projectEditorStore, {
+            const result = await showGenericDialog(projectEditorStore, {
                 dialogDefinition: {
                     title: "New Bitmap",
                     fields: [
@@ -149,27 +149,35 @@ export class Bitmap extends EezObject {
                 values: {
                     bpp: 32
                 }
-            }).then(result => {
-                return new Promise((resolve, reject) => {
-                    fs.readFile(
-                        getDocumentStore(parent).getAbsoluteFilePath(
-                            result.values.imageFilePath
-                        ),
-                        "base64",
-                        (err: any, data: any) => {
-                            if (err) {
-                                reject(err);
-                            } else {
-                                resolve({
-                                    name: result.values.name,
-                                    image: "data:image/png;base64," + data,
-                                    bpp: result.values.bpp,
-                                    alwaysBuild: false
-                                });
-                            }
+            });
+
+            return new Promise((resolve, reject) => {
+                fs.readFile(
+                    projectEditorStore.getAbsoluteFilePath(
+                        result.values.imageFilePath
+                    ),
+                    "base64",
+                    (err: any, data: any) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            const bitmapProperties: Partial<Bitmap> = {
+                                name: result.values.name,
+                                image: "data:image/png;base64," + data,
+                                bpp: result.values.bpp,
+                                alwaysBuild: false
+                            };
+
+                            const bitmap = createObject<Bitmap>(
+                                projectEditorStore,
+                                bitmapProperties,
+                                Bitmap
+                            );
+
+                            resolve(bitmap);
                         }
-                    );
-                });
+                    }
+                );
             });
         },
         icon: "image"

@@ -24,12 +24,12 @@ import {
     isDashboardOrAppletOrFirmwareWithFlowSupportProject,
     isNotV1Project,
     isV3OrNewerProject,
-    loadObject,
     Message,
     objectToJS,
     propertyNotFoundMessage,
     propertyNotSetMessage,
-    propertySetButNotUsedMessage
+    propertySetButNotUsedMessage,
+    createObject
 } from "project-editor/store";
 import { getDocumentStore, IContextMenuContext } from "project-editor/store";
 
@@ -1469,10 +1469,8 @@ export class LayoutViewWidget extends Widget {
 
     replaceWithContainer() {
         if (this.layoutPage) {
-            var containerWidgetJsObject = Object.assign(
-                {},
-                ContainerWidget.classInfo.defaultValue
-            );
+            var containerWidgetJsObject: Partial<ContainerWidget> =
+                Object.assign({}, ContainerWidget.classInfo.defaultValue);
 
             containerWidgetJsObject.widgets = this.layoutPage.components.map(
                 widget => objectToJS(widget)
@@ -1487,11 +1485,10 @@ export class LayoutViewWidget extends Widget {
 
             return projectEditorStore.replaceObject(
                 this,
-                loadObject(
+                createObject<ContainerWidget>(
                     projectEditorStore,
-                    getParent(this),
                     containerWidgetJsObject,
-                    Widget
+                    ContainerWidget
                 )
             );
         }

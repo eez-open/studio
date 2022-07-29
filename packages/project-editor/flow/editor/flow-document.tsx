@@ -8,9 +8,9 @@ import {
     getSelectedObjectsBoundingRect
 } from "project-editor/flow/editor/bounding-rects";
 import { IEezObject, getParent } from "project-editor/core/object";
-import { getDocumentStore } from "project-editor/store";
+import { createObject, getDocumentStore } from "project-editor/store";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
-import type { ConnectionLine, Flow } from "project-editor/flow/flow";
+import { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { Component } from "project-editor/flow/component";
 import { _intersection } from "eez-studio-shared/algorithm";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -236,11 +236,17 @@ export class FlowDocument implements IDocument {
             targetObjectId
         ) as Component;
 
-        this.projectEditorStore.addObject(flow.connectionLines, {
-            source: sourceObject.wireID,
-            output: connectionOutput,
-            target: targetObject.wireID,
-            input: connectionInput
-        });
+        const connectionLine = createObject<ConnectionLine>(
+            this.flowContext.projectEditorStore,
+            {
+                source: sourceObject.wireID,
+                output: connectionOutput,
+                target: targetObject.wireID,
+                input: connectionInput
+            },
+            ConnectionLine
+        );
+
+        this.projectEditorStore.addObject(flow.connectionLines, connectionLine);
     }
 }

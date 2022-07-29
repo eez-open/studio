@@ -49,9 +49,10 @@ import {
     propertyNotSetMessage,
     updateObject,
     isDashboardOrAppletOrFirmwareWithFlowSupportProject,
-    isNotDashboardOrAppletOrFirmwareWithFlowSupportProject
+    isNotDashboardOrAppletOrFirmwareWithFlowSupportProject,
+    createObject
 } from "project-editor/store";
-import { loadObject, objectToJS } from "project-editor/store";
+import { objectToJS } from "project-editor/store";
 import { IContextMenuContext, getDocumentStore } from "project-editor/store";
 
 import type {
@@ -72,7 +73,9 @@ import type { Page } from "project-editor/features/page/page";
 import { Style } from "project-editor/features/style/style";
 import type {
     ContainerWidget,
-    ListWidget
+    LayoutViewWidget,
+    ListWidget,
+    SelectWidget
 } from "project-editor/flow/components/widgets";
 import { WIDGET_TYPE_NONE } from "project-editor/flow/components/component_types";
 import { guid } from "eez-studio-shared/guid";
@@ -381,11 +384,17 @@ export function makeExpressionProperty(
                                         true
                                     );
 
-                                    const customInput = new CustomInput();
-                                    customInput.name = props.propertyInfo.name;
-                                    customInput.type =
-                                        props.propertyInfo.expressionType ||
-                                        "any";
+                                    const customInput =
+                                        createObject<CustomInput>(
+                                            projectEditorStore,
+                                            {
+                                                name: props.propertyInfo.name,
+                                                type:
+                                                    props.propertyInfo
+                                                        .expressionType || "any"
+                                            },
+                                            CustomInput
+                                        );
 
                                     projectEditorStore.addObject(
                                         component.customInputs,
@@ -394,7 +403,7 @@ export function makeExpressionProperty(
 
                                     projectEditorStore.updateObject(component, {
                                         [props.propertyInfo.name]:
-                                            props.propertyInfo.name
+                                            customInput.name
                                     });
 
                                     projectEditorStore.undoManager.setCombineCommands(
@@ -706,8 +715,8 @@ export class CustomInput extends EezObject implements ComponentInput {
 
         defaultValue: {},
 
-        newItem: (parent: IEezObject) => {
-            return showGenericDialog({
+        newItem: async (parent: IEezObject) => {
+            const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Component Input",
                     fields: [
@@ -733,12 +742,22 @@ export class CustomInput extends EezObject implements ComponentInput {
                 },
                 values: {},
                 dialogContext: ProjectEditor.getProject(parent)
-            }).then(result => {
-                return Promise.resolve({
-                    name: result.values.name,
-                    type: result.values.type
-                });
             });
+
+            const customInputProperties: Partial<CustomInput> = {
+                name: result.values.name,
+                type: result.values.type
+            };
+
+            const project = ProjectEditor.getProject(parent);
+
+            const customInput = createObject<CustomInput>(
+                project._DocumentStore,
+                customInputProperties,
+                CustomInput
+            );
+
+            return customInput;
         },
 
         updateObjectValueHook: (object: CustomInput, values: any) => {
@@ -817,8 +836,8 @@ export class CustomOutput extends EezObject implements ComponentOutput {
 
         defaultValue: {},
 
-        newItem: (parent: IEezObject) => {
-            return showGenericDialog({
+        newItem: async (parent: IEezObject) => {
+            const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Component Output",
                     fields: [
@@ -842,12 +861,22 @@ export class CustomOutput extends EezObject implements ComponentOutput {
                 },
                 values: {},
                 dialogContext: ProjectEditor.getProject(parent)
-            }).then(result => {
-                return Promise.resolve({
-                    name: result.values.name,
-                    type: result.values.type
-                });
             });
+
+            const customOutputProperties: Partial<CustomOutput> = {
+                name: result.values.name,
+                type: result.values.type
+            };
+
+            const project = ProjectEditor.getProject(parent);
+
+            const customOutput = createObject<CustomOutput>(
+                project._DocumentStore,
+                customOutputProperties,
+                CustomOutput
+            );
+
+            return customOutput;
         },
 
         updateObjectValueHook: (object: CustomInput, values: any) => {
@@ -1898,7 +1927,11 @@ export class Component extends EezObject {
                     props.height = value.height ?? object.rect.height;
                 }
 
-                const newKeyframe = new TimelineKeyframe();
+                const newKeyframe = createObject<TimelineKeyframe>(
+                    projectEditorStore,
+                    {},
+                    TimelineKeyframe
+                );
 
                 newKeyframe.start = time;
                 newKeyframe.end = time;
@@ -2949,7 +2982,12 @@ const TimelineKeyframePropertyUI = observer(
             this.widgets.forEach(widget => {
                 const position = this.timeline.position;
 
-                const newKeyframe = new TimelineKeyframe();
+                const newKeyframe = createObject<TimelineKeyframe>(
+                    this.context,
+                    {},
+                    TimelineKeyframe
+                );
+
                 newKeyframe.start = position;
                 newKeyframe.end = position;
 
@@ -3769,7 +3807,7 @@ export class Widget extends Component {
     putInSelect() {
         let thisWidgetJsObject = objectToJS(this);
 
-        var selectWidgetJsObject = Object.assign(
+        var selectWidgetJsObject: Partial<SelectWidget> = Object.assign(
             {},
             getClassFromType("Select")?.classInfo.defaultValue,
             { type: "Select" }
@@ -3791,11 +3829,10 @@ export class Widget extends Component {
 
         return projectEditorStore.replaceObject(
             this,
-            loadObject(
+            createObject<SelectWidget>(
                 projectEditorStore,
-                getParent(this),
                 selectWidgetJsObject,
-                Component
+                ProjectEditor.SelectWidgetClass
             )
         );
     }
@@ -3838,7 +3875,7 @@ export class Widget extends Component {
     }
 
     static putInContainer(fromWidgets: Component[]) {
-        var containerWidgetJsObject: ContainerWidget = Object.assign(
+        var containerWidgetJsObject: Partial<ContainerWidget> = Object.assign(
             {},
             getClassFromType("Container")?.classInfo.defaultValue,
             { type: "Container" }
@@ -3857,11 +3894,10 @@ export class Widget extends Component {
 
         return projectEditorStore.replaceObjects(
             fromWidgets,
-            loadObject(
+            createObject<ContainerWidget>(
                 projectEditorStore,
-                getParent(fromWidgets[0]),
                 containerWidgetJsObject,
-                Component
+                ProjectEditor.ContainerWidgetClass
             )
         );
     }
@@ -3891,7 +3927,7 @@ export class Widget extends Component {
             containerWidgetJsObject.height = createWidgetsResult.height;
         }
 
-        var listWidgetJsObject: ListWidget = Object.assign(
+        var listWidgetJsObject: Partial<ListWidget> = Object.assign(
             {},
             getClassFromType("List")?.classInfo.defaultValue,
             { type: "List" }
@@ -3911,11 +3947,10 @@ export class Widget extends Component {
 
         return projectEditorStore.replaceObjects(
             fromWidgets,
-            loadObject(
+            createObject<ListWidget>(
                 projectEditorStore,
-                getParent(fromWidgets[0]),
                 listWidgetJsObject,
-                Component
+                ProjectEditor.ListWidgetClass
             )
         );
     }
@@ -3950,27 +3985,25 @@ export class Widget extends Component {
 
             projectEditorStore.addObject(
                 customWidgets,
-                loadObject(
+                createObject<Page>(
                     projectEditorStore,
-                    undefined,
                     {
                         name: customWidgetName,
                         left: 0,
                         top: 0,
                         width: createWidgetsResult.width,
                         height: createWidgetsResult.height,
-                        widgets: createWidgetsResult.widgets,
+                        components: createWidgetsResult.widgets,
                         isUsedAsCustomWidget: true
                     },
-                    findClass("Page")!
+                    ProjectEditor.PageClass
                 )
             );
 
             return projectEditorStore.replaceObjects(
                 fromWidgets,
-                loadObject(
+                createObject<LayoutViewWidget>(
                     projectEditorStore,
-                    getParent(fromWidgets[0]),
                     {
                         type: "LayoutView",
                         left: createWidgetsResult.left,
@@ -3979,7 +4012,7 @@ export class Widget extends Component {
                         height: createWidgetsResult.height,
                         layout: customWidgetName
                     },
-                    Component
+                    ProjectEditor.LayoutViewWidgetClass
                 )
             );
         } catch (error) {
@@ -4012,9 +4045,8 @@ export class Widget extends Component {
 
             return getDocumentStore(fromWidgets[0]).replaceObjects(
                 fromWidgets,
-                loadObject(
+                createObject<LayoutViewWidget>(
                     getDocumentStore(fromWidgets[0]),
-                    getParent(fromWidgets[0]),
                     {
                         type: "LayoutView",
                         left: createWidgetsResult.left,
@@ -4023,7 +4055,7 @@ export class Widget extends Component {
                         height: createWidgetsResult.height,
                         layout: customWidgetName
                     },
-                    Component
+                    ProjectEditor.LayoutViewWidgetClass
                 )
             );
         } catch (error) {

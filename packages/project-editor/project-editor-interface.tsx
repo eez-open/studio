@@ -51,7 +51,12 @@ import type {
 import type { browseGlyph } from "project-editor/features/font/FontEditor";
 import type { Variable } from "project-editor/features/variable/variable";
 import type { CallActionActionComponent } from "project-editor/flow/components/actions";
-import type { LayoutViewWidget } from "project-editor/flow/components/widgets";
+import type {
+    ContainerWidget,
+    LayoutViewWidget,
+    ListWidget,
+    SelectWidget
+} from "project-editor/flow/components/widgets";
 
 export interface IProjectEditor {
     homeTabs: Tabs;
@@ -77,6 +82,9 @@ export interface IProjectEditor {
     WidgetClass: typeof Widget;
     ConnectionLineClass: typeof ConnectionLine;
     LayoutViewWidgetClass: typeof LayoutViewWidget;
+    SelectWidgetClass: typeof SelectWidget;
+    ContainerWidgetClass: typeof ContainerWidget;
+    ListWidgetClass: typeof ListWidget;
     CallActionActionComponentClass: typeof CallActionActionComponent;
     VariableClass: typeof Variable;
     GlyphClass: typeof Glyph;

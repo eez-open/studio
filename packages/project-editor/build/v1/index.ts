@@ -8,7 +8,7 @@ import {
 } from "project-editor/core/objectAdapter";
 import { IEezObject, MessageType } from "project-editor/core/object";
 import {
-    loadObject,
+    //createObject,
     propertyNotFoundMessage,
     Section
 } from "project-editor/store";
@@ -34,7 +34,7 @@ import {
 } from "project-editor/features/bitmap/bitmap";
 import { Font } from "project-editor/features/font/font";
 import { Style } from "project-editor/features/style/style";
-import { Page, PageOrientation } from "project-editor/features/page/page";
+import { Page /*, PageOrientation*/ } from "project-editor/features/page/page";
 import { Widget, Component } from "project-editor/flow/component";
 import {
     BarGraphWidget,
@@ -1699,29 +1699,29 @@ function buildGuiDocumentDef(
     }
 
     function buildPage(page: Page) {
-        if (orientation === "portrait") {
-            const pageOrientation = page.portrait
-                ? page.portrait
-                : loadObject(
-                      getDocumentStore(project),
-                      page,
-                      {
-                          left: 0,
-                          top: 0,
-                          width: 240,
-                          height: 320,
-                          widgets: [],
-                          rect: {
-                              left: 0,
-                              top: 0,
-                              width: 240,
-                              height: 320
-                          }
-                      },
-                      PageOrientation
-                  );
-            return buildWidget(pageOrientation as Page);
-        }
+        // if (orientation === "portrait") {
+        //     const pageOrientation = page.portrait
+        //         ? page.portrait
+        //         : createObject<PageOrientation>(
+        //               getDocumentStore(project),
+        //               page,
+        //               {
+        //                   left: 0,
+        //                   top: 0,
+        //                   width: 240,
+        //                   height: 320,
+        //                   components: [],
+        //                   rect: {
+        //                       left: 0,
+        //                       top: 0,
+        //                       width: 240,
+        //                       height: 320
+        //                   }
+        //               },
+        //               PageOrientation
+        //           );
+        //     return buildWidget(pageOrientation);
+        // }
         return buildWidget(page);
     }
 

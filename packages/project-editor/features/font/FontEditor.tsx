@@ -15,7 +15,8 @@ import {
     IPanel,
     LayoutModels,
     objectToJS,
-    getDocumentStore
+    getDocumentStore,
+    createObject
 } from "project-editor/store";
 import { validators } from "eez-studio-shared/validation";
 import * as notification from "eez-studio-ui/notification";
@@ -33,7 +34,7 @@ import { Glyphs } from "./Glyphs";
 import { RelativeFileInput } from "project-editor/ui-components/FileInput";
 import { showGenericDialog } from "project-editor/core/util";
 import { GlyphSelectFieldType } from "project-editor/features/font/GlyphSelectFieldType";
-import { Font, Glyph } from "project-editor/features/font/font";
+import { Font, Glyph, GlyphSource } from "project-editor/features/font/font";
 
 import {
     EncodingRange,
@@ -287,10 +288,11 @@ export const FontEditor = observer(
                             let newGlyph: IEezObject | undefined;
 
                             let added = 0;
-                            for (const glyph of font.glyphs) {
+                            for (const glyphProperties of font.glyphs) {
                                 const existingGlyph = this.font.glyphs.find(
                                     existingGlyph =>
-                                        existingGlyph.encoding == glyph.encoding
+                                        existingGlyph.encoding ==
+                                        glyphProperties.encoding
                                 );
                                 if (existingGlyph) {
                                     if (result.values.overwriteExisting) {
@@ -302,10 +304,16 @@ export const FontEditor = observer(
                                     }
                                 }
 
+                                const glyph = createObject<Glyph>(
+                                    this.context,
+                                    glyphProperties as Partial<GlyphSource>,
+                                    Glyph
+                                );
+
                                 newGlyph = this.context.addObject(
                                     this.font.glyphs,
                                     glyph
-                                ) as Glyph;
+                                );
                                 added++;
                             }
 

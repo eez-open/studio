@@ -52,7 +52,8 @@ import {
     getDocumentStore,
     isNotV1Project,
     LayoutModels,
-    propertyNotUniqueMessage
+    propertyNotUniqueMessage,
+    createObject
 } from "project-editor/store";
 
 import type { Action } from "project-editor/features/action/action";
@@ -100,6 +101,7 @@ import { Changes } from "project-editor/features/changes";
 import { resizeWidget } from "project-editor/flow/editor/resizing-widget-property";
 import { Rect } from "eez-studio-shared/geometry";
 import { PageTabState } from "project-editor/features/page/PageEditor";
+import { validators } from "eez-studio-shared/validation";
 
 export { ProjectType } from "project-editor/core/object";
 
@@ -144,10 +146,37 @@ export class BuildConfiguration extends EezObject {
                 hideInPropertyGrid: isNotV1Project
             }
         ],
-        newItem: (parent: IEezObject) => {
-            return Promise.resolve({
-                name: "Configuration"
+        newItem: async (parent: IEezObject) => {
+            const result = await showGenericDialog({
+                dialogDefinition: {
+                    title: "New Configuration",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [
+                                validators.required,
+                                validators.unique({}, parent)
+                            ]
+                        }
+                    ]
+                },
+                values: {}
             });
+
+            const buildConfigurationProperties: Partial<BuildConfiguration> = {
+                name: result.values.name
+            };
+
+            const project = ProjectEditor.getProject(parent);
+
+            const buildConfiguration = createObject<BuildConfiguration>(
+                project._DocumentStore,
+                buildConfigurationProperties,
+                BuildConfiguration
+            );
+
+            return buildConfiguration;
         },
         check: (object: BuildConfiguration) => {
             let messages: Message[] = [];
@@ -207,11 +236,21 @@ export class BuildFile extends EezObject {
                 hideInPropertyGrid: true
             }
         ],
-        newItem: (parent: IEezObject) => {
-            return Promise.resolve({
+        newItem: async (parent: IEezObject) => {
+            const buildFileProperties: Partial<BuildFile> = {
                 fileName: "file",
                 template: ""
-            });
+            };
+
+            const project = ProjectEditor.getProject(parent);
+
+            const buildFile = createObject<BuildFile>(
+                project._DocumentStore,
+                buildFileProperties,
+                BuildFile
+            );
+
+            return buildFile;
         }
     };
 

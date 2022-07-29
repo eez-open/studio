@@ -22,7 +22,8 @@ import {
     addItem,
     deleteObject,
     insertObjectAfter,
-    insertObjectBefore
+    insertObjectBefore,
+    createObject
 } from "project-editor/store";
 
 import { ProjectContext } from "project-editor/project/context";
@@ -179,10 +180,14 @@ export const ArrayProperty = observer(
                         `Class "${typeClass.name}" is missing defaultValue`
                     );
                 } else {
-                    this.context.addObject(
-                        value,
-                        typeClass.classInfo.defaultValue
+                    const object = createObject(
+                        this.context,
+                        typeClass.classInfo.defaultValue,
+                        typeClass
                     );
+
+                    this.context.addObject(value, object);
+
                     this.context.undoManager.setCombineCommands(false);
                 }
             }

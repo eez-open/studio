@@ -647,7 +647,7 @@ export class ProjectEditorStore {
         return this.modified;
     }
 
-    addObject(parentObject: IEezObject, object: any) {
+    addObject(parentObject: IEezObject, object: EezObject) {
         const undoManager = this.undoManager;
 
         let closeCombineCommands = false;
@@ -676,7 +676,7 @@ export class ProjectEditorStore {
         return eezObject;
     }
 
-    addObjects(parentObject: IEezObject, objects: any[]) {
+    addObjects(parentObject: IEezObject, objects: EezObject[]) {
         return addObjects(parentObject, objects);
     }
 

@@ -12,12 +12,12 @@ import {
 } from "project-editor/core/object";
 
 import {
+    createObject,
     getChildOfObject,
     getClass,
     getClassInfo,
     isArray,
     isObject,
-    loadObject,
     objectToJson,
     ProjectEditorStore
 } from "project-editor/store";
@@ -50,18 +50,16 @@ export function clipboardDataToObject(
     if (aClass) {
         serializedData.classInfo = aClass.classInfo;
         if (serializedData.object) {
-            serializedData.object = loadObject(
+            serializedData.object = createObject(
                 projectEditorStore,
-                undefined,
                 serializedData.object,
                 aClass
             ) as EezObject;
         } else if (serializedData.objects) {
             serializedData.objects = serializedData.objects.map(
                 object =>
-                    loadObject(
+                    createObject(
                         projectEditorStore,
-                        undefined,
                         object,
                         aClass
                     ) as EezObject

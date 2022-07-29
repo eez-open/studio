@@ -3,7 +3,6 @@ import {
     observable,
     computed,
     action,
-    toJS,
     runInAction,
     makeObservable
 } from "mobx";
@@ -1081,7 +1080,7 @@ export const FlowEditor = observer(
 
                 const object = this.context.addObject(
                     flow.components,
-                    toJS(this.flowContext.dragComponent)
+                    this.flowContext.dragComponent
                 );
 
                 this.flowContext.dragComponent = undefined;

@@ -147,8 +147,8 @@ export interface PropertyInfo {
     check?: (object: IEezObject) => IMessage[];
     interceptAddObject?: (
         parentObject: IEezObject,
-        object: IEezObject
-    ) => IEezObject;
+        object: EezObject
+    ) => EezObject;
     downloadFileName?: (
         object: IEezObject,
         propertyInfo: PropertyInfo
@@ -203,7 +203,8 @@ export interface ClassInfo {
     hideInProperties?: boolean;
     isPropertyMenuSupported?: boolean;
 
-    newItem?: (object: IEezObject) => Promise<any>;
+    newItem?: (parent: IEezObject) => Promise<EezObject | undefined>;
+
     getInheritedValue?: (
         object: IEezObject,
         propertyName: string

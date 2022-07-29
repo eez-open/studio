@@ -6,8 +6,8 @@ import { getProperty, getParent, IEezObject } from "project-editor/core/object";
 import {
     addItem,
     canAdd,
-    LayoutModels,
-    loadObject
+    createObject,
+    LayoutModels
 } from "project-editor/store";
 
 import { confirm } from "project-editor/core/util";
@@ -43,9 +43,8 @@ const ProjectFeature = observer(
         declare context: React.ContextType<typeof ProjectContext>;
 
         onAdd() {
-            let newFeatureObject = loadObject(
+            let newFeatureObject = createObject(
                 this.context,
-                this.context.project,
                 this.props.projectFeature.create(),
                 this.props.projectFeature.typeClass,
                 this.props.projectFeature.key

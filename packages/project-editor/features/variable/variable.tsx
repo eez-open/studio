@@ -29,7 +29,8 @@ import {
     isNotFirmwareWithFlowSupportProject,
     Message,
     propertyInvalidValueMessage,
-    propertyNotSetMessage
+    propertyNotSetMessage,
+    createObject
 } from "project-editor/store";
 import type { Project } from "project-editor/project/project";
 import { metrics } from "project-editor/features/variable/metrics";
@@ -395,8 +396,8 @@ export class Variable extends EezObject {
         beforeLoadHook: (object: Variable, objectJS: any) => {
             migrateType(objectJS);
         },
-        newItem: (parent: IEezObject) => {
-            return showGenericDialog({
+        newItem: async (parent: IEezObject) => {
+            const result = await showGenericDialog({
                 dialogDefinition: {
                     title: ProjectEditor.getFlow(parent)
                         ? "New Local Variable"
@@ -425,17 +426,28 @@ export class Variable extends EezObject {
                 },
                 values: {},
                 dialogContext: ProjectEditor.getProject(parent)
-            }).then(result => {
-                let persistent =
-                    !ProjectEditor.getFlow(parent) &&
-                    isObjectType(result.values.type);
-                return Promise.resolve({
-                    name: result.values.name,
-                    type: result.values.type,
-                    defaultValue: result.values.defaultValue,
-                    persistent
-                });
             });
+
+            let persistent =
+                !ProjectEditor.getFlow(parent) &&
+                isObjectType(result.values.type);
+
+            const variableProperties: Partial<Variable> = {
+                name: result.values.name,
+                type: result.values.type,
+                defaultValue: result.values.defaultValue,
+                persistent
+            };
+
+            const project = ProjectEditor.getProject(parent);
+
+            const variable = createObject<Variable>(
+                project._DocumentStore,
+                variableProperties,
+                Variable
+            );
+
+            return variable;
         },
         check: (variable: Variable) => {
             let messages: Message[] = [];
@@ -990,8 +1002,8 @@ export class StructureField extends EezObject implements IStructureField {
             migrateType(objectJS);
         },
         defaultValue: {},
-        newItem: (parent: IEezObject) => {
-            return showGenericDialog({
+        newItem: async (parent: IEezObject) => {
+            const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Structure Field",
                     fields: [
@@ -1013,12 +1025,22 @@ export class StructureField extends EezObject implements IStructureField {
                 },
                 values: {},
                 dialogContext: ProjectEditor.getProject(parent)
-            }).then(result => {
-                return Promise.resolve({
-                    name: result.values.name,
-                    type: result.values.type
-                });
             });
+
+            const structureFieldProperties: Partial<StructureField> = {
+                name: result.values.name,
+                type: result.values.type
+            };
+
+            const project = ProjectEditor.getProject(parent);
+
+            const structureField = createObject<StructureField>(
+                project._DocumentStore,
+                structureFieldProperties,
+                StructureField
+            );
+
+            return structureField;
         }
     };
 
@@ -1059,8 +1081,8 @@ export class Structure extends EezObject implements IStructure {
                 typeClass: StructureField
             }
         ],
-        newItem: (parent: IEezObject) => {
-            return showGenericDialog({
+        newItem: async (parent: IEezObject) => {
+            const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Structure",
                     fields: [
@@ -1076,11 +1098,21 @@ export class Structure extends EezObject implements IStructure {
                     ]
                 },
                 values: {}
-            }).then(result => {
-                return Promise.resolve({
-                    name: result.values.name
-                });
             });
+
+            const structureProperties: Partial<Structure> = {
+                name: result.values.name
+            };
+
+            const project = ProjectEditor.getProject(parent);
+
+            const structure = createObject<Structure>(
+                project._DocumentStore,
+                structureProperties,
+                Structure
+            );
+
+            return structure;
         }
     };
 
@@ -1135,8 +1167,8 @@ export class EnumMember extends EezObject {
             return messages;
         },
         defaultValue: {},
-        newItem: (parent: IEezObject) => {
-            return showGenericDialog({
+        newItem: async (parent: IEezObject) => {
+            const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Enum Member",
                     fields: [
@@ -1152,11 +1184,21 @@ export class EnumMember extends EezObject {
                     ]
                 },
                 values: {}
-            }).then(result => {
-                return Promise.resolve({
-                    name: result.values.name
-                });
             });
+
+            const enumMemberProperties: Partial<EnumMember> = {
+                name: result.values.name
+            };
+
+            const project = ProjectEditor.getProject(parent);
+
+            const enumMember = createObject<EnumMember>(
+                project._DocumentStore,
+                enumMemberProperties,
+                EnumMember
+            );
+
+            return enumMember;
         }
     };
 
@@ -1191,8 +1233,8 @@ export class Enum extends EezObject {
                 typeClass: EnumMember
             }
         ],
-        newItem: (parent: IEezObject) => {
-            return showGenericDialog({
+        newItem: async (parent: IEezObject) => {
+            const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Enum",
                     fields: [
@@ -1208,11 +1250,21 @@ export class Enum extends EezObject {
                     ]
                 },
                 values: {}
-            }).then(result => {
-                return Promise.resolve({
-                    name: result.values.name
-                });
             });
+
+            const enumProperties: Partial<Enum> = {
+                name: result.values.name
+            };
+
+            const project = ProjectEditor.getProject(parent);
+
+            const enumObject = createObject<Enum>(
+                project._DocumentStore,
+                enumProperties,
+                Enum
+            );
+
+            return enumObject;
         }
     };
 

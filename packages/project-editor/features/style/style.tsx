@@ -28,7 +28,8 @@ import {
     propertyInvalidValueMessage,
     propertyNotFoundMessage,
     updateObject,
-    propertyNotSetMessage
+    propertyNotSetMessage,
+    createObject
 } from "project-editor/store";
 import { getDocumentStore } from "project-editor/store";
 import { validators } from "eez-studio-shared/validation";
@@ -237,7 +238,11 @@ const inheritFromProperty: PropertyInfo = {
 
                                 projectEditorStore.addObject(
                                     projectEditorStore.project.styles,
-                                    stylePropertyValues
+                                    createObject<Style>(
+                                        projectEditorStore,
+                                        stylePropertyValues,
+                                        Style
+                                    )
                                 );
                                 projectEditorStore.updateObject(
                                     object,
@@ -1011,8 +1016,8 @@ export class Style extends EezObject {
             }
         },
         isPropertyMenuSupported: true,
-        newItem: (parent: IEezObject) => {
-            return showGenericDialog({
+        newItem: async (parent: IEezObject) => {
+            const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Style",
                     fields: [
@@ -1027,11 +1032,21 @@ export class Style extends EezObject {
                     ]
                 },
                 values: {}
-            }).then(result => {
-                return Promise.resolve({
-                    name: result.values.name
-                });
             });
+
+            const styleProperties: Partial<Style> = {
+                name: result.values.name
+            };
+
+            const project = ProjectEditor.getProject(parent);
+
+            const style = createObject<Style>(
+                project._DocumentStore,
+                styleProperties,
+                Style
+            );
+
+            return style;
         },
         getInheritedValue: (styleObject: Style, propertyName: string) =>
             getInheritedValue(styleObject, propertyName, [], false),

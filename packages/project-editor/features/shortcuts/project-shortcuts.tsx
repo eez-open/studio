@@ -23,7 +23,7 @@ import {
     EezObject,
     PropertyType
 } from "project-editor/core/object";
-import { objectToJS } from "project-editor/store";
+import { createObject, objectToJS } from "project-editor/store";
 
 import { ConfigurationReferencesPropertyValue } from "project-editor/ui-components/ConfigurationReferencesPropertyValue";
 
@@ -61,7 +61,14 @@ export class ShortcutsEditor extends EditorComponent {
 
             addShortcut(shortcut: Partial<IShortcut>) {
                 shortcut.id = guid();
-                projectEditorStore.addObject(shortcuts, shortcut as any);
+                projectEditorStore.addObject(
+                    shortcuts,
+                    createObject<Shortcut>(
+                        projectEditorStore,
+                        shortcut as any,
+                        Shortcut
+                    )
+                );
                 return shortcut.id;
             },
 

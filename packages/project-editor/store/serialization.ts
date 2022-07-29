@@ -16,6 +16,18 @@ import { getClassInfo, ProjectEditorStore } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export function createObject<T extends EezObject>(
+    projectEditorStore: ProjectEditorStore,
+    jsObject: Partial<T>,
+    aClass: EezClass,
+    key?: string
+): T {
+    currentDocumentStore = projectEditorStore;
+    const result = loadObjectInternal(undefined, jsObject, aClass, key);
+    currentDocumentStore = undefined;
+    return result as T;
+}
+
 export function loadObject(
     projectEditorStore: ProjectEditorStore,
     parent: IEezObject | undefined,

@@ -18,7 +18,8 @@ import {
     IContextMenuContext,
     getDocumentStore,
     LayoutModels,
-    Message
+    Message,
+    createObject
 } from "project-editor/store";
 import { validators } from "eez-studio-shared/validation";
 import { replaceObjectReference } from "project-editor/core/search";
@@ -354,8 +355,8 @@ export class Color extends EezObject implements IColor {
 
             return messages;
         },
-        newItem: (parent: IEezObject) => {
-            return showGenericDialog({
+        newItem: async (parent: IEezObject) => {
+            const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Color",
                     fields: [
@@ -393,12 +394,22 @@ export class Color extends EezObject implements IColor {
                     ]
                 },
                 values: {}
-            }).then(result => {
-                return Promise.resolve({
-                    colorId: guid(),
-                    name: result.values.name
-                });
             });
+
+            const colorProperties: Partial<Color> = {
+                colorId: guid(),
+                name: result.values.name
+            };
+
+            const project = ProjectEditor.getProject(parent);
+
+            const color = createObject<Color>(
+                project._DocumentStore,
+                colorProperties,
+                Color
+            );
+
+            return color;
         },
 
         extendContextMenu: (
@@ -498,8 +509,8 @@ export class Theme extends EezObject implements ITheme {
                 hideInPropertyGrid: true
             }
         ],
-        newItem: (parent: IEezObject) => {
-            return showGenericDialog({
+        newItem: async (parent: IEezObject) => {
+            const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Theme",
                     fields: [
@@ -514,12 +525,22 @@ export class Theme extends EezObject implements ITheme {
                     ]
                 },
                 values: {}
-            }).then(result => {
-                return Promise.resolve({
-                    themeId: guid(),
-                    name: result.values.name
-                });
             });
+
+            const themeProperties: Partial<Theme> = {
+                themeId: guid(),
+                name: result.values.name
+            };
+
+            const project = ProjectEditor.getProject(parent);
+
+            const theme = createObject<Theme>(
+                project._DocumentStore,
+                themeProperties,
+                Theme
+            );
+
+            return theme;
         },
         onAfterPaste: (newTheme: Theme, fromTheme: Theme) => {
             const project = ProjectEditor.getProject(newTheme);
