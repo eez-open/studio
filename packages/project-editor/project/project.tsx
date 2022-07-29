@@ -1489,6 +1489,8 @@ export class Project extends EezObject {
         id: new AssetsMap(this, "id")
     };
 
+    lastObjid: number;
+
     settings: Settings;
     variables: ProjectVariables;
     actions: Action[];

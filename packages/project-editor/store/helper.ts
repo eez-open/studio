@@ -40,11 +40,7 @@ import {
 } from "project-editor/store/clipboard";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import {
-    createObject,
-    loadObject,
-    objectToJson
-} from "project-editor/store/serialization";
+import { createObject, objectToJson } from "project-editor/store/serialization";
 import { confirm, onAfterPaste } from "project-editor/core/util";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -676,7 +672,7 @@ export function pasteItem(object: IEezObject) {
                         return projectEditorStore.insertObject(
                             c.pastePlace as IEezObject,
                             (c.pastePlace as any).indexOf(object) + 1,
-                            objectToJS(c.serializedData.object)
+                            c.serializedData.object
                         );
                     } else {
                         const aClass = getClassByName(
@@ -941,14 +937,9 @@ export function objectToJS(object: IEezObject): any {
     return JSON.parse(objectToJson(object));
 }
 
-export function cloneObject(
+export function cloneObject<T extends EezObject>(
     projectEditorStore: ProjectEditorStore,
-    obj: IEezObject
+    obj: T
 ) {
-    return loadObject(
-        projectEditorStore,
-        undefined,
-        objectToJson(obj),
-        getClass(obj)
-    );
+    return createObject<T>(projectEditorStore, obj, getClass(obj));
 }

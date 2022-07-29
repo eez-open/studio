@@ -1,9 +1,8 @@
 import { readTextFile } from "eez-studio-shared/util-electron";
 import { runInAction } from "mobx";
 import path from "path";
-import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Project } from "project-editor/project/project";
-import { getJSON, loadObject, ProjectEditorStore } from "project-editor/store";
+import { getJSON, loadProject, ProjectEditorStore } from "project-editor/store";
 
 import {
     Revision,
@@ -123,11 +122,9 @@ export async function getRevisionContent(
     const revisionProjectEditorStore = new ProjectEditorStore();
 
     runInAction(() => {
-        revisionProjectEditorStore.project = loadObject(
+        revisionProjectEditorStore.project = loadProject(
             projectEditorStore,
-            undefined,
-            content,
-            ProjectEditor.ProjectClass
+            content
         ) as Project;
     });
 
@@ -170,7 +167,13 @@ export async function diff(
           )
         : {};
 
-    const delta = jsondiffpatch.diff(beforeContent, afterContent);
+    const delta = jsondiffpatch
+        .create({
+            objectHash: function (obj: any, index: number) {
+                return obj.objid || index;
+            }
+        })
+        .diff(beforeContent, afterContent);
     if (!delta) {
         return undefined;
     }

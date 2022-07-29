@@ -366,7 +366,7 @@ export type IEezObject = EezObject | EezObject[];
 export class EezObject {
     static classInfo: ClassInfo;
 
-    persistentObjectId: number;
+    objid: number;
 }
 
 export type EezClass = typeof EezObject;

@@ -11,6 +11,8 @@ import {
     setParent,
     setPropertyInfo
 } from "project-editor/core/object";
+import { ProjectEditor } from "project-editor/project-editor-interface";
+import type { Project } from "project-editor/project/project";
 
 import { getClassInfo, ProjectEditorStore } from "project-editor/store";
 
@@ -23,21 +25,27 @@ export function createObject<T extends EezObject>(
     key?: string
 ): T {
     currentDocumentStore = projectEditorStore;
+    currentProject = projectEditorStore.project;
+    createNewObjectIds = true;
     const result = loadObjectInternal(undefined, jsObject, aClass, key);
     currentDocumentStore = undefined;
+    currentProject = undefined;
     return result as T;
 }
 
-export function loadObject(
+export function loadProject(
     projectEditorStore: ProjectEditorStore,
-    parent: IEezObject | undefined,
-    jsObjectOrString: any | string,
-    aClass: EezClass,
-    key?: string
-): IEezObject {
+    projectObjectOrString: any | string
+): Project {
     currentDocumentStore = projectEditorStore;
-    const result = loadObjectInternal(parent, jsObjectOrString, aClass, key);
+    createNewObjectIds = false;
+    const result = loadObjectInternal(
+        undefined,
+        projectObjectOrString,
+        ProjectEditor.ProjectClass
+    ) as Project;
     currentDocumentStore = undefined;
+    currentProject = undefined;
     return result;
 }
 
@@ -80,6 +88,8 @@ export function objectToJson(
 ////////////////////////////////////////////////////////////////////////////////
 
 let currentDocumentStore: ProjectEditorStore | undefined;
+let currentProject: Project | undefined;
+let createNewObjectIds: boolean;
 
 function loadArrayObject(
     arrayObject: any,
@@ -125,7 +135,7 @@ function loadObjectInternal(
         });
     }
 
-    let object: IEezObject;
+    let object: EezObject;
 
     try {
         object = aClass.classInfo.getClass
@@ -141,6 +151,21 @@ function loadObjectInternal(
 
     setId(currentDocumentStore!, object, currentDocumentStore!.getChildId());
     setParent(object, parent as IEezObject);
+
+    if (aClass == ProjectEditor.ProjectClass) {
+        currentProject = object as Project;
+        if (jsObject.lastObjid != undefined) {
+            currentProject.lastObjid = jsObject.lastObjid;
+        } else {
+            currentProject.lastObjid = 0;
+        }
+    } else {
+        if (createNewObjectIds || jsObject.objid == undefined) {
+            object.objid = ++currentProject!.lastObjid;
+        } else {
+            object.objid = jsObject.objid;
+        }
+    }
 
     if (classInfo.beforeLoadHook) {
         classInfo.beforeLoadHook(object, jsObject);

@@ -26,7 +26,8 @@ import {
     getKey,
     isEezObject,
     EezObject,
-    PropertyInfo
+    PropertyInfo,
+    setParent
 } from "project-editor/core/object";
 import type { CurrentSearch } from "project-editor/core/search";
 
@@ -53,7 +54,11 @@ import { UIStateStore } from "project-editor/store/ui-state";
 import { RuntimeSettings } from "project-editor/store/runtime-settings";
 import { UndoManager } from "project-editor/store/undo-manager";
 import { OutputSections } from "project-editor/store/output-sections";
-import { loadObject, objectToJson } from "project-editor/store/serialization";
+import {
+    createObject,
+    loadProject,
+    objectToJson
+} from "project-editor/store/serialization";
 import { TypesStore } from "project-editor/store//types";
 
 import {
@@ -448,7 +453,7 @@ export class ProjectEditorStore {
     }
 
     getNewProject(): Project {
-        let project: any = {
+        let project = {
             settings: {
                 general: {},
                 build: {
@@ -462,12 +467,7 @@ export class ProjectEditorStore {
             }
         };
 
-        return loadObject(
-            this,
-            undefined,
-            project as Project,
-            ProjectEditor.ProjectClass
-        ) as Project;
+        return loadProject(this, project);
     }
 
     async newProject() {
@@ -680,7 +680,7 @@ export class ProjectEditorStore {
         return addObjects(parentObject, objects);
     }
 
-    insertObject(parentObject: IEezObject, index: number, object: any) {
+    insertObject(parentObject: IEezObject, index: number, object: EezObject) {
         return insertObject(parentObject, index, object);
     }
 
@@ -697,24 +697,25 @@ export class ProjectEditorStore {
 
                 if (propertyInfo) {
                     if (propertyInfo.computed !== true) {
-                        const value = inputValues[propertyName];
+                        let value = inputValues[propertyName];
                         if (
                             (propertyInfo.type === PropertyType.Object ||
                                 propertyInfo.type === PropertyType.Array) &&
-                            value !== undefined &&
-                            !isEezObject(value)
+                            value !== undefined
                         ) {
-                            // convert to EezObject
-                            values[propertyName] = loadObject(
-                                this,
-                                object,
-                                inputValues[propertyName],
-                                propertyInfo.typeClass!
-                            );
-                        } else {
-                            // use as is
-                            values[propertyName] = value;
+                            if (!isEezObject(value)) {
+                                // make an EezObject
+                                value = createObject(
+                                    this,
+                                    value,
+                                    propertyInfo.typeClass!
+                                );
+                            }
+
+                            setParent(value, object);
                         }
+
+                        values[propertyName] = value;
                     } else {
                         console.warn("ignored computed property", propertyName);
                     }
@@ -782,7 +783,7 @@ export class ProjectEditorStore {
         }
     }
 
-    replaceObject(object: IEezObject, replaceWithObject: IEezObject) {
+    replaceObject(object: IEezObject, replaceWithObject: EezObject) {
         if (getParent(object) !== getParent(replaceWithObject)) {
             console.error("assert failed");
         }
@@ -790,7 +791,7 @@ export class ProjectEditorStore {
         return replaceObject(object, replaceWithObject);
     }
 
-    replaceObjects(objects: IEezObject[], replaceWithObject: IEezObject) {
+    replaceObjects(objects: IEezObject[], replaceWithObject: EezObject) {
         if (getParent(objects[0]) !== getParent(replaceWithObject)) {
             console.error("assert failed");
         }
@@ -1017,11 +1018,9 @@ export async function load(
         projectJs = fileData.toString("utf8");
     }
 
-    const project: Project = loadObject(
+    const project: Project = loadProject(
         projectEditorStore,
-        undefined,
-        projectJs,
-        ProjectEditor.ProjectClass
+        projectJs
     ) as Project;
 
     project._isDashboardBuild = isDashboardBuild;

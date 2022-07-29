@@ -727,7 +727,7 @@ export class CustomInput extends EezObject implements ComponentInput {
                                 validators.required,
                                 componentInputUnique(
                                     {
-                                        persistentObjectId: 0
+                                        objid: 0
                                     },
                                     parent
                                 )
@@ -845,10 +845,7 @@ export class CustomOutput extends EezObject implements ComponentOutput {
                             name: "name",
                             type: "string",
                             validators: [
-                                componentOutputUnique(
-                                    { persistentObjectId: 0 },
-                                    parent
-                                ),
+                                componentOutputUnique({ objid: 0 }, parent),
                                 validators.unique({}, parent)
                             ]
                         },

@@ -1,6 +1,8 @@
 import { makeObservable, computed, action } from "mobx";
 
 import { humanize } from "eez-studio-shared/string";
+import { _map } from "eez-studio-shared/algorithm";
+import { guid } from "eez-studio-shared/guid";
 
 import {
     IEezObject,
@@ -14,7 +16,6 @@ import {
 
 import {
     findPropertyByNameInObject,
-    getClass,
     getClassInfo,
     getDocumentStore,
     getHumanReadableObjectPath,
@@ -22,39 +23,36 @@ import {
 } from "project-editor/store/helper";
 
 import { ICommand } from "project-editor/store/undo-manager";
-import { loadObject } from "project-editor/store/serialization";
-import { _map } from "eez-studio-shared/algorithm";
-import { guid } from "eez-studio-shared/guid";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export let addObject = action(
-    (parentObject: IEezObject, object: IEezObject) => {
-        setParent(object, parentObject);
+export let addObject = action((parentObject: IEezObject, object: EezObject) => {
+    setParent(object, parentObject);
 
-        ensureUniqueProperties(parentObject, [object]);
+    ensureUniqueProperties(parentObject, [object]);
 
-        getDocumentStore(parentObject).undoManager.executeCommand({
-            execute: action(() => {
-                (parentObject as IEezObject[]).push(object);
-            }),
+    getDocumentStore(parentObject).undoManager.executeCommand({
+        execute: action(() => {
+            (parentObject as IEezObject[]).push(object);
+        }),
 
-            undo: action(() => {
-                (parentObject as IEezObject[]).pop();
-            }),
+        undo: action(() => {
+            (parentObject as IEezObject[]).pop();
+        }),
 
-            get description() {
-                return "Added: " + getHumanReadableObjectPath(object);
-            }
-        });
+        get description() {
+            return "Added: " + getHumanReadableObjectPath(object);
+        }
+    });
 
-        return object;
-    }
-);
+    return object;
+});
 
 export let addObjects = action(
     (parentObject: IEezObject, objects: EezObject[]) => {
-        objects.forEach(object => setParent(object, parentObject));
+        objects.forEach(object => {
+            setParent(object, parentObject);
+        });
 
         ensureUniqueProperties(parentObject, objects);
 
@@ -85,12 +83,8 @@ export let addObjects = action(
 
 export let insertObject = action(
     (parentObject: IEezObject, index: number, object: any) => {
-        object = loadObject(
-            getDocumentStore(parentObject),
-            parentObject,
-            object,
-            getClass(parentObject)
-        );
+        setParent(object, parentObject);
+
         ensureUniqueProperties(parentObject, [object]);
 
         getDocumentStore(parentObject).undoManager.executeCommand({
@@ -274,8 +268,11 @@ export let deleteObjects = action((objects: IEezObject[]) => {
 });
 
 export let replaceObject = action(
-    (object: IEezObject, replaceWithObject: IEezObject) => {
+    (object: IEezObject, replaceWithObject: EezObject) => {
         let parent = getParent(object);
+
+        setParent(replaceWithObject, parent);
+
         const undoManager = getDocumentStore(parent).undoManager;
         if (isArrayElement(object)) {
             const array = parent as IEezObject[];
@@ -306,12 +303,15 @@ export let replaceObject = action(
 );
 
 export let replaceObjects = action(
-    (objects: IEezObject[], replaceWithObject: IEezObject) => {
+    (objects: IEezObject[], replaceWithObject: EezObject) => {
         if (objects.length === 1) {
             return replaceObject(objects[0], replaceWithObject);
         }
 
         const parent = getParent(objects[0]);
+
+        setParent(replaceWithObject, parent);
+
         const array = parent as IEezObject[];
         const index = array.indexOf(objects[0]);
 
