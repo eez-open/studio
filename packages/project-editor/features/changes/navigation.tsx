@@ -11,6 +11,7 @@ import {
     IReactionDisposer
 } from "mobx";
 import { observer } from "mobx-react";
+import * as FlexLayout from "flexlayout-react";
 
 import { Loader } from "eez-studio-ui/loader";
 import { List, IListNode } from "eez-studio-ui/list";
@@ -18,7 +19,7 @@ import { List, IListNode } from "eez-studio-ui/list";
 import { ProjectContext } from "project-editor/project/context";
 import { NavigationComponent } from "project-editor/project/NavigationComponent";
 import { EditorComponent } from "project-editor/project/EditorComponent";
-import { IPanel } from "project-editor/store";
+import { IPanel, LayoutModels } from "project-editor/store";
 import {
     MEMORY_HASH,
     UNSTAGED_HASH,
@@ -26,6 +27,14 @@ import {
     STAGED_HASH
 } from "project-editor/store/ui-state";
 import { diff, getRevisions } from "project-editor/features/changes/diff";
+import { Delta } from "jsondiffpatch";
+import {
+    Body,
+    ToolbarHeader,
+    VerticalHeaderWithBody
+} from "eez-studio-ui/header-with-body";
+import { Toolbar } from "eez-studio-ui/toolbar";
+import { IconAction } from "eez-studio-ui/action";
 
 export const ChangesNavigation = observer(
     class ChangesNavigation extends NavigationComponent {
@@ -44,25 +53,27 @@ export const ChangesNavigation = observer(
         }
 
         async componentDidMount() {
+            this.refresh(false);
+        }
+
+        refresh = async (forceGitRefresh: boolean = true) => {
             runInAction(() => {
                 this.loading = true;
             });
 
-            let revisions: Revision[] | undefined;
-            try {
-                revisions = await getRevisions(this.context);
-            } catch (err) {
-                revisions = undefined;
-            }
+            let revisions: Revision[] = await getRevisions(
+                this.context,
+                forceGitRefresh
+            );
 
             runInAction(() => {
                 this.context.uiStateStore.revisions = revisions;
                 this.loading = false;
             });
-        }
+        };
 
-        get nodes(): IListNode<Revision>[] | undefined {
-            return this.context.uiStateStore.revisions?.map(revision => ({
+        get nodes(): IListNode<Revision>[] {
+            return this.context.uiStateStore.revisions.map(revision => ({
                 id: revision.hash,
                 label: revision.message,
                 data: revision,
@@ -73,35 +84,53 @@ export const ChangesNavigation = observer(
         }
 
         render() {
-            if (this.loading) {
-                return <Loader className="" centered={true} />;
-            }
-
-            return this.nodes ? (
-                <List
-                    tabIndex={0}
-                    nodes={this.nodes}
-                    selectNode={action((node: IListNode<Revision>) => {
-                        this.context.uiStateStore.selectedRevisionHash =
-                            node.data.hash;
-                    })}
-                    renderNode={(node: IListNode<Revision>) => (
-                        <div className="pb-2">
-                            <div>{node.data.message}</div>
-                            <div className="fw-light">
-                                {node.data.hash != MEMORY_HASH &&
-                                node.data.hash != UNSTAGED_HASH &&
-                                node.data.hash != STAGED_HASH
-                                    ? `${node.data.hash.slice(0, 8)} • ${
-                                          node.data.author_name
-                                      } • ${moment(node.data.date).calendar()}`
-                                    : ""}
-                            </div>
-                        </div>
-                    )}
-                ></List>
-            ) : (
-                "Not a git repository"
+            return (
+                <VerticalHeaderWithBody style={{ height: "100%" }}>
+                    <ToolbarHeader>
+                        <Toolbar>
+                            <IconAction
+                                icon="material:refresh"
+                                title="Refresh"
+                                onClick={this.refresh}
+                            />
+                        </Toolbar>
+                    </ToolbarHeader>
+                    <Body tabIndex={0}>
+                        {this.loading ? (
+                            <Loader className="" centered={true} />
+                        ) : (
+                            <List
+                                tabIndex={0}
+                                nodes={this.nodes}
+                                selectNode={action(
+                                    (node: IListNode<Revision>) => {
+                                        this.context.uiStateStore.selectedRevisionHash =
+                                            node.data.hash;
+                                    }
+                                )}
+                                renderNode={(node: IListNode<Revision>) => (
+                                    <div className="pb-2">
+                                        <div>{node.data.message}</div>
+                                        <div className="fw-light">
+                                            {node.data.hash != MEMORY_HASH &&
+                                            node.data.hash != UNSTAGED_HASH &&
+                                            node.data.hash != STAGED_HASH
+                                                ? `${node.data.hash.slice(
+                                                      0,
+                                                      8
+                                                  )} • ${
+                                                      node.data.author_name
+                                                  } • ${moment(
+                                                      node.data.date
+                                                  ).calendar()}`
+                                                : ""}
+                                        </div>
+                                    </div>
+                                )}
+                            ></List>
+                        )}
+                    </Body>
+                </VerticalHeaderWithBody>
             );
         }
     }
@@ -112,7 +141,13 @@ export const ChangesEditor = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
-        delta: string | undefined;
+        delta:
+            | {
+                  delta: Delta;
+                  html: string;
+                  annotated: string;
+              }
+            | undefined;
         progressPercent: number | undefined;
 
         activeTask: () => void | undefined;
@@ -143,12 +178,15 @@ export const ChangesEditor = observer(
                     this.progressPercent = 0;
                 });
 
-                let revisionContent: string | undefined = undefined;
+                let revisionContent:
+                    | {
+                          delta: Delta;
+                          html: string;
+                          annotated: string;
+                      }
+                    | undefined = undefined;
 
-                if (
-                    this.context.uiStateStore.selectedRevisionHash &&
-                    this.context.uiStateStore.revisions
-                ) {
+                if (this.context.uiStateStore.selectedRevisionHash) {
                     const index = this.context.uiStateStore.revisions.findIndex(
                         revision =>
                             revision.hash ==
@@ -213,6 +251,38 @@ export const ChangesEditor = observer(
             this.context.navigationStore.setSelectedPanel(this);
         };
 
+        factory = (node: FlexLayout.TabNode) => {
+            var component = node.getComponent();
+
+            if (component === "html") {
+                return (
+                    <div
+                        dangerouslySetInnerHTML={{
+                            __html: this.delta?.html || ""
+                        }}
+                    ></div>
+                );
+            }
+
+            if (component === "json") {
+                return (
+                    <pre>{JSON.stringify(this.delta?.delta, undefined, 2)}</pre>
+                );
+            }
+
+            if (component === "annotated") {
+                return (
+                    <div
+                        dangerouslySetInnerHTML={{
+                            __html: this.delta?.annotated || ""
+                        }}
+                    ></div>
+                );
+            }
+
+            return null;
+        };
+
         render() {
             if (this.progressPercent != undefined) {
                 return (
@@ -223,10 +293,14 @@ export const ChangesEditor = observer(
                     />
                 );
             }
+
             return (
-                <div
-                    dangerouslySetInnerHTML={{ __html: this.delta || "" }}
-                ></div>
+                <FlexLayout.Layout
+                    model={this.context.layoutModels.changes}
+                    factory={this.factory}
+                    realtimeResize={true}
+                    font={LayoutModels.FONT_SUB}
+                />
             );
         }
     }

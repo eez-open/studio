@@ -1,4 +1,5 @@
 import { readTextFile } from "eez-studio-shared/util-electron";
+import { Delta } from "jsondiffpatch";
 import { runInAction } from "mobx";
 import path from "path";
 import type { Project } from "project-editor/project/project";
@@ -29,51 +30,85 @@ async function getProjectTopLevelDirPath(
 }
 
 export async function getRevisions(
-    projectEditorStore: ProjectEditorStore
+    projectEditorStore: ProjectEditorStore,
+    forceGitRefresh: boolean
 ): Promise<Revision[]> {
-    const projectFilePath = projectEditorStore.filePath!;
-    const projectTopLevelDirPath = await getProjectTopLevelDirPath(
-        projectFilePath
-    );
+    if (
+        !forceGitRefresh &&
+        projectEditorStore.uiStateStore.revisionsGitRefreshed
+    ) {
+        const revisions = projectEditorStore.uiStateStore.revisions.slice();
 
-    const { simpleGit } = await import("simple-git");
-    const git = simpleGit(projectTopLevelDirPath);
+        if (projectEditorStore.modified) {
+            if (revisions.length == 0 || revisions[0].hash != MEMORY_HASH) {
+                revisions.splice(0, 0, {
+                    hash: MEMORY_HASH,
+                    message: "[ Current changes ]"
+                });
+                runInAction(() => {
+                    projectEditorStore.uiStateStore.selectedRevisionHash =
+                        MEMORY_HASH;
+                });
+            }
+        } else {
+            if (revisions.length > 0 && revisions[0].hash == MEMORY_HASH) {
+                revisions.splice(0, 1);
+            }
+        }
 
-    const projectGitRelativeFilePath = path
-        .relative(projectTopLevelDirPath, projectFilePath)
-        .split(path.sep)
-        .join(path.posix.sep);
+        return revisions;
+    }
 
-    const log = await git.log({
-        file: projectGitRelativeFilePath
-    });
+    let revisions: Revision[] = [];
 
-    const revisions: Revision[] = [];
+    try {
+        const projectFilePath = projectEditorStore.filePath!;
+        const projectTopLevelDirPath = await getProjectTopLevelDirPath(
+            projectFilePath
+        );
+
+        const { simpleGit } = await import("simple-git");
+        const git = simpleGit(projectTopLevelDirPath);
+
+        const projectGitRelativeFilePath = path
+            .relative(projectTopLevelDirPath, projectFilePath)
+            .split(path.sep)
+            .join(path.posix.sep);
+
+        const log = await git.log({
+            file: projectGitRelativeFilePath
+        });
+
+        const status = await git.status();
+
+        if (status.modified.indexOf(projectGitRelativeFilePath) != -1) {
+            revisions.push({
+                hash: UNSTAGED_HASH,
+                message: "[ Unstaged ]"
+            });
+        }
+
+        if (status.staged.indexOf(projectGitRelativeFilePath) != -1) {
+            revisions.push({
+                hash: STAGED_HASH,
+                message: "[ Staged ]"
+            });
+        }
+
+        revisions.push(...log.all);
+
+        projectEditorStore.uiStateStore.revisionsGitRefreshed = true;
+    } catch (err) {
+        console.error(err);
+        revisions = [];
+    }
 
     if (projectEditorStore.modified) {
-        revisions.push({
+        revisions.splice(0, 0, {
             hash: MEMORY_HASH,
             message: "[ Current changes ]"
         });
     }
-
-    const status = await git.status();
-
-    if (status.modified.indexOf(projectGitRelativeFilePath) != -1) {
-        revisions.push({
-            hash: UNSTAGED_HASH,
-            message: "[ Unstaged ]"
-        });
-    }
-
-    if (status.staged.indexOf(projectGitRelativeFilePath) != -1) {
-        revisions.push({
-            hash: STAGED_HASH,
-            message: "[ Staged ]"
-        });
-    }
-
-    revisions.push(...log.all);
 
     return revisions;
 }
@@ -148,7 +183,14 @@ export async function diff(
     revisionBefore: Revision | undefined,
     revisionAfter: Revision,
     progressCallback: (percent: number) => void
-): Promise<string | undefined> {
+): Promise<
+    | {
+          delta: Delta;
+          html: string;
+          annotated: string;
+      }
+    | undefined
+> {
     const jsondiffpatch = await import("jsondiffpatch");
 
     const SUBTASK_PERCENT = 45;
@@ -179,9 +221,18 @@ export async function diff(
     }
 
     jsondiffpatch.formatters.html.hideUnchanged();
-    const result = jsondiffpatch.formatters.html.format(delta, beforeContent);
+    const html = jsondiffpatch.formatters.html.format(delta, beforeContent);
+
+    const annotated = jsondiffpatch.formatters.annotated.format(
+        delta,
+        beforeContent
+    );
 
     progressCallback(100);
 
-    return result;
+    return {
+        delta,
+        html,
+        annotated
+    };
 }

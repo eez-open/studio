@@ -40,7 +40,8 @@ export class UIStateStore {
 
     objectUIStates = new Map<string, any>();
 
-    revisions: Revision[] | undefined = undefined;
+    revisionsGitRefreshed: boolean = false;
+    revisions: Revision[] = [];
     selectedRevisionHash: string | undefined;
 
     get pageEditorFrontFace() {
