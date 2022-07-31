@@ -481,7 +481,7 @@ export const ChangesTree = observer(
                         label: (
                             <>
                                 <Icon
-                                    icon="material:add"
+                                    icon="material:add_box"
                                     size={16}
                                     style={{ transform: "translateY(-2px)" }}
                                 />
