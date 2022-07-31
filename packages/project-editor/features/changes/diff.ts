@@ -113,17 +113,25 @@ export async function getRevisions(
     return revisions;
 }
 
+interface Content {
+    project: Project;
+    projectJs: any;
+}
+
 export async function getRevisionContent(
     projectEditorStore: ProjectEditorStore,
     revision: Revision,
     progressCallback: (percent: number) => void
-): Promise<string> {
+): Promise<Content> {
     if (revision.hash == MEMORY_HASH) {
         const json = getJSON(projectEditorStore);
         progressCallback(50);
-        const result = JSON.parse(json);
+        const projectJs = JSON.parse(json);
         progressCallback(100);
-        return result;
+        return {
+            project: projectEditorStore.project,
+            projectJs
+        };
     }
 
     const projectFilePath = projectEditorStore.filePath!;
@@ -169,13 +177,24 @@ export async function getRevisionContent(
 
     progressCallback(75);
 
-    const result = JSON.parse(json);
+    const projectJs = JSON.parse(json);
 
     revisionProjectEditorStore.unmount();
 
     progressCallback(100);
 
-    return result;
+    return {
+        project: revisionProjectEditorStore.project,
+        projectJs
+    };
+}
+
+export interface DiffResult {
+    delta: Delta;
+    html: string;
+    annotated: string;
+    beforeContent: Content;
+    afterContent: Content;
 }
 
 export async function diff(
@@ -183,14 +202,7 @@ export async function diff(
     revisionBefore: Revision | undefined,
     revisionAfter: Revision,
     progressCallback: (percent: number) => void
-): Promise<
-    | {
-          delta: Delta;
-          html: string;
-          annotated: string;
-      }
-    | undefined
-> {
+): Promise<DiffResult | undefined> {
     const jsondiffpatch = await import("jsondiffpatch");
 
     const SUBTASK_PERCENT = 45;
@@ -201,13 +213,16 @@ export async function diff(
         percent => progressCallback(SUBTASK_PERCENT * (percent / 100))
     );
 
-    const beforeContent = revisionBefore
+    const beforeContent: Content = revisionBefore
         ? await getRevisionContent(
               projectEditorStore,
               revisionBefore,
               percent => progressCallback(SUBTASK_PERCENT * (1 + percent / 100))
           )
-        : {};
+        : {
+              project: {} as any,
+              projectJs: {}
+          };
 
     const delta = jsondiffpatch
         .create({
@@ -215,17 +230,20 @@ export async function diff(
                 return obj.objid || index;
             }
         })
-        .diff(beforeContent, afterContent);
+        .diff(beforeContent.projectJs, afterContent.projectJs);
     if (!delta) {
         return undefined;
     }
 
     jsondiffpatch.formatters.html.hideUnchanged();
-    const html = jsondiffpatch.formatters.html.format(delta, beforeContent);
+    const html = jsondiffpatch.formatters.html.format(
+        delta,
+        beforeContent.projectJs
+    );
 
     const annotated = jsondiffpatch.formatters.annotated.format(
         delta,
-        beforeContent
+        beforeContent.projectJs
     );
 
     progressCallback(100);
@@ -233,6 +251,8 @@ export async function diff(
     return {
         delta,
         html,
-        annotated
+        annotated,
+        beforeContent,
+        afterContent
     };
 }
