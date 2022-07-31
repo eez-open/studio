@@ -47,6 +47,7 @@ export class LayoutModels {
     static TEXT_RESOURCES_TAB_ID = "TEXT_RESOURCES";
     static TEXTS_STATISTICS_TAB_ID = "TEXTS_STATISTICS";
 
+    static CHANGES_TREE_TAB_ID = "CHANGES_TREE";
     static CHANGES_HTML_TAB_ID = "CHANGES_HTML";
     static CHANGES_JSON_TAB_ID = "CHANGES_JSON";
     static CHANGES_ANNOTATED_TAB_ID = "CHANGES_ANNOTATED";
@@ -862,7 +863,7 @@ export class LayoutModels {
             },
             {
                 name: "changes",
-                version: 4,
+                version: 6,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: [],
@@ -872,6 +873,13 @@ export class LayoutModels {
                             {
                                 type: "tabset",
                                 children: [
+                                    {
+                                        type: "tree",
+                                        enableClose: false,
+                                        name: "Tree",
+                                        id: LayoutModels.CHANGES_TREE_TAB_ID,
+                                        component: "tree"
+                                    },
                                     {
                                         type: "tab",
                                         enableClose: false,

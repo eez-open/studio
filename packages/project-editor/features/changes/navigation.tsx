@@ -19,7 +19,7 @@ import { List, IListNode } from "eez-studio-ui/list";
 import { ProjectContext } from "project-editor/project/context";
 import { NavigationComponent } from "project-editor/project/NavigationComponent";
 import { EditorComponent } from "project-editor/project/EditorComponent";
-import { IPanel, LayoutModels } from "project-editor/store";
+import { getLabel, IPanel, LayoutModels } from "project-editor/store";
 import {
     MEMORY_HASH,
     UNSTAGED_HASH,
@@ -35,6 +35,7 @@ import {
 } from "eez-studio-ui/header-with-body";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
+import { ITreeNode, Tree } from "eez-studio-ui/tree";
 
 export const ChangesNavigation = observer(
     class ChangesNavigation extends NavigationComponent {
@@ -254,6 +255,13 @@ export const ChangesEditor = observer(
         factory = (node: FlexLayout.TabNode) => {
             var component = node.getComponent();
 
+            if (component === "tree") {
+                if (!this.delta) {
+                    return null;
+                }
+                return <ChangesTree delta={this.delta.delta} />;
+            }
+
             if (component === "html") {
                 return (
                     <div
@@ -300,6 +308,209 @@ export const ChangesEditor = observer(
                     factory={this.factory}
                     realtimeResize={true}
                     font={LayoutModels.FONT_SUB}
+                />
+            );
+        }
+    }
+);
+
+export const ChangesTree = observer(
+    class ChangesTree extends React.Component<{ delta: Delta }> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        get rootNode(): ITreeNode {
+            return {
+                id: "",
+                label: "",
+                children: this.getChildren(
+                    this.props.delta,
+                    this.context.project
+                ),
+                selected: false,
+                expanded: true,
+                data: undefined
+            };
+        }
+
+        getChildren(delta: Delta, eezObject: any): ITreeNode[] {
+            function getValueLabel(obj: any, key: any, defaultLabel: any) {
+                if (!obj) {
+                    return defaultLabel;
+                }
+                if (!obj[key]) {
+                    return defaultLabel;
+                }
+
+                try {
+                    return getLabel(obj[key]);
+                } catch (err) {
+                    return defaultLabel;
+                }
+            }
+
+            if (delta._t == "a") {
+                return Object.keys(delta)
+                    .filter(key => key != "_t")
+                    .map(arrayIndex => {
+                        const value = delta[arrayIndex];
+                        const id = arrayIndex.toString();
+
+                        if (arrayIndex[0] == "_") {
+                            const index = parseInt(arrayIndex.slice(1));
+
+                            if (value[2] == 3) {
+                                const destinationIndex = value[1];
+
+                                const label = getValueLabel(
+                                    eezObject,
+                                    index,
+                                    index
+                                );
+
+                                return {
+                                    id,
+                                    label: `${label}: moved from position ${index} to position ${destinationIndex}`,
+                                    children: [],
+                                    selected: false,
+                                    expanded: true,
+                                    data: undefined
+                                };
+                            }
+
+                            const label = getValueLabel(value, 0, index);
+
+                            return {
+                                id,
+                                label: `${label}: removed`,
+                                children: [],
+                                selected: false,
+                                expanded: true,
+                                data: undefined
+                            };
+                        }
+
+                        const index = parseInt(arrayIndex);
+
+                        const label = getValueLabel(eezObject, index, index);
+
+                        if (Array.isArray(value)) {
+                            if (value.length == 1) {
+                                return {
+                                    id,
+                                    label: `${label}: value added ${JSON.stringify(
+                                        value[0]
+                                    )}`,
+                                    children: [],
+                                    selected: false,
+                                    expanded: true,
+                                    data: undefined
+                                };
+                            } else if (value.length == 2) {
+                                return {
+                                    id,
+                                    label: `${label}: value changed ${JSON.stringify(
+                                        value[0]
+                                    )} -> ${JSON.stringify(value[1])}`,
+                                    children: [],
+                                    selected: false,
+                                    expanded: true,
+                                    data: undefined
+                                };
+                            } else {
+                                return {
+                                    id,
+                                    label: `${label}: value deleted ${JSON.stringify(
+                                        value[0]
+                                    )}`,
+                                    children: [],
+                                    selected: false,
+                                    expanded: true,
+                                    data: undefined
+                                };
+                            }
+                        } else {
+                            return {
+                                id,
+                                label,
+                                children: this.getChildren(
+                                    value,
+                                    eezObject[index]
+                                ),
+                                selected: false,
+                                expanded: true,
+                                data: undefined
+                            };
+                        }
+                    });
+            }
+
+            return Object.keys(delta).map(key => {
+                const value = delta[key];
+
+                const id = key;
+                const label = getValueLabel(eezObject, key, key);
+
+                if (Array.isArray(value)) {
+                    if (value.length == 1) {
+                        return {
+                            id,
+                            label: `${label}: value added ${JSON.stringify(
+                                value[0]
+                            )}`,
+                            children: [],
+                            selected: false,
+                            expanded: true,
+                            data: undefined
+                        };
+                    } else if (value.length == 2) {
+                        return {
+                            id,
+                            label: `${label}: value changed ${JSON.stringify(
+                                value[0]
+                            )} -> ${JSON.stringify(value[1])}`,
+                            children: [],
+                            selected: false,
+                            expanded: true,
+                            data: undefined
+                        };
+                    } else {
+                        return {
+                            id,
+                            label: `${label}: value deleted ${JSON.stringify(
+                                value[0]
+                            )}`,
+                            children: [],
+                            selected: false,
+                            expanded: true,
+                            data: undefined
+                        };
+                    }
+                } else {
+                    return {
+                        id,
+                        label,
+                        children: this.getChildren(value, eezObject[key]),
+                        selected: false,
+                        expanded: true,
+                        data: undefined
+                    };
+                }
+            });
+        }
+
+        selectNode = (treeNode: ITreeNode) => {};
+
+        render() {
+            const { delta } = this.props;
+            if (!delta) {
+                return null;
+            }
+            return (
+                <Tree
+                    showOnlyChildren={true}
+                    rootNode={this.rootNode}
+                    selectNode={this.selectNode}
                 />
             );
         }

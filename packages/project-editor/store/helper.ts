@@ -290,6 +290,13 @@ export function getLabel(object: IEezObject): string {
         return object;
     }
 
+    if (isArray(object)) {
+        return getObjectPropertyDisplayName(
+            getParent(object),
+            getPropertyInfo(object)
+        );
+    }
+
     const label = getClassInfo(object).label;
     if (label) {
         return label(object);
