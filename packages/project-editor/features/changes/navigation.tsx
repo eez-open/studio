@@ -11,7 +11,6 @@ import {
     IReactionDisposer
 } from "mobx";
 import { observer } from "mobx-react";
-import * as FlexLayout from "flexlayout-react";
 
 import { Loader } from "eez-studio-ui/loader";
 import { List, IListNode } from "eez-studio-ui/list";
@@ -19,12 +18,7 @@ import { List, IListNode } from "eez-studio-ui/list";
 import { ProjectContext } from "project-editor/project/context";
 import { NavigationComponent } from "project-editor/project/NavigationComponent";
 import { EditorComponent } from "project-editor/project/EditorComponent";
-import {
-    getClassInfo,
-    getLabel,
-    IPanel,
-    LayoutModels
-} from "project-editor/store";
+import { getClassInfo, getLabel, IPanel } from "project-editor/store";
 import {
     MEMORY_HASH,
     UNSTAGED_HASH,
@@ -50,6 +44,8 @@ import {
     findPropertyByNameInClassInfo,
     getObjectPropertyDisplayName
 } from "project-editor/core/object";
+import { ProjectEditor } from "project-editor/project-editor-interface";
+import { getProjectFeatures } from "project-editor/store/features";
 
 export const ChangesNavigation = observer(
     class ChangesNavigation extends NavigationComponent {
@@ -216,6 +212,8 @@ export const ChangesEditor = observer(
                                 this.progressPercent = Math.round(percent);
                             })
                         );
+
+                        console.log("DELTA", revisionContent?.delta);
                     }
                 } else {
                     await new Promise(resolve => setTimeout(resolve, 100));
@@ -254,47 +252,6 @@ export const ChangesEditor = observer(
             this.context.navigationStore.setSelectedPanel(this);
         };
 
-        factory = (node: FlexLayout.TabNode) => {
-            var component = node.getComponent();
-
-            if (component === "tree") {
-                if (!this.diffResult) {
-                    return null;
-                }
-                return <ChangesTree diffResult={this.diffResult} />;
-            }
-
-            if (component === "html") {
-                return (
-                    <div
-                        dangerouslySetInnerHTML={{
-                            __html: this.diffResult?.html || ""
-                        }}
-                    ></div>
-                );
-            }
-
-            if (component === "json") {
-                return (
-                    <pre>
-                        {JSON.stringify(this.diffResult?.delta, undefined, 2)}
-                    </pre>
-                );
-            }
-
-            if (component === "annotated") {
-                return (
-                    <div
-                        dangerouslySetInnerHTML={{
-                            __html: this.diffResult?.annotated || ""
-                        }}
-                    ></div>
-                );
-            }
-
-            return null;
-        };
-
         render() {
             if (this.progressPercent != undefined) {
                 return (
@@ -306,14 +263,11 @@ export const ChangesEditor = observer(
                 );
             }
 
-            return (
-                <FlexLayout.Layout
-                    model={this.context.layoutModels.changes}
-                    factory={this.factory}
-                    realtimeResize={true}
-                    font={LayoutModels.FONT_SUB}
-                />
-            );
+            if (!this.diffResult) {
+                return null;
+            }
+
+            return <ChangesTree diffResult={this.diffResult} />;
         }
     }
 );
@@ -358,9 +312,10 @@ export const ChangesTree = observer(
                             const index = parseInt(arrayIndex.slice(1));
 
                             if (value[2] == 3) {
+                                // element moved inside an array
                                 const destinationIndex = value[1];
 
-                                const label = this.getValueLabel(
+                                const label = this.getArrayElementLabel(
                                     eezObjectAfter,
                                     index,
                                     index
@@ -368,7 +323,9 @@ export const ChangesTree = observer(
 
                                 return {
                                     id,
-                                    label: `${label}: moved from position ${index} to position ${destinationIndex}`,
+                                    label: (
+                                        <span className="item-moved">{`${label}: moved from position ${index} to position ${destinationIndex}`}</span>
+                                    ),
                                     children: [],
                                     selected: false,
                                     expanded: true,
@@ -376,7 +333,8 @@ export const ChangesTree = observer(
                                 };
                             }
 
-                            const label = this.getValueLabel(
+                            // element removed from the array
+                            const label = this.getArrayElementLabel(
                                 eezObjectBefore,
                                 index,
                                 index
@@ -385,17 +343,9 @@ export const ChangesTree = observer(
                             return {
                                 id,
                                 label: (
-                                    <>
-                                        <Icon
-                                            className="pe-1 text-danger"
-                                            icon="material:delete"
-                                            size={16}
-                                            style={{
-                                                transform: "translateY(-1px)"
-                                            }}
-                                        />
-                                        <span className="pe-1">{label}</span>
-                                    </>
+                                    <span className="item-removed">
+                                        {label}
+                                    </span>
                                 ),
                                 children: [],
                                 selected: false,
@@ -404,9 +354,10 @@ export const ChangesTree = observer(
                             };
                         }
 
+                        // element added to the array
                         const index = parseInt(arrayIndex);
 
-                        const label = this.getValueLabel(
+                        const label = this.getArrayElementLabel(
                             eezObjectAfter,
                             index,
                             index
@@ -423,28 +374,43 @@ export const ChangesTree = observer(
                     });
             }
 
-            return Object.keys(delta).map(key =>
-                this.getTreeNode(
-                    delta[key],
-                    key,
-                    key,
-                    undefined,
-                    eezObjectBefore,
-                    eezObjectAfter
-                )
-            );
+            return Object.keys(delta)
+                .filter(key => this.filterProperties(eezObjectAfter, key))
+                .map(key =>
+                    this.getTreeNode(
+                        delta[key],
+                        key,
+                        key,
+                        undefined,
+                        eezObjectBefore,
+                        eezObjectAfter
+                    )
+                );
         }
 
-        getValueLabel(obj: any, key: any, defaultLabel: any) {
+        filterProperties(object: any, key: any) {
+            if (
+                object instanceof ProjectEditor.ProjectClass &&
+                key == "lastObjid"
+            ) {
+                return false;
+            }
+            return true;
+        }
+
+        getArrayElementLabel(obj: any, key: any, defaultLabel: any) {
             if (!obj) {
                 return defaultLabel;
             }
-            if (!obj[key]) {
+
+            const subobject = obj[key];
+
+            if (!subobject) {
                 return defaultLabel;
             }
 
             try {
-                return getLabel(obj[key]);
+                return getLabel(subobject);
             } catch (err) {
                 return defaultLabel;
             }
@@ -458,38 +424,64 @@ export const ChangesTree = observer(
             eezObjectBefore: any,
             eezObjectAfter: any
         ) {
-            if (label == undefined) {
-                const propertyInfo = findPropertyByNameInClassInfo(
-                    getClassInfo(eezObjectAfter),
-                    key
-                );
+            let icon: string | React.ReactNode | undefined;
+            let isProject: boolean = false;
 
-                if (propertyInfo) {
-                    label = getObjectPropertyDisplayName(
-                        eezObjectAfter,
-                        propertyInfo
+            if (label == undefined) {
+                if (eezObjectAfter instanceof ProjectEditor.ProjectClass) {
+                    isProject = true;
+
+                    const features = getProjectFeatures();
+                    const feature = features.find(
+                        feature => feature.key == key
                     );
-                } else {
-                    label = key;
+
+                    if (feature) {
+                        icon = feature.icon;
+                    } else {
+                        icon =
+                            getClassInfo((eezObjectAfter as any)[key]).icon ||
+                            "extension";
+                    }
                 }
+
+                if (label == undefined) {
+                    const propertyInfo = findPropertyByNameInClassInfo(
+                        getClassInfo(eezObjectAfter),
+                        key
+                    );
+
+                    if (propertyInfo) {
+                        label = getObjectPropertyDisplayName(
+                            eezObjectAfter,
+                            propertyInfo
+                        );
+                    } else {
+                        label = key;
+                    }
+                }
+            }
+
+            if (icon && typeof icon == "string") {
+                icon = <Icon icon={`material:${icon}`} size={18} />;
             }
 
             if (Array.isArray(value)) {
                 if (value.length == 1) {
+                    // added
                     return {
                         id,
-                        label: (
-                            <>
-                                <Icon
-                                    icon="material:add_box"
-                                    size={16}
-                                    style={{ transform: "translateY(-2px)" }}
-                                />
-                                <span className="pe-1">{label}</span>
-                                <span className="text-success">
-                                    {JSON.stringify(value[0])}
-                                </span>
-                            </>
+                        label: isProject ? (
+                            <span className="feature-row feature-added">
+                                <span className="feature-icon">{icon}</span>
+                                <span className="feature-label">{label}</span>
+                            </span>
+                        ) : (
+                            <span className="property-added">
+                                {typeof value[0] == "object"
+                                    ? label
+                                    : `${label}: ${JSON.stringify(value[0])}`}
+                            </span>
                         ),
                         children: [],
                         selected: false,
@@ -497,23 +489,22 @@ export const ChangesTree = observer(
                         data: undefined
                     };
                 } else if (value.length == 2) {
+                    // edited
                     return {
                         id,
                         label: (
-                            <>
-                                <Icon
-                                    className="pe-1"
-                                    icon="material:edit"
-                                    size={16}
-                                />
-                                <span className="pe-1">{label}</span>
-                                <span className="pe-1 text-decoration-line-through text-danger">
+                            <span className="property-changed">
+                                <span className="property-label">
+                                    {label}:{" "}
+                                </span>
+                                <span className="property-old-value">
                                     {JSON.stringify(value[0])}
                                 </span>
-                                <span className="text-success">
+                                <span> </span>
+                                <span className="property-new-value">
                                     {JSON.stringify(value[1])}
                                 </span>
-                            </>
+                            </span>
                         ),
                         children: [],
                         selected: false,
@@ -521,21 +512,18 @@ export const ChangesTree = observer(
                         data: undefined
                     };
                 } else {
+                    // removed
                     return {
                         id,
-                        label: (
-                            <>
-                                <Icon
-                                    className="pe-1"
-                                    icon="material:delete"
-                                    size={16}
-                                    style={{ transform: "translateY(-1px)" }}
-                                />
-                                <span className="pe-1">{label}</span>
-                                <span className="pe-1 text-decoration-line-through text-danger">
-                                    {JSON.stringify(value[0])}
-                                </span>
-                            </>
+                        label: isProject ? (
+                            <span className="feature-row feature-removed">
+                                <span className="feature-icon">{icon}</span>
+                                <span className="feature-label">{label}</span>
+                            </span>
+                        ) : (
+                            <span className="property-removed">
+                                {`${label}: ${JSON.stringify(value[0])}`}
+                            </span>
                         ),
                         children: [],
                         selected: false,
@@ -544,9 +532,23 @@ export const ChangesTree = observer(
                     };
                 }
             } else {
+                // changed
                 return {
                     id,
-                    label,
+                    label: isProject ? (
+                        <span className="feature-row">
+                            <span className="feature-icon">
+                                {icon && typeof icon == "string" ? (
+                                    <Icon icon={`material:${icon}`} size={20} />
+                                ) : (
+                                    icon
+                                )}
+                            </span>
+                            <span className="feature-label">{label}</span>
+                        </span>
+                    ) : (
+                        label
+                    ),
                     children: this.getChildren(
                         value,
                         eezObjectBefore[key],
@@ -564,9 +566,11 @@ export const ChangesTree = observer(
         render() {
             return (
                 <Tree
+                    className="EezStudio_ChangesEditor"
                     showOnlyChildren={true}
                     rootNode={this.rootNode}
                     selectNode={this.selectNode}
+                    collapsable={true}
                 />
             );
         }

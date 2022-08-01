@@ -47,11 +47,6 @@ export class LayoutModels {
     static TEXT_RESOURCES_TAB_ID = "TEXT_RESOURCES";
     static TEXTS_STATISTICS_TAB_ID = "TEXTS_STATISTICS";
 
-    static CHANGES_TREE_TAB_ID = "CHANGES_TREE";
-    static CHANGES_HTML_TAB_ID = "CHANGES_HTML";
-    static CHANGES_JSON_TAB_ID = "CHANGES_JSON";
-    static CHANGES_ANNOTATED_TAB_ID = "CHANGES_ANNOTATED";
-
     static BREAKPOINTS_TAB: FlexLayout.IJsonTabNode = {
         type: "tab",
         enableClose: false,
@@ -103,8 +98,6 @@ export class LayoutModels {
     styles: FlexLayout.Model;
     themes: FlexLayout.Model;
     texts: FlexLayout.Model;
-
-    changes: FlexLayout.Model;
 
     constructor(public projectEditorStore: ProjectEditorStore) {
         makeObservable(this, {
@@ -860,54 +853,6 @@ export class LayoutModels {
                 },
                 get: () => this.texts,
                 set: action(model => (this.texts = model))
-            },
-            {
-                name: "changes",
-                version: 6,
-                json: {
-                    global: LayoutModels.GLOBAL_OPTIONS,
-                    borders: [],
-                    layout: {
-                        type: "row",
-                        children: [
-                            {
-                                type: "tabset",
-                                children: [
-                                    {
-                                        type: "tree",
-                                        enableClose: false,
-                                        name: "Tree",
-                                        id: LayoutModels.CHANGES_TREE_TAB_ID,
-                                        component: "tree"
-                                    },
-                                    {
-                                        type: "tab",
-                                        enableClose: false,
-                                        name: "HTML",
-                                        id: LayoutModels.CHANGES_HTML_TAB_ID,
-                                        component: "html"
-                                    },
-                                    {
-                                        type: "tab",
-                                        enableClose: false,
-                                        name: "JSON",
-                                        id: LayoutModels.CHANGES_JSON_TAB_ID,
-                                        component: "json"
-                                    },
-                                    {
-                                        type: "tab",
-                                        enableClose: false,
-                                        name: "JSON Annotated",
-                                        id: LayoutModels.CHANGES_ANNOTATED_TAB_ID,
-                                        component: "annotated"
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                },
-                get: () => this.changes,
-                set: action(model => (this.changes = model))
             }
         ];
     }

@@ -155,7 +155,9 @@ export class ProjectEditorStore {
         this.currentSearch = new ProjectEditor.documentSearch.CurrentSearch(
             this
         );
+    }
 
+    mount() {
         this.dispose1 = autorun(
             () => {
                 this.updateProjectWindowState();

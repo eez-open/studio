@@ -463,6 +463,7 @@ export class ProjectEditorTab implements IHomeTab {
 
             await initProjectEditor(tabs, ProjectEditorTab);
             const projectEditorStore = await ProjectEditorStore.create();
+            projectEditorStore.mount();
 
             if (this._filePath) {
                 await projectEditorStore.openFile(this._filePath);

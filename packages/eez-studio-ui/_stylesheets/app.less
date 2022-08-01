@@ -3,9 +3,6 @@
 @import "animate";
 @import "../../../node_modules/react-toastify/dist/ReactToastify.css";
 
-@import "../../../node_modules/jsondiffpatch/dist/formatters-styles/html.css";
-@import "../../../node_modules/jsondiffpatch/dist/formatters-styles/annotated.css";
-
 * {
     user-select: none;
 }
@@ -5503,4 +5500,86 @@ button.EezStudio_Action {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.EezStudio_ChangesEditor {
+    .EezStudio_TreeRowLabel {
+        margin-left: 0;
+    }
+
+    .EezStudio_TreeRowTriangle {
+        opacity: 50%;
+    }
+
+    .feature-row {
+        display: inline-flex;
+        align-content: center;
+
+        background: @panelHeaderColor;
+        border-radius: 4px;
+
+        padding: 2px 4px;
+
+        .feature-icon {
+            padding-right: 4px;
+            svg {
+                width: 16px;
+            }
+        }
+
+        .feature-label {
+            font-size: 110%;
+        }
+
+        &.feature-added {
+            background-color: #bbffbb;
+            color: #212529;
+        }
+
+        &.feature-removed {
+            background-color: #ffbbbb;
+            color: #212529;
+            text-decoration: line-through;
+        }
+    }
+
+    .property-added {
+        background-color: #bbffbb;
+        color: #212529;
+    }
+
+    .property-removed {
+        background-color: #ffbbbb;
+        color: #212529;
+        text-decoration: line-through;
+    }
+
+    .property-changed {
+        .property-old-value {
+            background-color: #ffbbbb;
+            color: #212529;
+            text-decoration: line-through;
+        }
+
+        .property-new-value {
+            background-color: #bbffbb;
+            color: #212529;
+        }
+    }
+
+    .item-added {
+        background-color: #bbffbb;
+        color: #212529;
+    }
+
+    .item-moved {
+        background-color: #ffffbb;
+        color: #212529;
+    }
+
+    .item-removed {
+        background-color: #ffbbbb;
+        color: #212529;
+        text-decoration: line-through;
+    }
 }

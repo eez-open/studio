@@ -179,8 +179,6 @@ export async function getRevisionContent(
 
     const projectJs = JSON.parse(json);
 
-    revisionProjectEditorStore.unmount();
-
     progressCallback(100);
 
     return {
@@ -191,8 +189,6 @@ export async function getRevisionContent(
 
 export interface DiffResult {
     delta: Delta;
-    html: string;
-    annotated: string;
     beforeContent: Content;
     afterContent: Content;
 }
@@ -235,23 +231,10 @@ export async function diff(
         return undefined;
     }
 
-    jsondiffpatch.formatters.html.hideUnchanged();
-    const html = jsondiffpatch.formatters.html.format(
-        delta,
-        beforeContent.projectJs
-    );
-
-    const annotated = jsondiffpatch.formatters.annotated.format(
-        delta,
-        beforeContent.projectJs
-    );
-
     progressCallback(100);
 
     return {
         delta,
-        html,
-        annotated,
         beforeContent,
         afterContent
     };

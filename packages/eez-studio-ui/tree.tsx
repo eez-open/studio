@@ -25,16 +25,9 @@ export const TreeRow = observer(
         onDoubleClick?: () => void;
         getExpanded: (level: number, node: ITreeNode) => boolean;
         toggleExpanded: (level: number, node: ITreeNode) => void;
+        collapsable: boolean;
     }> {
-        constructor(props: {
-            showOnlyChildren: boolean;
-            node: ITreeNode;
-            level: number;
-            selectNode: (node: ITreeNode) => void;
-            onDoubleClick?: () => void;
-            getExpanded: (level: number, node: ITreeNode) => boolean;
-            toggleExpanded: (level: number, node: ITreeNode) => void;
-        }) {
+        constructor(props: any) {
             super(props);
 
             makeObservable(this, {
@@ -79,6 +72,7 @@ export const TreeRow = observer(
                             onDoubleClick={this.props.onDoubleClick}
                             getExpanded={this.props.getExpanded}
                             toggleExpanded={this.props.toggleExpanded}
+                            collapsable={this.props.collapsable}
                         />
                     );
                 });
@@ -98,7 +92,10 @@ export const TreeRow = observer(
                 let label: JSX.Element | undefined;
                 let triangle: JSX.Element | undefined;
 
-                if (this.props.node.children.length > 0) {
+                if (
+                    this.props.collapsable &&
+                    this.props.node.children.length > 0
+                ) {
                     let triangleClassName = classNames(
                         "EezStudio_TreeRowTriangle",
                         {
@@ -172,6 +169,7 @@ export const Tree = observer(
             onDoubleClick?: () => void;
             className?: string;
             style?: React.CSSProperties;
+            collapsable?: boolean;
         },
         {}
     > {
@@ -213,6 +211,7 @@ export const Tree = observer(
                         onDoubleClick={this.props.onDoubleClick}
                         getExpanded={this.getExpanded}
                         toggleExpanded={this.toggleExpanded}
+                        collapsable={this.props.collapsable ?? true}
                     />
                 </div>
             );
