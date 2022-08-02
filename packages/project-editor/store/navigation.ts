@@ -320,7 +320,7 @@ export class NavigationStore {
                     result.subObject
                 );
                 const editorState = editor.state;
-                if (editorState) {
+                if (editorState && editorState.selectObjectsAndEnsureVisible) {
                     editorState.selectObjectsAndEnsureVisible(objects);
                 }
             }

@@ -84,7 +84,10 @@ const AddButton = observer(
                         this.props.listAdapter.getItemFromId(getId(aNewItem))!
                     );
 
-                    const result = ProjectEditor.getEditorComponent(aNewItem);
+                    const result = ProjectEditor.getEditorComponent(
+                        aNewItem,
+                        undefined
+                    );
                     if (result) {
                         this.context.editorsStore.openEditor(
                             result.object,
@@ -219,7 +222,7 @@ export const ListNavigation = observer(
                 return;
             }
 
-            const result = ProjectEditor.getEditorComponent(object);
+            const result = ProjectEditor.getEditorComponent(object, undefined);
             if (result) {
                 this.context.editorsStore.openEditor(
                     result.object,

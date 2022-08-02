@@ -3,17 +3,21 @@ import React from "react";
 import { IEezObject } from "project-editor/core/object";
 
 export interface IEditorState {
-    loadState(state: any): void;
-    saveState(): any;
-    selectObject(object: IEezObject): void;
-    selectObjects(objects: IEezObject[]): void;
-    selectObjectsAndEnsureVisible(objects: IEezObject[]): void;
+    loadState?(state: any): void;
+    saveState?(): any;
+    selectObject?(object: IEezObject): void;
+    selectObjects?(objects: IEezObject[]): void;
+    selectObjectsAndEnsureVisible?(objects: IEezObject[]): void;
+    getTitle?(editor: IEditor): string;
 }
 
 export interface IEditor {
     object: IEezObject;
     subObject?: IEezObject;
+    params?: any;
     state: IEditorState | undefined;
+
+    getConfig(): any;
 }
 
 export interface EditorComponentProps {

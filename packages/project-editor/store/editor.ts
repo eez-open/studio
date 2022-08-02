@@ -14,6 +14,7 @@ import {
 } from "project-editor/store/helper";
 import type { ProjectEditorStore } from "project-editor/store";
 import { LayoutModels } from "project-editor/store/layout-models";
+import { objectEqual } from "eez-studio-shared/util";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -21,21 +22,39 @@ export class Editor implements IEditor {
     tabId: string;
     object: IEezObject;
     subObject: IEezObject | undefined;
+    params: any;
     state: IEditorState | undefined;
 
     loading = false;
 
-    constructor(public projectEditorStore: ProjectEditorStore) {
+    constructor(
+        public projectEditorStore: ProjectEditorStore,
+        object?: IEezObject,
+        subObject?: IEezObject | undefined,
+        params?: any,
+        state?: IEditorState | undefined
+    ) {
+        if (object) {
+            this.object = object;
+        }
+        this.subObject = subObject;
+        this.params = params;
+        this.state = state;
+
         makeObservable(this, {
             object: observable,
             subObject: observable,
             state: observable,
+            params: observable,
             title: computed,
             makeActive: action
         });
     }
 
     get title() {
+        if (this.state && this.state.getTitle) {
+            return this.state.getTitle(this);
+        }
         return objectToString(this.object);
     }
 
@@ -48,7 +67,55 @@ export class Editor implements IEditor {
             }
         }
     }
+
+    getConfig(): IEditorTabConfig {
+        return {
+            objectPath: getObjectPathAsString(this.object),
+            subObjectPath: this.subObject
+                ? getObjectPathAsString(this.subObject)
+                : undefined,
+            params: this.params
+        };
+    }
+
+    compare(
+        object: IEezObject,
+        subObject: IEezObject | undefined,
+        params: any
+    ) {
+        if (this.object != object) {
+            return false;
+        }
+
+        if (this.subObject != subObject) {
+            return false;
+        }
+
+        if (this.params && !params) {
+            return false;
+        }
+
+        if (!this.params && params) {
+            return false;
+        }
+
+        if (this.params && params) {
+            if (!objectEqual(this.params, params)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
+
+type IEditorTabConfig =
+    | "string"
+    | {
+          objectPath: string;
+          subObjectPath: string | undefined;
+          params: any;
+      };
 
 export class EditorsStore {
     tabIdToEditorMap = new Map<string, Editor>();
@@ -79,7 +146,7 @@ export class EditorsStore {
 
     saveState() {
         for (const editor of this.editors) {
-            if (editor.state) {
+            if (editor.state && editor.state.saveState) {
                 editor.state.saveState();
             }
         }
@@ -123,11 +190,31 @@ export class EditorsStore {
 
         for (const tab of this.tabs) {
             const tabId = tab.getId();
-            const tabConfig = tab.getConfig();
-            const object = getObjectFromStringPath(
-                this.projectEditorStore.project,
-                tabConfig
-            );
+            const tabConfig: IEditorTabConfig = tab.getConfig();
+
+            let object: IEezObject;
+            let subObject: IEezObject | undefined;
+            let params: any;
+            if (typeof tabConfig == "string") {
+                object = getObjectFromStringPath(
+                    this.projectEditorStore.project,
+                    tabConfig
+                );
+                subObject = undefined;
+                params = undefined;
+            } else {
+                object = getObjectFromStringPath(
+                    this.projectEditorStore.project,
+                    tabConfig.objectPath
+                );
+                subObject = tabConfig.subObjectPath
+                    ? getObjectFromStringPath(
+                          this.projectEditorStore.project,
+                          tabConfig.subObjectPath
+                      )
+                    : undefined;
+                params = tabConfig.params;
+            }
 
             if (!object) {
                 this.tabsModel.doAction(FlexLayout.Actions.deleteTab(tabId));
@@ -140,6 +227,8 @@ export class EditorsStore {
 
                 editor.tabId = tabId;
                 editor.object = object;
+                editor.subObject = subObject;
+                editor.params = params;
                 editor.state = ProjectEditor.createEditorState(object);
             }
 
@@ -191,12 +280,13 @@ export class EditorsStore {
         }, 0);
     }
 
-    openEditor(object: IEezObject, subObject?: IEezObject) {
+    openEditor(object: IEezObject, subObject?: IEezObject, params?: any) {
         let editorFound: Editor | undefined;
 
         for (let i = 0; i < this.editors.length; i++) {
-            if (this.editors[i].object == object) {
+            if (this.editors[i].compare(object, subObject, params)) {
                 editorFound = this.editors[i];
+                break;
             }
         }
 
@@ -213,6 +303,7 @@ export class EditorsStore {
 
         editor.object = object;
         editor.subObject = subObject;
+        editor.params = params;
         editor.state = ProjectEditor.createEditorState(object);
 
         try {
@@ -222,7 +313,7 @@ export class EditorsStore {
                         type: "tab",
                         name: editor.title,
                         component: "editor",
-                        config: getObjectPathAsString(editor.object)
+                        config: editor.getConfig()
                     },
                     this.tabsSet.getId(),
                     FlexLayout.DockLocation.CENTER,

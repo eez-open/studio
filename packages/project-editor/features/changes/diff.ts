@@ -45,10 +45,6 @@ export async function getRevisions(
                     hash: MEMORY_HASH,
                     message: "[ Current changes ]"
                 });
-                runInAction(() => {
-                    projectEditorStore.uiStateStore.selectedRevisionHash =
-                        MEMORY_HASH;
-                });
             }
         } else {
             if (revisions.length > 0 && revisions[0].hash == MEMORY_HASH) {

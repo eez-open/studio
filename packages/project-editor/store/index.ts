@@ -843,7 +843,7 @@ export class ProjectEditorStore {
         if (this.runtime) {
             if (this.runtime.isDebuggerActive) {
                 const editorState = this.editorsStore.activeEditor?.state;
-                if (editorState) {
+                if (editorState && editorState.selectObjects) {
                     editorState.selectObjects([]);
                 }
             }

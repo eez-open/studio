@@ -821,9 +821,6 @@ export abstract class FlowTabState implements IEditorState {
         return !!this.projectEditorStore.runtime;
     }
 
-    abstract loadState(state: any): void;
-    abstract saveState(): any;
-
     abstract get widgetContainer(): ITreeObjectAdapter;
 
     abstract get transform(): Transform;

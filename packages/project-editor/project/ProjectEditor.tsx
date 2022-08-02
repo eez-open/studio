@@ -16,6 +16,7 @@ import {
 
 import { LineMarkers } from "project-editor/flow/editor/ConnectionLineComponent";
 import {
+    Editor,
     getChildren,
     getClassInfo,
     LayoutModels,
@@ -291,12 +292,17 @@ const Content = observer(
             ) {
                 return (
                     <PageEditor
-                        editor={{
-                            object: this.context.runtime.selectedPage,
-                            state: new PageTabState(
-                                this.context.runtime.selectedPage
+                        editor={
+                            new Editor(
+                                this.context,
+                                this.context.runtime.selectedPage,
+                                undefined,
+                                undefined,
+                                new PageTabState(
+                                    this.context.runtime.selectedPage
+                                )
                             )
-                        }}
+                        }
                     ></PageEditor>
                 );
             }
@@ -460,7 +466,10 @@ const Editors = observer(
                     node.getId()
                 );
                 if (editor) {
-                    let result = getEditorComponent(editor.object);
+                    let result = getEditorComponent(
+                        editor.object,
+                        editor.params
+                    );
                     if (result) {
                         return <result.EditorComponent editor={editor} />;
                     }
@@ -571,7 +580,7 @@ const NavigationMenuObject = observer(
 
         onClick = action(() => {
             this.props.selectedObject.set(this.props.object);
-            const result = getEditorComponent(this.props.object);
+            const result = getEditorComponent(this.props.object, undefined);
             if (result) {
                 this.context.editorsStore.openEditor(
                     result.object,

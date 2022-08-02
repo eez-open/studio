@@ -2,7 +2,10 @@ import { getParent, IEezObject, isAncestor } from "project-editor/core/object";
 
 import { getProject } from "project-editor/project/project";
 
-import { EditorComponent } from "project-editor/project/EditorComponent";
+import {
+    EditorComponent,
+    IEditorState
+} from "project-editor/project/EditorComponent";
 import { Action } from "project-editor/features/action/action";
 import {
     ActionEditor,
@@ -22,9 +25,15 @@ import { Font } from "project-editor/features/font/font";
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import { getAncestorOfType } from "project-editor/store";
 import { ReadmeEditor } from "project-editor/features/readme/navigation";
-import { ChangesEditor } from "project-editor/features/changes/navigation";
+import {
+    ChangesEditor,
+    ChangesEditorState
+} from "project-editor/features/changes/editor";
 
-export function getEditorComponent(object: IEezObject):
+export function getEditorComponent(
+    object: IEezObject,
+    params: any
+):
     | {
           object: IEezObject;
           subObject?: IEezObject;
@@ -81,10 +90,9 @@ export function getEditorComponent(object: IEezObject):
         };
     }
 
-    if (isAncestor(object, project.changes)) {
+    if (isAncestor(object, project.changes) && params) {
         return {
             object: project.changes,
-            subObject: object,
             EditorComponent: ChangesEditor
         };
     }
@@ -94,7 +102,7 @@ export function getEditorComponent(object: IEezObject):
 
 export function getAncestorWithEditorComponent(object: IEezObject) {
     while (object) {
-        const result = getEditorComponent(object);
+        const result = getEditorComponent(object, undefined);
         if (result) {
             return result;
         }
@@ -107,17 +115,19 @@ export function getAncestorWithEditorComponent(object: IEezObject) {
 export function createEditorState(object: IEezObject) {
     const project = getProject(object);
 
-    let state;
+    let state: IEditorState | undefined;
 
     if (isAncestor(object, project.actions)) {
         const action = object as Action;
         state = new ActionFlowTabState(action);
     } else if (isAncestor(object, project.pages)) {
         state = new PageTabState(object as Page);
+    } else if (isAncestor(object, project.changes)) {
+        state = new ChangesEditorState();
     }
 
-    if (state) {
-        state.loadState();
+    if (state && state.loadState) {
+        state.loadState(undefined);
     }
 
     return state;
