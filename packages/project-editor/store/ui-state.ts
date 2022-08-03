@@ -43,6 +43,7 @@ export class UIStateStore {
     revisionsGitRefreshed: boolean = false;
     revisions: Revision[] = [];
     selectedRevisionHash: string | undefined;
+    revisionForCompare: Revision | undefined;
 
     get pageEditorFrontFace() {
         return this._pageEditorFrontFace;
@@ -88,7 +89,8 @@ export class UIStateStore {
             watchExpressions: observable,
             selectedLanguage: computed,
             revisions: observable,
-            selectedRevisionHash: observable
+            selectedRevisionHash: observable,
+            revisionForCompare: observable
         });
     }
 

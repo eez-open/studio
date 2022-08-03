@@ -72,6 +72,7 @@ export const List = observer(
             nodes: IListNode[];
             selectNode?: (node: IListNode) => void;
             renderNode?: (node: IListNode) => React.ReactNode;
+            onContextMenu?: (node: IListNode) => void;
             tabIndex?: any;
             className?: string;
             style?: React.CSSProperties;
@@ -97,6 +98,15 @@ export const List = observer(
                                 this.props.selectNode(node);
                             }
                         }}
+                        onContextMenu={
+                            this.props.onContextMenu
+                                ? (event: React.MouseEvent<HTMLDivElement>) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      this.props.onContextMenu!(node);
+                                  }
+                                : undefined
+                        }
                     >
                         {renderNode ? renderNode(node) : node.label}
                     </div>

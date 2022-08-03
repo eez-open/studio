@@ -5502,6 +5502,30 @@ button.EezStudio_Action {
     justify-content: center;
 }
 
+.EezStudio_ChangesNavigation {
+    padding: 0;
+
+    .EezStudio_ListItem {
+        padding: 5px;
+
+        .revision-for-compare {
+            font-weight: bold;
+        }
+
+        .revision-message {
+            font-size: 110%;
+        }
+
+        .revision-details {
+            opacity: 50%;
+        }
+    }
+
+    .EezStudio_ListItem:not(:last-child) {
+        border-bottom: 1px solid @borderColor;
+    }
+}
+
 .EezStudio_ChangesEditor {
     .EezStudio_TreeRowLabel {
         margin-left: 0;

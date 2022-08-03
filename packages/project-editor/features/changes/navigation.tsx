@@ -1,5 +1,5 @@
 import moment from "moment";
-
+import { Menu, MenuItem } from "@electron/remote";
 import React from "react";
 import {
     makeObservable,
@@ -9,6 +9,7 @@ import {
     observable
 } from "mobx";
 import { observer } from "mobx-react";
+import classNames from "classnames";
 
 import { Loader } from "eez-studio-ui/loader";
 import { List, IListNode } from "eez-studio-ui/list";
@@ -78,49 +79,51 @@ export const ChangesNavigation = observer(
         }
 
         selectNode = action((node: IListNode<Revision>) => {
-            if (
-                this.context.uiStateStore.selectedRevisionHash != node.data.hash
-            ) {
-                this.context.uiStateStore.selectedRevisionHash = node.data.hash;
+            this.context.uiStateStore.selectedRevisionHash = node.data.hash;
 
-                if (this.context.uiStateStore.selectedRevisionHash) {
-                    const index = this.context.uiStateStore.revisions.findIndex(
-                        revision =>
-                            revision.hash ==
-                            this.context.uiStateStore.selectedRevisionHash
-                    );
+            if (this.context.uiStateStore.selectedRevisionHash) {
+                const index = this.context.uiStateStore.revisions.findIndex(
+                    revision =>
+                        revision.hash ==
+                        this.context.uiStateStore.selectedRevisionHash
+                );
 
-                    const revisionAfter =
-                        this.context.uiStateStore.revisions[index];
+                const revisionAfter =
+                    this.context.uiStateStore.revisions[index];
 
-                    let revisionBefore;
+                let revisionBefore;
 
-                    if (
-                        index != -1 &&
-                        index + 1 < this.context.uiStateStore.revisions.length
-                    ) {
-                        revisionBefore =
-                            this.context.uiStateStore.revisions[index + 1];
-                    } else {
-                        revisionBefore = undefined;
-                    }
-
-                    this.context.editorsStore.openEditor(
-                        this.context.project.changes,
-                        undefined,
-                        {
-                            revisionAfterHash: revisionAfter.hash,
-                            revisionBeforeHash: revisionBefore?.hash
-                        }
-                    );
+                if (
+                    index != -1 &&
+                    index + 1 < this.context.uiStateStore.revisions.length
+                ) {
+                    revisionBefore =
+                        this.context.uiStateStore.revisions[index + 1];
+                } else {
+                    revisionBefore = undefined;
                 }
+
+                this.context.editorsStore.openEditor(
+                    this.context.project.changes,
+                    undefined,
+                    {
+                        revisionAfterHash: revisionAfter.hash,
+                        revisionBeforeHash: revisionBefore?.hash
+                    }
+                );
             }
         });
 
         renderNode = (node: IListNode<Revision>) => (
-            <div className="pb-2">
-                <div>{node.data.message}</div>
-                <div className="fw-light">
+            <div
+                className={classNames({
+                    "revision-for-compare":
+                        node.data ==
+                        this.context.uiStateStore.revisionForCompare
+                })}
+            >
+                <div className="revision-message">{node.data.message}</div>
+                <div className="revision-details">
                     {node.data.hash != MEMORY_HASH &&
                     node.data.hash != UNSTAGED_HASH &&
                     node.data.hash != STAGED_HASH
@@ -131,6 +134,52 @@ export const ChangesNavigation = observer(
                 </div>
             </div>
         );
+
+        onContextMenu = (node: IListNode<Revision>) => {
+            const menu = new Menu();
+
+            if (node.data == this.context.uiStateStore.revisionForCompare) {
+                menu.append(
+                    new MenuItem({
+                        label: "Deselect",
+                        click: action(() => {
+                            this.context.uiStateStore.revisionForCompare =
+                                undefined;
+                        })
+                    })
+                );
+            } else {
+                if (this.context.uiStateStore.revisionForCompare) {
+                    menu.append(
+                        new MenuItem({
+                            label: "Compare with Selected",
+                            click: action(() => {
+                                this.context.editorsStore.openEditor(
+                                    this.context.project.changes,
+                                    undefined,
+                                    {
+                                        revisionAfterHash: node.data.hash,
+                                        revisionBeforeHash:
+                                            this.context.uiStateStore
+                                                .revisionForCompare!.hash
+                                    }
+                                );
+                            })
+                        })
+                    );
+                }
+                menu.append(
+                    new MenuItem({
+                        label: "Select for Compare",
+                        click: action(() => {
+                            this.context.uiStateStore.revisionForCompare =
+                                node.data;
+                        })
+                    })
+                );
+            }
+            menu.popup();
+        };
 
         render() {
             return (
@@ -149,10 +198,12 @@ export const ChangesNavigation = observer(
                             <Loader className="" centered={true} />
                         ) : (
                             <List
+                                className="EezStudio_ChangesNavigation"
                                 tabIndex={0}
                                 nodes={this.nodes}
                                 selectNode={this.selectNode}
                                 renderNode={this.renderNode}
+                                onContextMenu={this.onContextMenu}
                             ></List>
                         )}
                     </Body>
