@@ -185,6 +185,7 @@ export async function getRevisionContent(
 
 export interface DiffResult {
     delta: Delta;
+    reverseDelta: Delta | undefined;
     beforeContent: Content;
     afterContent: Content;
 }
@@ -231,6 +232,7 @@ export async function diff(
 
     return {
         delta,
+        reverseDelta: jsondiffpatch.reverse(delta),
         beforeContent,
         afterContent
     };

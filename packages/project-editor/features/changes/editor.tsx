@@ -60,7 +60,7 @@ export const ChangesEditor = observer(
             super(props);
 
             makeObservable(this, {
-                diffResult: observable,
+                diffResult: observable.shallow,
                 progressPercent: observable
             });
         }
@@ -218,7 +218,7 @@ export const ChangesTree = observer(
                                 const destinationIndex = value[1];
 
                                 const label = this.getArrayElementLabel(
-                                    eezObjectAfter,
+                                    eezObjectBefore,
                                     index,
                                     index
                                 );
@@ -466,6 +466,7 @@ export const ChangesTree = observer(
         selectNode = (treeNode: ITreeNode) => {};
 
         render() {
+            console.log(this.props.diffResult);
             return (
                 <Tree
                     className="EezStudio_ChangesEditor"
