@@ -5,8 +5,7 @@ import {
     action,
     observable,
     autorun,
-    IReactionDisposer,
-    toJS
+    IReactionDisposer
 } from "mobx";
 import { observer } from "mobx-react";
 
