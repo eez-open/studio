@@ -1,6 +1,6 @@
 import React from "react";
 import { guid } from "eez-studio-shared/guid";
-import { action, computed, observable, makeObservable } from "mobx";
+import { action, computed, observable, makeObservable, toJS } from "mobx";
 import {
     ClassInfo,
     EezObject,
@@ -19,7 +19,10 @@ import {
     objectToClipboardData,
     getLabel,
     Message,
-    getAncestorOfType
+    getAncestorOfType,
+    ProjectEditorStore,
+    createObject,
+    getClass
 } from "project-editor/store";
 import {
     ActionComponent,
@@ -45,7 +48,6 @@ import {
 } from "project-editor/flow/components/actions";
 import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { Transform } from "project-editor/flow/editor/transform";
-import { cloneObject } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { IEditorState } from "project-editor/project/EditorComponent";
 import { activateConnectionLine } from "project-editor/flow/editor/real-time-traffic-visualizer";
@@ -495,7 +497,7 @@ export abstract class Flow extends EezObject {
             }
             if (visitResult.value instanceof Component) {
                 const component = visitResult.value;
-                components.set(component.wireID, component);
+                components.set(component.objID, component);
             }
         }
 
@@ -714,13 +716,26 @@ export class FlowFragment extends EezObject {
 
         const projectEditorStore = getDocumentStore(flow);
 
-        const wireIDMap = new Set<string>();
+        const objIDMap = new Set<string>();
+
+        function cloneObject<T extends EezObject>(
+            projectEditorStore: ProjectEditorStore,
+            obj: T
+        ) {
+            return createObject<T>(
+                projectEditorStore,
+                toJS(obj),
+                getClass(obj),
+                undefined,
+                false // createNewObjectobjIDs
+            );
+        }
 
         objects.forEach((object: Component) => {
             const clone = cloneObject(projectEditorStore, object) as Component;
             this.components.push(clone);
 
-            wireIDMap.add(object.wireID);
+            objIDMap.add(object.objID);
 
             const v = visitObjects(object);
             while (true) {
@@ -732,15 +747,15 @@ export class FlowFragment extends EezObject {
                     visitResult.value != object &&
                     visitResult.value instanceof Component
                 ) {
-                    wireIDMap.add(visitResult.value.wireID);
+                    objIDMap.add(visitResult.value.objID);
                 }
             }
         });
 
         flow.connectionLines.forEach(connectionLine => {
             if (
-                wireIDMap.has(connectionLine.source) &&
-                wireIDMap.has(connectionLine.target)
+                objIDMap.has(connectionLine.source) &&
+                objIDMap.has(connectionLine.target)
             ) {
                 const clone = cloneObject(
                     projectEditorStore,
@@ -752,12 +767,12 @@ export class FlowFragment extends EezObject {
     }
 
     rewire() {
-        const wireIDMap = new Map<string, string>();
+        const objIDMap = new Map<string, string>();
 
         this.components.forEach((object: Component) => {
-            const wireID = guid();
-            wireIDMap.set(object.wireID, wireID);
-            object.wireID = wireID;
+            const objID = guid();
+            objIDMap.set(object.objID, objID);
+            object.objID = objID;
 
             const v = visitObjects(object);
             while (true) {
@@ -770,16 +785,16 @@ export class FlowFragment extends EezObject {
                     visitResult.value != object &&
                     visitResult.value instanceof Component
                 ) {
-                    const wireID = guid();
-                    wireIDMap.set(visitResult.value.wireID, wireID);
-                    visitResult.value.wireID = wireID;
+                    const objID = guid();
+                    objIDMap.set(visitResult.value.objID, objID);
+                    visitResult.value.objID = objID;
                 }
             }
         });
 
         this.connectionLines.forEach(connectionLine => {
-            const newSource = wireIDMap.get(connectionLine.source)!;
-            const newTarget = wireIDMap.get(connectionLine.target)!;
+            const newSource = objIDMap.get(connectionLine.source)!;
+            const newTarget = objIDMap.get(connectionLine.target)!;
             connectionLine.source = newSource;
             connectionLine.target = newTarget;
         });

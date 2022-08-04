@@ -1324,7 +1324,7 @@ export class MoveOutputConnectionLinesMouseHandler extends MouseHandler {
                 ) as Component;
 
             const changes = {
-                source: sourceObject.wireID,
+                source: sourceObject.objID,
                 output: source.connectionOutput
             };
 
@@ -1568,7 +1568,7 @@ export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
                 ) as Component;
 
             const changes = {
-                target: targetObject.wireID,
+                target: targetObject.objID,
                 input: target.connectionInput
             };
 

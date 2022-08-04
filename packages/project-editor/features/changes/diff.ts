@@ -1,9 +1,8 @@
 import { readTextFile } from "eez-studio-shared/util-electron";
-import { Delta } from "jsondiffpatch";
 import { runInAction } from "mobx";
 import path from "path";
 import type { Project } from "project-editor/project/project";
-import { getJSON, loadProject, ProjectEditorStore } from "project-editor/store";
+import { loadProject, ProjectEditorStore } from "project-editor/store";
 
 import {
     Revision,
@@ -109,25 +108,14 @@ export async function getRevisions(
     return revisions;
 }
 
-interface Content {
-    project: Project;
-    projectJs: any;
-}
-
-export async function getRevisionContent(
+async function getRevisionProject(
     projectEditorStore: ProjectEditorStore,
     revision: Revision,
     progressCallback: (percent: number) => void
-): Promise<Content> {
+): Promise<Project> {
     if (revision.hash == MEMORY_HASH) {
-        const json = getJSON(projectEditorStore);
-        progressCallback(50);
-        const projectJs = JSON.parse(json);
         progressCallback(100);
-        return {
-            project: projectEditorStore.project,
-            projectJs
-        };
+        return projectEditorStore.project;
     }
 
     const projectFilePath = projectEditorStore.filePath!;
@@ -156,7 +144,7 @@ export async function getRevisionContent(
         );
     }
 
-    progressCallback(25);
+    progressCallback(50);
 
     const revisionProjectEditorStore = new ProjectEditorStore();
 
@@ -167,73 +155,42 @@ export async function getRevisionContent(
         ) as Project;
     });
 
-    progressCallback(50);
-
-    const json = getJSON(revisionProjectEditorStore);
-
-    progressCallback(75);
-
-    const projectJs = JSON.parse(json);
-
     progressCallback(100);
 
-    return {
-        project: revisionProjectEditorStore.project,
-        projectJs
-    };
+    return revisionProjectEditorStore.project;
 }
 
-export interface DiffResult {
-    delta: Delta;
-    reverseDelta: Delta | undefined;
-    beforeContent: Content;
-    afterContent: Content;
+export interface BeforeAfterProject {
+    projectBefore: Project;
+    projectAfter: Project;
 }
 
-export async function diff(
+export async function getBeforeAfterProject(
     projectEditorStore: ProjectEditorStore,
     revisionBefore: Revision | undefined,
     revisionAfter: Revision,
     progressCallback: (percent: number) => void
-): Promise<DiffResult | undefined> {
-    const jsondiffpatch = await import("jsondiffpatch");
-
+): Promise<BeforeAfterProject | undefined> {
     const SUBTASK_PERCENT = 45;
 
-    const afterContent = await getRevisionContent(
+    const projectBefore: Project = revisionBefore
+        ? await getRevisionProject(
+              projectEditorStore,
+              revisionBefore,
+              percent => progressCallback(SUBTASK_PERCENT * (1 + percent / 100))
+          )
+        : ({} as any);
+
+    const projectAfter = await getRevisionProject(
         projectEditorStore,
         revisionAfter,
         percent => progressCallback(SUBTASK_PERCENT * (percent / 100))
     );
 
-    const beforeContent: Content = revisionBefore
-        ? await getRevisionContent(
-              projectEditorStore,
-              revisionBefore,
-              percent => progressCallback(SUBTASK_PERCENT * (1 + percent / 100))
-          )
-        : {
-              project: {} as any,
-              projectJs: {}
-          };
-
-    const delta = jsondiffpatch
-        .create({
-            objectHash: function (obj: any, index: number) {
-                return obj.objid || index;
-            }
-        })
-        .diff(beforeContent.projectJs, afterContent.projectJs);
-    if (!delta) {
-        return undefined;
-    }
-
     progressCallback(100);
 
     return {
-        delta,
-        reverseDelta: jsondiffpatch.reverse(delta),
-        beforeContent,
-        afterContent
+        projectBefore: projectBefore,
+        projectAfter: projectAfter
     };
 }

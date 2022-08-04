@@ -78,7 +78,6 @@ import type {
     SelectWidget
 } from "project-editor/flow/components/widgets";
 import { WIDGET_TYPE_NONE } from "project-editor/flow/components/component_types";
-import { guid } from "eez-studio-shared/guid";
 import classNames from "classnames";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
 import {
@@ -716,6 +715,8 @@ export class CustomInput extends EezObject implements ComponentInput {
         defaultValue: {},
 
         newItem: async (parent: IEezObject) => {
+            const project = ProjectEditor.getProject(parent);
+
             const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Component Input",
@@ -726,9 +727,11 @@ export class CustomInput extends EezObject implements ComponentInput {
                             validators: [
                                 validators.required,
                                 componentInputUnique(
-                                    {
-                                        objid: 0
-                                    },
+                                    createObject<CustomInput>(
+                                        project._DocumentStore,
+                                        {},
+                                        CustomInput
+                                    ),
                                     parent
                                 )
                             ]
@@ -748,8 +751,6 @@ export class CustomInput extends EezObject implements ComponentInput {
                 name: result.values.name,
                 type: result.values.type
             };
-
-            const project = ProjectEditor.getProject(parent);
 
             const customInput = createObject<CustomInput>(
                 project._DocumentStore,
@@ -837,6 +838,8 @@ export class CustomOutput extends EezObject implements ComponentOutput {
         defaultValue: {},
 
         newItem: async (parent: IEezObject) => {
+            const project = ProjectEditor.getProject(parent);
+
             const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Component Output",
@@ -845,7 +848,14 @@ export class CustomOutput extends EezObject implements ComponentOutput {
                             name: "name",
                             type: "string",
                             validators: [
-                                componentOutputUnique({ objid: 0 }, parent),
+                                componentOutputUnique(
+                                    createObject<CustomOutput>(
+                                        project._DocumentStore,
+                                        {},
+                                        CustomOutput
+                                    ),
+                                    parent
+                                ),
                                 validators.unique({}, parent)
                             ]
                         },
@@ -864,8 +874,6 @@ export class CustomOutput extends EezObject implements ComponentOutput {
                 name: result.values.name,
                 type: result.values.type
             };
-
-            const project = ProjectEditor.getProject(parent);
 
             const customOutput = createObject<CustomOutput>(
                 project._DocumentStore,
@@ -1652,8 +1660,6 @@ export class Component extends EezObject {
     width: number;
     height: number;
 
-    wireID: string;
-
     customInputs: CustomInput[];
     customOutputs: CustomOutput[];
 
@@ -1672,7 +1678,6 @@ export class Component extends EezObject {
             top: observable,
             width: observable,
             height: observable,
-            wireID: observable,
             customInputs: observable,
             customOutputs: observable,
             asOutputProperties: observable,
@@ -1790,11 +1795,6 @@ export class Component extends EezObject {
                 }
             },
             {
-                name: "wireID",
-                type: PropertyType.String,
-                hideInPropertyGrid: true
-            },
-            {
                 name: "customInputs",
                 displayName: "Inputs",
                 type: PropertyType.Array,
@@ -1834,10 +1834,6 @@ export class Component extends EezObject {
         ],
 
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
-            if (!jsObject.wireID) {
-                jsObject.wireID = guid();
-            }
-
             if (jsObject["x"] !== undefined) {
                 jsObject["left"] = jsObject["x"];
                 delete jsObject["x"];
@@ -4725,7 +4721,7 @@ export class NotFoundComponent extends ActionComponent {
     getInputs(): ComponentInput[] {
         return ProjectEditor.getFlow(this)
             .connectionLines.filter(
-                connectionLine => connectionLine.target == this.wireID
+                connectionLine => connectionLine.target == this.objID
             )
             .map(connectionLine => ({
                 name: connectionLine.input,
@@ -4738,7 +4734,7 @@ export class NotFoundComponent extends ActionComponent {
     getOutputs(): ComponentOutput[] {
         return ProjectEditor.getFlow(this)
             .connectionLines.filter(
-                connectionLine => connectionLine.source == this.wireID
+                connectionLine => connectionLine.source == this.objID
             )
             .map(connectionLine => ({
                 name: connectionLine.output,

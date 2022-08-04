@@ -1336,7 +1336,7 @@ export class LayoutViewWidget extends Widget {
             .filter(component => component instanceof InputActionComponent)
             .sort((a, b) => a.top - b.top)
             .map((inputActionComponent: InputActionComponent) => ({
-                name: inputActionComponent.wireID,
+                name: inputActionComponent.objID,
                 displayName: inputActionComponent.name,
                 type: inputActionComponent.inputType,
                 isSequenceInput: false,
@@ -1365,7 +1365,7 @@ export class LayoutViewWidget extends Widget {
             .filter(component => component instanceof OutputActionComponent)
             .sort((a, b) => a.top - b.top)
             .map((outputActionComponent: OutputActionComponent) => ({
-                name: outputActionComponent.wireID,
+                name: outputActionComponent.objID,
                 displayName: outputActionComponent.name,
                 type: outputActionComponent.outputType,
                 isSequenceOutput: false,
@@ -1520,7 +1520,7 @@ export class LayoutViewWidget extends Widget {
                 dataBuffer.writeUint8(
                     this.buildInputs.findIndex(
                         input =>
-                            input.name == layoutPage.inputComponents[0].wireID
+                            input.name == layoutPage.inputComponents[0].objID
                     )
                 );
             } else {
@@ -1531,7 +1531,7 @@ export class LayoutViewWidget extends Widget {
                 dataBuffer.writeUint8(
                     this.buildOutputs.findIndex(
                         output =>
-                            output.name == layoutPage.outputComponents[0].wireID
+                            output.name == layoutPage.outputComponents[0].objID
                     )
                 );
             } else {

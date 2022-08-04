@@ -1,3 +1,4 @@
+import { guid } from "eez-studio-shared/guid";
 import { observable, toJS } from "mobx";
 
 import {
@@ -22,14 +23,13 @@ export function createObject<T extends EezObject>(
     projectEditorStore: ProjectEditorStore,
     jsObject: Partial<T>,
     aClass: EezClass,
-    key?: string
+    key?: string,
+    createNewObjectobjIDs?: boolean
 ): T {
     currentDocumentStore = projectEditorStore;
-    currentProject = projectEditorStore.project;
-    createNewObjectIds = true;
+    createNewObjectobjIDs = createNewObjectobjIDs ?? true;
     const result = loadObjectInternal(undefined, jsObject, aClass, key);
     currentDocumentStore = undefined;
-    currentProject = undefined;
     return result as T;
 }
 
@@ -38,14 +38,13 @@ export function loadProject(
     projectObjectOrString: any | string
 ): Project {
     currentDocumentStore = projectEditorStore;
-    createNewObjectIds = false;
+    createNewObjectobjIDs = false;
     const result = loadObjectInternal(
         undefined,
         projectObjectOrString,
         ProjectEditor.ProjectClass
     ) as Project;
     currentDocumentStore = undefined;
-    currentProject = undefined;
     return result;
 }
 
@@ -88,8 +87,7 @@ export function objectToJson(
 ////////////////////////////////////////////////////////////////////////////////
 
 let currentDocumentStore: ProjectEditorStore | undefined;
-let currentProject: Project | undefined;
-let createNewObjectIds: boolean;
+let createNewObjectobjIDs: boolean;
 
 function loadArrayObject(
     arrayObject: any,
@@ -152,20 +150,14 @@ function loadObjectInternal(
     setId(currentDocumentStore!, object, currentDocumentStore!.getChildId());
     setParent(object, parent as IEezObject);
 
-    if (aClass == ProjectEditor.ProjectClass) {
-        currentProject = object as Project;
-        if (jsObject.lastObjid != undefined) {
-            currentProject.lastObjid = jsObject.lastObjid;
-        } else {
-            currentProject.lastObjid = 0;
-        }
-    } else {
-        if (createNewObjectIds || jsObject.objid == undefined) {
-            object.objid = ++currentProject!.lastObjid;
-        } else {
-            object.objid = jsObject.objid;
-        }
+    if (jsObject.wireID) {
+        jsObject.objID = jsObject.wireID;
+        delete jsObject.wireID;
     }
+    if (createNewObjectobjIDs || jsObject.objID == undefined) {
+        jsObject.objID = guid();
+    }
+    object.objID = jsObject.objID;
 
     if (classInfo.beforeLoadHook) {
         classInfo.beforeLoadHook(object, jsObject);

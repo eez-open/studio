@@ -1867,7 +1867,7 @@ export class CallActionActionComponent extends ActionComponent {
             } else {
                 inputs = action.inputComponents.map(
                     (inputActionComponent: InputActionComponent) => ({
-                        name: inputActionComponent.wireID,
+                        name: inputActionComponent.objID,
                         displayName: inputActionComponent.name
                             ? inputActionComponent.name
                             : NOT_NAMED_LABEL,
@@ -1910,7 +1910,7 @@ export class CallActionActionComponent extends ActionComponent {
             } else {
                 outputs = action.outputComponents.map(
                     (outputActionComponent: OutputActionComponent) => ({
-                        name: outputActionComponent.wireID,
+                        name: outputActionComponent.objID,
                         displayName: outputActionComponent.name
                             ? outputActionComponent.name
                             : NOT_NAMED_LABEL,
@@ -1965,7 +1965,7 @@ export class CallActionActionComponent extends ActionComponent {
                     dataBuffer.writeUint8(
                         this.buildInputs.findIndex(
                             input =>
-                                input.name == action.inputComponents[0].wireID
+                                input.name == action.inputComponents[0].objID
                         )
                     );
                 } else {
@@ -1976,7 +1976,7 @@ export class CallActionActionComponent extends ActionComponent {
                     dataBuffer.writeUint8(
                         this.buildOutputs.findIndex(
                             output =>
-                                output.name == action.outputComponents[0].wireID
+                                output.name == action.outputComponents[0].objID
                         )
                     );
                 } else {

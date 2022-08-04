@@ -214,9 +214,9 @@ export class FlowDocument implements IDocument {
 
         return !!flow.connectionLines.find(
             connectionLine =>
-                connectionLine.source == sourceObject.wireID &&
+                connectionLine.source == sourceObject.objID &&
                 connectionLine.output == connectionOutput &&
-                connectionLine.target == targetObject.wireID &&
+                connectionLine.target == targetObject.objID &&
                 connectionLine.input == connectionInput
         );
     }
@@ -239,9 +239,9 @@ export class FlowDocument implements IDocument {
         const connectionLine = createObject<ConnectionLine>(
             this.flowContext.projectEditorStore,
             {
-                source: sourceObject.wireID,
+                source: sourceObject.objID,
                 output: connectionOutput,
-                target: targetObject.wireID,
+                target: targetObject.objID,
                 input: connectionInput
             },
             ConnectionLine

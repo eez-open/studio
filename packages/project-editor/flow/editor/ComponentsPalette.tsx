@@ -17,7 +17,6 @@ import type { Component } from "project-editor/flow/component";
 
 import { ProjectContext } from "project-editor/project/context";
 import { SearchInput } from "eez-studio-ui/search-input";
-import { guid } from "eez-studio-shared/guid";
 import { humanize } from "eez-studio-shared/string";
 import {
     getClass,
@@ -353,8 +352,6 @@ const PaletteItem = observer(
                 defaultValue,
                 this.props.componentClass.objectClass
             );
-
-            object.wireID = guid();
 
             if (object.left == undefined) {
                 object.left = 0;

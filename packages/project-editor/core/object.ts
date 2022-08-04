@@ -366,7 +366,13 @@ export type IEezObject = EezObject | EezObject[];
 export class EezObject {
     static classInfo: ClassInfo;
 
-    objid: number;
+    objID: string;
+
+    constructor() {
+        makeObservable(this, {
+            objID: observable
+        });
+    }
 }
 
 export type EezClass = typeof EezObject;

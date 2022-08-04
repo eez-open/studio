@@ -943,10 +943,3 @@ export function deleteItems(objects: IEezObject[], callback?: () => void) {
 export function objectToJS(object: IEezObject): any {
     return JSON.parse(objectToJson(object));
 }
-
-export function cloneObject<T extends EezObject>(
-    projectEditorStore: ProjectEditorStore,
-    obj: T
-) {
-    return createObject<T>(projectEditorStore, obj, getClass(obj));
-}
