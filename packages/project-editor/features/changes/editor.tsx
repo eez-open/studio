@@ -302,7 +302,7 @@ export const ChangesTree = observer(
                             key={`added-${addedObject.objID}`}
                             className="element-added"
                         >
-                            getLabel(addedObject)
+                            {getLabel(addedObject)}
                         </div>
                     );
                 }),
@@ -341,6 +341,8 @@ export const ChangesTree = observer(
                 this.props.projectBeforeAndAfter.projectBefore,
                 this.props.projectBeforeAndAfter.projectAfter
             );
+
+            console.log(projectChanges);
 
             return (
                 <div className="EezStudio_ChangesEditor">

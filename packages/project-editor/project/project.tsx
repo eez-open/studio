@@ -71,13 +71,7 @@ import {
     startSearch,
     SearchCallbackMessage
 } from "project-editor/core/search";
-import {
-    Color,
-    IColor,
-    ITheme,
-    Theme
-} from "project-editor/features/style/theme";
-import { guid } from "eez-studio-shared/guid";
+import { Color, Theme } from "project-editor/features/style/theme";
 import { Page } from "project-editor/features/page/page";
 import type { Style } from "project-editor/features/style/style";
 import type { Font } from "project-editor/features/font/font";
@@ -943,12 +937,6 @@ export class Settings extends EezObject {
                         !projectEditorStore.masterProjectEnabled
                     );
                 }
-            },
-            {
-                name: "general",
-                type: PropertyType.Object,
-                typeClass: General,
-                hideInPropertyGrid: true
             }
         ],
         hideInProperties: true,
@@ -1081,29 +1069,6 @@ function getProjectClassInfo() {
                 if (projectJs.gui) {
                     Object.assign(projectJs, projectJs.gui);
                     delete projectJs.gui;
-                }
-
-                if (projectJs.colors) {
-                    const colors: IColor[] = projectJs.colors;
-                    for (const color of colors) {
-                        color.colorId = guid();
-                    }
-                }
-
-                if (projectJs.themes) {
-                    const themes: ITheme[] = projectJs.themes;
-                    const colors: IColor[] = projectJs.colors;
-                    for (const theme of themes) {
-                        theme.themeId = guid();
-                        for (let i = 0; i < theme.colors!.length; i++) {
-                            project.setThemeColor(
-                                theme.themeId,
-                                colors[i].colorId!,
-                                theme.colors![i]
-                            );
-                        }
-                        delete theme.colors;
-                    }
                 }
 
                 if (projectJs.settings.general.css) {
@@ -1489,6 +1454,8 @@ export class Project extends EezObject {
         id: new AssetsMap(this, "id")
     };
 
+    _objectsMap = new Map<string, EezObject>();
+
     settings: Settings;
     variables: ProjectVariables;
     actions: Action[];
@@ -1533,7 +1500,7 @@ export class Project extends EezObject {
             namespace: computed,
             masterProject: computed({ keepAlive: true }),
             allGlobalVariables: computed({ keepAlive: true }),
-            themeColors: observable,
+            _themeColors: observable,
             setThemeColor: action,
             colorToIndexMap: computed,
             buildColors: computed({ keepAlive: true })
@@ -1656,14 +1623,14 @@ export class Project extends EezObject {
         return allVariables;
     }
 
-    themeColors = new Map<string, string>();
+    _themeColors = new Map<string, string>();
 
     getThemeColor(themeId: string, colorId: string) {
-        return this.themeColors.get(themeId + colorId) || "#000000";
+        return this._themeColors.get(themeId + colorId) || "#000000";
     }
 
     setThemeColor(themeId: string, colorId: string, color: string) {
-        this.themeColors.set(themeId + colorId, color);
+        this._themeColors.set(themeId + colorId, color);
     }
 
     get colorToIndexMap() {

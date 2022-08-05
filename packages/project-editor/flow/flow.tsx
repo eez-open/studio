@@ -245,13 +245,13 @@ export class ConnectionLine extends EezObject {
     }
 
     get sourceComponent() {
-        const page = getParent(getParent(this)) as Flow;
-        return page.wiredComponents.get(this.source);
+        const project = ProjectEditor.getProject(this);
+        return project._objectsMap.get(this.source) as Component;
     }
 
     get targetComponent() {
-        const page = getParent(getParent(this)) as Flow;
-        return page.wiredComponents.get(this.target);
+        const project = ProjectEditor.getProject(this);
+        return project._objectsMap.get(this.target) as Component;
     }
 
     get _sourcePosition() {
@@ -477,31 +477,12 @@ export abstract class Flow extends EezObject {
             connectionLines: observable,
             localVariables: observable,
 
-            wiredComponents: computed,
             actionComponents: computed,
             startComponent: computed,
             endComponent: computed,
             inputComponents: computed,
             outputComponents: computed
         });
-    }
-
-    get wiredComponents() {
-        const components = new Map<string, Component>();
-
-        const v = visitObjects(this.components);
-        while (true) {
-            let visitResult = v.next();
-            if (visitResult.done) {
-                break;
-            }
-            if (visitResult.value instanceof Component) {
-                const component = visitResult.value;
-                components.set(component.objID, component);
-            }
-        }
-
-        return components;
     }
 
     get actionComponents() {

@@ -442,6 +442,11 @@ export function getArrayAndObjectProperties(object: IEezObject) {
 }
 
 export function getCommonProperties(objects: IEezObject[]) {
+    objects = objects.filter(object => object != undefined);
+    if (objects.length == 0) {
+        return [];
+    }
+
     let properties = getClassInfo(objects[0]).properties;
 
     properties = properties.filter(

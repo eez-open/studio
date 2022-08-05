@@ -28,8 +28,10 @@ export function createObject<T extends EezObject>(
 ): T {
     currentDocumentStore = projectEditorStore;
     createNewObjectobjIDs = createNewObjectobjIDs ?? true;
+    currentProject = projectEditorStore.project;
     const result = loadObjectInternal(undefined, jsObject, aClass, key);
     currentDocumentStore = undefined;
+    currentProject = undefined;
     return result as T;
 }
 
@@ -44,7 +46,16 @@ export function loadProject(
         projectObjectOrString,
         ProjectEditor.ProjectClass
     ) as Project;
+
+    let projectFeatures = ProjectEditor.extensions;
+    for (let projectFeature of projectFeatures) {
+        if (projectFeature.afterLoadProject) {
+            projectFeature.afterLoadProject(result);
+        }
+    }
+
     currentDocumentStore = undefined;
+    currentProject = undefined;
     return result;
 }
 
@@ -87,6 +98,7 @@ export function objectToJson(
 ////////////////////////////////////////////////////////////////////////////////
 
 let currentDocumentStore: ProjectEditorStore | undefined;
+let currentProject: Project | undefined;
 let createNewObjectobjIDs: boolean;
 
 function loadArrayObject(
@@ -145,19 +157,25 @@ function loadObjectInternal(
         return new EezObject();
     }
 
+    if (object instanceof ProjectEditor.ProjectClass) {
+        currentProject = object;
+    }
+
     const classInfo = getClassInfo(object);
 
     setId(currentDocumentStore!, object, currentDocumentStore!.getChildId());
     setParent(object, parent as IEezObject);
 
-    if (jsObject.wireID) {
-        jsObject.objID = jsObject.wireID;
-        delete jsObject.wireID;
+    let objID = jsObject.objID || jsObject.wireID;
+    if (
+        createNewObjectobjIDs ||
+        objID == undefined ||
+        currentProject!._objectsMap.get(objID)
+    ) {
+        objID = guid();
     }
-    if (createNewObjectobjIDs || jsObject.objID == undefined) {
-        jsObject.objID = guid();
-    }
-    object.objID = jsObject.objID;
+    object.objID = objID;
+    currentProject?._objectsMap.set(objID, object);
 
     if (classInfo.beforeLoadHook) {
         classInfo.beforeLoadHook(object, jsObject);

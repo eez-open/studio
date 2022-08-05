@@ -4,7 +4,6 @@ import { observable, computed, action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 
-import { guid } from "eez-studio-shared/guid";
 import {
     ClassInfo,
     IEezObject,
@@ -298,12 +297,7 @@ export const ThemesSideView = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class IColor {
-    colorId?: string;
-}
-
-export class Color extends EezObject implements IColor {
-    colorId: string;
+export class Color extends EezObject {
     id: number | undefined;
     name: string;
 
@@ -311,7 +305,6 @@ export class Color extends EezObject implements IColor {
         super();
 
         makeObservable(this, {
-            colorId: observable,
             id: observable,
             name: observable
         });
@@ -397,7 +390,6 @@ export class Color extends EezObject implements IColor {
             });
 
             const colorProperties: Partial<Color> = {
-                colorId: guid(),
                 name: result.values.name
             };
 
@@ -443,8 +435,8 @@ export class Color extends EezObject implements IColor {
                             const colorIndex =
                                 project.colors.indexOf(thisObject);
                             const color = project.getThemeColor(
-                                selectedTheme.themeId,
-                                thisObject.colorId
+                                selectedTheme.objID,
+                                thisObject.objID
                             );
 
                             project.themes.forEach((theme: any, i: number) => {
@@ -481,22 +473,14 @@ registerClass("Color", Color);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ITheme {
-    themeId?: string;
     colors?: string[];
 }
 
 export class Theme extends EezObject implements ITheme {
-    themeId: string;
     name: string;
 
     static classInfo: ClassInfo = {
         properties: [
-            {
-                name: "themeId",
-                type: PropertyType.GUID,
-                unique: true,
-                hideInPropertyGrid: true
-            },
             {
                 name: "name",
                 displayName: "Theme name",
@@ -528,7 +512,6 @@ export class Theme extends EezObject implements ITheme {
             });
 
             const themeProperties: Partial<Theme> = {
-                themeId: guid(),
                 name: result.values.name
             };
 
@@ -542,14 +525,15 @@ export class Theme extends EezObject implements ITheme {
 
             return theme;
         },
+
         onAfterPaste: (newTheme: Theme, fromTheme: Theme) => {
             const project = ProjectEditor.getProject(newTheme);
 
             for (const color of project.colors) {
                 project.setThemeColor(
-                    newTheme.themeId,
-                    color.colorId,
-                    project.getThemeColor(fromTheme.themeId, color.colorId)
+                    newTheme.objID,
+                    color.objID,
+                    project.getThemeColor(fromTheme.objID, color.objID)
                 );
             }
         }
@@ -559,7 +543,6 @@ export class Theme extends EezObject implements ITheme {
         super();
 
         makeObservable(this, {
-            themeId: observable,
             name: observable,
             colors: computed
         });
@@ -568,7 +551,7 @@ export class Theme extends EezObject implements ITheme {
     get colors() {
         const project = ProjectEditor.getProject(this);
         return project.colors.map(color =>
-            project.getThemeColor(this.themeId, color.colorId)
+            project.getThemeColor(this.objID, color.objID)
         );
     }
 
@@ -576,8 +559,8 @@ export class Theme extends EezObject implements ITheme {
         const project = ProjectEditor.getProject(this);
         for (let i = 0; i < value.length; i++) {
             project.setThemeColor(
-                this.themeId,
-                project.colors[i].colorId,
+                this.objID,
+                project.colors[i].objID,
                 value[i]
             );
         }

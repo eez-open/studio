@@ -21,6 +21,7 @@ export function getPropertyValue(
     objects: IEezObject[],
     propertyInfo: PropertyInfo
 ) {
+    objects = objects.filter(object => object != undefined);
     if (objects.length === 0) {
         return undefined;
     }

@@ -123,7 +123,6 @@ async function getRevisionProject(
     progressCallback: (percent: number) => void
 ): Promise<Project> {
     if (revision.hash == MEMORY_HASH) {
-        console.log(1);
         progressCallback(100);
         return projectEditorStore.project;
     }
@@ -167,7 +166,6 @@ async function getRevisionProject(
 
     progressCallback(100);
 
-    console.log(2);
     return revisionProjectEditorStore.project;
 }
 
@@ -289,7 +287,7 @@ export function diffObject(
             if (propertyInfo.type == PropertyType.Array) {
                 const arrayChanges = diffArray(
                     (objectBefore as any)[propertyInfo.name],
-                    (objectBefore as any)[propertyInfo.name]
+                    (objectAfter as any)[propertyInfo.name]
                 );
 
                 if (
@@ -312,7 +310,7 @@ export function diffObject(
             } else if (propertyInfo.type == PropertyType.Object) {
                 const objectChanges = diffObject(
                     (objectBefore as any)[propertyInfo.name],
-                    (objectBefore as any)[propertyInfo.name]
+                    (objectAfter as any)[propertyInfo.name]
                 );
 
                 if (objectChanges.changes.length == 0) {

@@ -36,11 +36,7 @@ import { validators } from "eez-studio-shared/validation";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import { findFont } from "project-editor/features/font/font";
-import {
-    getThemedColor,
-    IColor,
-    ITheme
-} from "project-editor/features/style/theme";
+import { getThemedColor, ITheme } from "project-editor/features/style/theme";
 import type { Font } from "project-editor/features/font/font";
 import { metrics } from "project-editor/features/style/metrics";
 import type { Project } from "project-editor/project/project";
@@ -2060,15 +2056,24 @@ export default {
     icon: "format_color_fill",
     create: () => [],
     metrics,
+    afterLoadProject: (project: Project) => {
+        if (project.themes) {
+            const themes = project.themes;
+            const colors = project.colors!;
+            for (const theme of themes) {
+                for (let i = 0; i < colors.length; i++) {
+                    project.setThemeColor(
+                        theme.objID,
+                        colors[i].objID,
+                        theme.colors![i]
+                    );
+                }
+            }
+        }
+    },
     toJsHook: (jsObject: Project, project: Project) => {
-        //
-        jsObject.colors.forEach((color: IColor) => delete color.colorId);
-
         jsObject.themes.forEach((theme: ITheme, i: number) => {
-            delete theme.themeId;
             theme.colors = project.themes[i].colors;
         });
-
-        delete (jsObject as Partial<Project>).themeColors;
     }
 };

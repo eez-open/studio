@@ -69,20 +69,11 @@ export const Property = observer(
             });
         }
 
-        componentDidUpdate(prevProps: any) {
-            if (this.props != prevProps) {
-                const getPropertyValueResult = getPropertyValue(
-                    this.props.objects,
-                    this.props.propertyInfo
-                );
-                this._value = getPropertyValueResult
-                    ? getPropertyValueResult.value
-                    : undefined;
+        updateChangeDocumentObserver() {
+            if (this.changeDocumentDisposer) {
+                this.changeDocumentDisposer();
             }
-            this.resizeTextArea();
-        }
 
-        componentDidMount() {
             this.changeDocumentDisposer = autorun(() => {
                 if (this.context.project) {
                     const getPropertyValueResult = getPropertyValue(
@@ -96,6 +87,27 @@ export const Property = observer(
                     });
                 }
             });
+        }
+
+        componentDidUpdate(prevProps: any) {
+            this.updateChangeDocumentObserver();
+
+            try {
+                const getPropertyValueResult = getPropertyValue(
+                    this.props.objects,
+                    this.props.propertyInfo
+                );
+                this._value = getPropertyValueResult
+                    ? getPropertyValueResult.value
+                    : undefined;
+            } catch (err) {
+                console.warn(err);
+            }
+            this.resizeTextArea();
+        }
+
+        componentDidMount() {
+            this.updateChangeDocumentObserver();
 
             let el = this.input || this.textarea || this.select;
             if (el) {
