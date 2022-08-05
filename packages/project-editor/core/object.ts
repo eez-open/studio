@@ -17,27 +17,32 @@ import type { ValueType } from "project-editor/features/variable/value-type";
 ////////////////////////////////////////////////////////////////////////////////
 
 export const enum PropertyType {
-    String,
-    StringArray,
-    MultilineText,
-    JSON,
-    CSS,
-    CPP,
-    Number,
-    NumberArray,
     Array,
     Object,
+
+    Boolean,
+
+    Number,
+
     Enum,
+
+    String,
+    MultilineText,
     Image,
     Color,
     ThemedColor,
     RelativeFolder,
     RelativeFile,
     ObjectReference,
-    ConfigurationReference,
-    Boolean,
+    JSON,
+    CSS,
+    CPP,
     GUID,
+
+    StringArray,
+    ConfigurationReference,
     Any,
+
     Null
 }
 
@@ -641,7 +646,7 @@ export interface PropertyValueSourceInfo {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class RectObject extends EezObject {
-    static classInfo = {
+    static classInfo: ClassInfo = {
         properties: [
             {
                 name: "top",

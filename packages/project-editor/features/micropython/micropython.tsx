@@ -5,7 +5,8 @@ import { observable, makeObservable } from "mobx";
 import {
     registerClass,
     PropertyType,
-    EezObject
+    EezObject,
+    ClassInfo
 } from "project-editor/core/object";
 import { ProjectContext } from "project-editor/project/context";
 import { CodeEditor } from "eez-studio-ui/code-editor";
@@ -63,7 +64,7 @@ export class MicroPythonEditor extends EditorComponent {
 export class MicroPython extends EezObject {
     code: string;
 
-    static classInfo = {
+    static classInfo: ClassInfo = {
         properties: [
             {
                 name: "code",
@@ -71,7 +72,6 @@ export class MicroPython extends EezObject {
                 hideInPropertyGrid: true
             }
         ],
-        navigationComponentId: "micropython",
         icon: ICON
     };
 

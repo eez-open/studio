@@ -5527,14 +5527,6 @@ button.EezStudio_Action {
 }
 
 .EezStudio_ChangesEditor {
-    .EezStudio_TreeRowLabel {
-        margin-left: 0;
-    }
-
-    .EezStudio_TreeRowTriangle {
-        opacity: 50%;
-    }
-
     .feature-row {
         display: inline-flex;
         align-content: center;
@@ -5544,66 +5536,40 @@ button.EezStudio_Action {
 
         padding: 2px 4px;
 
-        .feature-icon {
-            padding-right: 4px;
+        .change-icon {
+            margin-right: 4px;
             svg {
                 width: 16px;
             }
         }
 
-        .feature-label {
+        .change-label {
             font-size: 110%;
         }
-
-        &.feature-added {
-            background-color: #bbffbb;
-            color: #212529;
-        }
-
-        &.feature-removed {
-            background-color: #ffbbbb;
-            color: #212529;
-            text-decoration: line-through;
-        }
     }
 
-    .property-added {
+    .change-label {
+        margin-right: 4px;
+    }
+
+    .value-added,
+    .element-added {
         background-color: #bbffbb;
         color: #212529;
+        margin-right: 4px;
     }
 
-    .property-removed {
+    .value-removed,
+    .element-removed {
         background-color: #ffbbbb;
         color: #212529;
         text-decoration: line-through;
+        margin-right: 4px;
     }
 
-    .property-changed {
-        .property-old-value {
-            background-color: #ffbbbb;
-            color: #212529;
-            text-decoration: line-through;
-        }
-
-        .property-new-value {
-            background-color: #bbffbb;
-            color: #212529;
-        }
-    }
-
-    .item-added {
-        background-color: #bbffbb;
-        color: #212529;
-    }
-
-    .item-moved {
+    .array-moved {
         background-color: #ffffbb;
         color: #212529;
-    }
-
-    .item-removed {
-        background-color: #ffbbbb;
-        color: #212529;
-        text-decoration: line-through;
+        margin-right: 4px;
     }
 }

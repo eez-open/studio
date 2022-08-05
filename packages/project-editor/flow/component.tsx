@@ -3496,7 +3496,7 @@ export class Widget extends Component {
 
     timeline: TimelineKeyframe[];
 
-    static classInfo: ClassInfo = makeDerivedClassInfo(Component.classInfo, {
+    static classInfo = makeDerivedClassInfo(Component.classInfo, {
         properties: [
             resizingProperty,
             makeDataPropertyInfo("data"),

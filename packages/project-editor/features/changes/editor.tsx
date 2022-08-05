@@ -17,12 +17,22 @@ import {
     IEditor,
     IEditorState
 } from "project-editor/project/EditorComponent";
-import { getClassInfo, IPanel } from "project-editor/store";
+import { getClassInfo, getLabel, IPanel } from "project-editor/store";
 import {
-    getBeforeAfterProject,
-    BeforeAfterProject as ProjectBeforeAndAfter
+    getBeforeAndAfterProject,
+    BeforeAfterProject as ProjectBeforeAndAfter,
+    diffObject,
+    ObjectChanges,
+    ArrayChanges
 } from "project-editor/features/changes/diff";
-import { EezObject, PropertyType } from "project-editor/core/object";
+import { ProjectEditor } from "project-editor/project-editor-interface";
+import classNames from "classnames";
+import { getProjectFeatures } from "project-editor/store/features";
+import {
+    getObjectPropertyDisplayName,
+    PropertyType
+} from "project-editor/core/object";
+import { Icon } from "eez-studio-ui/icon";
 
 interface ChangesEditorParams {
     revisionAfterHash: string;
@@ -76,7 +86,7 @@ export const ChangesEditor = observer(
                     this.progressPercent = 0;
                 });
 
-                let revisionContent: ProjectBeforeAndAfter | undefined =
+                let projectBeforeAndAfter: ProjectBeforeAndAfter | undefined =
                     undefined;
 
                 const params: ChangesEditorParams = this.props.editor.params;
@@ -104,7 +114,7 @@ export const ChangesEditor = observer(
                               ]
                             : undefined;
 
-                    revisionContent = await getBeforeAfterProject(
+                    projectBeforeAndAfter = await getBeforeAndAfterProject(
                         this.context,
                         revisionBefore,
                         revisionAfter,
@@ -120,7 +130,7 @@ export const ChangesEditor = observer(
                 setTimeout(() => {
                     if (!canceled) {
                         runInAction(() => {
-                            this.projectBeforeAndAfter = revisionContent;
+                            this.projectBeforeAndAfter = projectBeforeAndAfter;
                             this.progressPercent = undefined;
                         });
                     }
@@ -181,49 +191,160 @@ export const ChangesTree = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
-        renderObjectChanges(objectBefore: EezObject, objectAfter: EezObject) {
-            const classInfo = getClassInfo(objectAfter);
-            return classInfo.properties
-                .filter(propertyInfo => true)
-                .map(propertyInfo => {
-                    const valueBefore = (objectBefore as any)[
-                        propertyInfo.name
-                    ];
-                    const valueAfter = (objectAfter as any)[propertyInfo.name];
+        renderObjectChanges(objectChanges: ObjectChanges) {
+            const isProject =
+                objectChanges.objectBefore instanceof
+                ProjectEditor.ProjectClass;
 
-                    if (!valueBefore && valueAfter) {
-                        return (
-                            <div key={propertyInfo.name}>
-                                {propertyInfo.name} ADDED
-                            </div>
-                        );
-                    }
+            return objectChanges.changes.map(propertyChange => {
+                const label = getObjectPropertyDisplayName(
+                    objectChanges.objectAfter,
+                    propertyChange.propertyInfo
+                );
 
-                    if (valueBefore && !valueAfter) {
-                        return (
-                            <div key={propertyInfo.name}>
-                                {propertyInfo.name} REMOVED
-                            </div>
-                        );
-                    }
+                let icon;
 
-                    if (propertyInfo.type === PropertyType.Object) {
-                        return null;
-                    } else if (propertyInfo.type === PropertyType.Array) {
-                        return null;
+                if (
+                    isProject &&
+                    (propertyChange.propertyInfo.type == PropertyType.Object ||
+                        propertyChange.propertyInfo.type == PropertyType.Array)
+                ) {
+                    const features = getProjectFeatures();
+                    const feature = features.find(
+                        feature =>
+                            feature.key == propertyChange.propertyInfo.name
+                    );
+
+                    if (feature) {
+                        icon = feature.icon;
                     } else {
-                        return null;
+                        if (propertyChange.type == "OBJECT_CHANGED") {
+                            icon =
+                                getClassInfo(
+                                    propertyChange.objectChanges.objectAfter
+                                ).icon || "extension";
+                        } else if (
+                            propertyChange.type == "VALUE_ADDED" ||
+                            propertyChange.type == "VALUE_REMOVED"
+                        ) {
+                            icon =
+                                getClassInfo(propertyChange.value).icon ||
+                                "extension";
+                        }
                     }
-                });
+                }
+
+                if (icon && typeof icon == "string") {
+                    icon = <Icon icon={`material:${icon}`} size={18} />;
+                }
+
+                return (
+                    <div key={propertyChange.propertyInfo.name}>
+                        <div
+                            className={classNames({
+                                "feature-row": isProject,
+                                "value-added":
+                                    propertyChange.type == "VALUE_ADDED",
+                                "value-removed":
+                                    propertyChange.type == "VALUE_REMOVED"
+                            })}
+                        >
+                            {icon && (
+                                <span className="change-icon">{icon}</span>
+                            )}
+                            <span className="change-label">{label}</span>
+
+                            {propertyChange.type == "VALUE_CHANGED" && (
+                                <>
+                                    <span className="value-removed">
+                                        {JSON.stringify(
+                                            propertyChange.valueBefore,
+                                            undefined,
+                                            2
+                                        )}
+                                    </span>
+                                    <span className="value-added">
+                                        {JSON.stringify(
+                                            propertyChange.valueAfter,
+                                            undefined,
+                                            2
+                                        )}
+                                    </span>
+                                </>
+                            )}
+                        </div>
+
+                        {propertyChange.type == "OBJECT_CHANGED" && (
+                            <div style={{ marginLeft: 20 }}>
+                                {this.renderObjectChanges(
+                                    propertyChange.objectChanges
+                                )}
+                            </div>
+                        )}
+
+                        {propertyChange.type == "ARRAY_CHANGED" && (
+                            <div style={{ marginLeft: 20 }}>
+                                {this.renderArrayChanges(
+                                    propertyChange.arrayChanges
+                                )}
+                            </div>
+                        )}
+                    </div>
+                );
+            });
+        }
+
+        renderArrayChanges(arrayChanges: ArrayChanges) {
+            return [
+                ...arrayChanges.added.map(addedObject => {
+                    return (
+                        <div
+                            key={`added-${addedObject.objID}`}
+                            className="element-added"
+                        >
+                            getLabel(addedObject)
+                        </div>
+                    );
+                }),
+                ...arrayChanges.removed.map(removedObject => {
+                    return (
+                        <div
+                            key={`removed-${removedObject.objID}`}
+                            className="element-removed"
+                        >
+                            {getLabel(removedObject)}
+                        </div>
+                    );
+                }),
+                ...arrayChanges.changed.map(objectChanges => {
+                    return (
+                        <div key={`changed-${objectChanges.objectAfter.objID}`}>
+                            <div>{getLabel(objectChanges.objectAfter)}</div>
+                            <div style={{ marginLeft: 20 }}>
+                                {this.renderObjectChanges(objectChanges)}
+                            </div>
+                        </div>
+                    );
+                }),
+                ...(arrayChanges.moved
+                    ? [
+                          <div key="moved">
+                              <span className="array-moved">MOVED</span>
+                          </div>
+                      ]
+                    : [])
+            ];
         }
 
         render() {
+            const projectChanges = diffObject(
+                this.props.projectBeforeAndAfter.projectBefore,
+                this.props.projectBeforeAndAfter.projectAfter
+            );
+
             return (
                 <div className="EezStudio_ChangesEditor">
-                    {this.renderObjectChanges(
-                        this.props.projectBeforeAndAfter.projectBefore,
-                        this.props.projectBeforeAndAfter.projectAfter
-                    )}
+                    {this.renderObjectChanges(projectChanges)}
                 </div>
             );
         }
