@@ -2049,7 +2049,7 @@ export default {
     author: "EEZ",
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
     displayName: "Styles",
-    mandatory: false,
+    mandatory: true,
     key: "styles",
     type: PropertyType.Array,
     typeClass: Style,

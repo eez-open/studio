@@ -41,9 +41,10 @@ export class UIStateStore {
     objectUIStates = new Map<string, any>();
 
     revisionsGitRefreshed: boolean = false;
+    revisionsRefreshing: boolean = false;
     revisions: Revision[] = [];
     selectedRevisionHash: string | undefined;
-    revisionForCompare: Revision | undefined;
+    revisionForCompareHash: string | undefined;
 
     get pageEditorFrontFace() {
         return this._pageEditorFrontFace;
@@ -88,9 +89,10 @@ export class UIStateStore {
             disableBreakpoint: action,
             watchExpressions: observable,
             selectedLanguage: computed,
+            revisionsRefreshing: observable,
             revisions: observable,
             selectedRevisionHash: observable,
-            revisionForCompare: observable
+            revisionForCompareHash: observable
         });
     }
 

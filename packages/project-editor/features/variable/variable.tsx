@@ -1377,7 +1377,7 @@ export default {
     author: "EEZ",
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
     displayName: "Variables",
-    mandatory: false,
+    mandatory: true,
     key: "variables",
     type: PropertyType.Object,
     typeClass: ProjectVariables,

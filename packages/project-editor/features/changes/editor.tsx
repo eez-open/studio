@@ -4,26 +4,29 @@ import {
     runInAction,
     action,
     observable,
-    autorun,
-    IReactionDisposer
+    IReactionDisposer,
+    autorun
 } from "mobx";
 import { observer } from "mobx-react";
 
 import { Loader } from "eez-studio-ui/loader";
 
 import { ProjectContext } from "project-editor/project/context";
+import { EditorComponent } from "project-editor/project/EditorComponent";
 import {
-    EditorComponent,
-    IEditor,
-    IEditorState
-} from "project-editor/project/EditorComponent";
-import { getClassInfo, getLabel, IPanel } from "project-editor/store";
+    getClassInfo,
+    getLabel,
+    IPanel,
+    ProjectEditorStore
+} from "project-editor/store";
 import {
     getBeforeAndAfterProject,
     BeforeAfterProject as ProjectBeforeAndAfter,
     diffObject,
     ObjectChanges,
-    ArrayChanges
+    ArrayChanges,
+    RevertChange,
+    refreshRevisions
 } from "project-editor/features/changes/diff";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import classNames from "classnames";
@@ -33,21 +36,62 @@ import {
     PropertyType
 } from "project-editor/core/object";
 import { Icon } from "eez-studio-ui/icon";
+import {
+    MEMORY_HASH,
+    STAGED_HASH,
+    UNSTAGED_HASH
+} from "project-editor/store/ui-state";
+import {
+    Body,
+    ToolbarHeader,
+    VerticalHeaderWithBody
+} from "eez-studio-ui/header-with-body";
+import { Toolbar } from "eez-studio-ui/toolbar";
+import { TextAction } from "eez-studio-ui/action";
+import { RightArrow } from "project-editor/flow/components/actions";
 
 interface ChangesEditorParams {
-    revisionAfterHash: string;
+    revisionAfterHash: string | undefined;
     revisionBeforeHash: string | undefined;
 }
 
-export class ChangesEditorState implements IEditorState {
-    getTitle(editor: IEditor) {
-        const { revisionAfterHash, revisionBeforeHash }: ChangesEditorParams =
-            editor.params;
+function getChangesEditorParams(projectEditorStore: ProjectEditorStore) {
+    let revisionAfterHash = undefined;
+    let revisionBeforeHash = undefined;
 
-        return `Changes: ${
-            revisionBeforeHash ? revisionBeforeHash.slice(0, 8) : "none"
-        } -> ${revisionAfterHash.slice(0, 8)}`;
+    if (projectEditorStore.uiStateStore.selectedRevisionHash) {
+        if (projectEditorStore.uiStateStore.revisionForCompareHash) {
+            revisionAfterHash =
+                projectEditorStore.uiStateStore.selectedRevisionHash;
+            revisionBeforeHash =
+                projectEditorStore.uiStateStore.revisionForCompareHash;
+        } else {
+            const index = projectEditorStore.uiStateStore.revisions.findIndex(
+                revision =>
+                    revision.hash ==
+                    projectEditorStore.uiStateStore.selectedRevisionHash
+            );
+
+            if (index != -1) {
+                revisionAfterHash =
+                    projectEditorStore.uiStateStore.revisions[index].hash;
+
+                if (
+                    index != -1 &&
+                    index + 1 < projectEditorStore.uiStateStore.revisions.length
+                ) {
+                    revisionBeforeHash =
+                        projectEditorStore.uiStateStore.revisions[index + 1]
+                            .hash;
+                }
+            }
+        }
     }
+
+    return {
+        revisionAfterHash,
+        revisionBeforeHash
+    };
 }
 
 export const ChangesEditor = observer(
@@ -56,7 +100,12 @@ export const ChangesEditor = observer(
         declare context: React.ContextType<typeof ProjectContext>;
 
         projectBeforeAndAfter: ProjectBeforeAndAfter | undefined;
+        projectChanges: ObjectChanges | undefined;
         progressPercent: number | undefined;
+
+        selectedRevertChange: { revertChange: RevertChange | undefined } = {
+            revertChange: undefined
+        };
 
         activeTask: () => void | undefined;
         dispose: IReactionDisposer | undefined;
@@ -66,11 +115,16 @@ export const ChangesEditor = observer(
 
             makeObservable(this, {
                 projectBeforeAndAfter: observable.shallow,
-                progressPercent: observable
+                progressPercent: observable,
+                selectedRevertChange: observable.shallow
             });
         }
 
         componentDidMount() {
+            this.refresh();
+        }
+
+        async refresh() {
             this.dispose = autorun(async () => {
                 if (this.activeTask) {
                     this.activeTask();
@@ -89,7 +143,7 @@ export const ChangesEditor = observer(
                 let projectBeforeAndAfter: ProjectBeforeAndAfter | undefined =
                     undefined;
 
-                const params: ChangesEditorParams = this.props.editor.params;
+                const params = getChangesEditorParams(this.context);
 
                 const revisionAfterIndex =
                     this.context.uiStateStore.revisions.findIndex(
@@ -129,6 +183,15 @@ export const ChangesEditor = observer(
 
                 setTimeout(() => {
                     if (!canceled) {
+                        if (projectBeforeAndAfter) {
+                            this.projectChanges = diffObject(
+                                projectBeforeAndAfter.projectBefore,
+                                projectBeforeAndAfter.projectAfter
+                            );
+                        } else {
+                            this.projectChanges = undefined;
+                        }
+
                         runInAction(() => {
                             this.projectBeforeAndAfter = projectBeforeAndAfter;
                             this.progressPercent = undefined;
@@ -148,48 +211,34 @@ export const ChangesEditor = observer(
             }
         }
 
-        // interface IPanel implementation
-        get selectedObject() {
-            return this.context.project.changes;
+        get isRevertChangesEnabled() {
+            return this.selectedRevertChange.revertChange != undefined;
         }
-        cutSelection() {}
-        copySelection() {}
-        pasteSelection() {}
-        deleteSelection() {}
-        onFocus = () => {
-            this.context.navigationStore.setSelectedPanel(this);
+
+        onSelectRevertChange = action((revertChange: RevertChange) => {
+            this.selectedRevertChange = { revertChange };
+        });
+
+        revertChanges = async () => {
+            if (this.selectedRevertChange.revertChange) {
+                this.selectedRevertChange.revertChange(this.context.project);
+            }
+
+            const params = getChangesEditorParams(this.context);
+
+            if (params.revisionAfterHash != MEMORY_HASH) {
+                await refreshRevisions(this.context);
+
+                runInAction(() => {
+                    this.context.uiStateStore.selectedRevisionHash =
+                        MEMORY_HASH;
+                    this.context.uiStateStore.revisionForCompareHash =
+                        params.revisionBeforeHash;
+                });
+            } else {
+                this.refresh();
+            }
         };
-
-        render() {
-            if (this.progressPercent != undefined) {
-                return (
-                    <Loader
-                        className=""
-                        centered={true}
-                        progressPercent={this.progressPercent}
-                    />
-                );
-            }
-
-            if (!this.projectBeforeAndAfter) {
-                return null;
-            }
-
-            return (
-                <ChangesTree
-                    projectBeforeAndAfter={this.projectBeforeAndAfter}
-                />
-            );
-        }
-    }
-);
-
-export const ChangesTree = observer(
-    class ChangesTree extends React.Component<{
-        projectBeforeAndAfter: ProjectBeforeAndAfter;
-    }> {
-        static contextType = ProjectContext;
-        declare context: React.ContextType<typeof ProjectContext>;
 
         renderObjectChanges(objectChanges: ObjectChanges) {
             const isProject =
@@ -241,37 +290,49 @@ export const ChangesTree = observer(
                 return (
                     <div key={propertyChange.propertyInfo.name}>
                         <div
-                            className={classNames({
-                                "feature-row": isProject,
-                                "value-added":
-                                    propertyChange.type == "VALUE_ADDED",
-                                "value-removed":
-                                    propertyChange.type == "VALUE_REMOVED"
+                            className={classNames("property-change", {
+                                selected:
+                                    this.selectedRevertChange.revertChange &&
+                                    this.selectedRevertChange.revertChange ==
+                                        propertyChange.revert
                             })}
+                            onClick={() =>
+                                this.onSelectRevertChange(propertyChange.revert)
+                            }
                         >
-                            {icon && (
-                                <span className="change-icon">{icon}</span>
-                            )}
-                            <span className="change-label">{label}</span>
+                            <div
+                                className={classNames({
+                                    "feature-row": isProject,
+                                    "value-added":
+                                        propertyChange.type == "VALUE_ADDED",
+                                    "value-removed":
+                                        propertyChange.type == "VALUE_REMOVED"
+                                })}
+                            >
+                                {icon && (
+                                    <span className="change-icon">{icon}</span>
+                                )}
+                                <span className="change-label">{label}</span>
 
-                            {propertyChange.type == "VALUE_CHANGED" && (
-                                <>
-                                    <span className="value-removed">
-                                        {JSON.stringify(
-                                            propertyChange.valueBefore,
-                                            undefined,
-                                            2
-                                        )}
-                                    </span>
-                                    <span className="value-added">
-                                        {JSON.stringify(
-                                            propertyChange.valueAfter,
-                                            undefined,
-                                            2
-                                        )}
-                                    </span>
-                                </>
-                            )}
+                                {propertyChange.type == "VALUE_CHANGED" && (
+                                    <>
+                                        <span className="value-removed">
+                                            {JSON.stringify(
+                                                propertyChange.valueBefore,
+                                                undefined,
+                                                2
+                                            )}
+                                        </span>
+                                        <span className="value-added">
+                                            {JSON.stringify(
+                                                propertyChange.valueAfter,
+                                                undefined,
+                                                2
+                                            )}
+                                        </span>
+                                    </>
+                                )}
+                            </div>
                         </div>
 
                         {propertyChange.type == "OBJECT_CHANGED" && (
@@ -296,39 +357,83 @@ export const ChangesTree = observer(
 
         renderArrayChanges(arrayChanges: ArrayChanges) {
             return [
-                ...arrayChanges.added.map(addedObject => {
+                ...arrayChanges.added.map(added => {
                     return (
                         <div
-                            key={`added-${addedObject.objID}`}
-                            className="element-added"
+                            key={`added-${added.object.objID}`}
+                            className={classNames("array-element-added", {
+                                selected:
+                                    this.selectedRevertChange.revertChange &&
+                                    this.selectedRevertChange.revertChange ==
+                                        added.revert
+                            })}
+                            onClick={() =>
+                                this.onSelectRevertChange(added.revert)
+                            }
                         >
-                            {getLabel(addedObject)}
+                            <span className="element-added">
+                                {getLabel(added.object)}
+                            </span>
                         </div>
                     );
                 }),
-                ...arrayChanges.removed.map(removedObject => {
+                ...arrayChanges.removed.map(removed => {
                     return (
                         <div
-                            key={`removed-${removedObject.objID}`}
-                            className="element-removed"
+                            key={`removed-${removed.object.objID}`}
+                            className={classNames("array-element-removed", {
+                                selected:
+                                    this.selectedRevertChange.revertChange &&
+                                    this.selectedRevertChange.revertChange ==
+                                        removed.revert
+                            })}
+                            onClick={() =>
+                                this.onSelectRevertChange(removed.revert)
+                            }
                         >
-                            {getLabel(removedObject)}
+                            <span className="element-removed">
+                                {getLabel(removed.object)}
+                            </span>
                         </div>
                     );
                 }),
-                ...arrayChanges.changed.map(objectChanges => {
+                ...arrayChanges.changed.map(change => {
                     return (
-                        <div key={`changed-${objectChanges.objectAfter.objID}`}>
-                            <div>{getLabel(objectChanges.objectAfter)}</div>
+                        <div
+                            key={`changed-${change.objectChanges.objectAfter.objID}`}
+                        >
+                            <div
+                                className={classNames("array-element-changed", {
+                                    selected:
+                                        this.selectedRevertChange
+                                            .revertChange == change.revert
+                                })}
+                                onClick={() =>
+                                    this.onSelectRevertChange(change.revert)
+                                }
+                            >
+                                {getLabel(change.objectChanges.objectAfter)}
+                            </div>
                             <div style={{ marginLeft: 20 }}>
-                                {this.renderObjectChanges(objectChanges)}
+                                {this.renderObjectChanges(change.objectChanges)}
                             </div>
                         </div>
                     );
                 }),
                 ...(arrayChanges.moved
                     ? [
-                          <div key="moved">
+                          <div
+                              key="moved"
+                              className={classNames("array-element-moved", {
+                                  selected:
+                                      this.selectedRevertChange.revertChange &&
+                                      this.selectedRevertChange.revertChange ==
+                                          arrayChanges.moved
+                              })}
+                              onClick={() =>
+                                  this.onSelectRevertChange(arrayChanges.moved)
+                              }
+                          >
                               <span className="array-moved">MOVED</span>
                           </div>
                       ]
@@ -336,18 +441,92 @@ export const ChangesTree = observer(
             ];
         }
 
-        render() {
-            const projectChanges = diffObject(
-                this.props.projectBeforeAndAfter.projectBefore,
-                this.props.projectBeforeAndAfter.projectAfter
-            );
+        get title() {
+            const { revisionAfterHash, revisionBeforeHash } =
+                getChangesEditorParams(this.context);
 
-            console.log(projectChanges);
+            if (!revisionAfterHash) {
+                return null;
+            }
 
             return (
-                <div className="EezStudio_ChangesEditor">
-                    {this.renderObjectChanges(projectChanges)}
+                <div className="d-flex">
+                    <span>
+                        {revisionBeforeHash
+                            ? revisionBeforeHash.slice(0, 8)
+                            : "none"}
+                    </span>
+                    <RightArrow />
+                    <span>
+                        {revisionAfterHash
+                            ? revisionAfterHash.slice(0, 8)
+                            : "none"}
+                    </span>
                 </div>
+            );
+        }
+
+        // interface IPanel implementation
+        get selectedObject() {
+            return this.context.project.changes;
+        }
+        cutSelection() {}
+        copySelection() {}
+        pasteSelection() {}
+        deleteSelection() {}
+        onFocus = () => {
+            this.context.navigationStore.setSelectedPanel(this);
+        };
+
+        render() {
+            if (this.progressPercent != undefined) {
+                return (
+                    <Loader
+                        className=""
+                        centered={true}
+                        progressPercent={this.progressPercent}
+                    />
+                );
+            }
+
+            if (!this.projectBeforeAndAfter) {
+                return null;
+            }
+
+            const params: ChangesEditorParams = getChangesEditorParams(
+                this.context
+            );
+
+            const hasRevertChanges =
+                params.revisionAfterHash == MEMORY_HASH ||
+                (params.revisionAfterHash == UNSTAGED_HASH &&
+                    this.context.uiStateStore.revisions[0].hash ==
+                        UNSTAGED_HASH) ||
+                (params.revisionAfterHash == STAGED_HASH &&
+                    this.context.uiStateStore.revisions[0].hash == STAGED_HASH);
+
+            return (
+                <VerticalHeaderWithBody style={{ height: "100%" }}>
+                    <ToolbarHeader style={{ justifyContent: "space-between" }}>
+                        <div>{this.title}</div>
+                        <Toolbar>
+                            {hasRevertChanges && (
+                                <TextAction
+                                    text="Revert Changes"
+                                    icon="material:undo"
+                                    title="Revert Changes"
+                                    onClick={this.revertChanges}
+                                    enabled={this.isRevertChangesEnabled}
+                                />
+                            )}
+                        </Toolbar>
+                    </ToolbarHeader>
+                    <Body tabIndex={0}>
+                        <div className="EezStudio_ChangesEditor">
+                            {this.renderObjectChanges(this.projectChanges!)}
+                        </div>
+                    </Body>
+                </VerticalHeaderWithBody>
             );
         }
     }

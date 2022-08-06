@@ -214,7 +214,7 @@ export default {
     author: "EEZ",
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
     displayName: "Action",
-    mandatory: false,
+    mandatory: true,
     key: "actions",
     type: PropertyType.Array,
     typeClass: Action,

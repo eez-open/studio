@@ -75,6 +75,7 @@ import {
 } from "project-editor/store/commands";
 
 import { objectsToClipboardData } from "project-editor/store/clipboard";
+import { getProjectFeatures } from "./features";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -455,7 +456,7 @@ export class ProjectEditorStore {
     }
 
     getNewProject(): Project {
-        let project = {
+        let project: any = {
             settings: {
                 general: {},
                 build: {
@@ -468,6 +469,13 @@ export class ProjectEditorStore {
                 }
             }
         };
+
+        const features = getProjectFeatures();
+        for (const feature of features) {
+            if (feature.mandatory) {
+                project[feature.key] = feature.create();
+            }
+        }
 
         return loadProject(this, project);
     }

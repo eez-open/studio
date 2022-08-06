@@ -6,7 +6,6 @@ import classNames from "classnames";
 import { objectClone } from "eez-studio-shared/util";
 
 import {
-    setId,
     getClassesDerivedFrom,
     IObjectClassInfo
 } from "project-editor/core/object";
@@ -24,7 +23,6 @@ import {
     setClipboardData
 } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { COMPONENT_PALETTE_ITEM_ID } from "./consts";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -365,8 +363,6 @@ const PaletteItem = observer(
             if (object.height == undefined) {
                 object.height = 0;
             }
-
-            setId(this.context, object, COMPONENT_PALETTE_ITEM_ID);
 
             setClipboardData(event, objectToClipboardData(object));
 

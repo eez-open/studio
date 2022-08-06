@@ -1,13 +1,7 @@
 import moment from "moment";
 import { Menu, MenuItem } from "@electron/remote";
 import React from "react";
-import {
-    makeObservable,
-    runInAction,
-    action,
-    computed,
-    observable
-} from "mobx";
+import { makeObservable, action, computed } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -22,7 +16,7 @@ import {
     Revision,
     STAGED_HASH
 } from "project-editor/store/ui-state";
-import { getRevisions } from "project-editor/features/changes/diff";
+import { refreshRevisions } from "project-editor/features/changes/diff";
 import {
     Body,
     ToolbarHeader,
@@ -36,14 +30,11 @@ export const ChangesNavigation = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
-        loading: boolean = true;
-
         constructor(props: any) {
             super(props);
 
             makeObservable(this, {
-                nodes: computed,
-                loading: observable
+                nodes: computed
             });
         }
 
@@ -51,20 +42,8 @@ export const ChangesNavigation = observer(
             this.refresh(false);
         }
 
-        refresh = async (forceGitRefresh: boolean = true) => {
-            runInAction(() => {
-                this.loading = true;
-            });
-
-            let revisions: Revision[] = await getRevisions(
-                this.context,
-                forceGitRefresh
-            );
-
-            runInAction(() => {
-                this.context.uiStateStore.revisions = revisions;
-                this.loading = false;
-            });
+        refresh = (forceGitRefresh: boolean = true) => {
+            refreshRevisions(this.context, forceGitRefresh);
         };
 
         get nodes(): IListNode<Revision>[] {
@@ -80,46 +59,15 @@ export const ChangesNavigation = observer(
 
         selectNode = action((node: IListNode<Revision>) => {
             this.context.uiStateStore.selectedRevisionHash = node.data.hash;
-
-            if (this.context.uiStateStore.selectedRevisionHash) {
-                const index = this.context.uiStateStore.revisions.findIndex(
-                    revision =>
-                        revision.hash ==
-                        this.context.uiStateStore.selectedRevisionHash
-                );
-
-                const revisionAfter =
-                    this.context.uiStateStore.revisions[index];
-
-                let revisionBefore;
-
-                if (
-                    index != -1 &&
-                    index + 1 < this.context.uiStateStore.revisions.length
-                ) {
-                    revisionBefore =
-                        this.context.uiStateStore.revisions[index + 1];
-                } else {
-                    revisionBefore = undefined;
-                }
-
-                this.context.editorsStore.openEditor(
-                    this.context.project.changes,
-                    undefined,
-                    {
-                        revisionAfterHash: revisionAfter.hash,
-                        revisionBeforeHash: revisionBefore?.hash
-                    }
-                );
-            }
+            this.context.editorsStore.openEditor(this.context.project.changes);
         });
 
         renderNode = (node: IListNode<Revision>) => (
             <div
                 className={classNames({
                     "revision-for-compare":
-                        node.data ==
-                        this.context.uiStateStore.revisionForCompare
+                        node.data.hash ==
+                        this.context.uiStateStore.revisionForCompareHash
                 })}
             >
                 <div className="revision-message">{node.data.message}</div>
@@ -138,42 +86,26 @@ export const ChangesNavigation = observer(
         onContextMenu = (node: IListNode<Revision>) => {
             const menu = new Menu();
 
-            if (node.data == this.context.uiStateStore.revisionForCompare) {
+            if (
+                node.data.hash ==
+                this.context.uiStateStore.revisionForCompareHash
+            ) {
                 menu.append(
                     new MenuItem({
                         label: "Deselect",
                         click: action(() => {
-                            this.context.uiStateStore.revisionForCompare =
+                            this.context.uiStateStore.revisionForCompareHash =
                                 undefined;
                         })
                     })
                 );
             } else {
-                if (this.context.uiStateStore.revisionForCompare) {
-                    menu.append(
-                        new MenuItem({
-                            label: "Compare with Selected",
-                            click: action(() => {
-                                this.context.editorsStore.openEditor(
-                                    this.context.project.changes,
-                                    undefined,
-                                    {
-                                        revisionAfterHash: node.data.hash,
-                                        revisionBeforeHash:
-                                            this.context.uiStateStore
-                                                .revisionForCompare!.hash
-                                    }
-                                );
-                            })
-                        })
-                    );
-                }
                 menu.append(
                     new MenuItem({
                         label: "Select for Compare",
                         click: action(() => {
-                            this.context.uiStateStore.revisionForCompare =
-                                node.data;
+                            this.context.uiStateStore.revisionForCompareHash =
+                                node.data.hash;
                         })
                     })
                 );
@@ -194,7 +126,7 @@ export const ChangesNavigation = observer(
                         </Toolbar>
                     </ToolbarHeader>
                     <Body tabIndex={0}>
-                        {this.loading ? (
+                        {this.context.uiStateStore.revisionsRefreshing ? (
                             <Loader className="" centered={true} />
                         ) : (
                             <List

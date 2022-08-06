@@ -74,6 +74,9 @@ export class NavigationStore {
             if (this.projectEditorStore.project.readme) {
                 selectedRootObject = this.projectEditorStore.project.readme;
                 editorObject = selectedRootObject;
+            } else if (this.projectEditorStore.project.changes) {
+                selectedRootObject = this.projectEditorStore.project.changes;
+                editorObject = selectedRootObject;
             } else if (this.projectEditorStore.project.pages) {
                 selectedRootObject = this.projectEditorStore.project.pages;
                 if (this.projectEditorStore.project.pages.length > 0) {

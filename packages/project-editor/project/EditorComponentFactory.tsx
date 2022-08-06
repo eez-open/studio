@@ -25,10 +25,7 @@ import { Font } from "project-editor/features/font/font";
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import { getAncestorOfType } from "project-editor/store";
 import { ReadmeEditor } from "project-editor/features/readme/navigation";
-import {
-    ChangesEditor,
-    ChangesEditorState
-} from "project-editor/features/changes/editor";
+import { ChangesEditor } from "project-editor/features/changes/editor";
 
 export function getEditorComponent(
     object: IEezObject,
@@ -90,7 +87,7 @@ export function getEditorComponent(
         };
     }
 
-    if (isAncestor(object, project.changes) && params) {
+    if (isAncestor(object, project.changes)) {
         return {
             object: project.changes,
             EditorComponent: ChangesEditor
@@ -122,8 +119,6 @@ export function createEditorState(object: IEezObject) {
         state = new ActionFlowTabState(action);
     } else if (isAncestor(object, project.pages)) {
         state = new PageTabState(object as Page);
-    } else if (isAncestor(object, project.changes)) {
-        state = new ChangesEditorState();
     }
 
     if (state && state.loadState) {

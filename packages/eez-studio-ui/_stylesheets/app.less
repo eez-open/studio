@@ -5572,4 +5572,26 @@ button.EezStudio_Action {
         color: #212529;
         margin-right: 4px;
     }
+
+    .property-change,
+    .array-element-added,
+    .array-element-removed,
+    .array-element-changed,
+    .array-element-moved {
+        padding: 2px 4px;
+        &:hover {
+            background-color: @hoverBackgroundColor;
+            color: @hoverColor;
+        }
+        &.selected {
+            background-color: @selectionBackgroundColor;
+            color: @selectionColor;
+        }
+    }
+
+    .property-change.selected {
+        .feature-row {
+            color: @textColor;
+        }
+    }
 }

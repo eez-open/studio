@@ -1,16 +1,24 @@
 import { readTextFile } from "eez-studio-shared/util-electron";
-import { runInAction } from "mobx";
+import { runInAction, toJS } from "mobx";
 import path from "path";
 import {
     EezObject,
     PropertyInfo,
     PropertyType
 } from "project-editor/core/object";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Project } from "project-editor/project/project";
 import {
+    addObject,
+    createObject,
+    deleteObject,
     getClassInfo,
+    getObjectFromStringPath,
+    getObjectPathAsString,
     loadProject,
-    ProjectEditorStore
+    ProjectEditorStore,
+    replaceObject,
+    updateObject
 } from "project-editor/store";
 
 import {
@@ -103,8 +111,14 @@ export async function getRevisions(
 
         projectEditorStore.uiStateStore.revisionsGitRefreshed = true;
     } catch (err) {
-        console.error(err);
-        revisions = [];
+        console.warn(err);
+
+        revisions = [
+            {
+                hash: UNSTAGED_HASH,
+                message: "[ Unstaged ]"
+            }
+        ];
     }
 
     if (projectEditorStore.modified) {
@@ -115,6 +129,25 @@ export async function getRevisions(
     }
 
     return revisions;
+}
+
+export async function refreshRevisions(
+    projectEditorStore: ProjectEditorStore,
+    forceGitRefresh: boolean = true
+) {
+    runInAction(() => {
+        projectEditorStore.uiStateStore.revisionsRefreshing = true;
+    });
+
+    let revisions: Revision[] = await getRevisions(
+        projectEditorStore,
+        forceGitRefresh
+    );
+
+    runInAction(() => {
+        projectEditorStore.uiStateStore.revisions = revisions;
+        projectEditorStore.uiStateStore.revisionsRefreshing = false;
+    });
 }
 
 async function getRevisionProject(
@@ -210,8 +243,11 @@ export interface ObjectChanges {
     changes: PropertyChange[];
 }
 
-type PropertyChange = {
+export type RevertChange = ((project: Project) => void) | undefined;
+
+export type PropertyChange = {
     propertyInfo: PropertyInfo;
+    revert: RevertChange;
 } & (
     | {
           type: "SAME";
@@ -243,10 +279,13 @@ export interface ArrayChanges {
     arrayBefore: EezObject[];
     arrayAfter: EezObject[];
 
-    added: EezObject[];
-    removed: EezObject[];
-    changed: ObjectChanges[];
-    moved: boolean;
+    added: { object: EezObject; revert: RevertChange }[];
+    removed: { object: EezObject; revert: RevertChange }[];
+    changed: {
+        objectChanges: ObjectChanges;
+        revert: RevertChange;
+    }[];
+    moved: RevertChange;
 }
 
 export function diffObject(
@@ -258,34 +297,74 @@ export function diffObject(
     const changes: PropertyChange[] = classInfo.properties
         .filter(propertyInfo => !propertyInfo.computed)
         .map(propertyInfo => {
+            let propertyChange: PropertyChange;
+
             const valueBefore = (objectBefore as any)[propertyInfo.name];
             const valueAfter = (objectAfter as any)[propertyInfo.name];
 
             if (!valueBefore && !valueAfter) {
-                return {
+                propertyChange = {
                     propertyInfo,
-                    type: "SAME"
-                } as PropertyChange;
-            }
+                    type: "SAME",
+                    revert: undefined
+                };
+            } else if (!valueBefore && valueAfter) {
+                let mandatoryFeature = false;
+                if (objectAfter instanceof ProjectEditor.ProjectClass) {
+                    mandatoryFeature = true;
+                }
 
-            if (!valueBefore && valueAfter) {
-                return {
+                propertyChange = {
                     propertyInfo,
                     type: "VALUE_ADDED",
-                    value: valueAfter
-                } as PropertyChange;
-            }
-
-            if (valueBefore && !valueAfter) {
-                return {
+                    value: valueAfter,
+                    revert: mandatoryFeature
+                        ? undefined
+                        : (project: Project) => {
+                              const object = getObjectFromStringPath(
+                                  project,
+                                  getObjectPathAsString(objectAfter)
+                              );
+                              updateObject(object, {
+                                  [propertyInfo.name]: undefined
+                              });
+                          }
+                };
+            } else if (valueBefore && !valueAfter) {
+                propertyChange = {
                     propertyInfo,
                     type: "VALUE_REMOVED",
-                    value: valueBefore
-                } as PropertyChange;
-            }
+                    value: valueBefore,
+                    revert: (project: Project) => {
+                        const object = getObjectFromStringPath(
+                            project,
+                            getObjectPathAsString(objectAfter)
+                        );
 
-            if (propertyInfo.type == PropertyType.Array) {
+                        let value;
+                        if (
+                            propertyInfo.type == PropertyType.Object ||
+                            propertyInfo.type == PropertyType.Array
+                        ) {
+                            value = createObject(
+                                project._DocumentStore,
+                                toJS(valueBefore),
+                                propertyInfo.typeClass!,
+                                undefined,
+                                false
+                            );
+                        } else {
+                            value = valueBefore;
+                        }
+
+                        updateObject(object, {
+                            [propertyInfo.name]: value
+                        });
+                    }
+                };
+            } else if (propertyInfo.type == PropertyType.Array) {
                 const arrayChanges = diffArray(
+                    propertyInfo,
                     (objectBefore as any)[propertyInfo.name],
                     (objectAfter as any)[propertyInfo.name]
                 );
@@ -296,17 +375,36 @@ export function diffObject(
                     arrayChanges.changed.length == 0 &&
                     !arrayChanges.moved
                 ) {
-                    return {
+                    propertyChange = {
                         propertyInfo,
-                        type: "SAME"
-                    } as PropertyChange;
-                }
+                        type: "SAME",
+                        revert: undefined
+                    };
+                } else {
+                    propertyChange = {
+                        propertyInfo,
+                        type: "ARRAY_CHANGED",
+                        arrayChanges,
+                        revert: (project: Project) => {
+                            const object = getObjectFromStringPath(
+                                project,
+                                getObjectPathAsString(objectAfter)
+                            );
 
-                return {
-                    propertyInfo,
-                    type: "ARRAY_CHANGED",
-                    arrayChanges
-                } as PropertyChange;
+                            let value = createObject(
+                                project._DocumentStore,
+                                toJS(valueBefore),
+                                propertyInfo.typeClass!,
+                                undefined,
+                                false
+                            );
+
+                            updateObject(object, {
+                                [propertyInfo.name]: value
+                            });
+                        }
+                    };
+                }
             } else if (propertyInfo.type == PropertyType.Object) {
                 const objectChanges = diffObject(
                     (objectBefore as any)[propertyInfo.name],
@@ -314,32 +412,80 @@ export function diffObject(
                 );
 
                 if (objectChanges.changes.length == 0) {
-                    return {
+                    propertyChange = {
                         propertyInfo,
-                        type: "SAME"
-                    } as PropertyChange;
-                }
+                        type: "SAME",
+                        revert: undefined
+                    };
+                } else {
+                    propertyChange = {
+                        propertyInfo,
+                        type: "OBJECT_CHANGED",
+                        objectChanges,
+                        revert: (project: Project) => {
+                            const object = getObjectFromStringPath(
+                                project,
+                                getObjectPathAsString(objectAfter)
+                            );
 
-                return {
-                    propertyInfo,
-                    type: "OBJECT_CHANGED",
-                    objectChanges
-                } as PropertyChange;
+                            let value = createObject(
+                                project._DocumentStore,
+                                toJS(valueBefore),
+                                propertyInfo.typeClass!,
+                                undefined,
+                                false
+                            );
+
+                            updateObject(object, {
+                                [propertyInfo.name]: value
+                            });
+                        }
+                    };
+                }
             } else {
                 if (JSON.stringify(valueBefore) == JSON.stringify(valueAfter)) {
-                    return {
+                    propertyChange = {
                         propertyInfo,
-                        type: "SAME"
-                    } as PropertyChange;
-                }
+                        type: "SAME",
+                        revert: undefined
+                    };
+                } else {
+                    propertyChange = {
+                        propertyInfo,
+                        type: "VALUE_CHANGED",
+                        valueBefore,
+                        valueAfter,
+                        revert: (project: Project) => {
+                            const object = getObjectFromStringPath(
+                                project,
+                                getObjectPathAsString(objectAfter)
+                            );
 
-                return {
-                    propertyInfo,
-                    type: "VALUE_CHANGED",
-                    valueBefore,
-                    valueAfter
-                } as PropertyChange;
+                            let value;
+                            if (
+                                propertyInfo.type == PropertyType.Object ||
+                                propertyInfo.type == PropertyType.Array
+                            ) {
+                                value = createObject(
+                                    project._DocumentStore,
+                                    toJS(valueBefore),
+                                    propertyInfo.typeClass!,
+                                    undefined,
+                                    false
+                                );
+                            } else {
+                                value = valueBefore;
+                            }
+
+                            updateObject(object, {
+                                [propertyInfo.name]: value
+                            });
+                        }
+                    };
+                }
             }
+
+            return propertyChange;
         })
         .filter(propertyChange => propertyChange.type != "SAME");
 
@@ -351,13 +497,17 @@ export function diffObject(
 }
 
 function diffArray(
+    propertyInfo: PropertyInfo,
     arrayBefore: EezObject[],
     arrayAfter: EezObject[]
 ): ArrayChanges {
-    const added: EezObject[] = [];
-    const removed: EezObject[] = [];
-    const changed: ObjectChanges[] = [];
-    let moved = false;
+    const added: { object: EezObject; revert: RevertChange }[] = [];
+    const removed: { object: EezObject; revert: RevertChange }[] = [];
+    const changed: {
+        objectChanges: ObjectChanges;
+        revert: RevertChange;
+    }[] = [];
+    let moved: RevertChange = undefined;
 
     for (let indexAfter = 0; indexAfter < arrayAfter.length; indexAfter++) {
         const elementAfter = arrayAfter[indexAfter];
@@ -367,17 +517,47 @@ function diffArray(
         );
 
         if (indexBefore == -1) {
-            added.push(elementAfter);
+            added.push({
+                object: elementAfter,
+                revert: (project: Project) => {
+                    const object = getObjectFromStringPath(
+                        project,
+                        getObjectPathAsString(elementAfter)
+                    );
+
+                    deleteObject(object);
+                }
+            });
         } else {
             const elementBefore = arrayBefore[indexBefore];
 
             const objectChanges = diffObject(elementBefore, elementAfter);
             if (objectChanges.changes.length > 0) {
-                changed.push(objectChanges);
+                changed.push({
+                    objectChanges,
+                    revert: (project: Project) => {
+                        const object = getObjectFromStringPath(
+                            project,
+                            getObjectPathAsString(elementAfter)
+                        );
+
+                        const value = createObject(
+                            project._DocumentStore,
+                            toJS(elementBefore),
+                            propertyInfo.typeClass!,
+                            undefined,
+                            false
+                        );
+
+                        replaceObject(object, value);
+                    }
+                });
             }
 
             if (indexBefore != indexAfter) {
-                moved = true;
+                moved = (project: Project) => {
+                    console.warn("NOT IMPLEMENTED");
+                };
             }
         }
     }
@@ -388,7 +568,25 @@ function diffArray(
             elementAfter => elementAfter.objID == elementBefore.objID
         );
         if (indexAfter == -1) {
-            removed.push(elementBefore);
+            removed.push({
+                object: elementBefore,
+                revert: (project: Project) => {
+                    const object = getObjectFromStringPath(
+                        project,
+                        getObjectPathAsString(arrayAfter)
+                    );
+
+                    const value = createObject(
+                        project._DocumentStore,
+                        toJS(elementBefore),
+                        propertyInfo.typeClass!,
+                        undefined,
+                        false
+                    );
+
+                    addObject(object, value);
+                }
+            });
         }
     }
 
@@ -398,6 +596,9 @@ function diffArray(
         added,
         removed,
         changed,
-        moved: moved && added.length == 0 && removed.length == 0
+        moved:
+            moved && added.length == 0 && removed.length == 0
+                ? moved
+                : undefined
     };
 }

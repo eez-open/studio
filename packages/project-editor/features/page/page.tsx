@@ -767,7 +767,7 @@ export default {
     author: "EEZ",
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
     displayName: "Pages",
-    mandatory: false,
+    mandatory: true,
     key: "pages",
     type: PropertyType.Array,
     typeClass: Page,

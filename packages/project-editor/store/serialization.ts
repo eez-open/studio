@@ -28,6 +28,7 @@ export function createObject<T extends EezObject>(
 ): T {
     currentDocumentStore = projectEditorStore;
     createNewObjectobjIDs = createNewObjectobjIDs ?? true;
+    isLoadProject = false;
     currentProject = projectEditorStore.project;
     const result = loadObjectInternal(undefined, jsObject, aClass, key);
     currentDocumentStore = undefined;
@@ -40,6 +41,7 @@ export function loadProject(
     projectObjectOrString: any | string
 ): Project {
     currentDocumentStore = projectEditorStore;
+    isLoadProject = true;
     createNewObjectobjIDs = false;
     const result = loadObjectInternal(
         undefined,
@@ -99,6 +101,7 @@ export function objectToJson(
 
 let currentDocumentStore: ProjectEditorStore | undefined;
 let currentProject: Project | undefined;
+let isLoadProject: boolean;
 let createNewObjectobjIDs: boolean;
 
 function loadArrayObject(
@@ -170,7 +173,7 @@ function loadObjectInternal(
     if (
         createNewObjectobjIDs ||
         objID == undefined ||
-        currentProject!._objectsMap.get(objID)
+        (isLoadProject && currentProject!._objectsMap.get(objID))
     ) {
         objID = guid();
     }

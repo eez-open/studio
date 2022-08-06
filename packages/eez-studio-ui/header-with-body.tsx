@@ -12,6 +12,7 @@ export class Header extends React.Component<{
 
 export class ToolbarHeader extends React.Component<{
     className?: string;
+    style?: React.CSSProperties;
 }> {
     render() {
         let className = classNames(
@@ -20,7 +21,11 @@ export class ToolbarHeader extends React.Component<{
             "EezStudio_Toolbar",
             this.props.className
         );
-        return <div className={className}>{this.props.children}</div>;
+        return (
+            <div className={className} style={this.props.style}>
+                {this.props.children}
+            </div>
+        );
     }
 }
 
