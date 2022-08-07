@@ -51,6 +51,8 @@ import { TextAction } from "eez-studio-ui/action";
 import { RightArrow } from "project-editor/flow/components/actions";
 import type { Page } from "project-editor/features/page/page";
 import { Splitter } from "eez-studio-ui/splitter";
+import { PageTabState } from "../page/PageEditor";
+import { FlowEditor } from "project-editor/flow/editor/editor";
 
 interface ChangesEditorParams {
     revisionAfterHash: string | undefined;
@@ -361,8 +363,38 @@ export const ChangesEditor = observer(
                                     persistId="project-editor/changes/splitter2"
                                     splitterSize={5}
                                 >
-                                    <div>TODO before</div>
-                                    <div>TODO after</div>
+                                    <ProjectContext.Provider
+                                        value={
+                                            ProjectEditor.getProject(
+                                                this.selectedPageChange
+                                                    .pageBefore
+                                            )._DocumentStore
+                                        }
+                                    >
+                                        <FlowEditor
+                                            tabState={
+                                                new PageTabState(
+                                                    this.selectedPageChange.pageBefore
+                                                )
+                                            }
+                                        ></FlowEditor>
+                                    </ProjectContext.Provider>
+                                    <ProjectContext.Provider
+                                        value={
+                                            ProjectEditor.getProject(
+                                                this.selectedPageChange
+                                                    .pageAfter
+                                            )._DocumentStore
+                                        }
+                                    >
+                                        <FlowEditor
+                                            tabState={
+                                                new PageTabState(
+                                                    this.selectedPageChange.pageAfter
+                                                )
+                                            }
+                                        ></FlowEditor>
+                                    </ProjectContext.Provider>
                                 </Splitter>
                             </Splitter>
                         ) : (

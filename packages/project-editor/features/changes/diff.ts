@@ -191,10 +191,10 @@ async function getRevisionProject(
     const revisionProjectEditorStore = new ProjectEditorStore();
 
     runInAction(() => {
-        revisionProjectEditorStore.project = loadProject(
-            revisionProjectEditorStore,
-            content
-        ) as Project;
+        revisionProjectEditorStore.setProject(
+            loadProject(revisionProjectEditorStore, content) as Project,
+            undefined
+        );
     });
 
     progressCallback(100);
