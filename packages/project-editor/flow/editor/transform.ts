@@ -20,7 +20,7 @@ export class Transform implements ITransform {
 
     clientRect = { left: 0, top: 0, width: 1, height: 1 };
 
-    constructor(params: ITransform) {
+    constructor(params: ITransform, public boundedTransform?: Transform) {
         makeObservable(this, {
             _translate: observable,
             _scale: observable,
@@ -29,16 +29,24 @@ export class Transform implements ITransform {
         });
 
         Object.assign(this, params);
+
+        if (boundedTransform) {
+            boundedTransform._setTranslate(this._translate);
+            boundedTransform._setScale(this._scale);
+        }
     }
 
     clone() {
-        const transform = new Transform({
-            translate: {
-                x: this.translate.x,
-                y: this.translate.y
+        const transform = new Transform(
+            {
+                translate: {
+                    x: this.translate.x,
+                    y: this.translate.y
+                },
+                scale: this.scale
             },
-            scale: this.scale
-        });
+            this.boundedTransform
+        );
         transform.clientRect = this.clientRect;
         return transform;
     }
@@ -51,6 +59,16 @@ export class Transform implements ITransform {
         runInAction(() => {
             this._translate = point;
         });
+
+        if (this.boundedTransform) {
+            this.boundedTransform._setTranslate(point);
+        }
+    }
+
+    _setTranslate(point: Point) {
+        runInAction(() => {
+            this._translate = point;
+        });
     }
 
     get scale() {
@@ -58,6 +76,16 @@ export class Transform implements ITransform {
     }
 
     set scale(scale: number) {
+        runInAction(() => {
+            this._scale = scale;
+        });
+
+        if (this.boundedTransform) {
+            this.boundedTransform._setScale(scale);
+        }
+    }
+
+    _setScale(scale: number) {
         runInAction(() => {
             this._scale = scale;
         });

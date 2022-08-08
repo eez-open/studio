@@ -25,6 +25,8 @@ interface SplitterProps {
     onKeyDown?: (event: any) => void;
 
     splitterSize?: number;
+
+    resizeable?: boolean;
 }
 
 interface IDraggableParams {
@@ -415,8 +417,15 @@ export const Splitter = observer(
                         boxSizing: "border-box"
                     };
 
+                    if (this.props.resizeable === false) {
+                        style.pointerEvents = "none";
+                        style.backgroundImage = "none";
+                    }
+
                     if (this.props.type === "horizontal") {
-                        style.cursor = "col-resize";
+                        if (this.props.resizeable !== false) {
+                            style.cursor = "col-resize";
+                        }
                         style.left = this.offsets[i] + this.sizes[i] + "px";
                         style.top = 0;
                         style.width =
@@ -426,7 +435,9 @@ export const Splitter = observer(
                         style.borderLeft = "1px solid " + theme().borderColor;
                         style.borderRight = "1px solid " + theme().borderColor;
                     } else {
-                        style.cursor = "row-resize";
+                        if (this.props.resizeable !== false) {
+                            style.cursor = "row-resize";
+                        }
                         style.left = 0;
                         style.top = this.offsets[i] + this.sizes[i] + "px";
                         style.width = "100%";

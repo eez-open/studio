@@ -51,8 +51,8 @@ import { TextAction } from "eez-studio-ui/action";
 import { RightArrow } from "project-editor/flow/components/actions";
 import type { Page } from "project-editor/features/page/page";
 import { Splitter } from "eez-studio-ui/splitter";
-import { PageTabState } from "../page/PageEditor";
-import { FlowEditor } from "project-editor/flow/editor/editor";
+import { FlowViewer } from "project-editor/features/changes/flow-viewer";
+import { Transform } from "project-editor/flow/editor/transform";
 
 interface ChangesEditorParams {
     revisionAfterHash: string | undefined;
@@ -332,6 +332,17 @@ export const ChangesEditor = observer(
                 </div>
             );
 
+            const transformBefore = new Transform({
+                translate: { x: 0, y: 0 },
+                scale: 0.5
+            });
+            const transformAfter = new Transform({
+                translate: { x: 0, y: 0 },
+                scale: 0.5
+            });
+            transformBefore.boundedTransform = transformAfter;
+            transformAfter.boundedTransform = transformBefore;
+
             return (
                 <VerticalHeaderWithBody style={{ height: "100%" }}>
                     <ToolbarHeader style={{ justifyContent: "space-between" }}>
@@ -360,8 +371,9 @@ export const ChangesEditor = observer(
                                 <Splitter
                                     type="vertical"
                                     sizes="50%|50%"
-                                    persistId="project-editor/changes/splitter2"
+                                    persistId="project-editor/changes/splitter3"
                                     splitterSize={5}
+                                    resizeable={false}
                                 >
                                     <ProjectContext.Provider
                                         value={
@@ -371,13 +383,13 @@ export const ChangesEditor = observer(
                                             )._DocumentStore
                                         }
                                     >
-                                        <FlowEditor
-                                            tabState={
-                                                new PageTabState(
-                                                    this.selectedPageChange.pageBefore
-                                                )
+                                        <FlowViewer
+                                            flow={
+                                                this.selectedPageChange
+                                                    .pageBefore
                                             }
-                                        ></FlowEditor>
+                                            transform={transformBefore}
+                                        ></FlowViewer>
                                     </ProjectContext.Provider>
                                     <ProjectContext.Provider
                                         value={
@@ -387,13 +399,13 @@ export const ChangesEditor = observer(
                                             )._DocumentStore
                                         }
                                     >
-                                        <FlowEditor
-                                            tabState={
-                                                new PageTabState(
-                                                    this.selectedPageChange.pageAfter
-                                                )
+                                        <FlowViewer
+                                            flow={
+                                                this.selectedPageChange
+                                                    .pageAfter
                                             }
-                                        ></FlowEditor>
+                                            transform={transformAfter}
+                                        ></FlowViewer>
                                     </ProjectContext.Provider>
                                 </Splitter>
                             </Splitter>
