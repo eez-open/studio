@@ -11,19 +11,14 @@ import { List, IListNode } from "eez-studio-ui/list";
 import { ProjectContext } from "project-editor/project/context";
 import { NavigationComponent } from "project-editor/project/NavigationComponent";
 import {
-    MEMORY_HASH,
-    UNSTAGED_HASH,
-    Revision,
-    STAGED_HASH
-} from "project-editor/store/ui-state";
-import { refreshRevisions } from "project-editor/features/changes/diff";
-import {
     Body,
     ToolbarHeader,
     VerticalHeaderWithBody
 } from "eez-studio-ui/header-with-body";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
+
+import { MEMORY_HASH, UNSTAGED_HASH, Revision, STAGED_HASH } from "./state";
 
 export const ChangesNavigation = observer(
     class ChangesNavigation extends NavigationComponent {
@@ -43,22 +38,28 @@ export const ChangesNavigation = observer(
         }
 
         refresh = (forceGitRefresh: boolean = true) => {
-            refreshRevisions(this.context, forceGitRefresh);
+            this.context.project.changes._state.refreshRevisions(
+                this.context,
+                forceGitRefresh
+            );
         };
 
         get nodes(): IListNode<Revision>[] {
-            return this.context.uiStateStore.revisions.map(revision => ({
-                id: revision.hash,
-                label: revision.message,
-                data: revision,
-                selected:
-                    revision.hash ==
-                    this.context.uiStateStore.selectedRevisionHash
-            }));
+            return this.context.project.changes._state.revisions.map(
+                revision => ({
+                    id: revision.hash,
+                    label: revision.message,
+                    data: revision,
+                    selected:
+                        revision.hash ==
+                        this.context.project.changes._state.selectedRevisionHash
+                })
+            );
         }
 
         selectNode = action((node: IListNode<Revision>) => {
-            this.context.uiStateStore.selectedRevisionHash = node.data.hash;
+            this.context.project.changes._state.selectedRevisionHash =
+                node.data.hash;
             this.context.editorsStore.openEditor(this.context.project.changes);
         });
 
@@ -67,7 +68,8 @@ export const ChangesNavigation = observer(
                 className={classNames({
                     "revision-for-compare":
                         node.data.hash ==
-                        this.context.uiStateStore.revisionForCompareHash
+                        this.context.project.changes._state
+                            .revisionForCompareHash
                 })}
             >
                 <div className="revision-message">{node.data.message}</div>
@@ -88,13 +90,13 @@ export const ChangesNavigation = observer(
 
             if (
                 node.data.hash ==
-                this.context.uiStateStore.revisionForCompareHash
+                this.context.project.changes._state.revisionForCompareHash
             ) {
                 menu.append(
                     new MenuItem({
                         label: "Deselect",
                         click: action(() => {
-                            this.context.uiStateStore.revisionForCompareHash =
+                            this.context.project.changes._state.revisionForCompareHash =
                                 undefined;
                         })
                     })
@@ -104,7 +106,7 @@ export const ChangesNavigation = observer(
                     new MenuItem({
                         label: "Select for Compare",
                         click: action(() => {
-                            this.context.uiStateStore.revisionForCompareHash =
+                            this.context.project.changes._state.revisionForCompareHash =
                                 node.data.hash;
                         })
                     })
@@ -126,7 +128,8 @@ export const ChangesNavigation = observer(
                         </Toolbar>
                     </ToolbarHeader>
                     <Body tabIndex={0}>
-                        {this.context.uiStateStore.revisionsRefreshing ? (
+                        {this.context.project.changes._state
+                            .revisionsRefreshing ? (
                             <Loader className="" centered={true} />
                         ) : (
                             <List

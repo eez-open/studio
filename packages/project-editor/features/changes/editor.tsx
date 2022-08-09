@@ -5,7 +5,8 @@ import {
     action,
     observable,
     IReactionDisposer,
-    autorun
+    autorun,
+    computed
 } from "mobx";
 import { observer } from "mobx-react";
 
@@ -14,33 +15,22 @@ import { Loader } from "eez-studio-ui/loader";
 import { ProjectContext } from "project-editor/project/context";
 import { EditorComponent } from "project-editor/project/EditorComponent";
 import {
+    getAncestorOfType,
     getClassInfo,
     getLabel,
     IPanel,
     ProjectEditorStore
 } from "project-editor/store";
-import {
-    getBeforeAndAfterProject,
-    BeforeAfterProject as ProjectBeforeAndAfter,
-    diffObject,
-    ObjectChanges,
-    ArrayChanges,
-    RevertChange,
-    refreshRevisions
-} from "project-editor/features/changes/diff";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import classNames from "classnames";
 import { getProjectFeatures } from "project-editor/store/features";
 import {
+    EezObject,
     getObjectPropertyDisplayName,
+    getParent,
     PropertyType
 } from "project-editor/core/object";
 import { Icon } from "eez-studio-ui/icon";
-import {
-    MEMORY_HASH,
-    STAGED_HASH,
-    UNSTAGED_HASH
-} from "project-editor/store/ui-state";
 import {
     Body,
     ToolbarHeader,
@@ -49,10 +39,32 @@ import {
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { TextAction } from "eez-studio-ui/action";
 import { RightArrow } from "project-editor/flow/components/actions";
-import type { Page } from "project-editor/features/page/page";
 import { Splitter } from "eez-studio-ui/splitter";
 import { FlowViewer } from "project-editor/features/changes/flow-viewer";
 import { Transform } from "project-editor/flow/editor/transform";
+import { Flow } from "project-editor/flow/flow";
+
+import {
+    MEMORY_HASH,
+    STAGED_HASH,
+    UNSTAGED_HASH,
+    getBeforeAndAfterProject,
+    BeforeAfterProject as ProjectBeforeAndAfter,
+    diffObject,
+    ObjectChanges,
+    ArrayChanges,
+    ProjectChange,
+    ObjectPropertyValueChanged,
+    PropertyValueRemoved,
+    PropertyValueAdded,
+    PropertyValueChanged,
+    ArrayPropertyValueChanged,
+    ArrayElementAdded,
+    ArrayElementRemoved,
+    ArrayElementChanged,
+    ObjectPropertyChange,
+    ArrayPropertyChange
+} from "./state";
 
 interface ChangesEditorParams {
     revisionAfterHash: string | undefined;
@@ -63,30 +75,37 @@ function getChangesEditorParams(projectEditorStore: ProjectEditorStore) {
     let revisionAfterHash = undefined;
     let revisionBeforeHash = undefined;
 
-    if (projectEditorStore.uiStateStore.selectedRevisionHash) {
-        if (projectEditorStore.uiStateStore.revisionForCompareHash) {
+    if (projectEditorStore.project.changes._state.selectedRevisionHash) {
+        if (projectEditorStore.project.changes._state.revisionForCompareHash) {
             revisionAfterHash =
-                projectEditorStore.uiStateStore.selectedRevisionHash;
+                projectEditorStore.project.changes._state.selectedRevisionHash;
             revisionBeforeHash =
-                projectEditorStore.uiStateStore.revisionForCompareHash;
+                projectEditorStore.project.changes._state
+                    .revisionForCompareHash;
         } else {
-            const index = projectEditorStore.uiStateStore.revisions.findIndex(
-                revision =>
-                    revision.hash ==
-                    projectEditorStore.uiStateStore.selectedRevisionHash
-            );
+            const index =
+                projectEditorStore.project.changes._state.revisions.findIndex(
+                    revision =>
+                        revision.hash ==
+                        projectEditorStore.project.changes._state
+                            .selectedRevisionHash
+                );
 
             if (index != -1) {
                 revisionAfterHash =
-                    projectEditorStore.uiStateStore.revisions[index].hash;
+                    projectEditorStore.project.changes._state.revisions[index]
+                        .hash;
 
                 if (
                     index != -1 &&
-                    index + 1 < projectEditorStore.uiStateStore.revisions.length
+                    index + 1 <
+                        projectEditorStore.project.changes._state.revisions
+                            .length
                 ) {
                     revisionBeforeHash =
-                        projectEditorStore.uiStateStore.revisions[index + 1]
-                            .hash;
+                        projectEditorStore.project.changes._state.revisions[
+                            index + 1
+                        ].hash;
                 }
             }
         }
@@ -98,11 +117,6 @@ function getChangesEditorParams(projectEditorStore: ProjectEditorStore) {
     };
 }
 
-interface PageChange {
-    pageBefore: Page;
-    pageAfter: Page;
-}
-
 export const ChangesEditor = observer(
     class ChangesEditor extends EditorComponent implements IPanel {
         static contextType = ProjectContext;
@@ -112,11 +126,16 @@ export const ChangesEditor = observer(
         projectChanges: ObjectChanges | undefined;
         progressPercent: number | undefined;
 
-        selectedRevertChange: { revertChange: RevertChange | undefined } = {
-            revertChange: undefined
-        };
+        selectedProjectChange: ProjectChange | undefined;
 
-        selectedPageChange: PageChange | undefined;
+        transformBefore = new Transform({
+            translate: { x: 0, y: 0 },
+            scale: 0.5
+        });
+        transformAfter = new Transform({
+            translate: { x: 0, y: 0 },
+            scale: 0.5
+        });
 
         activeTask: () => void | undefined;
         dispose: IReactionDisposer | undefined;
@@ -124,11 +143,75 @@ export const ChangesEditor = observer(
         constructor(props: any) {
             super(props);
 
+            this.transformBefore.boundedTransform = this.transformAfter;
+            this.transformAfter.boundedTransform = this.transformBefore;
+
             makeObservable(this, {
                 projectBeforeAndAfter: observable.shallow,
                 progressPercent: observable,
-                selectedRevertChange: observable.shallow
+                selectedProjectChange: observable,
+                flowChange: computed
             });
+        }
+
+        get flowChange() {
+            if (this.selectedProjectChange) {
+                if (
+                    this.selectedProjectChange instanceof ObjectPropertyChange
+                ) {
+                    if (
+                        this.selectedProjectChange.objectAfter instanceof Flow
+                    ) {
+                        if (
+                            this.selectedProjectChange.propertyInfo.name ==
+                                "components" ||
+                            this.selectedProjectChange.propertyInfo.name ==
+                                "connectionLines"
+                        ) {
+                            return {
+                                flowBefore: this.selectedProjectChange
+                                    .objectBefore as Flow,
+                                flowAfter:
+                                    this.selectedProjectChange.objectAfter
+                            };
+                        }
+                    } else {
+                        const flow = getAncestorOfType(
+                            this.selectedProjectChange.objectAfter,
+                            Flow.classInfo
+                        );
+
+                        if (flow) {
+                            return {
+                                flowBefore: getAncestorOfType(
+                                    this.selectedProjectChange.objectBefore,
+                                    Flow.classInfo
+                                ) as Flow,
+                                flowAfter: flow as Flow
+                            };
+                        }
+                    }
+                } else if (
+                    this.selectedProjectChange instanceof ArrayPropertyChange
+                ) {
+                    const flow = getAncestorOfType(
+                        getParent(this.selectedProjectChange.arrayAfter),
+                        Flow.classInfo
+                    );
+
+                    if (flow) {
+                        return {
+                            flowBefore: getAncestorOfType(
+                                this.selectedProjectChange.arrayBefore,
+                                Flow.classInfo
+                            ) as Flow,
+                            flowAfter: flow as Flow
+                        };
+                    }
+                }
+            }
+
+            return undefined;
         }
 
         componentDidMount() {
@@ -157,16 +240,18 @@ export const ChangesEditor = observer(
                 const params = getChangesEditorParams(this.context);
 
                 const revisionAfterIndex =
-                    this.context.uiStateStore.revisions.findIndex(
+                    this.context.project.changes._state.revisions.findIndex(
                         revision => revision.hash == params.revisionAfterHash
                     );
 
                 if (revisionAfterIndex != -1) {
                     const revisionAfter =
-                        this.context.uiStateStore.revisions[revisionAfterIndex];
+                        this.context.project.changes._state.revisions[
+                            revisionAfterIndex
+                        ];
 
                     const revisionBeforeIndex = params.revisionBeforeHash
-                        ? this.context.uiStateStore.revisions.findIndex(
+                        ? this.context.project.changes._state.revisions.findIndex(
                               revision =>
                                   revision.hash == params.revisionBeforeHash
                           )
@@ -174,7 +259,7 @@ export const ChangesEditor = observer(
 
                     const revisionBefore =
                         revisionBeforeIndex != -1
-                            ? this.context.uiStateStore.revisions[
+                            ? this.context.project.changes._state.revisions[
                                   revisionBeforeIndex
                               ]
                             : undefined;
@@ -223,33 +308,48 @@ export const ChangesEditor = observer(
         }
 
         get isRevertChangesEnabled() {
-            return this.selectedRevertChange.revertChange != undefined;
+            return (
+                this.selectedProjectChange != undefined &&
+                this.selectedProjectChange.revertable
+            );
         }
 
-        onSelectRevertChange = action(
-            (
-                revertChange: RevertChange,
-                pageChange: PageChange | undefined
-            ) => {
-                this.selectedRevertChange = { revertChange };
-                this.selectedPageChange = pageChange;
+        onSelectProjectChange = (projectChange: ProjectChange) => {
+            const flowChangeBefore = this.flowChange;
+
+            runInAction(() => {
+                this.selectedProjectChange = projectChange;
+            });
+
+            const flowChangeAfter = this.flowChange;
+
+            if (flowChangeBefore?.flowAfter != flowChangeAfter?.flowAfter) {
+                runInAction(() => {
+                    this.transformBefore.translate = { x: 0, y: 0 };
+                    this.transformBefore.scale = 0.5;
+                });
             }
-        );
+        };
 
         revertChanges = async () => {
-            if (this.selectedRevertChange.revertChange) {
-                this.selectedRevertChange.revertChange(this.context.project);
+            if (
+                this.selectedProjectChange &&
+                this.selectedProjectChange.revertable
+            ) {
+                this.selectedProjectChange.revert(this.context.project);
             }
 
             const params = getChangesEditorParams(this.context);
 
             if (params.revisionAfterHash != MEMORY_HASH) {
-                await refreshRevisions(this.context);
+                this.context.project.changes._state.refreshRevisions(
+                    this.context
+                );
 
                 runInAction(() => {
-                    this.context.uiStateStore.selectedRevisionHash =
+                    this.context.project.changes._state.selectedRevisionHash =
                         MEMORY_HASH;
-                    this.context.uiStateStore.revisionForCompareHash =
+                    this.context.project.changes._state.revisionForCompareHash =
                         params.revisionBeforeHash;
                 });
             } else {
@@ -316,32 +416,21 @@ export const ChangesEditor = observer(
             const hasRevertChanges =
                 params.revisionAfterHash == MEMORY_HASH ||
                 (params.revisionAfterHash == UNSTAGED_HASH &&
-                    this.context.uiStateStore.revisions[0].hash ==
+                    this.context.project.changes._state.revisions[0].hash ==
                         UNSTAGED_HASH) ||
                 (params.revisionAfterHash == STAGED_HASH &&
-                    this.context.uiStateStore.revisions[0].hash == STAGED_HASH);
+                    this.context.project.changes._state.revisions[0].hash ==
+                        STAGED_HASH);
 
             const changesEditor = (
                 <div className="EezStudio_ChangesEditor">
                     <ObjectChangesComponent
                         objectChanges={this.projectChanges!}
-                        selectedRevertChange={this.selectedRevertChange}
-                        onSelectRevertChange={this.onSelectRevertChange}
-                        pageChange={undefined}
+                        selectedProjectChange={this.selectedProjectChange}
+                        onSelectProjectChange={this.onSelectProjectChange}
                     />
                 </div>
             );
-
-            const transformBefore = new Transform({
-                translate: { x: 0, y: 0 },
-                scale: 0.5
-            });
-            const transformAfter = new Transform({
-                translate: { x: 0, y: 0 },
-                scale: 0.5
-            });
-            transformBefore.boundedTransform = transformAfter;
-            transformAfter.boundedTransform = transformBefore;
 
             return (
                 <VerticalHeaderWithBody style={{ height: "100%" }}>
@@ -360,7 +449,7 @@ export const ChangesEditor = observer(
                         </Toolbar>
                     </ToolbarHeader>
                     <Body tabIndex={0}>
-                        {this.selectedPageChange ? (
+                        {this.flowChange ? (
                             <Splitter
                                 type="horizontal"
                                 sizes="150px|100%"
@@ -378,33 +467,25 @@ export const ChangesEditor = observer(
                                     <ProjectContext.Provider
                                         value={
                                             ProjectEditor.getProject(
-                                                this.selectedPageChange
-                                                    .pageBefore
+                                                this.flowChange.flowBefore
                                             )._DocumentStore
                                         }
                                     >
                                         <FlowViewer
-                                            flow={
-                                                this.selectedPageChange
-                                                    .pageBefore
-                                            }
-                                            transform={transformBefore}
+                                            flow={this.flowChange.flowBefore}
+                                            transform={this.transformBefore}
                                         ></FlowViewer>
                                     </ProjectContext.Provider>
                                     <ProjectContext.Provider
                                         value={
                                             ProjectEditor.getProject(
-                                                this.selectedPageChange
-                                                    .pageAfter
+                                                this.flowChange.flowAfter
                                             )._DocumentStore
                                         }
                                     >
                                         <FlowViewer
-                                            flow={
-                                                this.selectedPageChange
-                                                    .pageAfter
-                                            }
-                                            transform={transformAfter}
+                                            flow={this.flowChange.flowAfter}
+                                            transform={this.transformAfter}
                                         ></FlowViewer>
                                     </ProjectContext.Provider>
                                 </Splitter>
@@ -422,12 +503,8 @@ export const ChangesEditor = observer(
 export const ObjectChangesComponent = observer(
     class ObjectChangesComponent extends React.Component<{
         objectChanges: ObjectChanges;
-        selectedRevertChange: { revertChange: RevertChange | undefined };
-        onSelectRevertChange: (
-            revertChange: RevertChange,
-            pageChange: PageChange | undefined
-        ) => void;
-        pageChange: PageChange | undefined;
+        selectedProjectChange: ProjectChange | undefined;
+        onSelectProjectChange: (projectChange: ProjectChange) => void;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
@@ -435,8 +512,8 @@ export const ObjectChangesComponent = observer(
         render() {
             const {
                 objectChanges,
-                selectedRevertChange,
-                onSelectRevertChange
+                selectedProjectChange,
+                onSelectProjectChange
             } = this.props;
 
             const isProject =
@@ -464,18 +541,31 @@ export const ObjectChangesComponent = observer(
                     if (feature) {
                         icon = feature.icon;
                     } else {
-                        if (propertyChange.type == "OBJECT_CHANGED") {
+                        if (
+                            propertyChange instanceof ObjectPropertyValueChanged
+                        ) {
                             icon =
                                 getClassInfo(
                                     propertyChange.objectChanges.objectAfter
                                 ).icon || "extension";
                         } else if (
-                            propertyChange.type == "VALUE_ADDED" ||
-                            propertyChange.type == "VALUE_REMOVED"
+                            propertyChange instanceof PropertyValueAdded
                         ) {
-                            icon =
-                                getClassInfo(propertyChange.value).icon ||
-                                "extension";
+                            const value = (propertyChange.objectAfter as any)[
+                                propertyChange.propertyInfo.name
+                            ];
+                            if (value instanceof EezObject) {
+                                icon = getClassInfo(value).icon || "extension";
+                            }
+                        } else if (
+                            propertyChange instanceof PropertyValueRemoved
+                        ) {
+                            const value = (propertyChange.objectBefore as any)[
+                                propertyChange.propertyInfo.name
+                            ];
+                            if (value instanceof EezObject) {
+                                icon = getClassInfo(value).icon || "extension";
+                            }
                         }
                     }
                 }
@@ -484,42 +574,26 @@ export const ObjectChangesComponent = observer(
                     icon = <Icon icon={`material:${icon}`} size={18} />;
                 }
 
-                let pageChange: PageChange | undefined = this.props.pageChange;
-                if (
-                    objectChanges.objectAfter instanceof
-                        ProjectEditor.PageClass &&
-                    propertyChange.propertyInfo.name == "components"
-                ) {
-                    label = "Flow";
-                    pageChange = {
-                        pageBefore: objectChanges.objectBefore as Page,
-                        pageAfter: objectChanges.objectAfter as Page
-                    };
-                }
-
                 return (
                     <div key={propertyChange.propertyInfo.name}>
                         <div
                             className={classNames("property-change", {
                                 selected:
-                                    selectedRevertChange.revertChange &&
-                                    selectedRevertChange.revertChange ==
-                                        propertyChange.revert
+                                    selectedProjectChange == propertyChange
                             })}
                             onClick={() =>
-                                onSelectRevertChange(
-                                    propertyChange.revert,
-                                    pageChange
-                                )
+                                onSelectProjectChange(propertyChange)
                             }
                         >
                             <div
                                 className={classNames({
                                     "feature-row": isProject,
                                     "value-added":
-                                        propertyChange.type == "VALUE_ADDED",
+                                        propertyChange instanceof
+                                        PropertyValueAdded,
                                     "value-removed":
-                                        propertyChange.type == "VALUE_REMOVED"
+                                        propertyChange instanceof
+                                        PropertyValueRemoved
                                 })}
                             >
                                 {icon && (
@@ -527,18 +601,29 @@ export const ObjectChangesComponent = observer(
                                 )}
                                 <span className="change-label">{label}</span>
 
-                                {propertyChange.type == "VALUE_CHANGED" && (
+                                {propertyChange instanceof
+                                    PropertyValueChanged && (
                                     <>
                                         <span className="value-removed">
                                             {JSON.stringify(
-                                                propertyChange.valueBefore,
+                                                (
+                                                    propertyChange.objectBefore as any
+                                                )[
+                                                    propertyChange.propertyInfo
+                                                        .name
+                                                ],
                                                 undefined,
                                                 2
                                             )}
                                         </span>
                                         <span className="value-added">
                                             {JSON.stringify(
-                                                propertyChange.valueAfter,
+                                                (
+                                                    propertyChange.objectAfter as any
+                                                )[
+                                                    propertyChange.propertyInfo
+                                                        .name
+                                                ],
                                                 undefined,
                                                 2
                                             )}
@@ -548,24 +633,32 @@ export const ObjectChangesComponent = observer(
                             </div>
                         </div>
 
-                        {propertyChange.type == "OBJECT_CHANGED" && (
+                        {propertyChange instanceof
+                            ObjectPropertyValueChanged && (
                             <div style={{ marginLeft: 20 }}>
                                 <ObjectChangesComponent
                                     objectChanges={propertyChange.objectChanges}
-                                    selectedRevertChange={selectedRevertChange}
-                                    onSelectRevertChange={onSelectRevertChange}
-                                    pageChange={pageChange}
+                                    selectedProjectChange={
+                                        selectedProjectChange
+                                    }
+                                    onSelectProjectChange={
+                                        onSelectProjectChange
+                                    }
                                 />
                             </div>
                         )}
 
-                        {propertyChange.type == "ARRAY_CHANGED" && (
+                        {propertyChange instanceof
+                            ArrayPropertyValueChanged && (
                             <div style={{ marginLeft: 20 }}>
                                 <ArrayChangesComponent
                                     arrayChanges={propertyChange.arrayChanges}
-                                    selectedRevertChange={selectedRevertChange}
-                                    onSelectRevertChange={onSelectRevertChange}
-                                    pageChange={pageChange}
+                                    selectedProjectChange={
+                                        selectedProjectChange
+                                    }
+                                    onSelectProjectChange={
+                                        onSelectProjectChange
+                                    }
                                 />
                             </div>
                         )}
@@ -579,12 +672,8 @@ export const ObjectChangesComponent = observer(
 export const ArrayChangesComponent = observer(
     class ArrayChangesComponent extends React.Component<{
         arrayChanges: ArrayChanges;
-        selectedRevertChange: { revertChange: RevertChange | undefined };
-        onSelectRevertChange: (
-            revertChange: RevertChange,
-            pageChange: PageChange | undefined
-        ) => void;
-        pageChange: PageChange | undefined;
+        selectedProjectChange: ProjectChange | undefined;
+        onSelectProjectChange: (projectChange: ProjectChange) => void;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
@@ -592,99 +681,105 @@ export const ArrayChangesComponent = observer(
         render() {
             const {
                 arrayChanges,
-                selectedRevertChange,
-                onSelectRevertChange,
-                pageChange
+                selectedProjectChange,
+                onSelectProjectChange
             } = this.props;
 
             return [
-                ...arrayChanges.added.map(added => {
-                    return (
-                        <div
-                            key={`added-${added.object.objID}`}
-                            className={classNames("array-element-added", {
-                                selected:
-                                    selectedRevertChange.revertChange &&
-                                    selectedRevertChange.revertChange ==
-                                        added.revert
-                            })}
-                            onClick={() =>
-                                onSelectRevertChange(added.revert, pageChange)
-                            }
-                        >
-                            <span className="element-added">
-                                {getLabel(added.object)}
-                            </span>
-                        </div>
-                    );
-                }),
-                ...arrayChanges.removed.map(removed => {
-                    return (
-                        <div
-                            key={`removed-${removed.object.objID}`}
-                            className={classNames("array-element-removed", {
-                                selected:
-                                    selectedRevertChange.revertChange &&
-                                    selectedRevertChange.revertChange ==
-                                        removed.revert
-                            })}
-                            onClick={() =>
-                                onSelectRevertChange(removed.revert, pageChange)
-                            }
-                        >
-                            <span className="element-removed">
-                                {getLabel(removed.object)}
-                            </span>
-                        </div>
-                    );
-                }),
-                ...arrayChanges.changed.map(change => {
-                    return (
-                        <div
-                            key={`changed-${change.objectChanges.objectAfter.objID}`}
-                        >
+                ...arrayChanges.changes
+                    .filter(change => change instanceof ArrayElementAdded)
+                    .map(change => {
+                        return (
                             <div
-                                className={classNames("array-element-changed", {
-                                    selected:
-                                        selectedRevertChange.revertChange ==
-                                        change.revert
+                                key={`added-${
+                                    change.arrayAfter[change.elementIndex].objID
+                                }`}
+                                className={classNames("array-element-added", {
+                                    selected: selectedProjectChange == change
                                 })}
-                                onClick={() =>
-                                    onSelectRevertChange(
-                                        change.revert,
-                                        pageChange
-                                    )
-                                }
+                                onClick={() => onSelectProjectChange(change)}
                             >
-                                {getLabel(change.objectChanges.objectAfter)}
+                                <span className="element-added">
+                                    {getLabel(
+                                        change.arrayAfter[change.elementIndex]
+                                    )}
+                                </span>
                             </div>
-                            <div style={{ marginLeft: 20 }}>
-                                <ObjectChangesComponent
-                                    objectChanges={change.objectChanges}
-                                    selectedRevertChange={selectedRevertChange}
-                                    onSelectRevertChange={onSelectRevertChange}
-                                    pageChange={pageChange}
-                                />
+                        );
+                    }),
+                ...arrayChanges.changes
+                    .filter(change => change instanceof ArrayElementRemoved)
+                    .map(change => {
+                        return (
+                            <div
+                                key={`removed-${
+                                    change.arrayBefore[change.elementIndex]
+                                        .objID
+                                }`}
+                                className={classNames("array-element-removed", {
+                                    selected: selectedProjectChange == change
+                                })}
+                                onClick={() => onSelectProjectChange(change)}
+                            >
+                                <span className="element-removed">
+                                    {getLabel(
+                                        change.arrayBefore[change.elementIndex]
+                                    )}
+                                </span>
                             </div>
-                        </div>
-                    );
-                }),
-                ...(arrayChanges.moved
+                        );
+                    }),
+                ...arrayChanges.changes
+                    .filter(change => change instanceof ArrayElementChanged)
+                    .map((change: ArrayElementChanged) => {
+                        return (
+                            <div
+                                key={`changed-${change.objectChanges.objectAfter.objID}`}
+                            >
+                                <div
+                                    className={classNames(
+                                        "array-element-changed",
+                                        {
+                                            selected:
+                                                selectedProjectChange == change
+                                        }
+                                    )}
+                                    onClick={() =>
+                                        onSelectProjectChange(change)
+                                    }
+                                >
+                                    {getLabel(change.objectChanges.objectAfter)}
+                                </div>
+                                <div style={{ marginLeft: 20 }}>
+                                    <ObjectChangesComponent
+                                        objectChanges={change.objectChanges}
+                                        selectedProjectChange={
+                                            selectedProjectChange
+                                        }
+                                        onSelectProjectChange={
+                                            onSelectProjectChange
+                                        }
+                                    />
+                                </div>
+                            </div>
+                        );
+                    }),
+                ...(arrayChanges.shuffled
                     ? [
                           <div
                               key="moved"
                               className={classNames("array-element-moved", {
                                   selected:
-                                      selectedRevertChange.revertChange &&
-                                      selectedRevertChange.revertChange ==
-                                          arrayChanges.moved
+                                      selectedProjectChange ==
+                                      arrayChanges.shuffled
                               })}
-                              onClick={() =>
-                                  onSelectRevertChange(
-                                      arrayChanges.moved,
-                                      pageChange
-                                  )
-                              }
+                              onClick={() => {
+                                  if (arrayChanges.shuffled) {
+                                      onSelectProjectChange(
+                                          arrayChanges.shuffled
+                                      );
+                                  }
+                              }}
                           >
                               <span className="array-moved">MOVED</span>
                           </div>

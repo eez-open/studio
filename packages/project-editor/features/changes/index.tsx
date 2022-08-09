@@ -7,6 +7,8 @@ import {
     registerClass
 } from "project-editor/core/object";
 
+import { ChangesState } from "./state";
+
 const CHANGES_ICON = (
     <svg width="24" height="24" viewBox="0 0 13 16">
         <path
@@ -24,6 +26,8 @@ export class Changes extends EezObject {
         properties: [],
         icon: CHANGES_ICON
     };
+
+    _state = new ChangesState();
 }
 
 registerClass("Changes", Changes);
