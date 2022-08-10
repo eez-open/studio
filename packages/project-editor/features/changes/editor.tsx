@@ -161,6 +161,25 @@ export const ChangesEditor = observer(
         }
 
         get flowChange() {
+            function getFlowObject(object: EezObject | EezObject[]) {
+                const component = getAncestorOfType(
+                    object,
+                    Component.classInfo
+                );
+                if (component) {
+                    return component as Component;
+                }
+
+                const connectionLine = getAncestorOfType(
+                    object,
+                    ConnectionLine.classInfo
+                );
+                if (connectionLine) {
+                    return connectionLine as ConnectionLine;
+                }
+                return undefined;
+            }
+
             if (this.selectedProjectChange) {
                 if (
                     this.selectedProjectChange instanceof ObjectPropertyChange
@@ -186,7 +205,9 @@ export const ChangesEditor = observer(
                                 flowBefore: this.selectedProjectChange
                                     .objectBefore as Flow,
                                 flowAfter:
-                                    this.selectedProjectChange.objectAfter
+                                    this.selectedProjectChange.objectAfter,
+                                selectedFlowObjectBefore: undefined,
+                                selectedFlowObjectAfter: undefined
                             };
                         }
                     } else {
@@ -201,7 +222,13 @@ export const ChangesEditor = observer(
                                     this.selectedProjectChange.objectBefore,
                                     Flow.classInfo
                                 ) as Flow,
-                                flowAfter: flow as Flow
+                                flowAfter: flow as Flow,
+                                selectedFlowObjectBefore: getFlowObject(
+                                    this.selectedProjectChange.objectBefore
+                                ),
+                                selectedFlowObjectAfter: getFlowObject(
+                                    this.selectedProjectChange.objectAfter
+                                )
                             };
                         }
                     }
@@ -227,7 +254,18 @@ export const ChangesEditor = observer(
                                 this.selectedProjectChange.arrayBefore,
                                 Flow.classInfo
                             ) as Flow,
-                            flowAfter: flow as Flow
+                            flowAfter: flow as Flow,
+                            selectedFlowObjectBefore: getFlowObject(
+                                this.selectedProjectChange.arrayBefore[
+                                    this.selectedProjectChange
+                                        .elementIndexBefore
+                                ]
+                            ),
+                            selectedFlowObjectAfter: getFlowObject(
+                                this.selectedProjectChange.arrayAfter[
+                                    this.selectedProjectChange.elementIndexAfter
+                                ]
+                            )
                         };
                     }
                 }
@@ -667,6 +705,10 @@ export const ChangesEditor = observer(
                                                 this.changedFlowObjects!
                                                     .changedBeforeObjects
                                             }
+                                            selectedObject={
+                                                this.flowChange
+                                                    .selectedFlowObjectBefore
+                                            }
                                         ></FlowViewer>
                                     </ProjectContext.Provider>
                                     <ProjectContext.Provider
@@ -683,6 +725,10 @@ export const ChangesEditor = observer(
                                             changedObjects={
                                                 this.changedFlowObjects!
                                                     .changedAfterObjects
+                                            }
+                                            selectedObject={
+                                                this.flowChange
+                                                    .selectedFlowObjectAfter
                                             }
                                         ></FlowViewer>
                                     </ProjectContext.Provider>

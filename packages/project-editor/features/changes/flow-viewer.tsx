@@ -17,7 +17,7 @@ import { IPanel } from "project-editor/store";
 
 import { ProjectContext } from "project-editor/project/context";
 
-import { Flow } from "project-editor/flow/flow";
+import { ConnectionLine, Flow } from "project-editor/flow/flow";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
 import { Svg } from "project-editor/flow/editor/render";
@@ -48,7 +48,7 @@ import type {
 } from "project-editor/flow/flow-interfaces";
 import { Transform } from "project-editor/flow/editor/transform";
 
-import type { Component } from "project-editor/flow/component";
+import { Component } from "project-editor/flow/component";
 import { guid } from "eez-studio-shared/guid";
 import { ChangedFlowObjects, ChangeOperations } from "./state";
 
@@ -69,6 +69,7 @@ export const FlowViewer = observer(
             flow: Flow;
             transform: Transform;
             changedObjects: ChangedFlowObjects;
+            selectedObject: Component | ConnectionLine | undefined;
         }>
         implements IPanel
     {
@@ -143,6 +144,42 @@ export const FlowViewer = observer(
                         {this.flowContext.document?.flow.object === flow && (
                             <>
                                 {
+                                    // render widget components
+                                    <div
+                                        style={{
+                                            position: "absolute"
+                                        }}
+                                    >
+                                        {flow.renderWidgetComponents(
+                                            this.flowContext
+                                        )}
+                                    </div>
+                                }
+
+                                {
+                                    // render connection lines
+                                    <AllConnectionLines
+                                        flowContext={this.flowContext}
+                                        changedObjects={
+                                            this.props.changedObjects
+                                        }
+                                    />
+                                }
+
+                                {
+                                    // render action components
+                                    <div
+                                        style={{
+                                            position: "absolute"
+                                        }}
+                                    >
+                                        {flow.renderActionComponents(
+                                            this.flowContext
+                                        )}
+                                    </div>
+                                }
+
+                                {
                                     //  mark changed objects
                                     <div
                                         style={{
@@ -181,7 +218,7 @@ export const FlowViewer = observer(
                                                                     4
                                                             }}
                                                             className={classNames(
-                                                                "EezStudio_ChangedFlowObject",
+                                                                "EezStudio_ChangesFlowViewer_ChangedObject",
                                                                 changedObject.operation
                                                             )}
                                                         ></div>
@@ -194,41 +231,35 @@ export const FlowViewer = observer(
                                     </div>
                                 }
 
-                                {
-                                    // render widget components
+                                {this.props.selectedObject instanceof
+                                    Component && (
                                     <div
                                         style={{
                                             position: "absolute"
                                         }}
                                     >
-                                        {flow.renderWidgetComponents(
-                                            this.flowContext
-                                        )}
+                                        <div
+                                            style={{
+                                                position: "absolute",
+                                                left:
+                                                    this.props.selectedObject
+                                                        .absolutePositionPoint
+                                                        .x - 10,
+                                                top:
+                                                    this.props.selectedObject
+                                                        .absolutePositionPoint
+                                                        .y - 10,
+                                                width:
+                                                    this.props.selectedObject
+                                                        .width + 20,
+                                                height:
+                                                    this.props.selectedObject
+                                                        .height + 20
+                                            }}
+                                            className="EezStudio_ChangesFlowViewer_SelectedObject"
+                                        ></div>
                                     </div>
-                                }
-
-                                {
-                                    // render connection lines
-                                    <AllConnectionLines
-                                        flowContext={this.flowContext}
-                                        changedObjects={
-                                            this.props.changedObjects
-                                        }
-                                    />
-                                }
-
-                                {
-                                    // render action components
-                                    <div
-                                        style={{
-                                            position: "absolute"
-                                        }}
-                                    >
-                                        {flow.renderActionComponents(
-                                            this.flowContext
-                                        )}
-                                    </div>
-                                }
+                                )}
                             </>
                         )}
                     </Canvas>
