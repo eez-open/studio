@@ -5596,3 +5596,64 @@ button.EezStudio_Action {
         }
     }
 }
+
+.EezStudio_ChangedFlowObject {
+    border-radius: 4px;
+
+    &.added {
+        box-shadow: 0 0 16px green;
+        border: 4px solid green;
+    }
+    &.removed {
+        box-shadow: 0 0 16px red;
+        border: 4px solid red;
+    }
+    &.updated {
+        box-shadow: 0 0 16px blue;
+        border: 4px solid blue;
+    }
+}
+
+.EezStudio_ChangesFlowViewer_Title {
+    position: absolute;
+    z-index: 100;
+    pointer-events: none;
+    background-color: @panelBorderColor;
+    color: @textColor;
+    font-size: 100%;
+}
+
+.EezStudio_ChangesFlowViewer_Legend {
+    position: absolute;
+    right: 0;
+    z-index: 100;
+    pointer-events: none;
+    background-color: @panelBorderColor;
+    color: @textColor;
+
+    font-size: 80%;
+
+    display: flex;
+    align-items: center;
+
+    .bullet {
+        width: 10px;
+        height: 10px;
+        border-radius: 4px;
+        margin-left: 6px;
+        margin-right: 2px;
+        display: inline-block;
+
+        &.added {
+            background-color: green;
+        }
+
+        &.removed {
+            background-color: red;
+        }
+
+        &.updated {
+            background-color: blue;
+        }
+    }
+}

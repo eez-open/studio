@@ -40,9 +40,12 @@ import { Toolbar } from "eez-studio-ui/toolbar";
 import { TextAction } from "eez-studio-ui/action";
 import { RightArrow } from "project-editor/flow/components/actions";
 import { Splitter } from "eez-studio-ui/splitter";
-import { FlowViewer } from "project-editor/features/changes/flow-viewer";
+import {
+    DEFAULT_SCALE,
+    FlowViewer
+} from "project-editor/features/changes/flow-viewer";
 import { Transform } from "project-editor/flow/editor/transform";
-import { Flow } from "project-editor/flow/flow";
+import { ConnectionLine, Flow } from "project-editor/flow/flow";
 
 import {
     MEMORY_HASH,
@@ -54,17 +57,19 @@ import {
     ObjectChanges,
     ArrayChanges,
     ProjectChange,
-    ObjectPropertyValueChanged,
+    ObjectPropertyValueUpdated,
     PropertyValueRemoved,
     PropertyValueAdded,
-    PropertyValueChanged,
-    ArrayPropertyValueChanged,
+    PropertyValueUpdated,
+    ArrayPropertyValueUpdated,
     ArrayElementAdded,
     ArrayElementRemoved,
-    ArrayElementChanged,
+    ArrayElementUpdated,
     ObjectPropertyChange,
-    ArrayPropertyChange
+    ArrayPropertyChange,
+    ChangedFlowObjects
 } from "./state";
+import { Component } from "project-editor/flow/component";
 
 interface ChangesEditorParams {
     revisionAfterHash: string | undefined;
@@ -130,11 +135,11 @@ export const ChangesEditor = observer(
 
         transformBefore = new Transform({
             translate: { x: 0, y: 0 },
-            scale: 0.5
+            scale: DEFAULT_SCALE
         });
         transformAfter = new Transform({
             translate: { x: 0, y: 0 },
-            scale: 0.5
+            scale: DEFAULT_SCALE
         });
 
         activeTask: () => void | undefined;
@@ -150,7 +155,8 @@ export const ChangesEditor = observer(
                 projectBeforeAndAfter: observable.shallow,
                 progressPercent: observable,
                 selectedProjectChange: observable,
-                flowChange: computed
+                flowChange: computed,
+                changedFlowObjects: computed
             });
         }
 
@@ -159,6 +165,14 @@ export const ChangesEditor = observer(
                 if (
                     this.selectedProjectChange instanceof ObjectPropertyChange
                 ) {
+                    if (
+                        ProjectEditor.getProject(
+                            this.selectedProjectChange.objectAfter
+                        ) != this.projectChanges?.objectAfter
+                    ) {
+                        return undefined;
+                    }
+
                     if (
                         this.selectedProjectChange.objectAfter instanceof Flow
                     ) {
@@ -194,6 +208,14 @@ export const ChangesEditor = observer(
                 } else if (
                     this.selectedProjectChange instanceof ArrayPropertyChange
                 ) {
+                    if (
+                        ProjectEditor.getProject(
+                            this.selectedProjectChange.arrayAfter
+                        ) != this.projectChanges?.objectAfter
+                    ) {
+                        return undefined;
+                    }
+
                     const flow = getAncestorOfType(
                         getParent(this.selectedProjectChange.arrayAfter),
                         Flow.classInfo
@@ -212,6 +234,168 @@ export const ChangesEditor = observer(
             }
 
             return undefined;
+        }
+
+        get changedFlowObjects() {
+            const flowChange = this.flowChange;
+
+            if (!this.projectChanges || !flowChange) {
+                return undefined;
+            }
+
+            const changedBeforeObjects: ChangedFlowObjects = [];
+            const changedAfterObjects: ChangedFlowObjects = [];
+
+            let insideFlow = false;
+
+            function traverseObjectChanges(objectChanges: ObjectChanges) {
+                if (objectChanges.objectAfter == flowChange!.flowAfter) {
+                    insideFlow = true;
+                }
+
+                for (let i = 0; i < objectChanges.changes.length; i++) {
+                    const propertyChange = objectChanges.changes[i];
+
+                    if (propertyChange instanceof PropertyValueAdded) {
+                        if (insideFlow) {
+                            const value = (objectChanges.objectAfter as any)[
+                                propertyChange.propertyInfo.name
+                            ];
+                            if (
+                                value instanceof Component ||
+                                value instanceof ConnectionLine
+                            ) {
+                                changedAfterObjects.push({
+                                    object: value,
+                                    operation: "added"
+                                });
+                            }
+                        }
+                    } else if (propertyChange instanceof PropertyValueRemoved) {
+                        if (insideFlow) {
+                            const value = (objectChanges.objectBefore as any)[
+                                propertyChange.propertyInfo.name
+                            ];
+                            if (
+                                value instanceof Component ||
+                                value instanceof ConnectionLine
+                            ) {
+                                changedBeforeObjects.push({
+                                    object: value,
+                                    operation: "removed"
+                                });
+                            }
+                        }
+                    } else if (
+                        propertyChange instanceof ObjectPropertyValueUpdated
+                    ) {
+                        if (insideFlow) {
+                            const value = (objectChanges.objectAfter as any)[
+                                propertyChange.propertyInfo.name
+                            ];
+                            if (
+                                value instanceof Component ||
+                                value instanceof ConnectionLine
+                            ) {
+                                changedBeforeObjects.push({
+                                    object: (objectChanges.objectBefore as any)[
+                                        propertyChange.propertyInfo.name
+                                    ],
+                                    operation: "updated"
+                                });
+
+                                changedAfterObjects.push({
+                                    object: value,
+                                    operation: "updated"
+                                });
+                            }
+                        }
+
+                        traverseObjectChanges(propertyChange.objectChanges);
+                    } else if (
+                        propertyChange instanceof ArrayPropertyValueUpdated
+                    ) {
+                        traverseArrayChanges(propertyChange.arrayChanges);
+                    }
+                }
+
+                if (objectChanges.objectAfter == flowChange!.flowAfter) {
+                    insideFlow = false;
+                }
+            }
+
+            function traverseArrayChanges(arrayChanges: ArrayChanges) {
+                for (let i = 0; i < arrayChanges.changes.length; i++) {
+                    const arrayChange = arrayChanges.changes[i];
+
+                    if (arrayChange instanceof ArrayElementAdded) {
+                        if (insideFlow) {
+                            const element =
+                                arrayChanges.arrayAfter[
+                                    arrayChange.elementIndexAfter
+                                ];
+                            if (
+                                element instanceof Component ||
+                                element instanceof ConnectionLine
+                            ) {
+                                changedAfterObjects.push({
+                                    object: element,
+                                    operation: "added"
+                                });
+                            }
+                        }
+                    } else if (arrayChange instanceof ArrayElementRemoved) {
+                        if (insideFlow) {
+                            const element =
+                                arrayChanges.arrayBefore[
+                                    arrayChange.elementIndexBefore
+                                ];
+                            if (
+                                element instanceof Component ||
+                                element instanceof ConnectionLine
+                            ) {
+                                changedBeforeObjects.push({
+                                    object: element,
+                                    operation: "removed"
+                                });
+                            }
+                        }
+                    } else if (arrayChange instanceof ArrayElementUpdated) {
+                        if (insideFlow) {
+                            const element =
+                                arrayChanges.arrayAfter[
+                                    arrayChange.elementIndexAfter
+                                ];
+
+                            if (
+                                element instanceof Component ||
+                                element instanceof ConnectionLine
+                            ) {
+                                changedBeforeObjects.push({
+                                    object: arrayChanges.arrayBefore[
+                                        arrayChange.elementIndexBefore
+                                    ] as any,
+                                    operation: "updated"
+                                });
+
+                                changedAfterObjects.push({
+                                    object: element,
+                                    operation: "updated"
+                                });
+                            }
+                        }
+
+                        traverseObjectChanges(arrayChange.objectChanges);
+                    }
+                }
+            }
+
+            traverseObjectChanges(this.projectChanges);
+
+            return {
+                changedBeforeObjects,
+                changedAfterObjects
+            };
         }
 
         componentDidMount() {
@@ -326,7 +510,7 @@ export const ChangesEditor = observer(
             if (flowChangeBefore?.flowAfter != flowChangeAfter?.flowAfter) {
                 runInAction(() => {
                     this.transformBefore.translate = { x: 0, y: 0 };
-                    this.transformBefore.scale = 0.5;
+                    this.transformBefore.scale = DEFAULT_SCALE;
                 });
             }
         };
@@ -432,6 +616,9 @@ export const ChangesEditor = observer(
                 </div>
             );
 
+            const { revisionAfterHash, revisionBeforeHash } =
+                getChangesEditorParams(this.context);
+
             return (
                 <VerticalHeaderWithBody style={{ height: "100%" }}>
                     <ToolbarHeader style={{ justifyContent: "space-between" }}>
@@ -472,8 +659,14 @@ export const ChangesEditor = observer(
                                         }
                                     >
                                         <FlowViewer
+                                            legend={true}
+                                            title={`BEFORE / ${revisionBeforeHash}`}
                                             flow={this.flowChange.flowBefore}
                                             transform={this.transformBefore}
+                                            changedObjects={
+                                                this.changedFlowObjects!
+                                                    .changedBeforeObjects
+                                            }
                                         ></FlowViewer>
                                     </ProjectContext.Provider>
                                     <ProjectContext.Provider
@@ -484,8 +677,13 @@ export const ChangesEditor = observer(
                                         }
                                     >
                                         <FlowViewer
+                                            title={`AFTER / ${revisionAfterHash}`}
                                             flow={this.flowChange.flowAfter}
                                             transform={this.transformAfter}
+                                            changedObjects={
+                                                this.changedFlowObjects!
+                                                    .changedAfterObjects
+                                            }
                                         ></FlowViewer>
                                     </ProjectContext.Provider>
                                 </Splitter>
@@ -542,7 +740,7 @@ export const ObjectChangesComponent = observer(
                         icon = feature.icon;
                     } else {
                         if (
-                            propertyChange instanceof ObjectPropertyValueChanged
+                            propertyChange instanceof ObjectPropertyValueUpdated
                         ) {
                             icon =
                                 getClassInfo(
@@ -602,7 +800,7 @@ export const ObjectChangesComponent = observer(
                                 <span className="change-label">{label}</span>
 
                                 {propertyChange instanceof
-                                    PropertyValueChanged && (
+                                    PropertyValueUpdated && (
                                     <>
                                         <span className="value-removed">
                                             {JSON.stringify(
@@ -634,7 +832,7 @@ export const ObjectChangesComponent = observer(
                         </div>
 
                         {propertyChange instanceof
-                            ObjectPropertyValueChanged && (
+                            ObjectPropertyValueUpdated && (
                             <div style={{ marginLeft: 20 }}>
                                 <ObjectChangesComponent
                                     objectChanges={propertyChange.objectChanges}
@@ -649,7 +847,7 @@ export const ObjectChangesComponent = observer(
                         )}
 
                         {propertyChange instanceof
-                            ArrayPropertyValueChanged && (
+                            ArrayPropertyValueUpdated && (
                             <div style={{ marginLeft: 20 }}>
                                 <ArrayChangesComponent
                                     arrayChanges={propertyChange.arrayChanges}
@@ -692,7 +890,8 @@ export const ArrayChangesComponent = observer(
                         return (
                             <div
                                 key={`added-${
-                                    change.arrayAfter[change.elementIndex].objID
+                                    change.arrayAfter[change.elementIndexAfter]
+                                        .objID
                                 }`}
                                 className={classNames("array-element-added", {
                                     selected: selectedProjectChange == change
@@ -701,7 +900,9 @@ export const ArrayChangesComponent = observer(
                             >
                                 <span className="element-added">
                                     {getLabel(
-                                        change.arrayAfter[change.elementIndex]
+                                        change.arrayAfter[
+                                            change.elementIndexAfter
+                                        ]
                                     )}
                                 </span>
                             </div>
@@ -713,8 +914,9 @@ export const ArrayChangesComponent = observer(
                         return (
                             <div
                                 key={`removed-${
-                                    change.arrayBefore[change.elementIndex]
-                                        .objID
+                                    change.arrayBefore[
+                                        change.elementIndexBefore
+                                    ].objID
                                 }`}
                                 className={classNames("array-element-removed", {
                                     selected: selectedProjectChange == change
@@ -723,15 +925,17 @@ export const ArrayChangesComponent = observer(
                             >
                                 <span className="element-removed">
                                     {getLabel(
-                                        change.arrayBefore[change.elementIndex]
+                                        change.arrayBefore[
+                                            change.elementIndexBefore
+                                        ]
                                     )}
                                 </span>
                             </div>
                         );
                     }),
                 ...arrayChanges.changes
-                    .filter(change => change instanceof ArrayElementChanged)
-                    .map((change: ArrayElementChanged) => {
+                    .filter(change => change instanceof ArrayElementUpdated)
+                    .map((change: ArrayElementUpdated) => {
                         return (
                             <div
                                 key={`changed-${change.objectChanges.objectAfter.objID}`}

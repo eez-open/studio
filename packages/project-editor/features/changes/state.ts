@@ -6,6 +6,8 @@ import {
     PropertyInfo,
     PropertyType
 } from "project-editor/core/object";
+import { Component } from "project-editor/flow/component";
+import { ConnectionLine } from "project-editor/flow/flow";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Project } from "project-editor/project/project";
 import {
@@ -217,7 +219,7 @@ export class PropertyValueRemoved extends ObjectPropertyChange {
     }
 }
 
-export class PropertyValueChanged extends ObjectPropertyChange {
+export class PropertyValueUpdated extends ObjectPropertyChange {
     revert(project: Project) {
         const object = getObjectFromStringPath(
             project,
@@ -247,7 +249,7 @@ export class PropertyValueChanged extends ObjectPropertyChange {
     }
 }
 
-export class ObjectPropertyValueChanged extends ObjectPropertyChange {
+export class ObjectPropertyValueUpdated extends ObjectPropertyChange {
     constructor(
         objectBefore: EezObject,
         objectAfter: EezObject,
@@ -279,7 +281,7 @@ export class ObjectPropertyValueChanged extends ObjectPropertyChange {
     }
 }
 
-export class ArrayPropertyValueChanged extends ObjectPropertyChange {
+export class ArrayPropertyValueUpdated extends ObjectPropertyChange {
     constructor(
         objectBefore: EezObject,
         objectAfter: EezObject,
@@ -316,7 +318,8 @@ export abstract class ArrayPropertyChange extends ProjectChange {
         public arrayBefore: EezObject[],
         public arrayAfter: EezObject[],
         public propertyInfo: PropertyInfo,
-        public elementIndex: number
+        public elementIndexBefore: number,
+        public elementIndexAfter: number
     ) {
         super(true);
     }
@@ -326,7 +329,7 @@ export class ArrayElementAdded extends ArrayPropertyChange {
     revert(project: Project) {
         const object = getObjectFromStringPath(
             project,
-            getObjectPathAsString(this.arrayAfter[this.elementIndex])
+            getObjectPathAsString(this.arrayAfter[this.elementIndexAfter])
         );
 
         deleteObject(object);
@@ -342,7 +345,7 @@ export class ArrayElementRemoved extends ArrayPropertyChange {
 
         const value = createObject(
             project._DocumentStore,
-            toJS(this.arrayBefore[this.elementIndex]),
+            toJS(this.arrayBefore[this.elementIndexBefore]),
             this.propertyInfo.typeClass!,
             undefined,
             false
@@ -352,26 +355,33 @@ export class ArrayElementRemoved extends ArrayPropertyChange {
     }
 }
 
-export class ArrayElementChanged extends ArrayPropertyChange {
+export class ArrayElementUpdated extends ArrayPropertyChange {
     constructor(
         arrayBefore: EezObject[],
         arrayAfter: EezObject[],
         propertyInfo: PropertyInfo,
-        elementIndex: number,
+        elementIndexBefore: number,
+        elementIndexAfter: number,
         public objectChanges: ObjectChanges
     ) {
-        super(arrayBefore, arrayAfter, propertyInfo, elementIndex);
+        super(
+            arrayBefore,
+            arrayAfter,
+            propertyInfo,
+            elementIndexBefore,
+            elementIndexAfter
+        );
     }
 
     revert(project: Project) {
         const object = getObjectFromStringPath(
             project,
-            getObjectPathAsString(this.arrayAfter[this.elementIndex])
+            getObjectPathAsString(this.arrayAfter[this.elementIndexAfter])
         );
 
         const value = createObject(
             project._DocumentStore,
-            toJS(this.arrayBefore[this.elementIndex]),
+            toJS(this.arrayBefore[this.elementIndexBefore]),
             this.propertyInfo.typeClass!,
             undefined,
             false
@@ -429,9 +439,9 @@ export function diffObject(
             const valueBefore = (objectBefore as any)[propertyInfo.name];
             const valueAfter = (objectAfter as any)[propertyInfo.name];
 
-            if (!valueBefore && !valueAfter) {
+            if (valueBefore === undefined && valueAfter === undefined) {
                 propertyChange = undefined;
-            } else if (!valueBefore && valueAfter) {
+            } else if (valueBefore === undefined && valueAfter !== undefined) {
                 let mandatoryFeature = false;
                 if (objectAfter instanceof ProjectEditor.ProjectClass) {
                     mandatoryFeature = true;
@@ -443,7 +453,7 @@ export function diffObject(
                     propertyInfo,
                     !mandatoryFeature
                 );
-            } else if (valueBefore && !valueAfter) {
+            } else if (valueBefore !== undefined && valueAfter === undefined) {
                 propertyChange = new PropertyValueRemoved(
                     objectBefore,
                     objectAfter,
@@ -463,7 +473,7 @@ export function diffObject(
                 ) {
                     propertyChange = undefined;
                 } else {
-                    propertyChange = new ArrayPropertyValueChanged(
+                    propertyChange = new ArrayPropertyValueUpdated(
                         objectBefore,
                         objectAfter,
                         propertyInfo,
@@ -480,7 +490,7 @@ export function diffObject(
                 if (objectChanges.changes.length == 0) {
                     propertyChange = undefined;
                 } else {
-                    propertyChange = new ObjectPropertyValueChanged(
+                    propertyChange = new ObjectPropertyValueUpdated(
                         objectBefore,
                         objectAfter,
                         propertyInfo,
@@ -492,7 +502,7 @@ export function diffObject(
                 if (JSON.stringify(valueBefore) == JSON.stringify(valueAfter)) {
                     propertyChange = undefined;
                 } else {
-                    propertyChange = new PropertyValueChanged(
+                    propertyChange = new PropertyValueUpdated(
                         objectBefore,
                         objectAfter,
                         propertyInfo,
@@ -531,6 +541,7 @@ function diffArray(
                     arrayBefore,
                     arrayAfter,
                     propertyInfo,
+                    indexBefore,
                     indexAfter
                 )
             );
@@ -540,10 +551,11 @@ function diffArray(
             const objectChanges = diffObject(elementBefore, elementAfter);
             if (objectChanges.changes.length > 0) {
                 changes.push(
-                    new ArrayElementChanged(
+                    new ArrayElementUpdated(
                         arrayBefore,
                         arrayAfter,
                         propertyInfo,
+                        indexBefore,
                         indexAfter,
                         objectChanges
                     )
@@ -567,7 +579,8 @@ function diffArray(
                     arrayBefore,
                     arrayAfter,
                     propertyInfo,
-                    indexBefore
+                    indexBefore,
+                    indexAfter
                 )
             );
         }
@@ -693,3 +706,12 @@ export async function getBeforeAndAfterProject(
         projectAfter: projectAfter
     };
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+export type ChangeOperations = "added" | "removed" | "updated";
+
+export type ChangedFlowObjects = {
+    object: Component | ConnectionLine;
+    operation: ChangeOperations;
+}[];

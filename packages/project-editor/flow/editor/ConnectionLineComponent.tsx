@@ -77,15 +77,17 @@ export const ConnectionLineDebugValues = observer(
     }
 );
 
-const ConnectionLineShape = observer(
+export const ConnectionLineShape = observer(
     ({
         connectionLineAdapter,
         context,
-        selected
+        selected,
+        shadow
     }: {
         connectionLineAdapter: ITreeObjectAdapter;
         context: IFlowContext;
         selected: boolean;
+        shadow?: { id: string; color: string };
     }) => {
         const connectionLine = connectionLineAdapter.object as ConnectionLine;
         const { lineShape, center } = getConnectionLineShape(
@@ -137,6 +139,7 @@ const ConnectionLineShape = observer(
                     connectionLine={connectionLine}
                     context={context}
                     targetInput={targetInput}
+                    shadow={shadow}
                 />
                 {context.projectEditorStore.uiStateStore
                     .showComponentDescriptions &&
@@ -196,6 +199,7 @@ class VisiblePath extends React.Component<{
     connectionLine: ConnectionLine;
     context: IFlowContext;
     targetInput: ComponentInput | undefined;
+    shadow: { id: string; color: string } | undefined;
 }> {
     ref = React.createRef<SVGPathElement>();
 
@@ -218,14 +222,19 @@ class VisiblePath extends React.Component<{
             targetInput?.isSequenceInput &&
             !(connectionLine.targetComponent instanceof OutputActionComponent);
 
-        return (
+        const path = (
             <path
                 ref={this.ref}
                 d={lineShape}
                 style={{
                     fill: "none",
-                    strokeWidth: seq ? seqStrokeWidth : strokeWidth,
-                    strokeLinecap: "round"
+                    strokeWidth: this.props.shadow
+                        ? 2
+                        : seq
+                        ? seqStrokeWidth
+                        : strokeWidth,
+                    strokeLinecap: "round",
+                    stroke: this.props.shadow?.color
                 }}
                 className={classNames("connection-line-path", {
                     selected,
@@ -233,6 +242,12 @@ class VisiblePath extends React.Component<{
                 })}
                 vectorEffect={selected ? "non-scaling-stroke" : "none"}
             ></path>
+        );
+
+        return this.props.shadow ? (
+            <g filter={`url(#${this.props.shadow.id})`}>{path}</g>
+        ) : (
+            path
         );
     }
 }

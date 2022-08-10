@@ -17,11 +17,11 @@ import { IPanel } from "project-editor/store";
 
 import { ProjectContext } from "project-editor/project/context";
 
-import type { Flow } from "project-editor/flow/flow";
+import { Flow } from "project-editor/flow/flow";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
 import { Svg } from "project-editor/flow/editor/render";
-import { ConnectionLines } from "project-editor/flow/editor/ConnectionLineComponent";
+import { ConnectionLineShape } from "project-editor/flow/editor/ConnectionLineComponent";
 import {
     IMouseHandler,
     PanMouseHandler
@@ -50,8 +50,11 @@ import { Transform } from "project-editor/flow/editor/transform";
 
 import type { Component } from "project-editor/flow/component";
 import { guid } from "eez-studio-shared/guid";
+import { ChangedFlowObjects, ChangeOperations } from "./state";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+export const DEFAULT_SCALE = 0.75;
 
 const CONF_DOUBLE_CLICK_TIME = 350; // ms
 const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
@@ -61,8 +64,11 @@ const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
 export const FlowViewer = observer(
     class FlowViewer
         extends React.Component<{
+            title: string;
+            legend?: boolean;
             flow: Flow;
             transform: Transform;
+            changedObjects: ChangedFlowObjects;
         }>
         implements IPanel
     {
@@ -137,6 +143,58 @@ export const FlowViewer = observer(
                         {this.flowContext.document?.flow.object === flow && (
                             <>
                                 {
+                                    //  mark changed objects
+                                    <div
+                                        style={{
+                                            position: "absolute"
+                                        }}
+                                    >
+                                        {this.props.changedObjects.map(
+                                            changedObject => {
+                                                if (
+                                                    changedObject.object instanceof
+                                                    ProjectEditor.ComponentClass
+                                                ) {
+                                                    const component =
+                                                        changedObject.object;
+                                                    return (
+                                                        <div
+                                                            key={
+                                                                component.objID
+                                                            }
+                                                            style={{
+                                                                position:
+                                                                    "absolute",
+                                                                left:
+                                                                    component
+                                                                        .absolutePositionPoint
+                                                                        .x - 2,
+                                                                top:
+                                                                    component
+                                                                        .absolutePositionPoint
+                                                                        .y - 2,
+                                                                width:
+                                                                    component.width +
+                                                                    4,
+                                                                height:
+                                                                    component.height +
+                                                                    4
+                                                            }}
+                                                            className={classNames(
+                                                                "EezStudio_ChangedFlowObject",
+                                                                changedObject.operation
+                                                            )}
+                                                        ></div>
+                                                    );
+                                                }
+
+                                                return null;
+                                            }
+                                        )}
+                                    </div>
+                                }
+
+                                {
                                     // render widget components
                                     <div
                                         style={{
@@ -153,6 +211,9 @@ export const FlowViewer = observer(
                                     // render connection lines
                                     <AllConnectionLines
                                         flowContext={this.flowContext}
+                                        changedObjects={
+                                            this.props.changedObjects
+                                        }
                                     />
                                 }
 
@@ -171,6 +232,19 @@ export const FlowViewer = observer(
                             </>
                         )}
                     </Canvas>
+                    <h6 className="EezStudio_ChangesFlowViewer_Title shadow-sm p-1 m-2 border rounded">
+                        {this.props.title}
+                    </h6>
+                    {this.props.legend === true && (
+                        <h6 className="EezStudio_ChangesFlowViewer_Legend shadow-sm p-1 m-2 border rounded">
+                            <span className="bullet added"></span>
+                            <span>ADDED</span>
+                            <span className="bullet removed"></span>
+                            <span>REMOVED</span>
+                            <span className="bullet updated"></span>
+                            <span>UPDATED</span>
+                        </h6>
+                    )}
                 </div>
             );
         }
@@ -470,24 +544,99 @@ export const Canvas = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const colors = {
+    added: "green",
+    removed: "red",
+    updated: "blue"
+};
+
+function getChangeOperationFilter(operation: ChangeOperations) {
+    return { id: operation + "-shadow", color: colors[operation] };
+}
+
+function getChangeOperationFilterName(operation: ChangeOperations) {
+    return operation + "-shadow";
+}
+
+function DropShadowFilter({ operation }: { operation: ChangeOperations }) {
+    return (
+        <filter id={getChangeOperationFilterName(operation)}>
+            <feDropShadow
+                dx="0"
+                dy="0"
+                stdDeviation="3"
+                floodOpacity="1"
+                floodColor={colors[operation]}
+            />
+        </filter>
+    );
+}
+
 const AllConnectionLines = observer(
-    ({ flowContext }: { flowContext: IFlowContext }) => {
+    ({
+        flowContext,
+        changedObjects
+    }: {
+        flowContext: IFlowContext;
+        changedObjects: ChangedFlowObjects;
+    }) => {
         return (
             <Svg flowContext={flowContext}>
-                <ConnectionLines
-                    connectionLines={
-                        flowContext.document.nonSelectedConnectionLines
+                <DropShadowFilter operation="added" />
+                <DropShadowFilter operation="removed" />
+                <DropShadowFilter operation="updated" />
+
+                {flowContext.document.nonSelectedConnectionLines.map(
+                    connectionLineAdapter => {
+                        const changedObject = changedObjects.find(
+                            changedObject =>
+                                changedObject.object ==
+                                connectionLineAdapter.object
+                        );
+
+                        return (
+                            <ConnectionLineShape
+                                key={connectionLineAdapter.id}
+                                connectionLineAdapter={connectionLineAdapter}
+                                context={flowContext}
+                                selected={false}
+                                shadow={
+                                    changedObject
+                                        ? getChangeOperationFilter(
+                                              changedObject.operation
+                                          )
+                                        : undefined
+                                }
+                            />
+                        );
                     }
-                    context={flowContext}
-                    selected={false}
-                />
-                <ConnectionLines
-                    connectionLines={
-                        flowContext.document.selectedConnectionLines
+                )}
+
+                {flowContext.document.selectedConnectionLines.map(
+                    connectionLineAdapter => {
+                        const changedObject = changedObjects.find(
+                            changedObject =>
+                                changedObject.object ==
+                                connectionLineAdapter.object
+                        );
+
+                        return (
+                            <ConnectionLineShape
+                                key={connectionLineAdapter.id}
+                                connectionLineAdapter={connectionLineAdapter}
+                                context={flowContext}
+                                selected={false}
+                                shadow={
+                                    changedObject
+                                        ? getChangeOperationFilter(
+                                              changedObject.operation
+                                          )
+                                        : undefined
+                                }
+                            />
+                        );
                     }
-                    context={flowContext}
-                    selected={true}
-                />
+                )}
             </Svg>
         );
     }
@@ -518,7 +667,7 @@ class FlowContext implements IFlowContext {
 
     resetTransform() {
         this.transform.translate = { x: 0, y: 0 };
-        this.transform.scale = 0.5;
+        this.transform.scale = DEFAULT_SCALE;
     }
 
     get projectEditorStore() {

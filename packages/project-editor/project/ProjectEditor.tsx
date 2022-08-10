@@ -611,12 +611,6 @@ const NavigationMenuObject = observer(
                     this.context.project.readme
                 );
             }
-
-            if (this.props.object != this.context.project.changes) {
-                this.context.editorsStore.closeEditorForObject(
-                    this.context.project.changes
-                );
-            }
         });
 
         render() {
