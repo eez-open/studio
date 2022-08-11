@@ -18,8 +18,7 @@ import {
     getAncestorOfType,
     getClassInfo,
     getLabel,
-    IPanel,
-    ProjectEditorStore
+    IPanel
 } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import classNames from "classnames";
@@ -37,7 +36,7 @@ import {
     VerticalHeaderWithBody
 } from "eez-studio-ui/header-with-body";
 import { Toolbar } from "eez-studio-ui/toolbar";
-import { TextAction } from "eez-studio-ui/action";
+//import { TextAction } from "eez-studio-ui/action";
 import { RightArrow } from "project-editor/flow/components/actions";
 import { Splitter } from "eez-studio-ui/splitter";
 import {
@@ -67,60 +66,10 @@ import {
     ArrayElementUpdated,
     ObjectPropertyChange,
     ArrayPropertyChange,
-    ChangedFlowObjects
+    ChangedFlowObjects,
+    getHashLabel
 } from "./state";
 import { Component } from "project-editor/flow/component";
-
-interface ChangesEditorParams {
-    revisionAfterHash: string | undefined;
-    revisionBeforeHash: string | undefined;
-}
-
-function getChangesEditorParams(projectEditorStore: ProjectEditorStore) {
-    let revisionAfterHash = undefined;
-    let revisionBeforeHash = undefined;
-
-    if (projectEditorStore.project.changes._state.selectedRevisionHash) {
-        if (projectEditorStore.project.changes._state.revisionForCompareHash) {
-            revisionAfterHash =
-                projectEditorStore.project.changes._state.selectedRevisionHash;
-            revisionBeforeHash =
-                projectEditorStore.project.changes._state
-                    .revisionForCompareHash;
-        } else {
-            const index =
-                projectEditorStore.project.changes._state.revisions.findIndex(
-                    revision =>
-                        revision.hash ==
-                        projectEditorStore.project.changes._state
-                            .selectedRevisionHash
-                );
-
-            if (index != -1) {
-                revisionAfterHash =
-                    projectEditorStore.project.changes._state.revisions[index]
-                        .hash;
-
-                if (
-                    index != -1 &&
-                    index + 1 <
-                        projectEditorStore.project.changes._state.revisions
-                            .length
-                ) {
-                    revisionBeforeHash =
-                        projectEditorStore.project.changes._state.revisions[
-                            index + 1
-                        ].hash;
-                }
-            }
-        }
-    }
-
-    return {
-        revisionAfterHash,
-        revisionBeforeHash
-    };
-}
 
 export const ChangesEditor = observer(
     class ChangesEditor extends EditorComponent implements IPanel {
@@ -156,8 +105,24 @@ export const ChangesEditor = observer(
                 progressPercent: observable,
                 selectedProjectChange: observable,
                 flowChange: computed,
-                changedFlowObjects: computed
+                changedFlowObjects: computed,
+                comparePair: computed
             });
+        }
+
+        get comparePair() {
+            const changesState = this.context.project.changes._state;
+
+            if (this.props.editor.params) {
+                const { hashBefore, hashAfter } = this.props.editor.params;
+
+                return {
+                    revisionAfter: changesState.getRevisionFromHash(hashAfter),
+                    revisionBefore: changesState.getRevisionFromHash(hashBefore)
+                };
+            }
+
+            return changesState.comparePair;
         }
 
         get flowChange() {
@@ -447,7 +412,6 @@ export const ChangesEditor = observer(
                 }
 
                 let canceled = false;
-
                 this.activeTask = () => {
                     canceled = true;
                 };
@@ -459,37 +423,13 @@ export const ChangesEditor = observer(
                 let projectBeforeAndAfter: ProjectBeforeAndAfter | undefined =
                     undefined;
 
-                const params = getChangesEditorParams(this.context);
+                const params = this.comparePair;
 
-                const revisionAfterIndex =
-                    this.context.project.changes._state.revisions.findIndex(
-                        revision => revision.hash == params.revisionAfterHash
-                    );
-
-                if (revisionAfterIndex != -1) {
-                    const revisionAfter =
-                        this.context.project.changes._state.revisions[
-                            revisionAfterIndex
-                        ];
-
-                    const revisionBeforeIndex = params.revisionBeforeHash
-                        ? this.context.project.changes._state.revisions.findIndex(
-                              revision =>
-                                  revision.hash == params.revisionBeforeHash
-                          )
-                        : -1;
-
-                    const revisionBefore =
-                        revisionBeforeIndex != -1
-                            ? this.context.project.changes._state.revisions[
-                                  revisionBeforeIndex
-                              ]
-                            : undefined;
-
+                if (params.revisionAfter) {
                     projectBeforeAndAfter = await getBeforeAndAfterProject(
                         this.context,
-                        revisionBefore,
-                        revisionAfter,
+                        params.revisionBefore,
+                        params.revisionAfter,
                         action(percent => {
                             if (canceled) {
                                 throw "canceled";
@@ -551,6 +491,56 @@ export const ChangesEditor = observer(
                     this.transformBefore.scale = DEFAULT_SCALE;
                 });
             }
+
+            if (this.flowChange) {
+                const selectedObject =
+                    this.flowChange.selectedFlowObjectAfter ||
+                    this.flowChange.selectedFlowObjectBefore;
+
+                if (selectedObject) {
+                    const selectedObjectRect =
+                        selectedObject instanceof ConnectionLine
+                            ? {
+                                  left: selectedObject.sourcePosition.x,
+                                  top: selectedObject.sourcePosition.y,
+                                  width:
+                                      selectedObject.targetPosition.x -
+                                      selectedObject.sourcePosition.x,
+                                  height:
+                                      selectedObject.targetPosition.y -
+                                      selectedObject.sourcePosition.y
+                              }
+                            : {
+                                  left: selectedObject.absolutePositionPoint.x,
+                                  top: selectedObject.absolutePositionPoint.y,
+                                  width: selectedObject.rect.width,
+                                  height: selectedObject.rect.height
+                              };
+
+                    const transform =
+                        selectedObject ==
+                        this.flowChange.selectedFlowObjectAfter
+                            ? this.transformAfter
+                            : this.transformBefore;
+
+                    runInAction(() => {
+                        transform.translate = {
+                            x:
+                                transform.scale *
+                                -(
+                                    selectedObjectRect.left +
+                                    selectedObjectRect.width / 2
+                                ),
+                            y:
+                                transform.scale *
+                                -(
+                                    selectedObjectRect.top +
+                                    selectedObjectRect.height / 2
+                                )
+                        };
+                    });
+                }
+            }
         };
 
         revertChanges = async () => {
@@ -561,9 +551,9 @@ export const ChangesEditor = observer(
                 this.selectedProjectChange.revert(this.context.project);
             }
 
-            const params = getChangesEditorParams(this.context);
+            const params = this.comparePair;
 
-            if (params.revisionAfterHash != MEMORY_HASH) {
+            if (params.revisionAfter?.hash != MEMORY_HASH) {
                 this.context.project.changes._state.refreshRevisions(
                     this.context
                 );
@@ -572,7 +562,7 @@ export const ChangesEditor = observer(
                     this.context.project.changes._state.selectedRevisionHash =
                         MEMORY_HASH;
                     this.context.project.changes._state.revisionForCompareHash =
-                        params.revisionBeforeHash;
+                        params.revisionBefore?.hash;
                 });
             } else {
                 this.refresh();
@@ -580,26 +570,17 @@ export const ChangesEditor = observer(
         };
 
         get title() {
-            const { revisionAfterHash, revisionBeforeHash } =
-                getChangesEditorParams(this.context);
+            const { revisionAfter, revisionBefore } = this.comparePair;
 
-            if (!revisionAfterHash) {
+            if (!revisionAfter) {
                 return null;
             }
 
             return (
                 <div className="d-flex">
-                    <span>
-                        {revisionBeforeHash
-                            ? revisionBeforeHash.slice(0, 8)
-                            : "none"}
-                    </span>
+                    <span>{getHashLabel(revisionBefore?.hash)}</span>
                     <RightArrow />
-                    <span>
-                        {revisionAfterHash
-                            ? revisionAfterHash.slice(0, 8)
-                            : "none"}
-                    </span>
+                    <span>{getHashLabel(revisionAfter.hash)}</span>
                 </div>
             );
         }
@@ -631,18 +612,17 @@ export const ChangesEditor = observer(
                 return null;
             }
 
-            const params: ChangesEditorParams = getChangesEditorParams(
-                this.context
-            );
+            const params = this.comparePair;
 
             const hasRevertChanges =
-                params.revisionAfterHash == MEMORY_HASH ||
-                (params.revisionAfterHash == UNSTAGED_HASH &&
+                params.revisionAfter?.hash == MEMORY_HASH ||
+                (params.revisionAfter?.hash == UNSTAGED_HASH &&
                     this.context.project.changes._state.revisions[0].hash ==
                         UNSTAGED_HASH) ||
-                (params.revisionAfterHash == STAGED_HASH &&
+                (params.revisionAfter?.hash == STAGED_HASH &&
                     this.context.project.changes._state.revisions[0].hash ==
                         STAGED_HASH);
+            console.log(hasRevertChanges);
 
             const changesEditor = (
                 <div className="EezStudio_ChangesEditor">
@@ -654,15 +634,14 @@ export const ChangesEditor = observer(
                 </div>
             );
 
-            const { revisionAfterHash, revisionBeforeHash } =
-                getChangesEditorParams(this.context);
+            const { revisionAfter, revisionBefore } = this.comparePair;
 
             return (
                 <VerticalHeaderWithBody style={{ height: "100%" }}>
                     <ToolbarHeader style={{ justifyContent: "space-between" }}>
                         <div>{this.title}</div>
                         <Toolbar>
-                            {hasRevertChanges && (
+                            {/*hasRevertChanges && (
                                 <TextAction
                                     text="Revert Changes"
                                     icon="material:undo"
@@ -670,7 +649,7 @@ export const ChangesEditor = observer(
                                     onClick={this.revertChanges}
                                     enabled={this.isRevertChangesEnabled}
                                 />
-                            )}
+                            )*/}
                         </Toolbar>
                     </ToolbarHeader>
                     <Body tabIndex={0}>
@@ -698,7 +677,9 @@ export const ChangesEditor = observer(
                                     >
                                         <FlowViewer
                                             legend={true}
-                                            title={`BEFORE / ${revisionBeforeHash}`}
+                                            title={`BEFORE / ${getHashLabel(
+                                                revisionBefore?.hash
+                                            )}`}
                                             flow={this.flowChange.flowBefore}
                                             transform={this.transformBefore}
                                             changedObjects={
@@ -719,7 +700,9 @@ export const ChangesEditor = observer(
                                         }
                                     >
                                         <FlowViewer
-                                            title={`AFTER / ${revisionAfterHash}`}
+                                            title={`AFTER / ${getHashLabel(
+                                                revisionAfter?.hash
+                                            )}`}
                                             flow={this.flowChange.flowAfter}
                                             transform={this.transformAfter}
                                             changedObjects={

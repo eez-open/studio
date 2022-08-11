@@ -4,6 +4,7 @@ import React from "react";
 import { makeObservable, action, computed } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
+import { dialog } from "@electron/remote";
 
 import { Loader } from "eez-studio-ui/loader";
 import { List, IListNode } from "eez-studio-ui/list";
@@ -18,7 +19,14 @@ import {
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
 
-import { MEMORY_HASH, UNSTAGED_HASH, Revision, STAGED_HASH } from "./state";
+import {
+    MEMORY_HASH,
+    UNSTAGED_HASH,
+    Revision,
+    STAGED_HASH,
+    getHashFromFilePath,
+    getFilePathFromHash
+} from "./state";
 
 export const ChangesNavigation = observer(
     class ChangesNavigation extends NavigationComponent {
@@ -44,6 +52,29 @@ export const ChangesNavigation = observer(
             );
         };
 
+        open = async () => {
+            const result = await dialog.showOpenDialog({
+                properties: ["openFile"],
+                filters: [
+                    { name: "EEZ Project", extensions: ["eez-project"] },
+                    { name: "All Files", extensions: ["*"] }
+                ]
+            });
+
+            if (!result.canceled) {
+                this.context.editorsStore.openEditor(
+                    this.context.project.changes,
+                    undefined,
+                    {
+                        hashBefore: getHashFromFilePath(result.filePaths[0]),
+                        hashAfter:
+                            this.context.project.changes._state.revisions[0]
+                                .hash
+                    }
+                );
+            }
+        };
+
         get nodes(): IListNode<Revision>[] {
             return this.context.project.changes._state.revisions.map(
                 revision => ({
@@ -60,6 +91,15 @@ export const ChangesNavigation = observer(
         selectNode = action((node: IListNode<Revision>) => {
             this.context.project.changes._state.selectedRevisionHash =
                 node.data.hash;
+            if (
+                this.context.project.changes._state.revisionForCompareHash &&
+                getFilePathFromHash(
+                    this.context.project.changes._state.revisionForCompareHash
+                )
+            ) {
+                this.context.project.changes._state.revisionForCompareHash =
+                    undefined;
+            }
             this.context.editorsStore.openEditor(this.context.project.changes);
         });
 
@@ -76,7 +116,8 @@ export const ChangesNavigation = observer(
                 <div className="revision-details">
                     {node.data.hash != MEMORY_HASH &&
                     node.data.hash != UNSTAGED_HASH &&
-                    node.data.hash != STAGED_HASH
+                    node.data.hash != STAGED_HASH &&
+                    !getFilePathFromHash(node.data.hash)
                         ? `${node.data.hash.slice(0, 8)} • ${
                               node.data.author_name
                           } • ${moment(node.data.date).calendar()}`
@@ -124,6 +165,11 @@ export const ChangesNavigation = observer(
                                 icon="material:refresh"
                                 title="Refresh"
                                 onClick={this.refresh}
+                            />
+                            <IconAction
+                                icon="material:compare"
+                                title="Compare with other project"
+                                onClick={this.open}
                             />
                         </Toolbar>
                     </ToolbarHeader>

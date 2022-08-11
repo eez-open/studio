@@ -1,5 +1,5 @@
 import { readTextFile } from "eez-studio-shared/util-electron";
-import { makeObservable, observable, runInAction, toJS } from "mobx";
+import { computed, makeObservable, observable, runInAction, toJS } from "mobx";
 import path from "path";
 import {
     EezObject,
@@ -28,6 +28,7 @@ import {
 export const MEMORY_HASH = "memory";
 export const UNSTAGED_HASH = "unstaged";
 export const STAGED_HASH = "staged";
+export const FILE_PATH_HASH_PREFIX = "file_path:";
 
 export interface Revision {
     hash: string;
@@ -37,13 +38,69 @@ export interface Revision {
     author_email?: string;
 }
 
+interface CompareRevisionsPair {
+    revisionAfter: Revision | undefined;
+    revisionBefore: Revision | undefined;
+}
+
+export function getHashFromFilePath(filePath: string) {
+    return FILE_PATH_HASH_PREFIX + filePath;
+}
+
+export function getFilePathFromHash(hash: string) {
+    return hash.startsWith(FILE_PATH_HASH_PREFIX)
+        ? hash.substring(FILE_PATH_HASH_PREFIX.length)
+        : undefined;
+}
+
+export function getHashLabel(hash: string | undefined) {
+    if (!hash) {
+        return "[None]";
+    }
+
+    if (hash == MEMORY_HASH) {
+        return "[Memory content]";
+    }
+
+    if (hash == UNSTAGED_HASH) {
+        return "[File content]";
+    }
+
+    if (hash == STAGED_HASH) {
+        return "[Staged]";
+    }
+
+    const filePath = getFilePathFromHash(hash);
+    if (filePath) {
+        return filePath;
+    }
+
+    return hash.slice(0, 8);
+}
+
+const MEMORY_REVISION = {
+    hash: MEMORY_HASH,
+    message: getHashLabel(MEMORY_HASH)
+};
+
+const UNSTAGED_REVISION = {
+    hash: UNSTAGED_HASH,
+    message: getHashLabel(UNSTAGED_HASH)
+};
+
+const STAGED_REVISION = {
+    hash: STAGED_HASH,
+    message: getHashLabel(STAGED_HASH)
+};
+
 export class ChangesState {
     constructor() {
         makeObservable(this, {
             revisionsRefreshing: observable,
             revisions: observable,
             selectedRevisionHash: observable,
-            revisionForCompareHash: observable
+            revisionForCompareHash: observable,
+            comparePair: computed
         });
     }
 
@@ -52,6 +109,29 @@ export class ChangesState {
     revisions: Revision[] = [];
     selectedRevisionHash: string | undefined;
     revisionForCompareHash: string | undefined;
+
+    getRevisionFromHash(hash: string): Revision | undefined {
+        if (getFilePathFromHash(hash)) {
+            return {
+                hash,
+                message: hash
+            };
+        }
+
+        if (hash == MEMORY_HASH) {
+            return MEMORY_REVISION;
+        }
+
+        if (hash == UNSTAGED_HASH) {
+            return UNSTAGED_REVISION;
+        }
+
+        if (hash == STAGED_HASH) {
+            return STAGED_REVISION;
+        }
+
+        return this.revisions.find(revision => revision.hash == hash);
+    }
 
     async _getRevisions(
         projectEditorStore: ProjectEditorStore,
@@ -62,10 +142,7 @@ export class ChangesState {
 
             if (projectEditorStore.modified) {
                 if (revisions.length == 0 || revisions[0].hash != MEMORY_HASH) {
-                    revisions.splice(0, 0, {
-                        hash: MEMORY_HASH,
-                        message: "[ Current changes ]"
-                    });
+                    revisions.splice(0, 0, MEMORY_REVISION);
                 }
             } else {
                 if (revisions.length > 0 && revisions[0].hash == MEMORY_HASH) {
@@ -99,17 +176,11 @@ export class ChangesState {
             const status = await git.status();
 
             if (status.modified.indexOf(projectGitRelativeFilePath) != -1) {
-                revisions.push({
-                    hash: UNSTAGED_HASH,
-                    message: "[ Unstaged ]"
-                });
+                revisions.push(UNSTAGED_REVISION);
             }
 
             if (status.staged.indexOf(projectGitRelativeFilePath) != -1) {
-                revisions.push({
-                    hash: STAGED_HASH,
-                    message: "[ Staged ]"
-                });
+                revisions.push(STAGED_REVISION);
             }
 
             revisions.push(...log.all);
@@ -118,19 +189,11 @@ export class ChangesState {
         } catch (err) {
             console.warn(err);
 
-            revisions = [
-                {
-                    hash: UNSTAGED_HASH,
-                    message: "[ Unstaged ]"
-                }
-            ];
+            revisions = [UNSTAGED_REVISION];
         }
 
         if (projectEditorStore.modified) {
-            revisions.splice(0, 0, {
-                hash: MEMORY_HASH,
-                message: "[ Current changes ]"
-            });
+            revisions.splice(0, 0, MEMORY_REVISION);
         }
 
         return revisions;
@@ -153,6 +216,39 @@ export class ChangesState {
             this.revisions = revisions;
             this.revisionsRefreshing = false;
         });
+    }
+
+    get comparePair(): CompareRevisionsPair {
+        let revisionAfter = undefined;
+        let revisionBefore = undefined;
+
+        if (this.selectedRevisionHash) {
+            if (this.revisionForCompareHash) {
+                revisionAfter = this.getRevisionFromHash(
+                    this.selectedRevisionHash
+                );
+                revisionBefore = this.getRevisionFromHash(
+                    this.revisionForCompareHash
+                );
+            } else {
+                const index = this.revisions.findIndex(
+                    revision => revision.hash == this.selectedRevisionHash
+                );
+
+                if (index != -1) {
+                    revisionAfter = this.revisions[index];
+
+                    if (index != -1 && index + 1 < this.revisions.length) {
+                        revisionBefore = this.revisions[index + 1];
+                    }
+                }
+            }
+        }
+
+        return {
+            revisionAfter,
+            revisionBefore
+        };
     }
 }
 
@@ -432,7 +528,20 @@ export function diffObject(
     const classInfo = getClassInfo(objectAfter);
 
     const changes: ObjectPropertyChange[] = classInfo.properties
-        .filter(propertyInfo => !propertyInfo.computed)
+        .filter(propertyInfo => {
+            if (propertyInfo.computed) {
+                return false;
+            }
+
+            if (
+                propertyInfo.name === "changes" &&
+                objectAfter instanceof ProjectEditor.ProjectClass
+            ) {
+                return false;
+            }
+
+            return true;
+        })
         .map(propertyInfo => {
             let propertyChange: ObjectPropertyChange | undefined;
 
@@ -630,30 +739,35 @@ async function getRevisionProject(
         return projectEditorStore.project;
     }
 
-    const projectFilePath = projectEditorStore.filePath!;
-
     let content: string;
 
-    if (revision.hash == UNSTAGED_HASH) {
-        content = await readTextFile(projectFilePath);
+    const filePath = getFilePathFromHash(revision.hash);
+    if (filePath) {
+        content = await readTextFile(filePath);
     } else {
-        const projectTopLevelDirPath = await getProjectTopLevelDirPath(
-            projectFilePath
-        );
+        const projectFilePath = projectEditorStore.filePath!;
 
-        const { simpleGit } = await import("simple-git");
-        const git = simpleGit(projectTopLevelDirPath);
+        if (revision.hash == UNSTAGED_HASH) {
+            content = await readTextFile(projectFilePath);
+        } else {
+            const projectTopLevelDirPath = await getProjectTopLevelDirPath(
+                projectFilePath
+            );
 
-        const projectGitRelativeFilePath = path
-            .relative(projectTopLevelDirPath, projectFilePath)
-            .split(path.sep)
-            .join(path.posix.sep);
+            const { simpleGit } = await import("simple-git");
+            const git = simpleGit(projectTopLevelDirPath);
 
-        content = await git.show(
-            `${
-                revision.hash == STAGED_HASH ? "" : revision.hash
-            }:${projectGitRelativeFilePath}`
-        );
+            const projectGitRelativeFilePath = path
+                .relative(projectTopLevelDirPath, projectFilePath)
+                .split(path.sep)
+                .join(path.posix.sep);
+
+            content = await git.show(
+                `${
+                    revision.hash == STAGED_HASH ? "" : revision.hash
+                }:${projectGitRelativeFilePath}`
+            );
+        }
     }
 
     progressCallback(50);

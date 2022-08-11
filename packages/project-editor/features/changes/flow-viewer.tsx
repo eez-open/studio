@@ -48,7 +48,7 @@ import type {
 } from "project-editor/flow/flow-interfaces";
 import { Transform } from "project-editor/flow/editor/transform";
 
-import { Component } from "project-editor/flow/component";
+import { Component, Widget } from "project-editor/flow/component";
 import { guid } from "eez-studio-shared/guid";
 import { ChangedFlowObjects, ChangeOperations } from "./state";
 
@@ -132,7 +132,7 @@ export const FlowViewer = observer(
             return (
                 <div
                     className={classNames(
-                        "EezStudio_FlowCanvasContainer EezStudio_FlowEditorCanvasContainer"
+                        "EezStudio_FlowCanvasContainer EezStudio_ChangesFlowViewerCanvasContainer"
                     )}
                     ref={this.divRef}
                     id={this.flowContext.viewState.containerId}
@@ -162,6 +162,9 @@ export const FlowViewer = observer(
                                         flowContext={this.flowContext}
                                         changedObjects={
                                             this.props.changedObjects
+                                        }
+                                        selectedObject={
+                                            this.props.selectedObject
                                         }
                                     />
                                 }
@@ -215,11 +218,23 @@ export const FlowViewer = observer(
                                                                     4,
                                                                 height:
                                                                     component.height +
-                                                                    4
+                                                                    4,
+                                                                borderRadius:
+                                                                    component instanceof
+                                                                    Widget
+                                                                        ? 0
+                                                                        : 6
                                                             }}
                                                             className={classNames(
                                                                 "EezStudio_ChangesFlowViewer_ChangedObject",
-                                                                changedObject.operation
+                                                                changedObject.operation,
+                                                                {
+                                                                    selected:
+                                                                        this
+                                                                            .props
+                                                                            .selectedObject ==
+                                                                        changedObject.object
+                                                                }
                                                             )}
                                                         ></div>
                                                     );
@@ -230,36 +245,6 @@ export const FlowViewer = observer(
                                         )}
                                     </div>
                                 }
-
-                                {this.props.selectedObject instanceof
-                                    Component && (
-                                    <div
-                                        style={{
-                                            position: "absolute"
-                                        }}
-                                    >
-                                        <div
-                                            style={{
-                                                position: "absolute",
-                                                left:
-                                                    this.props.selectedObject
-                                                        .absolutePositionPoint
-                                                        .x - 10,
-                                                top:
-                                                    this.props.selectedObject
-                                                        .absolutePositionPoint
-                                                        .y - 10,
-                                                width:
-                                                    this.props.selectedObject
-                                                        .width + 20,
-                                                height:
-                                                    this.props.selectedObject
-                                                        .height + 20
-                                            }}
-                                            className="EezStudio_ChangesFlowViewer_SelectedObject"
-                                        ></div>
-                                    </div>
-                                )}
                             </>
                         )}
                     </Canvas>
@@ -578,7 +563,7 @@ export const Canvas = observer(
 const colors = {
     added: "green",
     removed: "red",
-    updated: "blue"
+    updated: "#999"
 };
 
 function getChangeOperationFilter(operation: ChangeOperations) {
@@ -606,10 +591,12 @@ function DropShadowFilter({ operation }: { operation: ChangeOperations }) {
 const AllConnectionLines = observer(
     ({
         flowContext,
-        changedObjects
+        changedObjects,
+        selectedObject
     }: {
         flowContext: IFlowContext;
         changedObjects: ChangedFlowObjects;
+        selectedObject: Component | ConnectionLine | undefined;
     }) => {
         return (
             <Svg flowContext={flowContext}>
@@ -630,33 +617,11 @@ const AllConnectionLines = observer(
                                 key={connectionLineAdapter.id}
                                 connectionLineAdapter={connectionLineAdapter}
                                 context={flowContext}
-                                selected={false}
-                                shadow={
+                                selected={
                                     changedObject
-                                        ? getChangeOperationFilter(
-                                              changedObject.operation
-                                          )
-                                        : undefined
+                                        ? changedObject.object == selectedObject
+                                        : false
                                 }
-                            />
-                        );
-                    }
-                )}
-
-                {flowContext.document.selectedConnectionLines.map(
-                    connectionLineAdapter => {
-                        const changedObject = changedObjects.find(
-                            changedObject =>
-                                changedObject.object ==
-                                connectionLineAdapter.object
-                        );
-
-                        return (
-                            <ConnectionLineShape
-                                key={connectionLineAdapter.id}
-                                connectionLineAdapter={connectionLineAdapter}
-                                context={flowContext}
-                                selected={false}
                                 shadow={
                                     changedObject
                                         ? getChangeOperationFilter(

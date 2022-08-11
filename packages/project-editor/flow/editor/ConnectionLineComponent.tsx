@@ -109,6 +109,7 @@ export const ConnectionLineShape = observer(
             <g
                 className={classNames("connection-line", { selected })}
                 data-eez-flow-object-id={connectionLineAdapter.id}
+                filter={shadow ? `url(#${shadow.id})` : undefined}
             >
                 <path
                     d={lineShape}
@@ -222,7 +223,7 @@ class VisiblePath extends React.Component<{
             targetInput?.isSequenceInput &&
             !(connectionLine.targetComponent instanceof OutputActionComponent);
 
-        const path = (
+        return (
             <path
                 ref={this.ref}
                 d={lineShape}
@@ -242,12 +243,6 @@ class VisiblePath extends React.Component<{
                 })}
                 vectorEffect={selected ? "non-scaling-stroke" : "none"}
             ></path>
-        );
-
-        return this.props.shadow ? (
-            <g filter={`url(#${this.props.shadow.id})`}>{path}</g>
-        ) : (
-            path
         );
     }
 }
