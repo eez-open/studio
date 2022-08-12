@@ -554,10 +554,6 @@ export const ChangesEditor = observer(
             const params = this.comparePair;
 
             if (params.revisionAfter?.hash != MEMORY_HASH) {
-                this.context.project.changes._state.refreshRevisions(
-                    this.context
-                );
-
                 runInAction(() => {
                     this.context.project.changes._state.selectedRevisionHash =
                         MEMORY_HASH;
@@ -624,15 +620,18 @@ export const ChangesEditor = observer(
                         STAGED_HASH);
             console.log(hasRevertChanges);
 
-            const changesEditor = (
-                <div className="EezStudio_ChangesEditor">
-                    <ObjectChangesComponent
-                        objectChanges={this.projectChanges!}
-                        selectedProjectChange={this.selectedProjectChange}
-                        onSelectProjectChange={this.onSelectProjectChange}
-                    />
-                </div>
-            );
+            const changesEditor =
+                this.projectChanges?.changes.length == 0 ? (
+                    <div>No changes</div>
+                ) : (
+                    <div className="EezStudio_ChangesEditor">
+                        <ObjectChangesComponent
+                            objectChanges={this.projectChanges!}
+                            selectedProjectChange={this.selectedProjectChange}
+                            onSelectProjectChange={this.onSelectProjectChange}
+                        />
+                    </div>
+                );
 
             const { revisionAfter, revisionBefore } = this.comparePair;
 
@@ -801,6 +800,16 @@ export const ObjectChangesComponent = observer(
                     icon = <Icon icon={`material:${icon}`} size={18} />;
                 }
 
+                const valueBefore = (propertyChange.objectBefore as any)[
+                    propertyChange.propertyInfo.name
+                ];
+                const valueBeforeJSON = toJSON(valueBefore);
+
+                const valueAfter = (propertyChange.objectAfter as any)[
+                    propertyChange.propertyInfo.name
+                ];
+                const valueAfterJSON = toJSON(valueAfter);
+
                 return (
                     <div key={propertyChange.propertyInfo.name}>
                         <div
@@ -826,34 +835,43 @@ export const ObjectChangesComponent = observer(
                                 {icon && (
                                     <span className="change-icon">{icon}</span>
                                 )}
-                                <span className="change-label">{label}</span>
+                                <span className="change-label">
+                                    {label}
+                                    {(propertyChange instanceof
+                                        PropertyValueAdded &&
+                                        valueAfterJSON) ||
+                                    (propertyChange instanceof
+                                        PropertyValueRemoved &&
+                                        valueBeforeJSON) ||
+                                    propertyChange instanceof
+                                        PropertyValueUpdated
+                                        ? ": "
+                                        : ""}
+                                </span>
+
+                                {propertyChange instanceof PropertyValueAdded &&
+                                    valueAfterJSON && (
+                                        <span className="value-added">
+                                            {valueAfterJSON}
+                                        </span>
+                                    )}
+
+                                {propertyChange instanceof
+                                    PropertyValueRemoved &&
+                                    valueBeforeJSON && (
+                                        <span className="value-removed">
+                                            {valueBeforeJSON}
+                                        </span>
+                                    )}
 
                                 {propertyChange instanceof
                                     PropertyValueUpdated && (
                                     <>
                                         <span className="value-removed">
-                                            {JSON.stringify(
-                                                (
-                                                    propertyChange.objectBefore as any
-                                                )[
-                                                    propertyChange.propertyInfo
-                                                        .name
-                                                ],
-                                                undefined,
-                                                2
-                                            )}
+                                            {valueBeforeJSON}
                                         </span>
                                         <span className="value-added">
-                                            {JSON.stringify(
-                                                (
-                                                    propertyChange.objectAfter as any
-                                                )[
-                                                    propertyChange.propertyInfo
-                                                        .name
-                                                ],
-                                                undefined,
-                                                2
-                                            )}
+                                            {valueAfterJSON}
                                         </span>
                                     </>
                                 )}
@@ -996,12 +1014,12 @@ export const ArrayChangesComponent = observer(
                                 </div>
                             </div>
                         );
-                    }),
-                ...(arrayChanges.shuffled
+                    })
+                /*,...(arrayChanges.shuffled
                     ? [
                           <div
                               key="moved"
-                              className={classNames("array-element-moved", {
+                              className={classNames("array-element-shuffled", {
                                   selected:
                                       selectedProjectChange ==
                                       arrayChanges.shuffled
@@ -1014,11 +1032,19 @@ export const ArrayChangesComponent = observer(
                                   }
                               }}
                           >
-                              <span className="array-moved">MOVED</span>
+                              <span className="array-shuffled">MOVED</span>
                           </div>
                       ]
-                    : [])
+                    : [])*/
             ];
         }
     }
 );
+
+function toJSON(value: any) {
+    try {
+        return JSON.stringify(value);
+    } catch (err) {
+        return undefined;
+    }
+}

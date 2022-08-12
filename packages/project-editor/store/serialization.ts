@@ -1,8 +1,10 @@
+import crypto from "crypto";
 import { guid } from "eez-studio-shared/guid";
 import { observable, toJS } from "mobx";
 
 import {
     IEezObject,
+    ClassInfo,
     PropertyInfo,
     PropertyType,
     EezClass,
@@ -10,12 +12,18 @@ import {
     setId,
     setKey,
     setParent,
-    setPropertyInfo
+    setPropertyInfo,
+    getParent,
+    getKey
 } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Project } from "project-editor/project/project";
 
-import { getClassInfo, ProjectEditorStore } from "project-editor/store";
+import {
+    getClassInfo,
+    isArray,
+    ProjectEditorStore
+} from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -46,7 +54,8 @@ export function loadProject(
     const result = loadObjectInternal(
         undefined,
         projectObjectOrString,
-        ProjectEditor.ProjectClass
+        ProjectEditor.ProjectClass,
+        undefined
     ) as Project;
 
     let projectFeatures = ProjectEditor.extensions;
@@ -121,7 +130,8 @@ function loadArrayObject(
             loadObjectInternal(
                 eezArray,
                 object,
-                propertyInfo.typeClass!
+                propertyInfo.typeClass!,
+                undefined
             ) as EezObject
         )
     );
@@ -133,7 +143,7 @@ function loadObjectInternal(
     parent: IEezObject | undefined,
     jsObjectOrString: any | string,
     aClass: EezClass,
-    key?: string
+    key: string | undefined
 ): IEezObject {
     let jsObject: any =
         typeof jsObjectOrString == "string"
@@ -168,15 +178,11 @@ function loadObjectInternal(
 
     setId(currentDocumentStore!, object, currentDocumentStore!.getChildId());
     setParent(object, parent as IEezObject);
-
-    let objID = jsObject.objID || jsObject.wireID;
-    if (
-        createNewObjectobjIDs ||
-        objID == undefined ||
-        (isLoadProject && currentProject!._objectsMap.get(objID))
-    ) {
-        objID = guid();
+    if (key != undefined) {
+        setKey(object, key);
     }
+
+    let objID = getObjID(object, jsObject, classInfo, key);
     object.objID = objID;
     currentProject?._objectsMap.set(objID, object);
 
@@ -198,19 +204,20 @@ function loadObjectInternal(
                 childObject = loadObjectInternal(
                     object,
                     value,
-                    propertyInfo.typeClass!
+                    propertyInfo.typeClass!,
+                    propertyInfo.name
                 );
             } else if (!propertyInfo.isOptional) {
                 let typeClass = propertyInfo.typeClass!;
                 childObject = loadObjectInternal(
                     object,
                     typeClass.classInfo.defaultValue,
-                    typeClass
+                    typeClass,
+                    propertyInfo.name
                 );
             }
 
             if (childObject) {
-                setKey(childObject, propertyInfo.name);
                 (object as any)[propertyInfo.name] = childObject;
             }
         } else if (propertyInfo.type === PropertyType.Array) {
@@ -233,4 +240,66 @@ function loadObjectInternal(
     }
 
     return object;
+}
+
+function getObjID(
+    object: EezObject,
+    jsObject: any,
+    classInfo: ClassInfo,
+    key: string | undefined
+) {
+    if (createNewObjectobjIDs) {
+        return guid();
+    }
+
+    if (jsObject.objID != undefined) {
+        return jsObject.objID;
+    }
+
+    if (
+        jsObject.wireID != undefined &&
+        !(isLoadProject && currentProject!._objectsMap.get(jsObject.wireID))
+    ) {
+        return jsObject.wireID;
+    }
+
+    function getObjectPath(
+        object: IEezObject,
+        jsObject: any,
+        key: string | undefined
+    ): (string | number)[] {
+        let parent = getParent(object);
+        if (parent) {
+            if (isArray(parent)) {
+                let id = jsObject ? jsObject.name : (object as any).name;
+                if (id == undefined) {
+                    id = parent.length;
+                }
+                return getObjectPath(parent, undefined, undefined).concat(id);
+            } else {
+                return getObjectPath(parent, undefined, undefined).concat(
+                    getKey(object) || key || ""
+                );
+            }
+        }
+        return [];
+    }
+
+    const str = "/" + getObjectPath(object, jsObject, key).join("/");
+
+    console.log(str);
+
+    const hash = crypto.createHash("md5").update(str).digest("hex");
+
+    return (
+        hash.slice(0, 8) +
+        "-" +
+        hash.slice(8, 12) +
+        "-" +
+        hash.slice(12, 16) +
+        "-" +
+        hash.slice(16, 20) +
+        "-" +
+        hash.slice(20, 32)
+    );
 }

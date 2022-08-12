@@ -138,19 +138,7 @@ export class ChangesState {
         forceGitRefresh: boolean
     ): Promise<Revision[]> {
         if (!forceGitRefresh && this.revisionsGitRefreshed) {
-            const revisions = this.revisions.slice();
-
-            if (projectEditorStore.modified) {
-                if (revisions.length == 0 || revisions[0].hash != MEMORY_HASH) {
-                    revisions.splice(0, 0, MEMORY_REVISION);
-                }
-            } else {
-                if (revisions.length > 0 && revisions[0].hash == MEMORY_HASH) {
-                    revisions.splice(0, 1);
-                }
-            }
-
-            return revisions;
+            return this.revisions.slice();
         }
 
         let revisions: Revision[] = [];
@@ -192,9 +180,7 @@ export class ChangesState {
             revisions = [UNSTAGED_REVISION];
         }
 
-        if (projectEditorStore.modified) {
-            revisions.splice(0, 0, MEMORY_REVISION);
-        }
+        revisions.splice(0, 0, MEMORY_REVISION);
 
         return revisions;
     }

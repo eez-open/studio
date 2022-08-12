@@ -36,7 +36,8 @@ import {
     getProperty,
     MessageType,
     registerClass,
-    FlowPropertyType
+    FlowPropertyType,
+    getObjectPropertyDisplayName
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -2712,6 +2713,41 @@ export class TimelineKeyframe extends EezObject {
                 type: PropertyType.Any
             }
         ],
+        label: (keyframe: TimelineKeyframe) => {
+            const { start, end } = keyframe;
+
+            const values = TimelineKeyframe.classInfo.properties
+                .map(propertyInfo => ({
+                    propertyInfo,
+                    value: (keyframe as any)[
+                        propertyInfo.name
+                    ] as TimelineKeyframePropertyValue<number>
+                }))
+                .filter(
+                    x =>
+                        x.propertyInfo.type == PropertyType.Any &&
+                        x.value != undefined &&
+                        x.value.enabled
+                )
+                .map(x => {
+                    let label = getObjectPropertyDisplayName(
+                        keyframe,
+                        x.propertyInfo
+                    );
+
+                    if (x.value.easingFunction == "linear") {
+                        return `${label} to ${x.value.value}`;
+                    } else {
+                        return `${label} to ${x.value.value}/${x.value.easingFunction}`;
+                    }
+                })
+                .join(", ");
+
+            if (start == end) {
+                return `At ${end} s set ` + values;
+            }
+            return `From ${start} s to ${end} s animate ` + values;
+        },
         beforeLoadHook: (
             keyframe: TimelineKeyframe,
             jsKeyframe: Partial<TimelineKeyframe>
