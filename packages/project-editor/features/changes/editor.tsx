@@ -160,21 +160,13 @@ export const ChangesEditor = observer(
                     if (
                         this.selectedProjectChange.objectAfter instanceof Flow
                     ) {
-                        if (
-                            this.selectedProjectChange.propertyInfo.name ==
-                                "components" ||
-                            this.selectedProjectChange.propertyInfo.name ==
-                                "connectionLines"
-                        ) {
-                            return {
-                                flowBefore: this.selectedProjectChange
-                                    .objectBefore as Flow,
-                                flowAfter:
-                                    this.selectedProjectChange.objectAfter,
-                                selectedFlowObjectBefore: undefined,
-                                selectedFlowObjectAfter: undefined
-                            };
-                        }
+                        return {
+                            flowBefore: this.selectedProjectChange
+                                .objectBefore as Flow,
+                            flowAfter: this.selectedProjectChange.objectAfter,
+                            selectedFlowObjectBefore: undefined,
+                            selectedFlowObjectAfter: undefined
+                        };
                     } else {
                         const flow = getAncestorOfType(
                             this.selectedProjectChange.objectAfter,

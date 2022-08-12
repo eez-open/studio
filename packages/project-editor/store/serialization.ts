@@ -287,8 +287,6 @@ function getObjID(
 
     const str = "/" + getObjectPath(object, jsObject, key).join("/");
 
-    console.log(str);
-
     const hash = crypto.createHash("md5").update(str).digest("hex");
 
     return (
