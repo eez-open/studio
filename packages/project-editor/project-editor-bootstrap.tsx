@@ -2,8 +2,6 @@ import { validators } from "eez-studio-shared/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import "project-editor/project/builtInFeatures";
-
 import type { ProjectEditorTab, Tabs } from "home/tabs-store";
 
 import { getProjectFeatures } from "project-editor/store/features";
