@@ -567,25 +567,7 @@ const colors = {
 };
 
 function getChangeOperationFilter(operation: ChangeOperations) {
-    return { id: operation + "-shadow", color: colors[operation] };
-}
-
-function getChangeOperationFilterName(operation: ChangeOperations) {
-    return operation + "-shadow";
-}
-
-function DropShadowFilter({ operation }: { operation: ChangeOperations }) {
-    return (
-        <filter id={getChangeOperationFilterName(operation)}>
-            <feDropShadow
-                dx="0"
-                dy="0"
-                stdDeviation="3"
-                floodOpacity="1"
-                floodColor={colors[operation]}
-            />
-        </filter>
-    );
+    return { color: colors[operation] };
 }
 
 const AllConnectionLines = observer(
@@ -600,10 +582,6 @@ const AllConnectionLines = observer(
     }) => {
         return (
             <Svg flowContext={flowContext}>
-                <DropShadowFilter operation="added" />
-                <DropShadowFilter operation="removed" />
-                <DropShadowFilter operation="updated" />
-
                 {flowContext.document.nonSelectedConnectionLines.map(
                     connectionLineAdapter => {
                         const changedObject = changedObjects.find(

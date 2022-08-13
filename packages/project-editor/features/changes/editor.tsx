@@ -815,13 +815,7 @@ export const ObjectChangesComponent = observer(
                         >
                             <div
                                 className={classNames({
-                                    "feature-row": isProject,
-                                    "value-added":
-                                        propertyChange instanceof
-                                        PropertyValueAdded,
-                                    "value-removed":
-                                        propertyChange instanceof
-                                        PropertyValueRemoved
+                                    "feature-row": isProject
                                 })}
                             >
                                 {icon && (

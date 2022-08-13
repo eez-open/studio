@@ -783,28 +783,33 @@ export async function getBeforeAndAfterProject(
     revisionAfter: Revision,
     progressCallback: (percent: number) => void
 ): Promise<BeforeAfterProject | undefined> {
-    const SUBTASK_PERCENT = 45;
+    try {
+        const SUBTASK_PERCENT = 45;
 
-    const projectBefore: Project = revisionBefore
-        ? await getRevisionProject(
-              projectEditorStore,
-              revisionBefore,
-              percent => progressCallback(SUBTASK_PERCENT * (1 + percent / 100))
-          )
-        : ({} as any);
+        const projectBefore: Project = revisionBefore
+            ? await getRevisionProject(
+                  projectEditorStore,
+                  revisionBefore,
+                  percent =>
+                      progressCallback(SUBTASK_PERCENT * (1 + percent / 100))
+              )
+            : ({} as any);
 
-    const projectAfter = await getRevisionProject(
-        projectEditorStore,
-        revisionAfter,
-        percent => progressCallback(SUBTASK_PERCENT * (percent / 100))
-    );
+        const projectAfter = await getRevisionProject(
+            projectEditorStore,
+            revisionAfter,
+            percent => progressCallback(SUBTASK_PERCENT * (percent / 100))
+        );
 
-    progressCallback(100);
+        progressCallback(100);
 
-    return {
-        projectBefore: projectBefore,
-        projectAfter: projectAfter
-    };
+        return {
+            projectBefore: projectBefore,
+            projectAfter: projectAfter
+        };
+    } catch (err) {
+        return undefined;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -32,10 +32,10 @@ export function createObject<T extends EezObject>(
     jsObject: Partial<T>,
     aClass: EezClass,
     key?: string,
-    createNewObjectobjIDs?: boolean
+    _createNewObjectobjIDs?: boolean
 ): T {
     currentDocumentStore = projectEditorStore;
-    createNewObjectobjIDs = createNewObjectobjIDs ?? true;
+    createNewObjectobjIDs = _createNewObjectobjIDs ?? true;
     isLoadProject = false;
     currentProject = projectEditorStore.project;
     const result = loadObjectInternal(undefined, jsObject, aClass, key);

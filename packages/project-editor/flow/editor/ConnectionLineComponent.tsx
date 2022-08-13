@@ -87,7 +87,7 @@ export const ConnectionLineShape = observer(
         connectionLineAdapter: ITreeObjectAdapter;
         context: IFlowContext;
         selected: boolean;
-        shadow?: { id: string; color: string };
+        shadow?: { color: string };
     }) => {
         const connectionLine = connectionLineAdapter.object as ConnectionLine;
         const { lineShape, center } = getConnectionLineShape(
@@ -109,7 +109,11 @@ export const ConnectionLineShape = observer(
             <g
                 className={classNames("connection-line", { selected })}
                 data-eez-flow-object-id={connectionLineAdapter.id}
-                filter={shadow ? `url(#${shadow.id})` : undefined}
+                style={{
+                    filter: shadow
+                        ? `drop-shadow(0px 0px 3px ${shadow.color})`
+                        : undefined
+                }}
             >
                 <path
                     d={lineShape}
@@ -200,7 +204,7 @@ class VisiblePath extends React.Component<{
     connectionLine: ConnectionLine;
     context: IFlowContext;
     targetInput: ComponentInput | undefined;
-    shadow: { id: string; color: string } | undefined;
+    shadow: { color: string } | undefined;
 }> {
     ref = React.createRef<SVGPathElement>();
 
