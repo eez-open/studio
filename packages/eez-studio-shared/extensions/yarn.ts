@@ -132,7 +132,7 @@ export async function getNodeModuleFolders() {
 
     const packageJson = require(packageJsonPath);
 
-    return Object.keys(packageJson.dependencies).map(plugin =>
+    return Object.keys(packageJson.dependencies || []).map(plugin =>
         path.resolve(extensionsFolderPath, "node_modules", plugin.split("#")[0])
     );
 }
