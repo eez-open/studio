@@ -364,7 +364,10 @@ const PaletteItem = observer(
                 object.height = 0;
             }
 
-            setClipboardData(event, objectToClipboardData(object));
+            setClipboardData(
+                event,
+                objectToClipboardData(this.context, object)
+            );
 
             event.dataTransfer.effectAllowed = "copy";
 

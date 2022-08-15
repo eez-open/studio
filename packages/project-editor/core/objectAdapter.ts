@@ -1197,17 +1197,26 @@ export class TreeAdapter implements ITreeAdapter {
     }
 
     onDragStart(item: ITreeObjectAdapter, event: any) {
+        const projectEditorStore = getDocumentStore(this.rootItem.object);
+
         event.dataTransfer.effectAllowed = "copyMove";
-        setClipboardData(event, objectToClipboardData(item.object));
+        setClipboardData(
+            event,
+            objectToClipboardData(projectEditorStore, item.object)
+        );
         event.dataTransfer.setDragImage(
             DragAndDropManager.blankDragImage,
             0,
             0
         );
+
         // postpone render, otherwise we can receive onDragEnd immediatelly
-        const projectEditorStore = getDocumentStore(this.rootItem.object);
         setTimeout(() => {
-            DragAndDropManager.start(event, item.object as any, projectEditorStore);
+            DragAndDropManager.start(
+                event,
+                item.object as any,
+                projectEditorStore
+            );
         });
     }
 

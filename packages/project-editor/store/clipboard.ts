@@ -17,7 +17,6 @@ import {
     getChildOfObject,
     getClass,
     getClassInfo,
-    getDocumentStore,
     isArray,
     isObject,
     objectToJson,
@@ -28,9 +27,10 @@ import {
 
 const CLIPOARD_DATA_ID = "application/eez-studio-project-editor-data";
 
-export function cloneObjectWithNewObjIds(object: IEezObject) {
-    const projectEditorStore = getDocumentStore(object);
-
+export function cloneObjectWithNewObjIds(
+    projectEditorStore: ProjectEditorStore,
+    object: IEezObject
+) {
     const clonedObject = createObject(
         projectEditorStore,
         toJS(object) as any,
@@ -42,10 +42,13 @@ export function cloneObjectWithNewObjIds(object: IEezObject) {
     return objectToJson(clonedObject);
 }
 
-export function objectToClipboardData(object: IEezObject): string {
+export function objectToClipboardData(
+    projectEditorStore: ProjectEditorStore,
+    object: IEezObject
+): string {
     return JSON.stringify({
         objectClassName: getClass(object).name,
-        object: cloneObjectWithNewObjIds(object)
+        object: cloneObjectWithNewObjIds(projectEditorStore, object)
     });
 }
 
@@ -58,10 +61,15 @@ export function objectToClipboardDataWithoutNewObjIds(
     });
 }
 
-export function objectsToClipboardData(objects: IEezObject[]): string {
+export function objectsToClipboardData(
+    projectEditorStore: ProjectEditorStore,
+    objects: IEezObject[]
+): string {
     return JSON.stringify({
         objectClassName: getClass(objects[0]).name,
-        objects: objects.map(object => cloneObjectWithNewObjIds(object))
+        objects: objects.map(object =>
+            cloneObjectWithNewObjIds(projectEditorStore, object)
+        )
     });
 }
 

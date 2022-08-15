@@ -719,7 +719,7 @@ export function deleteItem(object: IEezObject) {
 }
 
 export function cutItem(object: IEezObject) {
-    let clipboardText = objectToClipboardData(object);
+    let clipboardText = objectToClipboardData(getDocumentStore(object), object);
 
     deleteItems([object], () => {
         copyToClipboard(clipboardText);
@@ -727,7 +727,7 @@ export function cutItem(object: IEezObject) {
 }
 
 export function copyItem(object: IEezObject) {
-    copyToClipboard(objectToClipboardData(object));
+    copyToClipboard(objectToClipboardData(getDocumentStore(object), object));
 }
 
 function duplicateItem(object: IEezObject) {

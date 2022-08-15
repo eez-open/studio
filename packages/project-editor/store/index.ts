@@ -822,7 +822,7 @@ export class ProjectEditorStore {
         if (classInfo.objectsToClipboardData) {
             return classInfo.objectsToClipboardData(objects);
         }
-        return objectsToClipboardData(objects);
+        return objectsToClipboardData(this, objects);
     }
 
     setRuntimeMode(isDebuggerActive: boolean) {
