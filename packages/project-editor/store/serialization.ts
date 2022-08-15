@@ -16,6 +16,7 @@ import {
     getParent,
     getKey
 } from "project-editor/core/object";
+import type { Flow } from "project-editor/flow/flow";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Project } from "project-editor/project/project";
 
@@ -190,6 +191,16 @@ function loadObjectInternal(
         classInfo.beforeLoadHook(object, jsObject);
     }
 
+    let rewireFlow = false;
+    if (
+        !isLoadProject &&
+        createNewObjectobjIDs &&
+        object instanceof ProjectEditor.FlowClass
+    ) {
+        createNewObjectobjIDs = false;
+        rewireFlow = true;
+    }
+
     for (const propertyInfo of classInfo.properties) {
         if (propertyInfo.computed === true) {
             continue;
@@ -237,6 +248,11 @@ function loadObjectInternal(
                 (object as any)[propertyInfo.name] = value;
             }
         }
+    }
+
+    if (rewireFlow) {
+        (object as Flow).rewire();
+        createNewObjectobjIDs = true;
     }
 
     return object;

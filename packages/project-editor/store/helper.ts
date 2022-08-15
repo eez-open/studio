@@ -703,7 +703,7 @@ export function pasteItem(object: IEezObject) {
                 } else if (c.serializedData.objects) {
                     return projectEditorStore.addObjects(
                         c.pastePlace as IEezObject,
-                        objectToJS(c.serializedData.objects)
+                        c.serializedData.objects
                     );
                 }
             }

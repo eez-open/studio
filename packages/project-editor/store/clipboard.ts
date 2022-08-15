@@ -1,4 +1,5 @@
 import { clipboard } from "@electron/remote";
+import { toJS } from "mobx";
 
 import {
     IEezObject,
@@ -16,6 +17,7 @@ import {
     getChildOfObject,
     getClass,
     getClassInfo,
+    getDocumentStore,
     isArray,
     isObject,
     objectToJson,
@@ -26,7 +28,30 @@ import {
 
 const CLIPOARD_DATA_ID = "application/eez-studio-project-editor-data";
 
+export function cloneObjectWithNewObjIds(object: IEezObject) {
+    const projectEditorStore = getDocumentStore(object);
+
+    const clonedObject = createObject(
+        projectEditorStore,
+        toJS(object) as any,
+        getClass(object),
+        undefined,
+        true
+    ) as EezObject;
+
+    return objectToJson(clonedObject);
+}
+
 export function objectToClipboardData(object: IEezObject): string {
+    return JSON.stringify({
+        objectClassName: getClass(object).name,
+        object: cloneObjectWithNewObjIds(object)
+    });
+}
+
+export function objectToClipboardDataWithoutNewObjIds(
+    object: IEezObject
+): string {
     return JSON.stringify({
         objectClassName: getClass(object).name,
         object: objectToJson(object)
@@ -36,7 +61,7 @@ export function objectToClipboardData(object: IEezObject): string {
 export function objectsToClipboardData(objects: IEezObject[]): string {
     return JSON.stringify({
         objectClassName: getClass(objects[0]).name,
-        objects: objects.map(object => objectToJson(object))
+        objects: objects.map(object => cloneObjectWithNewObjIds(object))
     });
 }
 
@@ -53,7 +78,9 @@ export function clipboardDataToObject(
             serializedData.object = createObject(
                 projectEditorStore,
                 serializedData.object,
-                aClass
+                aClass,
+                undefined,
+                false
             ) as EezObject;
         } else if (serializedData.objects) {
             serializedData.objects = serializedData.objects.map(
@@ -61,7 +88,9 @@ export function clipboardDataToObject(
                     createObject(
                         projectEditorStore,
                         object,
-                        aClass
+                        aClass,
+                        undefined,
+                        false
                     ) as EezObject
             );
         }

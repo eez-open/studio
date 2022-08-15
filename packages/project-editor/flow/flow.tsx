@@ -16,13 +16,13 @@ import {
 import { visitObjects } from "project-editor/core/search";
 import {
     getDocumentStore,
-    objectToClipboardData,
     getLabel,
     Message,
     getAncestorOfType,
     ProjectEditorStore,
     createObject,
-    getClass
+    getClass,
+    objectToClipboardDataWithoutNewObjIds
 } from "project-editor/store";
 import {
     ActionComponent,
@@ -506,15 +506,20 @@ export abstract class Flow extends EezObject {
     objectsToClipboardData(objects: IEezObject[]) {
         const flowFragment = new FlowFragment();
         flowFragment.addObjects(this, objects);
-        return objectToClipboardData(flowFragment);
+        return objectToClipboardDataWithoutNewObjIds(flowFragment);
+    }
+
+    rewire() {
+        const flowFragment = new FlowFragment();
+        flowFragment.components = this.components;
+        flowFragment.connectionLines = this.connectionLines;
+        flowFragment.rewire();
     }
 
     pasteFlowFragment(flowFragment: FlowFragment, object: IEezObject) {
         const projectEditorStore = getDocumentStore(this);
 
         projectEditorStore.undoManager.setCombineCommands(true);
-
-        flowFragment.rewire();
 
         let components: EezObject[];
 
@@ -745,6 +750,8 @@ export class FlowFragment extends EezObject {
                 this.connectionLines.push(clone);
             }
         });
+
+        this.rewire();
     }
 
     rewire() {
