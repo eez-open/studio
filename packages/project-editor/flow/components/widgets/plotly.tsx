@@ -585,7 +585,7 @@ export class LineChartWidget extends Widget {
 
             if (message.reset) {
                 const newRunningState = new RunningState();
-                newRunningState.labels = runningState.labels;
+                newRunningState.labels = message.labels;
                 flowState.setComponentRunningState(this, newRunningState);
             } else {
                 const { xValue, labels, values } = message;
