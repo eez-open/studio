@@ -16,7 +16,6 @@ import type { Component } from "project-editor/flow/component";
 
 import { ProjectContext } from "project-editor/project/context";
 import { SearchInput } from "eez-studio-ui/search-input";
-import { humanize } from "eez-studio-shared/string";
 import {
     getClass,
     objectToClipboardData,
@@ -289,7 +288,7 @@ export function getComponentName(componentClassName: string) {
         name = name.substring(0, name.length - "ActionComponent".length);
     }
 
-    return humanize(name);
+    return name;
 }
 
 const PaletteItem = observer(

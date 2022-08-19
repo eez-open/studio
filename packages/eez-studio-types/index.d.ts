@@ -177,6 +177,7 @@ export interface IComponentOutput {
 export interface IComponentPropertyBase {
     name: string;
     displayName?: string;
+    enabled?: (...props: string[]) => boolean;
 }
 
 export interface IExpressionComponentProperty extends IComponentPropertyBase {
@@ -195,10 +196,27 @@ export interface ITemplateLiteralComponentProperty
     type: "template-literal";
 }
 
+export interface EnumItem {
+    id: string | number;
+    label?: string;
+}
+
+export interface IEnumComponentProperty extends IComponentPropertyBase {
+    type: "enum";
+    enumItems: EnumItem[];
+}
+
+export interface IInlineCodeComponentProperty extends IComponentPropertyBase {
+    type: "inline-code";
+    language: "JSON" | "JavaScript" | "CSS" | "Python" | "C/C++";
+}
+
 export type IComponentProperty =
     | IExpressionComponentProperty
     | IAssignableExpressionComponentProperty
-    | ITemplateLiteralComponentProperty;
+    | ITemplateLiteralComponentProperty
+    | IEnumComponentProperty
+    | IInlineCodeComponentProperty;
 
 export type IDisposeComponentState = () => void;
 

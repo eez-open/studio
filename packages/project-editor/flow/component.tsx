@@ -4862,6 +4862,14 @@ export function registerActionComponent(
     const properties: PropertyInfo[] = [];
 
     for (const propertyDefinition of actionComponentDefinition.properties) {
+        let hideInPropertyGrid;
+
+        const enabled = propertyDefinition.enabled;
+        if (enabled) {
+            hideInPropertyGrid = (object: any, propertyInfo: PropertyInfo) =>
+                enabled(...(object?._props ?? []));
+        }
+
         if (propertyDefinition.type === "expression") {
             properties.push(
                 makeExpressionProperty(
@@ -4869,7 +4877,8 @@ export function registerActionComponent(
                         name: propertyDefinition.name,
                         displayName: propertyDefinition.displayName,
                         type: PropertyType.MultilineText,
-                        propertyGridGroup: specificGroup
+                        propertyGridGroup: specificGroup,
+                        hideInPropertyGrid
                     },
                     propertyDefinition.valueType
                 )
@@ -4881,20 +4890,47 @@ export function registerActionComponent(
                         name: propertyDefinition.name,
                         displayName: propertyDefinition.displayName,
                         type: PropertyType.MultilineText,
-                        propertyGridGroup: specificGroup
+                        propertyGridGroup: specificGroup,
+                        hideInPropertyGrid
                     },
                     propertyDefinition.valueType
                 )
             );
-        } else {
+        } else if (propertyDefinition.type === "template-literal") {
             properties.push(
                 makeTemplateLiteralProperty({
                     name: propertyDefinition.name,
                     displayName: propertyDefinition.displayName,
                     type: PropertyType.MultilineText,
-                    propertyGridGroup: specificGroup
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid
                 })
             );
+        } else if (propertyDefinition.type === "enum") {
+            properties.push({
+                name: propertyDefinition.name,
+                displayName: propertyDefinition.displayName,
+                type: PropertyType.Enum,
+                enumItems: propertyDefinition.enumItems,
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid
+            });
+        } else if (propertyDefinition.type === "inline-code") {
+            const languageToType = {
+                JSON: PropertyType.JSON,
+                JavaScript: PropertyType.JavaScript,
+                CSS: PropertyType.CSS,
+                Python: PropertyType.Python,
+                "C/C++": PropertyType.CPP
+            };
+
+            properties.push({
+                name: propertyDefinition.name,
+                displayName: propertyDefinition.displayName,
+                type: languageToType[propertyDefinition.language],
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid
+            });
         }
     }
 
@@ -4990,15 +5026,19 @@ export function registerActionComponent(
             }
 
             if (actionComponentDefinition.bodyPropertyCallback) {
-                return (
-                    <div className="body">
-                        <pre>
-                            {actionComponentDefinition.bodyPropertyCallback(
-                                ...this._props
-                            )}
-                        </pre>
-                    </div>
+                const body = actionComponentDefinition.bodyPropertyCallback(
+                    ...this._props
                 );
+
+                if (typeof body == "string") {
+                    return (
+                        <div className="body">
+                            <pre>{body}</pre>
+                        </div>
+                    );
+                }
+
+                return <div className="body">{body}</div>;
             }
 
             return null;
@@ -5016,6 +5056,24 @@ export function registerActionComponent(
                     messageId
                 );
             }
+        }
+
+        override buildFlowComponentSpecific(
+            assets: Assets,
+            dataBuffer: DataBuffer
+        ) {
+            actionComponentDefinition.properties.forEach(propertyDefinition => {
+                if (
+                    propertyDefinition.type == "enum" ||
+                    propertyDefinition.type == "inline-code"
+                ) {
+                    dataBuffer.writeObjectOffset(() =>
+                        dataBuffer.writeString(
+                            (this as any)[propertyDefinition.name]
+                        )
+                    );
+                }
+            });
         }
     };
 

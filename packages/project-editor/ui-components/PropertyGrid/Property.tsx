@@ -488,6 +488,14 @@ export const Property = observer(
                         showLabel={false}
                     />
                 );
+            } else if (propertyInfo.type === PropertyType.JavaScript) {
+                return (
+                    <CodeEditorProperty
+                        {...this.props}
+                        mode="javascript"
+                        showLabel={false}
+                    />
+                );
             } else if (propertyInfo.type === PropertyType.CSS) {
                 return (
                     <CodeEditorProperty
@@ -495,6 +503,14 @@ export const Property = observer(
                         mode="css"
                         showLabel={false}
                         readOnly={readOnly || !!propertyInfo.computed}
+                    />
+                );
+            } else if (propertyInfo.type === PropertyType.Python) {
+                return (
+                    <CodeEditorProperty
+                        {...this.props}
+                        mode="python"
+                        showLabel={false}
                     />
                 );
             } else if (propertyInfo.type === PropertyType.CPP) {

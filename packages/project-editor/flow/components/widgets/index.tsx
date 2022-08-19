@@ -2781,6 +2781,10 @@ export class BitmapWidget extends Widget {
             }
 
             if (typeof data === "string") {
+                if (data.startsWith("data:image/png;base64,")) {
+                    return data;
+                }
+
                 const bitmap = findBitmap(getProject(this), data as string);
                 if (bitmap) {
                     return bitmap;

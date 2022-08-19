@@ -7,7 +7,10 @@ import type {
     IGlobalVariable
 } from "project-editor/flow/runtime/wasm-worker-interfaces";
 import { init as initExecuteFunctions } from "project-editor/flow/runtime/wasm-execute-functions-init";
-import { actionConmponentExecuteFunctions } from "project-editor/flow/runtime/wasm-execute-functions";
+import {
+    actionConmponentExecuteFunctions,
+    wasmFlowRuntimeTerminateCallbacks
+} from "project-editor/flow/runtime/wasm-execute-functions";
 import {
     getValue,
     getArrayValue,
@@ -30,7 +33,9 @@ function startToDebuggerMessage(wasmModuleId: number) {}
 
 function writeDebuggerBuffer(wasmModuleId: number, arr: any) {
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
-
+    if (!WasmFlowRuntime) {
+        return;
+    }
     const data: WorkerToRenderMessage = {
         messageToDebugger: new Uint8Array(arr)
     };
@@ -115,12 +120,17 @@ function onArrayValueFree(wasmModuleId: number, ptr: number) {
     WasmFlowRuntime.postWorkerToRendererMessage(data);
 }
 
+function getCurrentWorkingDirectory() {
+    return process.cwd();
+}
+
 (global as any).startToDebuggerMessage = startToDebuggerMessage;
 (global as any).writeDebuggerBuffer = writeDebuggerBuffer;
 (global as any).finishToDebuggerMessage = finishToDebuggerMessage;
 (global as any).executeDashboardComponent = executeDashboardComponent;
 (global as any).onArrayValueFree = onArrayValueFree;
 (global as any).executeScpi = executeScpi;
+(global as any).getCurrentWorkingDirectory = getCurrentWorkingDirectory;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -517,6 +527,15 @@ export function createWasmWorker(
         postMessage: postRendererToWorkerMessage,
         terminate: () => {
             wasmFlowRuntimes.delete(wasmModuleId);
+            fireTerminateEvent(WasmFlowRuntime);
         }
     };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+function fireTerminateEvent(WasmFlowRuntime: IWasmFlowRuntime) {
+    for (const callback of wasmFlowRuntimeTerminateCallbacks) {
+        callback(WasmFlowRuntime);
+    }
 }

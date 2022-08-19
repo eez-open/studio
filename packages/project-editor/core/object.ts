@@ -34,9 +34,13 @@ export const enum PropertyType {
     RelativeFolder,
     RelativeFile,
     ObjectReference,
+
     JSON,
+    JavaScript,
     CSS,
+    Python,
     CPP,
+
     GUID,
 
     StringArray,

@@ -1,7 +1,18 @@
-import type { IDashboardComponentContext } from "eez-studio-types";
+import { tmpdir } from "os";
+import { sep } from "path";
+import { writeFileSync, unlinkSync } from "fs";
+import { PythonShell, Options } from "python-shell";
+
+import type {
+    IDashboardComponentContext,
+    IWasmFlowRuntime
+} from "eez-studio-types";
 import type { WorkerToRenderMessage } from "project-editor/flow/runtime/wasm-worker-interfaces";
 
-import { registerExecuteFunction } from "project-editor/flow/runtime/wasm-execute-functions";
+import {
+    registerExecuteFunction,
+    onWasmFlowRuntimeTerminate
+} from "project-editor/flow/runtime/wasm-execute-functions";
 import { Duplex, Readable, Stream, Writable } from "stream";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -740,5 +751,182 @@ registerExecuteFunction(
         } catch (err) {
             context.throwError(err.toString());
         }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+// Python components
+
+const handleToPythonShell = new Map<
+    number,
+    { wasmFlowRuntime: IWasmFlowRuntime; pythonShell: PythonShell }
+>();
+let lastPythonShellHandle = 0;
+
+function getNextPythonShellHandle() {
+    return lastPythonShellHandle + 1;
+}
+
+function addPythonShell(
+    wasmFlowRuntime: IWasmFlowRuntime,
+    pythonShell: PythonShell
+) {
+    lastPythonShellHandle = getNextPythonShellHandle();
+
+    handleToPythonShell.set(lastPythonShellHandle, {
+        wasmFlowRuntime,
+        pythonShell
+    });
+
+    return lastPythonShellHandle;
+}
+
+function getPythonShell(handle: number) {
+    return handleToPythonShell.get(handle) || { pythonShell: undefined };
+}
+
+function removePythonShell(handle: number) {
+    handleToPythonShell.delete(handle);
+}
+
+onWasmFlowRuntimeTerminate((wasmFlowRuntime: IWasmFlowRuntime) => {
+    for (const item of handleToPythonShell) {
+        if (item[1].wasmFlowRuntime == wasmFlowRuntime) {
+            item[1].pythonShell.end(() => {});
+        }
+    }
+});
+
+registerExecuteFunction(
+    "PythonRun",
+    function (context: IDashboardComponentContext) {
+        const scriptSourceOption = context.getStringParam(0);
+
+        let scriptSource;
+        let isInlineScript: boolean;
+        if (scriptSourceOption == "inline-script") {
+            scriptSource = context.getStringParam(4);
+            isInlineScript = true;
+        } else if (scriptSourceOption == "inline-script-as-expression") {
+            scriptSource = context.evalProperty<string>(
+                "scriptSourceInlineFromExpression"
+            );
+            isInlineScript = true;
+        } else {
+            scriptSource = context.evalProperty<string>("scriptSourceFile");
+            isInlineScript = false;
+        }
+
+        if (scriptSource == undefined) {
+            context.throwError(`Invalid script source`);
+            return;
+        }
+
+        const handle = getNextPythonShellHandle();
+
+        let scriptFilePath: string;
+        if (isInlineScript) {
+            scriptFilePath =
+                tmpdir() + sep + `eez-runtime-python-script-${handle}.py`;
+            writeFileSync(scriptFilePath, scriptSource);
+        } else {
+            scriptFilePath = scriptSource;
+        }
+
+        const options: Options = {};
+        const pythonShell = new PythonShell(scriptFilePath, options);
+        addPythonShell(context.WasmFlowRuntime, pythonShell);
+
+        pythonShell.on("message", message => {
+            context.propagateValue("message", message);
+        });
+
+        let wasError = false;
+
+        function cleanup() {
+            removePythonShell(handle);
+
+            if (isInlineScript) {
+                unlinkSync(scriptFilePath);
+            }
+        }
+
+        pythonShell.on("close", () => {
+            if (!wasError) {
+                try {
+                    context.propagateValueThroughSeqout();
+                } catch (err) {}
+
+                cleanup();
+            }
+        });
+
+        pythonShell.on("pythonError", err => {
+            wasError = true;
+
+            try {
+                context.throwError(err.toString());
+            } catch (err) {}
+
+            cleanup();
+        });
+
+        pythonShell.on("error", err => {
+            wasError = true;
+
+            try {
+                context.throwError(err.toString());
+            } catch (err) {}
+
+            cleanup();
+        });
+
+        context.propagateValue("handle", handle);
+    }
+);
+
+registerExecuteFunction(
+    "PythonSendMessage",
+    function (context: IDashboardComponentContext) {
+        const handle = context.evalProperty<number>("handle");
+        if (!handle) {
+            context.throwError(`Handle not defined`);
+            return;
+        }
+        const { pythonShell } = getPythonShell(handle);
+        if (!pythonShell) {
+            context.throwError(`Invalid handle ` + handle);
+            return;
+        }
+
+        const message = context.evalProperty<string>("message");
+        if (!message) {
+            context.throwError(`Message not defined`);
+            return;
+        }
+
+        pythonShell.send(message.toString());
+
+        context.propagateValueThroughSeqout();
+    }
+);
+
+registerExecuteFunction(
+    "PythonEnd",
+    function (context: IDashboardComponentContext) {
+        const handle = context.evalProperty<number>("handle");
+        if (!handle) {
+            context.throwError(`Handle not defined`);
+            return;
+        }
+        const { pythonShell } = getPythonShell(handle);
+        if (!pythonShell) {
+            context.throwError(`Invalid handle ` + handle);
+            return;
+        }
+
+        pythonShell.end(() => {
+            context.propagateValueThroughSeqout();
+        });
     }
 );

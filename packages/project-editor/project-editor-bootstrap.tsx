@@ -62,6 +62,7 @@ import "project-editor/flow/components/actions/regexp";
 import "project-editor/flow/components/actions/serial";
 import "project-editor/flow/components/actions/http";
 import "project-editor/flow/components/actions/json";
+import "project-editor/flow/components/actions/python";
 
 import "project-editor/flow/components/widgets/markdown";
 import "project-editor/flow/components/widgets/plotly";
