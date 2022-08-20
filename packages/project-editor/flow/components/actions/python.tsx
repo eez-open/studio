@@ -85,10 +85,16 @@ registerActionComponents("Python", [
                 enabled: (...props: string[]) => {
                     return props[0] != "script-file";
                 }
+            },
+            {
+                name: "pythonPath",
+                type: "expression",
+                valueType: "string"
             }
         ],
         defaults: {
-            scriptSourceOption: "inline-script"
+            scriptSourceOption: "inline-script",
+            pythonPath: '""'
         },
         bodyPropertyCallback: (...props: string[]) => {
             if (props[0] == "inline-script") {

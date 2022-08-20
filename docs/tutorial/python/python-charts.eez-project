@@ -53,7 +53,8 @@
           "description": "Start Python script from file charts.py located at the same folder as current dashboard project",
           "scriptSourceOption": "script-file",
           "scriptSourceInline": "",
-          "scriptSourceFile": "System.ProjectFolder + \"/charts.py\""
+          "scriptSourceFile": "System.ProjectFolder + \"/charts.py\"",
+          "pythonPath": "\"\""
         },
         {
           "objID": "169bafb0-3689-49b0-c2d5-018286c4ff28",

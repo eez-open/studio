@@ -845,7 +845,9 @@ registerExecuteFunction(
             scriptFilePath = scriptSource;
         }
 
-        const options: Options = {};
+        const options: Options = {
+            pythonPath: context.evalProperty<string>("pythonPath")
+        };
         const pythonShell = new PythonShell(scriptFilePath, options);
         addPythonShell(context.WasmFlowRuntime, pythonShell);
 
