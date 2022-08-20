@@ -61,13 +61,6 @@ void executeDashboardComponent(uint16_t componentType, int flowStateIndex, int c
     }, eez::flow::g_wasmModuleId, componentType, flowStateIndex, componentIndex);
 }
 
-void getCurrentWorkingDirectory(char *buffer, uint32_t length) {
-    EM_ASM({
-        const jsString = getCurrentWorkingDirectory();
-        stringToUTF8(jsString, $0, $1);
-    }, buffer, length);
-}
-
 void onArrayValueFree(eez::gui::ArrayValue *arrayValue) {
     EM_ASM({
         onArrayValueFree($0, $1);
@@ -100,7 +93,6 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSi
     eez::flow::writeDebuggerBufferHook = writeDebuggerBuffer;
     eez::flow::finishToDebuggerMessageHook = finishToDebuggerMessage;
     eez::flow::executeDashboardComponentHook = executeDashboardComponent;
-    eez::flow::getCurrentWorkingDirectoryHook = getCurrentWorkingDirectory;
     eez::flow::stopScriptHook = stopScript;
     eez::flow::registerComponent(eez::flow::defs_v3::COMPONENT_TYPE_SCPIACTION, eez::flow::executeScpiComponent);
 

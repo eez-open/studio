@@ -759,7 +759,11 @@ registerExecuteFunction(
 
 const handleToPythonShell = new Map<
     number,
-    { wasmFlowRuntime: IWasmFlowRuntime; pythonShell: PythonShell }
+    {
+        wasmFlowRuntime: IWasmFlowRuntime;
+        wasmFlowRuntimeTerminated: boolean;
+        pythonShell: PythonShell;
+    }
 >();
 let lastPythonShellHandle = 0;
 
@@ -775,6 +779,7 @@ function addPythonShell(
 
     handleToPythonShell.set(lastPythonShellHandle, {
         wasmFlowRuntime,
+        wasmFlowRuntimeTerminated: false,
         pythonShell
     });
 
@@ -782,7 +787,13 @@ function addPythonShell(
 }
 
 function getPythonShell(handle: number) {
-    return handleToPythonShell.get(handle) || { pythonShell: undefined };
+    return (
+        handleToPythonShell.get(handle) || {
+            pythonShell: undefined,
+            wasmFlowRuntime: undefined,
+            wasmFlowRuntimeTerminated: true
+        }
+    );
 }
 
 function removePythonShell(handle: number) {
@@ -792,6 +803,7 @@ function removePythonShell(handle: number) {
 onWasmFlowRuntimeTerminate((wasmFlowRuntime: IWasmFlowRuntime) => {
     for (const item of handleToPythonShell) {
         if (item[1].wasmFlowRuntime == wasmFlowRuntime) {
+            item[1].wasmFlowRuntimeTerminated = true;
             item[1].pythonShell.end(() => {});
         }
     }
@@ -838,7 +850,10 @@ registerExecuteFunction(
         addPythonShell(context.WasmFlowRuntime, pythonShell);
 
         pythonShell.on("message", message => {
-            context.propagateValue("message", message);
+            const { wasmFlowRuntimeTerminated } = getPythonShell(handle);
+            if (!wasmFlowRuntimeTerminated) {
+                context.propagateValue("message", message);
+            }
         });
 
         let wasError = false;

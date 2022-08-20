@@ -907,6 +907,7 @@ registerClass("SetVariableActionComponent", SetVariableActionComponent);
 class SwitchTest extends EezObject {
     condition: string;
     outputName: string;
+    outputValue: string;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -921,7 +922,14 @@ class SwitchTest extends EezObject {
                 name: "outputName",
                 type: PropertyType.String,
                 unique: componentOutputUnique
-            }
+            },
+            makeExpressionProperty(
+                {
+                    name: "outputValue",
+                    type: PropertyType.MultilineText
+                },
+                "any"
+            )
         ],
 
         check: (switchTest: SwitchTest) => {
@@ -935,11 +943,29 @@ class SwitchTest extends EezObject {
                 messages.push(
                     new Message(
                         MessageType.ERROR,
-                        `Invalid expression: ${err}`,
+                        `Invalid condition expression: ${err}`,
                         getChildOfObject(switchTest, "condition")
                     )
                 );
             }
+
+            if (switchTest.outputValue) {
+                try {
+                    checkExpression(
+                        getParent(getParent(switchTest)!)! as Component,
+                        switchTest.outputValue
+                    );
+                } catch (err) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid output value expression: ${err}`,
+                            getChildOfObject(switchTest, "outputValue")
+                        )
+                    );
+                }
+            }
+
             return messages;
         },
 
@@ -984,7 +1010,8 @@ class SwitchTest extends EezObject {
 
         makeObservable(this, {
             condition: observable,
-            outputName: observable
+            outputName: observable,
+            outputValue: observable
         });
     }
 }
@@ -1057,7 +1084,7 @@ export class SwitchActionComponent extends ActionComponent {
                 .filter(test => !!test.outputName)
                 .map(test => ({
                     name: test.outputName,
-                    type: "boolean" as ValueType,
+                    type: "any" as ValueType,
                     isSequenceOutput: true,
                     isOptionalOutput: false
                 }))
@@ -1079,12 +1106,24 @@ export class SwitchActionComponent extends ActionComponent {
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeArray(this.tests, test => {
-            dataBuffer.writeUint8(
+            dataBuffer.writeUint32(
                 this.buildOutputs.findIndex(
                     output => output.name == test.outputName
                 )
             );
-            buildExpression(assets, dataBuffer, this, test.condition);
+
+            dataBuffer.writeObjectOffset(() => {
+                buildExpression(assets, dataBuffer, this, test.condition);
+            });
+
+            dataBuffer.writeObjectOffset(() => {
+                buildExpression(
+                    assets,
+                    dataBuffer,
+                    this,
+                    test.outputValue || "true"
+                );
+            });
         });
     }
 }

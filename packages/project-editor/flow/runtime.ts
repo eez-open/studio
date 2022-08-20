@@ -35,7 +35,6 @@ import {
     RuntimeLogs
 } from "project-editor/flow/debugger/logs";
 import { LogItemType } from "project-editor/flow/flow-interfaces";
-import { valueToString } from "project-editor/flow/debugger/WatchPanel";
 import {
     evalExpression,
     IExpressionContext
@@ -971,12 +970,6 @@ export class FlowState {
     logScpi(message: string, component: Component) {
         this.runtime.logs.addLogItem(
             new LogItem("scpi", message, this, component)
-        );
-    }
-
-    logInfo(value: any, component: Component) {
-        this.runtime.logs.addLogItem(
-            new LogItem("scpi", valueToString(value), this, component)
         );
     }
 

@@ -1,0 +1,670 @@
+{
+  "objID": "6666cd76-f969-5646-9e7b-e39d750cc7d9",
+  "settings": {
+    "objID": "e007d988-9fba-797d-72e9-efc33ca6d05c",
+    "general": {
+      "objID": "fd434352-2277-c4a8-e87e-e96cfcbf2305",
+      "projectVersion": "v3",
+      "projectType": "dashboard",
+      "imports": []
+    },
+    "build": {
+      "objID": "72794a43-a0fc-13c2-7eb5-67dd952141a4",
+      "configurations": [
+        {
+          "objID": "bba0546c-06b8-604d-c43e-ecf1963e7492",
+          "name": "Default"
+        }
+      ],
+      "files": []
+    }
+  },
+  "variables": {
+    "objID": "c6c71e16-53e1-217f-d03b-cef56c6b037a",
+    "globalVariables": [],
+    "structures": [],
+    "enums": []
+  },
+  "actions": [],
+  "pages": [
+    {
+      "objID": "f7f15531-2f0d-6247-72af-17ad3967f8e0",
+      "components": [
+        {
+          "objID": "fd503d36-8317-4d79-9e42-138e8f3c06e4",
+          "type": "StartActionComponent",
+          "left": -636,
+          "top": -276,
+          "width": 87,
+          "height": 25,
+          "customInputs": [],
+          "customOutputs": []
+        },
+        {
+          "objID": "c7b76a8c-44ae-4e0d-b1ec-10aa6ae4531f",
+          "type": "PythonRun",
+          "left": -503,
+          "top": -276,
+          "width": 290,
+          "height": 73,
+          "customInputs": [],
+          "customOutputs": [],
+          "catchError": false,
+          "description": "Start Python script from file charts.py located at the same folder as current dashboard project",
+          "scriptSourceOption": "script-file",
+          "scriptSourceInline": "",
+          "scriptSourceFile": "System.ProjectFolder + \"/charts.py\""
+        },
+        {
+          "objID": "169bafb0-3689-49b0-c2d5-018286c4ff28",
+          "type": "Select",
+          "left": 170,
+          "top": 10,
+          "width": 620,
+          "height": 430,
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "loading",
+          "style": {
+            "objID": "9d14e487-2fa3-482b-e504-34b87602f6ea",
+            "inheritFrom": "default"
+          },
+          "timeline": [],
+          "widgets": [
+            {
+              "objID": "a78e82f4-a281-4197-a1fe-568718a70c13",
+              "type": "BitmapWidget",
+              "left": 0,
+              "top": 0,
+              "width": 620,
+              "height": 430,
+              "customInputs": [
+                {
+                  "objID": "cd8355c6-847d-480d-f241-7716be1e5480",
+                  "name": "data",
+                  "type": "string"
+                }
+              ],
+              "customOutputs": [],
+              "data": "data",
+              "style": {
+                "objID": "6d8bb036-0a91-4078-910b-5feb9ef5871f",
+                "inheritFrom": "default"
+              },
+              "timeline": []
+            },
+            {
+              "objID": "8c89c931-189f-4c46-b4ef-805499c010aa",
+              "type": "Container",
+              "left": 0,
+              "top": 0,
+              "width": 620,
+              "height": 430,
+              "customInputs": [],
+              "customOutputs": [],
+              "style": {
+                "objID": "57fa09b3-6142-4aa5-a787-92b63c493b92",
+                "inheritFrom": "default",
+                "backgroundColor": "#ffffff"
+              },
+              "timeline": [],
+              "widgets": [
+                {
+                  "objID": "4c871b8e-4dd0-4418-9ad7-d9129ddfa36f",
+                  "type": "LayoutViewWidget",
+                  "left": 210,
+                  "top": 210,
+                  "width": 200,
+                  "height": 10,
+                  "customInputs": [],
+                  "customOutputs": [],
+                  "style": {
+                    "objID": "37138fde-703a-4346-fe3a-dd0b6406961d",
+                    "inheritFrom": "default"
+                  },
+                  "timeline": [],
+                  "layout": "Loader"
+                }
+              ],
+              "layout": "static"
+            }
+          ]
+        },
+        {
+          "objID": "0d8c2f05-8513-4579-9585-b3d3a6b1321e",
+          "type": "ListWidget",
+          "left": 10,
+          "top": 10,
+          "width": 150,
+          "height": 398,
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "chart_types",
+          "style": {
+            "objID": "75d38495-a61c-472c-ae9b-3c5d9ba7c59a",
+            "inheritFrom": "default"
+          },
+          "timeline": [],
+          "itemWidget": {
+            "objID": "ddd598d8-3a6a-42ed-cc45-2891d79574b6",
+            "type": "Container",
+            "left": 0,
+            "top": 0,
+            "width": 150,
+            "height": 32,
+            "customInputs": [],
+            "customOutputs": [],
+            "style": {
+              "objID": "8a6d8db2-62a9-479f-c7b0-e662c8415b2e",
+              "inheritFrom": "default"
+            },
+            "timeline": [],
+            "widgets": [
+              {
+                "objID": "24753388-afc6-48a4-8e2c-61d8547b3e9d",
+                "type": "Select",
+                "left": 0,
+                "top": 0,
+                "width": 150,
+                "height": 32,
+                "customInputs": [],
+                "customOutputs": [],
+                "asOutputProperties": [],
+                "data": "$index == selected_chart_index ? 1 : 0",
+                "style": {
+                  "objID": "08eddcbb-deb7-4093-ee96-4a3fc6abf11a",
+                  "inheritFrom": "default"
+                },
+                "timeline": [],
+                "widgets": [
+                  {
+                    "objID": "a88e4b2f-7609-4b6f-c1db-5ffdb303c86f",
+                    "type": "TextWidget",
+                    "left": 0,
+                    "top": 0,
+                    "width": 150,
+                    "height": 32,
+                    "customInputs": [],
+                    "customOutputs": [],
+                    "asOutputProperties": [
+                      "action"
+                    ],
+                    "data": "chart_types[$index]",
+                    "style": {
+                      "objID": "1fd94cba-81f5-46d7-d0e6-a43e47db65bb",
+                      "inheritFrom": "default"
+                    },
+                    "timeline": [],
+                    "text": ""
+                  },
+                  {
+                    "objID": "f8d34db4-8c93-4b34-b658-69feb019eb60",
+                    "type": "TextWidget",
+                    "left": 0,
+                    "top": 0,
+                    "width": 150,
+                    "height": 32,
+                    "customInputs": [],
+                    "customOutputs": [],
+                    "data": "chart_types[$index]",
+                    "style": {
+                      "objID": "1fd94cba-81f5-46d7-d0e6-a43e47db65bb",
+                      "inheritFrom": "selected_chart"
+                    },
+                    "locked": true,
+                    "timeline": []
+                  }
+                ]
+              }
+            ],
+            "layout": "static"
+          },
+          "listType": "vertical",
+          "gap": 10
+        },
+        {
+          "objID": "10620670-161a-40fe-b996-a996a402add0",
+          "type": "SetVariableActionComponent",
+          "left": -231,
+          "top": 67,
+          "width": 116,
+          "height": 56,
+          "customInputs": [],
+          "customOutputs": [],
+          "description": "Hide loader",
+          "entries": [
+            {
+              "objID": "e178a181-bce5-4851-baa3-d601e966b6f0",
+              "variable": "loading",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "objID": "f0df6f29-45b9-4eea-dfe4-1935d7e6b96a",
+          "type": "SetVariableActionComponent",
+          "left": 245,
+          "top": -137,
+          "width": 315,
+          "height": 76,
+          "customInputs": [
+            {
+              "objID": "345d8651-3aee-4215-d8b7-918f7a02d8c1",
+              "name": "params",
+              "type": "struct:$ActionParams"
+            }
+          ],
+          "customOutputs": [],
+          "description": "Set selected chart index and show loader",
+          "entries": [
+            {
+              "objID": "e178a181-bce5-4851-baa3-d601e966b6f0",
+              "variable": "selected_chart_index",
+              "value": "params.index"
+            },
+            {
+              "objID": "88445e90-459b-40ea-8305-c1ed24d3dbaa",
+              "variable": "loading",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "objID": "ae7cef24-0948-4d2e-8e70-b56146b33280",
+          "type": "PythonSendMessage",
+          "left": 645,
+          "top": -276,
+          "width": 349,
+          "height": 66,
+          "customInputs": [
+            {
+              "objID": "76839800-db44-4917-e14b-666c3149a199",
+              "name": "handle",
+              "type": "integer"
+            }
+          ],
+          "customOutputs": [],
+          "description": "Send message to Pyhon script to draw chart of specific type",
+          "handle": "handle",
+          "message": "chart_types[selected_chart_index]"
+        },
+        {
+          "objID": "06be7c89-f97f-4e17-90cf-4f3a7539a02d",
+          "type": "TextWidget",
+          "left": 10,
+          "top": 408,
+          "width": 150,
+          "height": 32,
+          "customInputs": [
+            {
+              "objID": "ee559647-91f1-4dee-e136-3f5b6365ed87",
+              "name": "data",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "data": "data",
+          "style": {
+            "objID": "d6f19494-bc93-4c02-f1ee-b53ab900b9c6",
+            "inheritFrom": "default"
+          },
+          "timeline": []
+        },
+        {
+          "objID": "4d27fd60-6716-468c-9506-eaedc69d70be",
+          "type": "DelayActionComponent",
+          "left": 145,
+          "top": -331,
+          "width": 87,
+          "height": 55,
+          "customInputs": [],
+          "customOutputs": [],
+          "milliseconds": "2000"
+        },
+        {
+          "objID": "ec6de092-a552-441e-c86b-77ef860f4d53",
+          "type": "SwitchActionComponent",
+          "left": -819,
+          "top": 252,
+          "width": 588,
+          "height": 74,
+          "customInputs": [
+            {
+              "objID": "c1ec294a-8665-4457-cdad-b8ef8724872b",
+              "name": "message",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "description": "Message received from the Python script, check if it is chart image (starts with \"data:image\") or just a trace message",
+          "tests": [
+            {
+              "objID": "d7527078-80af-4cfa-897e-09a6c231b79d",
+              "condition": "String.substring(message, 0, String.length(\"data:image\")) == \"data:image\"",
+              "outputName": "image",
+              "outputValue": "message"
+            },
+            {
+              "objID": "e45f26fa-c364-48eb-f3b0-4ed0fa65c418",
+              "condition": "true",
+              "outputName": "trace",
+              "outputValue": "message"
+            }
+          ]
+        },
+        {
+          "objID": "aeaefeeb-3860-4615-8bb6-6a892c39f3ca",
+          "type": "StartActionComponent",
+          "left": 217,
+          "top": 491,
+          "width": 87,
+          "height": 25,
+          "customInputs": [],
+          "customOutputs": [],
+          "description": "Turn on loader animation loop"
+        }
+      ],
+      "connectionLines": [
+        {
+          "objID": "db6f529c-2527-40ce-9ea1-b9677f067f86",
+          "source": "fd503d36-8317-4d79-9e42-138e8f3c06e4",
+          "output": "@seqout",
+          "target": "c7b76a8c-44ae-4e0d-b1ec-10aa6ae4531f",
+          "input": "@seqin"
+        },
+        {
+          "objID": "d2c7294b-c850-4a5a-b43a-655484a07910",
+          "source": "c7b76a8c-44ae-4e0d-b1ec-10aa6ae4531f",
+          "output": "message",
+          "target": "ec6de092-a552-441e-c86b-77ef860f4d53",
+          "input": "message"
+        },
+        {
+          "objID": "301a2d9f-b426-4aa1-97da-b54a91d2d8a1",
+          "source": "a88e4b2f-7609-4b6f-c1db-5ffdb303c86f",
+          "output": "action",
+          "target": "f0df6f29-45b9-4eea-dfe4-1935d7e6b96a",
+          "input": "params"
+        },
+        {
+          "objID": "bd1ebc33-a424-4771-ee07-c6f313b9cc46",
+          "source": "c7b76a8c-44ae-4e0d-b1ec-10aa6ae4531f",
+          "output": "handle",
+          "target": "ae7cef24-0948-4d2e-8e70-b56146b33280",
+          "input": "handle"
+        },
+        {
+          "objID": "7cd0e75b-4e3d-4aec-9867-516da11fa8fd",
+          "source": "f0df6f29-45b9-4eea-dfe4-1935d7e6b96a",
+          "output": "@seqout",
+          "target": "ae7cef24-0948-4d2e-8e70-b56146b33280",
+          "input": "@seqin"
+        },
+        {
+          "objID": "f6090d43-b8c2-4022-e369-59abb510e335",
+          "source": "c7b76a8c-44ae-4e0d-b1ec-10aa6ae4531f",
+          "output": "handle",
+          "target": "4d27fd60-6716-468c-9506-eaedc69d70be",
+          "input": "@seqin"
+        },
+        {
+          "objID": "014baa8f-c3eb-44ba-e924-500187f3f04c",
+          "source": "4d27fd60-6716-468c-9506-eaedc69d70be",
+          "output": "@seqout",
+          "target": "ae7cef24-0948-4d2e-8e70-b56146b33280",
+          "input": "@seqin"
+        },
+        {
+          "objID": "b47dd056-a55e-4698-d76d-b45d35826343",
+          "source": "ec6de092-a552-441e-c86b-77ef860f4d53",
+          "output": "image",
+          "target": "10620670-161a-40fe-b996-a996a402add0",
+          "input": "@seqin"
+        },
+        {
+          "objID": "352a6160-077c-4aaf-a24b-141bffa63e61",
+          "source": "ec6de092-a552-441e-c86b-77ef860f4d53",
+          "output": "image",
+          "target": "a78e82f4-a281-4197-a1fe-568718a70c13",
+          "input": "data"
+        },
+        {
+          "objID": "de20a1e2-31c7-4611-88f5-015feb059429",
+          "source": "ec6de092-a552-441e-c86b-77ef860f4d53",
+          "output": "trace",
+          "target": "06be7c89-f97f-4e17-90cf-4f3a7539a02d",
+          "input": "data"
+        },
+        {
+          "objID": "c4ecc483-b320-40f9-8581-c84f2b71c3f6",
+          "source": "aeaefeeb-3860-4615-8bb6-6a892c39f3ca",
+          "output": "@seqout",
+          "target": "4c871b8e-4dd0-4418-9ad7-d9129ddfa36f",
+          "input": "@seqin"
+        }
+      ],
+      "localVariables": [
+        {
+          "objID": "554bc1c5-e078-4be5-84c4-edd2fdd989b8",
+          "name": "loading",
+          "type": "integer",
+          "defaultValue": "1",
+          "persistent": false
+        },
+        {
+          "objID": "09b4a468-ab26-42be-ebb6-394164911e12",
+          "name": "chart_types",
+          "type": "array:string",
+          "defaultValue": "[\"Bar Label Demo\", \"Coherence of two signals\", \"Scatter Demo2\"]",
+          "persistent": false
+        },
+        {
+          "objID": "e16fc960-6892-44af-fb5a-f093880c777a",
+          "name": "selected_chart_index",
+          "type": "integer",
+          "defaultValue": "0",
+          "persistent": false
+        }
+      ],
+      "name": "Main",
+      "style": "page",
+      "left": 0,
+      "top": 0,
+      "width": 800,
+      "height": 450
+    },
+    {
+      "objID": "a60c7e89-5b20-4fb8-bd67-83079ecd1672",
+      "components": [
+        {
+          "objID": "ce0379b1-6706-433f-a27e-4bda9380c757",
+          "type": "RectangleWidget",
+          "left": 2,
+          "top": 2,
+          "width": 50,
+          "height": 16,
+          "customInputs": [],
+          "customOutputs": [],
+          "style": {
+            "objID": "6953a77b-96bd-4b2a-d18d-ab33ec016c75",
+            "inheritFrom": "loader_front"
+          },
+          "timeline": [
+            {
+              "objID": "eee73c14-5320-4a2b-ee58-c0fc2870a038",
+              "start": 0,
+              "end": 0.5,
+              "left": {
+                "enabled": true,
+                "value": 348,
+                "easingFunction": "linear"
+              },
+              "top": {
+                "enabled": true,
+                "value": 2,
+                "easingFunction": "linear"
+              },
+              "width": {
+                "enabled": false,
+                "value": 50,
+                "easingFunction": "linear"
+              },
+              "height": {
+                "enabled": false,
+                "value": 20,
+                "easingFunction": "linear"
+              },
+              "scaleX": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "scaleY": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "rotate": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "opacity": {
+                "enabled": false,
+                "easingFunction": "linear"
+              }
+            },
+            {
+              "objID": "78eaaaf2-6d20-4720-fa71-15208ccb14b4",
+              "start": 0.5,
+              "end": 1,
+              "left": {
+                "enabled": true,
+                "value": 2,
+                "easingFunction": "linear"
+              },
+              "top": {
+                "enabled": true,
+                "value": 2,
+                "easingFunction": "linear"
+              },
+              "width": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "height": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "scaleX": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "scaleY": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "rotate": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "opacity": {
+                "enabled": false,
+                "easingFunction": "linear"
+              }
+            }
+          ]
+        },
+        {
+          "objID": "1a6ae309-b830-4fa4-b5cf-4eb6f579fbfb",
+          "type": "StartActionComponent",
+          "left": -87,
+          "top": -76,
+          "width": 87,
+          "height": 25,
+          "customInputs": [],
+          "customOutputs": []
+        },
+        {
+          "objID": "73b50248-a916-43e1-e194-ce68c39acb35",
+          "type": "AnimateActionComponent",
+          "left": 148,
+          "top": -115,
+          "width": 127,
+          "height": 55,
+          "customInputs": [],
+          "customOutputs": [],
+          "from": "0",
+          "to": "1",
+          "speed": "1"
+        }
+      ],
+      "connectionLines": [
+        {
+          "objID": "31400b52-a6e3-4bfc-a6d2-b91cdd15979e",
+          "source": "1a6ae309-b830-4fa4-b5cf-4eb6f579fbfb",
+          "output": "@seqout",
+          "target": "73b50248-a916-43e1-e194-ce68c39acb35",
+          "input": "@seqin"
+        },
+        {
+          "objID": "8dc1742a-ae23-49ac-fc5e-abdb453f4543",
+          "source": "73b50248-a916-43e1-e194-ce68c39acb35",
+          "output": "@seqout",
+          "target": "73b50248-a916-43e1-e194-ce68c39acb35",
+          "input": "@seqin"
+        }
+      ],
+      "localVariables": [],
+      "name": "Loader",
+      "style": "loader_back",
+      "left": 0,
+      "top": 0,
+      "width": 400,
+      "height": 20,
+      "scaleToFit": true,
+      "isUsedAsCustomWidget": true
+    }
+  ],
+  "styles": [
+    {
+      "objID": "04157789-da53-2f4a-e658-4ca10aa5fbef",
+      "name": "default"
+    },
+    {
+      "objID": "c49c1adf-a610-28c0-027c-0e452dadb32b",
+      "name": "page",
+      "inheritFrom": "",
+      "backgroundColor": "page_color",
+      "css": "\n"
+    },
+    {
+      "objID": "2728f4a7-659d-44c7-edba-da46077ff4c3",
+      "name": "loader_back",
+      "backgroundColor": "#7b7b7b"
+    },
+    {
+      "objID": "e65409a8-a661-446d-f4f9-1cc847d39848",
+      "name": "loader_front",
+      "backgroundColor": "#dcdcdc"
+    },
+    {
+      "objID": "b4706545-447b-4f2c-8d24-14312b9a8864",
+      "name": "selected_chart",
+      "color": "#ffffff",
+      "backgroundColor": "#3b79bb"
+    }
+  ],
+  "colors": [
+    {
+      "objID": "e6c28e5a-fe7f-09ed-9223-17769968ebea",
+      "name": "page_color"
+    }
+  ],
+  "themes": [
+    {
+      "objID": "a7943c4e-90c6-cf58-2c43-9f24cf4b097c",
+      "name": "default",
+      "colors": [
+        "#f0f0f0"
+      ]
+    }
+  ]
+}

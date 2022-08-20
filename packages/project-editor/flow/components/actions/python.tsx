@@ -129,11 +129,15 @@ registerActionComponents("Python", [
         ],
         bodyPropertyCallback(...props) {
             return (
-                <span style={{ display: "inline-flex", alignItems: "center" }}>
-                    <span style={{ paddingRight: 10 }}>{props[1]}</span>
-                    <RightArrow />
-                    <span style={{ paddingLeft: 10 }}>{props[0]}</span>
-                </span>
+                <pre>
+                    <span
+                        style={{ display: "inline-flex", alignItems: "center" }}
+                    >
+                        <span style={{ paddingRight: 10 }}>{props[1]}</span>
+                        <RightArrow />
+                        <span style={{ paddingLeft: 10 }}>{props[0]}</span>
+                    </span>
+                </pre>
             );
         },
         defaults: {

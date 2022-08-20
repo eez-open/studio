@@ -775,6 +775,30 @@ export const builtInFunctions: {
         }
     },
 
+    "String.length": {
+        arity: 1,
+        args: ["string", "start", "end"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => args[0].length,
+        getValueType: (...args: ValueType[]) => {
+            return "string";
+        }
+    },
+
+    "String.substring": {
+        arity: { min: 2 },
+        args: ["string", "start", "end"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => args[0].substring(args[1], args[2]),
+        getValueType: (...args: ValueType[]) => {
+            return "string";
+        }
+    },
+
     "String.find": {
         arity: 2,
         args: ["string", "substring"],

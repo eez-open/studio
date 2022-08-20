@@ -120,17 +120,12 @@ function onArrayValueFree(wasmModuleId: number, ptr: number) {
     WasmFlowRuntime.postWorkerToRendererMessage(data);
 }
 
-function getCurrentWorkingDirectory() {
-    return process.cwd();
-}
-
 (global as any).startToDebuggerMessage = startToDebuggerMessage;
 (global as any).writeDebuggerBuffer = writeDebuggerBuffer;
 (global as any).finishToDebuggerMessage = finishToDebuggerMessage;
 (global as any).executeDashboardComponent = executeDashboardComponent;
 (global as any).onArrayValueFree = onArrayValueFree;
 (global as any).executeScpi = executeScpi;
-(global as any).getCurrentWorkingDirectory = getCurrentWorkingDirectory;
 
 ////////////////////////////////////////////////////////////////////////////////
 

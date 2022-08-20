@@ -85,25 +85,18 @@ export const Property = observer(
                             ? getPropertyValueResult.value
                             : undefined;
                     });
+                    this.resizeTextArea();
                 }
             });
         }
 
-        componentDidUpdate(prevProps: any) {
-            this.updateChangeDocumentObserver();
-
-            try {
-                const getPropertyValueResult = getPropertyValue(
-                    this.props.objects,
-                    this.props.propertyInfo
-                );
-                this._value = getPropertyValueResult
-                    ? getPropertyValueResult.value
-                    : undefined;
-            } catch (err) {
-                console.warn(err);
+        componentDidUpdate(prevProps: PropertyProps) {
+            if (
+                !arrayCompareShallow(prevProps.objects, this.props.objects) ||
+                prevProps.propertyInfo != this.props.propertyInfo
+            ) {
+                this.updateChangeDocumentObserver();
             }
-            this.resizeTextArea();
         }
 
         componentDidMount() {
@@ -170,7 +163,9 @@ export const Property = observer(
                 return;
             }
 
-            this._value = newValue;
+            runInAction(() => {
+                this._value = newValue;
+            });
 
             if (this.props.propertyInfo.type === PropertyType.Number) {
                 if (
@@ -1003,3 +998,21 @@ export const Property = observer(
         }
     }
 );
+
+function arrayCompareShallow(arr1: any, arr2: any) {
+    if (!arr1 && !arr2) {
+        return true;
+    }
+
+    if ((!arr1 && arr2) || (arr1 && !arr2) || arr1.length != arr2.length) {
+        return false;
+    }
+
+    for (let i = 0; i < arr1.length; i++) {
+        if (arr1[i] != arr2[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}

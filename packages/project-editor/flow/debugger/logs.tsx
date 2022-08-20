@@ -44,7 +44,7 @@ export class LogItem {
 
 export class ActionStartLogItem extends LogItem {
     constructor(flowState: FlowState) {
-        super("info", undefined, flowState);
+        super("debug", undefined, flowState);
     }
 
     get label() {
@@ -54,7 +54,7 @@ export class ActionStartLogItem extends LogItem {
 
 export class ActionEndLogItem extends LogItem {
     constructor(flowState: FlowState) {
-        super("info", undefined, flowState);
+        super("debug", undefined, flowState);
     }
 
     get label() {
@@ -64,7 +64,7 @@ export class ActionEndLogItem extends LogItem {
 
 export class ExecuteComponentLogItem extends LogItem {
     constructor(flowState: FlowState | undefined, sourceComponent: Component) {
-        super("info", undefined, flowState, sourceComponent);
+        super("debug", undefined, flowState, sourceComponent);
     }
 
     get label() {
@@ -74,7 +74,7 @@ export class ExecuteComponentLogItem extends LogItem {
 
 export class ExecuteWidgetActionLogItem extends LogItem {
     constructor(flowState: FlowState | undefined, component: Component) {
-        super("info", undefined, flowState, component);
+        super("debug", undefined, flowState, component);
     }
 
     get label() {
@@ -125,7 +125,7 @@ export class OutputValueLogItem extends LogItem {
         public output?: string,
         public value?: any
     ) {
-        super("info", undefined, flowState, undefined, connectionLine);
+        super("debug", undefined, flowState, undefined, connectionLine);
     }
 
     get label() {

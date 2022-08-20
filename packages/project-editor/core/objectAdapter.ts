@@ -5,7 +5,8 @@ import {
     computed,
     runInAction,
     IObservableValue,
-    makeObservable
+    makeObservable,
+    toJS
 } from "mobx";
 import { createTransformer } from "mobx-utils";
 
@@ -53,7 +54,9 @@ import {
     isArrayElement,
     isObjectInstanceOf,
     getClassInfo,
-    getLabel
+    getLabel,
+    createObject,
+    getClass
 } from "project-editor/store";
 
 import { DragAndDropManager } from "project-editor/core/dd";
@@ -1251,11 +1254,22 @@ export class TreeAdapter implements ITreeAdapter {
         event.preventDefault();
 
         if (DragAndDropManager.dragObject) {
+            const projectEditorStore = getDocumentStore(this.rootItem.object);
+
+            const dragObjectClone =
+                DragAndDropManager.dropEffect == "copy"
+                    ? (createObject(
+                          projectEditorStore,
+                          toJS(DragAndDropManager.dragObject) as any,
+                          getClass(DragAndDropManager.dragObject),
+                          undefined,
+                          true
+                      ) as EezObject)
+                    : DragAndDropManager.dragObject;
+
             let dropItem = DragAndDropManager.dropObject as ITreeObjectAdapter;
 
             let aNewObject: IEezObject | undefined;
-
-            const projectEditorStore = getDocumentStore(this.rootItem.object);
 
             if (dropPosition == DropPosition.DROP_POSITION_BEFORE) {
                 DragAndDropManager.deleteDragItem({
@@ -1263,7 +1277,7 @@ export class TreeAdapter implements ITreeAdapter {
                 });
                 aNewObject = projectEditorStore.insertObjectBefore(
                     dropItem.object,
-                    DragAndDropManager.dragObject
+                    dragObjectClone
                 );
             } else if (dropPosition == DropPosition.DROP_POSITION_AFTER) {
                 DragAndDropManager.deleteDragItem({
@@ -1271,12 +1285,12 @@ export class TreeAdapter implements ITreeAdapter {
                 });
                 aNewObject = projectEditorStore.insertObjectAfter(
                     dropItem.object,
-                    DragAndDropManager.dragObject
+                    dragObjectClone
                 );
             } else if (dropPosition == DropPosition.DROP_POSITION_INSIDE) {
                 let dropPlace = findPastePlaceInside(
                     dropItem.object,
-                    getClassInfo(DragAndDropManager.dragObject),
+                    getClassInfo(dragObjectClone),
                     true
                 );
                 if (dropPlace) {
@@ -1287,12 +1301,11 @@ export class TreeAdapter implements ITreeAdapter {
                     if (isArray(dropPlace as any)) {
                         aNewObject = projectEditorStore.addObject(
                             dropPlace as any,
-                            DragAndDropManager.dragObject
+                            dragObjectClone
                         );
                     } else {
                         projectEditorStore.updateObject(dropItem.object, {
-                            [(dropPlace as PropertyInfo).name]:
-                                DragAndDropManager.dragObject
+                            [(dropPlace as PropertyInfo).name]: dragObjectClone
                         });
                     }
                 }

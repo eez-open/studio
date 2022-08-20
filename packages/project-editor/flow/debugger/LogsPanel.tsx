@@ -15,7 +15,7 @@ import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-type Filter = "all" | "scpi" | "error";
+type Filter = "all" | "scpi" | "error" | "info" | "debug";
 
 const logsPanelFilter = observable.box<Filter>("all");
 
@@ -44,8 +44,12 @@ export const LogsPanel = observer(
                                     onChange={this.onChangeFilter}
                                 >
                                     <option value="all">All</option>
-                                    <option value="scpi">SCPI</option>
+                                    <option value="fatal">Fatal</option>
                                     <option value="error">Error</option>
+                                    <option value="warning">Warning</option>
+                                    <option value="info">Info</option>
+                                    <option value="debug">Debug</option>
+                                    <option value="scpi">SCPI</option>
                                 </select>
                             </div>,
                             <IconAction
