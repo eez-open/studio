@@ -870,9 +870,11 @@ registerExecuteFunction(
 
         pythonShell.on("close", () => {
             if (!wasError) {
-                try {
+                const { wasmFlowRuntimeTerminated } = getPythonShell(handle);
+
+                if (!wasmFlowRuntimeTerminated) {
                     context.propagateValueThroughSeqout();
-                } catch (err) {}
+                }
 
                 cleanup();
             }
@@ -881,9 +883,10 @@ registerExecuteFunction(
         pythonShell.on("pythonError", err => {
             wasError = true;
 
-            try {
+            const { wasmFlowRuntimeTerminated } = getPythonShell(handle);
+            if (!wasmFlowRuntimeTerminated) {
                 context.throwError(err.toString());
-            } catch (err) {}
+            }
 
             cleanup();
         });
@@ -891,9 +894,10 @@ registerExecuteFunction(
         pythonShell.on("error", err => {
             wasError = true;
 
-            try {
+            const { wasmFlowRuntimeTerminated } = getPythonShell(handle);
+            if (!wasmFlowRuntimeTerminated) {
                 context.throwError(err.toString());
-            } catch (err) {}
+            }
 
             cleanup();
         });
