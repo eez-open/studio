@@ -77,6 +77,8 @@ const LineChartElement = observer(
                     }
                 }
 
+                console.log(name);
+
                 return {
                     x: runningState
                         ? runningState.values.map(
@@ -94,6 +96,7 @@ const LineChartElement = observer(
                         : [i + 1, (i + 1) * 2, (i + 1) * 3, (i + 1) * 4],
                     type: "scatter",
                     name,
+                    showlegend: widget.showLegend,
                     line: {
                         color: line.color
                     }
@@ -218,6 +221,7 @@ const LineChartElement = observer(
         }, [
             plotly,
             widget.title,
+            widget.showLegend,
             widget.yAxisRangeOption,
             widget.yAxisRangeOption == "fixed"
                 ? getNumberValue(flowContext, widget, "yAxisRangeFrom", 0)
@@ -370,6 +374,11 @@ export class LineChartWidget extends Widget {
                 propertyGridGroup: specificGroup
             },
             {
+                name: "showLegend",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup
+            },
+            {
                 name: "yAxisRangeOption",
                 type: PropertyType.Enum,
                 enumItems: [
@@ -438,6 +447,10 @@ export class LineChartWidget extends Widget {
                 jsObject.yAxisRangeFrom = 0;
                 jsObject.yAxisRangeTo = 10;
             }
+
+            if (jsObject.showLegend == undefined) {
+                jsObject.showLegend = true;
+            }
         },
 
         defaultValue: {
@@ -448,6 +461,7 @@ export class LineChartWidget extends Widget {
             xValue: "Date.now()",
             lines: [],
             title: "",
+            showLegend: true,
             yAxisRangeOption: "floating",
             yAxisRangeFrom: 0,
             yAxisRangeTo: 10,
@@ -484,6 +498,7 @@ export class LineChartWidget extends Widget {
     xValue: string;
     lines: LineChartLine[];
     title: string;
+    showLegend: boolean;
     yAxisRangeOption: "floating" | "fixed";
     yAxisRangeFrom: number;
     yAxisRangeTo: number;
@@ -497,6 +512,7 @@ export class LineChartWidget extends Widget {
             xValue: observable,
             lines: observable,
             title: observable,
+            showLegend: observable,
             yAxisRangeOption: observable,
             yAxisRangeFrom: observable,
             yAxisRangeTo: observable,
