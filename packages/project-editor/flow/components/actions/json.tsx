@@ -24,12 +24,19 @@ registerActionComponents("Dashboard Specific", [
         inputs: [],
         outputs: [],
         defaults: {
+            customInputs: [
+                {
+                    name: "text",
+                    type: "string"
+                }
+            ],
             customOutputs: [
                 {
                     name: "result",
                     type: "any"
                 }
-            ]
+            ],
+            value: "text"
         },
         properties: [
             {

@@ -1130,7 +1130,7 @@ class ComponentProperties {
     valuesFromWorker(widgetPropertyValues: IPropertyValue[]) {
         if (widgetPropertyValues.length > 0) {
             runInAction(() => {
-                widgetPropertyValues.forEach(propertyValue => {
+                for (const propertyValue of widgetPropertyValues) {
                     for (
                         let i = this.propertyValues.length;
                         i < propertyValue.propertyValueIndex;
@@ -1144,7 +1144,7 @@ class ComponentProperties {
 
                     this.propertyValues[propertyValue.propertyValueIndex] =
                         propertyValue.valueWithType;
-                });
+                }
             });
         }
     }

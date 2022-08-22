@@ -113,6 +113,10 @@ EM_PORT_API(bool) mainLoop() {
         g_started = true;
     } else {
         if (emscripten_run_script_int("Module.syncdone") == 1) {
+            if (eez::flow::isFlowStopped()) {
+                return false;
+            }
+
             eez_system_tick();
 
             if (eez::flow::isFlowStopped()) {
