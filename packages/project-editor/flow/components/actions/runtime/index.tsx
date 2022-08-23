@@ -14,6 +14,7 @@ import {
     onWasmFlowRuntimeTerminate
 } from "project-editor/flow/runtime/wasm-execute-functions";
 import { Duplex, Readable, Stream, Writable } from "stream";
+import { toJS } from "mobx";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -707,31 +708,72 @@ class StreamSnitch extends Writable {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-registerExecuteFunction(
-    "HTTPGet",
-    function (context: IDashboardComponentContext) {
-        const url = context.evalProperty<string>("url");
-        if (url == undefined || typeof url != "string") {
-            context.throwError(`Invalid URL property`);
+registerExecuteFunction("HTTP", function (context: IDashboardComponentContext) {
+    const method = context.getStringParam(0);
+
+    const url = context.evalProperty<string>("url");
+    if (url == undefined || typeof url != "string") {
+        context.throwError(`Invalid URL property`);
+        return;
+    }
+
+    const headers = new Headers();
+    const numHeaders = context.getListParamSize(4);
+    for (let i = 0; i < numHeaders; i++) {
+        const name = context.evalListParamElementExpression<string>(
+            4,
+            i,
+            0,
+            `Failed to evaluate ${i + 1}. header name`
+        );
+
+        const value = context.evalListParamElementExpression<string>(
+            4,
+            i,
+            4,
+            `Failed to evaluate ${i + 1}. header value`
+        );
+
+        if (name && value) {
+            headers.append(name, value);
+        }
+    }
+
+    let body;
+    if (method == "post" || method == "put" || method == "patch") {
+        body = context.evalProperty<string>("body");
+        if (body && typeof body != "string") {
+            context.throwError(`Body is not a string`);
             return;
         }
+    }
+    context = context.startAsyncExecution();
 
-        context = context.startAsyncExecution();
-
-        (async function () {
-            try {
-                const response = await fetch(url);
+    (async function () {
+        try {
+            const response = await fetch(url, {
+                method: method.toUpperCase(),
+                headers,
+                body
+            });
+            if (!response.ok) {
+                context.throwError(
+                    "Failed: " +
+                        (response.statusText || response.status.toString())
+                );
+            } else {
+                context.propagateValue("status", response.status);
                 const result = await response.text();
                 context.propagateValue("result", result);
                 context.propagateValueThroughSeqout();
-            } catch (err) {
-                context.throwError(err.toString());
-            } finally {
-                context.endAsyncExecution();
             }
-        })();
-    }
-);
+        } catch (err) {
+            context.throwError(err.toString());
+        } finally {
+            context.endAsyncExecution();
+        }
+    })();
+});
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -740,12 +782,31 @@ registerExecuteFunction(
     function (context: IDashboardComponentContext) {
         const value = context.evalProperty<string>("value");
         if (value == undefined || typeof value != "string") {
-            context.throwError(`Invalid URL property`);
+            context.throwError(`Invalid value property`);
             return;
         }
 
         try {
             const result = JSON.parse(value);
+            context.propagateValue("result", result);
+            context.propagateValueThroughSeqout();
+        } catch (err) {
+            context.throwError(err.toString());
+        }
+    }
+);
+
+registerExecuteFunction(
+    "JSONStringify",
+    function (context: IDashboardComponentContext) {
+        const value = context.evalProperty("value");
+        if (value == undefined) {
+            context.throwError(`Invalid value property`);
+            return;
+        }
+
+        try {
+            const result = JSON.stringify(toJS(value));
             context.propagateValue("result", result);
             context.propagateValueThroughSeqout();
         } catch (err) {

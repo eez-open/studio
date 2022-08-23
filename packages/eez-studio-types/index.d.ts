@@ -211,12 +211,20 @@ export interface IInlineCodeComponentProperty extends IComponentPropertyBase {
     language: "JSON" | "JavaScript" | "CSS" | "Python" | "C/C++";
 }
 
+export interface IListComponentProperty extends IComponentPropertyBase {
+    type: "list";
+    properties: IComponentProperty[];
+    migrateProperties?: (component: IActionComponent) => void;
+    defaults: any;
+}
+
 export type IComponentProperty =
     | IExpressionComponentProperty
     | IAssignableExpressionComponentProperty
     | ITemplateLiteralComponentProperty
     | IEnumComponentProperty
-    | IInlineCodeComponentProperty;
+    | IInlineCodeComponentProperty
+    | IListComponentProperty;
 
 export type IDisposeComponentState = () => void;
 
@@ -327,6 +335,9 @@ export interface IWasmFlowRuntime {
     _getExpressionListParam(flowStateIndex: number, componentIndex: number, offset: number): number;
     _freeExpressionListParam(ptr: number);
 
+    _getListParamSize(flowStateIndex: number, componentIndex: number, offset: number): number;
+    _evalListParamElementExpression(flowStateIndex: number, componentIndex: number, listOffset: number, elementIndex: number, expressionOffset: number, errorMessage: number): number;
+
     _getInputValue(flowStateIndex: number, inputIndex: number): number;
     _clearInputValue(flowStateIndex: number, inputIndex: number);
 
@@ -370,6 +381,15 @@ export interface IDashboardComponentContext {
 
     getStringParam: (offset: number) => string;
     getExpressionListParam: (offset: number) => any[];
+
+    getListParamSize: (offset: number) => number;
+    evalListParamElementExpression: <T = any>(
+        listOffset: number,
+        elementIndex: number,
+        expressionOffset: number,
+        errorMessage: string,
+        expectedTypes?: ValueType | ValueType[]
+    ) => T | undefined;
 
     getInputValue: <T = any>(
         inputName: string,

@@ -73,6 +73,55 @@ export class DashboardComponentContext implements IDashboardComponentContext {
         return values;
     }
 
+    getListParamSize(offset: number) {
+        return this.WasmFlowRuntime._getListParamSize(
+            this.flowStateIndex,
+            this.componentIndex,
+            offset
+        );
+    }
+
+    evalListParamElementExpression<T = any>(
+        listOffset: number,
+        elementIndex: number,
+        expressionOffset: number,
+        errorMesssage: string,
+        expectedTypes?: ValueType | ValueType[]
+    ) {
+        const errorMessagePtr =
+            this.WasmFlowRuntime.allocateUTF8(errorMesssage);
+
+        const valuePtr = this.WasmFlowRuntime._evalListParamElementExpression(
+            this.flowStateIndex,
+            this.componentIndex,
+            listOffset,
+            elementIndex,
+            expressionOffset,
+            errorMessagePtr
+        );
+
+        this.WasmFlowRuntime._free(errorMessagePtr);
+
+        if (!valuePtr) {
+            return undefined;
+        }
+
+        const result = getValue(this.WasmFlowRuntime, valuePtr);
+
+        this.WasmFlowRuntime._valueFree(valuePtr);
+
+        if (
+            expectedTypes &&
+            (Array.isArray(expectedTypes)
+                ? expectedTypes.indexOf(result.valueType) == -1
+                : expectedTypes != result.valueType)
+        ) {
+            return undefined;
+        }
+
+        return result.value as any as T;
+    }
+
     getInputValue<T = any>(inputName: string, expectedTypes?: ValueType[]) {
         const flowIndex = this.getFlowIndex();
         const flow = this.WasmFlowRuntime.assetsMap.flows[flowIndex];

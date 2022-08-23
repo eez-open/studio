@@ -45,5 +45,29 @@ registerActionComponents("Dashboard Specific", [
                 valueType: "string"
             }
         ]
+    },
+    {
+        name: "JSONStringify",
+        componentPaletteLabel: "JSONStringify",
+        icon: jsonParseIcon,
+        componentHeaderColor,
+        inputs: [],
+        outputs: [
+            {
+                name: "result",
+                type: "string",
+                isSequenceOutput: false,
+                isOptionalOutput: false
+            }
+        ],
+        defaults: {},
+        properties: [
+            {
+                name: "value",
+                type: "expression",
+                valueType: "any"
+            }
+        ],
+        bodyPropertyName: "value"
     }
 ]);

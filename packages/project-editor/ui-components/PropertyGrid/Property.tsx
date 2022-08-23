@@ -85,7 +85,6 @@ export const Property = observer(
                             ? getPropertyValueResult.value
                             : undefined;
                     });
-                    this.resizeTextArea();
                 }
             });
         }
@@ -97,6 +96,8 @@ export const Property = observer(
             ) {
                 this.updateChangeDocumentObserver();
             }
+
+            this.resizeTextArea();
         }
 
         componentDidMount() {

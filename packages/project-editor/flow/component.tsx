@@ -82,6 +82,8 @@ import { WIDGET_TYPE_NONE } from "project-editor/flow/components/component_types
 import classNames from "classnames";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
 import {
+    buildAssignableExpression,
+    buildExpression,
     checkAssignableExpression,
     checkExpression,
     checkTemplateLiteralExpression,
@@ -103,6 +105,7 @@ import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/d
 import type {
     IActionComponentDefinition,
     IComponentFlowState,
+    IComponentProperty,
     LogItemType
 } from "eez-studio-types";
 import {
@@ -304,6 +307,9 @@ function getComponentClass(jsObject: any) {
     }
     if (jsObject.type === "GetVariableActionComponent") {
         jsObject.type = "WatchVariableActionComponent";
+    }
+    if (jsObject.type === "HTTPGet") {
+        jsObject.type = "HTTP";
     }
     return getClassFromType(jsObject.type);
 }
@@ -4854,14 +4860,10 @@ function getComponentFlowState(
     };
 }
 
-export function registerActionComponent(
-    actionComponentDefinition: IActionComponentDefinition,
-    name?: string,
-    componentPaletteGroupName?: string
-) {
+function getProperties(propertyDefinitions: IComponentProperty[]) {
     const properties: PropertyInfo[] = [];
 
-    for (const propertyDefinition of actionComponentDefinition.properties) {
+    for (const propertyDefinition of propertyDefinitions) {
         let hideInPropertyGrid;
 
         const enabled = propertyDefinition.enabled;
@@ -4931,8 +4933,112 @@ export function registerActionComponent(
                 propertyGridGroup: specificGroup,
                 hideInPropertyGrid
             });
+        } else if (propertyDefinition.type === "list") {
+            const listItemProperties = propertyDefinition.properties;
+            const classInfoProperties = getProperties(listItemProperties);
+            const defaultValue = propertyDefinition.defaults;
+
+            const migrateProperties = propertyDefinition.migrateProperties;
+
+            const listItemClass = class ListItem extends EezObject {
+                static classInfo: ClassInfo = {
+                    label: () => propertyDefinition.name,
+                    properties: classInfoProperties,
+                    defaultValue,
+                    beforeLoadHook: migrateProperties
+                        ? (object: IEezObject, jsObject: any) =>
+                              migrateProperties(jsObject)
+                        : undefined,
+
+                    check: (item: ListItem) => {
+                        let messages: Message[] = [];
+
+                        for (const propertyInfo of listItemProperties) {
+                            if (propertyInfo.type == "expression") {
+                                try {
+                                    checkExpression(
+                                        getAncestorOfType(
+                                            item,
+                                            Component.classInfo
+                                        ) as Component,
+                                        (item as any)[propertyInfo.name]
+                                    );
+                                } catch (err) {
+                                    messages.push(
+                                        new Message(
+                                            MessageType.ERROR,
+                                            `Invalid expression: ${err}`,
+                                            getChildOfObject(
+                                                item,
+                                                propertyInfo.name
+                                            )
+                                        )
+                                    );
+                                }
+                            } else if (
+                                propertyInfo.type == "assignable-expression"
+                            ) {
+                                try {
+                                    checkAssignableExpression(
+                                        getAncestorOfType(
+                                            item,
+                                            Component.classInfo
+                                        ) as Component,
+                                        (item as any)[propertyInfo.name]
+                                    );
+                                } catch (err) {
+                                    messages.push(
+                                        new Message(
+                                            MessageType.ERROR,
+                                            `Invalid assignable expression: ${err}`,
+                                            getChildOfObject(item, "variable")
+                                        )
+                                    );
+                                }
+                            }
+                        }
+
+                        return messages;
+                    }
+                };
+
+                constructor() {
+                    super();
+
+                    const observables: any = {};
+
+                    listItemProperties.forEach(propertyInfo => {
+                        (this as any)[propertyInfo.name] = undefined;
+                        observables[propertyInfo.name] = observable;
+                    });
+
+                    makeObservable(this, observables);
+                }
+            };
+
+            properties.push({
+                name: propertyDefinition.name,
+                displayName: propertyDefinition.displayName,
+                type: PropertyType.Array,
+                typeClass: listItemClass,
+                propertyGridGroup: specificGroup,
+                partOfNavigation: false,
+                enumerable: false,
+                defaultValue: [],
+                hideInPropertyGrid
+            });
         }
     }
+
+    return properties;
+}
+
+export function registerActionComponent(
+    actionComponentDefinition: IActionComponentDefinition,
+    name?: string,
+    componentPaletteGroupName?: string
+) {
+    const properties = getProperties(actionComponentDefinition.properties);
 
     const migrateProperties = actionComponentDefinition.migrateProperties;
 
@@ -5072,6 +5178,36 @@ export function registerActionComponent(
                             (this as any)[propertyDefinition.name]
                         )
                     );
+                } else if (propertyDefinition.type == "list") {
+                    const listItemProperties = propertyDefinition.properties;
+
+                    const items = (this as any)[propertyDefinition.name];
+
+                    dataBuffer.writeArray(items, item => {
+                        for (const itemPropertyInfo of listItemProperties) {
+                            if (itemPropertyInfo.type == "expression") {
+                                dataBuffer.writeObjectOffset(() =>
+                                    buildExpression(
+                                        assets,
+                                        dataBuffer,
+                                        this,
+                                        (item as any)[itemPropertyInfo.name]
+                                    )
+                                );
+                            } else if (
+                                itemPropertyInfo.type == "assignable-expression"
+                            ) {
+                                dataBuffer.writeObjectOffset(() =>
+                                    buildAssignableExpression(
+                                        assets,
+                                        dataBuffer,
+                                        this,
+                                        (item as any)[itemPropertyInfo.name]
+                                    )
+                                );
+                            }
+                        }
+                    });
                 }
             });
         }

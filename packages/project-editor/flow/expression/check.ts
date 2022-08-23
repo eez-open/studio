@@ -26,6 +26,7 @@ export function checkExpression(component: Component, expression: string) {
     }
 
     if (expression == undefined) {
+        throw `Empty expression`;
     } else if (typeof expression == "number") {
     } else {
         let rootNode;
@@ -76,6 +77,7 @@ export function checkAssignableExpression(
     }
 
     if (expression == undefined) {
+        throw "empty expression";
     } else if (typeof expression == "number") {
     } else {
         let rootNode;

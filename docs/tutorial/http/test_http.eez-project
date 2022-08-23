@@ -60,8 +60,8 @@
         {
           "objID": "8271f9c2-6730-4618-d94c-59c6eb9382d8",
           "type": "TextWidget",
-          "left": 123,
-          "top": 77,
+          "left": 0,
+          "top": 322,
           "width": 112,
           "height": 32,
           "customInputs": [],
@@ -76,8 +76,8 @@
         {
           "objID": "ea7eb013-6c4a-4647-ff9f-0f2f5df1d137",
           "type": "TextWidget",
-          "left": 235,
-          "top": 77,
+          "left": 112,
+          "top": 322,
           "width": 400,
           "height": 32,
           "customInputs": [],
@@ -91,20 +91,24 @@
         },
         {
           "objID": "ddb2a85c-8e3c-467b-ceeb-e0ede24adacf",
-          "type": "HTTPGet",
-          "left": 127,
-          "top": -81,
-          "width": 372,
-          "height": 55,
+          "type": "HTTP",
+          "left": 506,
+          "top": -217,
+          "width": 497,
+          "height": 73,
           "customInputs": [],
           "customOutputs": [],
-          "url": "\"https://jsonplaceholder.typicode.com/todos/1\""
+          "description": "Get selected Todo",
+          "method": "get",
+          "url": "\"https://jsonplaceholder.typicode.com/todos/\" + selected_todo_index",
+          "headers": [],
+          "body": "\"\""
         },
         {
           "objID": "ef10e523-0818-4045-a81c-98d2efd122ee",
           "type": "TextWidget",
-          "left": 123,
-          "top": 109,
+          "left": 0,
+          "top": 354,
           "width": 112,
           "height": 32,
           "customInputs": [],
@@ -119,8 +123,8 @@
         {
           "objID": "1718f1c2-3ae2-4852-c1ca-a01a085c330b",
           "type": "TextWidget",
-          "left": 235,
-          "top": 109,
+          "left": 112,
+          "top": 354,
           "width": 400,
           "height": 32,
           "customInputs": [],
@@ -135,8 +139,8 @@
         {
           "objID": "9774d542-1657-48aa-d56a-ee9e4b46afeb",
           "type": "TextWidget",
-          "left": 123,
-          "top": 141,
+          "left": 0,
+          "top": 386,
           "width": 112,
           "height": 32,
           "customInputs": [],
@@ -151,8 +155,8 @@
         {
           "objID": "c5087143-4030-403a-9884-7504dbdc037e",
           "type": "TextWidget",
-          "left": 235,
-          "top": 141,
+          "left": 112,
+          "top": 386,
           "width": 400,
           "height": 32,
           "customInputs": [],
@@ -167,8 +171,8 @@
         {
           "objID": "d0b89c61-f9b8-4845-c243-ecebcd89d777",
           "type": "TextWidget",
-          "left": 123,
-          "top": 173,
+          "left": 0,
+          "top": 418,
           "width": 112,
           "height": 32,
           "customInputs": [],
@@ -183,8 +187,8 @@
         {
           "objID": "c5087143-4030-403a-9884-7504dbdc037e",
           "type": "TextWidget",
-          "left": 235,
-          "top": 173,
+          "left": 112,
+          "top": 418,
           "width": 400,
           "height": 32,
           "customInputs": [],
@@ -199,8 +203,8 @@
         {
           "objID": "0c2939e9-e31b-4cdb-866d-dbf9dd68ce71",
           "type": "StartActionComponent",
-          "left": 0,
-          "top": -81,
+          "left": -252,
+          "top": -354,
           "width": 87,
           "height": 25,
           "customInputs": [],
@@ -209,8 +213,8 @@
         {
           "objID": "a8747f01-da05-4738-d029-00313578ac22",
           "type": "SetVariableActionComponent",
-          "left": 673,
-          "top": -81,
+          "left": 1236,
+          "top": -217,
           "width": 127,
           "height": 56,
           "customInputs": [
@@ -232,8 +236,8 @@
         {
           "objID": "6aebbc3b-9e50-4334-ff42-a2ec845efffd",
           "type": "JSONParse",
-          "left": 539,
-          "top": -81,
+          "left": 1050,
+          "top": -217,
           "width": 94,
           "height": 54,
           "customInputs": [
@@ -251,12 +255,246 @@
             }
           ],
           "value": "text"
+        },
+        {
+          "objID": "828444a6-fc6b-4195-e0ce-47265c48eff5",
+          "type": "HTTP",
+          "left": 506,
+          "top": -354,
+          "width": 356,
+          "height": 73,
+          "customInputs": [],
+          "customOutputs": [],
+          "description": "Get all Todo's",
+          "method": "get",
+          "url": "\"https://jsonplaceholder.typicode.com/todos\"",
+          "headers": [
+            {
+              "objID": "9e8fa6ae-fdf5-4257-b22b-e5582bea8a7c",
+              "name": "\"Pero\"",
+              "value": "\"Value\""
+            }
+          ],
+          "body": "\"\""
+        },
+        {
+          "objID": "6d40f798-08fc-4181-c68b-b87852e7c287",
+          "type": "SetVariableActionComponent",
+          "left": 1052,
+          "top": -306,
+          "width": 133,
+          "height": 56,
+          "customInputs": [
+            {
+              "objID": "51e20ae1-814f-4eeb-edc4-dc81362c6c7e",
+              "name": "in",
+              "type": "array:struct:Todo"
+            }
+          ],
+          "customOutputs": [],
+          "entries": [
+            {
+              "objID": "d4c42d10-fb07-4b84-d54e-6baff4232883",
+              "variable": "todos",
+              "value": "in"
+            }
+          ]
+        },
+        {
+          "objID": "aad01bbc-2680-44f2-8962-bb7f945735c5",
+          "type": "JSONParse",
+          "left": 918,
+          "top": -306,
+          "width": 94,
+          "height": 54,
+          "customInputs": [
+            {
+              "objID": "67adacc1-c731-4c66-8a15-8a7e73c5475a",
+              "name": "text",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [
+            {
+              "objID": "e8322a4a-a307-4cf9-cdc5-d2580d72a322",
+              "name": "result",
+              "type": "array:struct:Todo"
+            }
+          ],
+          "value": "text"
+        },
+        {
+          "objID": "9dfe5a6d-68aa-461b-a8a1-76f975c3a793",
+          "type": "ListWidget",
+          "left": 0,
+          "top": 0,
+          "width": 800,
+          "height": 291,
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "todos",
+          "style": {
+            "objID": "0fa208fe-e099-4704-f6bc-12c35d46cf93",
+            "inheritFrom": "default",
+            "borderSize": "1",
+            "borderColor": "#1e1e1e"
+          },
+          "timeline": [],
+          "itemWidget": {
+            "objID": "369863a3-2fbd-4a2b-93f6-0ed133e11459",
+            "type": "Container",
+            "left": 0,
+            "top": 0,
+            "width": 561,
+            "height": 32,
+            "customInputs": [],
+            "customOutputs": [],
+            "style": {
+              "objID": "cb0a6340-8dc6-424e-f951-4db66cc89887",
+              "inheritFrom": "default"
+            },
+            "timeline": [],
+            "widgets": [
+              {
+                "objID": "09d65758-bedb-48f0-8b07-20fe5dd6cf1c",
+                "type": "Select",
+                "left": 4,
+                "top": 2,
+                "width": 549,
+                "height": 28,
+                "customInputs": [],
+                "customOutputs": [],
+                "data": "$index + 1 == selected_todo_index ? 1 : 0",
+                "style": {
+                  "objID": "d173fba4-f29a-4783-9fa8-33fcc0c26e7a",
+                  "inheritFrom": "default"
+                },
+                "timeline": [],
+                "widgets": [
+                  {
+                    "objID": "4da2a5a1-271e-4027-fe54-570194288af4",
+                    "type": "TextWidget",
+                    "left": 0,
+                    "top": 0,
+                    "width": 549,
+                    "height": 28,
+                    "customInputs": [],
+                    "customOutputs": [],
+                    "asOutputProperties": [
+                      "action"
+                    ],
+                    "data": "todos[$index].title",
+                    "style": {
+                      "objID": "caa8abe8-3401-47af-9470-b5b1309bee36",
+                      "inheritFrom": "default"
+                    },
+                    "timeline": []
+                  },
+                  {
+                    "objID": "1bda9d4a-3c2b-46b9-cfdc-ed32417d945b",
+                    "type": "TextWidget",
+                    "left": 0,
+                    "top": 0,
+                    "width": 549,
+                    "height": 28,
+                    "customInputs": [],
+                    "customOutputs": [],
+                    "asOutputProperties": [],
+                    "data": "todos[$index].title",
+                    "style": {
+                      "objID": "caa8abe8-3401-47af-9470-b5b1309bee36",
+                      "inheritFrom": "default",
+                      "color": "#ffffff",
+                      "backgroundColor": "#0e7ce2"
+                    },
+                    "timeline": []
+                  }
+                ]
+              }
+            ],
+            "layout": "static"
+          },
+          "listType": "vertical",
+          "gap": 0
+        },
+        {
+          "objID": "0bd1d718-9586-48aa-ed39-f2e7470e3dca",
+          "type": "SetVariableActionComponent",
+          "left": 643,
+          "top": -80,
+          "width": 333,
+          "height": 56,
+          "customInputs": [
+            {
+              "objID": "0b7b400a-a4a2-4c51-a6a3-491b01929e83",
+              "name": "params",
+              "type": "struct:$ActionParams"
+            }
+          ],
+          "customOutputs": [],
+          "entries": [
+            {
+              "objID": "a9e7c530-9c00-4b88-cefa-03837ac2aeb4",
+              "variable": "selected_todo_index",
+              "value": "params.index + 1"
+            }
+          ]
+        },
+        {
+          "objID": "025ed6ae-ad30-44ad-bde4-a24a5d5e6cd9",
+          "type": "HTTP",
+          "left": -40,
+          "top": -281,
+          "width": 402,
+          "height": 73,
+          "customInputs": [
+            {
+              "objID": "c0eae75a-ac94-4ed4-8dc7-027597b49410",
+              "name": "body",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "description": "Example of HTTP POST",
+          "method": "post",
+          "url": "\"https://jsonplaceholder.typicode.com/todos\"",
+          "headers": [],
+          "body": "body"
+        },
+        {
+          "objID": "9f51eb19-49a1-420d-82fc-c96a6a8dfd55",
+          "type": "JSONStringify",
+          "left": -361,
+          "top": -250,
+          "width": 249,
+          "height": 120,
+          "customInputs": [],
+          "customOutputs": [],
+          "description": "Make Todo value and convert it to JSON",
+          "value": "Flow.makeValue(\"struct:Todo\", {\n  id: 333,\n  userId: 1,\n  title: \"Buy a milk\",\n  completed: true\n})"
+        },
+        {
+          "objID": "dbee62d0-9fa9-4522-bddf-d8df489960d3",
+          "type": "LogActionComponent",
+          "left": 362,
+          "top": -103,
+          "width": 87,
+          "height": 54,
+          "customInputs": [
+            {
+              "objID": "995557b7-d84e-4510-c510-53e7fd7ecdac",
+              "name": "value",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "value": "value"
         }
       ],
       "connectionLines": [
         {
           "objID": "1b561fc4-cd54-4ea2-c4e3-65782a3aec62",
-          "source": "0c2939e9-e31b-4cdb-866d-dbf9dd68ce71",
+          "source": "025ed6ae-ad30-44ad-bde4-a24a5d5e6cd9",
           "output": "@seqout",
           "target": "ddb2a85c-8e3c-467b-ceeb-e0ede24adacf",
           "input": "@seqin"
@@ -274,6 +512,62 @@
           "output": "result",
           "target": "a8747f01-da05-4738-d029-00313578ac22",
           "input": "in"
+        },
+        {
+          "objID": "5c427bae-5f72-4757-f589-31841684e8d8",
+          "source": "828444a6-fc6b-4195-e0ce-47265c48eff5",
+          "output": "result",
+          "target": "aad01bbc-2680-44f2-8962-bb7f945735c5",
+          "input": "text"
+        },
+        {
+          "objID": "c4335bfa-d546-4218-8396-09907ff6dce8",
+          "source": "aad01bbc-2680-44f2-8962-bb7f945735c5",
+          "output": "result",
+          "target": "6d40f798-08fc-4181-c68b-b87852e7c287",
+          "input": "in"
+        },
+        {
+          "objID": "edc802ca-6dad-4a7d-f1f8-fe5163d8b2ac",
+          "source": "0c2939e9-e31b-4cdb-866d-dbf9dd68ce71",
+          "output": "@seqout",
+          "target": "025ed6ae-ad30-44ad-bde4-a24a5d5e6cd9",
+          "input": "@seqin"
+        },
+        {
+          "objID": "c0af8467-7732-4827-8e8b-37e38974fb45",
+          "source": "0bd1d718-9586-48aa-ed39-f2e7470e3dca",
+          "output": "@seqout",
+          "target": "ddb2a85c-8e3c-467b-ceeb-e0ede24adacf",
+          "input": "@seqin"
+        },
+        {
+          "objID": "a34ccb36-67ed-47b2-daef-0f107528acc6",
+          "source": "4da2a5a1-271e-4027-fe54-570194288af4",
+          "output": "action",
+          "target": "0bd1d718-9586-48aa-ed39-f2e7470e3dca",
+          "input": "params"
+        },
+        {
+          "objID": "58507b19-ceb5-4dfa-a79f-52921eeb47ff",
+          "source": "025ed6ae-ad30-44ad-bde4-a24a5d5e6cd9",
+          "output": "@seqout",
+          "target": "828444a6-fc6b-4195-e0ce-47265c48eff5",
+          "input": "@seqin"
+        },
+        {
+          "objID": "fc60d615-fa09-439c-d688-f9f20eb0d4ce",
+          "source": "9f51eb19-49a1-420d-82fc-c96a6a8dfd55",
+          "output": "result",
+          "target": "025ed6ae-ad30-44ad-bde4-a24a5d5e6cd9",
+          "input": "body"
+        },
+        {
+          "objID": "6009b531-6905-4f32-f666-b62ae2e89035",
+          "source": "025ed6ae-ad30-44ad-bde4-a24a5d5e6cd9",
+          "output": "result",
+          "target": "dbee62d0-9fa9-4522-bddf-d8df489960d3",
+          "input": "value"
         }
       ],
       "localVariables": [
@@ -282,6 +576,20 @@
           "name": "todo",
           "type": "struct:Todo",
           "defaultValue": "null",
+          "persistent": false
+        },
+        {
+          "objID": "d1796f1b-3785-4c1c-9f4b-f0385ab3d2dc",
+          "name": "todos",
+          "type": "array:struct:Todo",
+          "defaultValue": "null",
+          "persistent": false
+        },
+        {
+          "objID": "bcbcf5b8-e484-42cc-b26e-caad1e4edc92",
+          "name": "selected_todo_index",
+          "type": "integer",
+          "defaultValue": "1",
           "persistent": false
         }
       ],
