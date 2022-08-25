@@ -1,3 +1,4 @@
+import { Stream } from "stream";
 import React from "react";
 import {
     action,
@@ -238,6 +239,10 @@ export function getValueLabel(
 
     if (typeof value == "string") {
         return `"${value}"`;
+    }
+
+    if (value instanceof Stream) {
+        return "stream";
     }
 
     return value.toString();

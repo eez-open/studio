@@ -5027,6 +5027,14 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                 defaultValue: [],
                 hideInPropertyGrid
             });
+        } else if (propertyDefinition.type == "boolean") {
+            properties.push({
+                name: propertyDefinition.name,
+                displayName: propertyDefinition.displayName,
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid
+            });
         }
     }
 
@@ -5208,6 +5216,10 @@ export function registerActionComponent(
                             }
                         }
                     });
+                } else if (propertyDefinition.type == "boolean") {
+                    dataBuffer.writeUint32(
+                        (this as any)[propertyDefinition.name] ? 1 : 0
+                    );
                 }
             });
         }

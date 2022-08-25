@@ -12,6 +12,8 @@ import { Section } from "project-editor/store/output-sections";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export type LogPanelFilter = "all" | "scpi" | "error" | "info" | "debug";
+
 export class UIStateStore {
     selectedBuildConfiguration: string;
     features: any;
@@ -27,6 +29,8 @@ export class UIStateStore {
     selectedLanguageID: string;
 
     objectUIStates = new Map<string, any>();
+
+    logsPanelFilter: LogPanelFilter = "all";
 
     get pageEditorFrontFace() {
         return this._pageEditorFrontFace;
@@ -70,7 +74,8 @@ export class UIStateStore {
             enableBreakpoint: action,
             disableBreakpoint: action,
             watchExpressions: observable,
-            selectedLanguage: computed
+            selectedLanguage: computed,
+            logsPanelFilter: observable
         });
     }
 
@@ -161,6 +166,10 @@ export class UIStateStore {
                 this.projectEditorStore.project.changes._state.selectedRevisionHash =
                     uiState.selectedRevisionHash;
             }
+
+            if (uiState.logsPanelFilter != undefined) {
+                this.logsPanelFilter = uiState.logsPanelFilter;
+            }
         });
     }
 
@@ -211,7 +220,8 @@ export class UIStateStore {
             selectedRevisionHash: this.projectEditorStore.project.changes
                 ? this.projectEditorStore.project.changes._state
                       .selectedRevisionHash
-                : undefined
+                : undefined,
+            logsPanelFilter: this.logsPanelFilter
         };
 
         return state;

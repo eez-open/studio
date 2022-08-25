@@ -387,11 +387,15 @@ export class Variable extends EezObject {
                         ?.editConstructorParams
             }
         ],
-        label: (variable: Variable) => {
-            if (variable.native) {
-                return "[NATIVE] " + variable.name;
-            }
-            return variable.name;
+        listLabel: (variable: Variable) => {
+            return (
+                <>
+                    {variable.native && <span>[NATIVE] </span>}
+                    {variable.persistent && <span>[PERSISTENT] </span>}
+                    <span>{variable.name}: </span>
+                    <em>{variable.type}</em>
+                </>
+            );
         },
         beforeLoadHook: (object: Variable, objectJS: any) => {
             migrateType(objectJS);

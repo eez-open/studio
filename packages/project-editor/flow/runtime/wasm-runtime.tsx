@@ -37,6 +37,7 @@ import {
 import { InstrumentObject } from "instrument/instrument-object";
 import {
     ArrayValue,
+    clarStremIDs,
     createJsArrayValue
 } from "project-editor/flow/runtime/wasm-value";
 import {
@@ -180,6 +181,8 @@ export class WasmRuntime extends RemoteRuntime {
         }
 
         this.destroyGlobalVariables();
+
+        clarStremIDs();
 
         if (this.error) {
             if (notifyUser) {

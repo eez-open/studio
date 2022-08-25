@@ -42,6 +42,14 @@ export class DashboardComponentContext implements IDashboardComponentContext {
         );
     }
 
+    getUint32Param(offset: number) {
+        return this.WasmFlowRuntime._getUint32Param(
+            this.flowStateIndex,
+            this.componentIndex,
+            offset
+        );
+    }
+
     getStringParam(offset: number) {
         const ptr = this.WasmFlowRuntime._getStringParam(
             this.flowStateIndex,
@@ -368,8 +376,6 @@ function wasmToComponentExecutionState<T>(wasmState: number) {
 }
 
 function freeComponentExecutionState(wasmModuleId: number, wasmState: number) {
-    console.log("freeComponentExecutionState", wasmModuleId);
-
     const state = states.has(wasmState);
     if (state) {
         wasmStates.delete(state);

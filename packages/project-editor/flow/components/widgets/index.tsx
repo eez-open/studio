@@ -5448,6 +5448,64 @@ registerClass("InputEmbeddedWidget", InputEmbeddedWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function TextInputWidgetInput({
+    value,
+    flowContext,
+    textInputWidget
+}: {
+    value: string;
+    flowContext: IFlowContext;
+    textInputWidget: TextInputWidget;
+}) {
+    const ref = React.useRef<HTMLInputElement>(null);
+    const [cursor, setCursor] = React.useState<number | null>(null);
+
+    React.useEffect(() => {
+        const input = ref.current;
+        if (input) input.setSelectionRange(cursor, cursor);
+    }, [ref, cursor, value]);
+
+    return (
+        <>
+            <input
+                ref={ref}
+                type="text"
+                value={value}
+                onChange={event => {
+                    const flowState = flowContext.flowState as FlowState;
+                    if (flowState) {
+                        setCursor(event.target.selectionStart);
+
+                        const value = event.target.value;
+
+                        if (textInputWidget.data) {
+                            flowState.runtime.assignProperty(
+                                flowContext,
+                                textInputWidget,
+                                "data",
+                                value
+                            );
+                        }
+
+                        if (flowState.runtime) {
+                            flowState.runtime.executeWidgetAction(
+                                flowContext,
+                                textInputWidget,
+                                "action",
+                                makeTextInputActionParamsValue(
+                                    flowContext,
+                                    value
+                                ),
+                                `struct:${TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME}`
+                            );
+                        }
+                    }
+                }}
+            ></input>
+        </>
+    );
+}
+
 export class TextInputWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
@@ -5550,38 +5608,11 @@ export class TextInputWidget extends Widget {
 
         return (
             <>
-                <input
-                    type="text"
+                <TextInputWidgetInput
+                    flowContext={flowContext}
+                    textInputWidget={this}
                     value={value}
-                    onChange={event => {
-                        const flowState = flowContext.flowState as FlowState;
-                        if (flowState) {
-                            const value = event.target.value;
-
-                            if (this.data) {
-                                flowState.runtime.assignProperty(
-                                    flowContext,
-                                    this,
-                                    "data",
-                                    value
-                                );
-                            }
-
-                            if (flowState.runtime) {
-                                flowState.runtime.executeWidgetAction(
-                                    flowContext,
-                                    this,
-                                    "action",
-                                    makeTextInputActionParamsValue(
-                                        flowContext,
-                                        value
-                                    ),
-                                    `struct:${TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME}`
-                                );
-                            }
-                        }
-                    }}
-                ></input>
+                />
                 {super.render(flowContext, width, height)}
             </>
         );

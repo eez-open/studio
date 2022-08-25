@@ -2,6 +2,8 @@ import { tmpdir } from "os";
 import { sep } from "path";
 import { writeFileSync, unlinkSync } from "fs";
 import { PythonShell, Options } from "python-shell";
+import { PassThrough } from "stream";
+import { spawn } from "child_process";
 
 import type {
     IDashboardComponentContext,
@@ -499,15 +501,19 @@ registerExecuteFunction(
         context = context.startAsyncExecution();
 
         try {
-            const { spawn } = await import("child_process");
-
-            let process = spawn(commandValue, argsValue);
             let processFinished = false;
 
-            context.propagateValue("stdout", process.stdout);
-            context.propagateValue("stderr", process.stderr);
+            let childProcess = spawn(commandValue, argsValue);
 
-            process.on("exit", code => {
+            const passThroughStdout = new PassThrough();
+            childProcess.stdout.pipe(passThroughStdout);
+            context.propagateValue("stdout", passThroughStdout);
+
+            const passThroughStderr = new PassThrough();
+            childProcess.stderr.pipe(passThroughStderr);
+            context.propagateValue("stderr", passThroughStderr);
+
+            childProcess.on("exit", code => {
                 if (!processFinished) {
                     context.propagateValue("finished", code);
                     context.endAsyncExecution();
@@ -515,10 +521,11 @@ registerExecuteFunction(
                 }
             });
 
-            process.on("error", err => {
+            childProcess.on("error", err => {
                 if (!processFinished) {
                     context.throwError(err.toString());
                     context.endAsyncExecution();
+                    processFinished = true;
                 }
             });
 
@@ -580,14 +587,26 @@ registerExecuteFunction(
                 return;
             }
 
-            const re = new RegExp(patternValue, "gm");
+            const caseInsensitive = context.getUint32Param(0) ? true : false;
+
+            const re = new RegExp(
+                patternValue,
+                "gm" + (caseInsensitive ? "i" : "")
+            );
 
             const dataValue: any = context.evalProperty("data");
             if (typeof dataValue == "string") {
-                const m = re.exec(dataValue);
-                if (m) {
+                let m: RegExpExecArray | null;
+
+                while ((m = re.exec(dataValue)) !== null) {
+                    // This is necessary to avoid infinite loops with zero-width matches
+                    if (m.index === re.lastIndex) {
+                        re.lastIndex++;
+                    }
+
                     context.propagateValue("match", m);
                 }
+
                 context.propagateValue("done", null);
             } else if (
                 dataValue instanceof Readable ||

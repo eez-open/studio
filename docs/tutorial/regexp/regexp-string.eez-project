@@ -1,0 +1,382 @@
+{
+  "objID": "6666cd76-f969-5646-9e7b-e39d750cc7d9",
+  "settings": {
+    "objID": "e007d988-9fba-797d-72e9-efc33ca6d05c",
+    "general": {
+      "objID": "fd434352-2277-c4a8-e87e-e96cfcbf2305",
+      "projectVersion": "v3",
+      "projectType": "dashboard",
+      "imports": []
+    },
+    "build": {
+      "objID": "72794a43-a0fc-13c2-7eb5-67dd952141a4",
+      "configurations": [
+        {
+          "objID": "bba0546c-06b8-604d-c43e-ecf1963e7492",
+          "name": "Default"
+        }
+      ],
+      "files": []
+    }
+  },
+  "variables": {
+    "objID": "c6c71e16-53e1-217f-d03b-cef56c6b037a",
+    "globalVariables": [],
+    "structures": [],
+    "enums": []
+  },
+  "actions": [],
+  "pages": [
+    {
+      "objID": "f7f15531-2f0d-6247-72af-17ad3967f8e0",
+      "components": [
+        {
+          "objID": "d17ea157-0128-4494-c0c7-f52c67d0c64a",
+          "type": "Regexp",
+          "left": 182,
+          "top": -170,
+          "width": 140,
+          "height": 73,
+          "customInputs": [],
+          "customOutputs": [],
+          "pattern": "pattern",
+          "data": "text",
+          "caseInsensitive": true
+        },
+        {
+          "objID": "0f445c84-0145-4e1b-d3a1-c9b14c240239",
+          "type": "ListWidget",
+          "left": 271,
+          "top": 188,
+          "width": 347,
+          "height": 220,
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "matches",
+          "style": {
+            "objID": "28df5c79-cb44-4a8c-ae18-f5c9861021dd",
+            "inheritFrom": "default",
+            "borderSize": "1",
+            "borderColor": "#3e3e3e",
+            "borderStyle": "solid"
+          },
+          "timeline": [],
+          "itemWidget": {
+            "objID": "d8f061da-7d23-4f47-f381-6bceb2827671",
+            "type": "Container",
+            "left": 4,
+            "top": 4,
+            "width": 338,
+            "height": 32,
+            "customInputs": [],
+            "customOutputs": [],
+            "style": {
+              "objID": "f2c42f5a-907c-488a-c06d-5bf0ef1a8acb",
+              "inheritFrom": "default"
+            },
+            "timeline": [],
+            "widgets": [
+              {
+                "objID": "f948dcb3-48f6-4209-eab5-324bfbb7777e",
+                "type": "TextWidget",
+                "left": 0,
+                "top": 0,
+                "width": 338,
+                "height": 32,
+                "customInputs": [],
+                "customOutputs": [],
+                "data": "matches[$index]",
+                "style": {
+                  "objID": "c5654a7c-11d8-4b07-85b5-5aa1a9045390",
+                  "inheritFrom": "default"
+                },
+                "timeline": []
+              }
+            ],
+            "layout": "static"
+          },
+          "listType": "vertical",
+          "gap": 0
+        },
+        {
+          "objID": "b047878a-c5f8-446e-db83-35f45e522166",
+          "type": "TextWidget",
+          "left": 193,
+          "top": 188,
+          "width": 64,
+          "height": 32,
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "\"Matches:\"",
+          "style": {
+            "objID": "24f9c59c-10a0-43bb-9098-2569205a60e4",
+            "inheritFrom": "default"
+          },
+          "timeline": []
+        },
+        {
+          "objID": "750c321e-1c53-4525-a7b8-5c61ec82174e",
+          "type": "TextWidget",
+          "left": 193,
+          "top": 90,
+          "width": 64,
+          "height": 32,
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "\"Pattern:\"",
+          "style": {
+            "objID": "8a11f1d3-dd59-4edf-bc82-8ea8f7a73e16",
+            "inheritFrom": "default"
+          },
+          "timeline": []
+        },
+        {
+          "objID": "4c58cbe5-bff1-4e39-cbcc-25812f6b6add",
+          "type": "TextWidget",
+          "left": 193,
+          "top": 45,
+          "width": 64,
+          "height": 32,
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "\"Text:\"",
+          "style": {
+            "objID": "e73acd04-6fae-4130-e62a-6fa2b9b59f96",
+            "inheritFrom": "default"
+          },
+          "timeline": []
+        },
+        {
+          "objID": "d1cddcf4-c928-4440-900a-30e5184fac42",
+          "type": "TextInputWidget",
+          "left": 271,
+          "top": 90,
+          "width": 347,
+          "height": 32,
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "pattern",
+          "style": {
+            "objID": "83959b09-15e4-4a17-8e73-11bdbbec4141",
+            "inheritFrom": "default"
+          },
+          "timeline": []
+        },
+        {
+          "objID": "7e59ef6b-8a0c-496e-f939-438380f5a63f",
+          "type": "ButtonWidget",
+          "left": 271,
+          "top": 135,
+          "width": 107,
+          "height": 40,
+          "customInputs": [],
+          "customOutputs": [],
+          "asOutputProperties": [
+            "action"
+          ],
+          "data": "\"Match\"",
+          "style": {
+            "objID": "588e7847-168b-49a5-9b15-2efe090f74d7",
+            "inheritFrom": "default"
+          },
+          "timeline": [],
+          "disabledStyle": {
+            "objID": "8b307f1f-b57e-402c-cc8f-950a449b1c76",
+            "inheritFrom": "default"
+          }
+        },
+        {
+          "objID": "d08415b9-8cac-4f9d-a61f-9d31c341c913",
+          "type": "TextInputWidget",
+          "left": 271,
+          "top": 45,
+          "width": 347,
+          "height": 32,
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "text",
+          "style": {
+            "objID": "d69e7dd4-eeca-47e2-980e-0575d7e572d0",
+            "inheritFrom": "default"
+          },
+          "timeline": []
+        },
+        {
+          "objID": "6f167a4a-1e48-4d3b-885a-9d6652f5bb4f",
+          "type": "SetVariableActionComponent",
+          "left": 378,
+          "top": -170,
+          "width": 181,
+          "height": 56,
+          "customInputs": [
+            {
+              "objID": "8560a970-9cfe-4471-d003-17d25d9c8b05",
+              "name": "value",
+              "type": "array:string"
+            }
+          ],
+          "customOutputs": [],
+          "entries": [
+            {
+              "objID": "3f1459de-751c-46cf-92c3-ae0eb2ea5b2e",
+              "variable": "matches",
+              "value": "value"
+            }
+          ]
+        },
+        {
+          "objID": "286e0e93-2435-439e-dbbc-e3f0f02aad92",
+          "type": "SetVariableActionComponent",
+          "left": 0,
+          "top": -170,
+          "width": 134,
+          "height": 56,
+          "customInputs": [],
+          "customOutputs": [],
+          "entries": [
+            {
+              "objID": "3f1459de-751c-46cf-92c3-ae0eb2ea5b2e",
+              "variable": "matches",
+              "value": "null"
+            }
+          ]
+        },
+        {
+          "objID": "6a22de19-ffad-45d6-b7ac-5e4723c9bf81",
+          "type": "SetVariableActionComponent",
+          "left": 618,
+          "top": -97,
+          "width": 208,
+          "height": 56,
+          "customInputs": [],
+          "customOutputs": [],
+          "entries": [
+            {
+              "objID": "3f1459de-751c-46cf-92c3-ae0eb2ea5b2e",
+              "variable": "matches",
+              "value": "[\"<no matches>\"]"
+            }
+          ]
+        },
+        {
+          "objID": "ba023246-3479-44f7-abc1-a0dd24e48277",
+          "type": "SwitchActionComponent",
+          "left": 378,
+          "top": -97,
+          "width": 201,
+          "height": 55,
+          "customInputs": [],
+          "customOutputs": [],
+          "tests": [
+            {
+              "objID": "1d03f90c-b19c-48ff-8b20-0eac677a5e87",
+              "condition": "matches == null",
+              "outputName": "no_matches"
+            }
+          ]
+        }
+      ],
+      "connectionLines": [
+        {
+          "objID": "3a0957ab-86eb-4c11-f153-c84be4ae6dbc",
+          "source": "7e59ef6b-8a0c-496e-f939-438380f5a63f",
+          "output": "action",
+          "target": "286e0e93-2435-439e-dbbc-e3f0f02aad92",
+          "input": "@seqin"
+        },
+        {
+          "objID": "07075c85-b7cd-4ba2-ea6e-63d4a463eb4c",
+          "source": "d17ea157-0128-4494-c0c7-f52c67d0c64a",
+          "output": "match",
+          "target": "6f167a4a-1e48-4d3b-885a-9d6652f5bb4f",
+          "input": "value"
+        },
+        {
+          "objID": "2d7ce8c3-37f2-45ea-ed65-07bb829dd3e6",
+          "source": "286e0e93-2435-439e-dbbc-e3f0f02aad92",
+          "output": "@seqout",
+          "target": "d17ea157-0128-4494-c0c7-f52c67d0c64a",
+          "input": "@seqin"
+        },
+        {
+          "objID": "96001b00-57a8-45f2-c62a-d45f90b48f94",
+          "source": "d17ea157-0128-4494-c0c7-f52c67d0c64a",
+          "output": "done",
+          "target": "ba023246-3479-44f7-abc1-a0dd24e48277",
+          "input": "@seqin"
+        },
+        {
+          "objID": "2747e0b4-e031-4af1-e804-89b5c0c37125",
+          "source": "ba023246-3479-44f7-abc1-a0dd24e48277",
+          "output": "no_matches",
+          "target": "6a22de19-ffad-45d6-b7ac-5e4723c9bf81",
+          "input": "@seqin"
+        },
+        {
+          "objID": "53e77afb-0063-4111-9738-b3a0b7605caa",
+          "source": "d17ea157-0128-4494-c0c7-f52c67d0c64a",
+          "output": "@seqout",
+          "target": "d17ea157-0128-4494-c0c7-f52c67d0c64a",
+          "input": "next"
+        }
+      ],
+      "localVariables": [
+        {
+          "objID": "f5b5dc49-05ca-496b-fc45-154f907dacbc",
+          "name": "text",
+          "type": "string",
+          "defaultValue": "\"Abc def abc\"",
+          "persistent": false
+        },
+        {
+          "objID": "8f0477cd-5c50-47b6-df2b-0c16f485aacc",
+          "name": "pattern",
+          "type": "string",
+          "defaultValue": "\"abc\"",
+          "persistent": false
+        },
+        {
+          "objID": "b83e3274-3330-423f-8528-d87d58a409ab",
+          "name": "matches",
+          "type": "array:string",
+          "defaultValue": "null",
+          "persistent": false
+        }
+      ],
+      "name": "Main",
+      "style": "page",
+      "left": 0,
+      "top": 0,
+      "width": 800,
+      "height": 450
+    }
+  ],
+  "styles": [
+    {
+      "objID": "04157789-da53-2f4a-e658-4ca10aa5fbef",
+      "name": "default"
+    },
+    {
+      "objID": "c49c1adf-a610-28c0-027c-0e452dadb32b",
+      "name": "page",
+      "inheritFrom": "",
+      "backgroundColor": "page_color",
+      "css": "\n"
+    }
+  ],
+  "colors": [
+    {
+      "objID": "e6c28e5a-fe7f-09ed-9223-17769968ebea",
+      "name": "page_color"
+    }
+  ],
+  "themes": [
+    {
+      "objID": "a7943c4e-90c6-cf58-2c43-9f24cf4b097c",
+      "name": "default",
+      "colors": [
+        "#f0f0f0"
+      ]
+    }
+  ]
+}

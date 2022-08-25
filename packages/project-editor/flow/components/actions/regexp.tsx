@@ -51,6 +51,10 @@ registerActionComponents("Dashboard Specific", [
                 name: "data",
                 type: "expression",
                 valueType: "string"
+            },
+            {
+                name: "caseInsensitive",
+                type: "boolean"
             }
         ],
         bodyPropertyName: "pattern"

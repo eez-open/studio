@@ -218,13 +218,18 @@ export interface IListComponentProperty extends IComponentPropertyBase {
     defaults: any;
 }
 
+export interface IBooleanComponentProperty extends IComponentPropertyBase {
+    type: "boolean";
+}
+
 export type IComponentProperty =
     | IExpressionComponentProperty
     | IAssignableExpressionComponentProperty
     | ITemplateLiteralComponentProperty
     | IEnumComponentProperty
     | IInlineCodeComponentProperty
-    | IListComponentProperty;
+    | IListComponentProperty
+    | IBooleanComponentProperty;
 
 export type IDisposeComponentState = () => void;
 
@@ -331,6 +336,7 @@ export interface IWasmFlowRuntime {
     _getComponentExecutionState(flowStateIndex: number, componentIndex: number): number;
     _setComponentExecutionState(flowStateIndex: number, componentIndex: number, state: number): void;
 
+    _getUint32Param(flowStateIndex: number, componentIndex: number, offset: number): number;
     _getStringParam(flowStateIndex: number, componentIndex: number, offset: number): number;
     _getExpressionListParam(flowStateIndex: number, componentIndex: number, offset: number): number;
     _freeExpressionListParam(ptr: number);
@@ -379,6 +385,7 @@ export interface IDashboardComponentContext {
     getComponentExecutionState: <T>() => T | undefined;
     setComponentExecutionState: <T>(runningState: T) => void;
 
+    getUint32Param: (offset: number) => number;
     getStringParam: (offset: number) => string;
     getExpressionListParam: (offset: number) => any[];
 

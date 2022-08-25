@@ -1725,15 +1725,15 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  55420: function($0, $1) {freeComponentExecutionState($0, $1);},  
- 55461: function($0, $1, $2, $3, $4) {executeScpi($0, $1, new Uint8Array(Module.HEAPU8.buffer, $2, $3), $4);},  
- 55536: function() {FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; });},  
- 55697: function($0) {startToDebuggerMessage($0);},  
- 55729: function($0, $1, $2) {writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2));},  
- 55804: function($0) {finishToDebuggerMessage($0);},  
- 55837: function($0, $1, $2, $3) {executeDashboardComponent($0, $1, $2, $3);},  
- 55884: function($0, $1) {onArrayValueFree($0, $1);},  
- 55914: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
+  55452: function($0, $1) {freeComponentExecutionState($0, $1);},  
+ 55493: function($0, $1, $2, $3, $4) {executeScpi($0, $1, new Uint8Array(Module.HEAPU8.buffer, $2, $3), $4);},  
+ 55568: function() {FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; });},  
+ 55729: function($0) {startToDebuggerMessage($0);},  
+ 55761: function($0, $1, $2) {writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2));},  
+ 55836: function($0) {finishToDebuggerMessage($0);},  
+ 55869: function($0, $1, $2, $3) {executeDashboardComponent($0, $1, $2, $3);},  
+ 55916: function($0, $1) {onArrayValueFree($0, $1);},  
+ 55946: function() {if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); }}
 };
 
 
@@ -6139,6 +6139,9 @@ var _getComponentExecutionState = Module["_getComponentExecutionState"] = create
 
 /** @type {function(...*):?} */
 var _setComponentExecutionState = Module["_setComponentExecutionState"] = createExportWrapper("setComponentExecutionState");
+
+/** @type {function(...*):?} */
+var _getUint32Param = Module["_getUint32Param"] = createExportWrapper("getUint32Param");
 
 /** @type {function(...*):?} */
 var _getStringParam = Module["_getStringParam"] = createExportWrapper("getStringParam");

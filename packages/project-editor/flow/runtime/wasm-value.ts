@@ -442,3 +442,7 @@ function getStreamID(stream: Stream) {
 function getStreamFromID(streamID: number) {
     return streams[streamID];
 }
+
+export function clarStremIDs() {
+    streamIDs.clear();
+}

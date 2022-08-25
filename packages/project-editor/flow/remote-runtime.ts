@@ -695,6 +695,10 @@ export abstract class DebuggerConnectionBase {
             return `blob (size=${Number.parseInt(str.substring(1))})`;
         }
 
+        if (str[0] == ">") {
+            return `stream (id=${Number.parseInt(str.substring(1))})`;
+        }
+
         function parseFloat(str: string) {
             const buf = Buffer.alloc(8);
 

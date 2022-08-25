@@ -2684,6 +2684,8 @@ button.EezStudio_Action {
     .tree-row {
         display: flex;
 
+        white-space: nowrap;
+
         &.drag-source {
             background-color: @dragSourceBackgroundColor;
             color: @dragSourceColor;
@@ -4622,6 +4624,10 @@ button.EezStudio_Action {
             }
         }
 
+        &.ListWidget {
+            overflow: auto !important;
+        }
+
         &.DropDownListWidget {
             select {
                 display: block;
@@ -5120,10 +5126,6 @@ button.EezStudio_Action {
                         overflow-y: auto;
                     }
                 }
-            }
-
-            &.ListWidget {
-                overflow: auto !important;
             }
         }
 
