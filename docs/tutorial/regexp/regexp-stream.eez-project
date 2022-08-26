@@ -55,8 +55,8 @@
         {
           "objID": "e3624e11-d967-4de9-9bf7-379931f05395",
           "type": "Regexp",
-          "left": 422,
-          "top": -255,
+          "left": 446,
+          "top": -286,
           "width": 172,
           "height": 73,
           "customInputs": [
@@ -91,8 +91,8 @@
         {
           "objID": "5505b55b-3282-4e61-854c-0612c7702619",
           "type": "LogActionComponent",
-          "left": 776,
-          "top": -135,
+          "left": 765,
+          "top": -125,
           "width": 87,
           "height": 55,
           "customInputs": [],
@@ -147,10 +147,10 @@
         {
           "objID": "bcc5d62d-4e93-46f0-ad3b-4fc0e5d4b2b5",
           "type": "TerminalWidget",
-          "left": 52,
-          "top": 104,
-          "width": 240,
-          "height": 240,
+          "left": 0,
+          "top": 32,
+          "width": 800,
+          "height": 507,
           "customInputs": [
             {
               "objID": "2007a757-8a52-4560-c39b-148f7ae9df94",
@@ -169,10 +169,10 @@
         {
           "objID": "497b9c77-e373-4716-9a83-260a00cfe1c5",
           "type": "TerminalWidget",
-          "left": 498,
-          "top": 104,
-          "width": 240,
-          "height": 240,
+          "left": 0,
+          "top": 539,
+          "width": 800,
+          "height": 261,
           "customInputs": [
             {
               "objID": "2007a757-8a52-4560-c39b-148f7ae9df94",
@@ -242,9 +242,9 @@
         {
           "objID": "7c67a12f-83f8-4ba0-fc7a-562009803004",
           "type": "TextWidget",
-          "left": 481,
-          "top": 14,
-          "width": 284,
+          "left": 0,
+          "top": 0,
+          "width": 800,
           "height": 32,
           "customInputs": [
             {
@@ -290,13 +290,6 @@
           "output": "done",
           "target": "5505b55b-3282-4e61-854c-0612c7702619",
           "input": "@seqin"
-        },
-        {
-          "objID": "f18bd364-d2d5-4d72-da5d-6a1af0510170",
-          "source": "e3624e11-d967-4de9-9bf7-379931f05395",
-          "output": "@seqout",
-          "target": "e3624e11-d967-4de9-9bf7-379931f05395",
-          "input": "next"
         },
         {
           "objID": "3726f788-7924-4a8a-be60-94089900bfb9",
@@ -362,18 +355,25 @@
           "input": "value"
         },
         {
-          "objID": "6f09793e-9684-420b-89b1-24b326bf190b",
-          "source": "e3624e11-d967-4de9-9bf7-379931f05395",
-          "output": "match",
-          "target": "7c67a12f-83f8-4ba0-fc7a-562009803004",
-          "input": "data"
-        },
-        {
           "objID": "21064135-e958-4998-fb82-1de2be2405ec",
           "source": "6abc8e40-e30b-4de8-8d0f-ea276bc379be",
           "output": "@seqout",
           "target": "e3624e11-d967-4de9-9bf7-379931f05395",
           "input": "@seqin"
+        },
+        {
+          "objID": "1cfc4c30-cd52-4d5a-96dd-dbacc46e374f",
+          "source": "e267d733-e2b8-42d9-c0ee-7cbe1177c54a",
+          "output": "@seqout",
+          "target": "e3624e11-d967-4de9-9bf7-379931f05395",
+          "input": "next"
+        },
+        {
+          "objID": "0db55ee7-8dcc-4b07-ccd0-5b37b418a687",
+          "source": "e3624e11-d967-4de9-9bf7-379931f05395",
+          "output": "match",
+          "target": "7c67a12f-83f8-4ba0-fc7a-562009803004",
+          "input": "data"
         }
       ],
       "localVariables": [
@@ -404,7 +404,7 @@
       "left": 0,
       "top": 0,
       "width": 800,
-      "height": 450
+      "height": 800
     }
   ],
   "styles": [

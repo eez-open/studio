@@ -30,7 +30,8 @@ import {
     Message,
     propertyInvalidValueMessage,
     propertyNotSetMessage,
-    createObject
+    createObject,
+    isDashboardOrAppletOrFirmwareWithFlowSupportProject
 } from "project-editor/store";
 import type { Project } from "project-editor/project/project";
 import { metrics } from "project-editor/features/variable/metrics";
@@ -471,7 +472,12 @@ export class Variable extends EezObject {
                 messages.push(propertyNotSetMessage(variable, "type"));
             }
 
-            if (variable.type === "any" || variable.type === "array:any") {
+            if (
+                isDashboardOrAppletOrFirmwareWithFlowSupportProject(
+                    projectEditorStore.project
+                ) &&
+                (variable.type === "any" || variable.type === "array:any")
+            ) {
                 messages.push(
                     new Message(MessageType.WARNING, `Any type used`, variable)
                 );

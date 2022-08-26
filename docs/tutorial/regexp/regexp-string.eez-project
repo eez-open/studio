@@ -41,6 +41,7 @@
           "customOutputs": [],
           "pattern": "pattern",
           "data": "text",
+          "global": true,
           "caseInsensitive": true
         },
         {
@@ -313,8 +314,8 @@
           "input": "@seqin"
         },
         {
-          "objID": "53e77afb-0063-4111-9738-b3a0b7605caa",
-          "source": "d17ea157-0128-4494-c0c7-f52c67d0c64a",
+          "objID": "fc0f84b4-89de-4ac6-aed4-2a36c52fcb7b",
+          "source": "6f167a4a-1e48-4d3b-885a-9d6652f5bb4f",
           "output": "@seqout",
           "target": "d17ea157-0128-4494-c0c7-f52c67d0c64a",
           "input": "next"

@@ -39,7 +39,9 @@ class ExtensionsCatalog {
                 runInAction(() => (this.catalog = catalog));
             })
             .catch(error =>
-                notification.error(`Failed to load catalog (${error})`)
+                notification.error(
+                    `Failed to load extensions catalog (${error})`
+                )
             );
 
         this.loadCatalogVersion()
@@ -125,7 +127,8 @@ class ExtensionsCatalog {
                 return false;
             }
         } catch (error) {
-            notification.error(`Failed to download catalog version (${error})`);
+            console.error(error);
+            notification.error(`Failed to download extensions catalog version`);
         }
 
         return true;
@@ -150,7 +153,10 @@ class ExtensionsCatalog {
             });
 
             req.addEventListener("error", error => {
-                console.error("Failed to download catalog-version.json", error);
+                console.error(
+                    "Failed to download catalog-version.json for extensions",
+                    error
+                );
                 reject(error);
             });
 
@@ -163,16 +169,19 @@ class ExtensionsCatalog {
         req.responseType = "arraybuffer";
         req.open("GET", DEFAULT_EXTENSIONS_CATALOG_DOWNLOAD_URL);
 
-        const progressToastId = notification.info("Downloading catalog ...", {
-            autoClose: false,
-            hideProgressBar: false
-        });
+        const progressToastId = notification.info(
+            "Downloading extensions catalog ...",
+            {
+                autoClose: false,
+                hideProgressBar: false
+            }
+        );
 
         req.addEventListener("progress", event => {
             notification.update(progressToastId, {
                 render: event.total
-                    ? `Downloading catalog: ${event.loaded} of ${event.total}`
-                    : `Downloading catalog: ${event.loaded}`
+                    ? `Downloading extensions catalog: ${event.loaded} of ${event.total}`
+                    : `Downloading extensions catalog: ${event.loaded}`
             });
         });
 
@@ -189,7 +198,7 @@ class ExtensionsCatalog {
 
             notification.update(progressToastId, {
                 type: notification.SUCCESS,
-                render: `The latest catalog successfully downloaded.`,
+                render: `The latest extensions catalog successfully downloaded.`,
                 autoClose: 5000
             });
         });
@@ -198,7 +207,7 @@ class ExtensionsCatalog {
             console.error("ExtensionsCatalog download error", error);
             notification.update(progressToastId, {
                 type: notification.ERROR,
-                render: `Failed to download catalog.`,
+                render: `Failed to download extensions catalog.`,
                 autoClose: 5000
             });
         });

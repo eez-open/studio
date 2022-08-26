@@ -53,10 +53,26 @@ registerActionComponents("Dashboard Specific", [
                 valueType: "string"
             },
             {
+                name: "global",
+                type: "boolean"
+            },
+            {
                 name: "caseInsensitive",
                 type: "boolean"
             }
         ],
-        bodyPropertyName: "pattern"
+        bodyPropertyName: "pattern",
+        defaults: {
+            global: true,
+            caseInsensitive: false
+        },
+        migrateProperties: component => {
+            if (component.global == undefined) {
+                component.global = true;
+            }
+            if (component.caseInsensitive == undefined) {
+                component.caseInsensitive = false;
+            }
+        }
     }
 ]);

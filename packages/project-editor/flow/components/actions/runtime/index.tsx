@@ -587,36 +587,25 @@ registerExecuteFunction(
                 return;
             }
 
-            const caseInsensitive = context.getUint32Param(0) ? true : false;
+            const global = context.getUint32Param(0) ? true : false;
+            const caseInsensitive = context.getUint32Param(4) ? true : false;
 
             const re = new RegExp(
                 patternValue,
-                "gm" + (caseInsensitive ? "i" : "")
+                "m" + (global ? "g" : "") + (caseInsensitive ? "i" : "")
             );
 
             const dataValue: any = context.evalProperty("data");
             if (typeof dataValue == "string") {
-                let m: RegExpExecArray | null;
-
-                while ((m = re.exec(dataValue)) !== null) {
-                    // This is necessary to avoid infinite loops with zero-width matches
-                    if (m.index === re.lastIndex) {
-                        re.lastIndex++;
-                    }
-
-                    context.propagateValue("match", m);
-                }
-
-                context.propagateValue("done", null);
-            } else if (
-                dataValue instanceof Readable ||
-                dataValue instanceof Duplex
-            ) {
                 context.setComponentExecutionState(
-                    new RegexpExecutionState(context, re, dataValue)
+                    new RegexpExecutionStateForString(context, re, dataValue)
+                );
+            } else if (dataValue instanceof Readable) {
+                context.setComponentExecutionState(
+                    new RegexpExecutionStateForStream(context, re, dataValue)
                 );
             } else {
-                context.throwError("data is not a string or stream");
+                context.throwError("data is not a string or readable stream");
             }
         } else {
             runningState.getNext();
@@ -624,7 +613,42 @@ registerExecuteFunction(
     }
 );
 
-class RegexpExecutionState {
+abstract class RegexpExecutionState {
+    abstract getNext(): void;
+}
+
+class RegexpExecutionStateForString extends RegexpExecutionState {
+    constructor(
+        private context: IDashboardComponentContext,
+        private re: RegExp,
+        private text: string
+    ) {
+        super();
+
+        this.getNext();
+    }
+
+    getNext() {
+        let m: RegExpExecArray | null;
+
+        if ((m = this.re.exec(this.text)) !== null) {
+            // This is necessary to avoid infinite loops with zero-width matches
+            if (m.index === this.re.lastIndex) {
+                this.re.lastIndex++;
+            }
+
+            this.context.propagateValue("match", m);
+
+            if (this.re.global) {
+                return;
+            }
+        }
+
+        this.context.propagateValue("done", null);
+    }
+}
+
+class RegexpExecutionStateForStream extends RegexpExecutionState {
     private propagate = true;
     private isDone = false;
     private matches: RegExpMatchArray[] = [];
@@ -632,8 +656,10 @@ class RegexpExecutionState {
     constructor(
         private context: IDashboardComponentContext,
         re: RegExp,
-        dataValue: Readable
+        stream: Readable
     ) {
+        super();
+
         const streamSnitch = new StreamSnitch(
             re,
             (m: RegExpMatchArray) => {
@@ -653,9 +679,8 @@ class RegexpExecutionState {
                 this.isDone = true;
             }
         );
-
-        dataValue.pipe(streamSnitch);
-        dataValue.on("close", () => {
+        stream.pipe(streamSnitch);
+        stream.on("close", () => {
             streamSnitch.destroy();
         });
     }
