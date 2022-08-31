@@ -51,6 +51,7 @@ export const basicTypeNames = [
     "string",
     "date",
     "blob",
+    "stream",
     "any"
 ];
 

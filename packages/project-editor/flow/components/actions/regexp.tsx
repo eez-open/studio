@@ -2,7 +2,10 @@ import React from "react";
 
 import { registerActionComponents } from "project-editor/flow/component";
 
-import { ValueType } from "project-editor/features/variable/value-type";
+import {
+    registerSystemStructure,
+    ValueType
+} from "project-editor/features/variable/value-type";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -13,6 +16,27 @@ const regexpIcon: any = (
 );
 
 const componentHeaderColor = "#E0BBE4";
+
+const REGEXP_RESULT_STRUCT_NAME = "$RegExpResult";
+
+registerSystemStructure({
+    name: REGEXP_RESULT_STRUCT_NAME,
+    fields: [
+        {
+            name: "index",
+            type: "integer"
+        },
+        {
+            name: "texts",
+            type: "array:string"
+        },
+        {
+            name: "indices",
+            type: "array:array:integer"
+        }
+    ],
+    fieldsMap: new Map()
+});
 
 registerActionComponents("Dashboard Specific", [
     {
@@ -30,7 +54,7 @@ registerActionComponents("Dashboard Specific", [
         outputs: [
             {
                 name: "match",
-                type: "array:string",
+                type: `struct:${REGEXP_RESULT_STRUCT_NAME}`,
                 isSequenceOutput: false,
                 isOptionalOutput: false
             },
@@ -48,30 +72,29 @@ registerActionComponents("Dashboard Specific", [
                 valueType: "string"
             },
             {
-                name: "data",
+                name: "text",
                 type: "expression",
                 valueType: "string"
             },
             {
                 name: "global",
-                type: "boolean"
+                type: "expression",
+                valueType: "boolean"
             },
             {
                 name: "caseInsensitive",
-                type: "boolean"
+                type: "expression",
+                valueType: "boolean"
             }
         ],
         bodyPropertyName: "pattern",
         defaults: {
-            global: true,
-            caseInsensitive: false
+            global: "true",
+            caseInsensitive: "false"
         },
         migrateProperties: component => {
-            if (component.global == undefined) {
-                component.global = true;
-            }
-            if (component.caseInsensitive == undefined) {
-                component.caseInsensitive = false;
+            if (component.text == undefined) {
+                component.text = component.data;
             }
         }
     }

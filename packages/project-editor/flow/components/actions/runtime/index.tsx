@@ -577,8 +577,17 @@ registerExecuteFunction(
 registerExecuteFunction(
     "Regexp",
     function (context: IDashboardComponentContext) {
-        const runningState =
-            context.getComponentExecutionState<RegexpExecutionState>();
+        let runningState: RegexpExecutionState | undefined;
+        if (context.getInputValue("@seqin") !== undefined) {
+            context.setComponentExecutionState(undefined);
+            runningState = undefined;
+        } else {
+            runningState =
+                context.getComponentExecutionState<RegexpExecutionState>();
+            if (!runningState) {
+                context.throwError("Never started");
+            }
+        }
 
         if (!runningState) {
             const patternValue: any = context.evalProperty("pattern");
@@ -587,25 +596,35 @@ registerExecuteFunction(
                 return;
             }
 
-            const global = context.getUint32Param(0) ? true : false;
-            const caseInsensitive = context.getUint32Param(4) ? true : false;
+            const global: any = context.evalProperty("global");
+            if (typeof global != "boolean") {
+                context.throwError("Global is not a boolean");
+                return;
+            }
+
+            const caseInsensitive: any =
+                context.evalProperty("caseInsensitive");
+            if (typeof caseInsensitive != "boolean") {
+                context.throwError("Case insensitive is not a boolean");
+                return;
+            }
 
             const re = new RegExp(
                 patternValue,
-                "m" + (global ? "g" : "") + (caseInsensitive ? "i" : "")
+                "md" + (global ? "g" : "") + (caseInsensitive ? "i" : "")
             );
 
-            const dataValue: any = context.evalProperty("data");
-            if (typeof dataValue == "string") {
+            const textValue: any = context.evalProperty("text");
+            if (typeof textValue == "string") {
                 context.setComponentExecutionState(
-                    new RegexpExecutionStateForString(context, re, dataValue)
+                    new RegexpExecutionStateForString(context, re, textValue)
                 );
-            } else if (dataValue instanceof Readable) {
+            } else if (textValue instanceof Readable) {
                 context.setComponentExecutionState(
-                    new RegexpExecutionStateForStream(context, re, dataValue)
+                    new RegexpExecutionStateForStream(context, re, textValue)
                 );
             } else {
-                context.throwError("data is not a string or readable stream");
+                context.throwError("text is not a string or readable stream");
             }
         } else {
             runningState.getNext();
@@ -617,7 +636,17 @@ abstract class RegexpExecutionState {
     abstract getNext(): void;
 }
 
+function getMatchStruct(m: RegExpExecArray) {
+    return {
+        index: m.index,
+        texts: m.map(x => x),
+        indices: (m as any).indices.map((a: any) => a.map((x: any) => x))
+    };
+}
+
 class RegexpExecutionStateForString extends RegexpExecutionState {
+    done: boolean = false;
+
     constructor(
         private context: IDashboardComponentContext,
         private re: RegExp,
@@ -631,27 +660,28 @@ class RegexpExecutionStateForString extends RegexpExecutionState {
     getNext() {
         let m: RegExpExecArray | null;
 
-        if ((m = this.re.exec(this.text)) !== null) {
+        if (!this.done && (m = this.re.exec(this.text)) !== null) {
             // This is necessary to avoid infinite loops with zero-width matches
             if (m.index === this.re.lastIndex) {
                 this.re.lastIndex++;
             }
 
-            this.context.propagateValue("match", m);
+            this.context.propagateValue("match", getMatchStruct(m));
 
-            if (this.re.global) {
-                return;
+            if (!this.re.global) {
+                this.done = true;
             }
+        } else {
+            this.context.propagateValue("done", null);
+            this.context.setComponentExecutionState(undefined);
         }
-
-        this.context.propagateValue("done", null);
     }
 }
 
 class RegexpExecutionStateForStream extends RegexpExecutionState {
     private propagate = true;
     private isDone = false;
-    private matches: RegExpMatchArray[] = [];
+    private matches: RegExpExecArray[] = [];
 
     constructor(
         private context: IDashboardComponentContext,
@@ -662,9 +692,9 @@ class RegexpExecutionStateForStream extends RegexpExecutionState {
 
         const streamSnitch = new StreamSnitch(
             re,
-            (m: RegExpMatchArray) => {
+            (m: RegExpExecArray) => {
                 if (this.propagate) {
-                    context.propagateValue("match", m);
+                    this.context.propagateValue("match", getMatchStruct(m));
                     this.propagate = false;
                 } else {
                     this.matches.push(m);
@@ -687,7 +717,8 @@ class RegexpExecutionStateForStream extends RegexpExecutionState {
 
     getNext() {
         if (this.matches.length > 0) {
-            this.context.propagateValue("match", this.matches.shift());
+            const m = this.matches.shift();
+            this.context.propagateValue("match", getMatchStruct(m!));
         } else if (this.isDone) {
             this.context.propagateValue("done", null);
             this.context.setComponentExecutionState(undefined);

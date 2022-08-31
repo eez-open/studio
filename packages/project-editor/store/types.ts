@@ -86,6 +86,8 @@ export class TypesStore {
             allValueTypes.push(`array:${basicTypeName}`);
         });
 
+        allValueTypes.push(`array:array:integer`);
+
         this.projectEditorStore.project.variables.structsMap.forEach(
             structure => {
                 allValueTypes.push(`struct:${structure.name}`);

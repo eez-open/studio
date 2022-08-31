@@ -45,54 +45,55 @@
           "type": "ExecuteCommand",
           "left": -89,
           "top": -366,
-          "width": 150,
+          "width": 285,
           "height": 92,
           "customInputs": [],
           "customOutputs": [],
-          "command": "\"cmd.exe\"",
-          "arguments": "[\"/c\", \"dir\"]"
+          "command": "\"python\"",
+          "arguments": "[System.ProjectFolder + \"/test.py\"]"
         },
         {
           "objID": "e3624e11-d967-4de9-9bf7-379931f05395",
           "type": "Regexp",
           "left": 446,
           "top": -286,
-          "width": 172,
+          "width": 116,
           "height": 73,
           "customInputs": [
             {
               "objID": "a7c6c94d-acc0-41d4-e862-d50d0c8c0fe9",
               "name": "data",
-              "type": "string"
+              "type": "stream"
             }
           ],
           "customOutputs": [],
-          "pattern": "\"29.05.2022\"",
-          "data": "data",
-          "caseInsensitive": true
+          "pattern": "\"5\"",
+          "text": "data",
+          "global": "true",
+          "caseInsensitive": "true"
         },
         {
           "objID": "e267d733-e2b8-42d9-c0ee-7cbe1177c54a",
           "type": "LogActionComponent",
-          "left": 718,
-          "top": -237,
-          "width": 180,
+          "left": 680,
+          "top": -286,
+          "width": 217,
           "height": 55,
           "customInputs": [
             {
               "objID": "9b0beeb6-3e0c-41b3-8a0b-86b9c7dc1fe4",
               "name": "value",
-              "type": "array:string"
+              "type": "struct:$RegExpResult"
             }
           ],
           "customOutputs": [],
-          "value": "\"Match: \" + value[0]"
+          "value": "\"Match: \" + value.texts[0]"
         },
         {
           "objID": "5505b55b-3282-4e61-854c-0612c7702619",
           "type": "LogActionComponent",
-          "left": 765,
-          "top": -125,
+          "left": 742,
+          "top": -213,
           "width": 87,
           "height": 55,
           "customInputs": [],
@@ -111,40 +112,6 @@
           "value": "\"Finished\""
         },
         {
-          "objID": "2a0d1b89-ea51-45f8-f781-73044fce1713",
-          "type": "LogActionComponent",
-          "left": 522,
-          "top": -467,
-          "width": 168,
-          "height": 55,
-          "customInputs": [
-            {
-              "objID": "44362926-c044-4813-8bd1-65576e1bf056",
-              "name": "value",
-              "type": "string"
-            }
-          ],
-          "customOutputs": [],
-          "value": "\"stdout: \" + value"
-        },
-        {
-          "objID": "3ee62818-6cfc-4921-de3e-555cc776ea1d",
-          "type": "LogActionComponent",
-          "left": 560,
-          "top": -374,
-          "width": 168,
-          "height": 55,
-          "customInputs": [
-            {
-              "objID": "44362926-c044-4813-8bd1-65576e1bf056",
-              "name": "value",
-              "type": "string"
-            }
-          ],
-          "customOutputs": [],
-          "value": "\"stderr: \" + value"
-        },
-        {
           "objID": "bcc5d62d-4e93-46f0-ad3b-4fc0e5d4b2b5",
           "type": "TerminalWidget",
           "left": 0,
@@ -155,7 +122,7 @@
             {
               "objID": "2007a757-8a52-4560-c39b-148f7ae9df94",
               "name": "data",
-              "type": "string"
+              "type": "stream"
             }
           ],
           "customOutputs": [],
@@ -177,7 +144,7 @@
             {
               "objID": "2007a757-8a52-4560-c39b-148f7ae9df94",
               "name": "data",
-              "type": "string"
+              "type": "stream"
             }
           ],
           "customOutputs": [],
@@ -216,7 +183,7 @@
             {
               "objID": "dc030261-1ac8-4320-9e64-356cdad3554d",
               "name": "stream",
-              "type": "any"
+              "type": "stream"
             }
           ],
           "customOutputs": [],
@@ -250,11 +217,11 @@
             {
               "objID": "f871d19a-15f7-4d09-bc27-c763e3d6e36a",
               "name": "data",
-              "type": "array:string"
+              "type": "struct:$RegExpResult"
             }
           ],
           "customOutputs": [],
-          "data": "data[0]",
+          "data": "data.texts[0]",
           "style": {
             "objID": "8f1998e3-3a66-4a15-cada-5781036eec21",
             "inheritFrom": "default"
@@ -297,20 +264,6 @@
           "output": "finished",
           "target": "db136ecd-26d6-43db-ea32-13ec11579b86",
           "input": "@seqin"
-        },
-        {
-          "objID": "65e32a8c-673b-4263-d042-5279f90107e7",
-          "source": "6abc8e40-e30b-4de8-8d0f-ea276bc379be",
-          "output": "stdout",
-          "target": "2a0d1b89-ea51-45f8-f781-73044fce1713",
-          "input": "value"
-        },
-        {
-          "objID": "b8db7f8a-aa86-42ba-945b-1ba13048c68a",
-          "source": "6abc8e40-e30b-4de8-8d0f-ea276bc379be",
-          "output": "stderr",
-          "target": "3ee62818-6cfc-4921-de3e-555cc776ea1d",
-          "input": "value"
         },
         {
           "objID": "9fb7f0dc-60dc-4d49-9528-ff120bcc9aad",

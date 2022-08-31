@@ -30,13 +30,13 @@ registerActionComponents("Dashboard Specific", [
         outputs: [
             {
                 name: "stdout",
-                type: "string",
+                type: "stream",
                 isSequenceOutput: false,
                 isOptionalOutput: true
             },
             {
                 name: "stderr",
-                type: "string",
+                type: "stream",
                 isSequenceOutput: false,
                 isOptionalOutput: true
             },

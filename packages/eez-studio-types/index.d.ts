@@ -22,6 +22,7 @@ export type ValueType =
     | `struct:${string}`
     | `dynamic:${string}`
     | `array:${BasicType}`
+    | `array:array:${BasicType}`
     | `array:object:${string}`
     | `array:struct:${string}`
     | `array:enum:${string}`
