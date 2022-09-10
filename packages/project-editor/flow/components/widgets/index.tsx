@@ -17,7 +17,10 @@ import {
     getParent,
     PropertyProps,
     MessageType,
-    getId
+    getId,
+    EezObject,
+    ClassInfo,
+    RectObject
 } from "project-editor/core/object";
 import {
     ProjectEditorStore,
@@ -29,7 +32,8 @@ import {
     propertyNotFoundMessage,
     propertyNotSetMessage,
     propertySetButNotUsedMessage,
-    createObject
+    createObject,
+    getChildOfObject
 } from "project-editor/store";
 import { getDocumentStore, IContextMenuContext } from "project-editor/store";
 
@@ -134,9 +138,14 @@ import {
     WIDGET_TYPE_ROLLER,
     WIDGET_TYPE_SWITCH,
     WIDGET_TYPE_SLIDER,
-    WIDGET_TYPE_DROP_DOWN_LIST
+    WIDGET_TYPE_DROP_DOWN_LIST,
+    WIDGET_TYPE_LINE_CHART
 } from "project-editor/flow/components/component_types";
-import { evalConstantExpression } from "project-editor/flow/expression";
+import {
+    buildExpression,
+    checkExpression,
+    evalConstantExpression
+} from "project-editor/flow/expression";
 import { remap } from "eez-studio-shared/util";
 import { roundNumber } from "eez-studio-shared/roundNumber";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -154,6 +163,7 @@ import {
     getNumberValue,
     getAnyValue
 } from "project-editor/flow/helper";
+import { GAUGE_ICON, LINE_CHART_ICON } from "./icons";
 
 const LIST_TYPE_VERTICAL = 1;
 const LIST_TYPE_HORIZONTAL = 2;
@@ -2942,8 +2952,11 @@ export class ButtonWidget extends Widget {
                 }
             }),
             makeTextPropertyInfo("text", {
-                hideInPropertyGrid:
-                    isDashboardOrAppletOrFirmwareWithFlowSupportProject
+                hideInPropertyGrid: (object: IEezObject) => {
+                    return isDashboardOrAppletOrFirmwareWithFlowSupportProject(
+                        object
+                    );
+                }
             }),
             makeDataPropertyInfo("enabled"),
             makeStylePropertyInfo("disabledStyle")
@@ -4752,6 +4765,862 @@ registerClass("CanvasWidget", CanvasWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class LineChartLine extends EezObject {
+    label: string;
+    color: string;
+    value: string;
+
+    static classInfo: ClassInfo = {
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "label",
+                    type: PropertyType.MultilineText
+                },
+                "string"
+            ),
+            {
+                name: "color",
+                type: PropertyType.Color,
+                propertyGridGroup: specificGroup
+            },
+            makeExpressionProperty(
+                {
+                    name: "value",
+                    type: PropertyType.MultilineText
+                },
+                "double"
+            )
+        ],
+        check: (lineChartTrace: LineChartLine) => {
+            let messages: Message[] = [];
+
+            try {
+                checkExpression(
+                    getParent(
+                        getParent(lineChartTrace)!
+                    )! as LineChartEmbeddedWidget,
+                    lineChartTrace.label
+                );
+            } catch (err) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Invalid expression: ${err}`,
+                        getChildOfObject(lineChartTrace, "label")
+                    )
+                );
+            }
+
+            try {
+                checkExpression(
+                    getParent(
+                        getParent(lineChartTrace)!
+                    )! as LineChartEmbeddedWidget,
+                    lineChartTrace.value
+                );
+            } catch (err) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Invalid expression: ${err}`,
+                        getChildOfObject(lineChartTrace, "value")
+                    )
+                );
+            }
+
+            return messages;
+        },
+        defaultValue: {
+            color: "#333333"
+        }
+    };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            label: observable,
+            color: observable,
+            value: observable
+        });
+    }
+}
+
+export class LineChartEmbeddedWidget extends Widget {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        flowComponentId: WIDGET_TYPE_LINE_CHART,
+
+        properties: [
+            Object.assign(makeDataPropertyInfo("data"), {
+                hideInPropertyGrid: true
+            }),
+            makeExpressionProperty(
+                {
+                    name: "xValue",
+                    displayName: "X value",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "any"
+            ),
+            {
+                name: "lines",
+                type: PropertyType.Array,
+                typeClass: LineChartLine,
+                propertyGridGroup: specificGroup,
+                partOfNavigation: false,
+                enumerable: false,
+                defaultValue: []
+            },
+            makeDataPropertyInfo("title", {}, "string"),
+            makeDataPropertyInfo("showLegend", {}, "boolean"),
+            {
+                name: "yAxisRangeOption",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "floating",
+                        label: "Floating"
+                    },
+                    {
+                        id: "fixed",
+                        label: "Fixed"
+                    }
+                ],
+                propertyGridGroup: specificGroup
+            },
+            makeDataPropertyInfo(
+                "yAxisRangeFrom",
+                {
+                    hideInPropertyGrid: (widget: LineChartEmbeddedWidget) =>
+                        widget.yAxisRangeOption != "fixed"
+                },
+                "double"
+            ),
+            makeDataPropertyInfo(
+                "yAxisRangeTo",
+                {
+                    hideInPropertyGrid: (widget: LineChartEmbeddedWidget) =>
+                        widget.yAxisRangeOption != "fixed"
+                },
+                "double"
+            ),
+            {
+                name: "maxPoints",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "margin",
+                type: PropertyType.Object,
+                typeClass: RectObject,
+                propertyGridGroup: specificGroup,
+                enumerable: false
+            },
+            makeStylePropertyInfo("legendStyle"),
+            makeStylePropertyInfo("xAxisStyle"),
+            makeStylePropertyInfo("yAxisStyle")
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 320,
+            height: 160,
+            xValue: "Date.now()",
+            lines: [],
+            title: "",
+            showLegend: "true",
+            yAxisRangeOption: "floating",
+            yAxisRangeFrom: 0,
+            yAxisRangeTo: 10,
+            maxPoints: 40,
+            minRange: 0,
+            maxRange: 1,
+            margin: {
+                top: 50,
+                right: 0,
+                bottom: 50,
+                left: 50
+            },
+            customInputs: [
+                {
+                    name: "value",
+                    type: "any"
+                }
+            ],
+            legendStyle: {
+                inheritFrom: "default"
+            },
+            xAxisStyle: {
+                inheritFrom: "default"
+            },
+            yAxisStyle: {
+                inheritFrom: "default",
+                alignHorizontal: "right"
+            }
+        },
+
+        icon: LINE_CHART_ICON,
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
+    });
+
+    xValue: string;
+    lines: LineChartLine[];
+    title: string;
+    showLegend: string;
+    yAxisRangeOption: "floating" | "fixed";
+    yAxisRangeFrom: string;
+    yAxisRangeTo: string;
+    maxPoints: number;
+    margin: RectObject;
+
+    legendStyle: Style;
+    xAxisStyle: Style;
+    yAxisStyle: Style;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            xValue: observable,
+            lines: observable,
+            title: observable,
+            showLegend: observable,
+            yAxisRangeOption: observable,
+            yAxisRangeFrom: observable,
+            yAxisRangeTo: observable,
+            maxPoints: observable,
+            margin: observable,
+            legendStyle: observable,
+            xAxisStyle: observable,
+            yAxisStyle: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "reset",
+                type: "any" as ValueType,
+                isSequenceInput: false,
+                isOptionalInput: true
+            }
+        ];
+    }
+
+    getTitle(flowContext: IFlowContext) {
+        if (!this.title) {
+            return undefined;
+        }
+
+        if (
+            flowContext.projectEditorStore.project.isDashboardProject ||
+            flowContext.projectEditorStore.project.isAppletProject ||
+            flowContext.projectEditorStore.project
+                .isFirmwareWithFlowSupportProject
+        ) {
+            return evalProperty(flowContext, this, "title");
+        }
+
+        return this.title;
+    }
+
+    render(flowContext: IFlowContext, width: number, height: number) {
+        return (
+            <>
+                <ComponentCanvas
+                    width={width}
+                    height={height}
+                    component={this}
+                    draw={(ctx: CanvasRenderingContext2D) => {
+                        interface Axis {
+                            position: "x" | "y";
+                            type: "date" | "number";
+
+                            rect: {
+                                x: number;
+                                y: number;
+                                w: number;
+                                h: number;
+                            };
+
+                            min: number;
+                            max: number;
+
+                            offset: number;
+                            scale: number;
+
+                            ticksDelta: number;
+                        }
+
+                        function calcAutoTicks(axis: Axis) {
+                            const pxStart =
+                                axis.position == "x"
+                                    ? axis.rect.x
+                                    : axis.rect.y + axis.rect.h;
+                            const pxRange =
+                                axis.position == "x"
+                                    ? axis.rect.w
+                                    : -axis.rect.h;
+
+                            let range = axis.max - axis.min;
+
+                            const min = axis.min - 0.1 * range;
+                            const max = axis.max + 0.1 * range;
+
+                            range = max - min;
+
+                            axis.scale = pxRange / range;
+                            axis.offset = pxStart - min * axis.scale;
+
+                            const MAX_TICKS = 8;
+
+                            const x = range / MAX_TICKS;
+                            const exp = Math.floor(Math.log10(x));
+                            const nx = x * Math.pow(10, -exp);
+                            const ndelta = nx < 2 ? 2 : nx < 5 ? 5 : 10;
+                            const delta = ndelta * Math.pow(10, exp);
+                            axis.ticksDelta = delta;
+                        }
+
+                        const drawTitle = (
+                            x: number,
+                            y: number,
+                            w: number,
+                            h: number
+                        ) => {
+                            const title = this.getTitle(flowContext);
+                            if (title) {
+                                drawText(
+                                    ctx,
+                                    title,
+                                    x,
+                                    y,
+                                    w,
+                                    h,
+                                    this.style,
+                                    false
+                                );
+                            }
+                        };
+
+                        const LEGEND_ICON_WIDTH = 32;
+
+                        const measLegendWidth = () => {
+                            if (!showLegend) {
+                                return { legendWidth: 0, legendLineHeight: 0 };
+                            }
+
+                            const legendFont = styleGetFont(this.legendStyle);
+                            if (!legendFont) {
+                                return { legendWidth: 0, legendLineHeight: 0 };
+                            }
+
+                            let maxWidth = 0;
+
+                            for (let i = 0; i < this.lines.length; i++) {
+                                chart.legendLabels.push(`Trace ${i}`);
+
+                                const width = draw.measureStr(
+                                    chart.legendLabels[i],
+                                    legendFont,
+                                    widgetRect.w - LEGEND_ICON_WIDTH
+                                );
+                                if (width > maxWidth) {
+                                    maxWidth = width;
+                                }
+                            }
+
+                            return {
+                                legendWidth: LEGEND_ICON_WIDTH + maxWidth,
+                                legendLineHeight: legendFont.height
+                            };
+                        };
+
+                        const drawLegend = (
+                            x: number,
+                            y: number,
+                            w: number,
+                            h: number
+                        ) => {
+                            const legendFont = styleGetFont(this.legendStyle);
+                            if (!legendFont) {
+                                return;
+                            }
+
+                            y += 0.5;
+                            x = x + w - legendWidth;
+
+                            for (let i = 0; i < this.lines.length; i++) {
+                                const line = this.lines[i];
+
+                                if (
+                                    y + legendLineHeight >
+                                    gridRect.y + gridRect.h
+                                ) {
+                                    break;
+                                }
+
+                                draw.setColor(line.color);
+
+                                draw.fillRect(
+                                    ctx,
+                                    x,
+                                    y + (legendLineHeight - 2) / 2,
+                                    x + LEGEND_ICON_WIDTH - 4,
+                                    y + (legendLineHeight - 2) / 2 + 2
+                                );
+
+                                draw.fillCircle(
+                                    ctx,
+                                    x + (LEGEND_ICON_WIDTH - 4) / 2,
+                                    y + legendLineHeight / 2,
+                                    3
+                                );
+
+                                draw.drawText(
+                                    ctx,
+                                    chart.legendLabels[i],
+                                    x + LEGEND_ICON_WIDTH,
+                                    y,
+                                    legendWidth - LEGEND_ICON_WIDTH,
+                                    legendLineHeight,
+                                    this.legendStyle,
+                                    false
+                                );
+
+                                y += legendLineHeight;
+                            }
+                        };
+
+                        const drawXAxis = (axis: Axis) => {
+                            const from =
+                                Math.ceil(axis.min / axis.ticksDelta) *
+                                axis.ticksDelta;
+                            const to =
+                                Math.floor(axis.max / axis.ticksDelta) *
+                                axis.ticksDelta;
+
+                            const w = axis.ticksDelta * axis.scale;
+
+                            for (let i = 0; ; i++) {
+                                const tick = from + i * axis.ticksDelta;
+                                if (tick > to) break;
+
+                                const x = axis.offset + tick * axis.scale;
+
+                                draw.drawText(
+                                    ctx,
+                                    tick.toString(),
+                                    x - w / 2,
+                                    axis.rect.y,
+                                    w,
+                                    axis.rect.h,
+                                    this.xAxisStyle,
+                                    false
+                                );
+                            }
+                        };
+
+                        const drawYAxis = (axis: Axis) => {
+                            const from =
+                                Math.ceil(axis.min / axis.ticksDelta) *
+                                axis.ticksDelta;
+                            const to =
+                                Math.floor(axis.max / axis.ticksDelta) *
+                                axis.ticksDelta;
+
+                            const h = Math.abs(axis.ticksDelta * axis.scale);
+
+                            for (let i = 0; ; i++) {
+                                const tick = from + i * axis.ticksDelta;
+                                if (tick > to) break;
+
+                                const y = axis.offset + tick * axis.scale;
+
+                                draw.drawText(
+                                    ctx,
+                                    tick.toString(),
+                                    axis.rect.x,
+                                    y - h / 2,
+                                    axis.rect.w,
+                                    h,
+                                    this.yAxisStyle,
+                                    false
+                                );
+                            }
+                        };
+
+                        const drawGrid = () => {
+                            const drawVerticalGrid = (
+                                y: number,
+                                h: number,
+                                axis: Axis
+                            ) => {
+                                const from =
+                                    Math.ceil(axis.min / axis.ticksDelta) *
+                                    axis.ticksDelta;
+                                const to =
+                                    Math.floor(axis.max / axis.ticksDelta) *
+                                    axis.ticksDelta;
+
+                                for (let i = 0; ; i++) {
+                                    const tick = from + i * axis.ticksDelta;
+                                    if (tick > to) break;
+
+                                    const x = axis.offset + tick * axis.scale;
+
+                                    draw.drawVLine(ctx, x, y, h);
+                                }
+                            };
+
+                            const drawHorizontalGrid = (
+                                x: number,
+                                w: number,
+                                axis: Axis
+                            ) => {
+                                const from =
+                                    Math.ceil(axis.min / axis.ticksDelta) *
+                                    axis.ticksDelta;
+                                const to =
+                                    Math.floor(axis.max / axis.ticksDelta) *
+                                    axis.ticksDelta;
+
+                                for (let i = 0; ; i++) {
+                                    const tick = from + i * axis.ticksDelta;
+                                    if (tick > to) break;
+
+                                    const y = axis.offset + tick * axis.scale;
+
+                                    draw.drawHLine(ctx, x, y, w);
+                                }
+                            };
+
+                            draw.setColor(this.style.borderColorProperty);
+
+                            drawVerticalGrid(
+                                gridRect.y,
+                                gridRect.h,
+                                chart.xAxis
+                            );
+
+                            drawHorizontalGrid(
+                                gridRect.x,
+                                gridRect.w,
+                                chart.yAxis
+                            );
+                        };
+
+                        const drawLines = () => {
+                            ctx.beginPath();
+                            ctx.rect(
+                                gridRect.x,
+                                gridRect.y,
+                                gridRect.w,
+                                gridRect.h
+                            );
+                            ctx.clip();
+
+                            for (
+                                let lineIndex = 0;
+                                lineIndex < this.lines.length;
+                                lineIndex++
+                            ) {
+                                const line = this.lines[lineIndex];
+
+                                ctx.beginPath();
+                                ctx.moveTo(
+                                    chart.xAxis.offset +
+                                        chart.x[0] * chart.xAxis.scale,
+                                    chart.yAxis.offset +
+                                        chart.lines[lineIndex].y[0] *
+                                            chart.yAxis.scale
+                                );
+
+                                for (
+                                    let pointIndex = 1;
+                                    pointIndex < this.xValue.length - 1;
+                                    pointIndex++
+                                ) {
+                                    ctx.lineTo(
+                                        chart.xAxis.offset +
+                                            chart.x[pointIndex] *
+                                                chart.xAxis.scale,
+                                        chart.yAxis.offset +
+                                            chart.lines[lineIndex].y[
+                                                pointIndex
+                                            ] *
+                                                chart.yAxis.scale
+                                    );
+                                }
+
+                                ctx.strokeStyle = line.color;
+                                ctx.lineWidth = 1.5;
+                                ctx.stroke();
+                            }
+                        };
+
+                        const chart: {
+                            legendLabels: string[];
+                            xAxis: Axis;
+                            yAxis: Axis;
+                            x: number[];
+                            lines: {
+                                y: number[];
+                            }[];
+                        } = {
+                            legendLabels: [],
+                            xAxis: {
+                                position: "x",
+                                type: "number",
+                                rect: { x: 0, y: 0, w: 0, h: 0 },
+                                min: 0,
+                                max: 0,
+                                offset: 0,
+                                scale: 1.0,
+                                ticksDelta: 0
+                            },
+                            yAxis: {
+                                position: "y",
+                                type: "number",
+                                rect: { x: 0, y: 0, w: 0, h: 0 },
+                                min: 0,
+                                max: 0,
+                                offset: 0,
+                                scale: 1.0,
+                                ticksDelta: 0
+                            },
+                            x: [1, 2, 3, 4],
+                            lines: this.lines.map((line, i) => ({
+                                y: [
+                                    i + 1,
+                                    (i + 1) * 2,
+                                    (i + 1) * 3,
+                                    (i + 1) * 4
+                                ]
+                            }))
+                        };
+
+                        chart.xAxis.min = Math.min(...chart.x);
+                        chart.xAxis.max = Math.max(...chart.x);
+                        if (chart.xAxis.min >= chart.xAxis.max) {
+                            chart.xAxis.min = 0;
+                            chart.xAxis.max = 1;
+                        }
+
+                        if (this.yAxisRangeOption == "fixed") {
+                            try {
+                                const result = evalConstantExpression(
+                                    ProjectEditor.getProject(this),
+                                    this.yAxisRangeFrom
+                                );
+                                chart.yAxis.min =
+                                    typeof result.value == "number"
+                                        ? result.value
+                                        : 0;
+                            } catch (err) {
+                                chart.yAxis.min = 0;
+                            }
+                        } else {
+                            chart.yAxis.min = Math.min(
+                                ...chart.lines.map(line => Math.min(...line.y))
+                            );
+                        }
+
+                        if (this.yAxisRangeOption == "fixed") {
+                            try {
+                                const result = evalConstantExpression(
+                                    ProjectEditor.getProject(this),
+                                    this.yAxisRangeTo
+                                );
+                                chart.yAxis.max =
+                                    typeof result.value == "number"
+                                        ? result.value
+                                        : 10;
+                            } catch {
+                                chart.yAxis.max = 10;
+                            }
+                        } else {
+                            chart.yAxis.max = Math.max(
+                                ...chart.lines.map(line => Math.max(...line.y))
+                            );
+                        }
+
+                        if (chart.yAxis.min >= chart.yAxis.max) {
+                            chart.yAxis.min = 0;
+                            chart.yAxis.max = 1;
+                        }
+
+                        const widgetRect = {
+                            x: 0,
+                            y: 0,
+                            w: width,
+                            h: height
+                        };
+
+                        let showLegend: boolean;
+                        try {
+                            const result = evalConstantExpression(
+                                ProjectEditor.getProject(this),
+                                this.showLegend
+                            );
+                            showLegend = result.value ? true : false;
+                        } catch (err) {
+                            showLegend = false;
+                        }
+
+                        const { legendWidth, legendLineHeight } =
+                            measLegendWidth();
+
+                        const marginRight = Math.max(
+                            this.margin.right,
+                            legendWidth
+                        );
+
+                        let gridRect = {
+                            x: widgetRect.x + this.margin.left,
+                            y: widgetRect.y + this.margin.top,
+                            w: widgetRect.w - (this.margin.left + marginRight),
+                            h:
+                                widgetRect.h -
+                                (this.margin.top + this.margin.bottom)
+                        };
+
+                        chart.xAxis.rect.x = gridRect.x;
+                        chart.xAxis.rect.y = gridRect.y + gridRect.h;
+                        chart.xAxis.rect.w = gridRect.w;
+                        chart.xAxis.rect.h = this.margin.bottom;
+
+                        chart.yAxis.rect.x = widgetRect.x;
+                        chart.yAxis.rect.y = gridRect.y;
+                        chart.yAxis.rect.w = this.margin.left;
+                        chart.yAxis.rect.h = gridRect.h;
+
+                        calcAutoTicks(chart.xAxis);
+                        calcAutoTicks(chart.yAxis);
+
+                        draw.drawBackground(
+                            ctx,
+                            widgetRect.x,
+                            widgetRect.y,
+                            widgetRect.w,
+                            widgetRect.h,
+                            this.style,
+                            true
+                        );
+
+                        drawTitle(
+                            widgetRect.x,
+                            widgetRect.y,
+                            widgetRect.w,
+                            this.margin.top
+                        );
+
+                        if (showLegend) {
+                            drawLegend(
+                                gridRect.x + gridRect.w,
+                                gridRect.y,
+                                marginRight,
+                                gridRect.h
+                            );
+                        }
+
+                        drawXAxis(chart.xAxis);
+
+                        drawYAxis(chart.yAxis);
+
+                        drawGrid();
+
+                        drawLines();
+                    }}
+                />
+                {super.render(flowContext, width, height)}
+            </>
+        );
+    }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // title
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "title"));
+
+        // showLegend
+        dataBuffer.writeInt16(
+            assets.getWidgetDataItemIndex(this, "showLegend")
+        );
+
+        // yAxisRangeFrom
+        dataBuffer.writeInt16(this.yAxisRangeOption == "fixed" ? 0 : 1);
+
+        // yAxisRangeFrom
+        dataBuffer.writeInt16(
+            assets.getWidgetDataItemIndex(this, "yAxisRangeFrom")
+        );
+
+        // yAxisRangeTo
+        dataBuffer.writeInt16(
+            assets.getWidgetDataItemIndex(this, "yAxisRangeTo")
+        );
+
+        // margin
+        dataBuffer.writeInt16(this.margin.left);
+        dataBuffer.writeInt16(this.margin.top);
+        dataBuffer.writeInt16(this.margin.right);
+        dataBuffer.writeInt16(this.margin.bottom);
+
+        // legendStyle
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "legendStyle"));
+
+        // xAxisStyle
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "xAxisStyle"));
+
+        // yAxisStyle
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "yAxisStyle"));
+
+        // component index
+        dataBuffer.writeUint16(assets.getComponentIndex(this));
+
+        // resrved
+        dataBuffer.writeUint16(0);
+    }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // maxPoints
+        dataBuffer.writeUint32(this.maxPoints);
+
+        // xValue
+        dataBuffer.writeObjectOffset(() =>
+            buildExpression(assets, dataBuffer, this, this.xValue)
+        );
+
+        // lines
+        dataBuffer.writeArray(this.lines, line => {
+            dataBuffer.writeObjectOffset(() =>
+                buildExpression(assets, dataBuffer, this, line.label)
+            );
+
+            let color = assets.getColorIndexFromColorValue(line.color);
+            if (isNaN(color)) {
+                color = 0;
+            }
+            dataBuffer.writeUint16(color);
+            dataBuffer.writeUint16(0);
+
+            dataBuffer.writeObjectOffset(() =>
+                buildExpression(assets, dataBuffer, this, line.value)
+            );
+        });
+    }
+}
+
+registerClass("LineChartEmbeddedWidget", LineChartEmbeddedWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class GaugeEmbeddedWidget extends Widget {
     min: string;
     max: string;
@@ -4783,11 +5652,7 @@ export class GaugeEmbeddedWidget extends Widget {
             height: 128
         },
 
-        icon: (
-            <svg viewBox="0 0 1000 1000" width="20" height="20">
-                <path d="M406 509.333c22.667-37.333 94-132 214-284S804.667 0 814 5.333c8 4-24 96.667-96 278s-118 290-138 326c-33.333 57.333-78.667 69.333-136 36s-70-78.667-38-136m94-380c-112 0-206.667 42.333-284 127s-116 188.333-116 311c0 20 .667 35.333 2 46 1.333 14.667-2.667 27-12 37s-20.667 15.667-34 17c-13.333 1.333-25.333-2.667-36-12-10.667-9.333-16.667-20.667-18-34 0-5.333-.333-14-1-26s-1-21.333-1-28c0-150.667 48.333-278 145-382s215-156 355-156c48 0 92.667 6 134 18l-70 86c-26.667-2.667-48-4-64-4m362 62c92 102.667 138 228 138 376 0 25.333-.667 44-2 56-1.333 13.333-6.667 24.333-16 33-9.333 8.667-20.667 13-34 13h-4c-14.667-2.667-26.333-9.333-35-20-8.667-10.667-12.333-22.667-11-36 1.333-9.333 2-24.667 2-46 0-100-26.667-189.333-80-268 4-9.333 10.667-26.333 20-51s16.667-43.667 22-57" />
-            </svg>
-        ),
+        icon: GAUGE_ICON,
 
         check: (object: CanvasWidget) => {
             let messages: Message[] = [];

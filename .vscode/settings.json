@@ -35,7 +35,8 @@
         "sstream": "cpp",
         "algorithm": "cpp",
         "limits": "cpp",
-        "ios": "cpp"
+        "ios": "cpp",
+        "filesystem": "cpp"
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "workbench.editor.enablePreview": false,

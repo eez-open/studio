@@ -293,7 +293,9 @@ export class DummyDataBuffer {
 
     writeDouble(value: number) {}
 
-    writeFutureValue(callback: () => void) {}
+    writeFutureValue(callback: () => void) {
+        callback();
+    }
 
     writeUint8Array(array: Uint8Array | number[]) {}
 
@@ -311,9 +313,13 @@ export class DummyDataBuffer {
         }
     }
 
-    writeFutureArray(callback: () => void) {}
+    writeFutureArray(callback: () => void) {
+        callback();
+    }
 
-    writeNumberArray<T>(arr: T[], callback: (item: T, i: number) => void) {}
+    writeNumberArray<T>(arr: T[], callback: (item: T, i: number) => void) {
+        arr.forEach((item, i) => callback(item, i));
+    }
 
     writeObjectOffset(callback: () => void, padding: number = 4) {
         callback();
@@ -323,13 +329,13 @@ export class DummyDataBuffer {
 
     addPadding8() {}
 
-    get size() {
-        return 0;
-    }
-
     finalizeObjectList() {}
 
     finalize() {}
+
+    get size() {
+        return 0;
+    }
 
     compress() {
         return { compressedBuffer: this.buffer, compressedSize: 0 };

@@ -309,8 +309,6 @@ function buildExpressionNode(
             };
 
             node.arguments[1].valueType = node.valueType;
-
-            console.log("trt", node);
         }
 
         return [
@@ -448,7 +446,6 @@ function buildExpressionNode(
         const fieldValues: ExpressionNode[] = [];
 
         node.properties.forEach(property => {
-            console.log(property.key);
             const fieldIndex = type.fieldIndexes[property.key.name];
             if (fieldIndex == undefined) {
                 throw `Field ${property.key.name} not in ${node.valueType}`;

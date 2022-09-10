@@ -453,8 +453,10 @@ export class Assets {
         this.colors = [];
 
         //
-        buildGuiDocumentData(this, new DummyDataBuffer(this.utf8Support));
-        buildGuiStylesData(this, new DummyDataBuffer(this.utf8Support));
+        const dummyDataBuffer = new DummyDataBuffer(this.utf8Support);
+        buildGuiDocumentData(this, dummyDataBuffer);
+        buildGuiStylesData(this, dummyDataBuffer);
+        buildFlowData(this, dummyDataBuffer);
     }
 
     get utf8Support() {
@@ -740,19 +742,7 @@ export class Assets {
         return 0;
     }
 
-    getColorIndex(
-        style: Style,
-        propertyName:
-            | "color"
-            | "backgroundColor"
-            | "activeColor"
-            | "activeBackgroundColor"
-            | "focusColor"
-            | "focusBackgroundColor"
-            | "borderColor"
-    ) {
-        let color = getStyleProperty(style, propertyName, false);
-
+    getColorIndexFromColorValue(color: string) {
         if (color == "transparent") {
             return 65535;
         }
@@ -783,6 +773,21 @@ export class Assets {
         this.colors.push(color);
 
         return colors.length + this.colors.length - 1;
+    }
+
+    getColorIndex(
+        style: Style,
+        propertyName:
+            | "color"
+            | "backgroundColor"
+            | "activeColor"
+            | "activeBackgroundColor"
+            | "focusColor"
+            | "focusBackgroundColor"
+            | "borderColor"
+    ) {
+        let color = getStyleProperty(style, propertyName, false);
+        return this.getColorIndexFromColorValue(color);
     }
 
     getTypeIndex(valueType: ValueType) {

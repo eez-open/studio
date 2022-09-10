@@ -167,7 +167,8 @@ const resizingProperty: PropertyInfo = {
 
 export function makeDataPropertyInfo(
     name: string,
-    props?: Partial<PropertyInfo>
+    props?: Partial<PropertyInfo>,
+    expressionType: ValueType = "any"
 ): PropertyInfo {
     return Object.assign(
         makeExpressionProperty(
@@ -197,7 +198,7 @@ export function makeDataPropertyInfo(
                     );
                 }
             },
-            "any"
+            expressionType
         ),
         props
     );

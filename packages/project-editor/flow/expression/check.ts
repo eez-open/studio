@@ -210,6 +210,20 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
 
             checkArity(functionName, node);
 
+            if (functionName == "Flow.makeValue") {
+                if (node.arguments[0].type == "Literal") {
+                    node.valueType = node.arguments[0].value;
+                }
+
+                const project = ProjectEditor.getProject(component);
+                if (
+                    project._DocumentStore.typesStore.getType(node.valueType) ==
+                    undefined
+                ) {
+                    throw `Invalid type '${node.valueType}'`;
+                }
+            }
+
             node.arguments.forEach(checkNode);
             return;
         }

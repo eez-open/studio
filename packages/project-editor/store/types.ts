@@ -230,11 +230,12 @@ export class TypesStore {
                 this.projectEditorStore.project,
                 valueType
             );
-            if (structure) {
-                const type = this.structureToType(structure);
-                this._addType(type);
-                return type;
+            if (!structure) {
+                return undefined;
             }
+            const type = this.structureToType(structure);
+            this._addType(type);
+            return type;
         }
 
         if (isObjectType(valueType)) {

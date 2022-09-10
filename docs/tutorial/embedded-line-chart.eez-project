@@ -1,0 +1,4573 @@
+{
+  "objID": "6666cd76-f969-5646-9e7b-e39d750cc7d9",
+  "settings": {
+    "objID": "e007d988-9fba-797d-72e9-efc33ca6d05c",
+    "general": {
+      "objID": "fd434352-2277-c4a8-e87e-e96cfcbf2305",
+      "projectVersion": "v3",
+      "projectType": "firmware",
+      "imports": [
+        {
+          "objID": "70e48ba1-a593-86b0-e5d5-53724a68d9a2",
+          "projectFilePath": "embedded-line-chart-gui.eez-project"
+        }
+      ],
+      "flowSupport": true,
+      "displayWidth": 480,
+      "displayHeight": 272
+    },
+    "build": {
+      "objID": "72794a43-a0fc-13c2-7eb5-67dd952141a4",
+      "configurations": [
+        {
+          "objID": "d6db62b3-646f-680e-91e4-9d27cb07462d",
+          "name": "default"
+        }
+      ],
+      "files": [
+        {
+          "objID": "aff564fb-7760-21b3-77eb-25a9ffc7ca8e",
+          "fileName": "src/gui/document.h",
+          "template": "#pragma once\n\n#include <eez/gui/data.h>\n#include <eez/gui/widget.h>\n\nnamespace eez {\nnamespace gui {\n\n//${eez-studio DATA_ENUM}\n\n//${eez-studio DATA_FUNCS_DECL}\n\n//${eez-studio DATA_ARRAY_DECL}\n\n//${eez-studio ACTIONS_ENUM}\n\n//${eez-studio ACTIONS_FUNCS_DECL}\n\n//${eez-studio ACTIONS_ARRAY_DECL}\n\n//${eez-studio GUI_FONTS_ENUM}\n\n//${eez-studio GUI_BITMAPS_ENUM}\n\n//${eez-studio GUI_STYLES_ENUM}\n\n//${eez-studio GUI_THEMES_ENUM}\n\n//${eez-studio GUI_COLORS_ENUM}\n\n//${eez-studio GUI_PAGES_ENUM}\n\n//${eez-studio GUI_ASSETS_DECL_COMPRESSED}\n\n} // namespace gui\n} // namespace eez\n"
+        },
+        {
+          "objID": "1cc9aae6-a588-d56b-2532-8bc0f671da17",
+          "fileName": "src/gui/document.cpp",
+          "template": "#include \"document.h\"\n\nnamespace eez {\nnamespace gui {\n\n//${eez-studio DATA_ARRAY_DEF}\n\n//${eez-studio ACTIONS_ARRAY_DEF}\n\n//${eez-studio GUI_ASSETS_DEF_COMPRESSED}\n\n} // namespace gui\n} // namespace eez\n"
+        }
+      ],
+      "destinationFolder": "."
+    }
+  },
+  "variables": {
+    "objID": "c6c71e16-53e1-217f-d03b-cef56c6b037a",
+    "globalVariables": [],
+    "structures": [
+      {
+        "objID": "7e2d1ab8-377a-4074-c5cf-a66e8f51bb8f",
+        "name": "Value",
+        "fields": [
+          {
+            "objID": "409f5ed4-d99f-4661-b850-10b18a198a7f",
+            "name": "x",
+            "type": "double"
+          },
+          {
+            "objID": "370f1edc-ab30-4f47-8fac-db492b047d06",
+            "name": "min",
+            "type": "double"
+          },
+          {
+            "objID": "8fd29ba8-8ea2-4e68-9476-f13ee3884ffc",
+            "name": "max",
+            "type": "double"
+          },
+          {
+            "objID": "a0c1d76a-de9f-4872-f4ca-b31203a53e3b",
+            "name": "avg",
+            "type": "double"
+          }
+        ]
+      }
+    ],
+    "enums": []
+  },
+  "actions": [],
+  "pages": [
+    {
+      "objID": "dc8c5e32-a2aa-9d2d-a70b-4d971f3c2b8d",
+      "components": [
+        {
+          "objID": "df7d3249-0992-4be9-9633-714c2f215453",
+          "type": "LoopActionComponent",
+          "left": 65,
+          "top": -181,
+          "width": 223,
+          "height": 73,
+          "customInputs": [],
+          "customOutputs": [],
+          "variable": "idx",
+          "from": "0",
+          "to": "99",
+          "step": "1",
+          "version": 1
+        },
+        {
+          "objID": "fc0be6da-1672-4fd4-911b-6bfb70e9edab",
+          "type": "EvalExprActionComponent",
+          "left": 342,
+          "top": -181,
+          "width": 304,
+          "height": 94,
+          "customInputs": [],
+          "customOutputs": [],
+          "expression": "Flow.makeValue(\n  \"struct:Value\", \n  { x: idx, min: 0, max: 100, avg: idx }\n)"
+        },
+        {
+          "objID": "dc1310e3-8eba-4a53-c16f-75b74c9aca0a",
+          "type": "LineChartEmbeddedWidget",
+          "left": 11,
+          "top": 10,
+          "width": 458,
+          "height": 208,
+          "customInputs": [
+            {
+              "objID": "94caee5a-ab45-43cc-e405-a34f12a69420",
+              "name": "value",
+              "type": "struct:Value"
+            }
+          ],
+          "customOutputs": [],
+          "style": {
+            "objID": "e2cacded-aa8a-4b3a-9a4f-5d273dc369bb",
+            "inheritFrom": "line_chart"
+          },
+          "timeline": [],
+          "xValue": "show_date ? Date.now() : value.x",
+          "lines": [
+            {
+              "objID": "0bab4202-65b5-4b1e-af97-cf794ed17547",
+              "label": "\"Min\"",
+              "color": "#9e0000",
+              "value": "value.min"
+            },
+            {
+              "objID": "280d085e-59c6-4353-acc5-55a6f58466ab",
+              "label": "\"Max\"",
+              "color": "#0000a3",
+              "value": "value.max"
+            },
+            {
+              "objID": "9c0b15a0-2656-4e06-b172-fec9ff698049",
+              "label": "\"Avg\"",
+              "color": "#00a800",
+              "value": "value.avg"
+            }
+          ],
+          "title": "\"This is title\"",
+          "showLegend": "show_legend",
+          "yAxisRangeOption": "floating",
+          "yAxisRangeFrom": "-50",
+          "yAxisRangeTo": "150",
+          "maxPoints": 30,
+          "margin": {
+            "objID": "22927617-92eb-408f-8364-4ce66ea2c8bc",
+            "top": 30,
+            "right": 30,
+            "bottom": 30,
+            "left": 30
+          },
+          "legendStyle": {
+            "objID": "7a93edb4-28a0-8808-06f8-18f31f7ed04e",
+            "inheritFrom": "line_chart_legend"
+          },
+          "xAxisStyle": {
+            "objID": "abec2ecf-c82d-226d-c245-0cd0d16c6e03",
+            "inheritFrom": "line_chart_axis"
+          },
+          "yAxisStyle": {
+            "objID": "b5a1cf28-0545-3b67-dabd-08b2827d274c",
+            "inheritFrom": "line_chart_axis"
+          }
+        },
+        {
+          "objID": "9b08555b-a3f6-4483-d043-048b27a4ba76",
+          "type": "DelayActionComponent",
+          "left": 691,
+          "top": -181,
+          "width": 87,
+          "height": 55,
+          "customInputs": [],
+          "customOutputs": [],
+          "milliseconds": "25"
+        },
+        {
+          "objID": "e77c8cc0-886f-4cda-d6bd-1099eca05260",
+          "type": "ButtonWidget",
+          "left": 387,
+          "top": 227,
+          "width": 82,
+          "height": 40,
+          "customInputs": [],
+          "customOutputs": [],
+          "asOutputProperties": [
+            "action"
+          ],
+          "data": "\"Reset\"",
+          "style": {
+            "objID": "40d4549e-c392-4c04-d9be-02ba106fee08",
+            "inheritFrom": "button"
+          },
+          "timeline": [],
+          "text": "",
+          "disabledStyle": {
+            "objID": "60209a91-1c40-49b9-fb91-88905f1f8e20",
+            "inheritFrom": "button_disabled"
+          }
+        },
+        {
+          "objID": "cff02bd0-fe06-47f1-f3ff-b2c9e04a6b04",
+          "type": "ButtonWidget",
+          "left": 11,
+          "top": 227,
+          "width": 82,
+          "height": 40,
+          "customInputs": [],
+          "customOutputs": [],
+          "asOutputProperties": [
+            "action"
+          ],
+          "data": "\"Start\"",
+          "style": {
+            "objID": "40d4549e-c392-4c04-d9be-02ba106fee08",
+            "inheritFrom": "button"
+          },
+          "timeline": [],
+          "text": "",
+          "enabled": "!running",
+          "disabledStyle": {
+            "objID": "60209a91-1c40-49b9-fb91-88905f1f8e20",
+            "inheritFrom": "button_disabled"
+          }
+        },
+        {
+          "objID": "0bd29a54-b72a-4f92-891d-e3303565c4f5",
+          "type": "SetVariableActionComponent",
+          "left": -197,
+          "top": -184,
+          "width": 208,
+          "height": 76,
+          "customInputs": [],
+          "customOutputs": [],
+          "entries": [
+            {
+              "objID": "d518b81d-0cd1-4852-c7f5-345cadb295ae",
+              "variable": "running",
+              "value": "true"
+            },
+            {
+              "objID": "0e5394f5-609c-4132-ab4e-97334c650018",
+              "variable": "show_date",
+              "value": "show_date_temp"
+            }
+          ]
+        },
+        {
+          "objID": "93176790-ea19-4ac1-f8fa-f28de4abf135",
+          "type": "SetVariableActionComponent",
+          "left": 557,
+          "top": -27,
+          "width": 140,
+          "height": 56,
+          "customInputs": [],
+          "customOutputs": [],
+          "entries": [
+            {
+              "objID": "d518b81d-0cd1-4852-c7f5-345cadb295ae",
+              "variable": "running",
+              "value": "false"
+            }
+          ]
+        },
+        {
+          "objID": "e5da35d0-04d3-4540-a651-dcf4b0b2a757",
+          "type": "SwitchWidget",
+          "left": 199,
+          "top": 231,
+          "width": 45,
+          "height": 32,
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "show_legend",
+          "style": {
+            "objID": "56b4bedf-51bf-4b0f-a835-3e5aae5c5a19",
+            "inheritFrom": "switch_widget"
+          },
+          "timeline": []
+        },
+        {
+          "objID": "9cd2863d-89ab-431f-ab36-f1f96777fe11",
+          "type": "TextWidget",
+          "left": 135,
+          "top": 231,
+          "width": 64,
+          "height": 32,
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "\"Legend\"",
+          "style": {
+            "objID": "d8bbe1a2-61d8-47a8-f5b2-40f890758010",
+            "inheritFrom": "default"
+          },
+          "timeline": []
+        },
+        {
+          "objID": "cf16375e-114d-47f7-aa89-36552981e78e",
+          "type": "Select",
+          "left": 264,
+          "top": 231,
+          "width": 91,
+          "height": 32,
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "running ? 0 : 1",
+          "style": {
+            "objID": "b821cd9c-7eb2-4819-fb04-0728cbf5bfd5",
+            "inheritFrom": "default"
+          },
+          "timeline": [],
+          "widgets": [
+            {
+              "objID": "0e5dfcf2-e5f4-4d49-c76c-480bda26b278",
+              "type": "Container",
+              "left": 0,
+              "top": 0,
+              "width": 91,
+              "height": 32,
+              "customInputs": [],
+              "customOutputs": [],
+              "style": {
+                "objID": "802daf83-2b33-4f81-d649-e2d0def162da",
+                "inheritFrom": "default"
+              },
+              "timeline": [],
+              "widgets": [],
+              "layout": "static"
+            },
+            {
+              "objID": "f567a9b0-043f-47eb-f9c0-9eaed5358fdb",
+              "type": "Container",
+              "left": 0,
+              "top": 0,
+              "width": 91,
+              "height": 32,
+              "customInputs": [],
+              "customOutputs": [],
+              "style": {
+                "objID": "802daf83-2b33-4f81-d649-e2d0def162da",
+                "inheritFrom": "default"
+              },
+              "timeline": [],
+              "widgets": [
+                {
+                  "objID": "34ffdc79-1d0f-44b7-8198-d24966761ee2",
+                  "type": "SwitchWidget",
+                  "left": 46,
+                  "top": 0,
+                  "width": 45,
+                  "height": 32,
+                  "customInputs": [],
+                  "customOutputs": [],
+                  "data": "show_date_temp",
+                  "style": {
+                    "objID": "68e2ce93-3aca-4e18-87ec-196e7748963d",
+                    "inheritFrom": "switch_widget"
+                  },
+                  "timeline": []
+                },
+                {
+                  "objID": "e8be8649-2d1b-40cf-860a-18e43e330a2b",
+                  "type": "TextWidget",
+                  "left": 0,
+                  "top": 0,
+                  "width": 45,
+                  "height": 32,
+                  "customInputs": [],
+                  "customOutputs": [],
+                  "data": "\"Date\"",
+                  "style": {
+                    "objID": "4314accc-fddc-40b7-cc12-5a1242384d5c",
+                    "inheritFrom": "default"
+                  },
+                  "timeline": []
+                }
+              ],
+              "layout": "static"
+            }
+          ]
+        }
+      ],
+      "connectionLines": [
+        {
+          "objID": "110f3875-b614-41ef-d9bd-e400a3a240e9",
+          "source": "df7d3249-0992-4be9-9633-714c2f215453",
+          "output": "@seqout",
+          "target": "fc0be6da-1672-4fd4-911b-6bfb70e9edab",
+          "input": "@seqin"
+        },
+        {
+          "objID": "9f976748-26b4-4d1a-9ecc-cfee00ad1f58",
+          "source": "fc0be6da-1672-4fd4-911b-6bfb70e9edab",
+          "output": "@seqout",
+          "target": "9b08555b-a3f6-4483-d043-048b27a4ba76",
+          "input": "@seqin"
+        },
+        {
+          "objID": "7531480b-aafc-4191-d2b3-f2e574e568e2",
+          "source": "fc0be6da-1672-4fd4-911b-6bfb70e9edab",
+          "output": "result",
+          "target": "dc1310e3-8eba-4a53-c16f-75b74c9aca0a",
+          "input": "value"
+        },
+        {
+          "objID": "5953bdcb-5a26-4a19-af86-dd12976ad94a",
+          "source": "9b08555b-a3f6-4483-d043-048b27a4ba76",
+          "output": "@seqout",
+          "target": "df7d3249-0992-4be9-9633-714c2f215453",
+          "input": "next"
+        },
+        {
+          "objID": "c1ef051a-7fe9-4022-9d30-541fd44b6a00",
+          "source": "e77c8cc0-886f-4cda-d6bd-1099eca05260",
+          "output": "action",
+          "target": "dc1310e3-8eba-4a53-c16f-75b74c9aca0a",
+          "input": "reset"
+        },
+        {
+          "objID": "69c8748e-ee97-4351-ea59-b3e4224e73fa",
+          "source": "cff02bd0-fe06-47f1-f3ff-b2c9e04a6b04",
+          "output": "action",
+          "target": "0bd29a54-b72a-4f92-891d-e3303565c4f5",
+          "input": "@seqin"
+        },
+        {
+          "objID": "777e9ebd-a439-47fc-aff0-141279647203",
+          "source": "0bd29a54-b72a-4f92-891d-e3303565c4f5",
+          "output": "@seqout",
+          "target": "df7d3249-0992-4be9-9633-714c2f215453",
+          "input": "start"
+        },
+        {
+          "objID": "471a9256-2eb8-4e6d-9a37-2283b46ef241",
+          "source": "df7d3249-0992-4be9-9633-714c2f215453",
+          "output": "done",
+          "target": "93176790-ea19-4ac1-f8fa-f28de4abf135",
+          "input": "@seqin"
+        },
+        {
+          "objID": "6fd4a5d8-21b8-44bc-a4a6-0e1ddd0891d6",
+          "source": "cff02bd0-fe06-47f1-f3ff-b2c9e04a6b04",
+          "output": "action",
+          "target": "dc1310e3-8eba-4a53-c16f-75b74c9aca0a",
+          "input": "reset"
+        }
+      ],
+      "localVariables": [
+        {
+          "objID": "ab702d0e-daf8-418b-97db-25f4b90fc0e9",
+          "name": "idx",
+          "type": "integer",
+          "defaultValue": "0",
+          "persistent": false
+        },
+        {
+          "objID": "1f5b5f8e-6a58-485c-bf8e-116497758fa8",
+          "name": "running",
+          "type": "boolean",
+          "defaultValue": "false",
+          "persistent": false
+        },
+        {
+          "objID": "e2b0b53b-0249-4bc1-ce2a-d91220f52c4d",
+          "name": "show_legend",
+          "type": "boolean",
+          "defaultValue": "true",
+          "persistent": false
+        },
+        {
+          "objID": "dfdeff9f-e862-4b17-8dd2-beccd9da2bfa",
+          "name": "show_date",
+          "type": "boolean",
+          "defaultValue": "false",
+          "persistent": false
+        },
+        {
+          "objID": "7e4db514-18a8-4393-be1f-e45d16d91251",
+          "name": "show_date_temp",
+          "type": "boolean",
+          "defaultValue": "false",
+          "persistent": false
+        }
+      ],
+      "id": 1,
+      "name": "main",
+      "style": "background",
+      "left": 0,
+      "top": 0,
+      "width": 480,
+      "height": 272
+    }
+  ],
+  "styles": [
+    {
+      "objID": "424a0a43-4b9c-4a53-bb32-1313bd6b16a6",
+      "name": "line_chart",
+      "inheritFrom": "default",
+      "color": "#202020",
+      "backgroundColor": "#d4d4d4",
+      "borderColor": "#808080"
+    },
+    {
+      "objID": "b6d5b778-edcb-46e5-bbc2-44d044d489ee",
+      "name": "line_chart_legend",
+      "inheritFrom": "line_chart",
+      "font": "small",
+      "alignHorizontal": "left"
+    },
+    {
+      "objID": "69f67a0a-a40f-4da5-dd40-df5b2f5dc0a9",
+      "name": "line_chart_axis",
+      "inheritFrom": "line_chart",
+      "font": "small"
+    }
+  ],
+  "fonts": [
+    {
+      "objID": "d6d210fa-2e1e-cb43-348a-9ee0e89bec7c",
+      "id": 1,
+      "name": "medium",
+      "renderingEngine": "freetype",
+      "source": {
+        "objID": "c2f4ba6f-18e0-520f-3578-7e7a71edba6c",
+        "filePath": "Oswald-Medium.ttf",
+        "size": 12
+      },
+      "bpp": 8,
+      "height": 22,
+      "ascent": 18,
+      "descent": 4,
+      "glyphs": [
+        {
+          "objID": "2b42a95d-ba7c-857a-8e9a-e9e875993317",
+          "encoding": 32,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 4,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "615d8f1c-7312-73c9-8792-10948ae60772",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 32
+          }
+        },
+        {
+          "objID": "8689ffff-a7e9-01ae-7f71-d6293fe828bf",
+          "encoding": 33,
+          "x": 0,
+          "y": 0,
+          "width": 4,
+          "height": 14,
+          "dx": 4,
+          "glyphBitmap": {
+            "width": 4,
+            "height": 14,
+            "pixelArray": "28fcfc1718ffff0508fff20000f8df0000e7cd0000d7ba0000c7a80000b6950000a682000095700000855d0000020200239c9c0538ffff08"
+          },
+          "source": {
+            "objID": "ef68b828-0e42-75f7-676f-3014cb5e3ad5",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 33
+          }
+        },
+        {
+          "objID": "ed540094-cb9b-db26-ddd0-1294dcdb87fb",
+          "encoding": 34,
+          "x": 1,
+          "y": 8,
+          "width": 5,
+          "height": 6,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 5,
+            "height": 6,
+            "pixelArray": "f5f122fccbf8ca20ffa1f89e20ff75f87220ff48f84620ff1b0401010401"
+          },
+          "source": {
+            "objID": "5cd68bdc-84ee-4b84-e190-3a90220e631c",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 34
+          }
+        },
+        {
+          "objID": "f5e47fba-858b-87a4-9354-27cb767d25b7",
+          "encoding": 35,
+          "x": 0,
+          "y": 0,
+          "width": 9,
+          "height": 14,
+          "dx": 9,
+          "glyphBitmap": {
+            "width": 9,
+            "height": 14,
+            "pixelArray": "00006cfc7d1efcc80000008fff5c41ffa8000000b1ff3964ff85000000d3ff1687ff620056fcfffffdfffffe0b3ab5ffe7a4f4ffa8060042ffa401f3f4010039beffd49ffff39c055fffffffffffffff0502a9ff435bff8f040100c7ff2078ff6d000000e7fc0498ff4e000008ffe000b8ff2f000025ffc000d8ff100000"
+          },
+          "source": {
+            "objID": "9c303dda-d905-8c43-a9cc-cee1290adb8c",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 35
+          }
+        },
+        {
+          "objID": "598de000-f5c0-dba1-4484-d052f2e6ee92",
+          "encoding": 36,
+          "x": 0,
+          "y": -2,
+          "width": 8,
+          "height": 18,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 18,
+            "pixelArray": "0000001844000000000000308e0000000030bcf7ffd443000febffcdc1fff21358fff40701d5ff6271fff505009acb5652ffff87000000000ce6ffff8c0200000039f4ffffa70500000034e9ffff9f0000000023ddffff490532470023f6ffa86fffd30000adffc83cfffd2100b0ffac03d1ffe2adfeff4c001cadf2ffe4630000000000b7010000000000005a000000"
+          },
+          "source": {
+            "objID": "4f9fc423-3efb-5244-cb4d-82e41465e615",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 36
+          }
+        },
+        {
+          "objID": "deb0de31-10b4-9649-890d-543398c6f3ea",
+          "encoding": 37,
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 14,
+          "dx": 16,
+          "glyphBitmap": {
+            "width": 16,
+            "height": 14,
+            "pixelArray": "0043d0f9e381020000c8d6000000000009eeffb3ebff540014fe9200000000003bffc4006cff990059ff4b000000000052ffb10056ffaf00a0f90b000000000052ffb10056ffae01e6bd00000000000039ffc90072ff962eff7500000000000007eaffaeecff4e75ff2e0a6897893700003fd3ffec8201bce601b5fffffffe410000000200000bf9a016ffeb197cffa00000000000004aff5838ffc60043ffc100000000000091fe133bffc50041ffc3000000000000d8ca0026ffdb0155ffaf00000000001fff830002e0ffb2e1ff69000000000065ff3c000036c7faeb9205"
+          },
+          "source": {
+            "objID": "0c76e168-17ba-fc1a-cb4d-a9f143090a6f",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 37
+          }
+        },
+        {
+          "objID": "eb348920-1b14-938e-9361-479515dd8715",
+          "encoding": 38,
+          "x": 0,
+          "y": 0,
+          "width": 10,
+          "height": 14,
+          "dx": 10,
+          "glyphBitmap": {
+            "width": 10,
+            "height": 14,
+            "pixelArray": "000063dcf7bf380000000039fff6b5ffef0c0000008fff8c00caff4800000094ff8701e3ff3600000054ffbe36ffd90200000005dcfcc2fd40000000000064ffff6400000000000ad2fffe31009ab817008affcaffc604f4fe0902eeff28b7ff8bffca0021fff40129fcffff670016fffb0c02c3ffff480300bcffc8cbfff1ffff30001baff7f0a8177ef630"
+          },
+          "source": {
+            "objID": "4d4c413d-8044-d2f4-41e4-1aa21687d01d",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 38
+          }
+        },
+        {
+          "objID": "a0d4d764-41ba-ec2a-3200-6ddd30ad1deb",
+          "encoding": 39,
+          "x": 1,
+          "y": 8,
+          "width": 3,
+          "height": 6,
+          "dx": 5,
+          "glyphBitmap": {
+            "width": 3,
+            "height": 6,
+            "pixelArray": "d9fc0ddce300dcbb00dc9200dc6900040200"
+          },
+          "source": {
+            "objID": "12289657-b55e-c0f6-7f5b-5a4f06ba6d28",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 39
+          }
+        },
+        {
+          "objID": "ee0d7912-d6f3-bd85-00e6-2715ae3016c6",
+          "encoding": 40,
+          "x": 1,
+          "y": -3,
+          "width": 4,
+          "height": 17,
+          "dx": 5,
+          "glyphBitmap": {
+            "width": 4,
+            "height": 17,
+            "pixelArray": "001badd402cdffb342ffe00588ff9700afff7700c6ff6300d6ff5900dbff5500dcff5400dcff5400d6ff5800c7ff6100b0ff75008aff980042ffdf0502cfffb0001db1d7"
+          },
+          "source": {
+            "objID": "4f5658ad-a0af-8394-7bd0-86fea4ebb49a",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 40
+          }
+        },
+        {
+          "objID": "315a4373-f171-1061-2186-2ac21c05120f",
+          "encoding": 41,
+          "x": 0,
+          "y": -3,
+          "width": 5,
+          "height": 17,
+          "dx": 5,
+          "glyphBitmap": {
+            "width": 5,
+            "height": 17,
+            "pixelArray": "71d552000050f8fe3900007affa7000030ffed01000dffff170001fbff2d0000f0ff3a0000edff410000ecff440000edff420000f0ff3a0001faff2e000cffff170032ffee01007cffa7004ff8fe390073d9540000"
+          },
+          "source": {
+            "objID": "917eed36-7df5-f000-b40e-339a2c9412ef",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 41
+          }
+        },
+        {
+          "objID": "1f978f89-c9fd-ef63-7eea-2d89471de0ba",
+          "encoding": 42,
+          "x": 0,
+          "y": 8,
+          "width": 7,
+          "height": 6,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 6,
+            "pixelArray": "000018fc890000018e2bfc78723d19e6fdfefafe780004a1fff62600002cf88ff698000036c40f878402"
+          },
+          "source": {
+            "objID": "0960eeed-8cb3-b863-d79f-9b29c1bf12a6",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 42
+          }
+        },
+        {
+          "objID": "f4db431c-4e52-9f1f-7a63-2be69920a9ef",
+          "encoding": 43,
+          "x": 0,
+          "y": 3,
+          "width": 7,
+          "height": 8,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 8,
+            "pixelArray": "000028fc7b0000000028ff7c0000589cacffcd9c9590fffffffffff403042cff7f0404000028ff7c0000000028ff7c000000000104020000"
+          },
+          "source": {
+            "objID": "2317464a-8c14-3f6c-2658-91620b799754",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 43
+          }
+        },
+        {
+          "objID": "13e81ed2-dc6b-7e13-79dd-5d3a117baa37",
+          "encoding": 44,
+          "x": 0,
+          "y": -3,
+          "width": 3,
+          "height": 6,
+          "dx": 4,
+          "glyphBitmap": {
+            "width": 3,
+            "height": 6,
+            "pixelArray": "0c242354fff454fff4003ae016e16e022c00"
+          },
+          "source": {
+            "objID": "fcb5c7cb-019c-f81a-219e-afdaea8912fd",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 44
+          }
+        },
+        {
+          "objID": "82fd69c3-f6ea-92c6-d45f-fd7cd868f950",
+          "encoding": 45,
+          "x": 0,
+          "y": 4,
+          "width": 6,
+          "height": 3,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 3,
+            "pixelArray": "089c9c9c9c0a0cffffffff10010404040401"
+          },
+          "source": {
+            "objID": "a5266da0-ea1e-725a-44dd-3f3658cc2c60",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 45
+          }
+        },
+        {
+          "objID": "2f8526e7-33be-ebde-39de-32b00d0c358d",
+          "encoding": 46,
+          "x": 0,
+          "y": 0,
+          "width": 4,
+          "height": 3,
+          "dx": 4,
+          "glyphBitmap": {
+            "width": 4,
+            "height": 3,
+            "pixelArray": "0824240238ffff0838ffff08"
+          },
+          "source": {
+            "objID": "251bc684-c88d-bda5-4a7c-a0a8ca43b051",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 46
+          }
+        },
+        {
+          "objID": "4a4af95c-412a-fc5b-5bf4-68028626ee36",
+          "encoding": 47,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 14,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 14,
+            "pixelArray": "00000000a1f20800000002eab60000000032ff6e0000000079ff2700000000c0df010000000dfb98000000004fff500000000096fb0e00000000ddc10000000024ff7a000000006cff3200000000b3ea0200000006f4a30000000041ff5c00000000"
+          },
+          "source": {
+            "objID": "81c5eb5f-0624-bd27-26fa-2c145b6c2d87",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 47
+          }
+        },
+        {
+          "objID": "d4421a82-7732-5113-06c5-3241836d04db",
+          "encoding": 48,
+          "x": 0,
+          "y": 0,
+          "width": 8,
+          "height": 14,
+          "dx": 9,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 14,
+            "pixelArray": "00098de6f9d25900009bffebb2feff480bfaff5200a6ffb734ffff27007cffe33cffff240078ffec3cffff240078ffec3cffff240078ffec3cffff240078ffec3cffff240078ffec3cffff240078ffec35ffff29007dffe40efbff5700abffb80099ffebaffeff4a00098ee9fdd55c00"
+          },
+          "source": {
+            "objID": "c2a67b5f-7346-3bdc-5dd3-e2e9fcd1350d",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 48
+          }
+        },
+        {
+          "objID": "a69373b7-9c90-26d0-4846-9ec25b102360",
+          "encoding": 49,
+          "x": 1,
+          "y": 0,
+          "width": 6,
+          "height": 14,
+          "dx": 9,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 14,
+            "pixelArray": "00056bf6fc0c4cdcffffff0c88fde1ffff0c210f50ffff0c000050ffff0c000050ffff0c000050ffff0c000050ffff0c000050ffff0c000050ffff0c000050ffff0c000050ffff0c000050ffff0c000050ffff0c"
+          },
+          "source": {
+            "objID": "c4471c5c-84fe-55c4-23e7-7bfea1306a8a",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 49
+          }
+        },
+        {
+          "objID": "ca5eff4c-db4c-9c6d-bff9-28fe069e714f",
+          "encoding": 50,
+          "x": 0,
+          "y": 0,
+          "width": 8,
+          "height": 14,
+          "dx": 9,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 14,
+            "pixelArray": "000685e1fadb74020089fff6b1f9ff6d02f0ff700087ffce1cffff390064fff317a0a01e008bffe9000000000ceaffaa000000008cffff380000002bfbff9d00000001c0ffe7100000005affff540000000fe7ffb0010000008ffff21b00000023fcffd99c9c9c603cffffffffffff9c"
+          },
+          "source": {
+            "objID": "40dc6875-58f5-3f38-bec3-761f25ff5645",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 50
+          }
+        },
+        {
+          "objID": "ce800fe6-fafa-6fa9-f7df-c732cbfb5669",
+          "encoding": 51,
+          "x": 0,
+          "y": 0,
+          "width": 8,
+          "height": 14,
+          "dx": 9,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 14,
+            "pixelArray": "001098e9f8d15b0000b8ffe4b5feff4f25ffff3a00a7ffb84cffff11007dffdc25747406008affc8000000001cd8ff750000006bffff940300000046c6ffea2a0000000001baffa41d5c5c050080ffd84affff170080ffd821ffff6106c0ffaa00c2fffffbffff4b0017a4eefdd76300"
+          },
+          "source": {
+            "objID": "9dba3169-4e6a-b1a0-d033-ef7a72b6ae38",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 51
+          }
+        },
+        {
+          "objID": "31d5b1c7-e63a-bde2-649b-a8813b0e440f",
+          "encoding": 52,
+          "x": 0,
+          "y": 0,
+          "width": 9,
+          "height": 14,
+          "dx": 9,
+          "glyphBitmap": {
+            "width": 9,
+            "height": 14,
+            "pixelArray": "0000001dfafcdd00000000007fffffe00000000003e3ffffe0000000004bffc7ffe000000000b0ff75ffe00000001afcc858ffe00000007bff7558ffe0000002e0ff2258ffe0000045ffcf0058ffe0000064fffffcfefffffc4b63fcfcfcfefffffc4b0000000058ffe000000000000058ffe000000000000058ffe00000"
+          },
+          "source": {
+            "objID": "fdceaad6-123c-90ca-69b7-62af49482f1d",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 52
+          }
+        },
+        {
+          "objID": "b5677bcb-9ec4-5129-6196-29fc0d7f3565",
+          "encoding": 53,
+          "x": 0,
+          "y": 0,
+          "width": 8,
+          "height": 14,
+          "dx": 9,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 14,
+            "pixelArray": "00dbfcfcfcfcfc6300e2ffb2a4a4a44100e6ff200000000000e9ff170000000000edff0e0000000000f0ffabf3ea890300f4ffebb0fbff6900d0d836008fffc2000000000064ffe400000000005effe926fcfc270064ffd80dfeff4f008affa800b5ffe7a8f8ff440018aef0fdd96100"
+          },
+          "source": {
+            "objID": "6fd9d1db-ddd8-5643-285c-09a428be5b38",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 53
+          }
+        },
+        {
+          "objID": "0c83a47c-00a4-6ebf-0059-076b84122ba3",
+          "encoding": 54,
+          "x": 0,
+          "y": 0,
+          "width": 9,
+          "height": 14,
+          "dx": 9,
+          "glyphBitmap": {
+            "width": 9,
+            "height": 14,
+            "pixelArray": "000276dff9dd820400006afff9aff4ff7c0000d8ff7b007affd5000fffff4c0031887f0022ffff3d000000000024ffff5f899244000024fffffcffffff5a0024ffff9310afffcd0024ffff3c005dfffc0323ffff3c0052ffff0913ffff420057fff60100dbff740086ffc1000068fff5a9f7ff5400000173e1fddd690000"
+          },
+          "source": {
+            "objID": "b2d6c4b0-14c4-94f5-90b7-5d3cc3e4b514",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 54
+          }
+        },
+        {
+          "objID": "b5828bb0-6b54-8010-df2a-4fa50c25db1f",
+          "encoding": 55,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 14,
+          "dx": 9,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 14,
+            "pixelArray": "53fcfcfcfcfc9e36a4a4a4e8ff9100000000e1ff5c00000019ffff2600000050ffee0100000088ffb800000000bfff8200000004f4ff4b0000002fffff1500000066ffde000000009effa700000000d6ff7000000010ffff3a00000045fffb090000"
+          },
+          "source": {
+            "objID": "a5222324-6e6a-d8b9-7e06-a6cfa704d55a",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 55
+          }
+        },
+        {
+          "objID": "7d7c4211-122d-aa95-97bf-19d705ebda8f",
+          "encoding": 56,
+          "x": 0,
+          "y": 0,
+          "width": 8,
+          "height": 14,
+          "dx": 9,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 14,
+            "pixelArray": "000c95e9f8cb4400009effe9befff92206f6ff4b01d1ff771cffff2300a7ff980cfeff3300b6ff8600b9ff8b1af1ff390020f1ffffff92000088ffe7b9ffe81f1afdff3600b5ff974cfffb03007dffcf4dfff801007affd128ffff2600a8ffab01c2ffdcaeffff480016a4effcd45d00"
+          },
+          "source": {
+            "objID": "bdba7714-47e1-d2a6-c258-9164ffeff523",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 56
+          }
+        },
+        {
+          "objID": "1c5ec40b-1b50-6a11-a40a-bc6e902081bb",
+          "encoding": 57,
+          "x": 0,
+          "y": 0,
+          "width": 8,
+          "height": 14,
+          "dx": 9,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 14,
+            "pixelArray": "00058ae5f8ca4400008fffeab9fffb2e0af6ff5200b8ff9d34ffff200084ffd246ffff19007cffe33effff24007cffe413fdff720fbdffe4009cfffffffeffe40005699f818effe400000000007effe11aa0a014008fffcd10feff4c04caff9900b6fffbe8fffc310014a1ecfcd45000"
+          },
+          "source": {
+            "objID": "5f9e6ae2-aa96-c8c1-fc8c-a7b3534dca5c",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 57
+          }
+        },
+        {
+          "objID": "7103b5c6-e9ad-b135-3d85-707896b9801d",
+          "encoding": 58,
+          "x": 1,
+          "y": 0,
+          "width": 3,
+          "height": 9,
+          "dx": 4,
+          "glyphBitmap": {
+            "width": 3,
+            "height": 9,
+            "pixelArray": "959c2cf4ff48040402000000000000000000959c2cf4ff48040402"
+          },
+          "source": {
+            "objID": "5dc0a31b-9340-7270-9d00-84d00a392db8",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 58
+          }
+        },
+        {
+          "objID": "8f58b0d4-7bdc-beb7-e7f3-3977ca07a519",
+          "encoding": 59,
+          "x": 1,
+          "y": -2,
+          "width": 3,
+          "height": 12,
+          "dx": 4,
+          "glyphBitmap": {
+            "width": 3,
+            "height": 12,
+            "pixelArray": "f5fc47f8ff482b2c0d00000000000000000023240cf8ff54f8ff5407db42a9cc08150200"
+          },
+          "source": {
+            "objID": "79669b58-47fe-72b8-4376-986aea0ae80f",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 59
+          }
+        },
+        {
+          "objID": "fe48b9b1-a7a6-5ba2-42ff-d3beb33f1d2a",
+          "encoding": 60,
+          "x": 0,
+          "y": 0,
+          "width": 6,
+          "height": 11,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 11,
+            "pixelArray": "000000000005000000016689000016b2ff94004be9ffc8235ffffd8205007cff940100004ffaffa810000030d4ffe03700000990ff94000000004579000000000001"
+          },
+          "source": {
+            "objID": "9d79ec8e-c486-d310-acc8-17d85b90e576",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 60
+          }
+        },
+        {
+          "objID": "e1e564bc-4156-9f26-8d05-1a609f7be2a1",
+          "encoding": 61,
+          "x": 0,
+          "y": 4,
+          "width": 7,
+          "height": 6,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 6,
+            "pixelArray": "039c9c9c9c9c3104ffffffffff5001040404040402039c9c9c9c9c3104ffffffffff5001040404040402"
+          },
+          "source": {
+            "objID": "a1fc3db8-9367-1da1-f9c1-c525e6f7a1de",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 61
+          }
+        },
+        {
+          "objID": "767df281-7747-e7a9-894e-5997b15894a2",
+          "encoding": 62,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 11,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 11,
+            "pixelArray": "020300000000000cc421000000000cfff25f010000016bf7ffab130000002ad0ffe6050000001cedff08000047e8ffd104038dfffe8907000cffe13f0000000ca20f0000000001000000000000"
+          },
+          "source": {
+            "objID": "084858a5-09b2-ff58-d045-20dedd86fff8",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 62
+          }
+        },
+        {
+          "objID": "c410c330-5b2e-abd2-7d15-7d0335802858",
+          "encoding": 63,
+          "x": 0,
+          "y": 0,
+          "width": 8,
+          "height": 14,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 14,
+            "pixelArray": "002db9f2f4c23f0009e7ffd3c5fff92836fffe0e01c9ff872afff70700a7ffa60533060001d6ff8b000000003fffff3b0000000dd8ffad00000006b6ffd51000000079ffd8190000000084ff94000000000047884f0000000000162419000000000098ffb0000000000098ffb0000000"
+          },
+          "source": {
+            "objID": "fb48a548-c460-8b48-7b20-a0a8e73e181c",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 63
+          }
+        },
+        {
+          "objID": "d6fbada7-af54-ec63-96b1-fdb0e051696f",
+          "encoding": 64,
+          "x": 0,
+          "y": -3,
+          "width": 16,
+          "height": 17,
+          "dx": 16,
+          "glyphBitmap": {
+            "width": 16,
+            "height": 17,
+            "pixelArray": "00000000003c9dd4f6f6d289150000000000000da0ffffd5abb1e6ffed3b0000000008c4ffc429000000036dfceb180000007fffb70600000000000076ff92000015f6f6180024b7f4a0fcaf05e3ec02006dff920015e6ffcfd5ff8b0096ff2300adff3f0093ffa90292ff650070ff3700daff0d07f2ff1e00b6ff3f006cff3401faea0035ffdd0000daff19008dff1a06ffdf004bffcd0005faf30102d6de0101faeb0038fff7337cffd9006cff790000deff1406e2fffff5f6fac3ffd50a00009dff640030bfd7576cf2f4a6160000003affe111000000000001010000000000009fffd43700000000010c000000000000069bffffdaaea4bce89a00000000000000003ba0d8fafce0ba6800000000"
+          },
+          "source": {
+            "objID": "8b7045ad-edca-6142-341a-eab54d1a3d46",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 64
+          }
+        },
+        {
+          "objID": "68d1dfd1-f209-5f91-d03c-fec5376c4a49",
+          "encoding": 65,
+          "x": 0,
+          "y": 0,
+          "width": 9,
+          "height": 14,
+          "dx": 9,
+          "glyphBitmap": {
+            "width": 9,
+            "height": 14,
+            "pixelArray": "000006f5fcd2000000000031fffffd0b0000000064ffffff3a0000000097ffeeff6d00000000caffa0ffa000000006f9ff4dffd300000031ffec0efffd0a000064ffc300e4ff39000097ff9900baff6c0000cafffffcffff9f0006f9ffb9a4c4ffd20031ffff1b003cfffc0964fff0010011ffff3897ffc5000000e6ff6b"
+          },
+          "source": {
+            "objID": "31ca2e28-c20a-69c3-0295-f825de44ed22",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 65
+          }
+        },
+        {
+          "objID": "8d2ba4a6-7b95-614e-2167-d6cda4bb0cca",
+          "encoding": 66,
+          "x": 1,
+          "y": 0,
+          "width": 8,
+          "height": 14,
+          "dx": 9,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 14,
+            "pixelArray": "f5fcfcfae5a42100f8ffd5abe4ffe00af8ff88000dedff4df8ff880000c5ff6df8ff880000d8ff5bf8ff880352fff318f8ffffffffe93c00f8ffd5a9e5ffcf17f8ff88000ae2ff8ef8ff8800009fffcbf8ff88000099ffd2f8ff880003d5ffa9f8ffd29fd6fffe3ef8fffffff7c84b00"
+          },
+          "source": {
+            "objID": "6b280922-f91b-9be5-3380-0dc61600f25c",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 66
+          }
+        },
+        {
+          "objID": "cc9f3275-d44a-f7a7-ad11-fe48df8122a5",
+          "encoding": 67,
+          "x": 0,
+          "y": 0,
+          "width": 9,
+          "height": 14,
+          "dx": 9,
+          "glyphBitmap": {
+            "width": 9,
+            "height": 14,
+            "pixelArray": "00047ad8f8edb225000084fffaaedaffe00703eeff860016ffff4820ffff5d0000fbff6b2fffff580000f8ff7030ffff58000010100730ffff58000000000030ffff58000000000030ffff5800003334172fffff580000f8ff7021ffff5e0001fcff6903efff89001bffff430083fffaabd5ffdb0400037bdffcf2b52500"
+          },
+          "source": {
+            "objID": "72626858-ccab-3bdf-30c0-5318b1d8ead4",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 67
+          }
+        },
+        {
+          "objID": "02684611-9f98-b394-ebc6-b768aae9b23b",
+          "encoding": 68,
+          "x": 1,
+          "y": 0,
+          "width": 8,
+          "height": 14,
+          "dx": 9,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 14,
+            "pixelArray": "f5fcfcfae4a72300f8ffd5a9e8ffe60df8ff880025ffff63f8ff880001f8ff8cf8ff880000f5ff98f8ff880000f4ff98f8ff880000f4ff98f8ff880000f4ff98f8ff880000f4ff98f8ff880000f5ff98f8ff880001fcff88f8ff88002cffff5bf8ffd2a2e6ffe009f8ffffffe9ac2100"
+          },
+          "source": {
+            "objID": "c0579cea-9937-5d12-996a-9601cfd9628d",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 68
+          }
+        },
+        {
+          "objID": "8c87b856-4fc7-9228-2663-fcfcab9f7b5b",
+          "encoding": 69,
+          "x": 1,
+          "y": 0,
+          "width": 6,
+          "height": 14,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 14,
+            "pixelArray": "f5fcfcfcfcc9f8ffd5a4a483f8ff88000000f8ff88000000f8ff88000000f8ff88000000f8fffffcfc1cf8ffd5a4a412f8ff88000000f8ff88000000f8ff88000000f8ff88000000f8ffd29c9c82f8ffffffffd4"
+          },
+          "source": {
+            "objID": "663ed1ed-6ac8-039d-7aeb-991e431fa485",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 69
+          }
+        },
+        {
+          "objID": "774d0894-e779-94da-82cc-703a492fe082",
+          "encoding": 70,
+          "x": 1,
+          "y": 0,
+          "width": 6,
+          "height": 14,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 14,
+            "pixelArray": "f5fcfcfcfcaef8ffd5a4a471f8ff88000000f8ff88000000f8ff88000000f8ff88000000f8fffffcfc0cf8ffd5a4a408f8ff88000000f8ff88000000f8ff88000000f8ff88000000f8ff88000000f8ff88000000"
+          },
+          "source": {
+            "objID": "aa44ad80-35cd-bed1-b6ea-7b541d441dba",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 70
+          }
+        },
+        {
+          "objID": "147bc3fe-4623-2171-4958-33ca4e8744ea",
+          "encoding": 71,
+          "x": 0,
+          "y": 0,
+          "width": 9,
+          "height": 14,
+          "dx": 9,
+          "glyphBitmap": {
+            "width": 9,
+            "height": 14,
+            "pixelArray": "000377d8f9eeb32c00007ffffab1d6ffeb0f02ecff87000cf9ff5e1dffff5c0000e0ff852dffff58000094ac5f30ffff58000000000030ffff58000000000030ffff5820fcfcfc9a30ffff5815a4dfff9c2dffff580000a5ff9c19ffff610000afff9c01e6ff900005e2ff9c0080fffcafcbf6ff9c000582e4fdd049ff9c"
+          },
+          "source": {
+            "objID": "6019d533-db0f-3281-9bb6-06e4f1404563",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 71
+          }
+        },
+        {
+          "objID": "73f0f20a-b267-332c-7e75-0ff93050b7dd",
+          "encoding": 72,
+          "x": 1,
+          "y": 0,
+          "width": 8,
+          "height": 14,
+          "dx": 10,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 14,
+            "pixelArray": "f1fc8e0000a2fcd9f4ff900000a4ffdcf4ff900000a4ffdcf4ff900000a4ffdcf4ff900000a4ffdcf4ff900000a4ffdcf4fffffcfcffffdcf4ffd8a4a4dfffdcf4ff900000a4ffdcf4ff900000a4ffdcf4ff900000a4ffdcf4ff900000a4ffdcf4ff900000a4ffdcf4ff900000a4ffdc"
+          },
+          "source": {
+            "objID": "716a5e6b-36af-4bc6-d1d4-ab9ee40a33ea",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 72
+          }
+        },
+        {
+          "objID": "9a331e3e-8e27-c7aa-b5a6-26bfa26a3dda",
+          "encoding": 73,
+          "x": 1,
+          "y": 0,
+          "width": 3,
+          "height": 14,
+          "dx": 5,
+          "glyphBitmap": {
+            "width": 3,
+            "height": 14,
+            "pixelArray": "e1fc92e4ff94e4ff94e4ff94e4ff94e4ff94e4ff94e4ff94e4ff94e4ff94e4ff94e4ff94e4ff94e4ff94"
+          },
+          "source": {
+            "objID": "74ef3e2f-b03d-f502-ba68-6635c6bffca3",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 73
+          }
+        },
+        {
+          "objID": "1977c7da-1d8a-3774-f122-fca4ca79efef",
+          "encoding": 74,
+          "x": 0,
+          "y": 0,
+          "width": 5,
+          "height": 14,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 5,
+            "height": 14,
+            "pixelArray": "0000fcfc7e0000ffff7f0000ffff7f0000ffff7e0000ffff7e0000ffff7e0000ffff7d0000ffff7d0000ffff7c0000ffff7c0002ffff7b002fffff6ca9f4ffff30d8fde37000"
+          },
+          "source": {
+            "objID": "276483c7-d97e-00a2-7f34-5fe4dd685bc9",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 74
+          }
+        },
+        {
+          "objID": "efd73e6f-e0c9-5fd4-f87d-9075bc5fb42c",
+          "encoding": 75,
+          "x": 1,
+          "y": 0,
+          "width": 8,
+          "height": 14,
+          "dx": 9,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 14,
+            "pixelArray": "f5fc86000bebfc6df8ff88006afff410f8ff8802dbff9800f8ff884fffff2d00f8ff88c1ffc00000f8ffbcffff540000f8ffffffff1e0000f8ffefefff750000f8ff9198ffd60100f8ff883bffff3600f8ff8801ddff9600f8ff880081ffef08f8ff880025ffff57f8ff880000c7ffb8"
+          },
+          "source": {
+            "objID": "f1213029-f93b-e9a9-733e-2a99569fd7d6",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 75
+          }
+        },
+        {
+          "objID": "bcdeaa36-d001-e037-06d5-6ac0e9188c6a",
+          "encoding": 76,
+          "x": 1,
+          "y": 0,
+          "width": 6,
+          "height": 14,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 14,
+            "pixelArray": "f5fc86000000f8ff88000000f8ff88000000f8ff88000000f8ff88000000f8ff88000000f8ff88000000f8ff88000000f8ff88000000f8ff88000000f8ff88000000f8ff88000000f8ffdfb8b899f8ffffffffd4"
+          },
+          "source": {
+            "objID": "1563bee4-1c74-3431-40e2-f3d9f7316bf2",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 76
+          }
+        },
+        {
+          "objID": "93d5284f-0519-4f22-60c3-550b842ee0f2",
+          "encoding": 77,
+          "x": 1,
+          "y": 0,
+          "width": 10,
+          "height": 14,
+          "dx": 12,
+          "glyphBitmap": {
+            "width": 10,
+            "height": 14,
+            "pixelArray": "c4fce200000042fcfc5dcbffff1a000078ffff62cfffff4d0000adffff66d4ffff810000e2ffff6bd8fff4b50018fff6ff6fdcffbfe9014dffc0ff73e0ff85ff1d82ff88ff77e5ff4cff51b7e46bff7ce9ff14ff86edaf66ff80edfe00dcdaff7a61ff84f2fa00a7ffff455dff89f6f60072ffff1158ff8dfaf2003dffdb0054ff91feee000bfda6004fff96"
+          },
+          "source": {
+            "objID": "417df6e5-9f78-49dc-a6b9-c3502df473cf",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 77
+          }
+        },
+        {
+          "objID": "5ebd90fd-df0b-dc36-5925-16f9dd470ef8",
+          "encoding": 78,
+          "x": 1,
+          "y": 0,
+          "width": 8,
+          "height": 14,
+          "dx": 9,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 14,
+            "pixelArray": "f5ea090000ddfc34f8ff620000e0ff34f8ffcf0100e0ff34f8ffff3b00e0ff34f8ffffa800e0ff34f8fffcfb1ae0ff34f8ffadff82e0ff34f8ff47fee9e7ff34f8ff28b3ffffff34f8ff284affffff34f8ff2803dfffff34f8ff280078ffff34f8ff280016faff34f8ff280000a5ff34"
+          },
+          "source": {
+            "objID": "a6da4303-9e6d-968b-b76c-ad8653874967",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 78
+          }
+        },
+        {
+          "objID": "294557a9-e268-f1d8-de3f-d77265e66e05",
+          "encoding": 79,
+          "x": 0,
+          "y": 0,
+          "width": 9,
+          "height": 14,
+          "dx": 10,
+          "glyphBitmap": {
+            "width": 9,
+            "height": 14,
+            "pixelArray": "000479d7f9eeb52e000084fffbb1d5fff01803f0ff87000bf2ff7921ffff5f0000d3ffab2fffff5c0000d0ffbc30ffff5c0000d0ffbc30ffff5c0000d0ffbc30ffff5c0000d0ffbc30ffff5c0000d0ffbc30ffff5c0000d0ffbb1fffff5e0000d3ffaa02ecff850009f2ff790082fff9a9cefff01800047adafcf2be3100"
+          },
+          "source": {
+            "objID": "3963f0a3-b17f-bfbb-9cc7-261cc4096ab1",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 79
+          }
+        },
+        {
+          "objID": "354f82f2-0486-0b43-e9e3-5bf04b2d124f",
+          "encoding": 80,
+          "x": 1,
+          "y": 0,
+          "width": 8,
+          "height": 14,
+          "dx": 9,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 14,
+            "pixelArray": "f5fcfcfcf3ba2c00f8ffd5a8ddffe80ef8ff880010f8ff59f8ff880000dcff7ef8ff880000e5ff7af8ff88024cffff48f8ffffffffffba02f8ffd5a496570400f8ff880000000000f8ff880000000000f8ff880000000000f8ff880000000000f8ff880000000000f8ff880000000000"
+          },
+          "source": {
+            "objID": "4947dff6-54d8-1ea6-4018-df8805037d94",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 80
+          }
+        },
+        {
+          "objID": "b3b9b6ef-ee96-9a6a-2c8f-ea910e0d08ee",
+          "encoding": 81,
+          "x": 0,
+          "y": -3,
+          "width": 9,
+          "height": 17,
+          "dx": 10,
+          "glyphBitmap": {
+            "width": 9,
+            "height": 17,
+            "pixelArray": "000479d7f9eeb52e000084fffbb1d5fff01703f0ff87000bf2ff7821ffff5f0000d3ffab2fffff5c0000d0ffbc30ffff5c0000d0ffbc30ffff5c0000d0ffbc30ffff5c0000d0ffbc30ffff5c0000d0ffbc30ffff5c0000d0ffbb1fffff5e0000d3ffaa02ecff850009f2ff780082fff9a9cefff11800047adafdfffa3a00000000000090ffaa08000000000004acf709000000000000034d00"
+          },
+          "source": {
+            "objID": "aa234198-0bf2-bb2c-7395-29b314da6999",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 81
+          }
+        },
+        {
+          "objID": "a408efc7-847b-d60d-5f8f-50716db20cd0",
+          "encoding": 82,
+          "x": 1,
+          "y": 0,
+          "width": 8,
+          "height": 14,
+          "dx": 9,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 14,
+            "pixelArray": "f5fcfcf9e3a62700f8ffd5aae8ffeb15f8ff880016fbff69f8ff880000d6ff8cf8ff880001e5ff82f8ff880764ffff50f8ffffffffffb604f8ffd5c0fffa0a00f8ff8820ffff4500f8ff8800deff8d00f8ff88009cffd500f8ff88005affff1df8ff880019ffff64f8ff880000d6ffac"
+          },
+          "source": {
+            "objID": "198dad7f-bc5f-dd57-3bb2-b257957de699",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 82
+          }
+        },
+        {
+          "objID": "13ced25b-4135-449c-8994-8ae26ef17e25",
+          "encoding": 83,
+          "x": 0,
+          "y": 0,
+          "width": 8,
+          "height": 14,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 14,
+            "pixelArray": "0016a1ebf7cc490001c8ffdab4fffa272fffff1e00aeff874affff200076d2722dffffb10500000002d0ffffb60c00000026e8ffffca1400000023dbffffc90600000016ccffff74022a520011e5ffd044fff5030089ffed15fdff430088ffd100a1ffefa8f5ff6700098be4fedc6d01"
+          },
+          "source": {
+            "objID": "77d0d5ee-797e-46fc-6508-2beeee2a2f33",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 83
+          }
+        },
+        {
+          "objID": "65b72b94-0511-4b7d-d433-c825ac74f68e",
+          "encoding": 84,
+          "x": 0,
+          "y": 0,
+          "width": 8,
+          "height": 14,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 14,
+            "pixelArray": "edfcfcfcfcfcfc1c9aa4defff5a4a4120000a0ffe00000000000a0ffe00000000000a0ffe00000000000a0ffe00000000000a0ffe00000000000a0ffe00000000000a0ffe00000000000a0ffe00000000000a0ffe00000000000a0ffe00000000000a0ffe00000000000a0ffe0000000"
+          },
+          "source": {
+            "objID": "09317199-33fd-b92b-fd1a-cd4e300079d4",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 84
+          }
+        },
+        {
+          "objID": "0a7af8f5-46b0-f9ff-3cd6-18647b34353f",
+          "encoding": 85,
+          "x": 0,
+          "y": 0,
+          "width": 9,
+          "height": 14,
+          "dx": 10,
+          "glyphBitmap": {
+            "width": 9,
+            "height": 14,
+            "pixelArray": "14fcfc5b0000c5fca614ffff5c0000c8ffa814ffff5c0000c8ffa814ffff5c0000c8ffa814ffff5c0000c8ffa814ffff5c0000c8ffa814ffff5c0000c8ffa814ffff5c0000c8ffa814ffff5c0000c8ffa813ffff5c0000c9ffa606ffff630000cfff9600d6ff95000df5ff68006dfffeaed3ffed14000274dbfbf3bc3200"
+          },
+          "source": {
+            "objID": "f104198f-84f6-75bc-fa48-ba64b35c2dff",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 85
+          }
+        },
+        {
+          "objID": "32d88fd3-1e0c-bcbb-1c72-1cf5f3f733c6",
+          "encoding": 86,
+          "x": 0,
+          "y": 0,
+          "width": 9,
+          "height": 14,
+          "dx": 9,
+          "glyphBitmap": {
+            "width": 9,
+            "height": 14,
+            "pixelArray": "81fcb1000001eefc4e51ffe2000020ffff1c1effff13004dffe90101ecff42007affb60000b9ff7100a7ff82000086ffa100d4ff4f000053ffd007fcff1c000020fffa35ffe901000001edff8bffb600000000baffe5ff820000000087ffffff4f0000000054ffffff1c0000000021ffffe9010000000001eeffb6000000"
+          },
+          "source": {
+            "objID": "593bb446-1be5-2b52-96ba-f361fa4a8310",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 86
+          }
+        },
+        {
+          "objID": "c988f33b-ebfa-c416-d944-444da0ba9f38",
+          "encoding": 87,
+          "x": 0,
+          "y": 0,
+          "width": 12,
+          "height": 14,
+          "dx": 12,
+          "glyphBitmap": {
+            "width": 12,
+            "height": 14,
+            "pixelArray": "5efcb90000cefb0b007bfc903bffdb0003f8ff33009cff6e17fffa0224ffff5d00bcff4a01f3ff1b4effff8800dcff2600cfff3b77fffcb202fafd0600abff5aa1fac2dd1bffde000087ff7acbd394fe45ffba000063ff9bf4a869ff8cff9600003fffd8ff7e3fffd7ff7200001bffffff5314ffffff4e000002f6ffff2900eaffff2a000000d3fffa0500bffffe08000000afffd4000095ffe2000000008bffa900006affbe0000"
+          },
+          "source": {
+            "objID": "befe81d7-df37-bb3a-0ccd-9be6ab6e3eb1",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 87
+          }
+        },
+        {
+          "objID": "38823091-823a-3511-2daa-83f388f409a4",
+          "encoding": 88,
+          "x": 0,
+          "y": 0,
+          "width": 9,
+          "height": 14,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 9,
+            "height": 14,
+            "pixelArray": "8bfcc9000040fce70627ffff35009bff900000bdff9f07efff30000054fff761ffcf00000005e7fff4ff6e0000000083fffffa14000000002bffffad000000000067ffffa80000000000c7fffffa1700000027fff3e1ff7900000086ff9f78ffdf030003e4ff4316f9ff4a0045ffe40300a4ffb300a5ff8a00003afffe1f"
+          },
+          "source": {
+            "objID": "2c095226-1349-6994-cb9f-32486345f1a4",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 88
+          }
+        },
+        {
+          "objID": "244ff4df-4bc0-fcfe-f32e-06d75501d035",
+          "encoding": 89,
+          "x": 0,
+          "y": 0,
+          "width": 9,
+          "height": 14,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 9,
+            "height": 14,
+            "pixelArray": "adfca4000050fcf0085effef05009bffaa0011fbff4101e5ff580000b8ff8f30fff90e000065ffde7bffb400000016fdffe4ff6200000000c0fffffd14000000006dffffbe00000000001dffff71000000000008ffff5c000000000008ffff5c000000000008ffff5c000000000008ffff5c000000000008ffff5c000000"
+          },
+          "source": {
+            "objID": "664a9139-f752-c728-5d8f-cca2db06ebe9",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 89
+          }
+        },
+        {
+          "objID": "cf62dd59-b59a-8124-bb29-8e89b7081ebc",
+          "encoding": 90,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 14,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 14,
+            "pixelArray": "38fcfcfcfcfccd24a4a4a4efffb200000011faff5c00000061fff70e000000b7ffad00000013fbff5600000063fff40b000000baffa700000015fcff5000000066fff108000000bcffa100000016fdff4a0000005effffa29c9c8268ffffffffffd4"
+          },
+          "source": {
+            "objID": "6cbcd2b1-9254-fab1-e392-0bf3c4290ddc",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 90
+          }
+        },
+        {
+          "objID": "3e8d231b-910b-4839-52f7-880eaf147361",
+          "encoding": 91,
+          "x": 0,
+          "y": -3,
+          "width": 6,
+          "height": 17,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 17,
+            "pixelArray": "05fcfcfcfc1405ffffa7a40d05ffff08000005ffff08000006ffff08000006ffff08000006ffff08000006ffff08000007ffff08000007ffff08000007ffff08000007ffff08000008ffff08000008ffff08000008ffff08000008ffffa3a00a08ffffffff10"
+          },
+          "source": {
+            "objID": "a7d28acd-3f37-05c5-5973-f0667d968504",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 91
+          }
+        },
+        {
+          "objID": "89131e7b-985e-388b-7a05-d8e1a1286763",
+          "encoding": 92,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 14,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 14,
+            "pixelArray": "40fc5a0000000007f5a20000000000b4e802000000006dff310000000026ff780000000001dec0000000000097fb0d0000000050ff4f000000000efb960000000000c1de01000000007aff250000000033ff6d0000000002eab40000000000a4f508"
+          },
+          "source": {
+            "objID": "76306204-ccc9-820d-12bd-0109b391bdbe",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 92
+          }
+        },
+        {
+          "objID": "1813ce9f-9d5a-570b-2e5a-afc60d05d176",
+          "encoding": 93,
+          "x": 0,
+          "y": -3,
+          "width": 5,
+          "height": 17,
+          "dx": 5,
+          "glyphBitmap": {
+            "width": 5,
+            "height": 17,
+            "pixelArray": "9efcfcfc7767a4dbff78000098ff78000098ff78000098ff78000098ff78000098ff78000098ff78000098ff78000098ff78000098ff78000098ff78000098ff78000098ff78000098ff7864a0d9ff78a0ffffff78"
+          },
+          "source": {
+            "objID": "1f56fe93-ca2c-e92c-ac86-91d3cb8a1ad9",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 93
+          }
+        },
+        {
+          "objID": "7b2efd86-c7ca-1c8d-f8f8-4d4473bd0c42",
+          "encoding": 94,
+          "x": 0,
+          "y": 8,
+          "width": 8,
+          "height": 6,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 6,
+            "pixelArray": "00004dfcfc3200000000bbffffa000000029ffb9d2f916000095ff5d76ff7d000ff4f50c1dfee7062c846100006e8421"
+          },
+          "source": {
+            "objID": "54cce11a-8205-126f-f6b1-11073195d0c7",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 94
+          }
+        },
+        {
+          "objID": "b6ecd000-e485-8ea1-78e4-70fe16c2c0be",
+          "encoding": 95,
+          "x": 0,
+          "y": -3,
+          "width": 7,
+          "height": 2,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 2,
+            "pixelArray": "a0a0a0a0a0a00affffffffffff10"
+          },
+          "source": {
+            "objID": "35598265-e638-4121-6f2f-f8519404b9f6",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 95
+          }
+        },
+        {
+          "objID": "ce71aa26-471e-a746-ef4c-f6631b749721",
+          "encoding": 96,
+          "x": 0,
+          "y": 10,
+          "width": 5,
+          "height": 4,
+          "dx": 5,
+          "glyphBitmap": {
+            "width": 5,
+            "height": 4,
+            "pixelArray": "04c8fc6100002af8b700000073fb120000010401"
+          },
+          "source": {
+            "objID": "c0cf7057-6d33-9081-3a21-7da43abc1f53",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 96
+          }
+        },
+        {
+          "objID": "54c82455-f20d-e9cc-747b-bba4b66a201c",
+          "encoding": 97,
+          "x": 0,
+          "y": 0,
+          "width": 8,
+          "height": 10,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 10,
+            "pixelArray": "0024aff1f1a7100001cfffc9e5ff8d0021ffff1770ffd300145c5c0370ffe000000040bfffffe000007cffd287ffe00022fffd1e64ffe0004fffef026bffe1002affffb7e4ffeb00007df3db51fffe05"
+          },
+          "source": {
+            "objID": "cccdd7e4-7fb9-e01c-db9c-dc506deba172",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 97
+          }
+        },
+        {
+          "objID": "99887763-9546-9bdc-ed51-21a4698b0d96",
+          "encoding": 98,
+          "x": 0,
+          "y": 0,
+          "width": 8,
+          "height": 14,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 14,
+            "pixelArray": "18fcfc3c0000000018ffff3c0000000018ffff3c0000000018ffff3c0000000018ffff88d4f0700018ffffdbc4fffd1a18ffff3d09fbff5618ffff3c00edff6418ffff3c00ecff6418ffff3c00ecff6418ffff3c00edff6318ffff3c07fbff5018ffffcfbbfffa1518ffff95e0f16800"
+          },
+          "source": {
+            "objID": "41722177-37ce-07aa-c8a7-4407df3e8413",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 98
+          }
+        },
+        {
+          "objID": "fdebb7dc-81ca-e585-86d7-23bd6874d285",
+          "encoding": 99,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 10,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 10,
+            "pixelArray": "0030c3f6eda41003e0ffc8e3ff8c2fffff1964ffcb4affff0944c4a34cffff080000004cffff080000004affff0954f4cb30ffff1865ffc904e2ffc8e2ff890034c8faf0a30e"
+          },
+          "source": {
+            "objID": "a5d17977-68dc-f9e8-f4a9-7cb952a148fb",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 99
+          }
+        },
+        {
+          "objID": "05e048ab-8083-bb84-76e7-a357dce8740c",
+          "encoding": 100,
+          "x": 0,
+          "y": 0,
+          "width": 8,
+          "height": 14,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 14,
+            "pixelArray": "000000002cfcfc28000000002cffff28000000002cffff28000000002cffff28004ce3e99affff2804e9ffd2ceffff282fffff272cffff2846ffff112cffff2848ffff102cffff2848ffff102cffff2847ffff112cffff2834ffff222cffff2806f4ffccc5ffff28005be6ed9cffff28"
+          },
+          "source": {
+            "objID": "e9bd397e-3919-d269-121a-2d3f9208f2bd",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 100
+          }
+        },
+        {
+          "objID": "2adfa39f-3052-c4ec-4e1a-5bc9385411cf",
+          "encoding": 101,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 10,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 10,
+            "pixelArray": "002dc1f6ee9f0b03ddffc3deff832effff0f58ffcb4affff9ebcffe14cffffffffffe44cffff080404044affff042b887930ffff1460ffd504e3ffcde6ff8d0035c7f9efa00d"
+          },
+          "source": {
+            "objID": "90f401b3-b2a1-4255-0521-f3a4b664fd6f",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 101
+          }
+        },
+        {
+          "objID": "c179492b-a252-baff-4cdf-c712533f3188",
+          "encoding": 102,
+          "x": 0,
+          "y": 0,
+          "width": 6,
+          "height": 14,
+          "dx": 5,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 14,
+            "pixelArray": "000caef5f00f006dfffcb30d0098ffbe000000a0ffb00000aefffffffc1071deffe4a40b00a0ffb0000000a0ffb0000000a0ffb0000000a0ffb0000000a0ffb0000000a0ffb0000000a0ffb0000000a0ffb00000"
+          },
+          "source": {
+            "objID": "0bd7568f-a540-a710-6d20-6fe8df9248d3",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 102
+          }
+        },
+        {
+          "objID": "6247623c-224b-ca39-150b-6b342e987437",
+          "encoding": 103,
+          "x": 0,
+          "y": -3,
+          "width": 9,
+          "height": 14,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 9,
+            "height": 14,
+            "pixelArray": "000000000000000f00002abbf6e56486d40101d9ffc2e1ffdb680428fff70457ffa7000042ffe60044ffcf00002ffff40454ffc2000003d3ffbaddff7d0000007df2f8f39d0800002cfe9b1b03000000002cfafffffdda73010002a8e99eb9f2ff430066ff84000068ff6f0096ffeeada6e7ff440020b0ecfffdda7c0100"
+          },
+          "source": {
+            "objID": "3482dd2a-1734-b9ec-f385-617d2f863fc3",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 103
+          }
+        },
+        {
+          "objID": "5e71ad0c-cdf4-e4a0-c737-fdb3cfe74b0d",
+          "encoding": 104,
+          "x": 0,
+          "y": 0,
+          "width": 8,
+          "height": 14,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 14,
+            "pixelArray": "10fcfc3f0000000010ffff400000000010ffff400000000010ffff400000000010ffff6fb8f6b30310ffffe9beffff3b10ffff4309ffff4c10ffff4004ffff4c10ffff4004ffff4c10ffff4004ffff4c10ffff4004ffff4c10ffff4004ffff4c10ffff4004ffff4c10ffff4004ffff4c"
+          },
+          "source": {
+            "objID": "1dc9ac2e-d6be-21b3-7567-f12a052733e4",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 104
+          }
+        },
+        {
+          "objID": "967e9bb4-912e-37e6-3c32-a456c3664e0c",
+          "encoding": 105,
+          "x": 0,
+          "y": 0,
+          "width": 4,
+          "height": 14,
+          "dx": 4,
+          "glyphBitmap": {
+            "width": 4,
+            "height": 14,
+            "pixelArray": "08fcfc4b06a4a431000000000000000008fcfc4708ffff4808ffff4808ffff4808ffff4808ffff4808ffff4808ffff4808ffff4808ffff48"
+          },
+          "source": {
+            "objID": "f838691a-5971-c001-c138-ed780cb2a3a4",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 105
+          }
+        },
+        {
+          "objID": "18c1d787-5ead-c17e-d092-dfdf483cbcc6",
+          "encoding": 106,
+          "x": -1,
+          "y": -3,
+          "width": 5,
+          "height": 17,
+          "dx": 4,
+          "glyphBitmap": {
+            "width": 5,
+            "height": 17,
+            "pixelArray": "0000e1fc73000093a44b000000000000000000000000ddfc6f0000e0ff700000e0ff700000e0ff700000e0ff700000e0ff700000e0ff700000e0ff700000e0ff700000e0ff700004eeff6d31d9ffff3734f7ec7d01"
+          },
+          "source": {
+            "objID": "121fba19-53ea-6fe4-da58-a3aeb83f2538",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 106
+          }
+        },
+        {
+          "objID": "cc921e26-53be-bc3a-7345-aadb791e066e",
+          "encoding": 107,
+          "x": 0,
+          "y": 0,
+          "width": 9,
+          "height": 14,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 9,
+            "height": 14,
+            "pixelArray": "18fcfc38000000000018ffff38000000000018ffff38000000000018ffff38000000000018ffff38009ffcd90818ffff383fffff4c0018ffff3ed6ffb3000018ffffb0fff822000018ffffffffef09000018ffffb3e3ff5d000018ffff3c89ffc3000018ffff382effff2a0018ffff3800d2ff8f0018ffff380076ffee08"
+          },
+          "source": {
+            "objID": "892686a3-3232-3a49-a930-1dfacf441aac",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 107
+          }
+        },
+        {
+          "objID": "c497f53e-4ecd-2944-4451-3bc7ccbddd03",
+          "encoding": 108,
+          "x": 1,
+          "y": 0,
+          "width": 3,
+          "height": 14,
+          "dx": 4,
+          "glyphBitmap": {
+            "width": 3,
+            "height": 14,
+            "pixelArray": "f5fc5bf8ff5cf8ff5cf8ff5cf8ff5cf8ff5cf8ff5cf8ff5cf8ff5cf8ff5cf8ff5cf8ff5cf8ff5cf8ff5c"
+          },
+          "source": {
+            "objID": "593144fa-3a86-bc60-59e2-6acc341bd5e5",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 108
+          }
+        },
+        {
+          "objID": "7812645a-cb2c-608a-bd80-82dd419303cc",
+          "encoding": 109,
+          "x": 0,
+          "y": 0,
+          "width": 12,
+          "height": 10,
+          "dx": 12,
+          "glyphBitmap": {
+            "width": 12,
+            "height": 10,
+            "pixelArray": "1cfcfc67d3f69039c7f7a6031cffffe9bbffffe9b4ffff3c1cffff2303fcff4600deff5b1cffff1800f8ff3c00d8ff5c1cffff1800f8ff3c00d8ff5c1cffff1800f8ff3c00d8ff5c1cffff1800f8ff3c00d8ff5c1cffff1800f8ff3c00d8ff5c1cffff1800f8ff3c00d8ff5c1cffff1800f8ff3c00d8ff5c"
+          },
+          "source": {
+            "objID": "f6ac64b3-4483-be3a-6161-e44bde5bb00f",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 109
+          }
+        },
+        {
+          "objID": "c453632e-32d1-8d82-6ea0-7431d1ad790a",
+          "encoding": 110,
+          "x": 0,
+          "y": 0,
+          "width": 8,
+          "height": 10,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 10,
+            "pixelArray": "1cfcfc6fb7f6a1011cffffe3c4ffff221cffff3a21ffff381cffff381cffff381cffff381cffff381cffff381cffff381cffff381cffff381cffff381cffff381cffff381cffff381cffff381cffff38"
+          },
+          "source": {
+            "objID": "7e12edc5-63d0-e877-ce29-436971be406f",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 110
+          }
+        },
+        {
+          "objID": "557eda02-2329-9ae8-0790-108f00e26836",
+          "encoding": 111,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 10,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 10,
+            "pixelArray": "002cbff6ed9d0d04dfffc8e3ff9633ffff135dffe74bffff014dffff4cffff004cffff4cffff004cffff4bffff004dffff34ffff0f5dffe804e3ffc1deff9b0032c1f9efa110"
+          },
+          "source": {
+            "objID": "f297e0af-f3db-a938-8555-b4ed1cbae855",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 111
+          }
+        },
+        {
+          "objID": "d8fa313c-7255-1801-484c-a0e583c5d61c",
+          "encoding": 112,
+          "x": 0,
+          "y": -3,
+          "width": 8,
+          "height": 13,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 13,
+            "pixelArray": "1cfcfc8dd8ef6d001cffffdac7fffc171cffff390bfdff4f1cffff3800f1ff601cffff3800f0ff601cffff3800f0ff601cffff3800f1ff5f1cffff3808fdff4c1cffffcdbefff9121cffff91e0ef65001cffff38000000001cffff38000000001cffff3800000000"
+          },
+          "source": {
+            "objID": "f8692fc5-d20a-fa67-13aa-c497ecaaa5b7",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 112
+          }
+        },
+        {
+          "objID": "66babfb6-a864-39b7-2050-f4aa739b2f5d",
+          "encoding": 113,
+          "x": 0,
+          "y": -3,
+          "width": 8,
+          "height": 13,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 13,
+            "pixelArray": "0048e1e995fcfc3004e8ffd3cdffff3030ffff2724ffff3043ffff1124ffff3044ffff1024ffff3044ffff1024ffff3043ffff1124ffff3030ffff2224ffff3005f1ffccc4ffff300059e6ed97ffff300000000024ffff300000000024ffff300000000024ffff30"
+          },
+          "source": {
+            "objID": "4f2adcb3-e720-6a95-5d79-b802a8bc36ff",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 113
+          }
+        },
+        {
+          "objID": "7c754312-6f8a-ba39-f498-b50a3b1a08a6",
+          "encoding": 114,
+          "x": 0,
+          "y": 0,
+          "width": 6,
+          "height": 11,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 11,
+            "pixelArray": "00000000000214fcfc6bcea614fffffbb87914ffff77000014ffff40000014ffff40000014ffff40000014ffff40000014ffff40000014ffff40000014ffff400000"
+          },
+          "source": {
+            "objID": "90ec2ff7-5015-534c-8101-3ef0ce0521a7",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 114
+          }
+        },
+        {
+          "objID": "33733620-f16a-df89-e54c-245a15a5b9c5",
+          "encoding": 115,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 10,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 10,
+            "pixelArray": "0054d4f7bb240021fdfbb4fccd015fffc6008ed71531ffff730a01000093ffff8b0200000283ffff9200000c0863ffff3167f56300c7ff5b31fef4abfcfd20005bd7fbd15700"
+          },
+          "source": {
+            "objID": "023c1e60-9000-2c5e-1526-81443ed9b384",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 115
+          }
+        },
+        {
+          "objID": "968b81fc-08e7-1bc4-19e6-1833a3d38dd6",
+          "encoding": 116,
+          "x": 0,
+          "y": 0,
+          "width": 6,
+          "height": 13,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 13,
+            "pixelArray": "00b6fc9e000000b8ffa0000000b8ffa00000aefffffffc1c71e7ffdea41200b8ffa0000000b8ffa0000000b8ffa0000000b8ffa0000000b8ffa0000000b4ffad00000088ffffdb320017c6fcf533"
+          },
+          "source": {
+            "objID": "db8defe2-5c4a-d76e-c9e3-2137cffa7841",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 116
+          }
+        },
+        {
+          "objID": "dcef3f89-a6fd-d198-1fda-2a237383977d",
+          "encoding": 117,
+          "x": 0,
+          "y": 0,
+          "width": 8,
+          "height": 10,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 10,
+            "pixelArray": "2cfcfc2434fcfc1c2cffff2434ffff1c2cffff2434ffff1c2cffff2434ffff1c2cffff2434ffff1c2cffff2434ffff1c2cffff2434ffff1c2cffff2a37ffff1c19ffffd0e7ffff1c009ffac067ffff1c"
+          },
+          "source": {
+            "objID": "32cbac38-8a8d-cb4b-125e-ec098440c627",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 117
+          }
+        },
+        {
+          "objID": "f5891788-08e1-7eea-2d53-5c5d6c5e0404",
+          "encoding": 118,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 10,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 10,
+            "pixelArray": "aefc8b00a3fc9280ffaf00c7ff634effd200e8ff331dfff40cfffb0701ecff43ffd10000bbff88ffa0000089ffccff6f000058fffeff3e000027ffffff0e000002f3ffdc0000"
+          },
+          "source": {
+            "objID": "f94371fc-5a9b-7719-ffc8-5f1d98b38dbb",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 118
+          }
+        },
+        {
+          "objID": "bf635824-d26c-9c65-9f7a-37b8b5117c8f",
+          "encoding": 119,
+          "x": 0,
+          "y": 0,
+          "width": 10,
+          "height": 10,
+          "dx": 10,
+          "glyphBitmap": {
+            "width": 10,
+            "height": 10,
+            "pixelArray": "7ffc6700d6f9063afc965bff8907fcff295eff7134ffab2cffff5082ff490effcc55fffe76a6ff2100e7ed7ef1cd9dcbf80300c0ffb7c3a0c4f0d2000099fff79474f5ffaa000072ffff6547ffff8300004bffff361bffff5b000024fffe0a01efff3400"
+          },
+          "source": {
+            "objID": "39320d51-a4dc-a092-afe8-e7de20c40689",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 119
+          }
+        },
+        {
+          "objID": "2c2e8eb8-e317-1b3a-351c-34d7d882ec96",
+          "encoding": 120,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 10,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 10,
+            "pixelArray": "92fcb10064fc9926feff26c8ff2f00b1ffbdffc200003fffffff55000001d8ffe405000015f9ffe808000073ffffff620001d9ff98ffd4013fffc210f3ff48a5ff63008effbb"
+          },
+          "source": {
+            "objID": "0486dc24-5eaf-bab6-cb74-40598c6cbc53",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 120
+          }
+        },
+        {
+          "objID": "caf9d5d9-5f03-e020-4d9b-d143ed7cd7fd",
+          "encoding": 121,
+          "x": 0,
+          "y": -3,
+          "width": 7,
+          "height": 13,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 13,
+            "pixelArray": "c3fc750067fcd289ffa50090ff9e4bffd300b8ff6610fefb07e0ff2f00ceff3afff504008fff8fffc0000051ffe4ff89000014ffffff51000000d5ffff1a00000098ffe30000000075ffab00000bb6f0ff52000010fdd574010000"
+          },
+          "source": {
+            "objID": "cccd2f29-e7af-d701-ab32-e84773f263e5",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 121
+          }
+        },
+        {
+          "objID": "ddda03a4-753a-5992-5dc0-b11a817e3d84",
+          "encoding": 122,
+          "x": 0,
+          "y": 0,
+          "width": 6,
+          "height": 10,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 10,
+            "pixelArray": "2cfcfcfcfcd51da4a4e3ffbe000009eeff5b00005effee080000c6ff9000002effff2b000095ffc400000cf2ff5e00005dffffa69c7f70ffffffffd0"
+          },
+          "source": {
+            "objID": "a55067ca-676a-91c1-0937-84355cb66d0a",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 122
+          }
+        },
+        {
+          "objID": "bc3c0a42-1563-f775-0075-a45abf497ae9",
+          "encoding": 123,
+          "x": 0,
+          "y": -3,
+          "width": 6,
+          "height": 17,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 17,
+            "pixelArray": "00007de8fc4b0017ffffcc310035ffff1f000038ffff14000038ffff1400003affff1400004afffa05002ad4ffa8000044fffc5200000270ffe10000003effff0b000039ffff14000038ffff14000038ffff14000032ffff21000013feffca30000076ebff4c"
+          },
+          "source": {
+            "objID": "5e0dfab7-ff43-0dbc-66ea-e04d13a291a6",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 123
+          }
+        },
+        {
+          "objID": "1123091d-046c-4b6b-2284-e83be372cf05",
+          "encoding": 124,
+          "x": 1,
+          "y": -3,
+          "width": 3,
+          "height": 17,
+          "dx": 4,
+          "glyphBitmap": {
+            "width": 3,
+            "height": 17,
+            "pixelArray": "dafc28ddff28ddff28ddff28deff28deff28deff28deff28dfff28dfff28dfff28dfff28e0ff28e0ff28e0ff28e0ff28e0ff28"
+          },
+          "source": {
+            "objID": "f983b8a5-d29c-b5e2-c4d1-c7b01db38334",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 124
+          }
+        },
+        {
+          "objID": "1f02ab5c-154b-f0c1-5be8-4914baea37a0",
+          "encoding": 125,
+          "x": 0,
+          "y": -3,
+          "width": 6,
+          "height": 17,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 17,
+            "pixelArray": "43fce98400002cc9ffff1e000018ffff3e00000dffff4400000cffff4400000cffff44000002f6ff50000000a3ffd72f00004dfaff4c0000dcff76020006ffff4600000cffff4400000cffff4400000dffff4400001affff3b002bc7ffff1a0044ffed7d0000"
+          },
+          "source": {
+            "objID": "5b2b7c8c-028c-14d1-cfa7-dd13a70c102c",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 125
+          }
+        },
+        {
+          "objID": "4c09e1a0-a47a-542b-fc57-b91992b77688",
+          "encoding": 126,
+          "x": 0,
+          "y": 5,
+          "width": 8,
+          "height": 4,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 4,
+            "pixelArray": "00218c630700220026efffffe4b4fd2e067a1753cbf57a010000000000010000"
+          },
+          "source": {
+            "objID": "306be132-43b3-1f14-0bad-d7b7b96edc20",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 126
+          }
+        },
+        {
+          "objID": "f41b0a05-098b-cbfa-d4ba-6e50f56be3f1",
+          "encoding": 127,
+          "x": 0,
+          "y": 0,
+          "width": 6,
+          "height": 12,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 12,
+            "pixelArray": "25545454540770553c3c9b14702000007c14702000007c14702000007c14702000007c14702000007c14702000007c14702000007c14702000007c14702000007c14709b8c8cc514"
+          },
+          "source": {
+            "objID": "0710be28-0863-7063-3efc-2c15a6b3c2e9",
+            "filePath": "Oswald-Medium.ttf",
+            "size": 12,
+            "encoding": 127
+          }
+        }
+      ],
+      "alwaysBuild": false
+    },
+    {
+      "objID": "9cd39fbd-a955-4df0-946e-00dc02a6577c",
+      "name": "small",
+      "renderingEngine": "opentype",
+      "source": {
+        "objID": "4d920deb-ef06-4bac-83c3-0f419940a09e",
+        "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+        "size": 10
+      },
+      "bpp": 8,
+      "threshold": 128,
+      "height": 19,
+      "ascent": 15,
+      "descent": 4,
+      "glyphs": [
+        {
+          "objID": "825347a0-7f94-41ef-b3b3-31175eae6fc9",
+          "encoding": 32,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 4,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "e19e775c-d447-45b0-ef1f-14f035a3e7f6",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 32
+          }
+        },
+        {
+          "objID": "d6d3e0cc-598b-4e3d-a194-699ee902711f",
+          "encoding": 33,
+          "x": 0,
+          "y": 0,
+          "width": 3,
+          "height": 11,
+          "dx": 4,
+          "glyphBitmap": {
+            "width": 3,
+            "height": 11,
+            "pixelArray": "30bf6040ff4040ff4040ff4000ff2000ff0000ff0000e00000400060bf6080ff80"
+          },
+          "source": {
+            "objID": "404d439a-dda5-40a4-d14b-969319973fa6",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 33
+          }
+        },
+        {
+          "objID": "604d529b-0b26-4c32-f369-ad11a95f46ab",
+          "encoding": 34,
+          "x": 0,
+          "y": 7,
+          "width": 5,
+          "height": 4,
+          "dx": 5,
+          "glyphBitmap": {
+            "width": 5,
+            "height": 4,
+            "pixelArray": "30bf30c06040ff20ff6040ff00ff30309000c000"
+          },
+          "source": {
+            "objID": "5f408a31-ed04-4e19-8cf8-e907acd5322c",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 34
+          }
+        },
+        {
+          "objID": "4084f199-9fc6-40b3-cf44-d8135d64a65e",
+          "encoding": 35,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 11,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 11,
+            "pixelArray": "0000c06050bf100010ff7080ff000040ff40a0d000409fff9fdfdf2060e0ffc0ffe03000b0d000ff800080ffffffffff4020ffa080ff601000ff8080ff000040ff4090f0000040ff30c0c00000"
+          },
+          "source": {
+            "objID": "f7b87cc3-ddf6-48a9-b4ea-7b3b46893d23",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 35
+          }
+        },
+        {
+          "objID": "daffdb1e-8671-432c-bf82-e9881028104a",
+          "encoding": 36,
+          "x": 0,
+          "y": -2,
+          "width": 7,
+          "height": 14,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 14,
+            "pixelArray": "000000800000000070cfefaf100050ffd0a0ffa00080ff4000e0df0080ff900030100020f0ff8f0000000030f0ff9f0000000030e0ff8000205f2020ffef0080ff5000c0ff0040ffdf7fefe0000080ffffe030000000008000000000000020000000"
+          },
+          "source": {
+            "objID": "4e113224-beb5-437a-ad2e-b033424ec4bb",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 36
+          }
+        },
+        {
+          "objID": "93c52070-0a7e-4722-8576-cc2d9072ae10",
+          "encoding": 37,
+          "x": 0,
+          "y": -1,
+          "width": 13,
+          "height": 12,
+          "dx": 13,
+          "glyphBitmap": {
+            "width": 13,
+            "height": 12,
+            "pixelArray": "0080bfbf50000090600000000030ffa0c0ef1010ff400000000080ff1050ff4050f0000000000080ff0040ff40a0b0000000000050ff60a0ff20e060000000000000c0ffff8030ff2080dfdf7f00000010000070d030ffa0a0ff300000000000c09040ff4040ff400000000000ff4040ff4040ff400000000050ff0030ff7f7fff300000000090b0000090ffff900000000000000000000000000000"
+          },
+          "source": {
+            "objID": "53d223a5-5ea7-471f-b662-84d1836562d7",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 37
+          }
+        },
+        {
+          "objID": "213c53b4-9108-4ff8-de6e-c89a84f9fb19",
+          "encoding": 38,
+          "x": 0,
+          "y": -1,
+          "width": 8,
+          "height": 12,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 12,
+            "pixelArray": "0010afef9f10000000b0f090ff90000000f0c000ffc0000000b0df20ff7000000050ffcfd00000000010efef10103f1000b0f0ff6080ff1020ff90b0dfb0e00040ff4020ffff800030ff9f4fefffbf200090ffffc070ff400000000000001010"
+          },
+          "source": {
+            "objID": "a37dd4bf-883e-4cf0-ef52-85afa23ac325",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 38
+          }
+        },
+        {
+          "objID": "c0582bc6-66fa-4aa4-9ac0-3dbeeca04669",
+          "encoding": 39,
+          "x": 0,
+          "y": 7,
+          "width": 3,
+          "height": 4,
+          "dx": 5,
+          "glyphBitmap": {
+            "width": 3,
+            "height": 4,
+            "pixelArray": "00c04000ff4000ff0000b000"
+          },
+          "source": {
+            "objID": "cd39c498-ebeb-47e7-8012-29aebf68e26a",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 39
+          }
+        },
+        {
+          "objID": "3583fa71-7702-4e48-8fa4-3efaf8074694",
+          "encoding": 40,
+          "x": 0,
+          "y": -3,
+          "width": 4,
+          "height": 14,
+          "dx": 5,
+          "glyphBitmap": {
+            "width": 4,
+            "height": 14,
+            "pixelArray": "000080a00060ff6000c0e00000ffc00000ffc00000ff900000ff800000ff800000ffa00000ffc00000f0c00000a0ef100030ffa000003060"
+          },
+          "source": {
+            "objID": "51b407bb-fe13-4b84-fdcf-c8250b48b9cc",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 40
+          }
+        },
+        {
+          "objID": "e82d268a-b48d-4828-ef6f-1bd21a0087bc",
+          "encoding": 41,
+          "x": 0,
+          "y": -3,
+          "width": 4,
+          "height": 14,
+          "dx": 4,
+          "glyphBitmap": {
+            "width": 4,
+            "height": 14,
+            "pixelArray": "709f100030f0a00000a0ff000080ff400080ff400070ff400040ff400040ff400080ff400080ff400080ff2000d0e00060ff700040500000"
+          },
+          "source": {
+            "objID": "16b938b7-511f-4932-c723-4fc972cef30a",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 41
+          }
+        },
+        {
+          "objID": "65b4e6b6-d4a2-4e56-abc3-0a69f7b4d465",
+          "encoding": 42,
+          "x": 0,
+          "y": 6,
+          "width": 6,
+          "height": 5,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 5,
+            "pixelArray": "000090600000209fb0a09f0010a0fff090100060e0f04000007050705000"
+          },
+          "source": {
+            "objID": "184295cc-03c1-4c28-ec1a-d0b959da10b1",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 42
+          }
+        },
+        {
+          "objID": "e49e9169-5c89-4c82-8f65-bbb9cd4b39fe",
+          "encoding": 43,
+          "x": 0,
+          "y": 2,
+          "width": 6,
+          "height": 7,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 7,
+            "pixelArray": "0000302000000000c0800000303fcf9f3f20c0ffffffff800000c08000000000c0800000000030200000"
+          },
+          "source": {
+            "objID": "386bf4e3-3c93-4cf0-9015-a9bd454a6723",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 43
+          }
+        },
+        {
+          "objID": "fcfa77e9-6e7d-4dbb-dbe4-f073ae9f2b87",
+          "encoding": 44,
+          "x": 0,
+          "y": -2,
+          "width": 3,
+          "height": 4,
+          "dx": 3,
+          "glyphBitmap": {
+            "width": 3,
+            "height": 4,
+            "pixelArray": "60bf3080ff4000b020307000"
+          },
+          "source": {
+            "objID": "48b5741f-0977-4c97-a0c8-a828c1402c28",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 44
+          }
+        },
+        {
+          "objID": "4b9e7cfd-ac90-49fb-e487-7b3a1eb8c800",
+          "encoding": 45,
+          "x": 0,
+          "y": 3,
+          "width": 4,
+          "height": 2,
+          "dx": 5,
+          "glyphBitmap": {
+            "width": 4,
+            "height": 2,
+            "pixelArray": "38e0e0d81861615d"
+          },
+          "source": {
+            "objID": "45c8edc9-a701-4052-9c0a-dc86ef1bf1b0",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 45
+          }
+        },
+        {
+          "objID": "02311b69-9a8b-4457-8032-c69d22cf19f2",
+          "encoding": 46,
+          "x": 0,
+          "y": 0,
+          "width": 3,
+          "height": 2,
+          "dx": 3,
+          "glyphBitmap": {
+            "width": 3,
+            "height": 2,
+            "pixelArray": "4fcc4e62ff61"
+          },
+          "source": {
+            "objID": "fc5b3f7b-f0a4-458c-ff22-34c181ca08ba",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 46
+          }
+        },
+        {
+          "objID": "fcbba8e7-f0fb-4135-8a81-01a719f9e8df",
+          "encoding": 47,
+          "x": 0,
+          "y": 0,
+          "width": 5,
+          "height": 11,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 5,
+            "height": 11,
+            "pixelArray": "0000007080000000e070000020ff20000060e0000000b090000000f050000040ff00000090b0000000d070000020ff30000060e0000000"
+          },
+          "source": {
+            "objID": "eaa0a5b3-7636-4694-f82c-558416d85ab8",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 47
+          }
+        },
+        {
+          "objID": "b62b21a3-15ea-4191-d5b4-a033b36d2131",
+          "encoding": 48,
+          "x": 0,
+          "y": -1,
+          "width": 7,
+          "height": 12,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 12,
+            "pixelArray": "0040bfdfaf200010eff0c0ffbf0040ff9000c0ff1080ff8000c0ff4080ff8000c0ff4080ff8000c0ff4080ff8000c0ff4080ff8000c0ff4050ff9000c0ff2020ffef8fffe0000060fffff0300000000010000000"
+          },
+          "source": {
+            "objID": "5b3f6020-d1bf-4164-9bd8-045f9d4f4eb3",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 48
+          }
+        },
+        {
+          "objID": "75e4c2dc-bb3d-4e13-c30d-3edebd9819fd",
+          "encoding": 49,
+          "x": 1,
+          "y": 0,
+          "width": 4,
+          "height": 11,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 4,
+            "height": 11,
+            "pixelArray": "0040bf90a0ffffc08060ffc00000ffc00000ffc00000ffc00000ffc00000ffc00000ffc00000ffc00000ffc0"
+          },
+          "source": {
+            "objID": "a8ca26d8-f702-41e6-a22a-ce038fbd903c",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 49
+          }
+        },
+        {
+          "objID": "9b95bd56-de07-45fa-9e8e-aa2919279e54",
+          "encoding": 50,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 11,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 11,
+            "pixelArray": "0030bfefaf300000f0ffc0ffdf0040ffb000a0ff4030c06000b0ff4000000020ffe000000000c0ff5000000050ffb000000010eff020000000a0ff7000000040ffef7f7f7f0080ffffffffff00"
+          },
+          "source": {
+            "objID": "6e7cc850-0c76-4dec-ac17-a77d6e62adf0",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 50
+          }
+        },
+        {
+          "objID": "232b49e4-dec1-4dbb-cb85-a05e015ea6e0",
+          "encoding": 51,
+          "x": 0,
+          "y": -1,
+          "width": 7,
+          "height": 12,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 12,
+            "pixelArray": "0050bfefaf300020fff090ffdf0060ff8000c0ff2040804000c0ff100000208fffc000000040ffff300000000040f0ef00203f2000c0ff2070ff8000c0ff1030ffcf7fefe0000080fffff0300000000010000000"
+          },
+          "source": {
+            "objID": "7b8abad8-b5d8-4521-f6d9-3a3ec1a7dc8f",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 51
+          }
+        },
+        {
+          "objID": "363e1e53-490f-470d-f3fb-8e124b826f8e",
+          "encoding": 52,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 11,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 11,
+            "pixelArray": "000000b0bf6000000060ffff80000000c0d0ff80000030ff70ff800000a0e040ff800010ff9040ff800070ff6f6fff9f2080ffffffffff8020404070ffa02000000040ff800000000040ff8000"
+          },
+          "source": {
+            "objID": "7c8bdabb-8af9-4ceb-acb5-e2f1ea47b180",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 52
+          }
+        },
+        {
+          "objID": "82971fca-ccd5-4482-ade8-401c58511652",
+          "encoding": 53,
+          "x": 0,
+          "y": -1,
+          "width": 7,
+          "height": 12,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 12,
+            "pixelArray": "00c0bfbfbf900030ffffffffc00040ff800000000040ff800000000040ffcfffff600040ffd040e0ef001040200090ff300000000080ff4040ff8000a0ff2020ffcf4fdfe0000090fffff0400000000030000000"
+          },
+          "source": {
+            "objID": "b05d6076-f786-45df-c649-5b22dac974a2",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 53
+          }
+        },
+        {
+          "objID": "388d747c-4c77-4df3-e771-8be64f1c6adb",
+          "encoding": 54,
+          "x": 0,
+          "y": -1,
+          "width": 7,
+          "height": 12,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 12,
+            "pixelArray": "0030afefaf300000e0ff90f0ef0040ffa00090ff3040ff800000000040ff908f8f200040ffffc0ffdf0040ff9000a0ff4040ff800080ff4040ffa00090ff4000f0ef6fdff0000060f0fff0600000000000000000"
+          },
+          "source": {
+            "objID": "71a2ca10-3f43-47e9-ab02-d4bc3d401fde",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 54
+          }
+        },
+        {
+          "objID": "9be92810-56cf-4dab-9d88-3ce13edbb79b",
+          "encoding": 55,
+          "x": 0,
+          "y": 0,
+          "width": 6,
+          "height": 11,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 11,
+            "pixelArray": "60bfbfbfbf3060c0c0f0ff20000000d0f000000010ffb000000040ff8000000080ff40000000c0ff10000000f0d000000030ffa000000060ff60000000a0ff300000"
+          },
+          "source": {
+            "objID": "a004ea66-89a1-4fc7-8ae4-a22e98d2824c",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 55
+          }
+        },
+        {
+          "objID": "5fadcf3a-5002-4600-c609-af1f8b67e2d5",
+          "encoding": 56,
+          "x": 0,
+          "y": -1,
+          "width": 7,
+          "height": 12,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 12,
+            "pixelArray": "0040bfdfaf100010eff090ffa00040ff8000d0ef0040ff9000f0d00000d0ef9fff90000070ffffff300030ffc050f0df0070ff6000c0ff1070ff5000c0ff0030ffbf4fefe0000080fffff0300000000010000000"
+          },
+          "source": {
+            "objID": "54154831-5e8e-4a3b-b257-46460990abc1",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 56
+          }
+        },
+        {
+          "objID": "211a4ec8-d262-458d-a739-20ebdb972ca3",
+          "encoding": 57,
+          "x": 0,
+          "y": -1,
+          "width": 7,
+          "height": 12,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 12,
+            "pixelArray": "0030bfefaf100010eff0a0ffbf0050ff8000d0ff1080ff8000c0ff4070ff8000c0ff4020ffef8fffff400060c0b0d0ff4000000000c0ff4030bf6000c0ff1030ffcf5fffe0000070ffffe0300000000010000000"
+          },
+          "source": {
+            "objID": "7f6f9da4-8dc2-4e46-d103-d1ecaef6af4d",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 57
+          }
+        },
+        {
+          "objID": "8e17833f-04ee-4279-bf75-505fa6bae17b",
+          "encoding": 58,
+          "x": 0,
+          "y": 1,
+          "width": 3,
+          "height": 7,
+          "dx": 4,
+          "glyphBitmap": {
+            "width": 3,
+            "height": 7,
+            "pixelArray": "103f2040ff8020804000000000000030bf6040ff80"
+          },
+          "source": {
+            "objID": "c143203a-91b5-4540-e0a2-210717419be0",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 58
+          }
+        },
+        {
+          "objID": "0f8fecf1-90d4-4629-a867-f89bf8bfaeda",
+          "encoding": 59,
+          "x": 0,
+          "y": -2,
+          "width": 3,
+          "height": 10,
+          "dx": 4,
+          "glyphBitmap": {
+            "width": 3,
+            "height": 10,
+            "pixelArray": "207f4040ff80104020000000000000103f2040ff8020b08000c030000000"
+          },
+          "source": {
+            "objID": "ef0fb46b-ea7d-4db9-b266-a0ccc9c53094",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 59
+          }
+        },
+        {
+          "objID": "9c204505-0c17-4380-8bce-0adc858c77c9",
+          "encoding": 60,
+          "x": 0,
+          "y": 0,
+          "width": 5,
+          "height": 8,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 5,
+            "height": 8,
+            "pixelArray": "00000050300010afff4030dff0600080ef20000050ffcf30000030e0ef3000001090400000000000"
+          },
+          "source": {
+            "objID": "e47338fc-8865-42dc-91fa-dc535da75f95",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 60
+          }
+        },
+        {
+          "objID": "768d965c-aa60-473a-df7c-2688211a35f7",
+          "encoding": 61,
+          "x": 0,
+          "y": 3,
+          "width": 5,
+          "height": 5,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 5,
+            "height": 5,
+            "pixelArray": "103f3f3f3f40ffffffff000000000030bfbfbfbf2080808080"
+          },
+          "source": {
+            "objID": "252f5de9-c878-4a36-b714-098492bbe932",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 61
+          }
+        },
+        {
+          "objID": "2a874dc9-6e67-448d-cbf0-8c38d3be3f0e",
+          "encoding": 62,
+          "x": 0,
+          "y": 0,
+          "width": 5,
+          "height": 8,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 5,
+            "height": 8,
+            "pixelArray": "306f00000030ffbf10000040f0ef50000010e0c00010bfff8020eff0500040b01000000000000000"
+          },
+          "source": {
+            "objID": "2ea8bacf-119d-495b-ab78-e4fd086a1eab",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 62
+          }
+        },
+        {
+          "objID": "e8a8828d-0fa1-428d-d26a-e2b5e0883012",
+          "encoding": 63,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 11,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 11,
+            "pixelArray": "0070cfef9f100030ffe0d0ffb00040ff5000d0ff0020702000e0f00000000040ffa000000010efe010000000e0f03000000000ff80000000000040200000000000c0900000000000ffc0000000"
+          },
+          "source": {
+            "objID": "8f48c65e-d0c5-4f9d-feca-55a46b27c56f",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 63
+          }
+        },
+        {
+          "objID": "ca4b4505-b455-4c2f-883e-430d5d9e8404",
+          "encoding": 64,
+          "x": 0,
+          "y": -2,
+          "width": 12,
+          "height": 13,
+          "dx": 13,
+          "glyphBitmap": {
+            "width": 12,
+            "height": 13,
+            "pixelArray": "00000000509fbfbf9f400000000010cfffb08080c0ff8f000010cff0300000000060ff400070ff3010bfffcfff30b0b000d0b00090ff70a0ff0070ef00ff7010ffa000c0d00040ff40ff4040ff5000d0c00080d040ff4040ff5010ff8000c08000ff7010f0dfcff09f9fe01000e0bf0030b05050c09010000050ff7f0000000000000000000080ffdf9f7f7fbf1000000000003080b0c0c080200000"
+          },
+          "source": {
+            "objID": "dbd97343-5535-42b7-b5a2-ef46cb048f4b",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 64
+          }
+        },
+        {
+          "objID": "729bbb2b-dea0-4c0e-cfbb-b2d56ef67ce8",
+          "encoding": 65,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 11,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 11,
+            "pixelArray": "000080bf6000000000d0ffc000000000ffffef00000040ffc0ff30000070ff80ff600000a0ff10ff900000d0e000f0c00000ffefbfefff0040ffc080c0ff3070ff600070ff60b0ff300040ff90"
+          },
+          "source": {
+            "objID": "d6da4a24-1e2c-4732-d9d8-3d8375385597",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 65
+          }
+        },
+        {
+          "objID": "6c99f1d9-947a-4073-bffc-d40612782473",
+          "encoding": 66,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 11,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 11,
+            "pixelArray": "30bfbfbfaf500040ffe090e0ff5040ffc00030ff8040ffc00030ff7040ffdf7fbfe02040ffffffffaf1040ffc00060ffa040ffc00000ffdf40ffc00010ffd040ffdf7fafff9040fffffff0a010"
+          },
+          "source": {
+            "objID": "70449626-56fa-47dd-a209-ae1e213bf017",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 66
+          }
+        },
+        {
+          "objID": "8c324ff4-20f3-4b7e-8041-4a0c14822379",
+          "encoding": 67,
+          "x": 0,
+          "y": -1,
+          "width": 7,
+          "height": 12,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 12,
+            "pixelArray": "0030afffcf7f0000f0ff90e0ff4040ffc00040ff8040ff800040ff8040ff800010402040ff800000000040ff800000000040ff800040ff8040ffc00040ff8010f0ef5fbfff600060f0ffff900000000000000000"
+          },
+          "source": {
+            "objID": "5e2372fa-0c6d-48a6-f83a-bc042f777ed1",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 67
+          }
+        },
+        {
+          "objID": "cc79718d-d829-450c-c286-b5a0839b7f58",
+          "encoding": 68,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 11,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 11,
+            "pixelArray": "30bfbfbfaf500040ffe090f0ff5040ffc00050ffb040ffc00040ffc040ffc00040ffc040ffc00040ffc040ffc00040ffc040ffc00040ffc040ffc00040ffb040ffdf7fcfff6040ffffffe08000"
+          },
+          "source": {
+            "objID": "f63f83b5-ca06-4f65-e9af-f5c81298435e",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 68
+          }
+        },
+        {
+          "objID": "7cbf1af1-62a7-42dc-e2ee-74c12b4177bf",
+          "encoding": 69,
+          "x": 0,
+          "y": 0,
+          "width": 6,
+          "height": 11,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 11,
+            "pixelArray": "30bfbfbfbf3040ffe080802040ffc000000040ffc000000040ffcf3f300040ffffffc00040ffc000000040ffc000000040ffc000000040ffcf3f3f1040ffffffff40"
+          },
+          "source": {
+            "objID": "1f9abaa2-8151-4206-e932-1cb0e7729eb1",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 69
+          }
+        },
+        {
+          "objID": "307775a2-d03a-4174-f4d8-a0b33014a606",
+          "encoding": 70,
+          "x": 0,
+          "y": 0,
+          "width": 6,
+          "height": 11,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 11,
+            "pixelArray": "30bfbfbfbf3040ffe080802040ffc000000040ffc000000040ffcf3f300040ffffffc00040ffc000000040ffc000000040ffc000000040ffc000000040ffc0000000"
+          },
+          "source": {
+            "objID": "25c5b47e-3c9e-4a90-ea7f-4c8732a6b223",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 70
+          }
+        },
+        {
+          "objID": "daee31d2-bab9-4074-ad73-e1c5fa89b242",
+          "encoding": 71,
+          "x": 0,
+          "y": -1,
+          "width": 7,
+          "height": 12,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 12,
+            "pixelArray": "0030afefbf6f0000f0ff90d0ff6040ffc00040ff9040ff800030c09040ff800000000040ff80207f7f6040ff8030c0ffc040ff900000ffc040ffc00010ffc010f0ef5f9fffc00060f0ffd0a0c000000000000000"
+          },
+          "source": {
+            "objID": "11b5d9b0-f545-43c4-c41f-24ca6d8092e8",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 71
+          }
+        },
+        {
+          "objID": "ed842bca-8a15-4e15-e5b4-319fe979e446",
+          "encoding": 72,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 11,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 11,
+            "pixelArray": "30bf900000c0bf40ffc00000ffff40ffc00000ffff40ffc00000ffff40ffcf3f3fffff40ffffffffffff40ffc00000ffff40ffc00000ffff40ffc00000ffff40ffc00000ffff40ffc00000ffff"
+          },
+          "source": {
+            "objID": "546ac5e2-706d-4b6d-9922-fc0b221b5723",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 72
+          }
+        },
+        {
+          "objID": "94abbf40-c7d2-4d0c-e1a2-8072c3e8c4b9",
+          "encoding": 73,
+          "x": 0,
+          "y": 0,
+          "width": 3,
+          "height": 11,
+          "dx": 4,
+          "glyphBitmap": {
+            "width": 3,
+            "height": 11,
+            "pixelArray": "1bc9a222ffcd22ffcd22ffcd22ffcd22ffcd22ffcd22ffcd22ffcd22ffcd22ffcd"
+          },
+          "source": {
+            "objID": "83584e36-ea85-42c6-e83a-87dab4c00c54",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 73
+          }
+        },
+        {
+          "objID": "41ad6579-ca45-4d30-f99f-781a1f3adba0",
+          "encoding": 74,
+          "x": 0,
+          "y": -1,
+          "width": 4,
+          "height": 12,
+          "dx": 5,
+          "glyphBitmap": {
+            "width": 4,
+            "height": 12,
+            "pixelArray": "0060bf600080ff800080ff800080ff800080ff800080ff800080ff800080ff800080ff8040afff70fffff01040400000"
+          },
+          "source": {
+            "objID": "2f5fc297-7822-4bed-f426-d985823da397",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 74
+          }
+        },
+        {
+          "objID": "bfe35108-e258-4b00-cfbf-ea30e99cd5d1",
+          "encoding": 75,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 11,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 11,
+            "pixelArray": "30bf900040bf7040ffc000b0ff3040ffc020ffc00040ffc0a0ff600040ffd0fff0000040ffffffdf000040ffe0a0ff400040ffc040ffa00040ffc000e0ff1040ffc00090ff6040ffc00020ffcf"
+          },
+          "source": {
+            "objID": "f4e7497c-1e72-441f-bdde-8b5787e6c0a4",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 75
+          }
+        },
+        {
+          "objID": "0754b514-8b0b-4522-dffd-aa7e2626a72d",
+          "encoding": 76,
+          "x": 0,
+          "y": 0,
+          "width": 6,
+          "height": 11,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 11,
+            "pixelArray": "30bf9000000040ffc000000040ffc000000040ffc000000040ffc000000040ffc000000040ffc000000040ffc000000040ffc000000040ffcf3f3f1040ffffffff40"
+          },
+          "source": {
+            "objID": "dd152628-cccb-4133-b3ce-15a89b140731",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 76
+          }
+        },
+        {
+          "objID": "0bf5752d-9bf3-4c34-892d-6f6d19b0696d",
+          "encoding": 77,
+          "x": 0,
+          "y": 0,
+          "width": 9,
+          "height": 11,
+          "dx": 10,
+          "glyphBitmap": {
+            "width": 9,
+            "height": 11,
+            "pixelArray": "00c0bf000000c0bf2000ffff400020ffff4000ffff700050ffff4000ffffb00090f0ff4000ffe0df00c0c0ff4020ff80ff10ff80ff4040ff40ff70ff50ff4040ff40c0dfe040ff4040ff4090ffb040ff4040ff4050ff7040ff4040ff4020ff4040ff40"
+          },
+          "source": {
+            "objID": "730f8c5f-2062-400d-d9a5-95bda6a2a37d",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 77
+          }
+        },
+        {
+          "objID": "fa63ae27-b530-47b3-abd2-72ded2e74208",
+          "encoding": 78,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 11,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 11,
+            "pixelArray": "30bf400030bf6040ffbf0040ff8040ffff2040ff8040ffffa040ff8040ffffef50ff8040ffa0ffb0ff8040ff80c0ffff8040ff8050ffff8040ff8000e0ff8040ff800080ff8040ff800010ff80"
+          },
+          "source": {
+            "objID": "12039e15-5667-4e52-b590-14c784f44dc4",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 78
+          }
+        },
+        {
+          "objID": "b4391b1e-225b-48ef-b6d1-a30179dc576e",
+          "encoding": 79,
+          "x": 0,
+          "y": -1,
+          "width": 7,
+          "height": 12,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 12,
+            "pixelArray": "0030afffbf6f0010efff90d0ff6040ffc00040ffc040ffc00040ffc040ffc00040ffc040ffc00040ffc040ffc00040ffc040ffc00040ffc040ffc00040ffc010f0ef5fafff800050f0ffffc01000000000000000"
+          },
+          "source": {
+            "objID": "19d227b7-566d-4fca-badc-32d151db6593",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 79
+          }
+        },
+        {
+          "objID": "778502e5-698e-4282-ce3a-ac53fa053c07",
+          "encoding": 80,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 11,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 11,
+            "pixelArray": "30bfbfbfbf500040ffe080e0ff4040ffc00040ff8040ffc00040ffa040ffcf3f9fff7040ffffffffc01040ffd04010000040ffc00000000040ffc00000000040ffc00000000040ffc000000000"
+          },
+          "source": {
+            "objID": "58f60b53-bc11-4041-9dae-ed3f162b2619",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 80
+          }
+        },
+        {
+          "objID": "668f3692-b8ef-4b72-8881-a521f6ace8ba",
+          "encoding": 81,
+          "x": 0,
+          "y": -3,
+          "width": 7,
+          "height": 14,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 14,
+            "pixelArray": "0030afffbf6f0010efff90d0ff6040ffc00040ffc040ffc00040ffc040ffc00040ffc040ffc00040ffc040ffc00040ffc040ffc00040ffc040ffc00040ffb010f0ef5fafff700050f0ffffb00000000000c0df300000000010d03000000000000000"
+          },
+          "source": {
+            "objID": "a79882fb-4148-47b9-f4de-83dbe2e4ae8c",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 81
+          }
+        },
+        {
+          "objID": "5b62ee12-0002-488c-8fa4-80cf54d0c820",
+          "encoding": 82,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 11,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 11,
+            "pixelArray": "30bfbfbfaf500040ffe090e0ff5040ffc00040ffb040ffc00040ffc040ffcf3f9fff7040ffffffffc01040ffc040ffa00040ffc000ffef0040ffc000b0ff3040ffc00070ff7040ffc00030ffc0"
+          },
+          "source": {
+            "objID": "ab7f1044-2888-49e1-e30d-dcef8bfdc78e",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 82
+          }
+        },
+        {
+          "objID": "0869d68b-daf7-4a4d-8c27-5a39615b5c96",
+          "encoding": 83,
+          "x": 0,
+          "y": -1,
+          "width": 7,
+          "height": 12,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 12,
+            "pixelArray": "0050bfffaf100020ffe090ffb00070ff8000c0ff0060ffaf0030200010f0ff9f0000000030e0ffbf1000000010d0ff9000205f2010f0ff2060ff8000c0ff4020ffef7feff0000060f0fff0500000000000000000"
+          },
+          "source": {
+            "objID": "ca3830a2-8142-4e31-c9f4-77f618c62f37",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 83
+          }
+        },
+        {
+          "objID": "b35c4bcd-f540-416d-c1f2-e1168fe3926e",
+          "encoding": 84,
+          "x": 0,
+          "y": 0,
+          "width": 6,
+          "height": 11,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 11,
+            "pixelArray": "c0bfbfbfbf60c0d0fff0c0600040ffc000000040ffc000000040ffc000000040ffc000000040ffc000000040ffc000000040ffc000000040ffc000000040ffc00000"
+          },
+          "source": {
+            "objID": "191a312c-389e-41d6-ffc8-c6e046d81fa9",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 84
+          }
+        },
+        {
+          "objID": "73cf887f-cd13-4aa1-8407-b47a1f9c2663",
+          "encoding": 85,
+          "x": 0,
+          "y": -1,
+          "width": 7,
+          "height": 12,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 12,
+            "pixelArray": "30bf900000c09040ffc00000ffc040ffc00000ffc040ffc00000ffc040ffc00000ffc040ffc00000ffc040ffc00000ffc040ffc00010ffc040ffc00040ffc000f0ef5fafff700060f0ffffc01000000000000000"
+          },
+          "source": {
+            "objID": "f38f2b25-3c18-45bf-e5fe-01170890b1fd",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 85
+          }
+        },
+        {
+          "objID": "f3fc51ee-b6ba-40c8-e30e-2a1741eab50e",
+          "encoding": 86,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 11,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 11,
+            "pixelArray": "70bf200030bf6070ff400070ff5040ff800090ff2000ffb000c0f00000d0df00ffc00000a0ff20ff80000070ff90ff50000040ffefff20000000ffffe000000000d0ffb000000000a0ff800000"
+          },
+          "source": {
+            "objID": "1db2b565-fecf-45c9-a83c-8825c02b4819",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 86
+          }
+        },
+        {
+          "objID": "e3969550-8afd-45e2-cc8a-51f31988bccf",
+          "encoding": 87,
+          "x": 0,
+          "y": 0,
+          "width": 10,
+          "height": 11,
+          "dx": 10,
+          "glyphBitmap": {
+            "width": 10,
+            "height": 11,
+            "pixelArray": "60bf2000c0600060bf0060ff4010ffb000b0ff0040ff6040ffcf00c0c00010ff8070ffff00f0b00000ffa090c0ff30ff800000c0c0c080f080ff600000b0dff050c0c0ff40000080ffff3090efff10000060ffff0070ffff00000040ffd00040ffc000000010ffb00010ffb00000"
+          },
+          "source": {
+            "objID": "4782896c-344e-4da2-8ecd-cde4793a1c3f",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 87
+          }
+        },
+        {
+          "objID": "4e0ef626-efb1-4df8-ca0b-c6162a9ea082",
+          "encoding": 88,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 11,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 11,
+            "pixelArray": "80bf200060bf2040ff9000d0e00000e0ef40ff70000070ffdfff20000010f0ffb000000000d0ff6000000020ffffa000000090ffd0ff100000f0c060ff800050ff6000f0df00b0ff100080ff50"
+          },
+          "source": {
+            "objID": "2355f84c-a08d-4605-b0ea-13245a5375aa",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 88
+          }
+        },
+        {
+          "objID": "8625db51-af03-4330-d496-558449ff7d20",
+          "encoding": 89,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 11,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 11,
+            "pixelArray": "90bf100070bf3070ff6000d0f00020ffb020ffa00000d0ef60ff50000070ffeff000000020ffffa000000000d0ff5000000000c0ff4000000000c0ff4000000000c0ff4000000000c0ff400000"
+          },
+          "source": {
+            "objID": "908eecf2-f8bb-437c-fc4b-9ca634ebed57",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 89
+          }
+        },
+        {
+          "objID": "375f316d-391b-4b3a-8971-bdd10a52a1f3",
+          "encoding": 90,
+          "x": 0,
+          "y": 0,
+          "width": 6,
+          "height": 11,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 11,
+            "pixelArray": "60bfbfbfbf30408080e0ff30000010efe000000060ff90000000b0ff20000010ffd000000060ff70000000d0ff20000020ffb000000070ff8f3f3f1080ffffffff40"
+          },
+          "source": {
+            "objID": "d38cdec7-dd96-47e4-d525-e7bbfb29f64b",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 90
+          }
+        },
+        {
+          "objID": "33736543-688b-4e0c-a52b-d8d0ee541952",
+          "encoding": 91,
+          "x": 0,
+          "y": -3,
+          "width": 4,
+          "height": 14,
+          "dx": 5,
+          "glyphBitmap": {
+            "width": 4,
+            "height": 14,
+            "pixelArray": "30bfbfbf40ff500040ff400040ff400040ff400040ff400040ff400040ff400040ff400040ff400040ff400040ff400040ff6f3f20808080"
+          },
+          "source": {
+            "objID": "adab3813-83f2-4b3a-bed4-2e024ebd861e",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 91
+          }
+        },
+        {
+          "objID": "2d9ec4c3-2aa7-4706-b951-bb6f52002885",
+          "encoding": 92,
+          "x": 0,
+          "y": 0,
+          "width": 5,
+          "height": 11,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 5,
+            "height": 11,
+            "pixelArray": "509f00000030ff20000000e060000000a0b000000050ef00000010ff40000000c09000000070cf00000030ff10000000e060000000a0a0"
+          },
+          "source": {
+            "objID": "49095aaa-baa0-4430-b42d-537bdbc84826",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 92
+          }
+        },
+        {
+          "objID": "a6f7c652-79c1-443e-d865-1f060d47da6d",
+          "encoding": 93,
+          "x": 0,
+          "y": -3,
+          "width": 4,
+          "height": 14,
+          "dx": 5,
+          "glyphBitmap": {
+            "width": 4,
+            "height": 14,
+            "pixelArray": "90bfbf600000ff800000ff800000ff800000ff800000ff800000ff800000ff800000ff800000ff800000ff800000ff80303fff8060808040"
+          },
+          "source": {
+            "objID": "665cf9f4-a361-4343-efaf-851b757d1cbd",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 93
+          }
+        },
+        {
+          "objID": "4a1b1fc9-929f-4beb-969f-ea82e94a412e",
+          "encoding": 94,
+          "x": 0,
+          "y": 6,
+          "width": 6,
+          "height": 5,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 5,
+            "pixelArray": "0000b0bf10000040fff0700000a0d0a0df0020ff7050ff5050c02000c080"
+          },
+          "source": {
+            "objID": "d1dc8a83-1ad6-4b74-88b5-d51b644e55f4",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 94
+          }
+        },
+        {
+          "objID": "c19ffb5e-ba64-4d2d-c848-6ac0a10d9fc3",
+          "encoding": 95,
+          "x": 0,
+          "y": -3,
+          "width": 5,
+          "height": 3,
+          "dx": 5,
+          "glyphBitmap": {
+            "width": 5,
+            "height": 3,
+            "pixelArray": "4141414131ffffffffbf0909090900"
+          },
+          "source": {
+            "objID": "8e99cc6b-6755-4c12-df0d-abc182322dc9",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 95
+          }
+        },
+        {
+          "objID": "99dd8f52-5cac-43d8-9780-93c75aad386f",
+          "encoding": 96,
+          "x": 0,
+          "y": 8,
+          "width": 4,
+          "height": 3,
+          "dx": 4,
+          "glyphBitmap": {
+            "width": 4,
+            "height": 3,
+            "pixelArray": "10c080000090df000010b020"
+          },
+          "source": {
+            "objID": "5b959910-11f4-4387-b563-b6b5647e21a5",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 96
+          }
+        },
+        {
+          "objID": "c1260943-e5ee-4ba9-d4db-c1608e74534e",
+          "encoding": 97,
+          "x": 0,
+          "y": -1,
+          "width": 6,
+          "height": 9,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 9,
+            "pixelArray": "0050bfbf6f0020ffd0d0ff3040c05080ff60000060cfff8000c0f0b0ff8060ff6080ff8080ff8fb0ff8010e0ff90ff80000000000000"
+          },
+          "source": {
+            "objID": "cdbd6ccc-1895-4ce1-deca-3625f6ead51e",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 97
+          }
+        },
+        {
+          "objID": "a00138ca-0122-467f-9337-304f585a3098",
+          "encoding": 98,
+          "x": 0,
+          "y": -1,
+          "width": 6,
+          "height": 12,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 12,
+            "pixelArray": "30bf6000000040ff8000000040ff8000000040ffa0afaf2040ffd0a0ffa040ff8000ffc040ff8000ffc040ff8000ffc040ff8000ffc040ffaf5fffb040ffd0f0f040000000000000"
+          },
+          "source": {
+            "objID": "7fe2b3bd-a4f3-49c7-b4e6-0fc9d4dc112b",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 98
+          }
+        },
+        {
+          "objID": "70a67733-18ab-47db-b8f5-ff385840d74c",
+          "encoding": 99,
+          "x": 0,
+          "y": -1,
+          "width": 6,
+          "height": 9,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 9,
+            "pixelArray": "0060bfbf600020ffc0c0ff3070ff8050ff4080ff8010401080ff8000000080ff8040ff4030ff9f9fff4000b0ffffa000000000000000"
+          },
+          "source": {
+            "objID": "ca4dad69-00e6-4be5-eceb-875a5bd92435",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 99
+          }
+        },
+        {
+          "objID": "ee534a9d-b9fd-494e-fb5b-37cee0c5e77f",
+          "encoding": 100,
+          "x": 0,
+          "y": -1,
+          "width": 6,
+          "height": 12,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 12,
+            "pixelArray": "00000030bf6000000040ff8000000040ff800090bf9fff8030ffd0a0ff8070ff8040ff8080ff8040ff8080ff8040ff8080ff8040ff8040ffaf6fff8000d0ffd0ff80000000000000"
+          },
+          "source": {
+            "objID": "9ffa5f3a-feb4-4f11-b1e2-bc2b855216a1",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 100
+          }
+        },
+        {
+          "objID": "cdb81f6b-5315-4cba-bb86-fd133b77b0ad",
+          "encoding": 101,
+          "x": 0,
+          "y": -1,
+          "width": 6,
+          "height": 9,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 9,
+            "pixelArray": "0060bfbf600020ffd0c0ff2060ff6040ff6080ffcfcfff8080ff7040402080ff4030bf5030ff9f8fff4000b0ffffa000000000000000"
+          },
+          "source": {
+            "objID": "baf02f72-1cbc-4e78-a2ac-38760d250137",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 101
+          }
+        },
+        {
+          "objID": "4c4dd1b3-9589-4971-f084-7eb5415e4998",
+          "encoding": 102,
+          "x": 0,
+          "y": 0,
+          "width": 4,
+          "height": 11,
+          "dx": 5,
+          "glyphBitmap": {
+            "width": 4,
+            "height": 11,
+            "pixelArray": "00106f7f00b0ffff00ffff0090ffffbf60ffff8000ffff0000ffff0000ffff0000ffff0000ffff0000ffff00"
+          },
+          "source": {
+            "objID": "506ed523-6bac-4936-a2e7-b14abd21c335",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 102
+          }
+        },
+        {
+          "objID": "86a196bf-d278-4e32-8ccf-b007fac9a9c7",
+          "encoding": 103,
+          "x": 0,
+          "y": -3,
+          "width": 7,
+          "height": 11,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 11,
+            "pixelArray": "0050bfbf40bf2020ffb0b0ff600060ff4040ff400070ff4040ff400020f0cfcff0100010df908030000070ffbf7f6f100010efd0c0ffa00090ff100090c00090ffffffff800000304040300000"
+          },
+          "source": {
+            "objID": "69c5b0c5-d25f-45bc-bab0-64a75a663834",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 103
+          }
+        },
+        {
+          "objID": "44d9b17d-12db-4b77-caff-2345bea6a091",
+          "encoding": 104,
+          "x": 0,
+          "y": 0,
+          "width": 6,
+          "height": 11,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 11,
+            "pixelArray": "30bf6000000040ff8000000040ff8000000040ff908fbf5040ffe0a0ffc040ff8000ffc040ff8000ffc040ff8000ffc040ff8000ffc040ff8000ffc040ff8000ffc0"
+          },
+          "source": {
+            "objID": "f9270902-35d5-4948-e5a3-1874b5583eb5",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 104
+          }
+        },
+        {
+          "objID": "16eb72a0-712c-4e0a-ab22-81a8eca39b33",
+          "encoding": 105,
+          "x": 0,
+          "y": 0,
+          "width": 3,
+          "height": 11,
+          "dx": 4,
+          "glyphBitmap": {
+            "width": 3,
+            "height": 11,
+            "pixelArray": "207f4040ff8000000030bf6040ff8040ff8040ff8040ff8040ff8040ff8040ff80"
+          },
+          "source": {
+            "objID": "f3ce7288-ee4c-4cf2-a508-02600a0e807a",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 105
+          }
+        },
+        {
+          "objID": "ff0b662c-ca7a-4865-ccc3-7a8fbbfb0646",
+          "encoding": 106,
+          "x": -1,
+          "y": -3,
+          "width": 4,
+          "height": 14,
+          "dx": 4,
+          "glyphBitmap": {
+            "width": 4,
+            "height": 14,
+            "pixelArray": "00207f600040ffc0000000000000c0900000ffc00000ffc00000ffc00000ffc00000ffc00000ffc00000ffc0107fffa040fff04000000000"
+          },
+          "source": {
+            "objID": "1ae204f5-d805-41e7-cc87-5b681a7f8b3e",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 106
+          }
+        },
+        {
+          "objID": "b9498e3c-ff3d-4c0b-a54d-2c6fae97f9a9",
+          "encoding": 107,
+          "x": 0,
+          "y": 0,
+          "width": 7,
+          "height": 11,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 7,
+            "height": 11,
+            "pixelArray": "30bf600000000040ff800000000040ff800000000040ff800090bf2040ff8050ffb00040ff90dff0200040ffefffb0000040ffe0d0ef100040ff8070ff600040ff8010ffcf0040ff8000b0ff30"
+          },
+          "source": {
+            "objID": "3fdd7aa4-2fe7-42f7-f2f6-de7d5875b052",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 107
+          }
+        },
+        {
+          "objID": "e695d243-48a4-433b-afe0-c6530fec0a54",
+          "encoding": 108,
+          "x": 0,
+          "y": 0,
+          "width": 3,
+          "height": 11,
+          "dx": 4,
+          "glyphBitmap": {
+            "width": 3,
+            "height": 11,
+            "pixelArray": "25c9802fffa22fffa22fffa22fffa22fffa22fffa22fffa22fffa22fffa22fffa2"
+          },
+          "source": {
+            "objID": "9c6c9c2c-ada7-47fc-d9a9-c554ed8cb118",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 108
+          }
+        },
+        {
+          "objID": "3cd772f6-2bf4-4115-8708-9af67b086722",
+          "encoding": 109,
+          "x": 0,
+          "y": 0,
+          "width": 9,
+          "height": 8,
+          "dx": 10,
+          "glyphBitmap": {
+            "width": 9,
+            "height": 8,
+            "pixelArray": "30bf80afbf408fbf6040ffd090fff070f0cf40ff8000ffc000c0ff40ff8000ffc000c0ff40ff8000ffc000c0ff40ff8000ffc000c0ff40ff8000ffc000c0ff40ff8000ffc000c0ff"
+          },
+          "source": {
+            "objID": "01ab9ea5-0289-4732-aa63-77f4f2060fc3",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 109
+          }
+        },
+        {
+          "objID": "65a9af32-3818-4c60-8527-b7f54c58a119",
+          "encoding": 110,
+          "x": 0,
+          "y": 0,
+          "width": 6,
+          "height": 8,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 8,
+            "pixelArray": "30bf709fbf3040ffe0a0ffa040ff8040ffc040ff8040ffc040ff8040ffc040ff8040ffc040ff8040ffc040ff8040ffc0"
+          },
+          "source": {
+            "objID": "946147a8-0555-4369-cced-4c4a9dd08053",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 110
+          }
+        },
+        {
+          "objID": "23389b44-2e7f-4c76-a635-1550e4389dfe",
+          "encoding": 111,
+          "x": 0,
+          "y": -1,
+          "width": 6,
+          "height": 9,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 9,
+            "pixelArray": "0050bfbf600020ffc0c0ff3070ff5040ff8080ff4040ff8080ff4040ff8080ff4040ff8040ff9f8fff5000a0ffffb000000000000000"
+          },
+          "source": {
+            "objID": "c6cc624f-44db-447d-fc13-e643bf54ca16",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 111
+          }
+        },
+        {
+          "objID": "de47cdda-c7e9-415e-b994-b2ee58ff5a7a",
+          "encoding": 112,
+          "x": 0,
+          "y": -3,
+          "width": 6,
+          "height": 11,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 11,
+            "pixelArray": "30bf90afaf2040ffd0a0ffa040ff8000ffc040ff8000ffc040ff8000ffc040ff8000ffc040ffaf5fffa040ffd0f0f04040ff8000000040ff80000000208040000000"
+          },
+          "source": {
+            "objID": "e89d5b9e-18fc-4ee3-b52c-ed022263e849",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 112
+          }
+        },
+        {
+          "objID": "c56a6ad2-b163-4030-dd11-a7c145787b78",
+          "encoding": 113,
+          "x": 0,
+          "y": -3,
+          "width": 6,
+          "height": 11,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 11,
+            "pixelArray": "0090bf8fbf9030ffd0a0ffc070ff8040ffc080ff8040ffc080ff8040ffc080ff8040ffc040ffaf6fffc000d0ffd0ffc000000040ffc000000040ffc0000000208060"
+          },
+          "source": {
+            "objID": "1e5d83ea-5171-4476-f46d-fef3fe677621",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 113
+          }
+        },
+        {
+          "objID": "10ae7909-ad97-4840-89b1-70b62c28851c",
+          "encoding": 114,
+          "x": 0,
+          "y": 0,
+          "width": 5,
+          "height": 8,
+          "dx": 5,
+          "glyphBitmap": {
+            "width": 5,
+            "height": 8,
+            "pixelArray": "30bf60906040ffefff8040ffb0000040ff80000040ff80000040ff80000040ff80000040ff800000"
+          },
+          "source": {
+            "objID": "ac27bfa4-0ecf-4024-9bb4-3be02980441e",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 114
+          }
+        },
+        {
+          "objID": "d09dd2ad-1799-4879-c21d-2253e16796dd",
+          "encoding": 115,
+          "x": 0,
+          "y": -1,
+          "width": 5,
+          "height": 9,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 5,
+            "height": 9,
+            "pixelArray": "0080bf9f1060ffa0f0a070ff50405020f0ef60000030f0ff60104020f0ef90ef4fcff010d0fff0600000000000"
+          },
+          "source": {
+            "objID": "eb6f4ef9-1221-4bf4-c33f-fbd4a1420616",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 115
+          }
+        },
+        {
+          "objID": "4fda9e31-b071-45f3-dd61-767f2a2c1a85",
+          "encoding": 116,
+          "x": 0,
+          "y": -1,
+          "width": 5,
+          "height": 11,
+          "dx": 5,
+          "glyphBitmap": {
+            "width": 5,
+            "height": 11,
+            "pixelArray": "00ffc0000000ffc0000090ffefbf0060ffe0800000ffc0000000ffc0000000ffc0000000ffc0000000f0ef4f000090ffff000000000000"
+          },
+          "source": {
+            "objID": "3bfbeeaa-21f8-4329-b773-2dca8a45f929",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 116
+          }
+        },
+        {
+          "objID": "d1c8fa48-a253-4205-9218-8203d3b919e9",
+          "encoding": 117,
+          "x": 0,
+          "y": -1,
+          "width": 6,
+          "height": 9,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 9,
+            "pixelArray": "30bf6030bf6040ff8040ff8040ff8040ff8040ff8040ff8040ff8040ff8040ff8040ff8040ff9f7fff8020f0ffa0ff80000000000000"
+          },
+          "source": {
+            "objID": "6b2952b7-79c0-42f7-d43b-71ae0b298e57",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 117
+          }
+        },
+        {
+          "objID": "84770199-2091-45e4-bf7d-d9b73f3e8e5c",
+          "encoding": 118,
+          "x": 0,
+          "y": 0,
+          "width": 6,
+          "height": 8,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 8,
+            "pixelArray": "90bf0060bf2090ff20c0ff0070ff40d0c00040ff60ffa00000ff90ff700000d0f0ff400000a0ffff00000070ffd00000"
+          },
+          "source": {
+            "objID": "8d858f82-4988-43bd-8f0e-12077e2f2c6e",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 118
+          }
+        },
+        {
+          "objID": "ec58b328-aeb3-41cd-d0dd-437b85807d5a",
+          "encoding": 119,
+          "x": 0,
+          "y": 0,
+          "width": 8,
+          "height": 8,
+          "dx": 8,
+          "glyphBitmap": {
+            "width": 8,
+            "height": 8,
+            "pixelArray": "709f00909000b06080ff00e0cf00ff6050ff20ffff30ff4030ff80f0ff70ff1000ffc0c0c0c0f00000e0ff80a0ffc00000c0ff6080ff90000080ff3040ff8000"
+          },
+          "source": {
+            "objID": "e79afa7a-f38c-43cb-c13d-a192624ea1bb",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 119
+          }
+        },
+        {
+          "objID": "fc10d742-547f-4886-bef4-23c57f652239",
+          "encoding": 120,
+          "x": 0,
+          "y": 0,
+          "width": 6,
+          "height": 8,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 8,
+            "pixelArray": "80bf1050bf2040ff80b0d00000e0efff60000060fff000000070ffdf000000e0f0ff500050ff60f0bf00b0e00090ff40"
+          },
+          "source": {
+            "objID": "ef1b2998-e277-4dbc-c8a9-a43ab3cf8cc1",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 120
+          }
+        },
+        {
+          "objID": "5dd8191d-4e0c-4792-d28a-ed61ee3f1fc4",
+          "encoding": 121,
+          "x": 0,
+          "y": -3,
+          "width": 6,
+          "height": 11,
+          "dx": 6,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 11,
+            "pixelArray": "a0bf0050bf40a0ff1080ff3060ff40c0f00020ff80e0c00000d0b0ff80000090ffff40000050ffff00000010ffd00000104fff90000040ffc0100000000000000000"
+          },
+          "source": {
+            "objID": "1a28b76a-41aa-4097-cd4c-a7fbe6683d8d",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 121
+          }
+        },
+        {
+          "objID": "9ec8d07a-90d5-45d0-f83d-b176c0c85ace",
+          "encoding": 122,
+          "x": 0,
+          "y": 0,
+          "width": 5,
+          "height": 8,
+          "dx": 5,
+          "glyphBitmap": {
+            "width": 5,
+            "height": 8,
+            "pixelArray": "30bfbfbf6030c0e0ff700000b0ff200020ffa0000090ff400010efe0000070ff8f3f2080ffffff80"
+          },
+          "source": {
+            "objID": "57047f9a-8329-489b-c855-495a694c5cb1",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 122
+          }
+        },
+        {
+          "objID": "1f212cdb-cc21-43c8-dcc5-f4c3022e635f",
+          "encoding": 123,
+          "x": 0,
+          "y": -3,
+          "width": 5,
+          "height": 14,
+          "dx": 5,
+          "glyphBitmap": {
+            "width": 5,
+            "height": 14,
+            "pixelArray": "0030cfff400080ff80100080ff40000080ff40000080ff400000b0ff200060ffa0000040e0df000000a0ff30000080ff40000080ff40000080ff40000070ffcf300010708020"
+          },
+          "source": {
+            "objID": "e475269c-e1fe-48bf-9bcf-5dfc68a1011c",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 123
+          }
+        },
+        {
+          "objID": "fdb0f477-76e0-487a-e881-72e7b65ab169",
+          "encoding": 124,
+          "x": 0,
+          "y": -3,
+          "width": 3,
+          "height": 14,
+          "dx": 4,
+          "glyphBitmap": {
+            "width": 3,
+            "height": 14,
+            "pixelArray": "00c06000ff8000ff8000ff8000ff8000ff8000ff8000ff8000ff8000ff8000ff8000ff8000ff80004020"
+          },
+          "source": {
+            "objID": "4d86279a-4c72-4e43-e449-a40c33c8fd5e",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 124
+          }
+        },
+        {
+          "objID": "32568a56-379c-439a-bf58-b41eb1f992f5",
+          "encoding": 125,
+          "x": 0,
+          "y": -3,
+          "width": 5,
+          "height": 14,
+          "dx": 5,
+          "glyphBitmap": {
+            "width": 5,
+            "height": 14,
+            "pixelArray": "80ffaf000020c0ff40000080ff40000080ff40000080ff40000060ff60000010d0ef300030ffc0200080ff50000080ff40000080ff40000080ff400060efff30004080500000"
+          },
+          "source": {
+            "objID": "ba90b710-4f8d-4426-dcd3-1adda335ac1a",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 125
+          }
+        },
+        {
+          "objID": "854a3ecd-8a8f-4049-85fd-f8d951b46bc8",
+          "encoding": 126,
+          "x": 0,
+          "y": 4,
+          "width": 6,
+          "height": 3,
+          "dx": 7,
+          "glyphBitmap": {
+            "width": 6,
+            "height": 3,
+            "pixelArray": "0090af40303040d0c0ffff80000000303000"
+          },
+          "source": {
+            "objID": "aa5ffdc8-8afb-4600-f6dd-8b6a8e273c39",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 126
+          }
+        },
+        {
+          "objID": "842c36af-0c7b-4058-b990-3ee578492f90",
+          "encoding": 127,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "6aa6d042-2080-43dc-d2ba-eac276f5d07f",
+            "filePath": "..\\..\\..\\modular-psu-firmware\\fonts\\Oswald-Medium.ttf",
+            "size": 10,
+            "encoding": 127
+          }
+        }
+      ]
+    }
+  ],
+  "bitmaps": [],
+  "colors": [
+    {
+      "objID": "a4771d1c-1385-aa2a-51c3-422528b3a556",
+      "name": "background"
+    },
+    {
+      "objID": "35893de2-9ed1-3de9-f2ac-785807351a6c",
+      "name": "text"
+    },
+    {
+      "objID": "b7cea4e2-7b78-5459-21d6-ff7734fe9e94",
+      "name": "text_inactive"
+    },
+    {
+      "objID": "0a0636ab-7489-1cfb-8c54-784b2ed42d94",
+      "name": "dark_text"
+    },
+    {
+      "objID": "05234ece-86d1-04fb-3009-b724ffbd9a1b",
+      "name": "border"
+    },
+    {
+      "objID": "41461c14-e2aa-9b30-74bd-4de2527ed6cd",
+      "id": 1,
+      "name": "backdrop"
+    },
+    {
+      "objID": "db4b6da8-21e6-b7bd-95cd-2b61dcbc9e9d",
+      "name": "active_background"
+    },
+    {
+      "objID": "a37e158b-0380-1bf9-b572-f354f374c198",
+      "name": "button_text"
+    },
+    {
+      "objID": "5e24822a-e190-e8b9-e7f1-ea39987b80c5",
+      "name": "button_background"
+    },
+    {
+      "objID": "657d42f2-508a-7090-11b3-693f576d96b6",
+      "name": "button_active_background"
+    },
+    {
+      "objID": "8fe0ea1b-eb68-6a91-a6c4-f4427571b564",
+      "name": "button_border"
+    },
+    {
+      "objID": "4648650f-15ca-df51-1b6e-57cd4a95c54f",
+      "name": "button_disabled_text"
+    },
+    {
+      "objID": "de66d0d9-e90e-73f4-06ed-29f197c750df",
+      "name": "button_disabled_background"
+    },
+    {
+      "objID": "339bd2cf-9a53-e360-3101-39f575c9ed30",
+      "name": "button_disabled_border"
+    },
+    {
+      "objID": "6dad7c6c-eb09-0f5d-ac1b-65b889f303bb",
+      "name": "error"
+    },
+    {
+      "objID": "d7415fa8-de06-41cf-baef-39cb19c879e3",
+      "name": "note"
+    },
+    {
+      "objID": "fd1d3927-8215-fff3-e85c-e67b16910e20",
+      "name": "switch_widget_color"
+    },
+    {
+      "objID": "0733aeec-61d9-7f52-b7ed-af735aeb9c7f",
+      "name": "switch_widget_background_on"
+    },
+    {
+      "objID": "fee3a4bd-067a-2cb7-b906-97647e6f43c7",
+      "name": "switch_widget_background_off"
+    },
+    {
+      "objID": "7405fd2a-591b-3706-0b86-273fe8bde2d3",
+      "name": "switch_widget_border"
+    },
+    {
+      "objID": "ae2638c7-0dd8-aa2b-92c8-5225a7dc9b82",
+      "name": "slider_widget_color"
+    },
+    {
+      "objID": "263fed03-56a3-c3ec-96e2-27df4d83738e",
+      "name": "slider_widget_background"
+    },
+    {
+      "objID": "af79967b-6c54-88f2-85d2-9a51e24290c0",
+      "name": "drop_down_list_color"
+    },
+    {
+      "objID": "ca74695b-dbe9-7420-549a-3e65ff05b8fb",
+      "name": "drop_down_list_color_disabled"
+    },
+    {
+      "objID": "86bc879e-8caa-be4a-e81d-047e83482499",
+      "name": "drop_down_list_background"
+    },
+    {
+      "objID": "8c3cc8a6-dd01-66e8-4246-df58ca7ad3f3",
+      "name": "drop_down_list_border"
+    },
+    {
+      "objID": "ec09e8d8-3a03-dbc0-a0c7-81dcc2fbabbf",
+      "name": "drop_down_list_active_background"
+    },
+    {
+      "objID": "faf9f894-9b12-582e-4734-d7a88a4598b0",
+      "name": "text_input_color"
+    },
+    {
+      "objID": "5051e432-4dab-7d88-7d60-ed247b3b372f",
+      "name": "text_input_color_disabled"
+    },
+    {
+      "objID": "0f6f5174-39ad-a284-213d-d3a6c244e635",
+      "name": "text_input_background"
+    },
+    {
+      "objID": "baab95e4-de93-5c06-07b7-5d5fd4f10d32",
+      "name": "text_input_active_background"
+    },
+    {
+      "objID": "25ca2245-85fc-3052-6ab3-8635921ba053",
+      "name": "text_input_border"
+    }
+  ],
+  "themes": [
+    {
+      "objID": "a7943c4e-90c6-cf58-2c43-9f24cf4b097c",
+      "name": "default",
+      "colors": [
+        "#474747",
+        "#ffffff",
+        "#c0c0c0",
+        "#202020",
+        "#3b3b3b",
+        "#808080",
+        "#c490ee",
+        "#ffffff",
+        "#202020",
+        "#5c5c5c",
+        "#808080",
+        "#404040",
+        "#202020",
+        "#808080",
+        "#ffa3a3",
+        "#fce440",
+        "#ffffff",
+        "#0080ff",
+        "#808080",
+        "#c0c0c0",
+        "#0080ff",
+        "#ffffff",
+        "#404040",
+        "#808080",
+        "#ffffff",
+        "#404040",
+        "#c0c0c0",
+        "#404040",
+        "#808080",
+        "#ffffff",
+        "#c0c0c0",
+        "#404040"
+      ]
+    }
+  ]
+}

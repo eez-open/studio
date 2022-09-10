@@ -1146,3 +1146,15 @@ export function fillArcBar(
 
     filledPolygonRGBA(imageBuffer, vx, vy, n, r, g, b, a);
 }
+
+export function fillCircle(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    radius: number
+) {
+    ctx.fillStyle = fgColor;
+    ctx.beginPath();
+    ctx.ellipse(x, y, radius, radius, 0, 0, Math.PI * 2, false);
+    ctx.fill();
+}
