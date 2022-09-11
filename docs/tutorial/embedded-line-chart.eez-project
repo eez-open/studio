@@ -97,11 +97,11 @@
           "type": "EvalExprActionComponent",
           "left": 342,
           "top": -181,
-          "width": 304,
+          "width": 366,
           "height": 94,
           "customInputs": [],
           "customOutputs": [],
-          "expression": "Flow.makeValue(\n  \"struct:Value\", \n  { x: idx, min: 0, max: 100, avg: idx }\n)"
+          "expression": "Flow.makeValue(\n  \"struct:Value\", \n  { x: idx, min: 0, max: 100, avg: 40 + idx % 40 }\n)"
         },
         {
           "objID": "dc1310e3-8eba-4a53-c16f-75b74c9aca0a",
@@ -144,7 +144,7 @@
               "value": "value.avg"
             }
           ],
-          "title": "\"This is title\"",
+          "title": "\"Line Chart Example\"",
           "showLegend": "show_legend",
           "yAxisRangeOption": "floating",
           "yAxisRangeFrom": "-50",
@@ -173,13 +173,13 @@
         {
           "objID": "9b08555b-a3f6-4483-d043-048b27a4ba76",
           "type": "DelayActionComponent",
-          "left": 691,
+          "left": 745,
           "top": -181,
           "width": 87,
           "height": 55,
           "customInputs": [],
           "customOutputs": [],
-          "milliseconds": "25"
+          "milliseconds": "10"
         },
         {
           "objID": "e77c8cc0-886f-4cda-d6bd-1099eca05260",
@@ -504,7 +504,7 @@
       "name": "line_chart",
       "inheritFrom": "default",
       "color": "#202020",
-      "backgroundColor": "#d4d4d4",
+      "backgroundColor": "#ffffff",
       "borderColor": "#808080"
     },
     {
