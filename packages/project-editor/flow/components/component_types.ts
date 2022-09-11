@@ -27,6 +27,7 @@ export const WIDGET_TYPE_SWITCH = 26;
 export const WIDGET_TYPE_SLIDER = 27;
 export const WIDGET_TYPE_DROP_DOWN_LIST = 28;
 export const WIDGET_TYPE_LINE_CHART = 29;
+export const WIDGET_TYPE_QR_CODE = 30;
 
 export const COMPONENT_TYPE_START_ACTION = 1001;
 export const COMPONENT_TYPE_END_ACTION = 1002;

@@ -1,0 +1,123 @@
+{
+  "objID": "6666cd76-f969-5646-9e7b-e39d750cc7d9",
+  "settings": {
+    "objID": "e007d988-9fba-797d-72e9-efc33ca6d05c",
+    "general": {
+      "objID": "fd434352-2277-c4a8-e87e-e96cfcbf2305",
+      "projectVersion": "v3",
+      "projectType": "dashboard",
+      "imports": []
+    },
+    "build": {
+      "objID": "72794a43-a0fc-13c2-7eb5-67dd952141a4",
+      "configurations": [
+        {
+          "objID": "bba0546c-06b8-604d-c43e-ecf1963e7492",
+          "name": "Default"
+        }
+      ],
+      "files": []
+    }
+  },
+  "variables": {
+    "objID": "c6c71e16-53e1-217f-d03b-cef56c6b037a",
+    "globalVariables": [],
+    "structures": [],
+    "enums": []
+  },
+  "actions": [],
+  "pages": [
+    {
+      "objID": "f7f15531-2f0d-6247-72af-17ad3967f8e0",
+      "components": [
+        {
+          "objID": "a0635ded-f1bc-4fb0-8717-71c7da2e1034",
+          "type": "QRCodeWidget",
+          "left": 10,
+          "top": 52,
+          "width": 500,
+          "height": 500,
+          "customInputs": [],
+          "customOutputs": [],
+          "catchError": false,
+          "data": "text",
+          "style": {
+            "objID": "6ece67a1-03bb-4861-e713-0a26e7a5b4c5",
+            "inheritFrom": "default",
+            "color": "#000000",
+            "backgroundColor": "#ffffff"
+          },
+          "timeline": [],
+          "errorCorrection": "medium"
+        },
+        {
+          "objID": "96fd8d4a-0de1-4b4f-cb34-aa3b2c643c57",
+          "type": "TextInputWidget",
+          "left": 10,
+          "top": 10,
+          "width": 500,
+          "height": 32,
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "text",
+          "style": {
+            "objID": "5d20693c-fb67-48eb-e36e-1b44dfd2f02e",
+            "inheritFrom": "default"
+          },
+          "timeline": []
+        }
+      ],
+      "connectionLines": [],
+      "localVariables": [
+        {
+          "objID": "f6946a75-fa95-4adf-902e-620bcd24830d",
+          "name": "text",
+          "type": "string",
+          "defaultValue": "\"https://www.envox.eu/studio/studio-introduction/\"",
+          "persistent": false
+        },
+        {
+          "objID": "54b98a7e-35ff-46ab-b88c-6b7ce789b5b6",
+          "name": "error_message",
+          "type": "string",
+          "defaultValue": "\"\"",
+          "persistent": false
+        }
+      ],
+      "name": "Main",
+      "style": "page",
+      "left": 0,
+      "top": 0,
+      "width": 520,
+      "height": 562
+    }
+  ],
+  "styles": [
+    {
+      "objID": "04157789-da53-2f4a-e658-4ca10aa5fbef",
+      "name": "default"
+    },
+    {
+      "objID": "c49c1adf-a610-28c0-027c-0e452dadb32b",
+      "name": "page",
+      "inheritFrom": "",
+      "backgroundColor": "page_color",
+      "css": "\n"
+    }
+  ],
+  "colors": [
+    {
+      "objID": "e6c28e5a-fe7f-09ed-9223-17769968ebea",
+      "name": "page_color"
+    }
+  ],
+  "themes": [
+    {
+      "objID": "a7943c4e-90c6-cf58-2c43-9f24cf4b097c",
+      "name": "default",
+      "colors": [
+        "#f0f0f0"
+      ]
+    }
+  ]
+}

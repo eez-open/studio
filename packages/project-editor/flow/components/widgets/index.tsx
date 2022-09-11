@@ -5,6 +5,8 @@ import { observable, computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
+import QRC from "./qrcodegen";
+
 import { _find, _range } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
 
@@ -139,7 +141,8 @@ import {
     WIDGET_TYPE_SWITCH,
     WIDGET_TYPE_SLIDER,
     WIDGET_TYPE_DROP_DOWN_LIST,
-    WIDGET_TYPE_LINE_CHART
+    WIDGET_TYPE_LINE_CHART,
+    WIDGET_TYPE_QR_CODE
 } from "project-editor/flow/components/component_types";
 import {
     buildExpression,
@@ -7281,3 +7284,160 @@ export class DropDownListWidget extends Widget {
 }
 
 registerClass("DropDownListWidget", DropDownListWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class QRCodeWidget extends Widget {
+    errorCorrection: any;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            errorCorrection: observable,
+            errorCorrectionValue: computed
+        });
+    }
+
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        flowComponentId: WIDGET_TYPE_QR_CODE,
+
+        properties: [
+            makeDataPropertyInfo("data", {
+                displayName: "Text"
+            }),
+            {
+                name: "errorCorrection",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "low"
+                    },
+                    {
+                        id: "medium"
+                    },
+                    {
+                        id: "quartile"
+                    },
+                    {
+                        id: "high"
+                    }
+                ],
+                propertyGridGroup: specificGroup
+            }
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 128,
+            height: 128,
+            errorCorrection: "medium"
+        },
+
+        icon: (
+            <svg viewBox="0 0 16 16">
+                <path fill="#444" d="M6 0H0v6h6V0zM5 5H1V1h4v4z" />
+                <path
+                    fill="#444"
+                    d="M2 2h2v2H2V2zM0 16h6v-6H0v6zm1-5h4v4H1v-4z"
+                />
+                <path
+                    fill="#444"
+                    d="M2 12h2v2H2v-2zm8-12v6h6V0h-6zm5 5h-4V1h4v4z"
+                />
+                <path
+                    fill="#444"
+                    d="M12 2h2v2h-2V2zM2 7H0v2h3V8H2zm5 2h2v2H7V9zM3 7h2v1H3V7zm6 5H7v1h1v1h1v-1zM6 7v1H5v1h2V7zm2-3h1v2H8V4zm1 4v1h2V7H8v1zM7 6h1v1H7V6zm2 8h2v2H9v-2zm-2 0h1v2H7v-2zm2-3h1v1H9v-1zm0-8V1H8V0H7v4h1V3zm3 11h1v2h-1v-2zm0-2h2v1h-2v-1zm-1 1h1v1h-1v-1zm-1-1h1v1h-1v-1zm4-2v1h1v1h1v-2h-1zm1 3h-1v3h2v-2h-1zm-5-3v1h3V9h-2v1zm2-3v1h2v1h2V7h-2z"
+                />
+            </svg>
+        )
+    });
+
+    getText(flowContext: IFlowContext) {
+        if (!this.data) {
+            return undefined;
+        }
+
+        if (
+            flowContext.projectEditorStore.project.isDashboardProject ||
+            flowContext.projectEditorStore.project.isAppletProject ||
+            flowContext.projectEditorStore.project
+                .isFirmwareWithFlowSupportProject
+        ) {
+            return evalProperty(flowContext, this, "data");
+        }
+
+        return this.data;
+    }
+
+    get errorCorrectionValue() {
+        if (this.errorCorrection == "low") return QRC.Ecc.LOW;
+        if (this.errorCorrection == "medium") return QRC.Ecc.MEDIUM;
+        if (this.errorCorrection == "quartile") return QRC.Ecc.QUARTILE;
+        return QRC.Ecc.HIGH;
+    }
+
+    styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
+        super.styleHook(style, flowContext);
+
+        style.backgroundColor = this.style.backgroundColorProperty;
+    }
+
+    static toSvgString(
+        qr: any,
+        border: number,
+        lightColor: string,
+        darkColor: string
+    ) {
+        let parts: Array<string> = [];
+        for (let y = 0; y < qr.size; y++) {
+            for (let x = 0; x < qr.size; x++) {
+                if (qr.getModule(x, y))
+                    parts.push(`M${x + border},${y + border}h1v1h-1z`);
+            }
+        }
+        return (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                version="1.1"
+                viewBox={`0 0 ${qr.size + border * 2} ${qr.size + border * 2}`}
+                stroke="none"
+                style={{ objectFit: "contain", width: "100%", height: "100%" }}
+            >
+                <rect width="100%" height="100%" fill={`${lightColor}`} />
+                <path d={`${parts.join(" ")}`} fill={`${darkColor}`} />
+            </svg>
+        );
+    }
+
+    render(flowContext: IFlowContext, width: number, height: number) {
+        const text = this.getText(flowContext) || "";
+
+        const qr0 = QRC.encodeText(text, this.errorCorrectionValue);
+        const svg = QRCodeWidget.toSvgString(
+            qr0,
+            1,
+            this.style.backgroundColorProperty,
+            this.style.colorProperty
+        );
+
+        return (
+            <>
+                {svg}
+                {super.render(flowContext, width, height)}
+            </>
+        );
+    }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        let errorCorrection;
+        if (this.errorCorrection == "low") return (errorCorrection = 0);
+        if (this.errorCorrection == "medium") return (errorCorrection = 1);
+        if (this.errorCorrection == "quartile") return (errorCorrection = 2);
+        return 3;
+        dataBuffer.writeUint8(errorCorrection);
+    }
+}
+
+registerClass("QRCodeWidget", QRCodeWidget);
