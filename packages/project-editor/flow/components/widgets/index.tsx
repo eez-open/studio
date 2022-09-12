@@ -167,6 +167,7 @@ import {
     getAnyValue
 } from "project-editor/flow/helper";
 import { GAUGE_ICON, LINE_CHART_ICON } from "./icons";
+import { to16bitsColor } from "eez-studio-shared/color";
 
 const LIST_TYPE_VERTICAL = 1;
 const LIST_TYPE_HORIZONTAL = 2;
@@ -7381,7 +7382,9 @@ export class QRCodeWidget extends Widget {
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
         super.styleHook(style, flowContext);
 
-        style.backgroundColor = this.style.backgroundColorProperty;
+        style.backgroundColor = to16bitsColor(
+            this.style.backgroundColorProperty
+        );
     }
 
     static toSvgString(
@@ -7418,8 +7421,8 @@ export class QRCodeWidget extends Widget {
         const svg = QRCodeWidget.toSvgString(
             qr0,
             1,
-            this.style.backgroundColorProperty,
-            this.style.colorProperty
+            to16bitsColor(this.style.backgroundColorProperty),
+            to16bitsColor(this.style.colorProperty)
         );
 
         return (
