@@ -263,14 +263,14 @@ export const Selection = observer(
                     );
                 }
 
-                if (this.selectedObjectsParentRect) {
-                    selectedObjectsParentElement = (
-                        <SelectedObject
-                            className="EezStudio_FlowEditorSelection_SelectedObjectsParent"
-                            rect={this.selectedObjectsParentRect}
-                        />
-                    );
-                }
+                // if (this.selectedObjectsParentRect) {
+                //     selectedObjectsParentElement = (
+                //         <SelectedObject
+                //             className="EezStudio_FlowEditorSelection_SelectedObjectsParent"
+                //             rect={this.selectedObjectsParentRect}
+                //         />
+                //     );
+                // }
             }
 
             const style: React.CSSProperties = {

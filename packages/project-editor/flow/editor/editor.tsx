@@ -29,12 +29,7 @@ import {
     getSelectedObjectsBoundingRect
 } from "project-editor/flow/editor/bounding-rects";
 
-import {
-    isAncestor,
-    getParent,
-    setParent,
-    getId
-} from "project-editor/core/object";
+import { setParent, getId } from "project-editor/core/object";
 import { IPanel, isObjectInstanceOf } from "project-editor/store";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { DragAndDropManager } from "project-editor/core/dd";
@@ -55,82 +50,19 @@ import {
     DragMouseHandler,
     isSelectionMoveable,
     ResizeMouseHandler,
-    RubberBandSelectionMouseHandler,
-    SnapLines
+    RubberBandSelectionMouseHandler
 } from "project-editor/flow/editor/mouse-handler";
 import { Selection } from "project-editor/flow/editor/selection";
 import { setupDragScroll } from "project-editor/flow/editor/drag-scroll";
 import { settingsController } from "home/settings";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import {
+    DragSnapLines,
+    DragSnapLinesOverlay
+} from "project-editor/flow/editor/snap-lines";
 
 const CONF_DOUBLE_CLICK_TIME = 350; // ms
 const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
-
-////////////////////////////////////////////////////////////////////////////////
-
-class DragSnapLines {
-    snapLines: SnapLines | undefined;
-    flowContext: EditorFlowContext | undefined;
-    dragComponent: Component | undefined;
-
-    constructor() {
-        makeObservable(this, {
-            snapLines: observable
-        });
-    }
-
-    start(flowContext: EditorFlowContext) {
-        this.snapLines = new SnapLines();
-        this.flowContext = flowContext;
-        this.dragComponent = flowContext.dragComponent;
-
-        this.snapLines.find(flowContext, () => true);
-    }
-
-    clear() {
-        this.snapLines = undefined;
-        this.flowContext = undefined;
-        this.dragComponent = undefined;
-    }
-}
-
-const dragSnapLines = new DragSnapLines();
-
-const DragSnapLinesOverlay = observer(
-    class DragSnapLinesOverlay extends React.Component {
-        render() {
-            if (!dragSnapLines.snapLines) {
-                return null;
-            }
-
-            const flow = dragSnapLines.flowContext!.document.flow
-                .object as Flow;
-            const dragComponent = dragSnapLines.dragComponent!;
-
-            return (
-                <div style={{ left: 0, top: 0, pointerEvents: "none" }}>
-                    {dragSnapLines.snapLines.render(
-                        dragSnapLines.flowContext!,
-                        {
-                            left:
-                                (dragComponent instanceof
-                                ProjectEditor.WidgetClass
-                                    ? flow.pageRect.left
-                                    : 0) + dragComponent.left,
-                            top:
-                                (dragComponent instanceof
-                                ProjectEditor.WidgetClass
-                                    ? flow.pageRect.top
-                                    : 0) + dragComponent.top,
-                            width: dragComponent.rect.width,
-                            height: dragComponent.rect.height
-                        }
-                    )}
-                </div>
-            );
-        }
-    }
-);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -240,6 +172,7 @@ export const Canvas = observer(
         flowContext: EditorFlowContext;
         pageRect?: Rect;
         dragAndDropActive: boolean;
+        dragSnapLines: DragSnapLines;
     }> {
         div: HTMLDivElement;
         resizeObserver: ResizeObserver;
@@ -788,7 +721,9 @@ export const Canvas = observer(
                         this.mouseHandler.render &&
                         this.mouseHandler.render(this.props.flowContext)}
 
-                    <DragSnapLinesOverlay />
+                    <DragSnapLinesOverlay
+                        dragSnapLines={this.props.dragSnapLines}
+                    />
                 </div>
             );
         }
@@ -813,6 +748,8 @@ export const FlowEditor = observer(
 
         options: IEditorOptions;
 
+        dragSnapLines = new DragSnapLines();
+
         constructor(props: { tabState: FlowTabState }) {
             super(props);
 
@@ -830,37 +767,10 @@ export const FlowEditor = observer(
         get flowContext() {
             const flowContext = new EditorFlowContext();
 
-            flowContext.set(
-                this.props.tabState,
-                this.options,
-                this.filterSnapLines
-            );
+            flowContext.set(this.props.tabState, this.options);
 
             return flowContext;
         }
-
-        filterSnapLines = (node: ITreeObjectAdapter) => {
-            const object = node.object;
-
-            const selectedObjects = this.flowContext.viewState.selectedObjects;
-
-            for (let i = 0; i < selectedObjects.length; ++i) {
-                const selectedObject = selectedObjects[i].object;
-
-                if (object === selectedObject) {
-                    return false;
-                }
-
-                if (
-                    getParent(selectedObject) === getParent(object) ||
-                    isAncestor(selectedObject, object)
-                ) {
-                    return true;
-                }
-            }
-
-            return false;
-        };
 
         componentDidMount() {
             this.divRef.current?.addEventListener(
@@ -1007,14 +917,14 @@ export const FlowEditor = observer(
 
                     this.flowContext.viewState.selectObjects([]);
 
-                    dragSnapLines.start(this.flowContext);
+                    this.dragSnapLines.start(this.flowContext);
 
                     debounce = false;
                 } else {
                     debounce = true;
                 }
 
-                dragSnapLines.snapLines!.enabled = !event.shiftKey;
+                this.dragSnapLines.snapLines!.enabled = !event.shiftKey;
 
                 this.dragClientX = event.nativeEvent.clientX;
                 this.dragClientY = event.nativeEvent.clientY;
@@ -1053,8 +963,8 @@ export const FlowEditor = observer(
             let left = position.x;
             let top = position.y;
 
-            if (dragSnapLines.snapLines) {
-                ({ left, top } = dragSnapLines.snapLines.dragSnap(
+            if (this.dragSnapLines.snapLines) {
+                ({ left, top } = this.dragSnapLines.snapLines.dragSnap(
                     left,
                     top,
                     component.width,
@@ -1084,7 +994,7 @@ export const FlowEditor = observer(
                 );
 
                 this.flowContext.dragComponent = undefined;
-                dragSnapLines.clear();
+                this.dragSnapLines.clear();
 
                 setTimeout(() => {
                     const objectAdapter =
@@ -1107,7 +1017,7 @@ export const FlowEditor = observer(
                 // deselect dragComponent
                 this.flowContext.viewState.deselectAllObjects();
 
-                dragSnapLines.clear();
+                this.dragSnapLines.clear();
             }
         }
 
@@ -1189,6 +1099,7 @@ export const FlowEditor = observer(
                     <Canvas
                         flowContext={this.flowContext}
                         dragAndDropActive={!!DragAndDropManager.dragObject}
+                        dragSnapLines={this.dragSnapLines}
                     >
                         {this.flowContext.document && (
                             <>

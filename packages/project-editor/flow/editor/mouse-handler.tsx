@@ -3,11 +3,10 @@ import { observable, action, runInAction, makeObservable } from "mobx";
 
 import { Point, Rect, rectEqual, rectClone } from "eez-studio-shared/geometry";
 import {
-    ISnapLines,
-    findSnapLines,
+    CONF_ACTIVATE_SNAP_TO_LINES_AFTER_TIME,
     findClosestHorizontalSnapLinesToPosition,
     findClosestVerticalSnapLinesToPosition,
-    drawSnapLinesGeneric
+    SnapLines
 } from "project-editor/flow/editor/snap-lines";
 import { addAlphaToColor } from "eez-studio-shared/color";
 
@@ -16,7 +15,8 @@ import { theme } from "eez-studio-ui/theme";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import {
     getSelectedObjectsBoundingRect,
-    getObjectIdFromPoint
+    getObjectIdFromPoint,
+    getObjectBoundingRect
 } from "project-editor/flow/editor/bounding-rects";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { Transform } from "project-editor/flow/editor/transform";
@@ -27,14 +27,6 @@ import type { Component } from "project-editor/flow/component";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const SNAP_LINES_DRAW_THEME = {
-    lineColor: "rgba(128, 128, 128, 1)",
-    lineWidth: 0.5,
-    closestLineColor: "rgb(32, 192, 32)",
-    closestLineWidth: 1
-};
-const CONF_ACTIVATE_SNAP_TO_LINES_AFTER_TIME = 300;
 
 const CONNECTION_LINE_DRAW_THEME = {
     lineColor: "rgba(128, 128, 128, 1)",
@@ -295,134 +287,6 @@ export class RubberBandSelectionMouseHandler extends MouseHandler {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class SnapLines {
-    lines: ISnapLines;
-    enabled: boolean = false;
-
-    find(
-        context: IFlowContext,
-        filterSnapLines?: (node: ITreeObjectAdapter) => boolean
-    ) {
-        this.lines = findSnapLines(
-            context,
-            {
-                id: "",
-                children: [context.document.flow]
-            } as ITreeObjectAdapter,
-            filterSnapLines || context.editorOptions.filterSnapLines
-        );
-    }
-
-    dragSnap(left: number, top: number, width: number, height: number) {
-        if (this.enabled) {
-            let lines1 = findClosestVerticalSnapLinesToPosition(
-                this.lines,
-                left
-            );
-            let lines2 = findClosestVerticalSnapLinesToPosition(
-                this.lines,
-                left + width
-            );
-
-            if (lines1 && (!lines2 || lines1.diff <= lines2.diff)) {
-                left = lines1.lines[0].pos;
-            } else if (lines2) {
-                left = lines2.lines[0].pos - width;
-            }
-
-            lines1 = findClosestHorizontalSnapLinesToPosition(this.lines, top);
-            lines2 = findClosestHorizontalSnapLinesToPosition(
-                this.lines,
-                top + height
-            );
-
-            if (lines1 && (!lines2 || lines1.diff <= lines2.diff)) {
-                top = lines1.lines[0].pos;
-            } else if (lines2) {
-                top = lines2.lines[0].pos - height;
-            }
-        }
-
-        return {
-            left,
-            top
-        };
-    }
-
-    render(flowContext: IFlowContext, selectionRect: Rect) {
-        if (!this.enabled) {
-            return null;
-        }
-
-        const transform = flowContext.viewState.transform;
-
-        const offsetRect = transform.clientToOffsetRect(transform.clientRect);
-
-        const lines: JSX.Element[] = [];
-
-        const lineStyle = {
-            stroke: SNAP_LINES_DRAW_THEME.lineColor,
-            strokeWidth: SNAP_LINES_DRAW_THEME.lineWidth
-        };
-        const closestLineStyle = {
-            stroke: SNAP_LINES_DRAW_THEME.closestLineColor,
-            strokeWidth: SNAP_LINES_DRAW_THEME.closestLineWidth
-        };
-
-        drawSnapLinesGeneric(
-            flowContext,
-            this.lines,
-            selectionRect,
-            (pos: number, horizontal: boolean, closest: boolean) => {
-                const point = transform.pageToOffsetPoint({
-                    x: pos,
-                    y: pos
-                });
-
-                const key = pos + horizontal.toString() + closest.toString();
-
-                if (horizontal) {
-                    lines.push(
-                        <line
-                            key={key}
-                            x1={offsetRect.left}
-                            y1={point.y}
-                            x2={offsetRect.left + offsetRect.width}
-                            y2={point.y}
-                            style={closest ? closestLineStyle : lineStyle}
-                        />
-                    );
-                } else {
-                    lines.push(
-                        <line
-                            key={key}
-                            x1={point.x}
-                            y1={offsetRect.top}
-                            x2={point.x}
-                            y2={offsetRect.top + offsetRect.height}
-                            style={closest ? closestLineStyle : lineStyle}
-                        />
-                    );
-                }
-            }
-        );
-
-        return (
-            <svg
-                width={offsetRect.width}
-                height={offsetRect.height}
-                style={{
-                    position: "absolute",
-                    left: offsetRect.left,
-                    top: offsetRect.top
-                }}
-            >
-                {lines}
-            </svg>
-        );
-    }
-}
-
 class MouseHandlerWithSnapLines extends MouseHandler {
     snapLines = new SnapLines();
 
@@ -604,13 +468,15 @@ type ResizeHandleType =
     | "se-resize";
 
 export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
-    savedBoundingRect: Rect;
-    boundingRect: Rect;
-
     savedRect: Rect;
     rect: Rect;
 
     changed: boolean = false;
+
+    object: ITreeObjectAdapter;
+
+    xSnapOffset: number = 0;
+    ySnapOffset: number = 0;
 
     constructor(private handleType: ResizeHandleType) {
         super();
@@ -623,31 +489,43 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
     down(context: IFlowContext, event: IPointerEvent) {
         super.down(context, event);
 
+        this.object = context.viewState.selectedObjects[0];
+
         context.document.onDragStart();
 
-        this.savedRect = rectClone(context.viewState.selectedObjects[0].rect);
-        this.rect = rectClone(context.viewState.selectedObjects[0].rect);
+        this.savedRect = rectClone(this.object.rect);
+        this.rect = rectClone(this.object.rect);
+
+        const rect = getObjectBoundingRect(this.object);
+        this.xSnapOffset = rect.left - this.rect.left;
+        this.ySnapOffset = rect.top - this.rect.top;
     }
 
     snapX(x: number) {
+        x = Math.round(x);
         if (this.snapLines.enabled) {
-            let lines = findClosestVerticalSnapLinesToPosition(
+            let findResult = findClosestVerticalSnapLinesToPosition(
                 this.snapLines.lines,
-                x
+                x + this.xSnapOffset
             );
-            return lines ? lines.lines[0].pos : x;
+            return findResult
+                ? Math.round(findResult.lines[0].pos) - this.xSnapOffset
+                : x;
         } else {
             return x;
         }
     }
 
     snapY(y: number) {
+        y = Math.round(y);
         if (this.snapLines.enabled) {
-            let lines = findClosestHorizontalSnapLinesToPosition(
+            let findResult = findClosestHorizontalSnapLinesToPosition(
                 this.snapLines.lines,
-                y
+                y + this.ySnapOffset
             );
-            return lines ? lines.lines[0].pos : y;
+            return findResult
+                ? Math.round(findResult.lines[0].pos) - this.ySnapOffset
+                : y;
         } else {
             return y;
         }
@@ -701,48 +579,15 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
         rect.width = right - rect.left;
     }
 
-    maintainSameAspectRatio(
-        savedRect: Rect,
-        rect: Rect,
-        top: boolean,
-        left: boolean
-    ) {
-        let startAspectRatio = savedRect.width / savedRect.height;
-
-        let width;
-        let height;
-
-        if (rect.width / rect.height > startAspectRatio) {
-            width = rect.height * startAspectRatio;
-            height = rect.height;
-        } else {
-            width = rect.width;
-            height = rect.width / startAspectRatio;
-        }
-
-        if (top) {
-            rect.top += rect.height - height;
-        }
-
-        if (left) {
-            rect.left += rect.width - width;
-        }
-
-        rect.width = width;
-        rect.height = height;
-    }
-
     resizeRect(context: IFlowContext, savedRect: Rect, rect: Rect) {
         if (this.handleType === "nw-resize") {
             this.moveTop(context, savedRect, rect);
             this.moveLeft(context, savedRect, rect);
-            //this.maintainSameAspectRatio(savedRect, rect, true, true);
         } else if (this.handleType === "n-resize") {
             this.moveTop(context, savedRect, rect);
         } else if (this.handleType === "ne-resize") {
             this.moveTop(context, savedRect, rect);
             this.moveRight(context, savedRect, rect);
-            //this.maintainSameAspectRatio(savedRect, rect, true, false);
         } else if (this.handleType === "w-resize") {
             this.moveLeft(context, savedRect, rect);
         } else if (this.handleType === "e-resize") {
@@ -750,13 +595,11 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
         } else if (this.handleType === "sw-resize") {
             this.moveBottom(context, savedRect, rect);
             this.moveLeft(context, savedRect, rect);
-            //this.maintainSameAspectRatio(savedRect, rect, false, true);
         } else if (this.handleType === "s-resize") {
             this.moveBottom(context, savedRect, rect);
         } else if (this.handleType === "se-resize") {
             this.moveBottom(context, savedRect, rect);
             this.moveRight(context, savedRect, rect);
-            //this.maintainSameAspectRatio(savedRect, rect, false, false);
         }
     }
 
@@ -765,9 +608,9 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
 
         this.resizeRect(context, this.savedRect, this.rect);
 
-        if (!rectEqual(this.rect, context.viewState.selectedObjects[0].rect)) {
+        if (!rectEqual(this.rect, this.object.rect)) {
             this.changed = true;
-            context.viewState.selectedObjects[0].rect = {
+            this.object.rect = {
                 left: Math.floor(this.rect.left),
                 top: Math.floor(this.rect.top),
                 width: Math.floor(this.rect.width),

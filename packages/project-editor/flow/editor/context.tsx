@@ -346,11 +346,7 @@ export class EditorFlowContext implements IFlowContext {
         return this;
     }
 
-    set(
-        tabState: FlowTabState,
-        options?: IEditorOptions,
-        filterSnapLines?: (node: ITreeObjectAdapter) => boolean
-    ) {
+    set(tabState: FlowTabState, options?: IEditorOptions) {
         this.tabState = tabState;
 
         this.document = new FlowDocument(tabState.widgetContainer, this);
@@ -361,8 +357,6 @@ export class EditorFlowContext implements IFlowContext {
                 y: 0
             }
         };
-
-        this.editorOptions.filterSnapLines = filterSnapLines;
 
         this.dataContext =
             this.document.projectEditorStore.dataContext.createWithLocalVariables(
