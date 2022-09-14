@@ -271,7 +271,20 @@ export class ContainerWidget extends Widget {
             }
         },
 
-        icon: "../home/_images/widgets/Container.png",
+        icon: (
+            <svg
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <rect x="4" y="4" width="16" height="16" rx="2" />
+                <path d="M4 12h8m0 3h8m-8-6h8m-8-5v16" />
+            </svg>
+        ),
 
         check: (object: ContainerWidget) => {
             let messages: Message[] = [];
@@ -538,7 +551,20 @@ export class ListWidget extends Widget {
             gap: 0
         },
 
-        icon: "../home/_images/widgets/List.png",
+        icon: (
+            <svg
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <rect x="4" y="4" width="16" height="6" rx="2" />
+                <rect x="4" y="14" width="16" height="6" rx="2" />
+            </svg>
+        ),
 
         check: (object: ListWidget) => {
             let messages: Message[] = [];
@@ -727,7 +753,22 @@ export class GridWidget extends Widget {
             height: 64
         },
 
-        icon: "../home/_images/widgets/Grid.png",
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <rect x="4" y="4" width="6" height="6" rx="1"></rect>
+                <rect x="14" y="4" width="6" height="6" rx="1"></rect>
+                <rect x="4" y="14" width="6" height="6" rx="1"></rect>
+                <rect x="14" y="14" width="6" height="6" rx="1"></rect>
+            </svg>
+        ),
 
         check: (object: GridWidget) => {
             let messages: Message[] = [];
@@ -893,7 +934,16 @@ export class SelectWidget extends Widget {
             height: 32
         },
 
-        icon: "../home/_images/widgets/Select.png",
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+            >
+                <path fill="none" d="M0 0h24v24H0z" />
+                <path d="M10 2c.552 0 1 .448 1 1v4c0 .552-.448 1-1 1H8v2h5V9c0-.552.448-1 1-1h6c.552 0 1 .448 1 1v4c0 .552-.448 1-1 1h-6c-.552 0-1-.448-1-1v-1H8v6h5v-1c0-.552.448-1 1-1h6c.552 0 1 .448 1 1v4c0 .552-.448 1-1 1h-6c-.552 0-1-.448-1-1v-1H7c-.552 0-1-.448-1-1V8H4c-.552 0-1-.448-1-1V3c0-.552.448-1 1-1h6zm9 16h-4v2h4v-2zm0-8h-4v2h4v-2zM9 4H5v2h4V4z" />
+            </svg>
+        ),
 
         check: (object: SelectWidget) => {
             let messages: Message[] = [];
@@ -1213,7 +1263,20 @@ export class LayoutViewWidget extends Widget {
             height: 32
         },
 
-        icon: "../home/_images/widgets/LayoutView.png",
+        icon: (
+            <svg
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <rect x="4" y="4" width="16" height="16" rx="2" />
+                <path d="M4 9h8m0 6h8M12 4v16" />
+            </svg>
+        ),
 
         check: (object: LayoutViewWidget) => {
             let messages: Message[] = [];
@@ -1629,7 +1692,20 @@ export class DisplayDataWidget extends Widget {
             displayOption: 0
         },
 
-        icon: "../home/_images/widgets/Data.png",
+        icon: (
+            <svg
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <path d="M5 4C2.5 9 2.5 14 5 20M19 4c2.5 5 2.5 10 0 16M9 9h1c1 0 1 1 2.016 3.527C13 15 13 16 14 16h1" />
+                <path d="M8 16c1.5 0 3-2 4-3.5S14.5 9 16 9" />
+            </svg>
+        ),
 
         check: (object: DisplayDataWidget) => {
             let messages: Message[] = [];
@@ -1932,7 +2008,20 @@ export class TextWidget extends Widget {
             height: 32
         },
 
-        icon: "../home/_images/widgets/Text.png",
+        icon: (
+            <svg
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <circle cx="17.5" cy="15.5" r="3.5" />
+                <path d="M3 19V8.5a3.5 3.5 0 0 1 7 0V19m-7-6h7m11-1v7" />
+            </svg>
+        ),
 
         check: (widget: TextWidget) => {
             let messages: Message[] = [];
@@ -2430,7 +2519,19 @@ export class MultilineTextWidget extends Widget {
             hangingIndent: 0
         },
 
-        icon: "../home/_images/widgets/MultilineText.png",
+        icon: (
+            <svg
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <path d="M4 6h16M4 12h16M4 18h12" />
+            </svg>
+        ),
 
         check: (widget: MultilineTextWidget) => {
             let messages: Message[] = [];
@@ -2563,7 +2664,19 @@ export class RectangleWidget extends Widget {
             height: 32
         },
 
-        icon: "../home/_images/widgets/Rectangle.png",
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+            </svg>
+        ),
 
         check: (object: RectangleWidget) => {
             let messages: Message[] = [];
@@ -2730,7 +2843,22 @@ export class BitmapWidget extends Widget {
             height: 32
         },
 
-        icon: "../home/_images/widgets/Bitmap.png",
+        icon: (
+            <svg
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <path d="M15 8h.01" />
+                <rect x="4" y="4" width="16" height="16" rx="3" />
+                <path d="m4 15 4-4a3 5 0 0 1 3 0l5 5" />
+                <path d="m14 14 1-1a3 5 0 0 1 3 0l2 2" />
+            </svg>
+        ),
 
         check: (object: BitmapWidget) => {
             let messages: Message[] = [];
@@ -3005,7 +3133,14 @@ export class ButtonWidget extends Widget {
                 : {};
         },
 
-        icon: "../home/_images/widgets/Button.png",
+        icon: (
+            <svg viewBox="0 0 16 16">
+                <path
+                    fill="currentColor"
+                    d="m15.7 5.3-1-1c-.2-.2-.4-.3-.7-.3H1c-.6 0-1 .4-1 1v5c0 .3.1.6.3.7l1 1c.2.2.4.3.7.3h13c.6 0 1-.4 1-1V6c0-.3-.1-.5-.3-.7zM14 10H1V5h13v5z"
+                />
+            </svg>
+        ),
 
         check: (widget: ButtonWidget) => {
             let messages: Message[] = [];
@@ -3167,7 +3302,20 @@ export class ToggleButtonWidget extends Widget {
             height: 32
         },
 
-        icon: "../home/_images/widgets/ToggleButton.png",
+        icon: (
+            <svg fill="none" viewBox="0 0 24 24">
+                <path
+                    d="M15 9c-.5523 0-1 .4477-1 1v4c0 .5523.4477 1 1 1h4c.5523 0 1-.4477 1-1v-4c0-.5523-.4477-1-1-1h-4Z"
+                    fill="currentColor"
+                />
+                <path
+                    clipRule="evenodd"
+                    d="M0 7c0-1.1046.8954-2 2-2h20c1.1046 0 2 .8954 2 2v10c0 1.1046-.8954 2-2 2H2c-1.1046 0-2-.8954-2-2V7Zm2 0h20v10H2V7Z"
+                    fill="currentColor"
+                    fillRule="evenodd"
+                />
+            </svg>
+        ),
 
         check: (object: ToggleButtonWidget) => {
             let messages: Message[] = [];
@@ -3256,7 +3404,20 @@ export class ButtonGroupWidget extends Widget {
             height: 32
         },
 
-        icon: "../home/_images/widgets/ButtonGroup.png",
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <rect x="7" y="3" width="14" height="14" rx="2"></rect>
+                <path d="M17 17v2a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h2"></path>
+            </svg>
+        ),
 
         check: (object: ButtonGroupWidget) => {
             let messages: Message[] = [];
@@ -3465,7 +3626,22 @@ export class BarGraphWidget extends Widget {
             orientation: "left-right"
         },
 
-        icon: "../home/_images/widgets/BarGraph.png",
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <rect x="3" y="12" width="6" height="8" rx="1"></rect>
+                <rect x="9" y="8" width="6" height="12" rx="1"></rect>
+                <rect x="15" y="4" width="6" height="16" rx="1"></rect>
+                <line x1="4" y1="20" x2="18" y2="20"></line>
+            </svg>
+        ),
 
         check: (object: BarGraphWidget) => {
             let messages: Message[] = [];
@@ -3817,7 +3993,20 @@ export class YTGraphWidget extends Widget {
             height: 32
         },
 
-        icon: "../home/_images/widgets/YTGraph.png",
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <line x1="4" y1="19" x2="20" y2="19"></line>
+                <polyline points="4 15 8 9 12 11 16 6 20 10"></polyline>
+            </svg>
+        ),
 
         check: (object: YTGraphWidget) => {
             let messages: Message[] = [];
@@ -3918,7 +4107,18 @@ export class UpDownWidget extends Widget {
             downButtonText: "<"
         },
 
-        icon: "../home/_images/widgets/UpDown.png",
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                fillRule="evenodd"
+                clipRule="evenodd"
+                strokeLinejoin="round"
+                strokeMiterlimit="2"
+                fill="currentColor"
+            >
+                <path d="M16.25 18.689V6.5c0-.414.336-.75.75-.75s.75.336.75.75v12.189l2.72-2.719c.292-.293.768-.293 1.06 0 .293.292.293.768 0 1.06 0 0-2.144 2.145-3.293 3.293-.328.328-.773.513-1.237.513-.464 0-.909-.185-1.237-.513a9524.146 9524.146 0 0 1-3.293-3.293c-.293-.292-.293-.768 0-1.06.292-.293.768-.293 1.06 0l2.72 2.719Zm-10-12.378L3.53 9.03c-.292.293-.768.293-1.06 0-.293-.292-.293-.768 0-1.06 0 0 2.144-2.145 3.293-3.293.328-.328.773-.513 1.237-.513.464 0 .909.185 1.237.513C9.386 5.825 11.53 7.97 11.53 7.97c.293.292.293.768 0 1.06-.292.293-.768.293-1.06 0L7.75 6.311V18.5c0 .414-.336.75-.75.75s-.75-.336-.75-.75V6.311Z" />
+            </svg>
+        ),
 
         check: (object: UpDownWidget) => {
             let messages: Message[] = [];
@@ -4067,7 +4267,19 @@ export class ListGraphWidget extends Widget {
             height: 32
         },
 
-        icon: "../home/_images/widgets/ListGraph.png",
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M4 18h4v-4h4v-4h4v-4h4"></path>
+            </svg>
+        ),
 
         check: (object: ListGraphWidget) => {
             let messages: Message[] = [];
@@ -4197,7 +4409,20 @@ export class AppViewWidget extends Widget {
             height: 32
         },
 
-        icon: "../home/_images/widgets/AppView.png",
+        icon: (
+            <svg
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <rect x="3" y="5" width="18" height="14" rx="2" />
+                <path d="M6 8h.01M9 8h.01" />
+            </svg>
+        ),
 
         check: (object: AppViewWidget) => {
             let messages: Message[] = [];
@@ -4303,7 +4528,11 @@ export class ScrollBarWidget extends Widget {
             rightButtonText: ">"
         },
 
-        icon: "../home/_images/widgets/UpDown.png",
+        icon: (
+            <svg viewBox="0 0 14 14" fill="currentColor">
+                <path d="M1.2338 8.6533C1.0218 8.5507 1 8.3965 1 7.0017c0-1.415.0204-1.5505.2495-1.6548.185-.084 11.316-.084 11.501 0 .229.1043.2495.2398.2495 1.6548 0 1.4149-.0204 1.5504-.2495 1.6548-.1769.081-11.35.078-11.5167 0zm1.7912-.6445c.045-.045.0643-.3408.0643-.9872 0-.7676-.0142-.9371-.0842-1.0072-.0463-.046-.1145-.084-.1515-.084-.0748 0-1.2623.8754-1.3282.979-.0876.1379-.0252.2099.5862.6767.6194.473.786.55.9134.4228zm8.8283-.3737c.6232-.4672.6625-.505.6637-.6403.0008-.079-1.1217-.9723-1.3146-1.0463-.0433-.017-.1146-.0006-.1584.036-.0652.054-.0797.2436-.0797 1.0417 0 .5366.016.9917.0357 1.0113.1003.1004.3227 0 .8533-.4023zM10 7.0017v-.8572H4v1.7142h6v-.857z" />
+            </svg>
+        ),
 
         check: (object: ScrollBarWidget) => {
             let messages: Message[] = [];
@@ -4540,7 +4769,13 @@ export class ProgressWidget extends Widget {
             height: 32
         },
 
-        icon: "../home/_images/widgets/Progress.png"
+        icon: (
+            <svg viewBox="0 0 32 32" fill="currentColor">
+                <path d="M28 21H4a2.0021 2.0021 0 0 1-2-2v-6a2.0021 2.0021 0 0 1 2-2h24a2.0021 2.0021 0 0 1 2 2v6a2.0021 2.0021 0 0 1-2 2ZM4 13v6h24v-6Z" />
+                <path d="M6 15h14v2H6z" />
+                <path fill="none" d="M0 0h32v32H0z" />
+            </svg>
+        )
     });
 
     min: string;
@@ -4726,7 +4961,27 @@ export class CanvasWidget extends Widget {
             height: 32
         },
 
-        icon: "../home/_images/widgets/Canvas.png",
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <rect x="8" y="8" width="8" height="8" rx="1"></rect>
+                <line x1="3" y1="8" x2="4" y2="8"></line>
+                <line x1="3" y1="16" x2="4" y2="16"></line>
+                <line x1="8" y1="3" x2="8" y2="4"></line>
+                <line x1="16" y1="3" x2="16" y2="4"></line>
+                <line x1="20" y1="8" x2="21" y2="8"></line>
+                <line x1="20" y1="16" x2="21" y2="16"></line>
+                <line x1="8" y1="20" x2="8" y2="21"></line>
+                <line x1="16" y1="20" x2="16" y2="21"></line>
+            </svg>
+        ),
 
         check: (object: CanvasWidget) => {
             let messages: Message[] = [];
@@ -7146,7 +7401,7 @@ export class DropDownListWidget extends Widget {
         },
 
         icon: (
-            <svg viewBox="0 0 1000 1000">
+            <svg viewBox="0 0 1000 1000" fill="currentColor">
                 <path d="M258.8 402.9v157.4H990V402.9H258.8zm685.5 111.7H304.5v-66h639.8v66zM258.8 743.1H990V585.7H258.8v157.4zm45.7-111.7h639.8v66H304.5v-66zm-45.7 293.2H990V767.2H258.8v157.4zm45.7-111.7h639.8v66H304.5v-66zm436.7-463.3h198V75.4H10v274.2h731.2zm0-228.5h152.3v182.8H741.2V121.1zM55.7 303.9V121.1h639.8v182.8H55.7zm714.7-113.5h100.1l-50 63.6-50.1-63.6z" />
             </svg>
         )
@@ -7338,17 +7593,17 @@ export class QRCodeWidget extends Widget {
 
         icon: (
             <svg viewBox="0 0 16 16">
-                <path fill="#444" d="M6 0H0v6h6V0zM5 5H1V1h4v4z" />
+                <path fill="currentColor" d="M6 0H0v6h6V0zM5 5H1V1h4v4z" />
                 <path
-                    fill="#444"
+                    fill="currentColor"
                     d="M2 2h2v2H2V2zM0 16h6v-6H0v6zm1-5h4v4H1v-4z"
                 />
                 <path
-                    fill="#444"
+                    fill="currentColor"
                     d="M2 12h2v2H2v-2zm8-12v6h6V0h-6zm5 5h-4V1h4v4z"
                 />
                 <path
-                    fill="#444"
+                    fill="currentColor"
                     d="M12 2h2v2h-2V2zM2 7H0v2h3V8H2zm5 2h2v2H7V9zM3 7h2v1H3V7zm6 5H7v1h1v1h1v-1zM6 7v1H5v1h2V7zm2-3h1v2H8V4zm1 4v1h2V7H8v1zM7 6h1v1H7V6zm2 8h2v2H9v-2zm-2 0h1v2H7v-2zm2-3h1v1H9v-1zm0-8V1H8V0H7v4h1V3zm3 11h1v2h-1v-2zm0-2h2v1h-2v-1zm-1 1h1v1h-1v-1zm-1-1h1v1h-1v-1zm4-2v1h1v1h1v-2h-1zm1 3h-1v3h2v-2h-1zm-5-3v1h3V9h-2v1zm2-3v1h2v1h2V7h-2z"
                 />
             </svg>

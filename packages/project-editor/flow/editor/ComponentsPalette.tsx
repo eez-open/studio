@@ -2,6 +2,7 @@ import React from "react";
 import { observable, action, computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
+import tinycolor from "tinycolor2";
 
 import { objectClone } from "eez-studio-shared/util";
 
@@ -405,7 +406,13 @@ const PaletteItem = observer(
             let titleStyle: React.CSSProperties | undefined;
             if (classInfo.componentHeaderColor) {
                 titleStyle = {
-                    backgroundColor: classInfo.componentHeaderColor
+                    backgroundColor: classInfo.componentHeaderColor,
+                    color: tinycolor
+                        .mostReadable(classInfo.componentHeaderColor, [
+                            "#fff",
+                            "0x333"
+                        ])
+                        .toHexString()
                 };
             }
 

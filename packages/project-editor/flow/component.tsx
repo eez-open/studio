@@ -1658,6 +1658,18 @@ const CenterWidgetUI = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function getComponentLabel(component: Component) {
+    let name = getComponentName(component.type);
+
+    if (component instanceof Widget && component.data) {
+        return `${name}: ${component.data}`;
+    }
+
+    return name;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export type AutoSize = "width" | "height" | "both" | "none";
 
 export class Component extends EezObject {
@@ -1711,14 +1723,26 @@ export class Component extends EezObject {
             return getComponentClass(jsObject);
         },
 
-        label: (component: Component) => {
-            let name = getComponentName(component.type);
+        label: getComponentLabel,
 
-            if (component instanceof Widget && component.data) {
-                return `${name}: ${component.data}`;
-            }
-
-            return name;
+        listLabel: (component: Component) => {
+            const label = getComponentLabel(component);
+            const classInfo = getClassInfo(component);
+            return (
+                <>
+                    {classInfo.icon && (
+                        <Icon
+                            icon={classInfo.icon as any}
+                            style={{
+                                opacity: 0.66,
+                                marginRight: 5,
+                                height: 20
+                            }}
+                        />
+                    )}
+                    {label}
+                </>
+            );
         },
 
         properties: [
@@ -3810,7 +3834,6 @@ export class Widget extends Component {
         getResizeHandlers(widget: Widget) {
             return widget.getResizeHandlers();
         },
-        componentHeaderColor: "#ddd",
         isSelectable(widget: Widget) {
             return !widget.locked;
         },

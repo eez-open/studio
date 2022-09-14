@@ -226,8 +226,9 @@ export interface ClassInfo {
         isSingleObject: boolean
     ) => IEezObject | PropertyInfo | undefined;
 
-    icon?: string | React.ReactNode;
+    icon?: React.ReactNode;
     componentHeaderColor?: string;
+    componentHeaderTextColor?: string;
 
     propertyGridTableComponent?: any;
 

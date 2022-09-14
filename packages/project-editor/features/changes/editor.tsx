@@ -610,7 +610,7 @@ export const ChangesEditor = observer(
                 (params.revisionAfter?.hash == STAGED_HASH &&
                     this.context.project.changes._state.revisions[0].hash ==
                         STAGED_HASH);
-            console.log(hasRevertChanges);
+            hasRevertChanges;
 
             const changesEditor =
                 this.projectChanges?.changes.length == 0 ? (
