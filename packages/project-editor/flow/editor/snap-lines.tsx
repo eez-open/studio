@@ -12,6 +12,7 @@ import type { EditorFlowContext } from "project-editor/flow/editor/context";
 import type { Component } from "project-editor/flow/component";
 import type { Flow } from "project-editor/flow/flow";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { IEezObject, isAncestor } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -55,6 +56,13 @@ export function findSnapLines(flowContext: IFlowContext): ISnapLines {
         objectAdapter => objectAdapter.object
     );
 
+    const isSelectedObject = (object: IEezObject) => {
+        return selectedObjects.find(
+            selectedObject =>
+                selectedObject == object || isAncestor(object, selectedObject)
+        );
+    };
+
     const tree: ITreeObjectAdapter = {
         id: "",
         children: [flowContext.document.flow]
@@ -92,7 +100,7 @@ export function findSnapLines(flowContext: IFlowContext): ISnapLines {
             node.object &&
             (node.object instanceof ProjectEditor.PageClass ||
                 node.object instanceof ProjectEditor.ComponentClass) &&
-            selectedObjects.indexOf(node.object) == -1
+            !isSelectedObject(node.object)
         ) {
             const rect = getObjectBoundingRect(node);
 
