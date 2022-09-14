@@ -21,7 +21,7 @@ const SNAP_LINES_DRAW_THEME = {
     lineColor: "red",
     lineWidth: 1,
     lineDasharray: "5 5",
-    rectLineColor: "rgba(255, 0, 0, 0.2)",
+    rectLineColor: "rgba(255, 0, 0, 0.6)",
     rectLineWidth: 1,
     rectLineDasharray: "none",
     markerSize: 12,
