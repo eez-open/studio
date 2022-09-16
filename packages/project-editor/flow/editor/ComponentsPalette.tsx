@@ -8,7 +8,8 @@ import { objectClone } from "eez-studio-shared/util";
 
 import {
     getClassesDerivedFrom,
-    IObjectClassInfo
+    IObjectClassInfo,
+    ProjectType
 } from "project-editor/core/object";
 import { createObject } from "project-editor/store";
 import { DragAndDropManager } from "project-editor/core/dd";
@@ -62,27 +63,36 @@ export const ComponentsPalette = observer(
         get allComponentClasses() {
             const activeEditor = this.context.editorsStore.activeEditor;
 
-            let showOnlyActions;
+            let baseClass;
 
-            if (
+            const noFlowSupport =
+                (this.context.project.settings.general.projectType ==
+                    ProjectType.FIRMWARE ||
+                    this.context.project.settings.general.projectType ==
+                        ProjectType.FIRMWARE_MODULE) &&
+                !this.context.project.settings.general.flowSupport;
+
+            const showOnlyActions =
                 activeEditor &&
-                activeEditor.object instanceof ProjectEditor.ActionClass
-            ) {
-                showOnlyActions = true;
+                activeEditor.object instanceof ProjectEditor.ActionClass;
+
+            if (noFlowSupport) {
+                baseClass = ProjectEditor.WidgetClass;
             } else {
-                showOnlyActions = false;
+                if (showOnlyActions) {
+                    baseClass = ProjectEditor.ActionComponentClass;
+                } else {
+                    baseClass = ProjectEditor.ComponentClass;
+                }
             }
 
-            const stockComponents = getClassesDerivedFrom(
-                showOnlyActions
-                    ? ProjectEditor.ActionComponentClass
-                    : ProjectEditor.ComponentClass
-            ).filter(objectClassInfo =>
-                this.context.project.isAppletProject ||
-                this.context.project.isFirmwareWithFlowSupportProject
-                    ? objectClassInfo.objectClass.classInfo.flowComponentId !=
-                      undefined
-                    : true
+            const stockComponents = getClassesDerivedFrom(baseClass).filter(
+                objectClassInfo =>
+                    this.context.project.isAppletProject ||
+                    this.context.project.isFirmwareWithFlowSupportProject
+                        ? objectClassInfo.objectClass.classInfo
+                              .flowComponentId != undefined
+                        : true
             );
 
             const userWidgets: IObjectClassInfo[] = [];
