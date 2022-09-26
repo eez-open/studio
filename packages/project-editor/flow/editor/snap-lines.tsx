@@ -16,15 +16,23 @@ import { IEezObject, isAncestor } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const ADD_MARGIN_RECT = false;
+
 const MAX_SNAP_LINE_DISTANCE = 8;
 
 const SNAP_LINES_DRAW_THEME = {
     lineColor: "red",
     lineWidth: 1,
     lineDasharray: "5 5",
+
     rectLineColor: "rgba(255, 0, 0, 0.6)",
     rectLineWidth: 1,
     rectLineDasharray: "none",
+
+    marginRectLineColor: "rgba(0, 255, 0, 0.6)",
+    marginRectLineWidth: 1,
+    marginRectLineDasharray: "none",
+
     markerSize: 12,
     markerLineColor: "red",
     markerLineWidth: 2
@@ -34,9 +42,14 @@ export const CONF_ACTIVATE_SNAP_TO_LINES_AFTER_TIME = 300;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+interface SnapRect {
+    rect: Rect;
+    isMarginRect: boolean;
+}
+
 interface ISnapLine {
     pos: number;
-    rects: Rect[];
+    rects: SnapRect[];
 }
 
 export interface IClosestSnapLines {
@@ -71,27 +84,73 @@ export function findSnapLines(flowContext: IFlowContext): ISnapLines {
     let horizontalLines: ISnapLine[] = [];
     let verticalLines: ISnapLine[] = [];
 
-    function findRect(rect: Rect, rects: Rect[]) {
+    function findRect(rect: Rect, rects: SnapRect[]) {
         return rects.find(
-            r =>
-                r.left == rect.left &&
-                r.top == rect.top &&
-                r.width == rect.width &&
-                r.height == rect.height
+            snapRect =>
+                snapRect.rect.left == rect.left &&
+                snapRect.rect.top == rect.top &&
+                snapRect.rect.width == rect.width &&
+                snapRect.rect.height == rect.height
         );
     }
 
-    function addLine(lines: ISnapLine[], pos: number, rect: Rect) {
+    function addLine(
+        lines: ISnapLine[],
+        pos: number,
+        rect: Rect,
+        isMarginRect: boolean
+    ) {
         const line = lines.find(line => line.pos == pos);
         if (line) {
             if (!findRect(rect, line.rects)) {
-                line.rects.push(rect);
+                line.rects.push({
+                    rect,
+                    isMarginRect: isMarginRect
+                });
             }
         } else {
             lines.push({
                 pos,
-                rects: [rect]
+                rects: [
+                    {
+                        rect,
+                        isMarginRect: isMarginRect
+                    }
+                ]
             });
+        }
+    }
+
+    function addLines(rect: Rect, isMarginRect: boolean) {
+        addLine(verticalLines, rect.left, rect, isMarginRect);
+        if (rect.width > 0) {
+            if (isMarginRect) {
+                addLine(
+                    verticalLines,
+                    rect.left + rect.width / 2,
+                    rect,
+                    isMarginRect
+                );
+            }
+            addLine(verticalLines, rect.left + rect.width, rect, isMarginRect);
+        }
+
+        addLine(horizontalLines, rect.top, rect, isMarginRect);
+        if (rect.width > 0) {
+            if (isMarginRect) {
+                addLine(
+                    horizontalLines,
+                    rect.top + rect.height / 2,
+                    rect,
+                    isMarginRect
+                );
+            }
+            addLine(
+                horizontalLines,
+                rect.top + rect.height,
+                rect,
+                isMarginRect
+            );
         }
     }
 
@@ -102,18 +161,32 @@ export function findSnapLines(flowContext: IFlowContext): ISnapLines {
                 node.object instanceof ProjectEditor.ComponentClass) &&
             !isSelectedObject(node.object)
         ) {
-            const rect = getObjectBoundingRect(node);
+            const rect1 = getObjectBoundingRect(node);
+            addLines(rect1, true);
 
-            addLine(verticalLines, rect.left, rect);
-            if (rect.width > 0) {
-                addLine(verticalLines, rect.left + rect.width / 2, rect);
-                addLine(verticalLines, rect.left + rect.width, rect);
-            }
+            if (ADD_MARGIN_RECT) {
+                const marginRect = Object.assign({}, rect1);
 
-            addLine(horizontalLines, rect.top, rect);
-            if (rect.width > 0) {
-                addLine(horizontalLines, rect.top + rect.height / 2, rect);
-                addLine(horizontalLines, rect.top + rect.height, rect);
+                if (
+                    node.object instanceof ProjectEditor.PageClass ||
+                    node.object instanceof ProjectEditor.ContainerWidgetClass
+                ) {
+                    // add inner margin for page and container
+                    marginRect.left += 10;
+                    marginRect.top += 10;
+                    marginRect.width -= 20;
+                    marginRect.height -= 20;
+                    if (marginRect.width > 0 && marginRect.height > 0) {
+                        addLines(marginRect, false);
+                    }
+                } else {
+                    // add outer margin for all other widgets
+                    marginRect.left -= 10;
+                    marginRect.top -= 10;
+                    marginRect.width += 20;
+                    marginRect.height += 20;
+                    addLines(marginRect, false);
+                }
             }
         }
 
@@ -316,6 +389,12 @@ export class SnapLines {
             strokeDasharray: SNAP_LINES_DRAW_THEME.rectLineDasharray
         };
 
+        const marginRectStyle: React.CSSProperties = {
+            stroke: SNAP_LINES_DRAW_THEME.marginRectLineColor,
+            strokeWidth: SNAP_LINES_DRAW_THEME.marginRectLineWidth,
+            strokeDasharray: SNAP_LINES_DRAW_THEME.marginRectLineDasharray
+        };
+
         drawSnapLinesGeneric(
             this.lines,
             selectionRect,
@@ -347,13 +426,13 @@ export class SnapLines {
                         });
                     }
 
-                    line.rects.forEach(rect => {
+                    line.rects.forEach(snapRect => {
                         points.push({
-                            x: rect.left,
+                            x: snapRect.rect.left,
                             y: line.pos
                         });
                         points.push({
-                            x: rect.left + rect.width,
+                            x: snapRect.rect.left + snapRect.rect.width,
                             y: line.pos
                         });
                     });
@@ -382,14 +461,14 @@ export class SnapLines {
                         });
                     }
 
-                    line.rects.forEach(rect => {
+                    line.rects.forEach(snapRect => {
                         points.push({
                             x: line.pos,
-                            y: rect.top
+                            y: snapRect.rect.top
                         });
                         points.push({
                             x: line.pos,
-                            y: rect.top + rect.height
+                            y: snapRect.rect.top + snapRect.rect.height
                         });
                     });
 
@@ -412,8 +491,8 @@ export class SnapLines {
                     />
                 );
 
-                line.rects.forEach(rect => {
-                    rect = transform.pageToOffsetRect(rect);
+                line.rects.forEach(snapRect => {
+                    const rect = transform.pageToOffsetRect(snapRect.rect);
                     rects.push(
                         <rect
                             key={rects.length}
@@ -421,7 +500,11 @@ export class SnapLines {
                             y={rect.top}
                             width={rect.width}
                             height={rect.height}
-                            style={rectStyle}
+                            style={
+                                snapRect.isMarginRect
+                                    ? marginRectStyle
+                                    : rectStyle
+                            }
                             fill="none"
                         />
                     );
