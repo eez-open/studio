@@ -25,7 +25,7 @@ const SNAP_LINES_DRAW_THEME = {
     lineWidth: 1,
     lineDasharray: "5 5",
 
-    rectLineColor: "rgba(255, 0, 0, 0.6)",
+    rectLineColor: "rgba(255, 0, 0, 0.4)",
     rectLineWidth: 1,
     rectLineDasharray: "none",
 
@@ -105,7 +105,7 @@ export function findSnapLines(flowContext: IFlowContext): ISnapLines {
             if (!findRect(rect, line.rects)) {
                 line.rects.push({
                     rect,
-                    isMarginRect: isMarginRect
+                    isMarginRect
                 });
             }
         } else {
@@ -114,7 +114,7 @@ export function findSnapLines(flowContext: IFlowContext): ISnapLines {
                 rects: [
                     {
                         rect,
-                        isMarginRect: isMarginRect
+                        isMarginRect
                     }
                 ]
             });
@@ -124,7 +124,7 @@ export function findSnapLines(flowContext: IFlowContext): ISnapLines {
     function addLines(rect: Rect, isMarginRect: boolean) {
         addLine(verticalLines, rect.left, rect, isMarginRect);
         if (rect.width > 0) {
-            if (isMarginRect) {
+            if (!isMarginRect) {
                 addLine(
                     verticalLines,
                     rect.left + rect.width / 2,
@@ -137,7 +137,7 @@ export function findSnapLines(flowContext: IFlowContext): ISnapLines {
 
         addLine(horizontalLines, rect.top, rect, isMarginRect);
         if (rect.width > 0) {
-            if (isMarginRect) {
+            if (!isMarginRect) {
                 addLine(
                     horizontalLines,
                     rect.top + rect.height / 2,
@@ -162,7 +162,7 @@ export function findSnapLines(flowContext: IFlowContext): ISnapLines {
             !isSelectedObject(node.object)
         ) {
             const rect1 = getObjectBoundingRect(node);
-            addLines(rect1, true);
+            addLines(rect1, false);
 
             if (ADD_MARGIN_RECT) {
                 const marginRect = Object.assign({}, rect1);
@@ -177,7 +177,7 @@ export function findSnapLines(flowContext: IFlowContext): ISnapLines {
                     marginRect.width -= 20;
                     marginRect.height -= 20;
                     if (marginRect.width > 0 && marginRect.height > 0) {
-                        addLines(marginRect, false);
+                        addLines(marginRect, true);
                     }
                 } else {
                     // add outer margin for all other widgets
@@ -185,7 +185,7 @@ export function findSnapLines(flowContext: IFlowContext): ISnapLines {
                     marginRect.top -= 10;
                     marginRect.width += 20;
                     marginRect.height += 20;
-                    addLines(marginRect, false);
+                    addLines(marginRect, true);
                 }
             }
         }
