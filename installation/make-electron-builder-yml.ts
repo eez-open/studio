@@ -242,15 +242,15 @@ let files = [
             target: [
                 {
                     target: "dmg",
-                    arch: ["x64", "arm64"]
+                    arch: ["x64"]
                 },
                 {
                     target: "pkg",
-                    arch: ["x64", "arm64"]
+                    arch: ["x64"]
                 },
                 {
                     target: "zip",
-                    arch: ["x64", "arm64"]
+                    arch: ["x64"]
                 }
             ],
             category: "public.app-category.utilities",
