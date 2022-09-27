@@ -240,7 +240,7 @@ let files = [
 
         mac: {
             target: {
-                target: "default",
+                target: ["dmg", "pkg", "zip", "dir"],
                 arch: ["x64", "arm64"]
             },
             category: "public.app-category.utilities",
