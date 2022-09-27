@@ -1,3 +1,4 @@
+import * as os from "os";
 import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
 import type { ValueType } from "project-editor/features/variable/value-type";
 import type { IExpressionContext } from "project-editor/flow/expression";
@@ -866,6 +867,20 @@ export const builtInConstants: {
         valueType: ValueType;
     };
 } = {
+    "System.Platform": {
+        value: (projectEditorStore: ProjectEditorStore) => {
+            const platform = os.platform();
+            if (platform == "darwin") return "macos";
+            return platform;
+        },
+        valueType: "string"
+    },
+
+    "System.Architecture": {
+        value: (projectEditorStore: ProjectEditorStore) => os.arch(),
+        valueType: "string"
+    },
+
     "System.ProjectFolder": {
         value: (projectEditorStore: ProjectEditorStore) =>
             projectEditorStore.getAbsoluteProjectFolderPath(),
