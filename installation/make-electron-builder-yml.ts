@@ -239,10 +239,20 @@ let files = [
         ],
 
         mac: {
-            target: {
-                target: ["dmg", "pkg", "zip", "dir"],
-                arch: ["x64", "arm64"]
-            },
+            target: [
+                {
+                    target: "dmg",
+                    arch: ["x64", "arm64"]
+                },
+                {
+                    target: "pkg",
+                    arch: ["x64", "arm64"]
+                },
+                {
+                    target: "zip",
+                    arch: ["x64", "arm64"]
+                }
+            ],
             category: "public.app-category.utilities",
             bundleVersion: packageJson.version,
             icon: "./icon.icns",
