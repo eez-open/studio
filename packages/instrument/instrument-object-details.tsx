@@ -267,20 +267,18 @@ class PanelTitle extends React.Component<{ title?: string }, {}> {
     }
 }
 
-class Panel extends React.Component<
-    {
-        title?: string;
-        justify?:
-            | "flex-start"
-            | "flex-end"
-            | "center"
-            | "space-between"
-            | "space-around";
-        scrollable?: boolean;
-        grow?: number;
-    },
-    {}
-> {
+class Panel extends React.Component<{
+    children?: React.ReactNode;
+    title?: string;
+    justify?:
+        | "flex-start"
+        | "flex-end"
+        | "center"
+        | "space-between"
+        | "space-around";
+    scrollable?: boolean;
+    grow?: number;
+}> {
     render() {
         return (
             <div className="EezStudio_InstrumentPanelContainer">
@@ -300,7 +298,7 @@ class Panel extends React.Component<
     }
 }
 
-class Panels extends React.Component<{}, {}> {
+class Panels extends React.Component<{ children?: React.ReactNode }> {
     render() {
         return <div className="EezStudio_Panels">{this.props.children}</div>;
     }

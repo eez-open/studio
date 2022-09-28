@@ -3571,26 +3571,19 @@ class MeasurementsController {
 ////////////////////////////////////////////////////////////////////////////////
 
 export const ChartsView = observer(
-    class ChartsView extends React.Component<
-        {
-            chartsController: IChartsController;
-            className?: string;
-            tabIndex?: number;
-            sideDockAvailable?: boolean;
-        },
-        {}
-    > {
+    class ChartsView extends React.Component<{
+        children?: React.ReactNode;
+        chartsController: IChartsController;
+        className?: string;
+        tabIndex?: number;
+        sideDockAvailable?: boolean;
+    }> {
         animationFrameRequestId: any = undefined;
         div: HTMLDivElement | null = null;
         sideDock: SideDockComponent | null = null;
         chartMeasurements: ChartMeasurementsComponent | null = null;
 
-        constructor(props: {
-            chartsController: IChartsController;
-            className?: string;
-            tabIndex?: number;
-            sideDockAvailable?: boolean;
-        }) {
+        constructor(props: any) {
             super(props);
 
             makeObservable(this, {

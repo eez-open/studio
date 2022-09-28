@@ -3,13 +3,11 @@ import { observer } from "mobx-react";
 import classnames from "classnames";
 
 export const Toolbar = observer(
-    class Toolbar extends React.Component<
-        {
-            className?: string;
-            style?: React.CSSProperties;
-        },
-        {}
-    > {
+    class Toolbar extends React.Component<{
+        children?: React.ReactNode;
+        className?: string;
+        style?: React.CSSProperties;
+    }> {
         render() {
             let className = classnames(
                 "EezStudio_Toolbar",

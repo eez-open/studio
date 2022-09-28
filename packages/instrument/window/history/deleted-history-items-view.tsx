@@ -103,6 +103,7 @@ export const DeletedHistoryItemsTools = observer(
 
 export const DeletedHistoryItemsView = observer(
     class DeletedHistoryItemsView extends React.Component<{
+        children?: React.ReactNode;
         appStore: IAppStore;
         persistId: string;
     }> {
@@ -121,7 +122,7 @@ export const DeletedHistoryItemsView = observer(
             );
         };
 
-        constructor(props: { appStore: IAppStore; persistId: string }) {
+        constructor(props: any) {
             super(props);
 
             makeObservable(this, {

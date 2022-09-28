@@ -21,6 +21,7 @@ export interface IEditor {
 }
 
 export interface EditorComponentProps {
+    children?: React.ReactNode;
     editor: IEditor;
 }
 

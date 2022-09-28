@@ -138,7 +138,9 @@ function getDiscreteTypeEnumeration(object: ScpiParameter | ScpiResponse) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class ScpiParameterTable extends React.Component {
+class ScpiParameterTable extends React.Component<{
+    children?: React.ReactNode;
+}> {
     render() {
         return (
             <div className="EezStudio_ScpiParameterTable">

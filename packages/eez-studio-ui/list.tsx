@@ -135,15 +135,13 @@ export const List = observer(
 );
 
 export const ListContainer = observer(
-    class ListContainer extends React.Component<
-        {
-            tabIndex: any;
-            minHeight?: number;
-            maxHeight?: number;
-            className?: string;
-        },
-        {}
-    > {
+    class ListContainer extends React.Component<{
+        children?: React.ReactNode;
+        tabIndex: any;
+        minHeight?: number;
+        maxHeight?: number;
+        className?: string;
+    }> {
         render() {
             const { minHeight, maxHeight } = this.props;
             return (

@@ -15,6 +15,7 @@ import {
 
 const ZoomedPreview = observer(
     class ZoomedPreview extends React.Component<{
+        children?: React.ReactNode;
         toolbar?: React.ReactNode;
         className?: string;
         toggleZoom: (event: React.MouseEvent<HTMLElement>) => void;
@@ -83,6 +84,7 @@ const ZoomedPreview = observer(
 
 const UnzoomedPreview = observer(
     class UnzoomedPreview extends React.Component<{
+        children?: React.ReactNode;
         className?: string;
         toggleZoom: (event: React.MouseEvent<HTMLElement>) => void;
     }> {
@@ -104,6 +106,7 @@ const UnzoomedPreview = observer(
 
 export const HistoryItemPreview = observer(
     class HistoryItemPreview extends React.Component<{
+        children?: React.ReactNode;
         className?: string;
         toolbarWhenZoomed?: React.ReactNode;
         zoom: boolean;

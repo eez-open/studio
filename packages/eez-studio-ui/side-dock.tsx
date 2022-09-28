@@ -143,6 +143,7 @@ export class DockablePanelsComponent extends React.Component<{
 export const DockablePanels = observer(DockablePanelsComponent);
 
 export class SideDockComponent extends React.Component<{
+    children?: React.ReactNode;
     persistId: string;
     layoutId: string;
     defaultLayoutConfig: any;

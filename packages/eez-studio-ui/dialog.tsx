@@ -17,7 +17,7 @@ export interface IDialogOptions {
         width: number;
         height?: number;
     };
-    fieldsEnclosureDiv?: React.ComponentType;
+    fieldsEnclosureDiv?: React.ComponentType<{ children?: React.ReactNode }>;
 }
 
 export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
@@ -73,6 +73,7 @@ export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
 
 export const Dialog = observer(
     class Dialog extends React.Component<{
+        children?: React.ReactNode;
         modal?: boolean;
         open?: boolean;
         title?: string;
@@ -220,7 +221,7 @@ export const BootstrapDialog = observer(
         okEnabled?: () => boolean;
         disableButtons: boolean;
         buttons?: IDialogButton[];
-        children: React.ReactNode;
+        children?: React.ReactNode;
         additionalFooterControl?: React.ReactNode;
         backdrop?: "static" | boolean;
     }> {

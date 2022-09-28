@@ -2,6 +2,7 @@ import React from "react";
 import classNames from "classnames";
 
 export class Header extends React.Component<{
+    children?: React.ReactNode;
     className?: string;
 }> {
     render() {
@@ -11,6 +12,7 @@ export class Header extends React.Component<{
 }
 
 export class ToolbarHeader extends React.Component<{
+    children?: React.ReactNode;
     className?: string;
     style?: React.CSSProperties;
 }> {
@@ -30,6 +32,7 @@ export class ToolbarHeader extends React.Component<{
 }
 
 export class Body extends React.Component<{
+    children?: React.ReactNode;
     className?: string;
     tabIndex?: number;
     visible?: boolean;
@@ -57,6 +60,7 @@ export class Body extends React.Component<{
 }
 
 class HeaderWithBody extends React.Component<{
+    children?: React.ReactNode;
     className?: string;
     onContextMenu?: (event: React.MouseEvent<HTMLDivElement>) => void;
     style?: React.CSSProperties;
@@ -79,6 +83,7 @@ class HeaderWithBody extends React.Component<{
 }
 
 export class VerticalHeaderWithBody extends React.Component<{
+    children?: React.ReactNode;
     className?: string;
     onContextMenu?: (event: React.MouseEvent<HTMLDivElement>) => void;
     style?: React.CSSProperties;
@@ -101,6 +106,7 @@ export class VerticalHeaderWithBody extends React.Component<{
 }
 
 export class HorizontalHeaderWithBody extends React.Component<{
+    children?: React.ReactNode;
     className?: string;
 }> {
     render() {

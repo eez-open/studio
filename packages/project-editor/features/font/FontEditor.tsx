@@ -834,7 +834,9 @@ export function browseGlyph(glyph: Glyph) {
     });
 }
 
-class SelectGlyphDialogFieldsEnclosure extends React.Component {
+class SelectGlyphDialogFieldsEnclosure extends React.Component<{
+    children?: React.ReactNode;
+}> {
     render() {
         return (
             <div className="EezStudio_SelectGlyphDialogFieldsEnclosure">

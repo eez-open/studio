@@ -169,6 +169,7 @@ function CenterLines({ flowContext }: { flowContext: EditorFlowContext }) {
 
 export const Canvas = observer(
     class Canvas extends React.Component<{
+        children?: React.ReactNode;
         flowContext: EditorFlowContext;
         pageRect?: Rect;
         dragAndDropActive: boolean;

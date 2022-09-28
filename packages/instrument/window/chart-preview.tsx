@@ -36,6 +36,7 @@ function createChartsController(
 ////////////////////////////////////////////////////////////////////////////////
 
 interface ChartPreviewProps {
+    children?: React.ReactNode;
     appStore: IAppStore;
     data: ChartData;
 }

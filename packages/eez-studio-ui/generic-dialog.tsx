@@ -111,14 +111,12 @@ export const TableField = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 export const RadioGroupProperty = observer(
-    class RadioGroupProperty extends React.Component<
-        {
-            id?: string;
-            name: string;
-            errors?: string[];
-        },
-        {}
-    > {
+    class RadioGroupProperty extends React.Component<{
+        children?: React.ReactNode;
+        id?: string;
+        name: string;
+        errors?: string[];
+    }> {
         render() {
             let id = this.props.id || guid();
 

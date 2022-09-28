@@ -271,6 +271,7 @@ export const FlowViewer = observer(
 
 export const Canvas = observer(
     class Canvas extends React.Component<{
+        children?: React.ReactNode;
         flowContext: IFlowContext;
         pageRect?: Rect;
     }> {

@@ -12,6 +12,7 @@ import { ListContainer, List, IListNode } from "eez-studio-ui/list";
 export const PropertyEnclosure = observer(
     class PropertyEnclosure extends React.Component<
         {
+            children?: React.ReactNode;
             errors?: string[];
             style?: React.CSSProperties;
             className?: string;
@@ -444,19 +445,17 @@ export const StaticRichTextProperty = observer(
 );
 
 export const SelectProperty = observer(
-    class SelectProperty extends React.Component<
-        {
-            id?: string;
-            name: string;
-            value: string;
-            onChange: (value: string) => void;
-            inputGroupButton?: React.ReactNode;
-            selectStyle?: React.CSSProperties;
-            errors?: string[];
-            comboBox?: boolean;
-        },
-        {}
-    > {
+    class SelectProperty extends React.Component<{
+        children?: React.ReactNode;
+        id?: string;
+        name: string;
+        value: string;
+        onChange: (value: string) => void;
+        inputGroupButton?: React.ReactNode;
+        selectStyle?: React.CSSProperties;
+        errors?: string[];
+        comboBox?: boolean;
+    }> {
         render() {
             let id = this.props.id || guid();
 
@@ -760,6 +759,7 @@ export const ColorInputProperty = observer(
 
 export const PropertyList = observer(
     class PropertyList extends React.Component<{
+        children?: React.ReactNode;
         className?: string;
     }> {
         render() {
@@ -779,6 +779,7 @@ export const PropertyList = observer(
 
 export class Checkbox extends React.Component<
     {
+        children?: React.ReactNode;
         checked: boolean;
         onChange: (checked: boolean) => void;
     },
@@ -807,6 +808,7 @@ export class Checkbox extends React.Component<
 
 export class Radio extends React.Component<
     {
+        children?: React.ReactNode;
         checked: boolean;
         onChange: () => void;
     },

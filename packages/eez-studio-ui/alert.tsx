@@ -5,6 +5,7 @@ import classNames from "classnames";
 export const Alert = observer(
     class Alert extends React.Component<
         {
+            children?: React.ReactNode;
             onDismiss?: () => void;
             className?: string;
         },
@@ -33,6 +34,7 @@ export const Alert = observer(
 export const AlertDanger = observer(
     class AlertDanger extends React.Component<
         {
+            children?: React.ReactNode;
             onDismiss?: () => void;
             className?: string;
         },

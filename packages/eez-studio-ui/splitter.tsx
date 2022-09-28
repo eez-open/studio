@@ -9,6 +9,8 @@ import { Draggable } from "eez-studio-ui/draggable";
 const SPLITTER_SIZE = 8;
 
 interface SplitterProps {
+    children?: React.ReactNode;
+
     type: "horizontal" | "vertical";
     className?: string;
 

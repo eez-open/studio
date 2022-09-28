@@ -26,7 +26,7 @@ export const CLIPBOARD_DATA_TYPE = "application/eez-studio-history-item";
 ////////////////////////////////////////////////////////////////////////////////
 
 class ErrorBoundary extends React.Component<
-    { id: string },
+    { children?: React.ReactNode; id: string },
     { hasError: boolean }
 > {
     constructor(props: any) {

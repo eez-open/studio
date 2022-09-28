@@ -4,6 +4,7 @@ import classNames from "classnames";
 ////////////////////////////////////////////////////////////////////////////////
 
 export class BootstrapButton extends React.Component<{
+    children?: React.ReactNode;
     color: "primary" | "secondary";
     size: "small" | "medium" | "large";
     onClick: () => void;

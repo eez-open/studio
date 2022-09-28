@@ -123,7 +123,7 @@ ipcRenderer.on("command-palette", () => {
 });
 
 const Main = observer(
-    class Main extends React.Component {
+    class Main extends React.Component<{ children: React.ReactNode }> {
         render() {
             return (
                 <DndProvider backend={HTML5Backend}>

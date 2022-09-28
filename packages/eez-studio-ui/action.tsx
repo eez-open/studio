@@ -7,6 +7,7 @@ import { Icon } from "eez-studio-ui/icon";
 const Action = observer(
     class Action extends React.Component<
         {
+            children?: React.ReactNode;
             title: string;
             onClick?: (event: any) => void;
             selected?: boolean;
@@ -156,6 +157,7 @@ export const ButtonAction = observer(
 export const DropdownButtonAction = observer(
     class DropdownButtonAction extends React.Component<
         {
+            children?: React.ReactNode;
             text: string;
             icon?: string;
             iconSize?: number;
@@ -210,6 +212,7 @@ export const DropdownButtonAction = observer(
 export const DropdownIconAction = observer(
     class DropdownIconAction extends React.Component<
         {
+            children?: React.ReactNode;
             icon: string;
             iconSize?: number;
             title: string;

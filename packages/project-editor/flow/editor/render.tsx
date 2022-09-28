@@ -573,6 +573,7 @@ export function calcComponentGeometry(
 ////////////////////////////////////////////////////////////////////////////////
 
 export const Svg: React.FunctionComponent<{
+    children?: React.ReactNode;
     flowContext: IFlowContext;
     defs?: JSX.Element | null;
     className?: string;
