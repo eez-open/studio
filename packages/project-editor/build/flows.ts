@@ -83,7 +83,7 @@ function getComponentIdOfComponent(assets: Assets, component: Component) {
 
     if (
         flowComponentId == undefined &&
-        assets.projectEditorStore.project.isDashboardProject
+        assets.projectEditorStore.projectTypeTraits.isDashboard
     ) {
         const eezClass = getClass(component);
         const name = getClassName(eezClass);
@@ -405,11 +405,7 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
 }
 
 export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
-    if (
-        assets.projectEditorStore.project.isDashboardProject ||
-        assets.projectEditorStore.project.isAppletProject ||
-        assets.projectEditorStore.project.isFirmwareWithFlowSupportProject
-    ) {
+    if (assets.projectEditorStore.projectTypeTraits.hasFlowSupport) {
         dataBuffer.writeObjectOffset(() => {
             // flows
             dataBuffer.writeArray(assets.flows, flow => {

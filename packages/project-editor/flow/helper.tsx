@@ -112,11 +112,7 @@ export function getTextValue(
 ): { text: string; node: React.ReactNode } | string {
     let data = (widget as any)[propertyName];
 
-    if (
-        flowContext.projectEditorStore.project.isDashboardProject ||
-        flowContext.projectEditorStore.project.isAppletProject ||
-        flowContext.projectEditorStore.project.isFirmwareWithFlowSupportProject
-    ) {
+    if (flowContext.projectEditorStore.projectTypeTraits.hasFlowSupport) {
         if (data) {
             if (flowContext.flowState) {
                 try {

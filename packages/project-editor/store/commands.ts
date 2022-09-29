@@ -17,7 +17,7 @@ import {
 import {
     findPropertyByNameInObject,
     getClassInfo,
-    getDocumentStore,
+    getProjectEditorStore,
     getHumanReadableObjectPath,
     isArrayElement
 } from "project-editor/store/helper";
@@ -31,7 +31,7 @@ export let addObject = action((parentObject: IEezObject, object: EezObject) => {
 
     ensureUniqueProperties(parentObject, [object]);
 
-    getDocumentStore(parentObject).undoManager.executeCommand({
+    getProjectEditorStore(parentObject).undoManager.executeCommand({
         execute: action(() => {
             (parentObject as IEezObject[]).push(object);
         }),
@@ -56,7 +56,7 @@ export let addObjects = action(
 
         ensureUniqueProperties(parentObject, objects);
 
-        getDocumentStore(parentObject).undoManager.executeCommand({
+        getProjectEditorStore(parentObject).undoManager.executeCommand({
             execute: action(() => {
                 (parentObject as IEezObject[]).push(...objects);
             }),
@@ -87,7 +87,7 @@ export let insertObject = action(
 
         ensureUniqueProperties(parentObject, [object]);
 
-        getDocumentStore(parentObject).undoManager.executeCommand({
+        getProjectEditorStore(parentObject).undoManager.executeCommand({
             execute: action(() => {
                 (parentObject as IEezObject[]).splice(index, 0, object);
             }),
@@ -158,7 +158,7 @@ class UpdateCommand implements ICommand {
 }
 
 export let updateObject = action((object: IEezObject, values: any) => {
-    const undoManager = getDocumentStore(object).undoManager;
+    const undoManager = getProjectEditorStore(object).undoManager;
 
     let closeCombineCommands = false;
 
@@ -200,7 +200,7 @@ export let deleteObject = action((object: any) => {
         const array = parent as IEezObject[];
         const index = array.indexOf(object);
 
-        getDocumentStore(object).undoManager.executeCommand({
+        getProjectEditorStore(object).undoManager.executeCommand({
             execute: action(() => {
                 array.splice(index, 1);
             }),
@@ -223,7 +223,7 @@ export let deleteObject = action((object: any) => {
 export let deleteObjects = action((objects: IEezObject[]) => {
     let undoIndexes: number[];
 
-    getDocumentStore(objects[0]).undoManager.executeCommand({
+    getProjectEditorStore(objects[0]).undoManager.executeCommand({
         execute: action(() => {
             undoIndexes = [];
             for (let i = 0; i < objects.length; i++) {
@@ -273,7 +273,7 @@ export let replaceObject = action(
 
         setParent(replaceWithObject, parent);
 
-        const undoManager = getDocumentStore(parent).undoManager;
+        const undoManager = getProjectEditorStore(parent).undoManager;
         if (isArrayElement(object)) {
             const array = parent as IEezObject[];
 
@@ -317,7 +317,7 @@ export let replaceObjects = action(
 
         let undoIndexes: number[];
 
-        getDocumentStore(parent).undoManager.executeCommand({
+        getProjectEditorStore(parent).undoManager.executeCommand({
             execute: action(() => {
                 array[index] = replaceWithObject;
 

@@ -345,6 +345,9 @@ class LineChartLine extends EezObject {
 
 export class LineChartWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.DASHBOARD,
+
         properties: [
             Object.assign(makeDataPropertyInfo("data"), {
                 hideInPropertyGrid: true
@@ -481,10 +484,7 @@ export class LineChartWidget extends Widget {
             ]
         },
 
-        icon: LINE_CHART_ICON,
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType === ProjectType.DASHBOARD
+        icon: LINE_CHART_ICON
     });
 
     xValue: string;
@@ -761,6 +761,9 @@ const GaugeElement = observer(
 
 export class GaugeWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.DASHBOARD,
+
         properties: [
             {
                 name: "title",
@@ -805,10 +808,7 @@ export class GaugeWidget extends Widget {
             }
         },
 
-        icon: GAUGE_ICON,
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType === ProjectType.DASHBOARD
+        icon: GAUGE_ICON
     });
 
     title: string;

@@ -68,6 +68,8 @@ import "project-editor/flow/components/widgets/markdown";
 import "project-editor/flow/components/widgets/plotly";
 import "project-editor/flow/components/widgets/terminal";
 
+import "project-editor/flow/components/widgets/lvgl";
+
 import type {
     IActionComponentDefinition,
     IObjectVariableType

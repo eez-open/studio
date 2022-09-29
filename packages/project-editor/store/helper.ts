@@ -59,7 +59,7 @@ export class EezValueObject extends EezObject {
     static create(object: IEezObject, propertyInfo: PropertyInfo, value: any) {
         const valueObject = new EezValueObject();
 
-        const projectEditorStore = getDocumentStore(object);
+        const projectEditorStore = getProjectEditorStore(object);
 
         setId(projectEditorStore, valueObject, projectEditorStore.getChildId());
         setKey(valueObject, propertyInfo.name);
@@ -79,7 +79,7 @@ export function isValue(object: IEezObject | undefined) {
     return !!object && object instanceof EezValueObject;
 }
 
-export function getDocumentStore(object: IEezObject) {
+export function getProjectEditorStore(object: IEezObject) {
     return (getRootObject(object) as Project)._DocumentStore;
 }
 
@@ -662,12 +662,12 @@ export async function addItem(object: IEezObject) {
         return null;
     }
 
-    return getDocumentStore(object).addObject(parent, newObject);
+    return getProjectEditorStore(object).addObject(parent, newObject);
 }
 
 export function pasteItem(object: IEezObject) {
     try {
-        const projectEditorStore = getDocumentStore(object);
+        const projectEditorStore = getProjectEditorStore(object);
 
         const c = checkClipboard(projectEditorStore, object);
         if (c) {
@@ -719,7 +719,10 @@ export function deleteItem(object: IEezObject) {
 }
 
 export function cutItem(object: IEezObject) {
-    let clipboardText = objectToClipboardData(getDocumentStore(object), object);
+    let clipboardText = objectToClipboardData(
+        getProjectEditorStore(object),
+        object
+    );
 
     deleteItems([object], () => {
         copyToClipboard(clipboardText);
@@ -727,7 +730,9 @@ export function cutItem(object: IEezObject) {
 }
 
 export function copyItem(object: IEezObject) {
-    copyToClipboard(objectToClipboardData(getDocumentStore(object), object));
+    copyToClipboard(
+        objectToClipboardData(getProjectEditorStore(object), object)
+    );
 }
 
 function duplicateItem(object: IEezObject) {
@@ -741,7 +746,7 @@ function duplicateItem(object: IEezObject) {
         getClass(object)
     );
 
-    return getDocumentStore(object).addObject(parent, duplicateObject);
+    return getProjectEditorStore(object).addObject(parent, duplicateObject);
 }
 
 export interface IContextMenuContext {
@@ -756,7 +761,7 @@ export function createContextMenu(
 ) {
     let menuItems: Electron.MenuItem[] = [];
 
-    const projectEditorStore = getDocumentStore(object);
+    const projectEditorStore = getProjectEditorStore(object);
 
     if (editable && canAdd(object)) {
         menuItems.push(
@@ -904,7 +909,7 @@ export function showContextMenu(
 ////////////////////////////////////////////////////////////////////////////////
 
 export function deleteItems(objects: IEezObject[], callback?: () => void) {
-    const projectEditorStore = getDocumentStore(objects[0]);
+    const projectEditorStore = getProjectEditorStore(objects[0]);
 
     function doDelete() {
         projectEditorStore.deleteObjects(objects);

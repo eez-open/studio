@@ -43,7 +43,7 @@ import {
     pasteItem,
     deleteItems,
     canContainChildren,
-    getDocumentStore,
+    getProjectEditorStore,
     copyToClipboard,
     setClipboardData,
     objectToClipboardData,
@@ -433,7 +433,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             return;
         }
 
-        const projectEditorStore = getDocumentStore(this.object);
+        const projectEditorStore = getProjectEditorStore(this.object);
 
         const objects: IEezObject[] = [];
         for (const objectId of objectIds) {
@@ -618,7 +618,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             if (objects.length == 1) {
                 cutItem(objects[0]);
             } else {
-                let cliboardText = getDocumentStore(
+                let cliboardText = getProjectEditorStore(
                     this.object
                 ).objectsToClipboardData(objects);
 
@@ -652,14 +652,16 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             //     copyItem(objects[0]);
             // } else {
             copyToClipboard(
-                getDocumentStore(this.object).objectsToClipboardData(objects)
+                getProjectEditorStore(this.object).objectsToClipboardData(
+                    objects
+                )
             );
             // }
         }
     }
 
     canPaste() {
-        const projectEditorStore = getDocumentStore(this.object);
+        const projectEditorStore = getProjectEditorStore(this.object);
 
         if (this.selectedItems.length == 0) {
             if (canPaste(projectEditorStore, this.object)) {
@@ -1200,7 +1202,7 @@ export class TreeAdapter implements ITreeAdapter {
     }
 
     onDragStart(item: ITreeObjectAdapter, event: any) {
-        const projectEditorStore = getDocumentStore(this.rootItem.object);
+        const projectEditorStore = getProjectEditorStore(this.rootItem.object);
 
         event.dataTransfer.effectAllowed = "copyMove";
         setClipboardData(
@@ -1254,7 +1256,9 @@ export class TreeAdapter implements ITreeAdapter {
         event.preventDefault();
 
         if (DragAndDropManager.dragObject) {
-            const projectEditorStore = getDocumentStore(this.rootItem.object);
+            const projectEditorStore = getProjectEditorStore(
+                this.rootItem.object
+            );
 
             const dragObjectClone =
                 DragAndDropManager.dropEffect == "copy"

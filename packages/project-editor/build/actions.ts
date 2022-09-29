@@ -88,7 +88,7 @@ export function buildActions(
 
         if (
             assets.option == "buildFiles" &&
-            assets.projectEditorStore.project.isFirmwareWithFlowSupportProject
+            assets.projectEditorStore.projectTypeTraits.hasFlowSupport
         ) {
             // only native
             projectActions = projectActions.filter(

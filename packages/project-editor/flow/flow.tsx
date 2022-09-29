@@ -15,7 +15,7 @@ import {
 } from "project-editor/core/object";
 import { visitObjects } from "project-editor/core/search";
 import {
-    getDocumentStore,
+    getProjectEditorStore,
     getLabel,
     Message,
     getAncestorOfType,
@@ -517,7 +517,7 @@ export abstract class Flow extends EezObject {
     }
 
     pasteFlowFragment(flowFragment: FlowFragment, object: IEezObject) {
-        const projectEditorStore = getDocumentStore(this);
+        const projectEditorStore = getProjectEditorStore(this);
 
         projectEditorStore.undoManager.setCombineCommands(true);
 
@@ -700,7 +700,7 @@ export class FlowFragment extends EezObject {
         this.components = [];
         this.connectionLines = [];
 
-        const projectEditorStore = getDocumentStore(flow);
+        const projectEditorStore = getProjectEditorStore(flow);
 
         const objIDMap = new Set<string>();
 
@@ -817,7 +817,7 @@ export abstract class FlowTabState implements IEditorState {
     }
 
     get projectEditorStore() {
-        return getDocumentStore(this.flow);
+        return getProjectEditorStore(this.flow);
     }
 
     get isRuntime() {

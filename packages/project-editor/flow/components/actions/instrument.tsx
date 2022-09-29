@@ -34,10 +34,10 @@ import type { IFlowContext } from "project-editor/flow//flow-interfaces";
 import { Assets, DataBuffer } from "project-editor/build/assets";
 import {
     getChildOfObject,
-    getDocumentStore,
-    isAppletOrFirmwareWithFlowSupportProject,
+    getProjectEditorStore,
     Message
 } from "project-editor/store";
+import { isDashboardProject } from "project-editor/project/project-type-traits";
 import {
     buildExpression,
     buildAssignableExpression,
@@ -75,7 +75,7 @@ export class SCPIActionComponent extends ActionComponent {
                     name: "instrument",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: isAppletOrFirmwareWithFlowSupportProject
+                    hideInPropertyGrid: isDashboardProject
                 },
                 "object:Instrument"
             ),
@@ -130,10 +130,7 @@ export class SCPIActionComponent extends ActionComponent {
             }
 
             const project = ProjectEditor.getProject(component);
-            if (
-                project.isAppletProject ||
-                project.isFirmwareWithFlowSupportProject
-            ) {
+            if (!project.projectTypeTraits.isDashboard) {
                 jsObject.instrument = undefined;
             }
         },
@@ -183,13 +180,9 @@ export class SCPIActionComponent extends ActionComponent {
             return messages;
         },
         label: (component: SCPIActionComponent) => {
-            const project = getDocumentStore(component).project;
+            const project = getProjectEditorStore(component).project;
 
-            if (
-                !project.isAppletProject &&
-                !project.isFirmwareWithFlowSupportProject &&
-                component.instrument
-            ) {
+            if (project.projectTypeTraits.isDashboard && component.instrument) {
                 return `SCPI ${component.instrument}`;
             }
 

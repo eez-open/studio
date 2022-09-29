@@ -31,7 +31,7 @@ circular.txt
 
 !resources/project-templates/*.eez-project-ui-state
 
-packages/project-editor/flow/runtime/cpp/build
+packages/project-editor/flow/runtime/cpp/src/build
 !packages/project-editor/flow/runtime/flow_runtime.js
 !packages/project-editor/flow/runtime/cpp/src/platform/simulator/emscripten/pre.js
 !packages/project-editor/flow/runtime/cpp/src/platform/simulator/emscripten/post.js

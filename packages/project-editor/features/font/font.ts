@@ -23,11 +23,12 @@ import {
 } from "project-editor/core/object";
 import {
     getLabel,
-    getDocumentStore,
+    getProjectEditorStore,
     Message,
-    isNotV1Project,
     createObject
 } from "project-editor/store";
+import { isNotV1Project } from "project-editor/project/project-type-traits";
+
 import type { Project } from "project-editor/project/project";
 
 import {
@@ -811,7 +812,7 @@ export class Glyph extends EezObject {
                 }
             }
 
-            getDocumentStore(this).updateObject(this, {
+            getProjectEditorStore(this).updateObject(this, {
                 width,
                 height,
                 glyphBitmap: {
@@ -1013,7 +1014,7 @@ export class Font extends EezObject {
         check: (font: Font) => {
             let messages: Message[] = [];
 
-            const projectEditorStore = getDocumentStore(font);
+            const projectEditorStore = getProjectEditorStore(font);
 
             ProjectEditor.checkAssetId(
                 projectEditorStore,
@@ -1033,7 +1034,7 @@ export class Font extends EezObject {
                 return getProperty(obj, "createGlyphs");
             }
 
-            const projectEditorStore = getDocumentStore(parent);
+            const projectEditorStore = getProjectEditorStore(parent);
 
             try {
                 const result = await showGenericDialog(projectEditorStore, {
@@ -1123,7 +1124,7 @@ export class Font extends EezObject {
                 try {
                     const fontProperties = await extractFont({
                         name: result.values.name,
-                        absoluteFilePath: getDocumentStore(
+                        absoluteFilePath: getProjectEditorStore(
                             parent
                         ).getAbsoluteFilePath(result.values.filePath),
                         relativeFilePath: result.values.filePath,

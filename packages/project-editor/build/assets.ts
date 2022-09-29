@@ -359,7 +359,7 @@ export class Assets {
         // styles
         //
         this.styles = [];
-        if (!this.projectEditorStore.project.isDashboardProject) {
+        if (!this.projectEditorStore.projectTypeTraits.isDashboard) {
             this.getAssets<Style>(
                 project => project.styles,
                 style => style.id != undefined
@@ -390,7 +390,7 @@ export class Assets {
         // fonts
         //
         this.fonts = [];
-        if (!this.projectEditorStore.project.isDashboardProject) {
+        if (!this.projectEditorStore.projectTypeTraits.isDashboard) {
             this.getAssets<Font>(
                 project => project.fonts,
                 font => font.id != undefined
@@ -420,7 +420,7 @@ export class Assets {
         // bitmaps
         //
         this.bitmaps = [];
-        if (!this.projectEditorStore.project.isDashboardProject) {
+        if (!this.projectEditorStore.projectTypeTraits.isDashboard) {
             this.getAssets<Bitmap>(
                 project => project.bitmaps,
                 bitmap => bitmap.id != undefined
@@ -460,10 +460,7 @@ export class Assets {
     }
 
     get utf8Support() {
-        return (
-            this.projectEditorStore.project.isDashboardProject ||
-            this.projectEditorStore.project.isFirmwareWithFlowSupportProject
-        );
+        return this.projectEditorStore.projectTypeTraits.hasFlowSupport;
     }
 
     getAssetIndex<T extends EezObject>(
@@ -511,10 +508,7 @@ export class Assets {
     }
 
     getWidgetDataItemIndex(object: any, propertyName: string) {
-        if (
-            this.projectEditorStore.project.isAppletProject ||
-            this.projectEditorStore.project.isFirmwareWithFlowSupportProject
-        ) {
+        if (this.projectEditorStore.projectTypeTraits.hasFlowSupport) {
             return this.getFlowWidgetDataItemIndex(object, propertyName);
         }
 
@@ -531,10 +525,7 @@ export class Assets {
     }
 
     getWidgetActionIndex(object: any, propertyName: string) {
-        if (
-            this.projectEditorStore.project.isAppletProject ||
-            this.projectEditorStore.project.isFirmwareWithFlowSupportProject
-        ) {
+        if (this.projectEditorStore.projectTypeTraits.hasFlowSupport) {
             return this.getFlowWidgetActionIndex(object, propertyName);
         }
 
@@ -980,9 +971,7 @@ export class Assets {
                 return 0;
             }
 
-            if (
-                this.projectEditorStore.project.isFirmwareWithFlowSupportProject
-            ) {
+            if (this.projectEditorStore.projectTypeTraits.hasFlowSupport) {
                 const action = this.actions.find(
                     action => action.name == actionName
                 );
@@ -1099,7 +1088,7 @@ export class Assets {
             });
         });
 
-        if (this.projectEditorStore.project.isDashboardProject) {
+        if (this.projectEditorStore.projectTypeTraits.isDashboard) {
             this.map.dashboardComponentTypeToNameMap =
                 this.dashboardComponentTypeToNameMap;
         }
@@ -1121,7 +1110,7 @@ export class Assets {
     }
 
     get displayWidth() {
-        if (this.projectEditorStore.project.isDashboardProject) {
+        if (this.projectEditorStore.projectTypeTraits.isDashboard) {
             return 1;
         }
 
@@ -1129,7 +1118,7 @@ export class Assets {
             ...this.projectEditorStore.project.pages.map(page => page.width)
         );
 
-        if (this.projectEditorStore.project.isFirmwareWithFlowSupportProject) {
+        if (this.projectEditorStore.projectTypeTraits.hasFlowSupport) {
             return Math.max(
                 maxPageWidth,
                 this.projectEditorStore.project.settings.general.displayWidth
@@ -1140,7 +1129,7 @@ export class Assets {
     }
 
     get displayHeight() {
-        if (this.projectEditorStore.project.isDashboardProject) {
+        if (this.projectEditorStore.projectTypeTraits.isDashboard) {
             return 1;
         }
 
@@ -1148,7 +1137,7 @@ export class Assets {
             ...this.projectEditorStore.project.pages.map(page => page.height)
         );
 
-        if (this.projectEditorStore.project.isFirmwareWithFlowSupportProject) {
+        if (this.projectEditorStore.projectTypeTraits.hasFlowSupport) {
             return Math.max(
                 maxPageHeight,
                 this.projectEditorStore.project.settings.general.displayHeight
@@ -1177,9 +1166,7 @@ function buildHeaderData(
     dataBuffer.writeUint8(0); // PROJECT MINOR VERSION: 0
 
     // assetsType
-    dataBuffer.writeUint8(
-        assets.projectEditorStore.project.settings.general.getProjectTypeAsNumber()
-    );
+    dataBuffer.writeUint8(assets.projectEditorStore.projectTypeTraits.id);
 
     // reserved
     dataBuffer.writeUint8(0);

@@ -55,7 +55,8 @@ export const enum ProjectType {
     FIRMWARE_MODULE = "firmware-module",
     RESOURCE = "resource",
     APPLET = "applet",
-    DASHBOARD = "dashboard"
+    DASHBOARD = "dashboard",
+    LVGL = "lvgl"
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -18,7 +18,7 @@ import {
     EezValueObject,
     Section,
     ProjectEditorStore,
-    getDocumentStore,
+    getProjectEditorStore,
     objectToString
 } from "project-editor/store";
 
@@ -495,7 +495,7 @@ export function startSearch(
 }
 
 export function findAllReferences(object: IEezObject) {
-    const projectEditorStore = getDocumentStore(object);
+    const projectEditorStore = getProjectEditorStore(object);
     startNewSearch(projectEditorStore, object, true, true);
 }
 
@@ -559,7 +559,7 @@ export function replaceObjectReference(object: IEezObject, newValue: string) {
             if (parent) {
                 let key = getKey(searchValue);
                 if (parent && key && typeof key == "string") {
-                    getDocumentStore(rootObject).updateObject(parent, {
+                    getProjectEditorStore(rootObject).updateObject(parent, {
                         [key]: value
                     });
                 }

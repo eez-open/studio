@@ -42,7 +42,6 @@ import type { Project } from "project-editor/project/project";
 import {
     findPropertyByNameInObject,
     getClassInfo,
-    getDocumentStore,
     getObjectFromPath,
     getObjectFromStringPath
 } from "project-editor/store/helper";
@@ -76,6 +75,7 @@ import {
 
 import { objectsToClipboardData } from "project-editor/store/clipboard";
 import { getProjectFeatures } from "./features";
+import { RuntimeType } from "project-editor/project/project-type-traits";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -129,6 +129,10 @@ export class ProjectEditorStore {
     dispose6: mobx.IReactionDisposer;
 
     watcher: FSWatcher | undefined = undefined;
+
+    get projectTypeTraits() {
+        return this.project.projectTypeTraits;
+    }
 
     static async create() {
         return new ProjectEditorStore();
@@ -828,13 +832,12 @@ export class ProjectEditorStore {
     setRuntimeMode(isDebuggerActive: boolean) {
         let runtime: RuntimeBase;
 
-        if (
-            this.project.isDashboardProject ||
-            this.project.isFirmwareWithFlowSupportProject
-        ) {
+        if (this.projectTypeTraits.runtimeType == RuntimeType.WASM) {
             runtime = new ProjectEditor.WasmRuntimeClass(this);
-        } else {
+        } else if (this.projectTypeTraits.runtimeType == RuntimeType.REMOTE) {
             runtime = new ProjectEditor.RemoteRuntimeClass(this);
+        } else {
+            return;
         }
 
         runInAction(() => (this.runtime = runtime));
@@ -934,74 +937,6 @@ export class ProjectEditorStore {
         runtime.loadDebugInfo(filePath);
         runInAction(() => (this.runtime = runtime));
     }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function isDashboardProject(object: IEezObject) {
-    const projectEditorStore = getDocumentStore(object);
-    return projectEditorStore.project.isDashboardProject;
-}
-
-export function isNotDashboardProject(object: IEezObject) {
-    const projectEditorStore = getDocumentStore(object);
-    return !projectEditorStore.project.isDashboardProject;
-}
-
-export function isAppletOrFirmwareWithFlowSupportProject(object: IEezObject) {
-    const projectEditorStore = getDocumentStore(object);
-    return (
-        projectEditorStore.project.isAppletProject ||
-        projectEditorStore.project.isFirmwareWithFlowSupportProject
-    );
-}
-
-export function isDashboardOrApplet(object: IEezObject) {
-    const projectEditorStore = getDocumentStore(object);
-    return (
-        projectEditorStore.project.isDashboardProject ||
-        projectEditorStore.project.isAppletProject
-    );
-}
-
-export function isDashboardOrAppletOrFirmwareWithFlowSupportProject(
-    object: IEezObject
-) {
-    const projectEditorStore = getDocumentStore(object);
-    return (
-        projectEditorStore.project.isDashboardProject ||
-        projectEditorStore.project.isAppletProject ||
-        projectEditorStore.project.isFirmwareWithFlowSupportProject
-    );
-}
-
-export function isNotDashboardOrAppletOrFirmwareWithFlowSupportProject(
-    object: IEezObject
-) {
-    return !isDashboardOrAppletOrFirmwareWithFlowSupportProject(object);
-}
-
-export function isV1Project(object: IEezObject) {
-    const projectEditorStore = getDocumentStore(object);
-    return projectEditorStore.project.settings.general.projectVersion === "v1";
-}
-
-export function isNotV1Project(object: IEezObject) {
-    const projectEditorStore = getDocumentStore(object);
-    return projectEditorStore.project.settings.general.projectVersion !== "v1";
-}
-
-export function isV3OrNewerProject(object: IEezObject) {
-    const projectEditorStore = getDocumentStore(object);
-    return (
-        projectEditorStore.project.settings.general.projectVersion !== "v1" &&
-        projectEditorStore.project.settings.general.projectVersion !== "v2"
-    );
-}
-
-export function isNotFirmwareWithFlowSupportProject(object: IEezObject) {
-    const projectEditorStore = getDocumentStore(object);
-    return !projectEditorStore.project.isFirmwareWithFlowSupportProject;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -19,7 +19,7 @@ import { NavigationComponent } from "project-editor/project/NavigationComponent"
 import { Action } from "project-editor/features/action/action";
 import {
     getAncestorOfType,
-    getDocumentStore,
+    getProjectEditorStore,
     LayoutModels
 } from "project-editor/store";
 import { Bitmap } from "project-editor/features/bitmap/bitmap";
@@ -108,7 +108,12 @@ export function getNavigationComponent(
     }
 
     if (object == project.settings) {
-        if (!(project.isDashboardProject || project.isAppletProject)) {
+        if (
+            !(
+                project.projectTypeTraits.isDashboard ||
+                project.projectTypeTraits.isApplet
+            )
+        ) {
             return SettingsNavigation;
         }
     }
@@ -227,7 +232,7 @@ export function getNavigationObject(
 }
 
 export function navigateTo(object: IEezObject) {
-    const projectEditorStore = getDocumentStore(object);
+    const projectEditorStore = getProjectEditorStore(object);
     const project = projectEditorStore.project;
 
     let ancestor;
@@ -320,7 +325,7 @@ export function navigateTo(object: IEezObject) {
 }
 
 export function selectObject(object: IEezObject) {
-    const projectEditorStore = getDocumentStore(object);
+    const projectEditorStore = getProjectEditorStore(object);
     const project = projectEditorStore.project;
 
     let ancestor;

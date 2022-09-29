@@ -19,10 +19,6 @@ import {
 } from "project-editor/core/object";
 import {
     getChildOfObject,
-    isDashboardProject,
-    isNotDashboardProject,
-    isV1Project,
-    isV3OrNewerProject,
     isAnyPropertyModified,
     Message,
     propertyInvalidValueMessage,
@@ -31,7 +27,13 @@ import {
     propertyNotSetMessage,
     createObject
 } from "project-editor/store";
-import { getDocumentStore } from "project-editor/store";
+import {
+    isDashboardProject,
+    isNotDashboardProject,
+    isV1Project,
+    isV3OrNewerProject
+} from "project-editor/project/project-type-traits";
+import { getProjectEditorStore } from "project-editor/store";
 import { validators } from "eez-studio-shared/validation";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
@@ -165,7 +167,7 @@ const inheritFromProperty: PropertyInfo = {
     type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: "styles",
     propertyMenu: (props: PropertyProps): Electron.MenuItem[] => {
-        const projectEditorStore = getDocumentStore(props.objects[0]);
+        const projectEditorStore = getProjectEditorStore(props.objects[0]);
 
         let menuItems: Electron.MenuItem[] = [];
 
@@ -755,7 +757,7 @@ function getInheritedValue(
                 propertyName === "focusBackgroundColor" ||
                 propertyName === "borderColor")
         ) {
-            value = getThemedColor(getDocumentStore(styleObject), value);
+            value = getThemedColor(getProjectEditorStore(styleObject), value);
         }
 
         return {
@@ -1051,7 +1053,7 @@ export class Style extends EezObject {
         check: (style: Style) => {
             let messages: Message[] = [];
 
-            const projectEditorStore = getDocumentStore(style);
+            const projectEditorStore = getProjectEditorStore(style);
 
             function checkColor(propertyName: string) {
                 const color = (style as any)[propertyName];
@@ -1080,7 +1082,7 @@ export class Style extends EezObject {
             checkColor("focusBackgroundColor");
             checkColor("borderColor");
 
-            if (projectEditorStore.project.isDashboardProject) {
+            if (projectEditorStore.projectTypeTraits.isDashboard) {
                 if (
                     style.inheritFrom &&
                     !findStyle(projectEditorStore.project, style.inheritFrom)
@@ -1739,7 +1741,7 @@ export class Style extends EezObject {
     }
 
     get cssDeclarations() {
-        const projectEditorStore = getDocumentStore(this);
+        const projectEditorStore = getProjectEditorStore(this);
 
         let spec = [
             {

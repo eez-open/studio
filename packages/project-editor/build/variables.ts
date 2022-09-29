@@ -66,9 +66,7 @@ export function buildVariables(
 
         let projectVariables = assets.globalVariables;
 
-        if (
-            assets.projectEditorStore.project.isFirmwareWithFlowSupportProject
-        ) {
+        if (assets.projectEditorStore.projectTypeTraits.hasFlowSupport) {
             // only native
             projectVariables = projectVariables.filter(
                 variable => assets.option == "buildFiles" && variable.native

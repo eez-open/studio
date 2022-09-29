@@ -207,10 +207,10 @@ async function generateFiles(
                     projectEditorStore.filePath || "",
                     ".eez-project"
                 ) +
-                (project.isAppletProject ? ".app" : ".res")
+                (project.projectTypeTraits.isApplet ? ".app" : ".res")
         );
 
-        if (project.isResourceProject && project.micropython) {
+        if (project.projectTypeTraits.isResource && project.micropython) {
             await writeTextFile(
                 destinationFolderPath +
                     "/" +
@@ -280,7 +280,7 @@ function anythingToBuild(projectEditorStore: ProjectEditorStore) {
     return (
         project.settings.build.files.length > 0 ||
         projectEditorStore.masterProject ||
-        project.isDashboardProject
+        projectEditorStore.projectTypeTraits.isDashboard
     );
 }
 
@@ -325,7 +325,7 @@ export async function build(
                 throw new BuildException("Cannot find destination folder.");
             }
 
-            if (!project.isDashboardProject) {
+            if (!project.projectTypeTraits.isDashboard) {
                 sectionNames = getSectionNames(projectEditorStore);
             }
         }
@@ -337,7 +337,7 @@ export async function build(
         if (
             option == "check" ||
             option == "buildAssets" ||
-            !project.isDashboardProject
+            !project.projectTypeTraits.isDashboard
         ) {
             if (
                 project.settings.general.projectVersion !== "v1" &&
@@ -422,7 +422,7 @@ export async function build(
             return parts;
         }
 
-        if (!project.isDashboardProject) {
+        if (!project.projectTypeTraits.isDashboard) {
             parts = await generateFiles(
                 projectEditorStore,
                 destinationFolderPath || "",

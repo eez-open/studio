@@ -172,7 +172,7 @@ const StyleEditor = observer(
                 return null;
             }
 
-            if (this.context.project.isDashboardProject) {
+            if (this.context.projectTypeTraits.isDashboard) {
                 return (
                     <div className="EezStudio_StylePreviewContainer">
                         <div

@@ -15,7 +15,7 @@ import {
 import {
     ProjectEditorStore,
     IContextMenuContext,
-    getDocumentStore,
+    getProjectEditorStore,
     LayoutModels,
     Message,
     createObject
@@ -335,7 +335,7 @@ export class Color extends EezObject {
         check: (color: Color) => {
             let messages: Message[] = [];
 
-            const projectEditorStore = getDocumentStore(color);
+            const projectEditorStore = getProjectEditorStore(color);
 
             ProjectEditor.checkAssetId(
                 projectEditorStore,
@@ -419,14 +419,14 @@ export class Color extends EezObject {
                         label: "Copy to other themes",
                         click: () => {
                             const projectEditorStore =
-                                getDocumentStore(thisObject);
+                                getProjectEditorStore(thisObject);
 
                             projectEditorStore.undoManager.setCombineCommands(
                                 true
                             );
 
                             const project = getProjectWithThemes(
-                                getDocumentStore(thisObject)
+                                getProjectEditorStore(thisObject)
                             );
 
                             const selectedTheme =

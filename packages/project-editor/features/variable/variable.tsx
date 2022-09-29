@@ -24,22 +24,23 @@ import {
 } from "project-editor/core/object";
 import {
     getChildOfObject,
-    isDashboardProject,
-    isDashboardOrApplet,
-    isNotFirmwareWithFlowSupportProject,
     Message,
     propertyInvalidValueMessage,
     propertyNotSetMessage,
-    createObject,
-    isDashboardOrAppletOrFirmwareWithFlowSupportProject
+    createObject
 } from "project-editor/store";
+import {
+    isDashboardProject,
+    isDashboardOrApplet,
+    hasFlowSupport
+} from "project-editor/project/project-type-traits";
 import type { Project } from "project-editor/project/project";
 import { metrics } from "project-editor/features/variable/metrics";
 import type {
     IDataContext,
     IVariable
 } from "project-editor/flow/flow-interfaces";
-import { getDocumentStore } from "project-editor/store";
+import { getProjectEditorStore } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
 import { humanize } from "eez-studio-shared/string";
 import { evalConstantExpression } from "project-editor/flow//expression";
@@ -333,8 +334,9 @@ export class Variable extends EezObject {
                 name: "native",
                 type: PropertyType.Boolean,
                 hideInPropertyGrid: (variable: Variable) =>
-                    isNotFirmwareWithFlowSupportProject(variable) ||
-                    !isGlobalVariable(variable)
+                    !isGlobalVariable(variable) ||
+                    isDashboardProject(variable) ||
+                    !hasFlowSupport(variable)
             },
             {
                 name: "defaultValue",
@@ -457,7 +459,7 @@ export class Variable extends EezObject {
         check: (variable: Variable) => {
             let messages: Message[] = [];
 
-            const projectEditorStore = getDocumentStore(variable);
+            const projectEditorStore = getProjectEditorStore(variable);
 
             if (isGlobalVariable(variable)) {
                 ProjectEditor.checkAssetId(
@@ -473,9 +475,7 @@ export class Variable extends EezObject {
             }
 
             if (
-                isDashboardOrAppletOrFirmwareWithFlowSupportProject(
-                    projectEditorStore.project
-                ) &&
+                projectEditorStore.projectTypeTraits.hasFlowSupport &&
                 (variable.type === "any" || variable.type === "array:any")
             ) {
                 messages.push(
@@ -492,12 +492,7 @@ export class Variable extends EezObject {
             if (!variable.defaultValue) {
                 messages.push(propertyNotSetMessage(variable, "defaultValue"));
             } else {
-                if (
-                    projectEditorStore.project.isAppletProject ||
-                    projectEditorStore.project
-                        .isFirmwareWithFlowSupportProject ||
-                    projectEditorStore.project.isDashboardProject
-                ) {
+                if (projectEditorStore.projectTypeTraits.hasFlowSupport) {
                     try {
                         const { value } = evalConstantExpression(
                             projectEditorStore.project,
@@ -598,11 +593,7 @@ export class DataContext implements IDataContext {
                     if (this.project._DocumentStore.runtime) {
                         throw err;
                     }
-                    if (
-                        !this.project.isAppletProject &&
-                        !this.project.isFirmwareWithFlowSupportProject &&
-                        !this.project.isDashboardProject
-                    ) {
+                    if (!this.project.projectTypeTraits.hasFlowSupport) {
                         const value = this.project._assetsMap[
                             "name"
                         ].allAssets.get(variable.defaultValue);
@@ -995,7 +986,7 @@ export class StructureField extends EezObject implements IStructureField {
                 );
             }
 
-            const projectEditorStore = getDocumentStore(structureField);
+            const projectEditorStore = getProjectEditorStore(structureField);
             if (!isValidType(projectEditorStore.project, structureField.type)) {
                 messages.push(
                     new Message(

@@ -30,7 +30,7 @@ import {
 import classNames from "classnames";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
-import { getDocumentStore } from "project-editor/store";
+import { getProjectEditorStore } from "project-editor/store";
 import { getObjectIdFromPoint } from "project-editor/flow/editor/bounding-rects";
 
 import {
@@ -753,7 +753,7 @@ class FlowDocument implements IDocument {
     pasteSelection() {}
 
     get projectEditorStore() {
-        return getDocumentStore(this.flow.object);
+        return getProjectEditorStore(this.flow.object);
     }
 
     onDragStart(): void {}

@@ -18,7 +18,7 @@ import {
     MessageType
 } from "project-editor/core/object";
 import {
-    getDocumentStore,
+    getProjectEditorStore,
     getChildOfObject,
     Message,
     propertyNotSetMessage,
@@ -89,7 +89,12 @@ export class ScpiParameterType extends EezObject implements IParameterType {
             if (!this.enumeration) {
                 messages.push(propertyNotSetMessage(this, "enumeration"));
             } else {
-                if (!findScpiEnum(getDocumentStore(object), this.enumeration)) {
+                if (
+                    !findScpiEnum(
+                        getProjectEditorStore(object),
+                        this.enumeration
+                    )
+                ) {
                     messages.push(propertyNotFoundMessage(this, "enumeration"));
                 }
             }
@@ -171,7 +176,7 @@ export class ScpiParameter extends EezObject {
                     object: ScpiParameter,
                     propertyInfo: PropertyInfo
                 ) => {
-                    const projectEditorStore = getDocumentStore(object);
+                    const projectEditorStore = getProjectEditorStore(object);
                     const result = await showGenericDialog({
                         dialogDefinition: {
                             title: "Select one or more type",
@@ -444,7 +449,12 @@ export class ScpiResponseType extends EezObject implements IResponseType {
             if (!this.enumeration) {
                 messages.push(propertyNotSetMessage(this, "enumeration"));
             } else {
-                if (!findScpiEnum(getDocumentStore(object), this.enumeration)) {
+                if (
+                    !findScpiEnum(
+                        getProjectEditorStore(object),
+                        this.enumeration
+                    )
+                ) {
                     messages.push(propertyNotFoundMessage(this, "enumeration"));
                 }
             }
@@ -471,7 +481,7 @@ export class ScpiResponse extends EezObject {
                     object: ScpiResponse,
                     propertyInfo: PropertyInfo
                 ) => {
-                    const projectEditorStore = getDocumentStore(object);
+                    const projectEditorStore = getProjectEditorStore(object);
                     const result = await showGenericDialog({
                         dialogDefinition: {
                             title: "Select one or more type",

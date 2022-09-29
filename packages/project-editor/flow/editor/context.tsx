@@ -2,7 +2,7 @@ import { observable, computed, action, makeObservable } from "mobx";
 
 import { BoundingRectBuilder } from "eez-studio-shared/geometry";
 
-import { getClassInfo, getDocumentStore } from "project-editor/store";
+import { getClassInfo, getProjectEditorStore } from "project-editor/store";
 
 import {
     ITreeObjectAdapter,
@@ -212,7 +212,7 @@ class ViewState implements IViewState {
             widget => getWidgetParent(widget) !== getWidgetParent(components[0])
         );
 
-        const projectEditorStore = getDocumentStore(components[0]);
+        const projectEditorStore = getProjectEditorStore(components[0]);
 
         projectEditorStore.undoManager.setCombineCommands(true);
 

@@ -158,7 +158,7 @@ export class WasmRuntime extends RemoteRuntime {
 
         this.assetsData = result.GUI_ASSETS_DATA;
 
-        if (this.projectEditorStore.project.isDashboardProject) {
+        if (this.projectEditorStore.projectTypeTraits.isDashboard) {
             await this.loadGlobalVariables();
         }
 
@@ -213,7 +213,7 @@ export class WasmRuntime extends RemoteRuntime {
             const message: RendererToWorkerMessage = {};
 
             let globalVariableValues: IGlobalVariable[];
-            if (this.projectEditorStore.project.isDashboardProject) {
+            if (this.projectEditorStore.projectTypeTraits.isDashboard) {
                 globalVariableValues = this.globalVariables.map(
                     globalVariable => {
                         if (globalVariable.kind == "basic") {

@@ -49,12 +49,14 @@ import {
     Message,
     propertyNotSetMessage,
     updateObject,
-    isDashboardOrAppletOrFirmwareWithFlowSupportProject,
-    isNotDashboardOrAppletOrFirmwareWithFlowSupportProject,
     createObject
 } from "project-editor/store";
+import { isNotProjectWithFlowSupport } from "project-editor/project/project-type-traits";
 import { objectToJS } from "project-editor/store";
-import { IContextMenuContext, getDocumentStore } from "project-editor/store";
+import {
+    IContextMenuContext,
+    getProjectEditorStore
+} from "project-editor/store";
 
 import type {
     IResizeHandler,
@@ -193,9 +195,8 @@ export function makeDataPropertyInfo(
                     );
                 },
                 isOnSelectAvailable: (component: Component) => {
-                    return isDashboardOrAppletOrFirmwareWithFlowSupportProject(
-                        component
-                    );
+                    return ProjectEditor.getProject(component).projectTypeTraits
+                        .hasFlowSupport;
                 }
             },
             expressionType
@@ -383,9 +384,8 @@ export function makeExpressionProperty(
                             new MenuItem({
                                 label: "Convert to input",
                                 click: () => {
-                                    const projectEditorStore = getDocumentStore(
-                                        props.objects[0]
-                                    );
+                                    const projectEditorStore =
+                                        getProjectEditorStore(props.objects[0]);
 
                                     projectEditorStore.undoManager.setCombineCommands(
                                         true
@@ -511,7 +511,7 @@ export function makeToggablePropertyToOutput(
                                 ? "Convert to output"
                                 : "Convert to property",
                         click: () => {
-                            const projectEditorStore = getDocumentStore(
+                            const projectEditorStore = getProjectEditorStore(
                                 props.objects[0]
                             );
 
@@ -1012,15 +1012,11 @@ function addBreakpointMenuItems(
 
     var additionalMenuItems: Electron.MenuItem[] = [];
 
-    const projectEditorStore = getDocumentStore(component);
+    const projectEditorStore = getProjectEditorStore(component);
 
     const uiStateStore = projectEditorStore.uiStateStore;
 
-    if (
-        projectEditorStore.project.isAppletProject ||
-        projectEditorStore.project.isFirmwareWithFlowSupportProject ||
-        projectEditorStore.project.isDashboardProject
-    ) {
+    if (projectEditorStore.projectTypeTraits.hasFlowSupport) {
         if (uiStateStore.isBreakpointAddedForComponent(component)) {
             additionalMenuItems.push(
                 new MenuItem({
@@ -1835,8 +1831,7 @@ export class Component extends EezObject {
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: [],
-                hideInPropertyGrid:
-                    isNotDashboardOrAppletOrFirmwareWithFlowSupportProject
+                hideInPropertyGrid: isNotProjectWithFlowSupport
             },
             {
                 name: "customOutputs",
@@ -1847,15 +1842,13 @@ export class Component extends EezObject {
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: [],
-                hideInPropertyGrid:
-                    isNotDashboardOrAppletOrFirmwareWithFlowSupportProject
+                hideInPropertyGrid: isNotProjectWithFlowSupport
             },
             {
                 name: "catchError",
                 type: PropertyType.Boolean,
                 propertyGridGroup: flowGroup,
-                hideInPropertyGrid:
-                    isNotDashboardOrAppletOrFirmwareWithFlowSupportProject
+                hideInPropertyGrid: isNotProjectWithFlowSupport
             },
             {
                 name: "asOutputProperties",
@@ -1930,7 +1923,7 @@ export class Component extends EezObject {
             return object.rect;
         },
         setRect: (object: Component, value: Partial<Rect>) => {
-            const projectEditorStore = getDocumentStore(object);
+            const projectEditorStore = getProjectEditorStore(object);
 
             const timelineEditorState = getTimelineEditorState(object);
             if (timelineEditorState) {
@@ -2307,13 +2300,9 @@ export class Component extends EezObject {
                 // }
             });
 
-            const projectEditorStore = getDocumentStore(component);
+            const projectEditorStore = getProjectEditorStore(component);
 
-            if (
-                projectEditorStore.project.isAppletProject ||
-                projectEditorStore.project.isFirmwareWithFlowSupportProject ||
-                projectEditorStore.project.isDashboardProject
-            ) {
+            if (projectEditorStore.projectTypeTraits.hasFlowSupport) {
                 // check properties
                 for (const propertyInfo of getClassInfo(component).properties) {
                     if (isPropertyHidden(component, propertyInfo)) {
@@ -2651,7 +2640,7 @@ export class Component extends EezObject {
     }
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
-        // if (!flowContext.projectEditorStore.project.isDashboardProject) {
+        // if (!flowContext.projectEditorStore.projectTypeTraits.isDashboard) {
         //     const backgroundColor = this.style.backgroundColorProperty;
         //     style.backgroundColor = to16bitsColor(backgroundColor);
         // }
@@ -3485,11 +3474,11 @@ const TimelineKeyframePropertyUI = observer(
                         {this.renderProperty("top")}
                         {this.renderProperty("width")}
                         {this.renderProperty("height")}
-                        {this.context.project.isDashboardProject &&
+                        {this.context.projectTypeTraits.isDashboard &&
                             this.renderProperty("scaleX", 0)}
-                        {this.context.project.isDashboardProject &&
+                        {this.context.projectTypeTraits.isDashboard &&
                             this.renderProperty("scaleY", 0)}
-                        {this.context.project.isDashboardProject &&
+                        {this.context.projectTypeTraits.isDashboard &&
                             this.renderProperty("rotate", -360, 360)}
                         {this.renderProperty("opacity", 0, 1)}
                     </tbody>
@@ -3806,13 +3795,9 @@ export class Widget extends Component {
                 }
             }
 
-            const projectEditorStore = getDocumentStore(object);
+            const projectEditorStore = getProjectEditorStore(object);
 
-            if (
-                !projectEditorStore.project.isAppletProject &&
-                !projectEditorStore.project.isFirmwareWithFlowSupportProject &&
-                !projectEditorStore.project.isDashboardProject
-            ) {
+            if (!projectEditorStore.projectTypeTraits.hasFlowSupport) {
                 ProjectEditor.documentSearch.checkObjectReference(
                     object,
                     "data",
@@ -3884,7 +3869,7 @@ export class Widget extends Component {
 
         selectWidgetJsObject.widgets = [thisWidgetJsObject];
 
-        const projectEditorStore = getDocumentStore(this);
+        const projectEditorStore = getProjectEditorStore(this);
 
         return projectEditorStore.replaceObject(
             this,
@@ -3949,7 +3934,7 @@ export class Widget extends Component {
         containerWidgetJsObject.width = createWidgetsResult.width;
         containerWidgetJsObject.height = createWidgetsResult.height;
 
-        const projectEditorStore = getDocumentStore(fromWidgets[0]);
+        const projectEditorStore = getProjectEditorStore(fromWidgets[0]);
 
         return projectEditorStore.replaceObjects(
             fromWidgets,
@@ -4002,7 +3987,7 @@ export class Widget extends Component {
         containerWidgetJsObject.left = 0;
         containerWidgetJsObject.top = 0;
 
-        const projectEditorStore = getDocumentStore(fromWidgets[0]);
+        const projectEditorStore = getProjectEditorStore(fromWidgets[0]);
 
         return projectEditorStore.replaceObjects(
             fromWidgets,
@@ -4015,7 +4000,7 @@ export class Widget extends Component {
     }
 
     static async createCustomWidget(fromWidgets: Component[]) {
-        const projectEditorStore = getDocumentStore(fromWidgets[0]);
+        const projectEditorStore = getProjectEditorStore(fromWidgets[0]);
         const customWidgets = projectEditorStore.project.pages;
 
         try {
@@ -4102,10 +4087,10 @@ export class Widget extends Component {
 
             const createWidgetsResult = Widget.createWidgets(fromWidgets);
 
-            return getDocumentStore(fromWidgets[0]).replaceObjects(
+            return getProjectEditorStore(fromWidgets[0]).replaceObjects(
                 fromWidgets,
                 createObject<LayoutViewWidget>(
-                    getDocumentStore(fromWidgets[0]),
+                    getProjectEditorStore(fromWidgets[0]),
                     {
                         type: "LayoutView",
                         left: createWidgetsResult.left,
@@ -4312,8 +4297,9 @@ export class Widget extends Component {
 
     getTimelineRect(timelinePosition: number): Rect {
         const project = ProjectEditor.getProject(this);
-        const isFirmwareWithFlowSupportProject =
-            project.isFirmwareWithFlowSupportProject;
+        const roundValues =
+            project.projectTypeTraits.isFirmware &&
+            project.projectTypeTraits.hasFlowSupport;
 
         let left = this.left;
         let top = this.top;
@@ -4340,7 +4326,7 @@ export class Widget extends Component {
                     left +=
                         easingFunctions[keyframe.left.easingFunction](t) *
                         (keyframe.left.value! - left);
-                    if (isFirmwareWithFlowSupportProject) {
+                    if (roundValues) {
                         left = Math.floor(left);
                     }
                     if (keyframe.width.enabled) {
@@ -4350,7 +4336,7 @@ export class Widget extends Component {
                             (keyframe.left.value! +
                                 keyframe.width.value! -
                                 right);
-                        if (isFirmwareWithFlowSupportProject) {
+                        if (roundValues) {
                             right = Math.floor(right);
                         }
                         width = right - left;
@@ -4366,7 +4352,7 @@ export class Widget extends Component {
                     top +=
                         easingFunctions[keyframe.top.easingFunction](t) *
                         (keyframe.top.value! - top);
-                    if (isFirmwareWithFlowSupportProject) {
+                    if (roundValues) {
                         top = Math.floor(top);
                     }
                     if (keyframe.height.enabled) {
@@ -4376,7 +4362,7 @@ export class Widget extends Component {
                             (keyframe.top.value! +
                                 keyframe.height.value! -
                                 bottom);
-                        if (isFirmwareWithFlowSupportProject) {
+                        if (roundValues) {
                             bottom = Math.floor(bottom);
                         }
                         height = bottom - top;
@@ -5267,7 +5253,7 @@ export function registerActionComponents(
 
 function getTimelineEditorState(component: Component) {
     if (component instanceof Widget) {
-        const projectEditorStore = getDocumentStore(component);
+        const projectEditorStore = getProjectEditorStore(component);
         const editor = projectEditorStore.editorsStore.activeEditor;
         if (editor) {
             if (editor.object instanceof ProjectEditor.PageClass) {

@@ -8,8 +8,7 @@ import { objectClone } from "eez-studio-shared/util";
 
 import {
     getClassesDerivedFrom,
-    IObjectClassInfo,
-    ProjectType
+    IObjectClassInfo
 } from "project-editor/core/object";
 import { createObject } from "project-editor/store";
 import { DragAndDropManager } from "project-editor/core/dd";
@@ -65,31 +64,24 @@ export const ComponentsPalette = observer(
 
             let baseClass;
 
-            const noFlowSupport =
-                (this.context.project.settings.general.projectType ==
-                    ProjectType.FIRMWARE ||
-                    this.context.project.settings.general.projectType ==
-                        ProjectType.FIRMWARE_MODULE) &&
-                !this.context.project.settings.general.flowSupport;
-
             const showOnlyActions =
                 activeEditor &&
                 activeEditor.object instanceof ProjectEditor.ActionClass;
 
-            if (noFlowSupport) {
-                baseClass = ProjectEditor.WidgetClass;
-            } else {
+            if (this.context.projectTypeTraits.hasFlowSupport) {
                 if (showOnlyActions) {
                     baseClass = ProjectEditor.ActionComponentClass;
                 } else {
                     baseClass = ProjectEditor.ComponentClass;
                 }
+            } else {
+                baseClass = ProjectEditor.WidgetClass;
             }
 
             const stockComponents = getClassesDerivedFrom(baseClass).filter(
                 objectClassInfo =>
-                    this.context.project.isAppletProject ||
-                    this.context.project.isFirmwareWithFlowSupportProject
+                    this.context.projectTypeTraits.isFirmware &&
+                    this.context.projectTypeTraits.hasFlowSupport
                         ? objectClassInfo.objectClass.classInfo
                               .flowComponentId != undefined
                         : true
@@ -116,11 +108,7 @@ export const ComponentsPalette = observer(
             }
 
             const userActions: IObjectClassInfo[] = [];
-            if (
-                this.context.project.isDashboardProject ||
-                this.context.project.isAppletProject ||
-                this.context.project.settings.general.flowSupport
-            ) {
+            if (this.context.projectTypeTraits.hasFlowSupport) {
                 for (const action of this.context.project.actions) {
                     userActions.push({
                         id: `CallActionActionComponent<${action.name}>`,
@@ -289,6 +277,10 @@ export function getComponentName(componentClassName: string) {
         name = parts[1];
     } else {
         name = componentClassName;
+    }
+
+    if (name.startsWith("LVGL")) {
+        name = name.substring("LVGL".length);
     }
 
     if (name.endsWith("EmbeddedWidget")) {

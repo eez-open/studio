@@ -8,7 +8,7 @@ import {
     getSelectedObjectsBoundingRect
 } from "project-editor/flow/editor/bounding-rects";
 import { IEezObject, getParent } from "project-editor/core/object";
-import { createObject, getDocumentStore } from "project-editor/store";
+import { createObject, getProjectEditorStore } from "project-editor/store";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { Component } from "project-editor/flow/component";
@@ -186,7 +186,7 @@ export class FlowDocument implements IDocument {
     };
 
     get projectEditorStore() {
-        return getDocumentStore(this.flow.object);
+        return getProjectEditorStore(this.flow.object);
     }
 
     onDragStart(): void {

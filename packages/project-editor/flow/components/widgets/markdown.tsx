@@ -21,6 +21,9 @@ import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups"
 
 export class MarkdownWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.DASHBOARD,
+
         properties: [
             makeDataPropertyInfo("data", {
                 hideInPropertyGrid: true
@@ -52,10 +55,7 @@ export class MarkdownWidget extends Widget {
                 <path d="M7 15v-6l2 2l2 -2v6" />
                 <path d="M14 13l2 2l2 -2m-2 2v-6" />
             </svg>
-        ),
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType === ProjectType.DASHBOARD
+        )
     });
 
     text: string;
@@ -69,7 +69,7 @@ export class MarkdownWidget extends Widget {
     }
 
     getText(flowContext: IFlowContext): { __html: string } | string {
-        if (flowContext.projectEditorStore.project.isDashboardProject) {
+        if (flowContext.projectEditorStore.projectTypeTraits.isDashboard) {
             if (this.text) {
                 if (flowContext.flowState) {
                     try {

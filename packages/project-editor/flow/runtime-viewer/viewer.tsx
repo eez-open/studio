@@ -470,8 +470,8 @@ export const Canvas = observer(
             let scale: number;
             if (
                 runMode &&
-                this.props.flowContext.projectEditorStore.project
-                    .isDashboardProject &&
+                this.props.flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard &&
                 this.props.flowContext.document.flow.object instanceof
                     ProjectEditor.PageClass &&
                 this.props.flowContext.document.flow.object.scaleToFit
@@ -481,8 +481,10 @@ export const Canvas = observer(
                 scale = 1;
             } else if (
                 runMode &&
-                this.props.flowContext.projectEditorStore.project
-                    .isFirmwareWithFlowSupportProject &&
+                this.props.flowContext.projectEditorStore.projectTypeTraits
+                    .isFirmware &&
+                this.props.flowContext.projectEditorStore.projectTypeTraits
+                    .hasFlowSupport &&
                 this.props.flowContext.projectEditorStore.runtime instanceof
                     ProjectEditor.WasmRuntimeClass
             ) {

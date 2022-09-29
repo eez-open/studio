@@ -49,12 +49,15 @@ import {
     propertyNotFoundMessage,
     propertyInvalidValueMessage,
     ProjectEditorStore,
-    getDocumentStore,
-    isNotV1Project,
+    getProjectEditorStore,
     LayoutModels,
     propertyNotUniqueMessage,
     createObject
 } from "project-editor/store";
+import {
+    isNotV1Project,
+    RuntimeType
+} from "project-editor/project/project-type-traits";
 
 import type { Action } from "project-editor/features/action/action";
 import type {
@@ -96,6 +99,7 @@ import { resizeWidget } from "project-editor/flow/editor/resizing-widget-propert
 import { Rect } from "eez-studio-shared/geometry";
 import { PageTabState } from "project-editor/features/page/PageEditor";
 import { validators } from "eez-studio-shared/validation";
+import { createProjectTypeTraits } from "./project-type-traits";
 
 export { ProjectType } from "project-editor/core/object";
 
@@ -480,7 +484,7 @@ class BuildAssetsUssage {
 function showUsage(importDirective: ImportDirective) {
     const buildAssetsUsage = new BuildAssetsUssage(importDirective);
 
-    const projectEditorStore = getDocumentStore(importDirective);
+    const projectEditorStore = getProjectEditorStore(importDirective);
 
     usage(projectEditorStore, message => buildAssetsUsage.onMessage(message));
 
@@ -525,7 +529,7 @@ function showUsage(importDirective: ImportDirective) {
 }
 
 function openProject(importDirective: ImportDirective) {
-    const projectEditorStore = getDocumentStore(importDirective);
+    const projectEditorStore = getProjectEditorStore(importDirective);
     ipcRenderer.send(
         "open-file",
         projectEditorStore.getAbsoluteFilePath(importDirective.projectFilePath)
@@ -590,7 +594,7 @@ export class ImportDirective extends EezObject {
             if (object.projectFilePath) {
                 if (
                     !fileExistsSync(
-                        getDocumentStore(object).getAbsoluteFilePath(
+                        getProjectEditorStore(object).getAbsoluteFilePath(
                             object.projectFilePath
                         )
                     )
@@ -640,7 +644,7 @@ export class ImportDirective extends EezObject {
     }
 
     get projectAbsoluteFilePath() {
-        const projectEditorStore = getDocumentStore(this);
+        const projectEditorStore = getProjectEditorStore(this);
         return projectEditorStore.getAbsoluteFilePath(
             this.projectFilePath,
             getProject(this)
@@ -648,14 +652,14 @@ export class ImportDirective extends EezObject {
     }
 
     async loadProject() {
-        const projectEditorStore = getDocumentStore(this);
+        const projectEditorStore = getProjectEditorStore(this);
         await projectEditorStore.loadExternalProject(
             this.projectAbsoluteFilePath
         );
     }
 
     get project(): Project | undefined {
-        const projectEditorStore = getDocumentStore(this);
+        const projectEditorStore = getProjectEditorStore(this);
 
         if (this.projectAbsoluteFilePath == projectEditorStore.filePath) {
             return projectEditorStore.project;
@@ -707,7 +711,8 @@ export class General extends EezObject {
                     { id: ProjectType.FIRMWARE_MODULE },
                     { id: ProjectType.RESOURCE },
                     { id: ProjectType.APPLET },
-                    { id: ProjectType.DASHBOARD }
+                    { id: ProjectType.DASHBOARD },
+                    { id: ProjectType.LVGL, label: "LVGL" }
                 ]
             },
             {
@@ -746,11 +751,11 @@ export class General extends EezObject {
                 typeClass: ImportDirective,
                 defaultValue: [],
                 hideInPropertyGrid: (general: General) => {
-                    const projectEditorStore = getDocumentStore(general);
+                    const projectEditorStore = getProjectEditorStore(general);
                     return (
                         !!getProject(general).masterProject ||
-                        projectEditorStore.project.isDashboardProject ||
-                        projectEditorStore.project.isAppletProject
+                        projectEditorStore.projectTypeTraits.isDashboard ||
+                        projectEditorStore.projectTypeTraits.isApplet
                     );
                 }
             },
@@ -793,7 +798,7 @@ export class General extends EezObject {
             let messages: Message[] = [];
 
             if (general.masterProject) {
-                const projectEditorStore = getDocumentStore(general);
+                const projectEditorStore = getProjectEditorStore(general);
                 if (
                     !fileExistsSync(
                         projectEditorStore.getAbsoluteFilePath(
@@ -811,9 +816,12 @@ export class General extends EezObject {
                 }
             }
 
-            const projectEditorStore = getDocumentStore(general);
+            const projectEditorStore = getProjectEditorStore(general);
 
-            if (projectEditorStore.project.isFirmwareWithFlowSupportProject) {
+            if (
+                projectEditorStore.projectTypeTraits.isFirmware &&
+                projectEditorStore.projectTypeTraits.hasFlowSupport
+            ) {
                 if (general.displayWidth < 1 || general.displayWidth > 1280) {
                     messages.push(
                         new Message(
@@ -887,21 +895,6 @@ export class General extends EezObject {
             displayHeight: observable
         });
     }
-
-    getProjectTypeAsNumber() {
-        switch (this.projectType) {
-            case ProjectType.FIRMWARE:
-                return 1;
-            case ProjectType.FIRMWARE_MODULE:
-                return 2;
-            case ProjectType.RESOURCE:
-                return 3;
-            case ProjectType.APPLET:
-                return 4;
-            case ProjectType.DASHBOARD:
-                return 5;
-        }
-    }
 }
 
 registerClass("General", General);
@@ -931,9 +924,9 @@ export class Settings extends EezObject {
                     object: IEezObject,
                     propertyInfo: PropertyInfo
                 ) => {
-                    const projectEditorStore = getDocumentStore(object);
+                    const projectEditorStore = getProjectEditorStore(object);
                     return (
-                        !projectEditorStore.project.isDashboardProject &&
+                        !projectEditorStore.projectTypeTraits.isDashboard &&
                         !projectEditorStore.masterProjectEnabled
                     );
                 }
@@ -1503,8 +1496,13 @@ export class Project extends EezObject {
             _themeColors: observable,
             setThemeColor: action,
             colorToIndexMap: computed,
-            buildColors: computed({ keepAlive: true })
+            buildColors: computed({ keepAlive: true }),
+            projectTypeTraits: computed
         });
+    }
+
+    get projectTypeTraits() {
+        return createProjectTypeTraits(this);
     }
 
     get projectName() {
@@ -1529,50 +1527,6 @@ export class Project extends EezObject {
         }
 
         throw "unknown project";
-    }
-
-    get isFirmwareProject() {
-        return (
-            this.settings.general.projectType === ProjectType.FIRMWARE ||
-            this.settings.general.projectType === ProjectType.FIRMWARE_MODULE
-        );
-    }
-
-    get isFirmwareWithFlowSupportProject() {
-        return (
-            (this.settings.general.projectType === ProjectType.FIRMWARE ||
-                this.settings.general.projectType ===
-                    ProjectType.FIRMWARE_MODULE) &&
-            this.settings.general.flowSupport
-        );
-    }
-
-    get isDashboardProject() {
-        return this.settings.general.projectType === ProjectType.DASHBOARD;
-    }
-
-    get isAppletProject() {
-        return this.settings.general.projectType === ProjectType.APPLET;
-    }
-
-    get isResourceProject() {
-        return this.settings.general.projectType === ProjectType.RESOURCE;
-    }
-
-    static supportsDebugger(projectType: ProjectType, flowSupport: boolean) {
-        return (
-            projectType == ProjectType.DASHBOARD ||
-            projectType == ProjectType.APPLET ||
-            projectType == ProjectType.FIRMWARE
-        );
-    }
-
-    static supportsFlow(projectType: ProjectType, flowSupport: boolean) {
-        return (
-            projectType == ProjectType.DASHBOARD ||
-            projectType == ProjectType.APPLET ||
-            flowSupport
-        );
     }
 
     get importDirective() {
@@ -1718,18 +1672,12 @@ export class Project extends EezObject {
             flowSupport = this.settings.general.flowSupport;
         }
 
-        const supportsDebugger = Project.supportsDebugger(
-            projectType,
-            flowSupport
-        );
-        const supportsFlow = Project.supportsFlow(projectType, flowSupport);
-
         enableTab(
             this._DocumentStore.layoutModels.rootEditor,
             LayoutModels.BREAKPOINTS_TAB_ID,
             LayoutModels.BREAKPOINTS_TAB,
             LayoutModels.COMPONENTS_PALETTE_TAB_ID,
-            supportsDebugger
+            this.projectTypeTraits.runtimeType != RuntimeType.NONE
         );
 
         enableTab(
@@ -1737,7 +1685,7 @@ export class Project extends EezObject {
             LayoutModels.LOCAL_VARS_TAB_ID,
             LayoutModels.LOCAL_VARS_TAB,
             LayoutModels.GLOBAL_VARS_TAB_ID,
-            supportsFlow
+            this.projectTypeTraits.hasFlowSupport
         );
 
         enableTab(
@@ -1745,7 +1693,7 @@ export class Project extends EezObject {
             LayoutModels.STRUCTS_TAB_ID,
             LayoutModels.STRUCTS_TAB,
             LayoutModels.GLOBAL_VARS_TAB_ID,
-            supportsFlow
+            this.projectTypeTraits.hasFlowSupport
         );
     }
 }

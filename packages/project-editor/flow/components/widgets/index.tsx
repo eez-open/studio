@@ -26,9 +26,6 @@ import {
 } from "project-editor/core/object";
 import {
     ProjectEditorStore,
-    isDashboardOrAppletOrFirmwareWithFlowSupportProject,
-    isNotV1Project,
-    isV3OrNewerProject,
     Message,
     objectToJS,
     propertyNotFoundMessage,
@@ -37,7 +34,16 @@ import {
     createObject,
     getChildOfObject
 } from "project-editor/store";
-import { getDocumentStore, IContextMenuContext } from "project-editor/store";
+import {
+    isProjectWithFlowSupport,
+    isNotV1Project,
+    isV3OrNewerProject,
+    isNotProjectWithFlowSupport
+} from "project-editor/project/project-type-traits";
+import {
+    getProjectEditorStore,
+    IContextMenuContext
+} from "project-editor/store";
 
 import {
     checkObjectReference,
@@ -191,6 +197,9 @@ export class ContainerWidget extends Widget {
     layout: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL,
+
         flowComponentId: WIDGET_TYPE_CONTAINER,
 
         label: (widget: ContainerWidget) => {
@@ -215,12 +224,7 @@ export class ContainerWidget extends Widget {
             makeDataPropertyInfo("overlay", {
                 hideInPropertyGrid: (containerWidget: ContainerWidget) => {
                     const project = ProjectEditor.getProject(containerWidget);
-                    const projectType = project.settings.general.projectType;
-                    return !(
-                        (projectType === "firmware" &&
-                            !project.isFirmwareWithFlowSupportProject) ||
-                        projectType === "firmware-module"
-                    );
+                    return !project.projectTypeTraits.hasFlowSupport;
                 }
             }),
             {
@@ -414,8 +418,8 @@ export class ContainerWidget extends Widget {
 
         return (
             <>
-                {flowContext.projectEditorStore.project
-                    .isDashboardProject ? null : (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? null : (
                     <ComponentCanvas
                         component={this}
                         width={containerWidth}
@@ -504,6 +508,9 @@ export class ListWidget extends Widget {
     gap?: number;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL,
+
         flowComponentId: WIDGET_TYPE_LIST,
 
         properties: [
@@ -606,10 +613,7 @@ export class ListWidget extends Widget {
         let dataValue;
         if (this.data) {
             if (
-                flowContext.projectEditorStore.project.isAppletProject ||
-                flowContext.projectEditorStore.project
-                    .isFirmwareWithFlowSupportProject ||
-                flowContext.projectEditorStore.project.isDashboardProject
+                flowContext.projectEditorStore.projectTypeTraits.hasFlowSupport
             ) {
                 try {
                     dataValue = evalProperty(flowContext, this, "data");
@@ -712,6 +716,10 @@ export class GridWidget extends Widget {
     gridFlow?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
+
         flowComponentId: WIDGET_TYPE_GRID,
 
         properties: [
@@ -788,10 +796,7 @@ export class GridWidget extends Widget {
             }
 
             return messages;
-        },
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        }
     });
 
     constructor() {
@@ -886,6 +891,9 @@ export class SelectWidget extends Widget {
     _lastSelectedIndexInSelectWidget: number | undefined;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL,
+
         flowComponentId: WIDGET_TYPE_SELECT,
 
         properties: [
@@ -1141,8 +1149,8 @@ export class SelectWidget extends Widget {
 
         return (
             <>
-                {flowContext.projectEditorStore.project
-                    .isDashboardProject ? null : (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -1215,6 +1223,9 @@ export class LayoutViewWidget extends Widget {
     context?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL,
+
         flowComponentId: WIDGET_TYPE_LAYOUT_VIEW,
 
         properties: [
@@ -1363,7 +1374,7 @@ export class LayoutViewWidget extends Widget {
     }
 
     get layoutPage() {
-        return this.getLayoutPage(getDocumentStore(this).dataContext);
+        return this.getLayoutPage(getProjectEditorStore(this).dataContext);
     }
 
     getLayoutPage(dataContext: IDataContext) {
@@ -1508,8 +1519,8 @@ export class LayoutViewWidget extends Widget {
 
         return (
             <>
-                {flowContext.projectEditorStore.project
-                    .isDashboardProject ? null : (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -1535,7 +1546,7 @@ export class LayoutViewWidget extends Widget {
 
     open() {
         if (this.layoutPage) {
-            getDocumentStore(this).navigationStore.showObjects(
+            getProjectEditorStore(this).navigationStore.showObjects(
                 [this.layoutPage],
                 true,
                 false,
@@ -1558,7 +1569,7 @@ export class LayoutViewWidget extends Widget {
             containerWidgetJsObject.width = this.width;
             containerWidgetJsObject.height = this.height;
 
-            const projectEditorStore = getDocumentStore(this);
+            const projectEditorStore = getProjectEditorStore(this);
 
             return projectEditorStore.replaceObject(
                 this,
@@ -1640,6 +1651,10 @@ export class DisplayDataWidget extends Widget {
     displayOption: DisplayOption;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
+
         flowComponentId: WIDGET_TYPE_DISPLAY_DATA,
 
         properties: [
@@ -1725,10 +1740,7 @@ export class DisplayDataWidget extends Widget {
             }
 
             return messages;
-        },
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        }
     });
 
     constructor() {
@@ -1743,12 +1755,7 @@ export class DisplayDataWidget extends Widget {
     getText(
         flowContext: IFlowContext
     ): { text: string; node: React.ReactNode } | string {
-        if (
-            flowContext.projectEditorStore.project.isDashboardProject ||
-            flowContext.projectEditorStore.project.isAppletProject ||
-            flowContext.projectEditorStore.project
-                .isFirmwareWithFlowSupportProject
-        ) {
+        if (flowContext.projectEditorStore.projectTypeTraits.hasFlowSupport) {
             if (this.data) {
                 if (flowContext.flowState) {
                     try {
@@ -1878,7 +1885,8 @@ export class DisplayDataWidget extends Widget {
 
         return (
             <>
-                {flowContext.projectEditorStore.project.isDashboardProject ? (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? (
                     node || text
                 ) : (
                     <ComponentCanvas
@@ -1921,16 +1929,15 @@ export class TextWidget extends Widget {
     focusStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL,
+
         flowComponentId: WIDGET_TYPE_TEXT,
 
         label: (widget: TextWidget) => {
             const project = ProjectEditor.getProject(widget);
 
-            if (
-                !project.isDashboardProject &&
-                !project.isAppletProject &&
-                !project.isFirmwareWithFlowSupportProject
-            ) {
+            if (!project.projectTypeTraits.hasFlowSupport) {
                 if (widget.text) {
                     return `${humanize(widget.type)}: ${widget.text}`;
                 }
@@ -1956,19 +1963,14 @@ export class TextWidget extends Widget {
             makeDataPropertyInfo("data", {
                 displayName: (widget: TextWidget) => {
                     const project = ProjectEditor.getProject(widget);
-                    if (
-                        project.isDashboardProject ||
-                        project.isAppletProject ||
-                        project.isFirmwareWithFlowSupportProject
-                    ) {
+                    if (project.projectTypeTraits.hasFlowSupport) {
                         return "Text";
                     }
                     return "Data";
                 }
             }),
             makeTextPropertyInfo("text", {
-                hideInPropertyGrid:
-                    isDashboardOrAppletOrFirmwareWithFlowSupportProject
+                hideInPropertyGrid: isProjectWithFlowSupport
             }),
             {
                 name: "ignoreLuminocity",
@@ -1988,11 +1990,7 @@ export class TextWidget extends Widget {
         beforeLoadHook: (widget: Widget, jsObject: any) => {
             if (jsObject.text) {
                 const project = ProjectEditor.getProject(widget);
-                if (
-                    project.isDashboardProject ||
-                    project.isAppletProject ||
-                    project.isFirmwareWithFlowSupportProject
-                ) {
+                if (project.projectTypeTraits.hasFlowSupport) {
                     if (!jsObject.data) {
                         jsObject.data = `"${jsObject.text}"`;
                     }
@@ -2028,11 +2026,7 @@ export class TextWidget extends Widget {
 
             const project = ProjectEditor.getProject(widget);
 
-            if (
-                !project.isDashboardProject &&
-                !project.isAppletProject &&
-                !project.isFirmwareWithFlowSupportProject
-            ) {
+            if (!project.projectTypeTraits.hasFlowSupport) {
                 if (!widget.text && !widget.data) {
                     messages.push(propertyNotSetMessage(widget, "text"));
                 }
@@ -2060,12 +2054,7 @@ export class TextWidget extends Widget {
     getText(
         flowContext: IFlowContext
     ): { text: string; node: React.ReactNode } | string {
-        if (
-            flowContext.projectEditorStore.project.isDashboardProject ||
-            flowContext.projectEditorStore.project.isAppletProject ||
-            flowContext.projectEditorStore.project
-                .isFirmwareWithFlowSupportProject
-        ) {
+        if (flowContext.projectEditorStore.projectTypeTraits.hasFlowSupport) {
             if (this.data) {
                 if (flowContext.flowState) {
                     try {
@@ -2156,7 +2145,8 @@ export class TextWidget extends Widget {
 
         return (
             <>
-                {flowContext.projectEditorStore.project.isDashboardProject ? (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? (
                     <span
                         className={classNames(this.style.classNames)}
                         onClick={event => {
@@ -2430,16 +2420,16 @@ export class MultilineTextWidget extends Widget {
     hangingIndent: number;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
+
         flowComponentId: WIDGET_TYPE_MULTILINE_TEXT,
 
         label: (widget: TextWidget) => {
             const project = ProjectEditor.getProject(widget);
 
-            if (
-                !project.isDashboardProject &&
-                !project.isAppletProject &&
-                !project.isFirmwareWithFlowSupportProject
-            ) {
+            if (!project.projectTypeTraits.hasFlowSupport) {
                 if (widget.text) {
                     return `${humanize(widget.type)}: ${widget.text}`;
                 }
@@ -2465,19 +2455,14 @@ export class MultilineTextWidget extends Widget {
             makeDataPropertyInfo("data", {
                 displayName: (widget: TextWidget) => {
                     const project = ProjectEditor.getProject(widget);
-                    if (
-                        project.isDashboardProject ||
-                        project.isAppletProject ||
-                        project.isFirmwareWithFlowSupportProject
-                    ) {
+                    if (project.projectTypeTraits.hasFlowSupport) {
                         return "Text";
                     }
                     return "Data";
                 }
             }),
             makeTextPropertyInfo("text", {
-                hideInPropertyGrid:
-                    isDashboardOrAppletOrFirmwareWithFlowSupportProject
+                hideInPropertyGrid: isProjectWithFlowSupport
             }),
             {
                 name: "firstLineIndent",
@@ -2496,11 +2481,7 @@ export class MultilineTextWidget extends Widget {
         beforeLoadHook: (widget: Widget, jsObject: any) => {
             if (jsObject.text) {
                 const project = ProjectEditor.getProject(widget);
-                if (
-                    project.isDashboardProject ||
-                    project.isAppletProject ||
-                    project.isFirmwareWithFlowSupportProject
-                ) {
+                if (project.projectTypeTraits.hasFlowSupport) {
                     if (!jsObject.data) {
                         jsObject.data = `"${jsObject.text}"`;
                     }
@@ -2538,11 +2519,7 @@ export class MultilineTextWidget extends Widget {
 
             const project = ProjectEditor.getProject(widget);
 
-            if (
-                !project.isDashboardProject &&
-                !project.isAppletProject &&
-                !project.isFirmwareWithFlowSupportProject
-            ) {
+            if (!project.projectTypeTraits.hasFlowSupport) {
                 if (!widget.text && !widget.data) {
                     messages.push(propertyNotSetMessage(widget, "text"));
                 }
@@ -2553,10 +2530,7 @@ export class MultilineTextWidget extends Widget {
             }
 
             return messages;
-        },
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        }
     });
 
     constructor() {
@@ -2590,7 +2564,8 @@ export class MultilineTextWidget extends Widget {
 
         return (
             <>
-                {flowContext.projectEditorStore.project.isDashboardProject ? (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? (
                     node || text
                 ) : (
                     <ComponentCanvas
@@ -2639,6 +2614,9 @@ export class RectangleWidget extends Widget {
     invertColors: boolean;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL,
+
         flowComponentId: WIDGET_TYPE_RECTANGLE,
 
         properties: [
@@ -2705,8 +2683,8 @@ export class RectangleWidget extends Widget {
 
         return (
             <>
-                {flowContext.projectEditorStore.project
-                    .isDashboardProject ? null : (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -2758,7 +2736,7 @@ const BitmapWidgetPropertyGridUI = observer(
         }
 
         resizeToFitBitmap = () => {
-            getDocumentStore(this.props.objects[0]).updateObject(
+            getProjectEditorStore(this.props.objects[0]).updateObject(
                 this.props.objects[0],
                 {
                     width: this.bitmapWidget.bitmapObject!.imageElement!.width,
@@ -2818,6 +2796,9 @@ export class BitmapWidget extends Widget {
     }
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL,
+
         flowComponentId: WIDGET_TYPE_BITMAP,
 
         properties: [
@@ -2897,7 +2878,7 @@ export class BitmapWidget extends Widget {
     });
 
     get bitmapObject() {
-        return this.getBitmapObject(getDocumentStore(this).dataContext);
+        return this.getBitmapObject(getProjectEditorStore(this).dataContext);
     }
 
     getBitmapObject(dataContext: IDataContext) {
@@ -2953,7 +2934,8 @@ export class BitmapWidget extends Widget {
 
         return (
             <>
-                {flowContext.projectEditorStore.project.isDashboardProject ? (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? (
                     bitmap ? (
                         bitmap instanceof Bitmap ? (
                             <img src={bitmap.image} />
@@ -3067,28 +3049,23 @@ export class ButtonWidget extends Widget {
     disabledStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL,
+
         flowComponentId: WIDGET_TYPE_BUTTON,
 
         properties: [
             makeDataPropertyInfo("data", {
                 displayName: (widget: TextWidget) => {
                     const project = ProjectEditor.getProject(widget);
-                    if (
-                        project.isDashboardProject ||
-                        project.isAppletProject ||
-                        project.isFirmwareWithFlowSupportProject
-                    ) {
+                    if (project.projectTypeTraits.hasFlowSupport) {
                         return "Text";
                     }
                     return "Data";
                 }
             }),
             makeTextPropertyInfo("text", {
-                hideInPropertyGrid: (object: IEezObject) => {
-                    return isDashboardOrAppletOrFirmwareWithFlowSupportProject(
-                        object
-                    );
-                }
+                hideInPropertyGrid: isProjectWithFlowSupport
             }),
             makeDataPropertyInfo("enabled"),
             makeStylePropertyInfo("disabledStyle")
@@ -3097,11 +3074,7 @@ export class ButtonWidget extends Widget {
         beforeLoadHook: (widget: IEezObject, jsObject: any) => {
             if (jsObject.text) {
                 const project = ProjectEditor.getProject(widget);
-                if (
-                    project.isDashboardProject ||
-                    project.isAppletProject ||
-                    project.isFirmwareWithFlowSupportProject
-                ) {
+                if (project.projectTypeTraits.hasFlowSupport) {
                     if (!jsObject.data) {
                         jsObject.data = `"${jsObject.text}"`;
                     }
@@ -3121,7 +3094,7 @@ export class ButtonWidget extends Widget {
         },
 
         componentDefaultValue: (projectEditorStore: ProjectEditorStore) => {
-            return projectEditorStore.project.isFirmwareProject
+            return projectEditorStore.projectTypeTraits.isFirmware
                 ? {
                       style: {
                           inheritFrom: "button"
@@ -3147,11 +3120,7 @@ export class ButtonWidget extends Widget {
 
             const project = ProjectEditor.getProject(widget);
 
-            if (
-                !project.isDashboardProject &&
-                !project.isAppletProject &&
-                !project.isFirmwareWithFlowSupportProject
-            ) {
+            if (!project.projectTypeTraits.hasFlowSupport) {
                 if (
                     !widget.text &&
                     !widget.data &&
@@ -3214,7 +3183,8 @@ export class ButtonWidget extends Widget {
 
         return (
             <>
-                {flowContext.projectEditorStore.project.isDashboardProject ? (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? (
                     <button
                         className={classNames(style.classNames)}
                         disabled={!buttonEnabled}
@@ -3280,6 +3250,10 @@ export class ToggleButtonWidget extends Widget {
     text2?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
+
         flowComponentId: WIDGET_TYPE_TOGGLE_BUTTON,
 
         properties: [
@@ -3333,10 +3307,7 @@ export class ToggleButtonWidget extends Widget {
             }
 
             return messages;
-        },
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        }
     });
 
     constructor() {
@@ -3351,8 +3322,8 @@ export class ToggleButtonWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectEditorStore.project
-                    .isDashboardProject ? null : (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -3393,6 +3364,10 @@ export class ButtonGroupWidget extends Widget {
     selectedStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
+
         flowComponentId: WIDGET_TYPE_BUTTON_GROUP,
 
         properties: [makeStylePropertyInfo("selectedStyle")],
@@ -3427,10 +3402,7 @@ export class ButtonGroupWidget extends Widget {
             }
 
             return messages;
-        },
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        }
     });
 
     constructor() {
@@ -3444,8 +3416,8 @@ export class ButtonGroupWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectEditorStore.project
-                    .isDashboardProject ? null : (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -3578,6 +3550,10 @@ export class BarGraphWidget extends Widget {
     line2Style: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
+
         flowComponentId: WIDGET_TYPE_BAR_GRAPH,
 
         properties: [
@@ -3669,10 +3645,7 @@ export class BarGraphWidget extends Widget {
             }
 
             return messages;
-        },
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        }
     });
 
     constructor() {
@@ -3692,8 +3665,8 @@ export class BarGraphWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectEditorStore.project
-                    .isDashboardProject ? null : (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -3967,6 +3940,10 @@ export class YTGraphWidget extends Widget {
     y2Style: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
+
         flowComponentId: WIDGET_TYPE_YT_GRAPH,
 
         properties: [
@@ -4030,10 +4007,7 @@ export class YTGraphWidget extends Widget {
             }
 
             return messages;
-        },
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        }
     });
 
     constructor() {
@@ -4049,8 +4023,8 @@ export class YTGraphWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectEditorStore.project
-                    .isDashboardProject ? null : (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -4086,6 +4060,10 @@ export class UpDownWidget extends Widget {
     upButtonText?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
+
         flowComponentId: WIDGET_TYPE_UP_DOWN,
 
         properties: [
@@ -4136,10 +4114,7 @@ export class UpDownWidget extends Widget {
             }
 
             return messages;
-        },
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        }
     });
 
     constructor() {
@@ -4155,8 +4130,8 @@ export class UpDownWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectEditorStore.project
-                    .isDashboardProject ? null : (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -4242,6 +4217,10 @@ export class ListGraphWidget extends Widget {
     cursorStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
+
         flowComponentId: WIDGET_TYPE_LIST_GRAPH,
 
         properties: [
@@ -4325,10 +4304,7 @@ export class ListGraphWidget extends Widget {
             }
 
             return messages;
-        },
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        }
     });
 
     constructor() {
@@ -4348,8 +4324,8 @@ export class ListGraphWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectEditorStore.project
-                    .isDashboardProject ? null : (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -4400,6 +4376,10 @@ export class AppViewWidget extends Widget {
     page: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
+
         flowComponentId: WIDGET_TYPE_APP_VIEW,
 
         defaultValue: {
@@ -4432,10 +4412,7 @@ export class AppViewWidget extends Widget {
             }
 
             return messages;
-        },
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        }
     });
 
     constructor() {
@@ -4471,8 +4448,8 @@ export class AppViewWidget extends Widget {
         }
         return (
             <>
-                {flowContext.projectEditorStore.project
-                    .isDashboardProject ? null : (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -4510,6 +4487,10 @@ export class ScrollBarWidget extends Widget {
     rightButtonText?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
+
         flowComponentId: WIDGET_TYPE_SCROLL_BAR,
 
         properties: [
@@ -4550,10 +4531,7 @@ export class ScrollBarWidget extends Widget {
             }
 
             return messages;
-        },
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        }
     });
 
     constructor() {
@@ -4570,8 +4548,8 @@ export class ScrollBarWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectEditorStore.project
-                    .isDashboardProject ? null : (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -4701,26 +4679,17 @@ registerClass("ScrollBarWidget", ScrollBarWidget);
 
 export class ProgressWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL,
+
         flowComponentId: WIDGET_TYPE_PROGRESS,
 
         properties: [
             makeDataPropertyInfo("min", {
-                hideInPropertyGrid: (containerWidget: ContainerWidget) => {
-                    const project = ProjectEditor.getProject(containerWidget);
-                    return !(
-                        project.isDashboardProject ||
-                        project.isFirmwareWithFlowSupportProject
-                    );
-                }
+                hideInPropertyGrid: isNotProjectWithFlowSupport
             }),
             makeDataPropertyInfo("max", {
-                hideInPropertyGrid: (containerWidget: ContainerWidget) => {
-                    const project = ProjectEditor.getProject(containerWidget);
-                    return !(
-                        project.isDashboardProject ||
-                        project.isFirmwareWithFlowSupportProject
-                    );
-                }
+                hideInPropertyGrid: isNotProjectWithFlowSupport
             }),
             {
                 name: "orientation",
@@ -4742,10 +4711,7 @@ export class ProgressWidget extends Widget {
             jsProgressWidget: Partial<ProgressWidget>
         ) => {
             const project = ProjectEditor.getProject(progressWidget);
-            if (
-                project.isDashboardProject ||
-                project.isFirmwareWithFlowSupportProject
-            ) {
+            if (project.projectTypeTraits.hasFlowSupport) {
                 if (jsProgressWidget.min == undefined) {
                     jsProgressWidget.min = "0";
                 }
@@ -4793,12 +4759,7 @@ export class ProgressWidget extends Widget {
     }
 
     getPercent(flowContext: IFlowContext) {
-        if (
-            flowContext.projectEditorStore.project.isDashboardProject ||
-            flowContext.projectEditorStore.project.isAppletProject ||
-            flowContext.projectEditorStore.project
-                .isFirmwareWithFlowSupportProject
-        ) {
+        if (flowContext.projectEditorStore.projectTypeTraits.hasFlowSupport) {
             if (flowContext.flowState) {
                 try {
                     const min = evalProperty(flowContext, this, "min");
@@ -4836,7 +4797,8 @@ export class ProgressWidget extends Widget {
 
         return (
             <>
-                {flowContext.projectEditorStore.project.isDashboardProject ? (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? (
                     <div
                         className="progress"
                         style={{
@@ -4952,6 +4914,10 @@ registerClass("ProgressWidget", ProgressWidget);
 
 export class CanvasWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
+
         flowComponentId: WIDGET_TYPE_CANVAS,
 
         defaultValue: {
@@ -4991,17 +4957,14 @@ export class CanvasWidget extends Widget {
             }
 
             return messages;
-        },
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        }
     });
 
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectEditorStore.project
-                    .isDashboardProject ? null : (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -5108,6 +5071,10 @@ class LineChartLine extends EezObject {
 
 export class LineChartEmbeddedWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
+
         flowComponentId: WIDGET_TYPE_LINE_CHART,
 
         properties: [
@@ -5221,10 +5188,7 @@ export class LineChartEmbeddedWidget extends Widget {
             }
         },
 
-        icon: LINE_CHART_ICON,
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        icon: LINE_CHART_ICON
     });
 
     xValue: string;
@@ -5277,12 +5241,7 @@ export class LineChartEmbeddedWidget extends Widget {
             return undefined;
         }
 
-        if (
-            flowContext.projectEditorStore.project.isDashboardProject ||
-            flowContext.projectEditorStore.project.isAppletProject ||
-            flowContext.projectEditorStore.project
-                .isFirmwareWithFlowSupportProject
-        ) {
+        if (flowContext.projectEditorStore.projectTypeTraits.hasFlowSupport) {
             return evalProperty(flowContext, this, "title");
         }
 
@@ -5891,6 +5850,10 @@ export class GaugeEmbeddedWidget extends Widget {
     thresholdStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
+
         flowComponentId: WIDGET_TYPE_GAUGE,
 
         properties: [
@@ -5921,10 +5884,7 @@ export class GaugeEmbeddedWidget extends Widget {
             }
 
             return messages;
-        },
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        }
     });
 
     constructor() {
@@ -6281,8 +6241,8 @@ export class GaugeEmbeddedWidget extends Widget {
 
         return (
             <>
-                {flowContext.projectEditorStore.project
-                    .isDashboardProject ? null : (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? null : (
                     <ComponentCanvas
                         width={width}
                         height={height}
@@ -6340,6 +6300,10 @@ export class InputEmbeddedWidget extends Widget {
     unit: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
+
         flowComponentId: WIDGET_TYPE_INPUT,
 
         properties: [
@@ -6443,10 +6407,7 @@ export class InputEmbeddedWidget extends Widget {
             }
 
             return messages;
-        },
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        }
     });
 
     constructor() {
@@ -6465,8 +6426,8 @@ export class InputEmbeddedWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectEditorStore.project
-                    .isDashboardProject ? null : (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -6632,6 +6593,9 @@ function TextInputWidgetInput({
 
 export class TextInputWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType == ProjectType.DASHBOARD,
+
         properties: [
             makeDataPropertyInfo("data", {
                 displayName: "Value"
@@ -6653,7 +6617,7 @@ export class TextInputWidget extends Widget {
             title: ""
         },
         componentDefaultValue: (projectEditorStore: ProjectEditorStore) => {
-            return projectEditorStore.project.isFirmwareProject
+            return projectEditorStore.projectTypeTraits.isFirmware
                 ? {
                       style: {
                           inheritFrom: "text_input"
@@ -6682,10 +6646,7 @@ export class TextInputWidget extends Widget {
                 <path d="M17 12h.01"></path>
                 <path d="M13 12h.01"></path>
             </svg>
-        ),
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType === ProjectType.DASHBOARD
+        )
     });
 
     password: boolean;
@@ -6699,12 +6660,7 @@ export class TextInputWidget extends Widget {
     }
 
     getValue(flowContext: IFlowContext) {
-        if (
-            flowContext.projectEditorStore.project.isDashboardProject ||
-            flowContext.projectEditorStore.project.isAppletProject ||
-            flowContext.projectEditorStore.project
-                .isFirmwareWithFlowSupportProject
-        ) {
+        if (flowContext.projectEditorStore.projectTypeTraits.hasFlowSupport) {
             if (this.data) {
                 try {
                     return evalProperty(flowContext, this, "data");
@@ -6749,6 +6705,9 @@ registerClass("TextInputWidget", TextInputWidget);
 
 export class CheckboxWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.DASHBOARD,
+
         properties: [
             makeDataPropertyInfo("data", {
                 displayName: "Value"
@@ -6777,10 +6736,7 @@ export class CheckboxWidget extends Widget {
             <svg viewBox="0 0 1280 1279">
                 <path d="M1052 225.7c-13 8-54 35.2-66.2 43.9l-11.8 8.5-11.8-7.8c-28.8-19.1-64.8-34-98.6-40.8-31.8-6.4-10.6-6-307.1-6-280.2 0-275.2-.1-300 4.1-45.9 7.7-92.8 28.7-129.5 58-10.9 8.7-29.7 27.5-38.4 38.4-28.3 35.6-44.7 72.7-52.4 119.4-1.5 9.2-1.7 34.4-2 291.6-.2 183.6.1 286 .7 294.5 2.5 32.4 10.1 60 24.2 88.5 14.2 28.7 31 51.2 54.9 73.5 34.1 32 79.1 55.4 127 66.3 31.7 7.2 6.3 6.7 314.5 6.7h277l14-2.2c92.9-14.9 166.7-67 205-144.8 11-22.4 17.7-43.4 22.2-70.2 1.7-10.3 1.8-24.8 1.8-302.3 0-309.6.2-295.9-4.6-318.5-7.7-36.4-25-72.3-49.7-103.2-7.9-10-9-11.6-7.4-11.1.8.3 35.3-35.7 44.9-46.9 9.4-10.9 11.5-16.3 6.3-16.3-4.1 0-33.1 16.4-40.5 22.9-9.6 8.5-5.3 3.7 17.1-18.7l25.1-25.1-2.9-3.6c-1.6-1.9-3.3-3.5-3.6-3.4-.4 0-4.1 2.1-8.2 4.6zM836.5 334.8c6.1 1.2 14.9 3.3 19.6 4.6 9.6 2.9 25.9 9.4 25.9 10.5 0 .4-8.2 7.8-18.2 16.6-131.9 115.4-266.2 268.4-386.9 441-9.7 13.7-20.7 29.6-24.5 35.3-3.8 5.6-7.4 10-8 9.8-.9-.3-137.4-81.8-218.1-130.2l-7.2-4.3-3 3.8-3.1 3.8 11.2 13.9c49.6 61.6 263.1 323.4 263.7 323.4.4 0 1.3-1 2-2.2.6-1.3.9-1.5.7-.6-.5 1.9 5 7.3 9.1 8.9 3.9 1.5 8.5-1.1 12-6.7 1.6-2.7 7.4-14.4 12.8-25.9 27.4-58.3 76.5-153.1 111-214 84.9-150.1 186.4-294.2 291.8-414.3 6.4-7.4 10.5-12.8 10.1-13.5-.4-.7.3-.3 1.5.8 5.9 5.2 17.2 25.8 22.1 40.3 6.5 19.5 6.1-1.4 5.8 312.7l-.3 285-2.7 10c-1.6 5.5-3.8 12.5-5 15.5-14.9 37.8-46.5 68.6-86.6 84.5-19.1 7.5-34.9 11-56.7 12.5-19 1.3-502.3 1.3-521.3 0-24.3-1.7-44.3-6.7-64.9-16.5-44.7-21.2-74.4-57.1-84-101.8-1.7-7.7-1.8-24.4-1.8-293.2 0-270.2.1-285.4 1.8-293.5 3.8-18 10-32.8 20.3-48.2 25.4-38.2 70.8-64.4 120.9-69.7 4.4-.5 127.5-.8 273.5-.7l265.5.2 11 2.2z" />
             </svg>
-        ),
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType === ProjectType.DASHBOARD
+        )
     });
 
     label: string;
@@ -6798,12 +6754,7 @@ export class CheckboxWidget extends Widget {
     }
 
     getChecked(flowContext: IFlowContext) {
-        if (
-            flowContext.projectEditorStore.project.isDashboardProject ||
-            flowContext.projectEditorStore.project.isAppletProject ||
-            flowContext.projectEditorStore.project
-                .isFirmwareWithFlowSupportProject
-        ) {
+        if (flowContext.projectEditorStore.projectTypeTraits.hasFlowSupport) {
             if (this.data) {
                 try {
                     return !!evalProperty(flowContext, this, "data");
@@ -6823,12 +6774,7 @@ export class CheckboxWidget extends Widget {
     }
 
     getLabel(flowContext: IFlowContext) {
-        if (
-            flowContext.projectEditorStore.project.isDashboardProject ||
-            flowContext.projectEditorStore.project.isAppletProject ||
-            flowContext.projectEditorStore.project
-                .isFirmwareWithFlowSupportProject
-        ) {
+        if (flowContext.projectEditorStore.projectTypeTraits.hasFlowSupport) {
             if (this.label) {
                 try {
                     const value = evalProperty(flowContext, this, "label");
@@ -6945,6 +6891,10 @@ export class RollerWidget extends Widget {
     unselectedValueStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
+
         flowComponentId: WIDGET_TYPE_ROLLER,
 
         properties: [
@@ -6963,7 +6913,7 @@ export class RollerWidget extends Widget {
         },
 
         componentDefaultValue: (projectEditorStore: ProjectEditorStore) => {
-            return projectEditorStore.project.isFirmwareProject
+            return projectEditorStore.projectTypeTraits.isFirmware
                 ? {
                       style: {
                           inheritFrom: "roller_widget"
@@ -6996,10 +6946,7 @@ export class RollerWidget extends Widget {
                 <path d="M4 16a2 2 0 1 1 4 0c0 .591 -.5 1 -1 1.5l-3 2.5h4"></path>
                 <path d="M6 10v-6l-2 2"></path>
             </svg>
-        ),
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        )
     });
 
     constructor() {
@@ -7029,8 +6976,8 @@ export class RollerWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectEditorStore.project
-                    .isDashboardProject ? null : (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -7097,6 +7044,10 @@ registerClass("RollerWidget", RollerWidget);
 
 export class SwitchWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
+
         flowComponentId: WIDGET_TYPE_SWITCH,
 
         properties: [],
@@ -7109,7 +7060,7 @@ export class SwitchWidget extends Widget {
         },
 
         componentDefaultValue: (projectEditorStore: ProjectEditorStore) => {
-            return projectEditorStore.project.isFirmwareProject
+            return projectEditorStore.projectTypeTraits.isFirmware
                 ? {
                       style: {
                           inheritFrom: "switch_widget"
@@ -7132,10 +7083,7 @@ export class SwitchWidget extends Widget {
                 <circle cx="8" cy="12" r="2" />
                 <rect x="2" y="6" width="20" height="12" rx="6" />
             </svg>
-        ),
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        )
     });
 
     render(flowContext: IFlowContext, width: number, height: number) {
@@ -7143,8 +7091,8 @@ export class SwitchWidget extends Widget {
 
         return (
             <>
-                {flowContext.projectEditorStore.project
-                    .isDashboardProject ? null : (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -7218,6 +7166,10 @@ export class SliderWidget extends Widget {
     max: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
+
         flowComponentId: WIDGET_TYPE_SLIDER,
 
         properties: [makeDataPropertyInfo("min"), makeDataPropertyInfo("max")],
@@ -7230,7 +7182,7 @@ export class SliderWidget extends Widget {
         },
 
         componentDefaultValue: (projectEditorStore: ProjectEditorStore) => {
-            return projectEditorStore.project.isFirmwareProject
+            return projectEditorStore.projectTypeTraits.isFirmware
                 ? {
                       style: {
                           inheritFrom: "slider_widget"
@@ -7261,10 +7213,7 @@ export class SliderWidget extends Widget {
                 <line x1="4" y1="18" x2="15" y2="18"></line>
                 <line x1="19" y1="18" x2="20" y2="18"></line>
             </svg>
-        ),
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        )
     });
 
     constructor() {
@@ -7279,8 +7228,8 @@ export class SliderWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectEditorStore.project
-                    .isDashboardProject ? null : (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? null : (
                     <ComponentCanvas
                         component={this}
                         width={width}
@@ -7383,6 +7332,9 @@ export class DropDownListWidget extends Widget {
     options: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL,
+
         flowComponentId: WIDGET_TYPE_DROP_DOWN_LIST,
 
         properties: [
@@ -7465,7 +7417,8 @@ export class DropDownListWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectEditorStore.project.isDashboardProject ? (
+                {flowContext.projectEditorStore.projectTypeTraits
+                    .isDashboard ? (
                     this.renderDashboard(flowContext)
                 ) : (
                     <ComponentCanvas
@@ -7556,6 +7509,9 @@ export class QRCodeWidget extends Widget {
     }
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL,
+
         flowComponentId: WIDGET_TYPE_QR_CODE,
 
         properties: [
@@ -7615,12 +7571,7 @@ export class QRCodeWidget extends Widget {
             return undefined;
         }
 
-        if (
-            flowContext.projectEditorStore.project.isDashboardProject ||
-            flowContext.projectEditorStore.project.isAppletProject ||
-            flowContext.projectEditorStore.project
-                .isFirmwareWithFlowSupportProject
-        ) {
+        if (flowContext.projectEditorStore.projectTypeTraits.hasFlowSupport) {
             return evalProperty(flowContext, this, "data");
         }
 

@@ -18,7 +18,7 @@ import {
 import {
     getAncestorOfType,
     getChildOfObject,
-    getDocumentStore,
+    getProjectEditorStore,
     Message,
     propertyNotFoundMessage,
     propertyNotSetMessage,
@@ -1977,7 +1977,7 @@ export class CallActionActionComponent extends ActionComponent {
     open() {
         const action = findAction(getProject(this), this.action);
         if (action) {
-            getDocumentStore(this).navigationStore.showObjects(
+            getProjectEditorStore(this).navigationStore.showObjects(
                 [action],
                 true,
                 false,
@@ -3561,7 +3561,7 @@ export class CommentActionComponent extends ActionComponent {
                 flowContext={flowContext}
                 value={this.text}
                 setValue={action((value: string) => {
-                    const projectEditorStore = getDocumentStore(this);
+                    const projectEditorStore = getProjectEditorStore(this);
                     projectEditorStore.updateObject(this, {
                         text: value
                     });

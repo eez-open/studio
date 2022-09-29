@@ -19,13 +19,13 @@ import {
 import {
     createObject,
     getChildOfObject,
-    getDocumentStore,
+    getProjectEditorStore,
     getLabel,
-    isDashboardProject,
     Message,
     propertyInvalidValueMessage,
     propertyNotFoundMessage
 } from "project-editor/store";
+import { isDashboardProject } from "project-editor/project/project-type-traits";
 
 import type {
     IResizeHandler,
@@ -354,11 +354,11 @@ export class Page extends Flow {
                 name: result.values.name,
                 left: 0,
                 top: 0,
-                width: project.isDashboardProject
+                width: project.projectTypeTraits.isDashboard
                     ? 800
                     : project._DocumentStore.project.settings.general
                           .displayWidth ?? 480,
-                height: project.isDashboardProject
+                height: project.projectTypeTraits.isDashboard
                     ? 450
                     : project._DocumentStore.project.settings.general
                           .displayHeight ?? 272,
@@ -377,7 +377,7 @@ export class Page extends Flow {
         check: (page: Page) => {
             let messages: Message[] = [];
 
-            const projectEditorStore = getDocumentStore(page);
+            const projectEditorStore = getProjectEditorStore(page);
 
             ProjectEditor.checkAssetId(
                 projectEditorStore,
@@ -406,7 +406,10 @@ export class Page extends Flow {
                 messages.push(propertyNotFoundMessage(page, "style"));
             }
 
-            if (projectEditorStore.project.isFirmwareWithFlowSupportProject) {
+            if (
+                projectEditorStore.projectTypeTraits.isFirmware &&
+                projectEditorStore.projectTypeTraits.hasFlowSupport
+            ) {
                 const isSimulatorPage =
                     page.usedIn &&
                     page.usedIn.length == 1 &&
@@ -532,20 +535,20 @@ export class Page extends Flow {
     }
 
     get isRuntimeSelectedPage() {
-        const projectEditorStore = getDocumentStore(this);
+        const projectEditorStore = getProjectEditorStore(this);
         return (
             projectEditorStore.runtime &&
             projectEditorStore.runtime instanceof
                 ProjectEditor.WasmRuntimeClass &&
             projectEditorStore.runtime.selectedPage == this &&
-            !projectEditorStore.project.isDashboardProject
+            !projectEditorStore.projectTypeTraits.isDashboard
         );
     }
 
     renderWidgetComponents(flowContext: IFlowContext) {
         const scaleToFit =
             this.scaleToFit &&
-            flowContext.projectEditorStore.project.isDashboardProject &&
+            flowContext.projectEditorStore.projectTypeTraits.isDashboard &&
             flowContext.projectEditorStore.runtime &&
             !flowContext.projectEditorStore.runtime.isDebuggerActive;
 
@@ -608,7 +611,7 @@ export class Page extends Flow {
 
         let pageBackground;
         if (
-            !flowContext.projectEditorStore.project.isDashboardProject &&
+            !flowContext.projectEditorStore.projectTypeTraits.isDashboard &&
             !isLayoutViewWidgetPage
         ) {
             pageBackground = (
@@ -697,7 +700,7 @@ export class Page extends Flow {
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
         // widgets
-        const widgets = assets.projectEditorStore.project.isDashboardProject
+        const widgets = assets.projectEditorStore.projectTypeTraits.isDashboard
             ? []
             : (this.components.filter(
                   widget => widget instanceof Widget

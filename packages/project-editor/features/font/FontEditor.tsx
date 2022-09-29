@@ -15,7 +15,7 @@ import {
     IPanel,
     LayoutModels,
     objectToJS,
-    getDocumentStore,
+    getProjectEditorStore,
     createObject
 } from "project-editor/store";
 import { validators } from "eez-studio-shared/validation";
@@ -751,7 +751,7 @@ export function browseGlyph(glyph: Glyph) {
 
     const title = "Select Glyph";
 
-    const projectEditorStore = getDocumentStore(glyph);
+    const projectEditorStore = getProjectEditorStore(glyph);
 
     return showGenericDialog(projectEditorStore, {
         dialogDefinition: {

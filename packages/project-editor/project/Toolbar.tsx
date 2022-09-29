@@ -4,7 +4,7 @@ import { observer } from "mobx-react";
 import classNames from "classnames";
 import { startSearch } from "project-editor/core/search";
 import { ButtonAction, IconAction } from "eez-studio-ui/action";
-import { BuildConfiguration, Project } from "project-editor/project/project";
+import { BuildConfiguration } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 import {
     getObjectVariableTypeFromType,
@@ -14,6 +14,7 @@ import { PageTabState } from "project-editor/features/page/PageEditor";
 import { LayoutModels, objectToString } from "project-editor/store";
 import { RenderVariableStatus } from "project-editor/features/variable/variable";
 import { FlowTabState } from "project-editor/flow/flow";
+import { RuntimeType } from "./project-type-traits";
 
 const RUN_ICON = (
     <svg
@@ -54,10 +55,8 @@ export const Toolbar = observer(
                     )}
 
                     {!this.context.project._isDashboardBuild &&
-                    Project.supportsDebugger(
-                        this.context.project.settings.general.projectType,
-                        this.context.project.settings.general.flowSupport
-                    ) ? (
+                    this.context.projectTypeTraits.runtimeType !=
+                        RuntimeType.NONE ? (
                         <RunEditSwitchControls />
                     ) : (
                         <div />
@@ -161,14 +160,6 @@ const Controls = observer(
         }
 
         get isBuildConfigurationSelectorVisible() {
-            // return (
-            //     !this.context.project.isDashboardProject &&
-            //     !this.context.project.isAppletProject &&
-            //     (this.context.project.pages ||
-            //         this.context.project.actions ||
-            //         (this.context.project.variables &&
-            //             this.context.project.variables.globalVariables))
-            // );
             return false;
         }
 
@@ -270,7 +261,7 @@ const Controls = observer(
 
                     {!this.context.runtime && (
                         <div className="btn-group" role="group">
-                            {!this.context.project.isDashboardProject && (
+                            {!this.context.projectTypeTraits.isDashboard && (
                                 <IconAction
                                     title="Check"
                                     icon="material:check"
@@ -287,7 +278,7 @@ const Controls = observer(
                         </div>
                     )}
 
-                    {this.context.project.isResourceProject &&
+                    {this.context.projectTypeTraits.isResource &&
                         this.context.project.micropython && (
                             <div className="btn-group" role="group">
                                 <IconAction
@@ -302,9 +293,7 @@ const Controls = observer(
                             </div>
                         )}
 
-                    {(this.context.project.isAppletProject ||
-                        this.context.project.isFirmwareWithFlowSupportProject ||
-                        this.context.project.isDashboardProject) && (
+                    {this.context.projectTypeTraits.hasFlowSupport && (
                         <>
                             {this.pageTabState && (
                                 <>

@@ -21,6 +21,9 @@ class RunningState {
 
 export class TerminalWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.DASHBOARD,
+
         defaultValue: {
             left: 0,
             top: 0,
@@ -42,10 +45,7 @@ export class TerminalWidget extends Widget {
                 <line x1="13" y1="15" x2="16" y2="15"></line>
                 <rect x="3" y="4" width="18" height="16" rx="2"></rect>
             </svg>
-        ),
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType === ProjectType.DASHBOARD
+        )
     });
 
     getOutputs(): ComponentOutput[] {

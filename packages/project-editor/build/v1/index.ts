@@ -13,7 +13,7 @@ import {
     Section
 } from "project-editor/store";
 import type { BuildResult } from "project-editor/store/features";
-import { getDocumentStore } from "project-editor/store";
+import { getProjectEditorStore } from "project-editor/store";
 
 import {
     TAB,
@@ -175,7 +175,7 @@ function getSelectedWidgetForSelectWidget(
 ): DisplayItem | undefined {
     let widget = item.object as SelectWidget;
     if (widget.data && widget.widgets) {
-        let index: number = getDocumentStore(
+        let index: number = getProjectEditorStore(
             flowContainerDisplayItem.object
         ).dataContext.getEnumValue(widget.data);
         if (index >= 0 && index < widget.widgets.length) {
@@ -247,7 +247,7 @@ function createWidgetTree(widgetContainer: IEezObject, draw: boolean) {
                             item.children as DisplayItemChildrenObject
                         )["itemWidget"];
 
-                        const dataValue = getDocumentStore(
+                        const dataValue = getProjectEditorStore(
                             flowContainerDisplayItem.object
                         ).dataContext.get(widget.data as string);
                         if (dataValue && Array.isArray(dataValue)) {
@@ -500,7 +500,7 @@ function getItem(
     }
 
     const message = propertyNotFoundMessage(object, propertyName);
-    getDocumentStore(object).outputSectionsStore.write(
+    getProjectEditorStore(object).outputSectionsStore.write(
         Section.OUTPUT,
         message.type,
         message.text,
@@ -555,7 +555,7 @@ function getStyleIndex(object: any, propertyName: string) {
     }
 
     const message = propertyNotFoundMessage(object, propertyName);
-    getDocumentStore(object).outputSectionsStore.write(
+    getProjectEditorStore(object).outputSectionsStore.write(
         Section.OUTPUT,
         message.type,
         message.text,
@@ -1318,7 +1318,7 @@ function buildWidget(object: Widget | Page) {
         if (widget.itemWidget) {
             itemWidget = buildWidget(widget.itemWidget);
         } else {
-            getDocumentStore(object).outputSectionsStore.write(
+            getProjectEditorStore(object).outputSectionsStore.write(
                 Section.OUTPUT,
                 MessageType.ERROR,
                 "List item widget is missing",

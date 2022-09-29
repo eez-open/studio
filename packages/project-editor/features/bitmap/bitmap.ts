@@ -11,7 +11,11 @@ import {
 } from "project-editor/core/object";
 import { validators } from "eez-studio-shared/validation";
 
-import { createObject, getDocumentStore, Message } from "project-editor/store";
+import {
+    createObject,
+    getProjectEditorStore,
+    Message
+} from "project-editor/store";
 
 import { findStyle } from "project-editor/features/style/style";
 import { getThemedColor } from "project-editor/features/style/theme";
@@ -24,6 +28,7 @@ import { getProject, Project } from "project-editor/project/project";
 import { metrics } from "project-editor/features/bitmap/metrics";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
+import { BitmapColorFormat } from "project-editor/project/project-type-traits";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -97,7 +102,7 @@ export class Bitmap extends EezObject {
         check: (bitmap: Bitmap) => {
             let messages: Message[] = [];
 
-            const projectEditorStore = getDocumentStore(bitmap);
+            const projectEditorStore = getProjectEditorStore(bitmap);
 
             ProjectEditor.checkAssetId(
                 projectEditorStore,
@@ -109,7 +114,7 @@ export class Bitmap extends EezObject {
             return messages;
         },
         newItem: async (parent: IEezObject) => {
-            const projectEditorStore = getDocumentStore(parent);
+            const projectEditorStore = getProjectEditorStore(parent);
 
             const result = await showGenericDialog(projectEditorStore, {
                 dialogDefinition: {
@@ -194,7 +199,7 @@ export class Bitmap extends EezObject {
             );
             if (style && style.backgroundColorProperty) {
                 return getThemedColor(
-                    getDocumentStore(this),
+                    getProjectEditorStore(this),
                     style.backgroundColorProperty
                 );
             }
@@ -270,7 +275,9 @@ export function getData(bitmap: Bitmap): Promise<BitmapData> {
                 (bitmap.bpp === 32 ? 4 : 2) * image.width * image.height
             );
 
-            const rgb = getProject(bitmap).isFirmwareWithFlowSupportProject;
+            const rgb =
+                getProject(bitmap).projectTypeTraits.bitmapColorFormat ==
+                BitmapColorFormat.RGB;
 
             for (let i = 0; i < 4 * image.width * image.height; i += 4) {
                 let r = imageData[i];
@@ -351,8 +358,8 @@ export default {
         }
 
         if (
-            !ProjectEditor.getProject(object).isDashboardProject &&
-            !findStyle(getDocumentStore(object).project, "default")
+            !ProjectEditor.getProject(object).projectTypeTraits.isDashboard &&
+            !findStyle(getProjectEditorStore(object).project, "default")
         ) {
             messages.push(
                 new Message(

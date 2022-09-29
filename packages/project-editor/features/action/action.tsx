@@ -10,17 +10,16 @@ import {
     MessageType,
     EezObject
 } from "project-editor/core/object";
+import { createObject, Message } from "project-editor/store";
 import {
-    createObject,
+    hasFlowSupport,
     isDashboardOrApplet,
-    isNotFirmwareWithFlowSupportProject,
-    isNotV1Project,
-    Message
-} from "project-editor/store";
+    isNotV1Project
+} from "project-editor/project/project-type-traits";
 import type { Project } from "project-editor/project/project";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { metrics } from "project-editor/features/action/metrics";
-import { getDocumentStore } from "project-editor/store";
+import { getProjectEditorStore } from "project-editor/store";
 
 import { Flow } from "project-editor/flow/flow";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
@@ -81,8 +80,7 @@ export class Action extends Flow {
                     }
                 ],
                 hideInPropertyGrid: (action: Action) =>
-                    isNotV1Project(action) &&
-                    isNotFirmwareWithFlowSupportProject(action)
+                    isNotV1Project(action) && !hasFlowSupport(action)
             },
             {
                 name: "implementation",
@@ -99,7 +97,7 @@ export class Action extends Flow {
         check: (action: Action) => {
             let messages: Message[] = [];
 
-            const projectEditorStore = getDocumentStore(action);
+            const projectEditorStore = getProjectEditorStore(action);
 
             ProjectEditor.checkAssetId(
                 projectEditorStore,
@@ -142,15 +140,13 @@ export class Action extends Flow {
                 values: {}
             });
 
-            const projectEditorStore = getDocumentStore(parent);
+            const projectEditorStore = getProjectEditorStore(parent);
 
             const actionProperties: Partial<Action> = Object.assign(
                 {
                     name: result.values.name
                 },
-                projectEditorStore.project.isDashboardProject ||
-                    projectEditorStore.project.isAppletProject ||
-                    projectEditorStore.project.isFirmwareWithFlowSupportProject
+                projectEditorStore.projectTypeTraits.hasFlowSupport
                     ? ({
                           implementationType: "flow",
                           components: [],
