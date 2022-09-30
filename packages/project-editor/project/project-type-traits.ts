@@ -28,7 +28,7 @@ class ProjectTypeTraits {
         return false;
     }
 
-    get isDashboard() {
+    get isResource() {
         return false;
     }
 
@@ -36,7 +36,11 @@ class ProjectTypeTraits {
         return false;
     }
 
-    get isResource() {
+    get isDashboard() {
+        return false;
+    }
+
+    get isLVGL() {
         return false;
     }
 
@@ -146,6 +150,18 @@ class DashboardProjectTypeTraits extends ProjectTypeTraits {
 class LVGLProjectTypeTraits extends ProjectTypeTraits {
     override get id() {
         return 6;
+    }
+
+    override get isLVGL() {
+        return true;
+    }
+
+    override get hasFlowSupport() {
+        return true;
+    }
+
+    override get runtimeType() {
+        return RuntimeType.WASM;
     }
 }
 

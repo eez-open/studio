@@ -83,7 +83,8 @@ function getComponentIdOfComponent(assets: Assets, component: Component) {
 
     if (
         flowComponentId == undefined &&
-        assets.projectEditorStore.projectTypeTraits.isDashboard
+        (assets.projectEditorStore.projectTypeTraits.isDashboard ||
+            assets.projectEditorStore.projectTypeTraits.isLVGL)
     ) {
         const eezClass = getClass(component);
         const name = getClassName(eezClass);

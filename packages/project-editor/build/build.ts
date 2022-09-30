@@ -280,7 +280,8 @@ function anythingToBuild(projectEditorStore: ProjectEditorStore) {
     return (
         project.settings.build.files.length > 0 ||
         projectEditorStore.masterProject ||
-        projectEditorStore.projectTypeTraits.isDashboard
+        projectEditorStore.projectTypeTraits.isDashboard ||
+        projectEditorStore.projectTypeTraits.isLVGL
     );
 }
 

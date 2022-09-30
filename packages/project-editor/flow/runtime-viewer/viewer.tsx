@@ -721,7 +721,8 @@ export const FlowViewer = observer(
 
             const renderParts =
                 this.flowContext.flowState ||
-                this.flowContext.flow instanceof ProjectEditor.ActionClass;
+                this.flowContext.flow instanceof ProjectEditor.ActionClass ||
+                this.flowContext.projectEditorStore.projectTypeTraits.isLVGL;
 
             return (
                 <div

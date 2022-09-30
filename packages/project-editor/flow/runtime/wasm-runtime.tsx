@@ -168,7 +168,11 @@ export class WasmRuntime extends RemoteRuntime {
 
         // create WASM worker
         this.wasmModuleId = nextWasmModuleId++;
-        this.worker = createWasmWorker(this.wasmModuleId, this.onWorkerMessage);
+        this.worker = createWasmWorker(
+            this.wasmModuleId,
+            this.onWorkerMessage,
+            this.projectEditorStore.projectTypeTraits.isLVGL
+        );
     }
 
     async doStopRuntime(notifyUser: boolean) {
@@ -808,7 +812,11 @@ export class WasmRuntime extends RemoteRuntime {
     ////////////////////////////////////////////////////////////////////////////////
 
     renderPage() {
-        return <WasmCanvas />;
+        return this.projectEditorStore.projectTypeTraits.isLVGL ? (
+            <LVGLCanvas />
+        ) : (
+            <WasmCanvas />
+        );
     }
 }
 
@@ -914,6 +922,52 @@ export const WasmCanvas = observer(
                     height={wasmRuntime.displayHeight}
                 />
             );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const LVGLCanvas = observer(
+    class LVGLCanvas extends React.Component {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        divRef = React.createRef<HTMLDivElement>();
+
+        animationFrameRequest: number | undefined;
+
+        appendCanvasAsChild = () => {
+            this.animationFrameRequest = undefined;
+
+            const divElement = this.divRef.current;
+            const wasmRuntime = this.context.runtime as WasmRuntime;
+            if (
+                divElement &&
+                wasmRuntime &&
+                wasmRuntime.worker &&
+                wasmRuntime.worker.canvas
+            ) {
+                divElement.appendChild(wasmRuntime.worker.canvas);
+            } else {
+                this.animationFrameRequest = window.requestAnimationFrame(
+                    this.appendCanvasAsChild
+                );
+            }
+        };
+
+        componentDidMount() {
+            this.appendCanvasAsChild();
+        }
+
+        componentWillUnmount() {
+            if (this.animationFrameRequest != undefined) {
+                window.cancelAnimationFrame(this.animationFrameRequest);
+            }
+        }
+
+        render() {
+            return <div ref={this.divRef} />;
         }
     }
 );

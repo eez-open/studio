@@ -299,6 +299,9 @@ export interface IWasmFlowRuntime {
     _free(ptr: number): void;
 
     //
+    canvas?: HTMLCanvasElement;
+
+    //
     assetsMap: AssetsMap;
     componentMessages: IMessageFromWorker[] | undefined;
 

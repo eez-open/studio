@@ -19,7 +19,9 @@ import {
 import { DashboardComponentContext } from "project-editor/flow/runtime/worker-dashboard-component-context";
 import { IWasmFlowRuntime } from "eez-studio-types";
 
-const flow_runtime_constructor = require("project-editor/flow/runtime/flow_runtime.js");
+const eez_flow_runtime_constructor = require("project-editor/flow/runtime/eez_runtime.js");
+
+const lvgl_flow_runtime_constructor = require("project-editor/flow/runtime/lvgl_runtime.js");
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -131,11 +133,12 @@ function onArrayValueFree(wasmModuleId: number, ptr: number) {
 
 export function createWasmWorker(
     wasmModuleId: number,
-    postWorkerToRenderMessage: (data: WorkerToRenderMessage) => void
+    postWorkerToRenderMessage: (data: WorkerToRenderMessage) => void,
+    lvgl: boolean
 ) {
-    const WasmFlowRuntime: IWasmFlowRuntime = flow_runtime_constructor(
-        postWorkerToRenderMessage
-    );
+    const WasmFlowRuntime: IWasmFlowRuntime = lvgl
+        ? lvgl_flow_runtime_constructor(postWorkerToRenderMessage)
+        : eez_flow_runtime_constructor(postWorkerToRenderMessage);
 
     wasmFlowRuntimes.set(wasmModuleId, WasmFlowRuntime);
 
@@ -523,7 +526,8 @@ export function createWasmWorker(
         terminate: () => {
             wasmFlowRuntimes.delete(wasmModuleId);
             fireTerminateEvent(WasmFlowRuntime);
-        }
+        },
+        canvas: WasmFlowRuntime.canvas
     };
 }
 

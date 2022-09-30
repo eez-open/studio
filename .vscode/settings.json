@@ -36,7 +36,10 @@
         "algorithm": "cpp",
         "limits": "cpp",
         "ios": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "lvgl.h": "c",
+        "monitor.h": "c",
+        "sdl.h": "c"
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "workbench.editor.enablePreview": false,
