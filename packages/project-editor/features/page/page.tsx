@@ -58,6 +58,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import { drawBackground } from "project-editor/flow/editor/draw";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
+import { LVGLPage } from "project-editor/features/page/lvgl";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -546,34 +547,36 @@ export class Page extends Flow {
     }
 
     renderWidgetComponents(flowContext: IFlowContext) {
+        if (this.isRuntimeSelectedPage) {
+            return (
+                flowContext.projectEditorStore.runtime! as WasmRuntime
+            ).renderPage();
+        }
+
+        if (flowContext.projectEditorStore.projectTypeTraits.isLVGL) {
+            return <LVGLPage page={this} flowContext={flowContext} />;
+        }
+
+        let width: number | undefined;
+        let height: number | undefined;
+
         const scaleToFit =
             this.scaleToFit &&
             flowContext.projectEditorStore.projectTypeTraits.isDashboard &&
             flowContext.projectEditorStore.runtime &&
             !flowContext.projectEditorStore.runtime.isDebuggerActive;
-
-        let width: number | undefined;
-        let height: number | undefined;
         if (scaleToFit) {
             width = flowContext.viewState.transform.clientRect.width;
             height = flowContext.viewState.transform.clientRect.height;
         }
 
         return (
-            <>
-                {this.isRuntimeSelectedPage ? (
-                    (
-                        flowContext.projectEditorStore.runtime! as WasmRuntime
-                    ).renderPage()
-                ) : (
-                    <ComponentEnclosure
-                        component={this}
-                        flowContext={flowContext}
-                        width={width}
-                        height={height}
-                    />
-                )}
-            </>
+            <ComponentEnclosure
+                component={this}
+                flowContext={flowContext}
+                width={width}
+                height={height}
+            />
         );
     }
 
