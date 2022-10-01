@@ -79,13 +79,13 @@
  *  DISPLAY DRIVERS
  *********************/
 
-extern int sdl_hor_res, sdl_ver_res;
-
 /*-------------------
  *  SDL
  *-------------------*/
-#define USE_SDL         1
+#define USE_SDL         0
 #if USE_SDL
+extern int sdl_hor_res;
+extern int sdl_ver_res;
 #define SDL_HOR_RES     sdl_hor_res
 #define SDL_VER_RES     sdl_ver_res
 #define SDL_ZOOM        1                       /* Scale window by this factor (useful when simulating small screens) */

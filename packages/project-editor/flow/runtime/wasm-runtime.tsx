@@ -123,6 +123,11 @@ export class WasmRuntime extends RemoteRuntime {
 
     constructor(public projectEditorStore: ProjectEditorStore) {
         super(projectEditorStore);
+
+        makeObservable(this, {
+            displayWidth: observable,
+            displayHeight: observable
+        });
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -153,8 +158,10 @@ export class WasmRuntime extends RemoteRuntime {
             return;
         }
 
-        this.displayWidth = this.assetsMap.displayWidth;
-        this.displayHeight = this.assetsMap.displayHeight;
+        runInAction(() => {
+            this.displayWidth = this.assetsMap.displayWidth;
+            this.displayHeight = this.assetsMap.displayHeight;
+        });
 
         this.assetsData = result.GUI_ASSETS_DATA;
 
@@ -812,11 +819,7 @@ export class WasmRuntime extends RemoteRuntime {
     ////////////////////////////////////////////////////////////////////////////////
 
     renderPage() {
-        return this.projectEditorStore.projectTypeTraits.isLVGL ? (
-            <LVGLCanvas />
-        ) : (
-            <WasmCanvas />
-        );
+        return <WasmCanvas />;
     }
 }
 
@@ -922,52 +925,6 @@ export const WasmCanvas = observer(
                     height={wasmRuntime.displayHeight}
                 />
             );
-        }
-    }
-);
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const LVGLCanvas = observer(
-    class LVGLCanvas extends React.Component {
-        static contextType = ProjectContext;
-        declare context: React.ContextType<typeof ProjectContext>;
-
-        divRef = React.createRef<HTMLDivElement>();
-
-        animationFrameRequest: number | undefined;
-
-        appendCanvasAsChild = () => {
-            this.animationFrameRequest = undefined;
-
-            const divElement = this.divRef.current;
-            const wasmRuntime = this.context.runtime as WasmRuntime;
-            if (
-                divElement &&
-                wasmRuntime &&
-                wasmRuntime.worker &&
-                wasmRuntime.worker.canvas
-            ) {
-                divElement.appendChild(wasmRuntime.worker.canvas);
-            } else {
-                this.animationFrameRequest = window.requestAnimationFrame(
-                    this.appendCanvasAsChild
-                );
-            }
-        };
-
-        componentDidMount() {
-            this.appendCanvasAsChild();
-        }
-
-        componentWillUnmount() {
-            if (this.animationFrameRequest != undefined) {
-                window.cancelAnimationFrame(this.animationFrameRequest);
-            }
-        }
-
-        render() {
-            return <div ref={this.divRef} />;
         }
     }
 );

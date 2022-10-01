@@ -15,16 +15,3 @@ Module.print = function (args) {
 Module.printErr = function (args) {
     console.error("From LVGL-WASM flow runtime:", args);
 };
-
-var canvas = document.createElement('canvas');
-
-// TODO
-canvas.setAttribute("width", 800);
-canvas.setAttribute("height", 480);
-Module.canvas = canvas;
-document.body.appendChild(canvas);
-
-// TODO
-function setWindowTitle(arg) {
-    console.log("setWindowTitle", arg);
-}
