@@ -11,7 +11,7 @@
 
 #define EM_PORT_API(rettype) rettype EMSCRIPTEN_KEEPALIVE
 
-static void hal_init(void);
+static void hal_init(bool editor);
 static void memory_monitor(lv_timer_t * param);
 
 static lv_disp_t *disp1;
@@ -82,7 +82,7 @@ void my_mousewheel_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data) {
     mouse_wheel_delta = 0;
 }
 
-static void hal_init(void) {
+static void hal_init(bool editor) {
     // alloc memory for the display front buffer
     display_fb = (uint32_t *)malloc(sizeof(uint32_t) * hor_res * ver_res);
     memset(display_fb, 0x44, hor_res * ver_res * sizeof(uint32_t));
@@ -104,36 +104,38 @@ static void hal_init(void) {
     lv_group_t * g = lv_group_create();
     lv_group_set_default(g);
 
-    /* Add the mouse as input device
-    * Use the 'mouse' driver which reads the PC's mouse*/
-    //mouse_init();
-    static lv_indev_drv_t indev_drv_1;
-    lv_indev_drv_init(&indev_drv_1); /*Basic initialization*/
-    indev_drv_1.type = LV_INDEV_TYPE_POINTER;
+    if (!editor) {
+        /* Add the mouse as input device
+        * Use the 'mouse' driver which reads the PC's mouse*/
+        //mouse_init();
+        static lv_indev_drv_t indev_drv_1;
+        lv_indev_drv_init(&indev_drv_1); /*Basic initialization*/
+        indev_drv_1.type = LV_INDEV_TYPE_POINTER;
 
-    /*This function will be called periodically (by the library) to get the mouse position and state*/
-    indev_drv_1.read_cb = my_mouse_read;
-    lv_indev_drv_register(&indev_drv_1);
+        /*This function will be called periodically (by the library) to get the mouse position and state*/
+        indev_drv_1.read_cb = my_mouse_read;
+        lv_indev_drv_register(&indev_drv_1);
 
-    //keyboard_init();
-    static lv_indev_drv_t indev_drv_2;
-    lv_indev_drv_init(&indev_drv_2); /*Basic initialization*/
-    indev_drv_2.type = LV_INDEV_TYPE_KEYPAD;
-    indev_drv_2.read_cb = my_keyboard_read;
-    lv_indev_t *kb_indev = lv_indev_drv_register(&indev_drv_2);
-    lv_indev_set_group(kb_indev, g);
-    //mousewheel_init();
-    static lv_indev_drv_t indev_drv_3;
-    lv_indev_drv_init(&indev_drv_3); /*Basic initialization*/
-    indev_drv_3.type = LV_INDEV_TYPE_ENCODER;
-    indev_drv_3.read_cb = my_mousewheel_read;
+        //keyboard_init();
+        static lv_indev_drv_t indev_drv_2;
+        lv_indev_drv_init(&indev_drv_2); /*Basic initialization*/
+        indev_drv_2.type = LV_INDEV_TYPE_KEYPAD;
+        indev_drv_2.read_cb = my_keyboard_read;
+        lv_indev_t *kb_indev = lv_indev_drv_register(&indev_drv_2);
+        lv_indev_set_group(kb_indev, g);
+        //mousewheel_init();
+        static lv_indev_drv_t indev_drv_3;
+        lv_indev_drv_init(&indev_drv_3); /*Basic initialization*/
+        indev_drv_3.type = LV_INDEV_TYPE_ENCODER;
+        indev_drv_3.read_cb = my_mousewheel_read;
 
-    lv_indev_t * enc_indev = lv_indev_drv_register(&indev_drv_3);
-    lv_indev_set_group(enc_indev, g);
-
-    /* Optional:
-     * Create a memory monitor task which prints the memory usage in periodically.*/
-    lv_timer_create(memory_monitor, 3000, NULL);
+        lv_indev_t * enc_indev = lv_indev_drv_register(&indev_drv_3);
+        lv_indev_set_group(enc_indev, g);
+    } else {
+        /* Optional:
+        * Create a memory monitor task which prints the memory usage in periodically.*/
+        lv_timer_create(memory_monitor, 3000, NULL);
+    }
 }
 
 /**
@@ -151,6 +153,8 @@ static void memory_monitor(lv_timer_t * param)
 bool initialized = false;
 
 EM_PORT_API(void) init(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSize) {
+    bool editor = assetsSize == 0;
+
     hor_res = 800;
     ver_res = 480;
 
@@ -158,10 +162,10 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSi
     lv_init();
 
     /*Initialize the HAL (display, input devices, tick) for LittlevGL*/
-    hal_init();
+    hal_init(editor);
 
-    /*Load a demo*/
-    if (assetsSize > 0) {
+    if (!editor) {
+        /*Load a demo*/
         extern void lv_demo_widgets();
         lv_demo_widgets();
     }
