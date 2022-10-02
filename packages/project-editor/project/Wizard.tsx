@@ -307,6 +307,14 @@ const NewProjectWizard = observer(
                                 data: undefined
                             },
                             {
+                                id: "lvgl",
+                                label: "LVGL",
+                                children: [],
+                                selected: this.type === "lvgl",
+                                expanded: false,
+                                data: undefined
+                            },
+                            {
                                 id: "empty",
                                 label: "Empty",
                                 children: [],

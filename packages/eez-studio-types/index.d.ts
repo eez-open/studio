@@ -375,6 +375,12 @@ export interface IWasmFlowRuntime {
     _stopScript(): void;
 
     _isRTL(): boolean;
+
+    // LVGL API
+    _lvglCreateContainer(parentObj: number, x: number, y: number, w: number, h: number): number;
+    _lvglCreateLabel(parentObj: number, text: number, x: number, y: number, w: number, h: number): number;
+    _lvglCreateButton(parentObj: number, text: number, x: number, y: number, w: number, h: number): number;
+    _lvglDeleteObject(obj: number): void;
 }
 
 export interface IDashboardComponentContext {

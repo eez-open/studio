@@ -1,6 +1,5 @@
 import React from "react";
 import { observable, makeObservable } from "mobx";
-import classNames from "classnames";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
@@ -23,6 +22,9 @@ import {
     generalGroup,
     specificGroup
 } from "project-editor/ui-components/PropertyGrid/groups";
+import { IWasmFlowRuntime } from "eez-studio-types";
+
+////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLLabelWidget extends Widget {
     name: string;
@@ -108,20 +110,97 @@ export class LVGLLabelWidget extends Widget {
         });
     }
 
-    getClassName() {
-        return classNames("eez-widget-component", this.type);
+    render(flowContext: IFlowContext, width: number, height: number) {
+        return <>{super.render(flowContext, width, height)}</>;
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
-        return (
-            <>
-                <span className={classNames(this.style.classNames)}>
-                    {this.text}
-                </span>
-                {super.render(flowContext, width, height)}
-            </>
-        );
+    override lvglCreate(runtime: IWasmFlowRuntime, parentObj: number) {
+        return {
+            obj: runtime._lvglCreateLabel(
+                parentObj,
+                runtime.allocateUTF8(this.text),
+                this.left,
+                this.top,
+                this.width,
+                this.height
+            ),
+            children: []
+        };
     }
 }
 
 registerClass("LVGLLabelWidget", LVGLLabelWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLButtonWidget extends Widget {
+    text: string;
+
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        properties: [
+            {
+                name: "text",
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
+            }
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 80,
+            height: 40,
+            text: "Button"
+        },
+
+        icon: (
+            <svg viewBox="0 0 16 16">
+                <path
+                    fill="currentColor"
+                    d="m15.7 5.3-1-1c-.2-.2-.4-.3-.7-.3H1c-.6 0-1 .4-1 1v5c0 .3.1.6.3.7l1 1c.2.2.4.3.7.3h13c.6 0 1-.4 1-1V6c0-.3-.1-.5-.3-.7zM14 10H1V5h13v5z"
+                />
+            </svg>
+        ),
+
+        check: (widget: LVGLButtonWidget) => {
+            let messages: Message[] = [];
+
+            if (!widget.text) {
+                messages.push(propertyNotSetMessage(widget, "text"));
+            }
+
+            return messages;
+        }
+    });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            text: observable
+        });
+    }
+
+    render(flowContext: IFlowContext, width: number, height: number) {
+        return <>{super.render(flowContext, width, height)}</>;
+    }
+
+    override lvglCreate(runtime: IWasmFlowRuntime, parentObj: number) {
+        return {
+            obj: runtime._lvglCreateButton(
+                parentObj,
+                runtime.allocateUTF8(this.text),
+                this.left,
+                this.top,
+                this.width,
+                this.height
+            ),
+            children: []
+        };
+    }
+}
+
+registerClass("LVGLButtonWidget", LVGLButtonWidget);

@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <math.h>
 #include <emscripten.h>
@@ -7,6 +8,8 @@
 #include "lv_drivers/indev/mouse.h"
 #include "lv_drivers/indev/mousewheel.h"
 #include "lv_drivers/indev/keyboard.h"
+
+#define EM_PORT_API(rettype) rettype EMSCRIPTEN_KEEPALIVE
 
 static void hal_init(void);
 static void memory_monitor(lv_timer_t * param);
@@ -140,28 +143,10 @@ static void hal_init(void) {
 static void memory_monitor(lv_timer_t * param)
 {
     (void) param; /*Unused*/
+    lv_mem_monitor_t mon;
+    lv_mem_monitor(&mon);
+    printf("LVGL memory usage: %d%%\n", (int)mon.used_pct);
 }
-
-#if defined(__EMSCRIPTEN__)
-#ifndef EM_PORT_API
-#	if defined(__EMSCRIPTEN__)
-#		include <emscripten.h>
-#		if defined(__cplusplus)
-#			define EM_PORT_API(rettype) extern "C" rettype EMSCRIPTEN_KEEPALIVE
-#		else
-#			define EM_PORT_API(rettype) rettype EMSCRIPTEN_KEEPALIVE
-#		endif
-#	else
-#		if defined(__cplusplus)
-#			define EM_PORT_API(rettype) extern "C" rettype
-#		else
-#			define EM_PORT_API(rettype) rettype
-#		endif
-#	endif
-#endif
-#else
-#    define EM_PORT_API(rettype) rettype
-#endif
 
 bool initialized = false;
 
@@ -176,8 +161,10 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSi
     hal_init();
 
     /*Load a demo*/
-    extern void lv_demo_widgets();
-    lv_demo_widgets();
+    if (assetsSize > 0) {
+        extern void lv_demo_widgets();
+        lv_demo_widgets();
+    }
 
     initialized = true;
 }

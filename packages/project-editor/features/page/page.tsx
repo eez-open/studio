@@ -59,6 +59,7 @@ import { validators } from "eez-studio-shared/validation";
 import { drawBackground } from "project-editor/flow/editor/draw";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
 import { LVGLPage } from "project-editor/features/page/lvgl";
+import { IWasmFlowRuntime } from "eez-studio-types";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -554,7 +555,15 @@ export class Page extends Flow {
         }
 
         if (flowContext.projectEditorStore.projectTypeTraits.isLVGL) {
-            return <LVGLPage page={this} flowContext={flowContext} />;
+            return (
+                <>
+                    <ComponentEnclosure
+                        component={this}
+                        flowContext={flowContext}
+                    />
+                    <LVGLPage page={this} flowContext={flowContext} />
+                </>
+            );
         }
 
         let width: number | undefined;
@@ -615,6 +624,7 @@ export class Page extends Flow {
         let pageBackground;
         if (
             !flowContext.projectEditorStore.projectTypeTraits.isDashboard &&
+            !flowContext.projectEditorStore.projectTypeTraits.isLVGL &&
             !isLayoutViewWidgetPage
         ) {
             pageBackground = (
@@ -668,11 +678,19 @@ export class Page extends Flow {
     }
 
     getClassName() {
-        const style = findStyle(ProjectEditor.getProject(this), this.style);
+        const project = ProjectEditor.getProject(this);
+        let style = findStyle(project, this.style);
+        if (!project.projectTypeTraits.isLVGL) {
+            style = findStyle(project, this.style);
+        }
         return classNames("EezStudio_Page", style?.classNames);
     }
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
+        if (flowContext.projectEditorStore.projectTypeTraits.isLVGL) {
+            return;
+        }
+
         const isLayoutViewWidgetPage =
             !flowContext.document.findObjectById(getId(this)) &&
             !flowContext.projectEditorStore.runtime;
@@ -749,6 +767,25 @@ export class Page extends Flow {
 
         // reserved1
         dataBuffer.writeUint16(0);
+    }
+
+    lvglCreate(runtime: IWasmFlowRuntime, parentObj: number) {
+        const obj = runtime._lvglCreateContainer(
+            parentObj,
+            this.left,
+            this.top,
+            this.width,
+            this.height
+        );
+
+        const children = this.components
+            .filter(component => component instanceof Widget)
+            .map((widget: Widget) => widget.lvglCreate(runtime, obj));
+
+        return {
+            obj,
+            children
+        };
     }
 }
 

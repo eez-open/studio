@@ -108,6 +108,7 @@ import type {
     IActionComponentDefinition,
     IComponentFlowState,
     IComponentProperty,
+    IWasmFlowRuntime,
     LogItemType
 } from "eez-studio-types";
 import {
@@ -4452,6 +4453,13 @@ export class Widget extends Component {
         }
 
         return value;
+    }
+
+    lvglCreate(runtime: IWasmFlowRuntime, parentObj: number) {
+        return {
+            obj: 0,
+            children: []
+        };
     }
 }
 

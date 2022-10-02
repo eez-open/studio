@@ -20,7 +20,6 @@ import { DashboardComponentContext } from "project-editor/flow/runtime/worker-da
 import { IWasmFlowRuntime } from "eez-studio-types";
 
 const eez_flow_runtime_constructor = require("project-editor/flow/runtime/eez_runtime.js");
-
 const lvgl_flow_runtime_constructor = require("project-editor/flow/runtime/lvgl_runtime.js");
 
 ////////////////////////////////////////////////////////////////////////////////
