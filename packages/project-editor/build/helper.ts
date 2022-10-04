@@ -61,3 +61,14 @@ export function dumpData(data: number[] | Buffer) {
     result += "\n";
     return result;
 }
+
+export function indent(tab: string, text: string) {
+    return text
+        .split("\n")
+        .map(line => tab + line)
+        .join("\n");
+}
+
+export function escapeCString(text: string) {
+    return `"${text.replace(/"/g, '\\"')}"`;
+}

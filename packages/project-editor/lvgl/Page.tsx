@@ -2,7 +2,7 @@ import React from "react";
 import { observer } from "mobx-react";
 
 import { ProjectContext } from "project-editor/project/context";
-import type { Page } from "./page";
+import type { Page } from "project-editor/features/page/page";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { IWasmFlowRuntime } from "eez-studio-types";
 import { autorun, IReactionDisposer } from "mobx";

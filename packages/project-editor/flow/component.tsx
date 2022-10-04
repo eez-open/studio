@@ -51,7 +51,10 @@ import {
     updateObject,
     createObject
 } from "project-editor/store";
-import { isNotProjectWithFlowSupport } from "project-editor/project/project-type-traits";
+import {
+    isLVGLProject,
+    isNotProjectWithFlowSupport
+} from "project-editor/project/project-type-traits";
 import { objectToJS } from "project-editor/store";
 import {
     IContextMenuContext,
@@ -163,7 +166,8 @@ const resizingProperty: PropertyInfo = {
     name: "resizing",
     type: PropertyType.Any,
     propertyGridGroup: geometryGroup,
-    propertyGridRowComponent: ResizingProperty
+    propertyGridRowComponent: ResizingProperty,
+    hideInPropertyGrid: isLVGLProject
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -223,18 +227,22 @@ export function makeActionPropertyInfo(
 
 export function makeStylePropertyInfo(
     name: string,
-    displayName?: string
+    displayName?: string,
+    props?: Partial<PropertyInfo>
 ): PropertyInfo {
-    return {
-        name,
-        displayName,
-        type: PropertyType.Object,
-        typeClass: Style,
-        propertyGridGroup: styleGroup,
-        propertyGridCollapsable: true,
-        propertyGridCollapsableDefaultPropertyName: "inheritFrom",
-        enumerable: false
-    };
+    return Object.assign(
+        {
+            name,
+            displayName,
+            type: PropertyType.Object,
+            typeClass: Style,
+            propertyGridGroup: styleGroup,
+            propertyGridCollapsable: true,
+            propertyGridCollapsableDefaultPropertyName: "inheritFrom",
+            enumerable: false
+        },
+        props
+    );
 }
 
 export function makeTextPropertyInfo(
@@ -3556,17 +3564,23 @@ export class Widget extends Component {
     static classInfo = makeDerivedClassInfo(Component.classInfo, {
         properties: [
             resizingProperty,
-            makeDataPropertyInfo("data"),
-            makeDataPropertyInfo("visible"),
-            makeActionPropertyInfo("action", {
-                expressionType: `struct:${ACTION_PARAMS_STRUCT_NAME}`
+            makeDataPropertyInfo("data", { hideInPropertyGrid: isLVGLProject }),
+            makeDataPropertyInfo("visible", {
+                hideInPropertyGrid: isLVGLProject
             }),
-            makeStylePropertyInfo("style", "Normal style"),
+            makeActionPropertyInfo("action", {
+                expressionType: `struct:${ACTION_PARAMS_STRUCT_NAME}`,
+                hideInPropertyGrid: isLVGLProject
+            }),
+            makeStylePropertyInfo("style", "Normal style", {
+                hideInPropertyGrid: isLVGLProject
+            }),
             {
                 name: "allowOutside",
                 displayName: `Hide "Widget is outside of its parent" warning`,
                 type: PropertyType.Boolean,
-                propertyGridGroup: geometryGroup
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: isLVGLProject
             },
             {
                 name: "locked",
@@ -4460,6 +4474,10 @@ export class Widget extends Component {
             obj: 0,
             children: []
         };
+    }
+
+    lvglBuild() {
+        return "/*NOT IMPLEMENTED*/";
     }
 }
 

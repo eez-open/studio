@@ -47,6 +47,8 @@ export const enum PropertyType {
     ConfigurationReference,
     Any,
 
+    LVGLStyleProperty,
+
     Null
 }
 

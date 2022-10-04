@@ -43,11 +43,11 @@ import {
     registerActionComponent
 } from "project-editor/flow/component";
 
-import { Page } from "project-editor/features/page/page";
+import { findPage, Page } from "project-editor/features/page/page";
 import { Widget } from "project-editor/flow/component";
 import { Glyph } from "project-editor/features/font/font";
 import { ConnectionLine, Flow } from "project-editor/flow/flow";
-import { Action } from "project-editor/features/action/action";
+import { Action, findAction } from "project-editor/features/action/action";
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import {
     getObjectVariableTypeFromType,
@@ -68,7 +68,7 @@ import "project-editor/flow/components/widgets/markdown";
 import "project-editor/flow/components/widgets/plotly";
 import "project-editor/flow/components/widgets/terminal";
 
-import "project-editor/flow/components/widgets/lvgl";
+import "project-editor/lvgl/widgets";
 
 import type {
     IActionComponentDefinition,
@@ -193,6 +193,8 @@ export async function initProjectEditor(
         getFlow,
         getNameProperty,
         getObjectVariableTypeFromType,
+        findPage,
+        findAction,
         findBitmap,
         migrateProjectVersion,
         migrateProjectType,

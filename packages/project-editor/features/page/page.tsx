@@ -58,8 +58,9 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import { drawBackground } from "project-editor/flow/editor/draw";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
-import { LVGLPage } from "project-editor/features/page/lvgl";
+import { LVGLPage } from "project-editor/lvgl/Page";
 import { IWasmFlowRuntime } from "eez-studio-types";
+import { indent, TAB } from "project-editor/build/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -786,6 +787,24 @@ export class Page extends Flow {
             obj,
             children
         };
+    }
+
+    lvglBuild() {
+        const widgets = this.components
+            .filter(component => component instanceof Widget)
+            .map((widget: Widget) => `{\n${indent(TAB, widget.lvglBuild())}\n}`)
+            .join("\n\n");
+
+        return `lv_obj_t *obj = lv_obj_create(0);
+lv_obj_set_pos(obj, ${this.left}, ${this.top});
+lv_obj_set_size(obj, ${this.width}, ${this.height});
+
+lv_obj_t *parent_obj = obj;
+
+${widgets}
+
+return obj;
+`;
     }
 }
 

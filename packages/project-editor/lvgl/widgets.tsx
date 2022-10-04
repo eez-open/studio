@@ -20,15 +20,20 @@ import { Widget } from "project-editor/flow/component";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
     generalGroup,
-    specificGroup
+    specificGroup,
+    styleGroup
 } from "project-editor/ui-components/PropertyGrid/groups";
 import { IWasmFlowRuntime } from "eez-studio-types";
+import { escapeCString } from "project-editor/build/helper";
+import { LVGLStyleProperties } from "project-editor/lvgl/style";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLLabelWidget extends Widget {
     name: string;
     text: string;
+
+    styleProperties: LVGLStyleProperties;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -64,6 +69,14 @@ export class LVGLLabelWidget extends Widget {
                 name: "text",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
+            },
+            {
+                name: "styleProperties",
+                type: PropertyType.Object,
+                typeClass: LVGLStyleProperties,
+                propertyGridGroup: styleGroup,
+                propertyGridCollapsable: true,
+                enumerable: false
             }
         ],
 
@@ -106,7 +119,8 @@ export class LVGLLabelWidget extends Widget {
 
         makeObservable(this, {
             name: observable,
-            text: observable
+            text: observable,
+            styleProperties: observable
         });
     }
 
@@ -126,6 +140,13 @@ export class LVGLLabelWidget extends Widget {
             ),
             children: []
         };
+    }
+
+    lvglBuild() {
+        return `lv_obj_t *obj = lv_label_create(parent_obj);
+lv_obj_set_pos(obj, ${this.left}, ${this.top});
+lv_obj_set_size(obj, ${this.width}, ${this.height});
+lv_label_set_text(obj, ${escapeCString(this.text)});`;
     }
 }
 
@@ -200,6 +221,15 @@ export class LVGLButtonWidget extends Widget {
             ),
             children: []
         };
+    }
+
+    lvglBuild() {
+        return `lv_obj_t *obj = lv_btn_create(parent_obj);
+lv_obj_set_pos(obj, ${this.left}, ${this.top});
+lv_obj_set_size(obj, ${this.width}, ${this.height});
+lv_obj_t *label = lv_label_create(obj);
+lv_label_set_text(label, ${escapeCString(this.text)});
+lv_obj_center(label);`;
     }
 }
 

@@ -32,11 +32,11 @@ circular.txt
 !resources/project-templates/*.eez-project-ui-state
 
 packages/project-editor/flow/runtime/cpp/eez-runtime/build
-!packages/project-editor/flow/runtime/eez-runtime.js
+!packages/project-editor/flow/runtime/eez_runtime.js
 !packages/project-editor/flow/runtime/cpp/eez-runtime/platform/simulator/emscripten/pre.js
 !packages/project-editor/flow/runtime/cpp/eez-runtime/platform/simulator/emscripten/post.js
 
 packages/project-editor/flow/runtime/cpp/lvgl-runtime/build
-!packages/project-editor/flow/runtime/lvgl-runtime.js
+!packages/project-editor/flow/runtime/lvgl_runtime.js
 !packages/project-editor/flow/runtime/cpp/lvgl-runtime/pre.js
 !packages/project-editor/flow/runtime/cpp/lvgl-runtime/post.js

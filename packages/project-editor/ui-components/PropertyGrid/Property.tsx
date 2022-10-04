@@ -994,6 +994,17 @@ export const Property = observer(
                         )}
                     </div>
                 );
+            } else if (propertyInfo.type === PropertyType.LVGLStyleProperty) {
+                return (
+                    <input
+                        ref={(ref: any) => (this.input = ref)}
+                        type="text"
+                        className="form-control"
+                        value={this._value || ""}
+                        onChange={this.onChange}
+                        onKeyDown={this.onKeyDown}
+                    />
+                );
             }
             return null;
         }

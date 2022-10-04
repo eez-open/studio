@@ -3,7 +3,7 @@ import mobx from "mobx";
 import { observable, computed, action, autorun, runInAction } from "mobx";
 import * as FlexLayout from "flexlayout-react";
 
-import { IEezObject } from "project-editor/core/object";
+import { getParent, IEezObject } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { IEditor, IEditorState } from "project-editor/project/EditorComponent";
 import {
@@ -55,6 +55,23 @@ export class Editor implements IEditor {
         if (this.state && this.state.getTitle) {
             return this.state.getTitle(this);
         }
+
+        const projectSettings = this.projectEditorStore.project.settings;
+        if (
+            this.object === projectSettings &&
+            this.subObject &&
+            this.subObject != this.object
+        ) {
+            function getTitle(object: IEezObject): string {
+                if (object == projectSettings) {
+                    return objectToString(object);
+                }
+                const parent = getParent(object);
+                return getTitle(parent) + " / " + objectToString(object);
+            }
+            return getTitle(this.subObject);
+        }
+
         return objectToString(this.object);
     }
 
@@ -88,6 +105,9 @@ export class Editor implements IEditor {
         }
 
         if (this.subObject != subObject) {
+            if (this.object === this.projectEditorStore.project.settings) {
+                return true;
+            }
             return false;
         }
 
@@ -294,6 +314,12 @@ export class EditorsStore {
             editorFound.subObject = subObject;
             this.tabsModel.doAction(
                 FlexLayout.Actions.selectTab(editorFound.tabId)
+            );
+            this.tabsModel.doAction(
+                FlexLayout.Actions.renameTab(
+                    editorFound.tabId,
+                    editorFound.title
+                )
             );
             return editorFound;
         }

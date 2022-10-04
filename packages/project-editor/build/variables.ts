@@ -4,6 +4,7 @@ import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 
 import type { Variable } from "project-editor/features/variable/variable";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
+import { buildLvglDecl, buildLvglDef } from "project-editor/lvgl/build";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -87,6 +88,14 @@ export function buildVariables(
 
         if (!sectionNames || sectionNames.indexOf("DATA_ARRAY_DEF") !== -1) {
             result.DATA_ARRAY_DEF = buildDataArrayDef(projectVariables);
+        }
+
+        if (!sectionNames || sectionNames.indexOf("LVGL_DECL") !== -1) {
+            result.LVGL_DECL = buildLvglDecl(assets.projectEditorStore.project);
+        }
+
+        if (!sectionNames || sectionNames.indexOf("LVGL_DEF") !== -1) {
+            result.LVGL_DEF = buildLvglDef(assets.projectEditorStore.project);
         }
 
         resolve(result);

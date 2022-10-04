@@ -18,7 +18,7 @@ import type {
     getProject,
     Project
 } from "project-editor/project/project";
-import type { Page } from "project-editor/features/page/page";
+import type { findPage, Page } from "project-editor/features/page/page";
 import type {
     ActionComponent,
     Component,
@@ -26,7 +26,7 @@ import type {
 } from "project-editor/flow/component";
 import type { Glyph } from "project-editor/features/font/font";
 import type { ConnectionLine, Flow } from "project-editor/flow/flow";
-import type { Action } from "project-editor/features/action/action";
+import type { Action, findAction } from "project-editor/features/action/action";
 import type {
     ScpiCommand,
     ScpiSubsystem
@@ -94,6 +94,8 @@ export interface IProjectEditor {
     getFlow: typeof getFlow;
     getNameProperty: typeof getNameProperty;
     getObjectVariableTypeFromType: typeof getObjectVariableTypeFromType;
+    findPage: typeof findPage;
+    findAction: typeof findAction;
     findBitmap: typeof findBitmap;
     migrateProjectVersion: typeof migrateProjectVersion;
     migrateProjectType: typeof migrateProjectType;

@@ -225,6 +225,11 @@ export function isV3OrNewerProject(object: IEezObject) {
     );
 }
 
+export function isLVGLProject(object: IEezObject) {
+    const project = ProjectEditor.getProject(object);
+    return project.projectTypeTraits.isLVGL;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export function createProjectTypeTraits(project: Project) {
