@@ -308,12 +308,27 @@ class HistoryCalendar {
             return this.history.selection.items[0].date;
         }
 
-        if (this.history.itemInTheCenterOfTheView) {
-            return this.history.itemInTheCenterOfTheView.date;
+        if (this.lastSelectedDay) {
+            if (this.history.items.length == 0) {
+                return this.lastSelectedDay;
+            }
+
+            const dateFrom = this.history.items[0].date;
+            const dateTo =
+                this.history.items[this.history.items.length - 1].date;
+            if (
+                this.lastSelectedDay >= dateFrom &&
+                this.lastSelectedDay <= dateTo
+            ) {
+                return this.lastSelectedDay;
+            }
+
+            return this.history.items[Math.round(this.history.items.length / 2)]
+                .date;
         }
 
-        if (this.lastSelectedDay) {
-            return this.lastSelectedDay;
+        if (this.history.itemInTheCenterOfTheView) {
+            return this.history.itemInTheCenterOfTheView.date;
         }
 
         if (this.showFirstHistoryItemAsSelectedDay) {

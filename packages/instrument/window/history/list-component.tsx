@@ -528,12 +528,12 @@ export class HistoryListComponentClass extends React.Component<HistoryListCompon
 
             await this.props.history.navigator.loadOlder();
 
-            window.requestAnimationFrame(() => {
+            window.setTimeout(() => {
                 // make sure firstItem is again at the same offset
                 this.div.scrollTop = firstItem!.offsetTop - offset;
 
                 this.autoReloadEnabled = true;
-            });
+            }, 5);
         } else {
             await this.props.history.navigator.loadOlder();
         }
