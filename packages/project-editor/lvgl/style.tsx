@@ -605,8 +605,9 @@ const arc_width_property_info: LVGLPropertyInfo = {
 };
 const arc_rounded_property_info: LVGLPropertyInfo = {
     name: "arc_rounded",
-    type: PropertyType.Number,
-    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ARC_ROUNDED
+    type: PropertyType.Boolean,
+    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ARC_ROUNDED,
+    skipCheckboxLabel: true
 };
 const arc_color_property_info: LVGLPropertyInfo = {
     name: "arc_color",
