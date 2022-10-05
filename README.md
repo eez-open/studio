@@ -39,6 +39,8 @@ New functionality is under development thanks to the sponsorship of the [NGI0 PE
 * [M7](https://github.com/eez-open/studio/releases/tag/v0.9.91) - Multilanguage support in project
 * [M8](https://github.com/eez-open/studio/releases/tag/v0.9.92) - Widgets advanced control
 * [M9](https://github.com/eez-open/studio/releases/tag/v0.9.93) - Project templates
+* [M10](https://github.com/eez-open/studio/releases/tag/v0.9.94) - Gitea.io integration
+* [M11](https://github.com/eez-open/studio/releases/tag/v0.9.95) - New EEZ Flow extensions
 
 Interpreting the flowchart on a PC will allow the creation of a dashboard for remote control of various T&M instruments (including EEZ BB3). The debugger will simplify and speed up the development of flowcharts as it will allow step-by-step execution, setting breakpoints, etc.
 Adding a flow chart interpretation on EEZ BB3 will open up entirely new possibilities for quickly creating different test scenarios, automating measurement data collection, and more.
