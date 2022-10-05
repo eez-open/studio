@@ -579,8 +579,9 @@ const line_dash_gap_property_info: LVGLPropertyInfo = {
 };
 const line_rounded_property_info: LVGLPropertyInfo = {
     name: "line_rounded",
-    type: PropertyType.Number,
-    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_LINE_ROUNDED
+    type: PropertyType.Boolean,
+    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_LINE_ROUNDED,
+    skipCheckboxLabel: true
 };
 const line_color_property_info: LVGLPropertyInfo = {
     name: "line_color",
