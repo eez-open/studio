@@ -2,7 +2,6 @@ import React from "react";
 import { observable, makeObservable } from "mobx";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
-import { humanize } from "eez-studio-shared/string";
 
 import {
     registerClass,
@@ -17,66 +16,124 @@ import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
 import { Widget } from "project-editor/flow/component";
 
-import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
-    generalGroup,
     specificGroup,
     styleGroup
 } from "project-editor/ui-components/PropertyGrid/groups";
 import { IWasmFlowRuntime } from "eez-studio-types";
-import { escapeCString } from "project-editor/build/helper";
-import { LVGLStyleProperties } from "project-editor/lvgl/style";
+import { escapeCString, indent, TAB } from "project-editor/build/helper";
+import { LVGLStylesDefinition } from "project-editor/lvgl/style";
+import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
+import type { LVGLCreateResultType } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
+import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class LVGLLabelWidget extends Widget {
-    name: string;
-    text: string;
+export class LVGLWidget extends Widget {
+    children: Widget[];
+    localStyles: LVGLStylesDefinition;
 
-    styleProperties: LVGLStyleProperties;
+    _lvglObj: number;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
+        properties: [
+            {
+                name: "children",
+                type: PropertyType.Array,
+                typeClass: LVGLWidget,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "localStyles",
+                type: PropertyType.Object,
+                typeClass: LVGLStylesDefinition,
+                propertyGridGroup: styleGroup,
+                propertyGridRowComponent: LVGLStylesDefinitionProperty,
+                enumerable: false
+            }
+        ]
+    });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            localStyles: observable
+        });
+    }
+
+    override lvglCreate(
+        runtime: IWasmFlowRuntime,
+        parentObj: number
+    ): LVGLCreateResultType {
+        this.lvglCreateObj(runtime, parentObj);
+
+        this.localStyles.lvglCreate(runtime, this._lvglObj);
+
+        const children = this.children.map((widget: LVGLWidget) =>
+            widget.lvglCreate(runtime, this._lvglObj)
+        );
+
+        return {
+            obj: this._lvglObj,
+            children
+        };
+    }
+
+    lvglCreateObj(runtime: IWasmFlowRuntime, parentObj: number) {
+        console.error("UNEXPECTED!");
+    }
+
+    override lvglBuild(): string {
+        if (this.children.length == 0) {
+            return `${this.lvglBuildObj()}${this.localStyles.lvglBuild()}`;
+        }
+
+        const widgets = this.children
+            .map(
+                (widget: LVGLWidget) =>
+                    `{\n${indent(TAB, widget.lvglBuild())}\n}`
+            )
+            .join("\n\n");
+
+        return `${this.lvglBuildObj()}${this.localStyles.lvglBuild()}
+
+lv_obj_t *parent_obj = obj;
+${widgets}`;
+    }
+
+    lvglBuildObj() {
+        console.error("UNEXPECTED!");
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLLabelWidget extends LVGLWidget {
+    text: string;
+
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
         label: (widget: LVGLLabelWidget) => {
-            const project = ProjectEditor.getProject(widget);
+            let name = getComponentName(widget.type);
 
-            if (!project.projectTypeTraits.hasFlowSupport) {
-                if (widget.text) {
-                    return `${humanize(widget.type)}: ${widget.text}`;
-                }
+            if (widget.text) {
+                return `${name}: ${widget.text}`;
             }
 
-            if (widget.name) {
-                return `${humanize(widget.type)}: ${widget.name}`;
-            }
-
-            if (widget.data) {
-                return `${humanize(widget.type)}: ${widget.data}`;
-            }
-
-            return humanize(widget.type);
+            return name;
         },
 
         properties: [
             {
-                name: "name",
-                type: PropertyType.String,
-                propertyGridGroup: generalGroup
-            },
-            {
                 name: "text",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
-            },
-            {
-                name: "styleProperties",
-                type: PropertyType.Object,
-                typeClass: LVGLStyleProperties,
-                propertyGridGroup: styleGroup,
-                propertyGridCollapsable: true,
-                enumerable: false
             }
         ],
 
@@ -85,7 +142,8 @@ export class LVGLLabelWidget extends Widget {
             top: 0,
             width: 64,
             height: 32,
-            text: "Text"
+            text: "Text",
+            localStyles: {}
         },
 
         icon: (
@@ -118,9 +176,7 @@ export class LVGLLabelWidget extends Widget {
         super();
 
         makeObservable(this, {
-            name: observable,
-            text: observable,
-            styleProperties: observable
+            text: observable
         });
     }
 
@@ -128,21 +184,18 @@ export class LVGLLabelWidget extends Widget {
         return <>{super.render(flowContext, width, height)}</>;
     }
 
-    override lvglCreate(runtime: IWasmFlowRuntime, parentObj: number) {
-        return {
-            obj: runtime._lvglCreateLabel(
-                parentObj,
-                runtime.allocateUTF8(this.text),
-                this.left,
-                this.top,
-                this.width,
-                this.height
-            ),
-            children: []
-        };
+    override lvglCreateObj(runtime: IWasmFlowRuntime, parentObj: number) {
+        this._lvglObj = runtime._lvglCreateLabel(
+            parentObj,
+            runtime.allocateUTF8(this.text),
+            this.left,
+            this.top,
+            this.width,
+            this.height
+        );
     }
 
-    lvglBuild() {
+    override lvglBuildObj() {
         return `lv_obj_t *obj = lv_label_create(parent_obj);
 lv_obj_set_pos(obj, ${this.left}, ${this.top});
 lv_obj_set_size(obj, ${this.width}, ${this.height});
@@ -154,20 +207,12 @@ registerClass("LVGLLabelWidget", LVGLLabelWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class LVGLButtonWidget extends Widget {
-    text: string;
-
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+export class LVGLButtonWidget extends LVGLWidget {
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
-        properties: [
-            {
-                name: "text",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            }
-        ],
+        properties: [],
 
         defaultValue: {
             left: 0,
@@ -184,52 +229,33 @@ export class LVGLButtonWidget extends Widget {
                     d="m15.7 5.3-1-1c-.2-.2-.4-.3-.7-.3H1c-.6 0-1 .4-1 1v5c0 .3.1.6.3.7l1 1c.2.2.4.3.7.3h13c.6 0 1-.4 1-1V6c0-.3-.1-.5-.3-.7zM14 10H1V5h13v5z"
                 />
             </svg>
-        ),
-
-        check: (widget: LVGLButtonWidget) => {
-            let messages: Message[] = [];
-
-            if (!widget.text) {
-                messages.push(propertyNotSetMessage(widget, "text"));
-            }
-
-            return messages;
-        }
+        )
     });
 
     constructor() {
         super();
 
-        makeObservable(this, {
-            text: observable
-        });
+        makeObservable(this, {});
     }
 
     render(flowContext: IFlowContext, width: number, height: number) {
         return <>{super.render(flowContext, width, height)}</>;
     }
 
-    override lvglCreate(runtime: IWasmFlowRuntime, parentObj: number) {
-        return {
-            obj: runtime._lvglCreateButton(
-                parentObj,
-                runtime.allocateUTF8(this.text),
-                this.left,
-                this.top,
-                this.width,
-                this.height
-            ),
-            children: []
-        };
+    override lvglCreateObj(runtime: IWasmFlowRuntime, parentObj: number) {
+        this._lvglObj = runtime._lvglCreateButton(
+            parentObj,
+            this.left,
+            this.top,
+            this.width,
+            this.height
+        );
     }
 
-    lvglBuild() {
+    override lvglBuildObj() {
         return `lv_obj_t *obj = lv_btn_create(parent_obj);
 lv_obj_set_pos(obj, ${this.left}, ${this.top});
-lv_obj_set_size(obj, ${this.width}, ${this.height});
-lv_obj_t *label = lv_label_create(obj);
-lv_label_set_text(label, ${escapeCString(this.text)});
-lv_obj_center(label);`;
+lv_obj_set_size(obj, ${this.width}, ${this.height});`;
     }
 }
 

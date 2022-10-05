@@ -82,6 +82,8 @@ export const LVGLPage = observer(
                     ).obj;
                 });
             });
+
+            this.props.page._lvglRuntime = this.wasmFlowRuntime;
         }
 
         componentWillUnmount() {
@@ -96,6 +98,8 @@ export const LVGLPage = observer(
             if (this.pageObj != undefined) {
                 this.wasmFlowRuntime._lvglDeleteObject(this.pageObj);
             }
+
+            this.props.page._lvglRuntime = undefined;
         }
 
         render() {

@@ -7,28 +7,28 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 export const indentationGroup: IPropertyGridGroupDefinition = {
     id: "indentation",
     title: "Indentation",
-    position: 3
+    position: 4
 };
 
 export const generalGroup: IPropertyGridGroupDefinition = {
     id: "general",
     title: "General",
     position: (object: IEezObject) =>
-        object instanceof ProjectEditor.ActionComponentClass ? 0 : 2
+        object instanceof ProjectEditor.ActionComponentClass ? 0 : 1
 };
 
 export const specificGroup: IPropertyGridGroupDefinition = {
     id: "specific",
     title: "Specific",
     position: (object: IEezObject) =>
-        object instanceof ProjectEditor.ActionComponentClass ? 1 : 3
+        object instanceof ProjectEditor.ActionComponentClass ? 1 : 2
 };
 
 export const flowGroup: IPropertyGridGroupDefinition = {
     id: "flow",
     title: "Flow",
     position: (object: IEezObject) =>
-        object instanceof ProjectEditor.ActionComponentClass ? 2 : 4
+        object instanceof ProjectEditor.ActionComponentClass ? 2 : 5
 };
 
 export const geometryGroup: IPropertyGridGroupDefinition = {
@@ -42,7 +42,7 @@ export const styleGroup: IPropertyGridGroupDefinition = {
     id: "style",
     title: "Style",
     position: (object: IEezObject) =>
-        object instanceof ProjectEditor.ActionComponentClass ? 4 : 1
+        object instanceof ProjectEditor.ActionComponentClass ? 4 : 3
 };
 
 export const topGroup: IPropertyGridGroupDefinition = {

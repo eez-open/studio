@@ -665,15 +665,20 @@ export const Property = observer(
                     }
                 }
             } else if (propertyInfo.type === PropertyType.Boolean) {
-                return (
+                const input = (
+                    <input
+                        ref={(ref: any) => (this.input = ref)}
+                        type="checkbox"
+                        checked={this._value || false}
+                        onChange={this.onChange}
+                        readOnly={readOnly}
+                    />
+                );
+                return propertyInfo.skipCheckboxLabel ? (
+                    input
+                ) : (
                     <label className="EezStudio_PropertyGrid_Checkbox">
-                        <input
-                            ref={(ref: any) => (this.input = ref)}
-                            type="checkbox"
-                            checked={this._value || false}
-                            onChange={this.onChange}
-                            readOnly={readOnly}
-                        />
+                        {input}
                         <span>
                             {" " +
                                 getObjectPropertyDisplayName(
@@ -993,17 +998,6 @@ export const Property = observer(
                             />
                         )}
                     </div>
-                );
-            } else if (propertyInfo.type === PropertyType.LVGLStyleProperty) {
-                return (
-                    <input
-                        ref={(ref: any) => (this.input = ref)}
-                        type="text"
-                        className="form-control"
-                        value={this._value || ""}
-                        onChange={this.onChange}
-                        onKeyDown={this.onKeyDown}
-                    />
                 );
             }
             return null;

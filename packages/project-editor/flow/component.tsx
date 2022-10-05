@@ -148,6 +148,7 @@ import { BootstrapButton } from "project-editor/ui-components/BootstrapButton";
 import { easingFunctions } from "./easing-functions";
 import { humanize } from "eez-studio-shared/string";
 import { Icon } from "eez-studio-ui/icon";
+import type { LVGLCreateResultType } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1666,8 +1667,15 @@ const CenterWidgetUI = observer(
 function getComponentLabel(component: Component) {
     let name = getComponentName(component.type);
 
-    if (component instanceof Widget && component.data) {
-        return `${name}: ${component.data}`;
+    const classInfo = getClassInfo(component);
+    if (classInfo.label && classInfo.label != getComponentLabel) {
+        return classInfo.label(component);
+    }
+
+    if (component instanceof Widget) {
+        if (component.data) {
+            return `${name}: ${component.data}`;
+        }
     }
 
     return name;
@@ -4469,7 +4477,10 @@ export class Widget extends Component {
         return value;
     }
 
-    lvglCreate(runtime: IWasmFlowRuntime, parentObj: number) {
+    lvglCreate(
+        runtime: IWasmFlowRuntime,
+        parentObj: number
+    ): LVGLCreateResultType {
         return {
             obj: 0,
             children: []

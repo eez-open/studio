@@ -8,7 +8,6 @@ import classNames from "classnames";
 import QRC from "./qrcodegen";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
-import { humanize } from "eez-studio-shared/string";
 
 import {
     IEezObject,
@@ -174,6 +173,7 @@ import {
 } from "project-editor/flow/helper";
 import { GAUGE_ICON, LINE_CHART_ICON } from "./icons";
 import { to16bitsColor } from "eez-studio-shared/color";
+import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 
 const LIST_TYPE_VERTICAL = 1;
 const LIST_TYPE_HORIZONTAL = 2;
@@ -203,10 +203,12 @@ export class ContainerWidget extends Widget {
         flowComponentId: WIDGET_TYPE_CONTAINER,
 
         label: (widget: ContainerWidget) => {
+            let name = getComponentName(widget.type);
+
             if (widget.name) {
-                return `${humanize(widget.type)}: ${widget.name}`;
+                return `name: ${widget.name}`;
             }
-            return humanize(widget.type);
+            return name;
         },
 
         properties: [
@@ -1260,11 +1262,13 @@ export class LayoutViewWidget extends Widget {
         ],
 
         label: (widget: LayoutViewWidget) => {
+            let name = getComponentName(widget.type);
+
             if (widget.layout) {
-                return `${widget.type}: ${widget.layout}`;
+                return `${name}: ${widget.layout}`;
             }
 
-            return humanize(widget.type);
+            return name;
         },
 
         defaultValue: {
@@ -1935,23 +1939,25 @@ export class TextWidget extends Widget {
         flowComponentId: WIDGET_TYPE_TEXT,
 
         label: (widget: TextWidget) => {
+            let name = getComponentName(widget.type);
+
             const project = ProjectEditor.getProject(widget);
 
             if (!project.projectTypeTraits.hasFlowSupport) {
                 if (widget.text) {
-                    return `${humanize(widget.type)}: ${widget.text}`;
+                    return `${name}: ${widget.text}`;
                 }
             }
 
             if (widget.name) {
-                return `${humanize(widget.type)}: ${widget.name}`;
+                return `${name}: ${widget.name}`;
             }
 
             if (widget.data) {
-                return `${humanize(widget.type)}: ${widget.data}`;
+                return `${name}: ${widget.data}`;
             }
 
-            return humanize(widget.type);
+            return name;
         },
 
         properties: [
@@ -2427,23 +2433,25 @@ export class MultilineTextWidget extends Widget {
         flowComponentId: WIDGET_TYPE_MULTILINE_TEXT,
 
         label: (widget: TextWidget) => {
+            let name = getComponentName(widget.type);
+
             const project = ProjectEditor.getProject(widget);
 
             if (!project.projectTypeTraits.hasFlowSupport) {
                 if (widget.text) {
-                    return `${humanize(widget.type)}: ${widget.text}`;
+                    return `${name}: ${widget.text}`;
                 }
             }
 
             if (widget.name) {
-                return `${humanize(widget.type)}: ${widget.name}`;
+                return `${name}: ${widget.name}`;
             }
 
             if (widget.data) {
-                return `${humanize(widget.type)}: ${widget.data}`;
+                return `${name}: ${widget.data}`;
             }
 
-            return humanize(widget.type);
+            return name;
         },
 
         properties: [

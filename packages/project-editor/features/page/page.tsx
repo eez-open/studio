@@ -59,8 +59,9 @@ import { validators } from "eez-studio-shared/validation";
 import { drawBackground } from "project-editor/flow/editor/draw";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
 import { LVGLPage } from "project-editor/lvgl/Page";
-import { IWasmFlowRuntime } from "eez-studio-types";
+import type { IWasmFlowRuntime } from "eez-studio-types";
 import { indent, TAB } from "project-editor/build/helper";
+import type { LVGLCreateResultType } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -178,6 +179,8 @@ export class Page extends Flow {
     isUsedAsCustomWidget: boolean;
 
     dataContextOverrides: string;
+
+    _lvglRuntime: IWasmFlowRuntime | undefined;
 
     constructor() {
         super();
@@ -770,7 +773,10 @@ export class Page extends Flow {
         dataBuffer.writeUint16(0);
     }
 
-    lvglCreate(runtime: IWasmFlowRuntime, parentObj: number) {
+    lvglCreate(
+        runtime: IWasmFlowRuntime,
+        parentObj: number
+    ): LVGLCreateResultType {
         const obj = runtime._lvglCreateContainer(
             parentObj,
             this.left,

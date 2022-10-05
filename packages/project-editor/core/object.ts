@@ -47,8 +47,6 @@ export const enum PropertyType {
     ConfigurationReference,
     Any,
 
-    LVGLStyleProperty,
-
     Null
 }
 
@@ -180,6 +178,8 @@ export interface PropertyInfo {
     disableSpellcheck?: boolean;
 
     cssAttributeName?: string;
+
+    skipCheckboxLabel?: boolean;
 }
 
 export type InheritedValue =

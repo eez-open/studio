@@ -379,8 +379,12 @@ export interface IWasmFlowRuntime {
     // LVGL API
     _lvglCreateContainer(parentObj: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateLabel(parentObj: number, text: number, x: number, y: number, w: number, h: number): number;
-    _lvglCreateButton(parentObj: number, text: number, x: number, y: number, w: number, h: number): number;
+    _lvglCreateButton(parentObj: number, x: number, y: number, w: number, h: number): number;
     _lvglDeleteObject(obj: number): void;
+    _lvglObjGetStylePropColor(obj: number, part: number, prop: number): number;
+    _lvglObjGetStylePropNum(obj: number, part: number, prop: number): number;
+    _lvglObjSetLocalStylePropColor(obj: number, prop: number, value: number, selector: number): void;
+    _lvglObjSetLocalStylePropNum(obj: number, prop: number, value: number, selector: number): void;
 }
 
 export interface IDashboardComponentContext {

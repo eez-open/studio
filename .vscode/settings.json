@@ -43,7 +43,12 @@
         "iterator": "c",
         "emscripten.h": "c",
         "em_types.h": "c",
-        "em_macros.h": "c"
+        "em_macros.h": "c",
+        "optional": "c",
+        "ratio": "c",
+        "array": "c",
+        "tuple": "c",
+        "utility": "c"
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "workbench.editor.enablePreview": false,
