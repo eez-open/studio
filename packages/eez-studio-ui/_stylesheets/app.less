@@ -2883,6 +2883,15 @@ button.EezStudio_Action {
     padding: 5px 2px 10px 0px;
     overflow: auto;
 
+    .form-switch {
+        display: inline-flex;
+        align-items: end;
+        input {
+            width: 2.3rem;
+            height: 1.15rem;
+        }
+    }
+
     & > table {
         width: 100%;
 
@@ -2936,6 +2945,8 @@ button.EezStudio_Action {
                             font-size: 85%;
                             text-transform: uppercase;
                             font-weight: bold;
+                            display: inline-flex;
+                            align-items: center;
                         }
 
                         cursor: pointer;
@@ -4314,6 +4325,9 @@ button.EezStudio_Action {
         background-color: @panelHeaderColorInsideFlexLayout;
         border-bottom: 1px solid @borderColor;
         padding: 4px 11px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
     }
 }
 
@@ -5729,15 +5743,24 @@ button.EezStudio_Action {
 }
 
 .EezStudio_LVGLStylesDefinition {
-    padding-left: 10px;
+    padding-top: 5px;
+    padding-left: 5px;
 
     .EezStudio_LVGLStylesDefinition_GroupContainer {
-        margin-bottom: 10px;
-
         .EezStudio_LVGLStylesDefinition_GroupName {
+            width: 100%;
             font-size: 80%;
             text-transform: uppercase;
-            font-weight: 700;
+            &.modified {
+                font-weight: 700;
+            }
+            display: inline-flex;
+            align-items: center;
+
+            cursor: pointer;
+            &:hover {
+                background-color: #eee;
+            }
         }
 
         .EezStudio_LVGLStylesDefinition_GroupProperties {
@@ -5746,6 +5769,7 @@ button.EezStudio_Action {
                 display: flex;
                 align-items: center;
                 .EezStudio_LVGLStylesDefinition_Name {
+                    font-size: 95%;
                     min-width: 130px;
                 }
                 .EezStudio_LVGLStylesDefinition_Value {
@@ -5753,6 +5777,7 @@ button.EezStudio_Action {
                         width: 80px;
                     }
                     padding-bottom: 2px;
+                    flex: 1;
                 }
             }
         }

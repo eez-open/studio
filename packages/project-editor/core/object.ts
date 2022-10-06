@@ -13,6 +13,7 @@ import type {
 import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
 
 import type { ValueType } from "project-editor/features/variable/value-type";
+import type { LVGLParts } from "project-editor/lvgl/style";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -111,10 +112,11 @@ export interface PropertyInfo {
 
     // optional properties
     displayName?: string | ((object: IEezObject) => string);
-    enumItems?: EnumItem[];
+    enumItems?: EnumItem[] | ((object: IEezObject) => EnumItem[]);
     typeClass?: EezClass;
     referencedObjectCollectionPath?: string;
     computed?: boolean;
+    modifiable?: boolean;
     onSelect?: (
         object: IEezObject,
         propertyInfo: PropertyInfo,
@@ -178,8 +180,6 @@ export interface PropertyInfo {
     disableSpellcheck?: boolean;
 
     cssAttributeName?: string;
-
-    skipCheckboxLabel?: boolean;
 }
 
 export type InheritedValue =
@@ -290,6 +290,8 @@ export interface ClassInfo {
     ) => IEezObject;
 
     onAfterPaste?: (newObject: IEezObject, fromObject: IEezObject) => void;
+
+    lvglParts?: LVGLParts[];
 }
 
 export function makeDerivedClassInfo(

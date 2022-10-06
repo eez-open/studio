@@ -16,7 +16,8 @@ import {
     PropertyType,
     PropertyProps,
     getParent,
-    getObjectPropertyDisplayName
+    PropertyInfo,
+    IEezObject
 } from "project-editor/core/object";
 import { info } from "project-editor/core/util";
 import { replaceObjectReference } from "project-editor/core/search";
@@ -200,9 +201,10 @@ export const Property = observer(
                 }
             } else if (this.props.propertyInfo.type === PropertyType.Enum) {
                 const id = target.value.toString();
-                const enumItem = this.props.propertyInfo.enumItems!.find(
-                    enumItem => enumItem.id.toString() === id
-                );
+                const enumItem = getEnumItems(
+                    this.props.objects,
+                    this.props.propertyInfo
+                )!.find(enumItem => enumItem.id.toString() === id);
                 this.changeValue(enumItem && enumItem!.id);
             } else {
                 this.changeValue(
@@ -367,24 +369,24 @@ export const Property = observer(
         render() {
             const { propertyInfo, readOnly } = this.props;
 
-            if (readOnly && propertyInfo.type != PropertyType.CSS) {
-                const getPropertyValueAsStringResult = getPropertyValueAsString(
-                    this.props.objects,
-                    propertyInfo
-                );
-                let value =
-                    (getPropertyValueAsStringResult !== undefined
-                        ? getPropertyValueAsStringResult.value
-                        : undefined) || "";
-                return (
-                    <input
-                        type="text"
-                        className="form-control"
-                        value={value}
-                        readOnly
-                    />
-                );
-            }
+            // if (readOnly && propertyInfo.type != PropertyType.CSS) {
+            //     const getPropertyValueAsStringResult = getPropertyValueAsString(
+            //         this.props.objects,
+            //         propertyInfo
+            //     );
+            //     let value =
+            //         (getPropertyValueAsStringResult !== undefined
+            //             ? getPropertyValueAsStringResult.value
+            //             : undefined) || "";
+            //     return (
+            //         <input
+            //             type="text"
+            //             className="form-control"
+            //             value={value}
+            //             readOnly
+            //         />
+            //     );
+            // }
 
             let isOnSelectAvailable;
             if (propertyInfo.onSelect) {
@@ -573,7 +575,10 @@ export const Property = observer(
                     let options: JSX.Element[];
 
                     if (propertyInfo.enumItems) {
-                        options = propertyInfo.enumItems.map(enumItem => {
+                        options = getEnumItems(
+                            this.props.objects,
+                            propertyInfo
+                        ).map(enumItem => {
                             const id = enumItem.id.toString();
                             return (
                                 <option key={id} value={id}>
@@ -665,28 +670,19 @@ export const Property = observer(
                     }
                 }
             } else if (propertyInfo.type === PropertyType.Boolean) {
-                const input = (
-                    <input
-                        ref={(ref: any) => (this.input = ref)}
-                        type="checkbox"
-                        checked={this._value || false}
-                        onChange={this.onChange}
-                        readOnly={readOnly}
-                    />
-                );
-                return propertyInfo.skipCheckboxLabel ? (
-                    input
-                ) : (
-                    <label className="EezStudio_PropertyGrid_Checkbox">
-                        {input}
-                        <span>
-                            {" " +
-                                getObjectPropertyDisplayName(
-                                    this.props.objects[0],
-                                    propertyInfo
-                                )}
-                        </span>
-                    </label>
+                return (
+                    <div className="form-check form-switch">
+                        <input
+                            ref={(ref: any) => (this.input = ref)}
+                            className="form-check-input"
+                            type="checkbox"
+                            role="switch"
+                            checked={this._value || false}
+                            onChange={this.onChange}
+                            readOnly={readOnly}
+                            disabled={readOnly}
+                        />
+                    </div>
                 );
             } else if (propertyInfo.type === PropertyType.GUID) {
                 return (
@@ -1021,4 +1017,56 @@ function arrayCompareShallow(arr1: any, arr2: any) {
     }
 
     return true;
+}
+
+function getEnumItems(objects: IEezObject[], propertyInfo: PropertyInfo) {
+    if (!propertyInfo.enumItems) {
+        return [];
+    }
+
+    if (Array.isArray(propertyInfo.enumItems)) {
+        return propertyInfo.enumItems;
+    }
+
+    const enumItems = propertyInfo.enumItems;
+
+    const enumItemsArray = objects.map(object => enumItems(object));
+
+    const result = [];
+
+    for (let enumItems1 of enumItemsArray) {
+        for (let enumItem1 of enumItems1) {
+            let foundInAll = true;
+
+            for (let enumItems2 of enumItemsArray) {
+                let found = false;
+                for (let enumItem2 of enumItems2) {
+                    if (enumItem1.id == enumItem2.id) {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    foundInAll = false;
+                    break;
+                }
+            }
+
+            if (foundInAll) {
+                let found = false;
+                for (let enumItem2 of result) {
+                    if (enumItem1.id == enumItem2.id) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    result.push(enumItem1);
+                }
+            }
+        }
+    }
+
+    return result;
 }

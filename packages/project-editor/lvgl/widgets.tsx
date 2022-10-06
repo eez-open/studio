@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, makeObservable } from "mobx";
+import { observable, makeObservable, runInAction } from "mobx";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
 
@@ -8,7 +8,11 @@ import {
     PropertyType,
     makeDerivedClassInfo
 } from "project-editor/core/object";
-import { Message, propertyNotSetMessage } from "project-editor/store";
+import {
+    getClassInfo,
+    Message,
+    propertyNotSetMessage
+} from "project-editor/store";
 
 import { ProjectType } from "project-editor/project/project";
 
@@ -22,10 +26,11 @@ import {
 } from "project-editor/ui-components/PropertyGrid/groups";
 import { IWasmFlowRuntime } from "eez-studio-types";
 import { escapeCString, indent, TAB } from "project-editor/build/helper";
-import { LVGLStylesDefinition } from "project-editor/lvgl/style";
+import { LVGLParts, LVGLStylesDefinition } from "project-editor/lvgl/style";
 import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import type { LVGLCreateResultType } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -45,6 +50,34 @@ export class LVGLWidget extends Widget {
                 type: PropertyType.Array,
                 typeClass: LVGLWidget,
                 hideInPropertyGrid: true
+            },
+            {
+                name: "part",
+                type: PropertyType.Enum,
+                enumItems: (widget: LVGLWidget) => {
+                    const classInfo = getClassInfo(widget);
+                    return classInfo.lvglParts!.map(lvglPart => ({
+                        id: lvglPart
+                    }));
+                },
+                propertyGridGroup: styleGroup,
+                computed: true,
+                modifiable: true
+            },
+            {
+                name: "state",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "default", label: "DEFAULT" },
+                    { id: "checked", label: "CHECKED" },
+                    { id: "pressed", label: "PRESSED" },
+                    { id: "checked|pressed", label: "CHECKED | PRESSED" },
+                    { id: "disabled", label: "DISABLED" },
+                    { id: "focused", label: "FOCUSED" }
+                ],
+                propertyGridGroup: styleGroup,
+                computed: true,
+                modifiable: true
             },
             {
                 name: "localStyles",
@@ -108,6 +141,37 @@ ${widgets}`;
     lvglBuildObj() {
         console.error("UNEXPECTED!");
     }
+
+    get part() {
+        const project = ProjectEditor.getProject(this);
+        const classInfo = getClassInfo(this);
+        if (
+            classInfo.lvglParts &&
+            classInfo.lvglParts.indexOf(
+                project._DocumentStore.uiStateStore.lvglPart
+            ) != -1
+        ) {
+            return project._DocumentStore.uiStateStore.lvglPart;
+        }
+        return "main";
+    }
+    set part(part: LVGLParts) {
+        const project = ProjectEditor.getProject(this);
+        runInAction(
+            () => (project._DocumentStore.uiStateStore.lvglPart = part)
+        );
+    }
+
+    get state() {
+        const project = ProjectEditor.getProject(this);
+        return project._DocumentStore.uiStateStore.lvglState;
+    }
+    set state(state: string) {
+        const project = ProjectEditor.getProject(this);
+        runInAction(
+            () => (project._DocumentStore.uiStateStore.lvglState = state)
+        );
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -169,7 +233,9 @@ export class LVGLLabelWidget extends LVGLWidget {
             }
 
             return messages;
-        }
+        },
+
+        lvglParts: ["main", "scrollbar", "selected"]
     });
 
     constructor() {
@@ -229,7 +295,9 @@ export class LVGLButtonWidget extends LVGLWidget {
                     d="m15.7 5.3-1-1c-.2-.2-.4-.3-.7-.3H1c-.6 0-1 .4-1 1v5c0 .3.1.6.3.7l1 1c.2.2.4.3.7.3h13c.6 0 1-.4 1-1V6c0-.3-.1-.5-.3-.7zM14 10H1V5h13v5z"
                 />
             </svg>
-        )
+        ),
+
+        lvglParts: ["main"]
     });
 
     constructor() {

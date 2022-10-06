@@ -160,7 +160,6 @@ export const PropertyGrid = observer(
 
             for (let propertyInfo of properties) {
                 const colSpan =
-                    propertyInfo.type === PropertyType.Boolean ||
                     (propertyInfo.type === PropertyType.Any &&
                         !propertyInfo.propertyGridColumnComponent) ||
                     (propertyInfo.propertyGridCollapsable &&

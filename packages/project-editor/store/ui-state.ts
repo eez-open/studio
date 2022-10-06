@@ -9,6 +9,7 @@ import type { Component } from "project-editor/flow/component";
 import { getObjectPathAsString } from "project-editor/store/helper";
 import type { ProjectEditorStore } from "project-editor/store";
 import { Section } from "project-editor/store/output-sections";
+import type { LVGLParts } from "project-editor/lvgl/style";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -27,6 +28,9 @@ export class UIStateStore {
     showCommandPalette: boolean = false;
     showComponentDescriptions: boolean = true;
     selectedLanguageID: string;
+    lvglPart: LVGLParts = "main";
+    lvglState: string = "default";
+    lvglExpandedPropertiesGroup: string[] = [];
 
     objectUIStates = new Map<string, any>();
 
@@ -75,7 +79,10 @@ export class UIStateStore {
             disableBreakpoint: action,
             watchExpressions: observable,
             selectedLanguage: computed,
-            logsPanelFilter: observable
+            logsPanelFilter: observable,
+            lvglPart: observable,
+            lvglState: observable,
+            lvglExpandedPropertiesGroup: observable
         });
     }
 
@@ -170,6 +177,19 @@ export class UIStateStore {
             if (uiState.logsPanelFilter != undefined) {
                 this.logsPanelFilter = uiState.logsPanelFilter;
             }
+
+            if (uiState.lvglPart) {
+                this.lvglPart = uiState.lvglPart;
+            }
+
+            if (uiState.lvglState) {
+                this.lvglState = uiState.lvglState;
+            }
+
+            if (uiState.lvglExpandedPropertiesGroup) {
+                this.lvglExpandedPropertiesGroup =
+                    uiState.lvglExpandedPropertiesGroup;
+            }
         });
     }
 
@@ -221,7 +241,10 @@ export class UIStateStore {
                 ? this.projectEditorStore.project.changes._state
                       .selectedRevisionHash
                 : undefined,
-            logsPanelFilter: this.logsPanelFilter
+            logsPanelFilter: this.logsPanelFilter,
+            lvglPart: this.lvglPart,
+            lvglState: this.lvglState,
+            lvglExpandedPropertiesGroup: this.lvglExpandedPropertiesGroup
         };
 
         return state;

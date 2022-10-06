@@ -49,6 +49,8 @@ const lvglParts = {
     any: 0x0f0000 // LV_PART_ANY          Special value can be used in some functions to target all parts
 };
 
+export type LVGLParts = keyof typeof lvglParts;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum LVGLStylePropCode {
@@ -411,11 +413,11 @@ const bg_dither_mode_property_info = makeEnumPropertyInfo(
     ],
     "LV_DITHER_"
 );
-const bg_img_src_property_info: LVGLPropertyInfo = {
-    name: "bg_img_src",
-    type: PropertyType.Number,
-    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BG_IMG_SRC
-};
+// const bg_img_src_property_info: LVGLPropertyInfo = {
+//     name: "bg_img_src",
+//     type: PropertyType.Any,
+//     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BG_IMG_SRC
+// };
 const bg_img_opa_property_info: LVGLPropertyInfo = {
     name: "bg_img_opa",
     type: PropertyType.Number,
@@ -434,7 +436,6 @@ const bg_img_recolor_opa_property_info: LVGLPropertyInfo = {
 const bg_img_tiled_property_info: LVGLPropertyInfo = {
     name: "bg_img_tiled",
     type: PropertyType.Boolean,
-    skipCheckboxLabel: true,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BG_IMG_TILED
 };
 
@@ -458,7 +459,7 @@ const border_width_property_info: LVGLPropertyInfo = {
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BORDER_WIDTH
 };
 const border_side_property_info = makeEnumPropertyInfo(
-    "border_size",
+    "border_side",
     LVGLStylePropCode.LV_STYLE_BORDER_SIDE,
     {
         NONE: 0x00,
@@ -474,8 +475,7 @@ const border_side_property_info = makeEnumPropertyInfo(
 const border_post_property_info: LVGLPropertyInfo = {
     name: "border_post",
     type: PropertyType.Boolean,
-    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BORDER_POST,
-    skipCheckboxLabel: true
+    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BORDER_POST
 };
 
 //
@@ -580,8 +580,7 @@ const line_dash_gap_property_info: LVGLPropertyInfo = {
 const line_rounded_property_info: LVGLPropertyInfo = {
     name: "line_rounded",
     type: PropertyType.Boolean,
-    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_LINE_ROUNDED,
-    skipCheckboxLabel: true
+    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_LINE_ROUNDED
 };
 const line_color_property_info: LVGLPropertyInfo = {
     name: "line_color",
@@ -606,8 +605,7 @@ const arc_width_property_info: LVGLPropertyInfo = {
 const arc_rounded_property_info: LVGLPropertyInfo = {
     name: "arc_rounded",
     type: PropertyType.Boolean,
-    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ARC_ROUNDED,
-    skipCheckboxLabel: true
+    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ARC_ROUNDED
 };
 const arc_color_property_info: LVGLPropertyInfo = {
     name: "arc_color",
@@ -619,11 +617,11 @@ const arc_opa_property_info: LVGLPropertyInfo = {
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ARC_OPA
 };
-const arc_img_src_property_info: LVGLPropertyInfo = {
-    name: "arc_img_src",
-    type: PropertyType.Number,
-    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ARC_IMG_SRC
-};
+// const arc_img_src_property_info: LVGLPropertyInfo = {
+//     name: "arc_img_src",
+//     type: PropertyType.Any,
+//     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ARC_IMG_SRC
+// };
 
 //
 // TEXT
@@ -639,11 +637,11 @@ const text_opa_property_info: LVGLPropertyInfo = {
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_TEXT_OPA
 };
-const text_font_property_info: LVGLPropertyInfo = {
-    name: "text_font",
-    type: PropertyType.Number,
-    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_TEXT_FONT
-};
+// const text_font_property_info: LVGLPropertyInfo = {
+//     name: "text_font",
+//     type: PropertyType.Any,
+//     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_TEXT_FONT
+// };
 const text_letter_space_property_info: LVGLPropertyInfo = {
     name: "text_letter_space",
     type: PropertyType.Number,
@@ -654,16 +652,18 @@ const text_line_space_property_info: LVGLPropertyInfo = {
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_TEXT_LINE_SPACE
 };
-const text_decor_property_info: LVGLPropertyInfo = {
-    name: "text_decor",
-    type: PropertyType.Number,
-    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_TEXT_DECOR
-};
-const text_align_property_info: LVGLPropertyInfo = {
-    name: "text_align",
-    type: PropertyType.Number,
-    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_TEXT_ALIGN
-};
+const text_decor_property_info = makeEnumPropertyInfo(
+    "text_decor",
+    LVGLStylePropCode.LV_STYLE_TEXT_DECOR,
+    ["NONE", "UNDERLINE", "STRIKETHROUGH"],
+    "LV_TEXT_DECOR_"
+);
+const text_align_property_info = makeEnumPropertyInfo(
+    "text_align",
+    LVGLStylePropCode.LV_STYLE_TEXT_ALIGN,
+    ["AUTO", "LEFT", "CENTER", "RIGHT"],
+    "LV_TEXT_ALIGN_"
+);
 
 //
 // MISCELLANEOUS
@@ -676,7 +676,7 @@ const radius_property_info: LVGLPropertyInfo = {
 };
 const clip_corner_property_info: LVGLPropertyInfo = {
     name: "clip_corner",
-    type: PropertyType.Number,
+    type: PropertyType.Boolean,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_CLIP_CORNER
 };
 const opa_property_info: LVGLPropertyInfo = {
@@ -694,11 +694,11 @@ const color_filter_opa_property_info: LVGLPropertyInfo = {
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_COLOR_FILTER_OPA
 };
-const anim_property_info: LVGLPropertyInfo = {
-    name: "anim",
-    type: PropertyType.Number,
-    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ANIM
-};
+// const anim_property_info: LVGLPropertyInfo = {
+//     name: "anim",
+//     type: PropertyType.Any,
+//     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ANIM
+// };
 const anim_time_property_info: LVGLPropertyInfo = {
     name: "anim_time",
     type: PropertyType.Number,
@@ -709,28 +709,41 @@ const anim_speed_property_info: LVGLPropertyInfo = {
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ANIM_SPEED
 };
-const transition_property_info: LVGLPropertyInfo = {
-    name: "transition",
-    type: PropertyType.Number,
-    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_TRANSITION
-};
-const blend_mode_property_info: LVGLPropertyInfo = {
-    name: "blend_mode",
-    type: PropertyType.Number,
-    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BLEND_MODE
-};
+// const transition_property_info: LVGLPropertyInfo = {
+//     name: "transition",
+//     type: PropertyType.Any,
+//     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_TRANSITION
+// };
+const blend_mode_property_info = makeEnumPropertyInfo(
+    "blend_mode",
+    LVGLStylePropCode.LV_STYLE_BLEND_MODE,
+    [
+        "NORMAL", // Simply mix according to the opacity value
+        "ADDITIVE", // Add the respective color channels
+        "SUBTRACTIVE", // Subtract the foreground from the background
+        "MULTIPLY", // Multiply the foreground and background
+        "REPLACE" // Replace background with foreground in the area
+    ],
+    "LV_BLEND_MODE_"
+);
 const layout_property_info: LVGLPropertyInfo = {
     name: "layout",
-    type: PropertyType.Number,
+    type: PropertyType.Any,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_LAYOUT
 };
-const base_dir_property_info: LVGLPropertyInfo = {
-    name: "base_dir",
-    type: PropertyType.Number,
-    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BASE_DIR
-};
+const base_dir_property_info = makeEnumPropertyInfo(
+    "base_dir",
+    LVGLStylePropCode.LV_STYLE_BASE_DIR,
+    ["LTR", "RTL", "AUTO"],
+    "LV_BASE_DIR_"
+);
 
-export const lvglProperties = [
+export interface PropertiesGroup {
+    groupName: string;
+    properties: LVGLPropertyInfo[];
+}
+
+export const lvglProperties: PropertiesGroup[] = [
     {
         groupName: "SIZE AND POSITION",
         properties: [
@@ -777,7 +790,7 @@ export const lvglProperties = [
             bg_grad_stop_property_info,
             //bg_grad_property_info,
             bg_dither_mode_property_info,
-            bg_img_src_property_info,
+            //bg_img_src_property_info,
             bg_img_opa_property_info,
             bg_img_recolor_property_info,
             bg_img_recolor_opa_property_info,
@@ -845,8 +858,8 @@ export const lvglProperties = [
             arc_width_property_info,
             arc_rounded_property_info,
             arc_color_property_info,
-            arc_opa_property_info,
-            arc_img_src_property_info
+            arc_opa_property_info
+            //arc_img_src_property_info
         ]
     },
 
@@ -855,7 +868,7 @@ export const lvglProperties = [
         properties: [
             text_color_property_info,
             text_opa_property_info,
-            text_font_property_info,
+            //text_font_property_info,
             text_letter_space_property_info,
             text_line_space_property_info,
             text_decor_property_info,
@@ -871,10 +884,10 @@ export const lvglProperties = [
             opa_property_info,
             color_filter_dsc_property_info,
             color_filter_opa_property_info,
-            anim_property_info,
+            //anim_property_info,
             anim_time_property_info,
             anim_speed_property_info,
-            transition_property_info,
+            //transition_property_info,
             blend_mode_property_info,
             layout_property_info,
             base_dir_property_info
@@ -938,7 +951,7 @@ export class LVGLStylesDefinition extends EezObject {
         }
 
         const stateStyles = partStyles[state];
-        if (!partStyles) {
+        if (!stateStyles) {
             return undefined;
         }
 

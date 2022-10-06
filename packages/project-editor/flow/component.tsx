@@ -2881,7 +2881,7 @@ const TimelineKeyframePropertyName = observer(
                             ref={this.inputRef}
                             type="checkbox"
                             className="form-check-input"
-                            checked={this.props.value}
+                            checked={this.props.value ? true : false}
                             onChange={e =>
                                 this.props.onChange(e.target.checked)
                             }

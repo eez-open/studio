@@ -710,7 +710,10 @@ export class ProjectEditorStore {
                 );
 
                 if (propertyInfo) {
-                    if (propertyInfo.computed !== true) {
+                    if (
+                        propertyInfo.computed !== true ||
+                        propertyInfo.modifiable
+                    ) {
                         let value = inputValues[propertyName];
                         if (
                             (propertyInfo.type === PropertyType.Object ||
