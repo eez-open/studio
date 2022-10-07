@@ -383,8 +383,14 @@ export interface IWasmFlowRuntime {
     _lvglDeleteObject(obj: number): void;
     _lvglObjGetStylePropColor(obj: number, part: number, prop: number): number;
     _lvglObjGetStylePropNum(obj: number, part: number, prop: number): number;
-    _lvglObjSetLocalStylePropColor(obj: number, prop: number, value: number, selector: number): void;
-    _lvglObjSetLocalStylePropNum(obj: number, prop: number, value: number, selector: number): void;
+    _lvglObjSetLocalStylePropColor(obj: number, prop: number, color: number, selector: number): void;
+    _lvglObjSetLocalStylePropNum(obj: number, prop: number, num: number, selector: number): void;
+    _lvglObjSetLocalStylePropPtr(obj: number, prop: number, ptr: number, selector: number): void;
+    _lvglObjSetLocalStylePropBuiltInFont(obj: number, prop: number, fontIndex: number, selector: number): void;
+    _lvglObjX1(obj: number): number;
+    _lvglObjX2(obj: number): number;
+    _lvglObjY1(obj: number): number;
+    _lvglObjY2(obj: number): number;
 }
 
 export interface IDashboardComponentContext {

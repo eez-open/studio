@@ -6,7 +6,7 @@ import classNames from "classnames";
 import { EezObject, PropertyProps } from "project-editor/core/object";
 import type { Page } from "project-editor/features/page/page";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { getAncestorOfType } from "project-editor/store";
+import { getAncestorOfType, ProjectEditorStore } from "project-editor/store";
 import React from "react";
 import {
     getStylePropDefaultValue,
@@ -18,7 +18,7 @@ import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import { ProjectContext } from "project-editor/project/context";
 import { Property } from "project-editor/ui-components/PropertyGrid/Property";
 import { Icon } from "eez-studio-ui/icon";
-import { IWasmFlowRuntime } from "eez-studio-types";
+import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 
 export type LVGLCreateResultType = {
     obj: number;
@@ -60,19 +60,40 @@ export const LVGLStylesDefinitionProperty = observer(
         getNumModifications(propertiesGroup: PropertiesGroup) {
             let result = 0;
 
-            const widget = this.props.objects[0] as LVGLWidget;
-            const stylesDefinition = (widget as any)[
-                this.props.propertyInfo.name
-            ] as LVGLStylesDefinition;
+            const stylesDefinitions = this.props.objects.map(
+                widget =>
+                    (widget as any)[
+                        this.props.propertyInfo.name
+                    ] as LVGLStylesDefinition
+            );
 
             for (const propertyInfo of propertiesGroup.properties) {
-                if (
+                let definedValues = stylesDefinitions.map(stylesDefinition =>
                     stylesDefinition.getPropertyValue(
                         propertyInfo,
                         this.context.uiStateStore.lvglPart,
                         this.context.uiStateStore.lvglState
-                    ) !== undefined
-                ) {
+                    )
+                );
+
+                let numDefined = 0;
+                let numUndefined = 0;
+                definedValues.forEach(definedValue => {
+                    if (definedValue !== undefined) {
+                        numDefined++;
+                    } else {
+                        numUndefined++;
+                    }
+                });
+
+                let checkboxState =
+                    numDefined == 0
+                        ? false
+                        : numUndefined == 0
+                        ? true
+                        : undefined;
+
+                if (checkboxState !== false) {
                     result++;
                 }
             }
@@ -91,7 +112,7 @@ export const LVGLStylesDefinitionProperty = observer(
                     ] as LVGLStylesDefinition
             );
 
-            let runtime: IWasmFlowRuntime | undefined;
+            let runtime: LVGLPageRuntime | undefined;
             {
                 const widget = this.props.objects[0] as LVGLWidget;
                 const page = getAncestorOfType(
@@ -280,6 +301,7 @@ export const LVGLStylesDefinitionProperty = observer(
                                                                 objects={values.map(
                                                                     value =>
                                                                         new PropertyValueHolder(
+                                                                            this.context,
                                                                             propertyInfo.name,
                                                                             value
                                                                         )
@@ -344,9 +366,13 @@ export const LVGLStylesDefinitionProperty = observer(
     }
 );
 
-class PropertyValueHolder extends EezObject {
+export class PropertyValueHolder extends EezObject {
     [propertyName: string]: any;
-    constructor(propertyName: string, propertyValue: any) {
+    constructor(
+        public projectEditorStore: ProjectEditorStore,
+        propertyName: string,
+        propertyValue: any
+    ) {
         super();
         this[propertyName] = propertyValue;
     }

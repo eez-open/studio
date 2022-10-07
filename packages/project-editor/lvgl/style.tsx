@@ -1,15 +1,20 @@
 import tinycolor from "tinycolor2";
 import { makeObservable, observable } from "mobx";
 
-import { IWasmFlowRuntime } from "eez-studio-types";
 import {
     ClassInfo,
     EezObject,
+    MessageType,
     PropertyInfo,
     PropertyType,
     registerClass
 } from "project-editor/core/object";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
+import { getProject } from "project-editor/project/project";
+import { ProjectEditor } from "project-editor/project-editor-interface";
+import { Message } from "project-editor/store";
+import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
+import type { PropertyValueHolder } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,6 +57,80 @@ const lvglParts = {
 export type LVGLParts = keyof typeof lvglParts;
 
 ////////////////////////////////////////////////////////////////////////////////
+
+function makeEnumPropertyInfo(
+    name: string,
+    lvglStylePropCode: LVGLStylePropCode,
+    enumItemToCodeOrStringArray: { [key: string]: number } | string[],
+    buildPrefix: string
+): LVGLPropertyInfo {
+    let enumItemToCode: { [key: string]: number };
+    if (Array.isArray(enumItemToCodeOrStringArray)) {
+        enumItemToCode = {};
+        for (let i = 0; i < enumItemToCodeOrStringArray.length; i++) {
+            enumItemToCode[enumItemToCodeOrStringArray[i]] = i;
+        }
+    } else {
+        enumItemToCode = enumItemToCodeOrStringArray;
+    }
+
+    const codeToEnumItem: { [code: string]: string } = {};
+
+    Object.keys(enumItemToCode).forEach(
+        enumItem =>
+            (codeToEnumItem[enumItemToCode[enumItem].toString()] = enumItem)
+    );
+
+    return {
+        name,
+        type: PropertyType.Enum,
+        enumItems: Object.keys(enumItemToCode).map(id => ({
+            id,
+            label: id
+        })),
+        lvglStylePropCode,
+        lvglStylePropValueRead: (value: number) =>
+            codeToEnumItem[value.toString()],
+        lvglStylePropValueToNum: (value: string) =>
+            enumItemToCode[value.toString()],
+        lvglStylePropValueBuild: (value: string) => buildPrefix + value
+    };
+}
+
+const BUILT_IN_FONTS = [
+    "MONTSERRAT_8",
+    "MONTSERRAT_10",
+    "MONTSERRAT_12",
+    "MONTSERRAT_14",
+    "MONTSERRAT_16",
+    "MONTSERRAT_18",
+    "MONTSERRAT_20",
+    "MONTSERRAT_22",
+    "MONTSERRAT_24",
+    "MONTSERRAT_26",
+    "MONTSERRAT_28",
+    "MONTSERRAT_30",
+    "MONTSERRAT_32",
+    "MONTSERRAT_34",
+    "MONTSERRAT_36",
+    "MONTSERRAT_38",
+    "MONTSERRAT_40",
+    "MONTSERRAT_42",
+    "MONTSERRAT_44",
+    "MONTSERRAT_46",
+    "MONTSERRAT_48"
+];
+
+////////////////////////////////////////////////////////////////////////////////
+
+type LVGLPropertyInfo = PropertyInfo & {
+    lvglStylePropCode: LVGLStylePropCode;
+    lvglStylePropValueRead?: (value: number) => string;
+    lvglStylePropValueToNum?: (value: string) => number;
+    lvglStylePropValueBuild?: (value: string) => string;
+};
+
+// #region style properties
 
 enum LVGLStylePropCode {
     LV_STYLE_PROP_INV = 0,
@@ -154,58 +233,6 @@ enum LVGLStylePropCode {
     LV_STYLE_TRANSFORM_PIVOT_X = 110,
     LV_STYLE_TRANSFORM_PIVOT_Y = 111
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-function makeEnumPropertyInfo(
-    name: string,
-    lvglStylePropCode: LVGLStylePropCode,
-    enumItemToCodeOrStringArray: { [key: string]: number } | string[],
-    buildPrefix: string
-): LVGLPropertyInfo {
-    let enumItemToCode: { [key: string]: number };
-    if (Array.isArray(enumItemToCodeOrStringArray)) {
-        enumItemToCode = {};
-        for (let i = 0; i < enumItemToCodeOrStringArray.length; i++) {
-            enumItemToCode[enumItemToCodeOrStringArray[i]] = i;
-        }
-    } else {
-        enumItemToCode = enumItemToCodeOrStringArray;
-    }
-
-    const codeToEnumItem: { [code: string]: string } = {};
-
-    Object.keys(enumItemToCode).forEach(
-        enumItem =>
-            (codeToEnumItem[enumItemToCode[enumItem].toString()] = enumItem)
-    );
-
-    return {
-        name,
-        type: PropertyType.Enum,
-        enumItems: Object.keys(enumItemToCode).map(id => ({
-            id,
-            label: id
-        })),
-        lvglStylePropCode,
-        lvglStylePropValueRead: (value: number) =>
-            codeToEnumItem[value.toString()],
-        lvglStylePropValueToNum: (value: string) =>
-            enumItemToCode[value.toString()],
-        lvglStylePropValueBuild: (value: string) => buildPrefix + value
-    };
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-type LVGLPropertyInfo = PropertyInfo & {
-    lvglStylePropCode: LVGLStylePropCode;
-    lvglStylePropValueRead?: (value: number) => string;
-    lvglStylePropValueToNum?: (value: string) => number;
-    lvglStylePropValueBuild?: (value: string) => string;
-};
-
-// #region style properties
 
 //
 // SIZE AND POSITION
@@ -413,11 +440,12 @@ const bg_dither_mode_property_info = makeEnumPropertyInfo(
     ],
     "LV_DITHER_"
 );
-// const bg_img_src_property_info: LVGLPropertyInfo = {
-//     name: "bg_img_src",
-//     type: PropertyType.Any,
-//     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BG_IMG_SRC
-// };
+const bg_img_src_property_info: LVGLPropertyInfo = {
+    name: "bg_img_src",
+    type: PropertyType.ObjectReference,
+    referencedObjectCollectionPath: "bitmaps",
+    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BG_IMG_SRC
+};
 const bg_img_opa_property_info: LVGLPropertyInfo = {
     name: "bg_img_opa",
     type: PropertyType.Number,
@@ -617,11 +645,12 @@ const arc_opa_property_info: LVGLPropertyInfo = {
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ARC_OPA
 };
-// const arc_img_src_property_info: LVGLPropertyInfo = {
-//     name: "arc_img_src",
-//     type: PropertyType.Any,
-//     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ARC_IMG_SRC
-// };
+const arc_img_src_property_info: LVGLPropertyInfo = {
+    name: "arc_img_src",
+    type: PropertyType.ObjectReference,
+    referencedObjectCollectionPath: "bitmaps",
+    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ARC_IMG_SRC
+};
 
 //
 // TEXT
@@ -637,11 +666,14 @@ const text_opa_property_info: LVGLPropertyInfo = {
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_TEXT_OPA
 };
-// const text_font_property_info: LVGLPropertyInfo = {
-//     name: "text_font",
-//     type: PropertyType.Any,
-//     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_TEXT_FONT
-// };
+const text_font_property_info: LVGLPropertyInfo = {
+    name: "text_font",
+    type: PropertyType.Enum,
+    enumItems: (propertyValueHolder: PropertyValueHolder) => {
+        return [...BUILT_IN_FONTS.map(id => ({ id }))];
+    },
+    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_TEXT_FONT
+};
 const text_letter_space_property_info: LVGLPropertyInfo = {
     name: "text_letter_space",
     type: PropertyType.Number,
@@ -790,7 +822,7 @@ export const lvglProperties: PropertiesGroup[] = [
             bg_grad_stop_property_info,
             //bg_grad_property_info,
             bg_dither_mode_property_info,
-            //bg_img_src_property_info,
+            bg_img_src_property_info,
             bg_img_opa_property_info,
             bg_img_recolor_property_info,
             bg_img_recolor_opa_property_info,
@@ -858,8 +890,8 @@ export const lvglProperties: PropertiesGroup[] = [
             arc_width_property_info,
             arc_rounded_property_info,
             arc_color_property_info,
-            arc_opa_property_info
-            //arc_img_src_property_info
+            arc_opa_property_info,
+            arc_img_src_property_info
         ]
     },
 
@@ -868,7 +900,7 @@ export const lvglProperties: PropertiesGroup[] = [
         properties: [
             text_color_property_info,
             text_opa_property_info,
-            //text_font_property_info,
+            text_font_property_info,
             text_letter_space_property_info,
             text_line_space_property_info,
             text_decor_property_info,
@@ -1010,7 +1042,54 @@ export class LVGLStylesDefinition extends EezObject {
         return copy;
     }
 
-    lvglCreate(runtime: IWasmFlowRuntime, obj: number) {
+    check() {
+        let messages: Message[] = [];
+
+        if (this.definition) {
+            Object.keys(this.definition).forEach(part => {
+                Object.keys(this.definition[part]).forEach(state => {
+                    Object.keys(this.definition[part][state]).forEach(
+                        propertyName => {
+                            const propertyInfo =
+                                lvglPropertiesMap.get(propertyName);
+                            if (!propertyInfo) {
+                                return;
+                            }
+
+                            if (
+                                propertyInfo.type ==
+                                    PropertyType.ObjectReference &&
+                                propertyInfo.referencedObjectCollectionPath ==
+                                    "bitmaps"
+                            ) {
+                                const value =
+                                    this.definition[part][state][propertyName];
+
+                                const bitmap = ProjectEditor.findBitmap(
+                                    getProject(this),
+                                    value
+                                );
+
+                                if (!bitmap) {
+                                    messages.push(
+                                        new Message(
+                                            MessageType.ERROR,
+                                            `Bitmap not found for style property ${part} - ${state} - ${propertyInfo.name}`,
+                                            this
+                                        )
+                                    );
+                                }
+                            }
+                        }
+                    );
+                });
+            });
+        }
+
+        return messages;
+    }
+
+    lvglCreate(runtime: LVGLPageRuntime, obj: number) {
         if (!this.definition) {
             return;
         }
@@ -1032,7 +1111,7 @@ export class LVGLStylesDefinition extends EezObject {
                         if (propertyInfo.type == PropertyType.ThemedColor) {
                             const colorValue = colorRgbToNum(value);
 
-                            runtime._lvglObjSetLocalStylePropColor(
+                            runtime.wasm._lvglObjSetLocalStylePropColor(
                                 obj,
                                 propertyInfo.lvglStylePropCode,
                                 colorValue,
@@ -1042,28 +1121,58 @@ export class LVGLStylesDefinition extends EezObject {
                             propertyInfo.type == PropertyType.Number ||
                             propertyInfo.type == PropertyType.Enum
                         ) {
-                            const numValue =
-                                propertyInfo.lvglStylePropValueToNum
-                                    ? propertyInfo.lvglStylePropValueToNum(
-                                          value
-                                      )
-                                    : value;
+                            if (propertyInfo == text_font_property_info) {
+                                const index = BUILT_IN_FONTS.indexOf(value);
+                                if (index != -1) {
+                                    runtime.wasm._lvglObjSetLocalStylePropBuiltInFont(
+                                        obj,
+                                        propertyInfo.lvglStylePropCode,
+                                        index,
+                                        selectorCode
+                                    );
+                                }
+                            } else {
+                                const numValue =
+                                    propertyInfo.lvglStylePropValueToNum
+                                        ? propertyInfo.lvglStylePropValueToNum(
+                                              value
+                                          )
+                                        : value;
 
-                            runtime._lvglObjSetLocalStylePropNum(
-                                obj,
-                                propertyInfo.lvglStylePropCode,
-                                numValue,
-                                selectorCode
-                            );
+                                runtime.wasm._lvglObjSetLocalStylePropNum(
+                                    obj,
+                                    propertyInfo.lvglStylePropCode,
+                                    numValue,
+                                    selectorCode
+                                );
+                            }
                         } else if (propertyInfo.type == PropertyType.Boolean) {
                             const numValue = value ? 1 : 0;
 
-                            runtime._lvglObjSetLocalStylePropNum(
+                            runtime.wasm._lvglObjSetLocalStylePropNum(
                                 obj,
                                 propertyInfo.lvglStylePropCode,
                                 numValue,
                                 selectorCode
                             );
+                        } else if (
+                            propertyInfo.type == PropertyType.ObjectReference &&
+                            propertyInfo.referencedObjectCollectionPath ==
+                                "bitmaps"
+                        ) {
+                            (async () => {
+                                const bitmapPtr = await runtime.loadBitmap(
+                                    value
+                                );
+                                if (bitmapPtr) {
+                                    runtime.wasm._lvglObjSetLocalStylePropPtr(
+                                        obj,
+                                        propertyInfo.lvglStylePropCode,
+                                        bitmapPtr,
+                                        selectorCode
+                                    );
+                                }
+                            })();
                         }
                     }
                 );
@@ -1107,20 +1216,37 @@ lv_obj_set_style_${propertyInfo.name}(obj, lv_color_hex(${colorValue}), ${select
                             propertyInfo.type == PropertyType.Number ||
                             propertyInfo.type == PropertyType.Enum
                         ) {
-                            const numValue =
-                                propertyInfo.lvglStylePropValueBuild
-                                    ? propertyInfo.lvglStylePropValueBuild(
-                                          value
-                                      )
-                                    : value;
+                            if (propertyInfo == text_font_property_info) {
+                                const index = BUILT_IN_FONTS.indexOf(value);
+                                if (index != -1) {
+                                    result += `
+lv_obj_set_style_${propertyInfo.name}(obj, &lv_font_${(
+                                        value as string
+                                    ).toLowerCase()}, ${selectorCode});`;
+                                }
+                            } else {
+                                const numValue =
+                                    propertyInfo.lvglStylePropValueBuild
+                                        ? propertyInfo.lvglStylePropValueBuild(
+                                              value
+                                          )
+                                        : value;
 
-                            result += `
+                                result += `
 lv_obj_set_style_${propertyInfo.name}(obj, ${numValue}, ${selectorCode});`;
+                            }
                         } else if (propertyInfo.type == PropertyType.Boolean) {
                             const numValue = value ? "true" : "false";
 
                             result += `
 lv_obj_set_style_${propertyInfo.name}(obj, ${numValue}, ${selectorCode});`;
+                        } else if (
+                            propertyInfo.type == PropertyType.ObjectReference &&
+                            propertyInfo.referencedObjectCollectionPath ==
+                                "bitmaps"
+                        ) {
+                            result += `
+lv_obj_set_style_${propertyInfo.name}(obj, &img_${value}, ${selectorCode});`;
                         }
                     }
                 );
@@ -1205,14 +1331,14 @@ function colorRgbToNum(color: string): number {
 }
 
 export function getStylePropDefaultValue(
-    runtime: IWasmFlowRuntime | undefined,
+    runtime: LVGLPageRuntime | undefined,
     widget: LVGLWidget,
     part: keyof typeof lvglParts,
     propertyInfo: LVGLPropertyInfo
 ) {
     if (runtime && widget._lvglObj) {
         if (propertyInfo.type == PropertyType.ThemedColor) {
-            let colorNum = runtime._lvglObjGetStylePropColor(
+            let colorNum = runtime.wasm._lvglObjGetStylePropColor(
                 widget._lvglObj,
                 getPartCode(part),
                 propertyInfo.lvglStylePropCode
@@ -1222,7 +1348,7 @@ export function getStylePropDefaultValue(
             propertyInfo.type == PropertyType.Number ||
             propertyInfo.type == PropertyType.Enum
         ) {
-            let num = runtime._lvglObjGetStylePropNum(
+            let num = runtime.wasm._lvglObjGetStylePropNum(
                 widget._lvglObj,
                 getPartCode(part),
                 propertyInfo.lvglStylePropCode
@@ -1231,7 +1357,7 @@ export function getStylePropDefaultValue(
                 ? propertyInfo.lvglStylePropValueRead(num)
                 : num;
         } else if (propertyInfo.type == PropertyType.Boolean) {
-            let num = runtime._lvglObjGetStylePropNum(
+            let num = runtime.wasm._lvglObjGetStylePropNum(
                 widget._lvglObj,
                 getPartCode(part),
                 propertyInfo.lvglStylePropCode

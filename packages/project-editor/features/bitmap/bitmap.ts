@@ -28,7 +28,10 @@ import { getProject, Project } from "project-editor/project/project";
 import { metrics } from "project-editor/features/bitmap/metrics";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
-import { BitmapColorFormat } from "project-editor/project/project-type-traits";
+import {
+    BitmapColorFormat,
+    isLVGLProject
+} from "project-editor/project/project-type-traits";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -92,7 +95,8 @@ export class Bitmap extends EezObject {
             {
                 name: "style",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "styles"
+                referencedObjectCollectionPath: "styles",
+                hideInPropertyGrid: isLVGLProject
             },
             {
                 name: "alwaysBuild",
@@ -238,7 +242,7 @@ export interface BitmapData {
     pixels: Uint8Array;
 }
 
-export function getData(bitmap: Bitmap): Promise<BitmapData> {
+export function getBitmapData(bitmap: Bitmap): Promise<BitmapData> {
     return new Promise((resolve, reject) => {
         let image = new Image();
 

@@ -75,6 +75,8 @@ import { FIRST_DASHBOARD_COMPONENT_TYPE } from "project-editor/flow/components/c
 
 import { DummyDataBuffer, DataBuffer } from "project-editor/build/data-buffer";
 
+import { buildLvglDecl, buildLvglDef } from "project-editor/lvgl/build";
+
 export { DummyDataBuffer, DataBuffer } from "project-editor/build/data-buffer";
 
 export const PATH_SEPARATOR = "//";
@@ -1367,6 +1369,14 @@ export async function buildAssets(
 
             result.GUI_ASSETS_DATA_MAP_JS = assets.map;
         }
+    }
+
+    if (!sectionNames || sectionNames.indexOf("LVGL_DECL") !== -1) {
+        result.LVGL_DECL = buildLvglDecl(assets.projectEditorStore.project);
+    }
+
+    if (!sectionNames || sectionNames.indexOf("LVGL_DEF") !== -1) {
+        result.LVGL_DEF = await buildLvglDef(assets.projectEditorStore.project);
     }
 
     return Object.assign(

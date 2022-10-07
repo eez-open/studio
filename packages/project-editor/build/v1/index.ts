@@ -28,7 +28,7 @@ import {
 } from "project-editor/project/project";
 
 import {
-    getData as getBitmapData,
+    getBitmapData,
     BitmapData,
     Bitmap
 } from "project-editor/features/bitmap/bitmap";

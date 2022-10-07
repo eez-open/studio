@@ -57,3 +57,54 @@ EM_PORT_API(void) lvglObjSetLocalStylePropNum(lv_obj_t *obj, lv_style_prop_t pro
     value.num = num;
     lv_obj_set_local_style_prop(obj, prop, value, selector);
 }
+
+EM_PORT_API(void) lvglObjSetLocalStylePropPtr(lv_obj_t *obj, lv_style_prop_t prop, const void *ptr, lv_style_selector_t selector) {
+    lv_style_value_t value;
+    value.ptr = ptr;
+    lv_obj_set_local_style_prop(obj, prop, value, selector);
+}
+
+EM_PORT_API(void) lvglObjSetLocalStylePropBuiltInFont(lv_obj_t *obj, lv_style_prop_t prop, int font_index, lv_style_selector_t selector) {
+    static const lv_font_t *BUILT_IN_FONTS[] = {
+        &lv_font_montserrat_8,
+        &lv_font_montserrat_10,
+        &lv_font_montserrat_12,
+        &lv_font_montserrat_14,
+        &lv_font_montserrat_16,
+        &lv_font_montserrat_18,
+        &lv_font_montserrat_20,
+        &lv_font_montserrat_22,
+        &lv_font_montserrat_24,
+        &lv_font_montserrat_26,
+        &lv_font_montserrat_28,
+        &lv_font_montserrat_30,
+        &lv_font_montserrat_32,
+        &lv_font_montserrat_34,
+        &lv_font_montserrat_36,
+        &lv_font_montserrat_38,
+        &lv_font_montserrat_40,
+        &lv_font_montserrat_42,
+        &lv_font_montserrat_44,
+        &lv_font_montserrat_46,
+        &lv_font_montserrat_48
+    };
+    lv_style_value_t value;
+    value.ptr = BUILT_IN_FONTS[font_index];
+    lv_obj_set_local_style_prop(obj, prop, value, selector);
+}
+
+EM_PORT_API(int16_t) lvglObjX1(lv_obj_t *obj) {
+    return obj->coords.x1;
+}
+
+EM_PORT_API(int16_t) lvglObjX2(lv_obj_t *obj) {
+    return obj->coords.x2;
+}
+
+EM_PORT_API(int16_t) lvglObjY1(lv_obj_t *obj) {
+    return obj->coords.y1;
+}
+
+EM_PORT_API(int16_t) lvglObjY2(lv_obj_t *obj) {
+    return obj->coords.y2;
+}

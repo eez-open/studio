@@ -24,13 +24,21 @@ import {
     specificGroup,
     styleGroup
 } from "project-editor/ui-components/PropertyGrid/groups";
-import { IWasmFlowRuntime } from "eez-studio-types";
 import { escapeCString, indent, TAB } from "project-editor/build/helper";
 import { LVGLParts, LVGLStylesDefinition } from "project-editor/lvgl/style";
 import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import type { LVGLCreateResultType } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
+import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+
+// import { getAncestorOfType } from "project-editor/store";
+// import {
+//     getTimelineEditorState,
+//     getWidgetParent,
+// } from "project-editor/flow/component";
+// import type { Page } from "project-editor/features/page/page";
+// import { Point, Rect } from "eez-studio-shared/geometry";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -87,37 +95,122 @@ export class LVGLWidget extends Widget {
                 propertyGridRowComponent: LVGLStylesDefinitionProperty,
                 enumerable: false
             }
-        ]
+        ],
+
+        check: (widget: LVGLWidget) => {
+            let messages: Message[] = [];
+
+            messages.push(...widget.localStyles.check());
+
+            return messages;
+        }
     });
 
     constructor() {
         super();
 
         makeObservable(this, {
-            localStyles: observable
+            localStyles: observable,
+            _lvglObj: observable
         });
     }
 
+    // get lvglRect() {
+    //     const page = getAncestorOfType(
+    //         this,
+    //         ProjectEditor.PageClass.classInfo
+    //     ) as Page;
+
+    //     if (!this._lvglObj || !page._lvglRuntime) {
+    //         let x = this.left;
+    //         let y = this.top;
+
+    //         for (
+    //             let parent = getWidgetParent(this);
+    //             parent &&
+    //             (parent instanceof ProjectEditor.PageClass ||
+    //                 parent instanceof ProjectEditor.WidgetClass);
+    //             parent = getWidgetParent(parent)
+    //         ) {
+    //             x += parent.left;
+    //             y += parent.top;
+    //         }
+
+    //         return {
+    //             left: x,
+    //             top: y,
+    //             width: this.width ?? 0,
+    //             height: this.height ?? 0
+    //         };
+    //     }
+
+    //     const x1 = page._lvglRuntime.wasm._lvglObjX1(this._lvglObj);
+    //     const x2 = page._lvglRuntime.wasm._lvglObjX2(this._lvglObj);
+    //     const y1 = page._lvglRuntime.wasm._lvglObjY1(this._lvglObj);
+    //     const y2 = page._lvglRuntime.wasm._lvglObjY2(this._lvglObj);
+
+    //     return { left: x1, top: y1, width: x2 - x1 + 1, height: y2 - y1 + 1 };
+    // }
+
+    // override get rect(): Rect {
+    //     if (this instanceof Widget && this.timeline.length > 0) {
+    //         const timelineEditorState = getTimelineEditorState(this);
+    //         if (timelineEditorState) {
+    //             return this.getTimelineRect(timelineEditorState.position);
+    //         }
+    //     }
+
+    //     let parent = getWidgetParent(this);
+    //     let parentPosition: Point;
+    //     if (parent instanceof ProjectEditor.PageClass) {
+    //         parentPosition = { x: parent.left, y: parent.top };
+    //     } else {
+    //         parentPosition = parent.absolutePositionPoint;
+    //     }
+
+    //     const position = this.absolutePositionPoint;
+
+    //     return {
+    //         left: position.x - parentPosition.x,
+    //         top: position.y - parentPosition.y,
+    //         width: this.lvglRect.width,
+    //         height: this.lvglRect.height
+    //     };
+    // }
+
+    // override get absolutePositionPoint() {
+    //     return { x: this.lvglRect.left, y: this.lvglRect.top };
+    // }
+
     override lvglCreate(
-        runtime: IWasmFlowRuntime,
+        runtime: LVGLPageRuntime,
         parentObj: number
     ): LVGLCreateResultType {
-        this.lvglCreateObj(runtime, parentObj);
+        const obj = this.lvglCreateObj(runtime, parentObj);
 
-        this.localStyles.lvglCreate(runtime, this._lvglObj);
+        runInAction(() => (this._lvglObj = obj));
 
-        const children = this.children.map((widget: LVGLWidget) =>
-            widget.lvglCreate(runtime, this._lvglObj)
-        );
+        let children: LVGLCreateResultType[];
+
+        if (obj) {
+            this.localStyles.lvglCreate(runtime, obj);
+
+            children = this.children.map((widget: LVGLWidget) =>
+                widget.lvglCreate(runtime, obj)
+            );
+        } else {
+            children = [];
+        }
 
         return {
-            obj: this._lvglObj,
+            obj,
             children
         };
     }
 
-    lvglCreateObj(runtime: IWasmFlowRuntime, parentObj: number) {
+    lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number): number {
         console.error("UNEXPECTED!");
+        return 0;
     }
 
     override lvglBuild(): string {
@@ -250,10 +343,10 @@ export class LVGLLabelWidget extends LVGLWidget {
         return <>{super.render(flowContext, width, height)}</>;
     }
 
-    override lvglCreateObj(runtime: IWasmFlowRuntime, parentObj: number) {
-        this._lvglObj = runtime._lvglCreateLabel(
+    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+        return runtime.wasm._lvglCreateLabel(
             parentObj,
-            runtime.allocateUTF8(this.text),
+            runtime.wasm.allocateUTF8(this.text),
             this.left,
             this.top,
             this.width,
@@ -310,8 +403,8 @@ export class LVGLButtonWidget extends LVGLWidget {
         return <>{super.render(flowContext, width, height)}</>;
     }
 
-    override lvglCreateObj(runtime: IWasmFlowRuntime, parentObj: number) {
-        this._lvglObj = runtime._lvglCreateButton(
+    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+        return runtime.wasm._lvglCreateButton(
             parentObj,
             this.left,
             this.top,

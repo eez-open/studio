@@ -74,7 +74,10 @@ import type {
     IActionComponentDefinition,
     IObjectVariableType
 } from "eez-studio-types";
-import { findBitmap } from "project-editor/features/bitmap/bitmap";
+import {
+    findBitmap,
+    getBitmapData
+} from "project-editor/features/bitmap/bitmap";
 import {
     migrateProjectVersion,
     migrateProjectType
@@ -99,6 +102,8 @@ import {
     ListWidget,
     SelectWidget
 } from "project-editor/flow/components/widgets";
+import { ArrayProperty } from "project-editor/ui-components/PropertyGrid/ArrayElementProperty";
+import { EmbeddedPropertyGrid } from "project-editor/ui-components/PropertyGrid/EmbeddedPropertyGrid";
 
 let extensionsInitialized = false;
 
@@ -196,6 +201,7 @@ export async function initProjectEditor(
         findPage,
         findAction,
         findBitmap,
+        getBitmapData,
         migrateProjectVersion,
         migrateProjectType,
         getNavigationComponent,
@@ -206,7 +212,9 @@ export async function initProjectEditor(
         getAncestorWithEditorComponent,
         createEditorState,
         browseGlyph,
-        checkAssetId
+        checkAssetId,
+        ArrayProperty,
+        EmbeddedPropertyGrid
     };
 
     Object.assign(ProjectEditor, projectEditor);

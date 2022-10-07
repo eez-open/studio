@@ -32,7 +32,10 @@ import type {
     ScpiSubsystem
 } from "project-editor/features/scpi/scpi";
 import type { getObjectVariableTypeFromType } from "project-editor/features/variable/value-type";
-import type { findBitmap } from "project-editor/features/bitmap/bitmap";
+import type {
+    findBitmap,
+    getBitmapData
+} from "project-editor/features/bitmap/bitmap";
 import type {
     migrateProjectVersion,
     migrateProjectType
@@ -57,6 +60,8 @@ import type {
     ListWidget,
     SelectWidget
 } from "project-editor/flow/components/widgets";
+import type { ArrayProperty } from "project-editor/ui-components/PropertyGrid/ArrayElementProperty";
+import type { EmbeddedPropertyGrid } from "project-editor/ui-components/PropertyGrid/EmbeddedPropertyGrid";
 
 export interface IProjectEditor {
     homeTabs: Tabs;
@@ -97,6 +102,7 @@ export interface IProjectEditor {
     findPage: typeof findPage;
     findAction: typeof findAction;
     findBitmap: typeof findBitmap;
+    getBitmapData: typeof getBitmapData;
     migrateProjectVersion: typeof migrateProjectVersion;
     migrateProjectType: typeof migrateProjectType;
     getNavigationComponent: typeof getNavigationComponent;
@@ -108,6 +114,8 @@ export interface IProjectEditor {
     createEditorState: typeof createEditorState;
     browseGlyph: typeof browseGlyph;
     checkAssetId: typeof checkAssetId;
+    ArrayProperty: typeof ArrayProperty;
+    EmbeddedPropertyGrid: typeof EmbeddedPropertyGrid;
 }
 
 export const ProjectEditor: IProjectEditor = {} as any;

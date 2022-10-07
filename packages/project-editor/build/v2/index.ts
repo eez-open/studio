@@ -20,7 +20,7 @@ import {
 } from "project-editor/features/variable/variable";
 
 import {
-    getData as getBitmapData,
+    getBitmapData,
     Bitmap,
     findBitmap
 } from "project-editor/features/bitmap/bitmap";

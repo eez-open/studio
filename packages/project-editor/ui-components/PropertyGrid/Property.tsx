@@ -34,9 +34,8 @@ import {
 import { getPropertyValue, getPropertyValueAsString } from "./utils";
 import { CodeEditorProperty } from "./CodeEditorProperty";
 import { ThemedColorInput } from "./ThemedColorInput";
-import { ArrayProperty } from "./ArrayElementProperty";
-import { EmbeddedPropertyGrid } from "./EmbeddedPropertyGrid";
 import { ObjectReferenceInput } from "./ObjectReferenceInput";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -558,7 +557,9 @@ export const Property = observer(
                         </div>
                     );
                 } else {
-                    return <EmbeddedPropertyGrid {...this.props} />;
+                    return (
+                        <ProjectEditor.EmbeddedPropertyGrid {...this.props} />
+                    );
                 }
             } else if (propertyInfo.type === PropertyType.Enum) {
                 if (readOnly) {
@@ -776,7 +777,7 @@ export const Property = observer(
                     />
                 );
             } else if (propertyInfo.type === PropertyType.Array) {
-                return <ArrayProperty {...this.props} />;
+                return <ProjectEditor.ArrayProperty {...this.props} />;
             } else if (
                 propertyInfo.type === PropertyType.ConfigurationReference
             ) {

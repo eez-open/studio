@@ -111,7 +111,6 @@ import type {
     IActionComponentDefinition,
     IComponentFlowState,
     IComponentProperty,
-    IWasmFlowRuntime,
     LogItemType
 } from "eez-studio-types";
 import {
@@ -149,6 +148,7 @@ import { easingFunctions } from "./easing-functions";
 import { humanize } from "eez-studio-shared/string";
 import { Icon } from "eez-studio-ui/icon";
 import type { LVGLCreateResultType } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
+import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -4478,7 +4478,7 @@ export class Widget extends Component {
     }
 
     lvglCreate(
-        runtime: IWasmFlowRuntime,
+        runtime: LVGLPageRuntime,
         parentObj: number
     ): LVGLCreateResultType {
         return {
@@ -5288,7 +5288,7 @@ export function registerActionComponents(
     );
 }
 
-function getTimelineEditorState(component: Component) {
+export function getTimelineEditorState(component: Component) {
     if (component instanceof Widget) {
         const projectEditorStore = getProjectEditorStore(component);
         const editor = projectEditorStore.editorsStore.activeEditor;

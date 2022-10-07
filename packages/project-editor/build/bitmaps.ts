@@ -1,4 +1,4 @@
-import { getData as getBitmapData } from "project-editor/features/bitmap/bitmap";
+import { getBitmapData } from "project-editor/features/bitmap/bitmap";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 
