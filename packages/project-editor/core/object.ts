@@ -291,7 +291,9 @@ export interface ClassInfo {
 
     onAfterPaste?: (newObject: IEezObject, fromObject: IEezObject) => void;
 
-    lvglParts?: LVGLParts[];
+    lvgl?: {
+        parts: LVGLParts[];
+    };
 }
 
 export function makeDerivedClassInfo(
@@ -328,6 +330,14 @@ export function makeDerivedClassInfo(
         }
 
         derivedClassInfoProperties.properties = r;
+    }
+
+    if (derivedClassInfoProperties.defaultValue && baseClassInfo.defaultValue) {
+        derivedClassInfoProperties.defaultValue = Object.assign(
+            {},
+            baseClassInfo.defaultValue,
+            derivedClassInfoProperties.defaultValue
+        );
     }
 
     const baseBeforeLoadHook = baseClassInfo.beforeLoadHook;

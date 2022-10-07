@@ -6,7 +6,8 @@ import { _find, _range } from "eez-studio-shared/algorithm";
 import {
     registerClass,
     PropertyType,
-    makeDerivedClassInfo
+    makeDerivedClassInfo,
+    IPropertyGridGroupDefinition
 } from "project-editor/core/object";
 import {
     getClassInfo,
@@ -42,6 +43,18 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const statesGroup: IPropertyGridGroupDefinition = {
+    id: "states",
+    title: "States",
+    position: 4
+};
+
+export const flagsGroup: IPropertyGridGroupDefinition = {
+    id: "flags",
+    title: "Flags",
+    position: 4
+};
+
 export class LVGLWidget extends Widget {
     children: Widget[];
     localStyles: LVGLStylesDefinition;
@@ -60,11 +73,195 @@ export class LVGLWidget extends Widget {
                 hideInPropertyGrid: true
             },
             {
+                name: "flagHidden",
+                displayName: "Hidden",
+                type: PropertyType.Boolean,
+                propertyGridGroup: flagsGroup
+            },
+            {
+                name: "flagClickable",
+                displayName: "Clickable",
+                type: PropertyType.Boolean,
+                propertyGridGroup: flagsGroup
+            },
+            {
+                name: "flagCheckable",
+                displayName: "Checkable",
+                type: PropertyType.Boolean,
+                propertyGridGroup: flagsGroup
+            },
+            {
+                name: "flagPressLock",
+                displayName: "Press lock",
+                type: PropertyType.Boolean,
+                propertyGridGroup: flagsGroup
+            },
+            {
+                name: "flagClickFocusable",
+                displayName: "Click focusable",
+                type: PropertyType.Boolean,
+                propertyGridGroup: flagsGroup
+            },
+            {
+                name: "flagAdvHittest",
+                displayName: "Adv hittest",
+                type: PropertyType.Boolean,
+                propertyGridGroup: flagsGroup
+            },
+            {
+                name: "flagIgnoreLayout",
+                displayName: "Ignore layout",
+                type: PropertyType.Boolean,
+                propertyGridGroup: flagsGroup
+            },
+            {
+                name: "flagFloating",
+                displayName: "Floating",
+                type: PropertyType.Boolean,
+                propertyGridGroup: flagsGroup
+            },
+            {
+                name: "flagEventBubble",
+                displayName: "Event bubble",
+                type: PropertyType.Boolean,
+                propertyGridGroup: flagsGroup
+            },
+            {
+                name: "flagGestureBubble",
+                displayName: "Gesture bubble",
+                type: PropertyType.Boolean,
+                propertyGridGroup: flagsGroup
+            },
+            {
+                name: "flagSnappable",
+                displayName: "Snappable",
+                type: PropertyType.Boolean,
+                propertyGridGroup: flagsGroup
+            },
+            {
+                name: "flagScrollable",
+                displayName: "Scrollable",
+                type: PropertyType.Boolean,
+                propertyGridGroup: flagsGroup
+            },
+            {
+                name: "flagScrollElastic",
+                displayName: "Scroll elastic",
+                type: PropertyType.Boolean,
+                propertyGridGroup: flagsGroup
+            },
+            {
+                name: "flagScrollMomentum",
+                displayName: "Scroll momentum",
+                type: PropertyType.Boolean,
+                propertyGridGroup: flagsGroup
+            },
+            {
+                name: "flagScrollOnFocus",
+                displayName: "Scroll on focus",
+                type: PropertyType.Boolean,
+                propertyGridGroup: flagsGroup
+            },
+            {
+                name: "flagScrollChain",
+                displayName: "Scroll chain",
+                type: PropertyType.Boolean,
+                propertyGridGroup: flagsGroup
+            },
+            {
+                name: "flagScrollOne",
+                displayName: "Scroll one",
+                type: PropertyType.Boolean,
+                propertyGridGroup: flagsGroup
+            },
+            {
+                name: "scrollbarMode",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "off",
+                        label: "OFF"
+                    },
+                    {
+                        id: "on",
+                        label: "ON"
+                    },
+                    {
+                        id: "active",
+                        label: "ACTIVE"
+                    },
+                    {
+                        id: "auto",
+                        label: "AUTO"
+                    }
+                ],
+                propertyGridGroup: flagsGroup
+            },
+            {
+                name: "scrollDirection",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "top",
+                        label: "TOP"
+                    },
+                    {
+                        id: "left",
+                        label: "LEFT"
+                    },
+                    {
+                        id: "bottom",
+                        label: "BOTTOM"
+                    },
+                    {
+                        id: "right",
+                        label: "RIGHT"
+                    },
+                    {
+                        id: "hor",
+                        label: "HOR"
+                    },
+                    {
+                        id: "ver",
+                        label: "VER"
+                    },
+                    {
+                        id: "all",
+                        label: "ALL"
+                    }
+                ],
+                propertyGridGroup: flagsGroup
+            },
+            {
+                name: "stateChecked",
+                displayName: "Checked",
+                type: PropertyType.Boolean,
+                propertyGridGroup: statesGroup
+            },
+            {
+                name: "stateDisabled",
+                displayName: "Disabled",
+                type: PropertyType.Boolean,
+                propertyGridGroup: statesGroup
+            },
+            {
+                name: "stateFocused",
+                displayName: "Focused",
+                type: PropertyType.Boolean,
+                propertyGridGroup: statesGroup
+            },
+            {
+                name: "statePressed",
+                displayName: "Pressed",
+                type: PropertyType.Boolean,
+                propertyGridGroup: statesGroup
+            },
+            {
                 name: "part",
                 type: PropertyType.Enum,
                 enumItems: (widget: LVGLWidget) => {
                     const classInfo = getClassInfo(widget);
-                    return classInfo.lvglParts!.map(lvglPart => ({
+                    return classInfo.lvgl!.parts.map(lvglPart => ({
                         id: lvglPart
                     }));
                 },
@@ -96,6 +293,11 @@ export class LVGLWidget extends Widget {
                 enumerable: false
             }
         ],
+
+        defaultValue: {
+            scrollbarMode: "auto",
+            scrollDirection: "all"
+        },
 
         check: (widget: LVGLWidget) => {
             let messages: Message[] = [];
@@ -239,8 +441,7 @@ ${widgets}`;
         const project = ProjectEditor.getProject(this);
         const classInfo = getClassInfo(this);
         if (
-            classInfo.lvglParts &&
-            classInfo.lvglParts.indexOf(
+            classInfo.lvgl!.parts.indexOf(
                 project._DocumentStore.uiStateStore.lvglPart
             ) != -1
         ) {
@@ -300,7 +501,15 @@ export class LVGLLabelWidget extends LVGLWidget {
             width: 64,
             height: 32,
             text: "Text",
-            localStyles: {}
+            localStyles: {},
+            flagPressLock: true,
+            flagClickFocusable: true,
+            flagGestureBubble: true,
+            flagSnappable: true,
+            flagScrollable: true,
+            flagScrollElastic: true,
+            flagScrollMomentum: true,
+            flagScrollChain: true
         },
 
         icon: (
@@ -328,7 +537,7 @@ export class LVGLLabelWidget extends LVGLWidget {
             return messages;
         },
 
-        lvglParts: ["main", "scrollbar", "selected"]
+        lvgl: { parts: ["main", "scrollbar", "selected"] }
     });
 
     constructor() {
@@ -378,7 +587,16 @@ export class LVGLButtonWidget extends LVGLWidget {
             top: 0,
             width: 80,
             height: 40,
-            text: "Button"
+            text: "Button",
+            flagClickable: true,
+            flagPressLock: true,
+            flagClickFocusable: true,
+            flagGestureBubble: true,
+            flagSnappable: true,
+            flagScrollElastic: true,
+            flagScrollOnFocus: true,
+            flagScrollMomentum: true,
+            flagScrollChain: true
         },
 
         icon: (
@@ -390,7 +608,7 @@ export class LVGLButtonWidget extends LVGLWidget {
             </svg>
         ),
 
-        lvglParts: ["main"]
+        lvgl: { parts: ["main"] }
     });
 
     constructor() {
