@@ -1185,7 +1185,7 @@ export class LVGLStylesDefinition extends EezObject {
             return "";
         }
 
-        let result = "\n";
+        let result = "";
 
         Object.keys(this.definition).forEach(part => {
             Object.keys(this.definition[part]).forEach(state => {

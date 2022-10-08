@@ -286,6 +286,11 @@ export const LVGLStylesDefinitionProperty = observer(
                                                                             false
                                                                         );
                                                                     }}
+                                                                    readOnly={
+                                                                        this
+                                                                            .props
+                                                                            .readOnly
+                                                                    }
                                                                 />
                                                                 {" " +
                                                                     humanize(
@@ -346,8 +351,10 @@ export const LVGLStylesDefinitionProperty = observer(
                                                                     );
                                                                 }}
                                                                 readOnly={
+                                                                    this.props
+                                                                        .readOnly ||
                                                                     checkboxState !==
-                                                                    true
+                                                                        true
                                                                 }
                                                             />
                                                         </div>
@@ -381,7 +388,9 @@ export class PropertyValueHolder extends EezObject {
 export const Checkbox = observer(
     class Checkbox extends React.Component<{
         state: boolean | undefined;
+        label?: string;
         onChange: (value: boolean) => void;
+        readOnly: boolean;
     }> {
         inputRef = React.createRef<HTMLInputElement>();
 
@@ -401,7 +410,7 @@ export const Checkbox = observer(
         }
 
         render() {
-            return (
+            const input = (
                 <input
                     ref={this.inputRef}
                     type="checkbox"
@@ -410,7 +419,21 @@ export const Checkbox = observer(
                     onChange={event =>
                         this.props.onChange(event.target.checked)
                     }
+                    disabled={this.props.readOnly}
                 />
+            );
+
+            if (this.props.label === undefined) {
+                return input;
+            }
+
+            return (
+                <div className="form-check">
+                    <label className="form-check-label">
+                        {input}
+                        {this.props.label}
+                    </label>
+                </div>
             );
         }
     }

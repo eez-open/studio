@@ -1,5 +1,6 @@
 import React from "react";
 import { observable, makeObservable, runInAction } from "mobx";
+import { observer } from "mobx-react";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
 
@@ -7,7 +8,10 @@ import {
     registerClass,
     PropertyType,
     makeDerivedClassInfo,
-    IPropertyGridGroupDefinition
+    IPropertyGridGroupDefinition,
+    PropertyProps,
+    LVGL_FLAG_CODES,
+    LVGL_STATE_CODES
 } from "project-editor/core/object";
 import {
     getClassInfo,
@@ -22,32 +26,24 @@ import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { Widget } from "project-editor/flow/component";
 
 import {
+    generalGroup,
     specificGroup,
     styleGroup
 } from "project-editor/ui-components/PropertyGrid/groups";
 import { escapeCString, indent, TAB } from "project-editor/build/helper";
 import { LVGLParts, LVGLStylesDefinition } from "project-editor/lvgl/style";
-import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
+import {
+    LVGLStylesDefinitionProperty,
+    Checkbox
+} from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import type { LVGLCreateResultType } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-
-// import { getAncestorOfType } from "project-editor/store";
-// import {
-//     getTimelineEditorState,
-//     getWidgetParent,
-// } from "project-editor/flow/component";
-// import type { Page } from "project-editor/features/page/page";
-// import { Point, Rect } from "eez-studio-shared/geometry";
+import { ProjectContext } from "project-editor/project/context";
+import { humanize } from "eez-studio-shared/string";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-export const statesGroup: IPropertyGridGroupDefinition = {
-    id: "states",
-    title: "States",
-    position: 4
-};
 
 export const flagsGroup: IPropertyGridGroupDefinition = {
     id: "flags",
@@ -55,8 +51,325 @@ export const flagsGroup: IPropertyGridGroupDefinition = {
     position: 4
 };
 
+export const statesGroup: IPropertyGridGroupDefinition = {
+    id: "states",
+    title: "States",
+    position: 4
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const LVGLWidgetFlagsProperty = observer(
+    class LVGLWidgetFlagsProperty extends React.Component<PropertyProps> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        render() {
+            const flagNames: (keyof typeof LVGL_FLAG_CODES)[] = [];
+
+            this.props.objects.map((widget: LVGLWidget) => {
+                const classInfo = getClassInfo(widget);
+                for (const flagName of classInfo.lvgl!.flags) {
+                    if (flagNames.indexOf(flagName) == -1) {
+                        flagNames.push(flagName);
+                    }
+                }
+            });
+
+            return (
+                <div>
+                    {flagNames.map(flagName => {
+                        let values = this.props.objects.map(
+                            (widget: LVGLWidget) =>
+                                (widget.flags || "")
+                                    .split("|")
+                                    .indexOf(flagName) != -1
+                        );
+
+                        let numEnabled = 0;
+                        let numDisabled = 0;
+                        values.forEach(value => {
+                            if (value) {
+                                numEnabled++;
+                            } else {
+                                numDisabled++;
+                            }
+                        });
+
+                        let state =
+                            numEnabled == 0
+                                ? false
+                                : numDisabled == 0
+                                ? true
+                                : undefined;
+
+                        return (
+                            <Checkbox
+                                key={flagName}
+                                state={state}
+                                label={humanize(flagName)}
+                                onChange={(value: boolean) => {
+                                    this.context.undoManager.setCombineCommands(
+                                        true
+                                    );
+
+                                    if (value) {
+                                        this.props.objects.forEach(
+                                            (widget: LVGLWidget) => {
+                                                const classInfo =
+                                                    getClassInfo(widget);
+                                                if (
+                                                    classInfo.lvgl!.flags.indexOf(
+                                                        flagName
+                                                    ) == -1
+                                                ) {
+                                                    return;
+                                                }
+
+                                                const flagsArr = (
+                                                    widget.flags || ""
+                                                ).split("|");
+                                                if (
+                                                    flagsArr.indexOf(
+                                                        flagName
+                                                    ) == -1
+                                                ) {
+                                                    flagsArr.push(flagName);
+                                                    this.context.updateObject(
+                                                        widget,
+                                                        {
+                                                            flags: flagsArr.join(
+                                                                "|"
+                                                            )
+                                                        }
+                                                    );
+                                                }
+                                            }
+                                        );
+                                    } else {
+                                        this.props.objects.forEach(
+                                            (widget: LVGLWidget) => {
+                                                const classInfo =
+                                                    getClassInfo(widget);
+                                                if (
+                                                    classInfo.lvgl!.flags.indexOf(
+                                                        flagName
+                                                    ) == -1
+                                                ) {
+                                                    return;
+                                                }
+
+                                                const flagsArr = (
+                                                    widget.flags || ""
+                                                ).split("|");
+                                                const i =
+                                                    flagsArr.indexOf(flagName);
+                                                if (i != -1) {
+                                                    flagsArr.splice(i, 1);
+                                                    this.context.updateObject(
+                                                        widget,
+                                                        {
+                                                            flags: flagsArr.join(
+                                                                "|"
+                                                            )
+                                                        }
+                                                    );
+                                                }
+                                            }
+                                        );
+                                    }
+
+                                    this.context.undoManager.setCombineCommands(
+                                        false
+                                    );
+                                }}
+                                readOnly={this.props.readOnly}
+                            />
+                        );
+                    })}
+                </div>
+            );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const LVGLWidgetStatesProperty = observer(
+    class LVGLWidgetStatesProperty extends React.Component<PropertyProps> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        render() {
+            const stateNames: (keyof typeof LVGL_STATE_CODES)[] = [];
+
+            this.props.objects.map((widget: LVGLWidget) => {
+                const classInfo = getClassInfo(widget);
+                for (const stateName of classInfo.lvgl!.states) {
+                    if (stateNames.indexOf(stateName) == -1) {
+                        stateNames.push(stateName);
+                    }
+                }
+            });
+
+            return (
+                <div>
+                    {stateNames.map(stateName => {
+                        let values = this.props.objects.map(
+                            (widget: LVGLWidget) =>
+                                (widget.states || "")
+                                    .split("|")
+                                    .indexOf(stateName) != -1
+                        );
+
+                        let numEnabled = 0;
+                        let numDisabled = 0;
+                        values.forEach(value => {
+                            if (value) {
+                                numEnabled++;
+                            } else {
+                                numDisabled++;
+                            }
+                        });
+
+                        let state =
+                            numEnabled == 0
+                                ? false
+                                : numDisabled == 0
+                                ? true
+                                : undefined;
+
+                        return (
+                            <Checkbox
+                                key={stateName}
+                                state={state}
+                                label={humanize(stateName)}
+                                onChange={(value: boolean) => {
+                                    this.context.undoManager.setCombineCommands(
+                                        true
+                                    );
+
+                                    if (value) {
+                                        this.props.objects.forEach(
+                                            (widget: LVGLWidget) => {
+                                                const classInfo =
+                                                    getClassInfo(widget);
+                                                if (
+                                                    classInfo.lvgl!.states.indexOf(
+                                                        stateName
+                                                    ) == -1
+                                                ) {
+                                                    return;
+                                                }
+
+                                                const statesArr = (
+                                                    widget.states || ""
+                                                ).split("|");
+                                                if (
+                                                    statesArr.indexOf(
+                                                        stateName
+                                                    ) == -1
+                                                ) {
+                                                    statesArr.push(stateName);
+                                                    this.context.updateObject(
+                                                        widget,
+                                                        {
+                                                            states: statesArr.join(
+                                                                "|"
+                                                            )
+                                                        }
+                                                    );
+                                                }
+                                            }
+                                        );
+                                    } else {
+                                        this.props.objects.forEach(
+                                            (widget: LVGLWidget) => {
+                                                const classInfo =
+                                                    getClassInfo(widget);
+                                                if (
+                                                    classInfo.lvgl!.states.indexOf(
+                                                        stateName
+                                                    ) == -1
+                                                ) {
+                                                    return;
+                                                }
+
+                                                const statesArr = (
+                                                    widget.states || ""
+                                                ).split("|");
+                                                const i =
+                                                    statesArr.indexOf(
+                                                        stateName
+                                                    );
+                                                if (i != -1) {
+                                                    statesArr.splice(i, 1);
+                                                    this.context.updateObject(
+                                                        widget,
+                                                        {
+                                                            states: statesArr.join(
+                                                                "|"
+                                                            )
+                                                        }
+                                                    );
+                                                }
+                                            }
+                                        );
+                                    }
+
+                                    this.context.undoManager.setCombineCommands(
+                                        false
+                                    );
+                                }}
+                                readOnly={this.props.readOnly}
+                            />
+                        );
+                    })}
+                </div>
+            );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+function changes<T>(defaults: T[], arr: T[]) {
+    const added: T[] = [];
+    const cleared: T[] = [];
+
+    for (const x of arr) {
+        if (defaults.indexOf(x) == -1) {
+            added.push(x);
+        }
+    }
+
+    for (const x of defaults) {
+        if (arr.indexOf(x) == -1) {
+            cleared.push(x);
+        }
+    }
+
+    return {
+        added,
+        cleared
+    };
+}
+
+function getCode<T extends string>(
+    arr: T[],
+    keyToCode: { [key in T]: number }
+) {
+    return arr.reduce((code, el) => code | keyToCode[el], 0) >>> 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class LVGLWidget extends Widget {
     children: Widget[];
+    flags: string;
+    scrollbarMode: string;
+    scrollDirection: string;
+    states: string;
     localStyles: LVGLStylesDefinition;
 
     _lvglObj: number;
@@ -73,106 +386,11 @@ export class LVGLWidget extends Widget {
                 hideInPropertyGrid: true
             },
             {
-                name: "flagHidden",
-                displayName: "Hidden",
-                type: PropertyType.Boolean,
-                propertyGridGroup: flagsGroup
-            },
-            {
-                name: "flagClickable",
-                displayName: "Clickable",
-                type: PropertyType.Boolean,
-                propertyGridGroup: flagsGroup
-            },
-            {
-                name: "flagCheckable",
-                displayName: "Checkable",
-                type: PropertyType.Boolean,
-                propertyGridGroup: flagsGroup
-            },
-            {
-                name: "flagPressLock",
-                displayName: "Press lock",
-                type: PropertyType.Boolean,
-                propertyGridGroup: flagsGroup
-            },
-            {
-                name: "flagClickFocusable",
-                displayName: "Click focusable",
-                type: PropertyType.Boolean,
-                propertyGridGroup: flagsGroup
-            },
-            {
-                name: "flagAdvHittest",
-                displayName: "Adv hittest",
-                type: PropertyType.Boolean,
-                propertyGridGroup: flagsGroup
-            },
-            {
-                name: "flagIgnoreLayout",
-                displayName: "Ignore layout",
-                type: PropertyType.Boolean,
-                propertyGridGroup: flagsGroup
-            },
-            {
-                name: "flagFloating",
-                displayName: "Floating",
-                type: PropertyType.Boolean,
-                propertyGridGroup: flagsGroup
-            },
-            {
-                name: "flagEventBubble",
-                displayName: "Event bubble",
-                type: PropertyType.Boolean,
-                propertyGridGroup: flagsGroup
-            },
-            {
-                name: "flagGestureBubble",
-                displayName: "Gesture bubble",
-                type: PropertyType.Boolean,
-                propertyGridGroup: flagsGroup
-            },
-            {
-                name: "flagSnappable",
-                displayName: "Snappable",
-                type: PropertyType.Boolean,
-                propertyGridGroup: flagsGroup
-            },
-            {
-                name: "flagScrollable",
-                displayName: "Scrollable",
-                type: PropertyType.Boolean,
-                propertyGridGroup: flagsGroup
-            },
-            {
-                name: "flagScrollElastic",
-                displayName: "Scroll elastic",
-                type: PropertyType.Boolean,
-                propertyGridGroup: flagsGroup
-            },
-            {
-                name: "flagScrollMomentum",
-                displayName: "Scroll momentum",
-                type: PropertyType.Boolean,
-                propertyGridGroup: flagsGroup
-            },
-            {
-                name: "flagScrollOnFocus",
-                displayName: "Scroll on focus",
-                type: PropertyType.Boolean,
-                propertyGridGroup: flagsGroup
-            },
-            {
-                name: "flagScrollChain",
-                displayName: "Scroll chain",
-                type: PropertyType.Boolean,
-                propertyGridGroup: flagsGroup
-            },
-            {
-                name: "flagScrollOne",
-                displayName: "Scroll one",
-                type: PropertyType.Boolean,
-                propertyGridGroup: flagsGroup
+                name: "flags",
+                type: PropertyType.String,
+                propertyGridGroup: flagsGroup,
+                propertyGridRowComponent: LVGLWidgetFlagsProperty,
+                enumerable: false
             },
             {
                 name: "scrollbarMode",
@@ -233,28 +451,11 @@ export class LVGLWidget extends Widget {
                 propertyGridGroup: flagsGroup
             },
             {
-                name: "stateChecked",
-                displayName: "Checked",
-                type: PropertyType.Boolean,
-                propertyGridGroup: statesGroup
-            },
-            {
-                name: "stateDisabled",
-                displayName: "Disabled",
-                type: PropertyType.Boolean,
-                propertyGridGroup: statesGroup
-            },
-            {
-                name: "stateFocused",
-                displayName: "Focused",
-                type: PropertyType.Boolean,
-                propertyGridGroup: statesGroup
-            },
-            {
-                name: "statePressed",
-                displayName: "Pressed",
-                type: PropertyType.Boolean,
-                propertyGridGroup: statesGroup
+                name: "states",
+                type: PropertyType.String,
+                propertyGridGroup: statesGroup,
+                propertyGridRowComponent: LVGLWidgetStatesProperty,
+                enumerable: false
             },
             {
                 name: "part",
@@ -312,77 +513,14 @@ export class LVGLWidget extends Widget {
         super();
 
         makeObservable(this, {
+            flags: observable,
+            scrollbarMode: observable,
+            scrollDirection: observable,
+            states: observable,
             localStyles: observable,
             _lvglObj: observable
         });
     }
-
-    // get lvglRect() {
-    //     const page = getAncestorOfType(
-    //         this,
-    //         ProjectEditor.PageClass.classInfo
-    //     ) as Page;
-
-    //     if (!this._lvglObj || !page._lvglRuntime) {
-    //         let x = this.left;
-    //         let y = this.top;
-
-    //         for (
-    //             let parent = getWidgetParent(this);
-    //             parent &&
-    //             (parent instanceof ProjectEditor.PageClass ||
-    //                 parent instanceof ProjectEditor.WidgetClass);
-    //             parent = getWidgetParent(parent)
-    //         ) {
-    //             x += parent.left;
-    //             y += parent.top;
-    //         }
-
-    //         return {
-    //             left: x,
-    //             top: y,
-    //             width: this.width ?? 0,
-    //             height: this.height ?? 0
-    //         };
-    //     }
-
-    //     const x1 = page._lvglRuntime.wasm._lvglObjX1(this._lvglObj);
-    //     const x2 = page._lvglRuntime.wasm._lvglObjX2(this._lvglObj);
-    //     const y1 = page._lvglRuntime.wasm._lvglObjY1(this._lvglObj);
-    //     const y2 = page._lvglRuntime.wasm._lvglObjY2(this._lvglObj);
-
-    //     return { left: x1, top: y1, width: x2 - x1 + 1, height: y2 - y1 + 1 };
-    // }
-
-    // override get rect(): Rect {
-    //     if (this instanceof Widget && this.timeline.length > 0) {
-    //         const timelineEditorState = getTimelineEditorState(this);
-    //         if (timelineEditorState) {
-    //             return this.getTimelineRect(timelineEditorState.position);
-    //         }
-    //     }
-
-    //     let parent = getWidgetParent(this);
-    //     let parentPosition: Point;
-    //     if (parent instanceof ProjectEditor.PageClass) {
-    //         parentPosition = { x: parent.left, y: parent.top };
-    //     } else {
-    //         parentPosition = parent.absolutePositionPoint;
-    //     }
-
-    //     const position = this.absolutePositionPoint;
-
-    //     return {
-    //         left: position.x - parentPosition.x,
-    //         top: position.y - parentPosition.y,
-    //         width: this.lvglRect.width,
-    //         height: this.lvglRect.height
-    //     };
-    // }
-
-    // override get absolutePositionPoint() {
-    //     return { x: this.lvglRect.left, y: this.lvglRect.top };
-    // }
 
     override lvglCreate(
         runtime: LVGLPageRuntime,
@@ -391,6 +529,54 @@ export class LVGLWidget extends Widget {
         const obj = this.lvglCreateObj(runtime, parentObj);
 
         runInAction(() => (this._lvglObj = obj));
+
+        const classInfo = getClassInfo(this);
+
+        // add/clear flags
+        {
+            const { added, cleared } = changes(
+                (classInfo.lvgl!.defaultFlags ?? "").split("|"),
+                (this.flags || "").split(
+                    "|"
+                ) as (keyof typeof LVGL_FLAG_CODES)[]
+            );
+
+            if (added.length > 0) {
+                runtime.wasm._lvglObjAddFlag(
+                    obj,
+                    getCode(added, LVGL_FLAG_CODES)
+                );
+            }
+            if (cleared.length > 0) {
+                runtime.wasm._lvglObjClearFlag(
+                    obj,
+                    getCode(cleared, LVGL_FLAG_CODES)
+                );
+            }
+        }
+
+        // add/clear states
+        {
+            const { added, cleared } = changes(
+                (classInfo.lvgl!.defaultStates ?? "").split("|"),
+                (this.states || "").split(
+                    "|"
+                ) as (keyof typeof LVGL_STATE_CODES)[]
+            );
+
+            if (added.length > 0) {
+                runtime.wasm._lvglObjAddState(
+                    obj,
+                    getCode(added, LVGL_STATE_CODES)
+                );
+            }
+            if (cleared.length > 0) {
+                runtime.wasm._lvglObjClearState(
+                    obj,
+                    getCode(cleared, LVGL_STATE_CODES)
+                );
+            }
+        }
 
         let children: LVGLCreateResultType[];
 
@@ -416,8 +602,75 @@ export class LVGLWidget extends Widget {
     }
 
     override lvglBuild(): string {
+        const classInfo = getClassInfo(this);
+
+        // add/clear flags
+        let flags = "";
+        {
+            const { added, cleared } = changes(
+                (classInfo.defaultValue?.flags ?? "").split("|"),
+                (this.flags || "").split(
+                    "|"
+                ) as (keyof typeof LVGL_FLAG_CODES)[]
+            );
+
+            if (added.length > 0) {
+                flags += `lv_obj_add_flag(obj, ${added
+                    .map(flag => "LV_OBJ_FLAG_" + flag)
+                    .join("|")});\n`;
+            }
+
+            if (cleared.length > 0) {
+                flags += `lv_obj_clear_flag(obj, ${cleared
+                    .map(flag => "LV_OBJ_FLAG_" + flag)
+                    .join("|")});\n`;
+            }
+        }
+
+        // add/clear states
+        let states = "";
+        {
+            const { added, cleared } = changes(
+                (classInfo.defaultValue?.states ?? "").split("|"),
+                (this.states || "").split(
+                    "|"
+                ) as (keyof typeof LVGL_STATE_CODES)[]
+            );
+
+            if (added.length > 0) {
+                states += `lv_obj_add_state(obj, ${added
+                    .map(state => "LV_STATE_" + state)
+                    .join("|")});\n`;
+            }
+
+            if (cleared.length > 0) {
+                states += `lv_obj_clear_state(obj, ${cleared
+                    .map(state => "LV_STATE_" + state)
+                    .join("|")});\n`;
+            }
+        }
+
+        let result = this.lvglBuildObj();
+
+        if (flags) {
+            result += "\n" + flags;
+        }
+
+        if (states) {
+            if (!flags) {
+                result += "\n";
+            }
+            result += states;
+        }
+
+        if (result.endsWith("\n")) {
+            result = result.substring(0, result.length - 1);
+        }
+
+        result += this.localStyles.lvglBuild();
+
         if (this.children.length == 0) {
-            return `${this.lvglBuildObj()}${this.localStyles.lvglBuild()}`;
+            return result;
         }
 
         const widgets = this.children
@@ -427,14 +680,16 @@ export class LVGLWidget extends Widget {
             )
             .join("\n\n");
 
-        return `${this.lvglBuildObj()}${this.localStyles.lvglBuild()}
+        return `${result}
 
 lv_obj_t *parent_obj = obj;
+
 ${widgets}`;
     }
 
-    lvglBuildObj() {
+    lvglBuildObj(): string {
         console.error("UNEXPECTED!");
+        return "";
     }
 
     get part() {
@@ -465,6 +720,10 @@ ${widgets}`;
         runInAction(
             () => (project._DocumentStore.uiStateStore.lvglState = state)
         );
+    }
+
+    render(flowContext: IFlowContext, width: number, height: number) {
+        return <>{super.render(flowContext, width, height)}</>;
     }
 }
 
@@ -502,14 +761,7 @@ export class LVGLLabelWidget extends LVGLWidget {
             height: 32,
             text: "Text",
             localStyles: {},
-            flagPressLock: true,
-            flagClickFocusable: true,
-            flagGestureBubble: true,
-            flagSnappable: true,
-            flagScrollable: true,
-            flagScrollElastic: true,
-            flagScrollMomentum: true,
-            flagScrollChain: true
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
         },
 
         icon: (
@@ -537,7 +789,31 @@ export class LVGLLabelWidget extends LVGLWidget {
             return messages;
         },
 
-        lvgl: { parts: ["main", "scrollbar", "selected"] }
+        lvgl: {
+            parts: ["main", "scrollbar", "selected"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "CHECKABLE",
+                "PRESS_LOCK",
+                "CLICK_FOCUSABLE",
+                "ADV_HITTEST",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE",
+                "SCROLLABLE",
+                "SCROLL_ELASTIC",
+                "SCROLL_MOMENTUM",
+                "SCROLL_ON_FOCUS",
+                "SCROLL_CHAIN",
+                "SCROLL_ONE"
+            ],
+            defaultFlags:
+                "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        }
     });
 
     constructor() {
@@ -546,10 +822,6 @@ export class LVGLLabelWidget extends LVGLWidget {
         makeObservable(this, {
             text: observable
         });
-    }
-
-    render(flowContext: IFlowContext, width: number, height: number) {
-        return <>{super.render(flowContext, width, height)}</>;
     }
 
     override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
@@ -587,16 +859,7 @@ export class LVGLButtonWidget extends LVGLWidget {
             top: 0,
             width: 80,
             height: 40,
-            text: "Button",
-            flagClickable: true,
-            flagPressLock: true,
-            flagClickFocusable: true,
-            flagGestureBubble: true,
-            flagSnappable: true,
-            flagScrollElastic: true,
-            flagScrollOnFocus: true,
-            flagScrollMomentum: true,
-            flagScrollChain: true
+            flags: "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_ON_FOCUS|SCROLL_MOMENTUM|SCROLL_CHAIN"
         },
 
         icon: (
@@ -608,17 +871,37 @@ export class LVGLButtonWidget extends LVGLWidget {
             </svg>
         ),
 
-        lvgl: { parts: ["main"] }
+        lvgl: {
+            parts: ["main"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "CHECKABLE",
+                "PRESS_LOCK",
+                "CLICK_FOCUSABLE",
+                "ADV_HITTEST",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE",
+                "SCROLLABLE",
+                "SCROLL_ELASTIC",
+                "SCROLL_MOMENTUM",
+                "SCROLL_ON_FOCUS",
+                "SCROLL_CHAIN",
+                "SCROLL_ONE"
+            ],
+            defaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        }
     });
 
     constructor() {
         super();
 
         makeObservable(this, {});
-    }
-
-    render(flowContext: IFlowContext, width: number, height: number) {
-        return <>{super.render(flowContext, width, height)}</>;
     }
 
     override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
@@ -639,3 +922,245 @@ lv_obj_set_size(obj, ${this.width}, ${this.height});`;
 }
 
 registerClass("LVGLButtonWidget", LVGLButtonWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLPanelWidget extends LVGLWidget {
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        properties: [],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 120,
+            height: 120,
+            flags: "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
+        },
+
+        icon: (
+            <svg
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <rect x="4" y="4" width="16" height="16" rx="2" />
+                <path d="M4 12h8m0 3h8m-8-6h8m-8-5v16" />
+            </svg>
+        ),
+
+        lvgl: {
+            parts: ["main", "scrollbar"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "CHECKABLE",
+                "PRESS_LOCK",
+                "CLICK_FOCUSABLE",
+                "ADV_HITTEST",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE",
+                "SCROLLABLE",
+                "SCROLL_ELASTIC",
+                "SCROLL_MOMENTUM",
+                "SCROLL_ON_FOCUS",
+                "SCROLL_CHAIN",
+                "SCROLL_ONE"
+            ],
+            defaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        }
+    });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {});
+    }
+
+    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+        return runtime.wasm._lvglCreatePanel(
+            parentObj,
+            this.left,
+            this.top,
+            this.width,
+            this.height
+        );
+    }
+
+    override lvglBuildObj() {
+        return `lv_obj_t *obj = lv_obj_create(parent_obj);
+lv_obj_set_pos(obj, ${this.left}, ${this.top});
+lv_obj_set_size(obj, ${this.width}, ${this.height});`;
+    }
+}
+
+registerClass("LVGLPanelWidget", LVGLPanelWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLImageWidget extends LVGLWidget {
+    image: string;
+    pivotX: number;
+    pivotY: number;
+    zoom: number;
+    angle: number;
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        properties: [
+            {
+                name: "image",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "bitmaps",
+                propertyGridGroup: generalGroup
+            },
+            {
+                name: "pivotX",
+                displayName: "Pivot X",
+                type: PropertyType.Number,
+                propertyGridGroup: generalGroup
+            },
+            {
+                name: "pivotY",
+                displayName: "Pivot Y",
+                type: PropertyType.Number,
+                propertyGridGroup: generalGroup
+            },
+            {
+                name: "zoom",
+                displayName: "Scale",
+                type: PropertyType.Number,
+                propertyGridGroup: generalGroup
+            },
+            {
+                name: "angle",
+                displayName: "Rotation",
+                type: PropertyType.Number,
+                propertyGridGroup: generalGroup
+            }
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 120,
+            height: 120,
+            pivotX: 0,
+            pivotY: 0,
+            zoom: 256,
+            angle: 0,
+            flags: "PRESS_LOCK|ADV_HITTEST|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
+        },
+
+        icon: (
+            <svg
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <path d="M15 8h.01" />
+                <rect x="4" y="4" width="16" height="16" rx="3" />
+                <path d="m4 15 4-4a3 5 0 0 1 3 0l5 5" />
+                <path d="m14 14 1-1a3 5 0 0 1 3 0l2 2" />
+            </svg>
+        ),
+
+        lvgl: {
+            parts: ["main"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "CHECKABLE",
+                "PRESS_LOCK",
+                "CLICK_FOCUSABLE",
+                "ADV_HITTEST",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE",
+                "SCROLLABLE",
+                "SCROLL_ELASTIC",
+                "SCROLL_MOMENTUM",
+                "SCROLL_ON_FOCUS",
+                "SCROLL_CHAIN",
+                "SCROLL_ONE"
+            ],
+            defaultFlags:
+                "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        }
+    });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            image: observable,
+            pivotX: observable,
+            pivotY: observable,
+            zoom: observable,
+            angle: observable
+        });
+    }
+
+    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+        const obj = runtime.wasm._lvglCreateImage(
+            parentObj,
+            this.left,
+            this.top,
+            this.width,
+            this.height,
+            0,
+            this.pivotX,
+            this.pivotY,
+            this.zoom,
+            this.angle
+        );
+
+        (async () => {
+            runtime.wasm._lvglSetImageSrc(
+                obj,
+                await runtime.loadBitmap(this.image)
+            );
+        })();
+
+        return obj;
+    }
+
+    override lvglBuildObj() {
+        return `lv_obj_t *obj = lv_img_create(parent_obj);
+lv_obj_set_pos(obj, ${this.left}, ${this.top});
+lv_obj_set_size(obj, ${this.width}, ${this.height});${
+            this.image ? `\lv_img_set_src(obj, &img_${this.image});` : ""
+        }${
+            this.pivotX != 0 || this.pivotY != 0
+                ? `\nlv_img_set_pivot(obj, ${this.pivotX}, ${this.pivotY});`
+                : ""
+        }${this.zoom != 256 ? `\nlv_img_set_zoom(obj, ${this.zoom});` : ""}${
+            this.angle != 0 ? `\nlv_img_set_angle(obj, ${this.angle});` : ""
+        }`;
+    }
+}
+
+registerClass("LVGLImageWidget", LVGLImageWidget);
+
+// slider
+// roller (screen 3)
+// switch (screen 3)

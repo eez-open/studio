@@ -32,8 +32,50 @@ EM_PORT_API(lv_obj_t *) lvglCreateButton(lv_obj_t *parentObj, lv_coord_t x, lv_c
     return obj;
 }
 
+EM_PORT_API(lv_obj_t *) lvglCreatePanel(lv_obj_t *parentObj, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+    lv_obj_t *obj = lv_obj_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateImage(lv_obj_t *parentObj, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, const void *img_src, lv_coord_t pivotX, lv_coord_t pivotY, uint16_t zoom, int16_t angle) {
+    lv_obj_t *obj = lv_img_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    if (img_src != 0) {
+        lv_img_set_src(obj, img_src);
+    }
+    lv_img_set_pivot(obj, pivotX, pivotY);
+    lv_img_set_zoom(obj, zoom);
+    lv_img_set_angle(obj, angle);
+    return obj;
+}
+
+EM_PORT_API(void) lvglSetImageSrc(lv_obj_t *obj, const void *img_src) {
+    if (img_src != 0) {
+        lv_img_set_src(obj, img_src);
+    }
+}
+
 EM_PORT_API(void) lvglDeleteObject(lv_obj_t *obj) {
     lv_obj_del(obj);
+}
+
+EM_PORT_API(void) lvglObjAddFlag(lv_obj_t *obj, lv_obj_flag_t f) {
+    lv_obj_add_flag(obj, f);
+}
+
+EM_PORT_API(void) lvglObjClearFlag(lv_obj_t *obj, lv_obj_flag_t f) {
+    lv_obj_clear_flag(obj, f);
+}
+
+EM_PORT_API(void) lvglObjAddState(lv_obj_t *obj, lv_obj_flag_t s) {
+    lv_obj_add_state(obj, s);
+}
+
+EM_PORT_API(void) lvglObjClearState(lv_obj_t *obj, lv_obj_flag_t s) {
+    lv_obj_clear_state(obj, s);
 }
 
 EM_PORT_API(uint32_t) lvglObjGetStylePropColor(lv_obj_t *obj, lv_part_t part, lv_style_prop_t prop) {
@@ -91,20 +133,4 @@ EM_PORT_API(void) lvglObjSetLocalStylePropBuiltInFont(lv_obj_t *obj, lv_style_pr
     lv_style_value_t value;
     value.ptr = BUILT_IN_FONTS[font_index];
     lv_obj_set_local_style_prop(obj, prop, value, selector);
-}
-
-EM_PORT_API(int16_t) lvglObjX1(lv_obj_t *obj) {
-    return obj->coords.x1;
-}
-
-EM_PORT_API(int16_t) lvglObjX2(lv_obj_t *obj) {
-    return obj->coords.x2;
-}
-
-EM_PORT_API(int16_t) lvglObjY1(lv_obj_t *obj) {
-    return obj->coords.y1;
-}
-
-EM_PORT_API(int16_t) lvglObjY2(lv_obj_t *obj) {
-    return obj->coords.y2;
 }

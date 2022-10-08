@@ -47,7 +47,12 @@ export async function buildLvglDef(project: Project) {
 
             const bitmapData = await ProjectEditor.getBitmapData(bitmap);
 
-            return `const LV_ATTRIBUTE_MEM_ALIGN uint8_t ${varName}_data[] = { ${bitmapData.pixels.join(
+            const bgrPixels = new Uint8Array(bitmapData.pixels);
+            for (let i = 0; i < bgrPixels.length; i += 4) {
+                bgrPixels[i] = bitmapData.pixels[i + 2];
+                bgrPixels[i + 2] = bitmapData.pixels[i];
+            }
+            return `const LV_ATTRIBUTE_MEM_ALIGN uint8_t ${varName}_data[] = { ${bgrPixels.join(
                 ", "
             )} };
 const lv_img_dsc_t ${varName} = {

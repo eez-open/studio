@@ -62,6 +62,7 @@ import type {
 } from "project-editor/flow/components/widgets";
 import type { ArrayProperty } from "project-editor/ui-components/PropertyGrid/ArrayElementProperty";
 import type { EmbeddedPropertyGrid } from "project-editor/ui-components/PropertyGrid/EmbeddedPropertyGrid";
+import type { LVGLWidget } from "project-editor/lvgl/widgets";
 
 export interface IProjectEditor {
     homeTabs: Tabs;
@@ -95,6 +96,7 @@ export interface IProjectEditor {
     GlyphClass: typeof Glyph;
     ScpiCommandClass: typeof ScpiCommand;
     ScpiSubsystemClass: typeof ScpiSubsystem;
+    LVGLWidgetClass: typeof LVGLWidget;
     getProject: typeof getProject;
     getFlow: typeof getFlow;
     getNameProperty: typeof getNameProperty;

@@ -380,7 +380,14 @@ export interface IWasmFlowRuntime {
     _lvglCreateContainer(parentObj: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateLabel(parentObj: number, text: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateButton(parentObj: number, x: number, y: number, w: number, h: number): number;
+    _lvglCreatePanel(parentObj: number, x: number, y: number, w: number, h: number): number;
+    _lvglCreateImage(parentObj: number, x: number, y: number, w: number, h: number, img_src: number, pivotX: number, pivotY: number, zoom: number, angle: number): number;
+    _lvglSetImageSrc(parentObj: number, img_src: number): void;
     _lvglDeleteObject(obj: number): void;
+    _lvglObjAddFlag(obj: number, f: number): void;
+    _lvglObjClearFlag(obj: number, f: number): void;
+    _lvglObjAddState(obj: number, s: number): void;
+    _lvglObjClearState(obj: number, s: number): void;
     _lvglObjGetStylePropColor(obj: number, part: number, prop: number): number;
     _lvglObjGetStylePropNum(obj: number, part: number, prop: number): number;
     _lvglObjSetLocalStylePropColor(obj: number, prop: number, color: number, selector: number): void;

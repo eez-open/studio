@@ -3770,7 +3770,11 @@ export class Widget extends Component {
         check: (object: Component) => {
             let messages: Message[] = [];
 
-            if (object instanceof Widget && !object.allowOutside) {
+            if (
+                object instanceof Widget &&
+                !(object instanceof ProjectEditor.LVGLWidgetClass) &&
+                !object.allowOutside
+            ) {
                 if (object.left < 0) {
                     messages.push(
                         new Message(
