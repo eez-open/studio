@@ -88,6 +88,7 @@ function makeEnumPropertyInfo(
             id,
             label: id
         })),
+        enumDisallowUndefined: true,
         lvglStylePropCode,
         lvglStylePropValueRead: (value: number) =>
             codeToEnumItem[value.toString()],

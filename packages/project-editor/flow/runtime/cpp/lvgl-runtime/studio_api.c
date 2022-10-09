@@ -13,6 +13,7 @@ EM_PORT_API(lv_obj_t *) lvglCreateContainer(lv_obj_t *parentObj, lv_coord_t x, l
     if (parentObj == 0) {
         lv_scr_load(obj);
     }
+    lv_obj_update_layout(obj);
     return obj;
 }
 
@@ -22,6 +23,7 @@ EM_PORT_API(lv_obj_t *) lvglCreateLabel(lv_obj_t *parentObj, char *text, lv_coor
     lv_obj_set_size(obj, w, h);
     lv_label_set_text(obj, text);
     free(text);
+    lv_obj_update_layout(obj);
     return obj;
 }
 
@@ -29,6 +31,7 @@ EM_PORT_API(lv_obj_t *) lvglCreateButton(lv_obj_t *parentObj, lv_coord_t x, lv_c
     lv_obj_t *obj = lv_btn_create(parentObj);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
     return obj;
 }
 
@@ -36,6 +39,7 @@ EM_PORT_API(lv_obj_t *) lvglCreatePanel(lv_obj_t *parentObj, lv_coord_t x, lv_co
     lv_obj_t *obj = lv_obj_create(parentObj);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
     return obj;
 }
 
@@ -49,6 +53,7 @@ EM_PORT_API(lv_obj_t *) lvglCreateImage(lv_obj_t *parentObj, lv_coord_t x, lv_co
     lv_img_set_pivot(obj, pivotX, pivotY);
     lv_img_set_zoom(obj, zoom);
     lv_img_set_angle(obj, angle);
+    lv_obj_update_layout(obj);
     return obj;
 }
 
@@ -56,6 +61,7 @@ EM_PORT_API(void) lvglSetImageSrc(lv_obj_t *obj, const void *img_src) {
     if (img_src != 0) {
         lv_img_set_src(obj, img_src);
     }
+    lv_obj_update_layout(obj);
 }
 
 EM_PORT_API(void) lvglDeleteObject(lv_obj_t *obj) {
@@ -64,18 +70,22 @@ EM_PORT_API(void) lvglDeleteObject(lv_obj_t *obj) {
 
 EM_PORT_API(void) lvglObjAddFlag(lv_obj_t *obj, lv_obj_flag_t f) {
     lv_obj_add_flag(obj, f);
+    lv_obj_update_layout(obj);
 }
 
 EM_PORT_API(void) lvglObjClearFlag(lv_obj_t *obj, lv_obj_flag_t f) {
     lv_obj_clear_flag(obj, f);
+    lv_obj_update_layout(obj);
 }
 
 EM_PORT_API(void) lvglObjAddState(lv_obj_t *obj, lv_obj_flag_t s) {
     lv_obj_add_state(obj, s);
+    lv_obj_update_layout(obj);
 }
 
 EM_PORT_API(void) lvglObjClearState(lv_obj_t *obj, lv_obj_flag_t s) {
     lv_obj_clear_state(obj, s);
+    lv_obj_update_layout(obj);
 }
 
 EM_PORT_API(uint32_t) lvglObjGetStylePropColor(lv_obj_t *obj, lv_part_t part, lv_style_prop_t prop) {
@@ -92,18 +102,21 @@ EM_PORT_API(void) lvglObjSetLocalStylePropColor(lv_obj_t *obj, lv_style_prop_t p
     lv_style_value_t value;
     value.color = lv_color_hex(color);
     lv_obj_set_local_style_prop(obj, prop, value, selector);
+    lv_obj_update_layout(obj);
 }
 
 EM_PORT_API(void) lvglObjSetLocalStylePropNum(lv_obj_t *obj, lv_style_prop_t prop, int32_t num, lv_style_selector_t selector) {
     lv_style_value_t value;
     value.num = num;
     lv_obj_set_local_style_prop(obj, prop, value, selector);
+    lv_obj_update_layout(obj);
 }
 
 EM_PORT_API(void) lvglObjSetLocalStylePropPtr(lv_obj_t *obj, lv_style_prop_t prop, const void *ptr, lv_style_selector_t selector) {
     lv_style_value_t value;
     value.ptr = ptr;
     lv_obj_set_local_style_prop(obj, prop, value, selector);
+    lv_obj_update_layout(obj);
 }
 
 EM_PORT_API(void) lvglObjSetLocalStylePropBuiltInFont(lv_obj_t *obj, lv_style_prop_t prop, int font_index, lv_style_selector_t selector) {
@@ -133,4 +146,31 @@ EM_PORT_API(void) lvglObjSetLocalStylePropBuiltInFont(lv_obj_t *obj, lv_style_pr
     lv_style_value_t value;
     value.ptr = BUILT_IN_FONTS[font_index];
     lv_obj_set_local_style_prop(obj, prop, value, selector);
+    lv_obj_update_layout(obj);
+}
+
+EM_PORT_API(int16_t) lvglGetObjRelX(lv_obj_t *obj) {
+    int16_t x = lv_obj_get_x(obj);
+
+    lv_obj_t *parent = lv_obj_get_parent(obj);
+    if (parent) {
+        lv_area_t area;
+        lv_obj_get_content_coords(parent, &area);
+        return area.x1 - lv_obj_get_x(parent) + x;
+    }
+
+    return x;
+}
+
+EM_PORT_API(int16_t) lvglGetObjRelY(lv_obj_t *obj) {
+    int16_t y = lv_obj_get_y(obj);
+
+    lv_obj_t *parent = lv_obj_get_parent(obj);
+    if (parent) {
+        lv_area_t area;
+        lv_obj_get_content_coords(parent, &area);
+        return area.y1 - lv_obj_get_y(parent) + y;
+    }
+
+    return y;
 }

@@ -1727,10 +1727,6 @@ export class Component extends EezObject {
         });
     }
 
-    get autoSize(): AutoSize {
-        return "none";
-    }
-
     static classInfo: ClassInfo = {
         getClass: function (jsObject: any) {
             return getComponentClass(jsObject);
@@ -2127,26 +2123,31 @@ export class Component extends EezObject {
 
             const props: Partial<Rect> = {};
 
-            if (value.left != undefined && value.left !== object.left) {
-                props.left = value.left;
+            const { left, top } = object.fromRelativePosition(
+                value.left ?? object.rect.left,
+                value.top ?? object.rect.top
+            );
+
+            if (left !== object.left) {
+                props.left = left;
             }
 
+            if (top !== object.top) {
+                props.top = top;
+            }
+
+            const width = value.width ?? object.rect.width;
+            const height = value.height ?? object.rect.height;
+
             if (!(object.autoSize == "width" || object.autoSize == "both")) {
-                if (value.width != undefined && value.width !== object.width) {
-                    props.width = value.width;
+                if (width !== object.width) {
+                    props.width = width;
                 }
             }
 
-            if (value.top != undefined && value.top !== object.top) {
-                props.top = value.top;
-            }
-
             if (!(object.autoSize == "height" || object.autoSize == "both")) {
-                if (
-                    value.height != undefined &&
-                    value.height !== object.height
-                ) {
-                    props.height = value.height;
+                if (height !== object.height) {
+                    props.height = height;
                 }
             }
 
@@ -2467,6 +2468,18 @@ export class Component extends EezObject {
         }
     };
 
+    get relativePosition() {
+        return { left: this.left, top: this.top };
+    }
+
+    fromRelativePosition(left: number, top: number) {
+        return { left, top };
+    }
+
+    get autoSize(): AutoSize {
+        return "none";
+    }
+
     get geometry() {
         if (this._geometry) {
             return this._geometry;
@@ -2490,8 +2503,8 @@ export class Component extends EezObject {
         }
 
         return {
-            left: this.left,
-            top: this.top,
+            left: this.relativePosition.left,
+            top: this.relativePosition.top,
             width: this.width ?? 0,
             height: this.height ?? 0
         };

@@ -113,6 +113,7 @@ export interface PropertyInfo {
     // optional properties
     displayName?: string | ((object: IEezObject) => string);
     enumItems?: EnumItem[] | ((object: IEezObject) => EnumItem[]);
+    enumDisallowUndefined?: boolean;
     typeClass?: EezClass;
     referencedObjectCollectionPath?: string;
     computed?: boolean;

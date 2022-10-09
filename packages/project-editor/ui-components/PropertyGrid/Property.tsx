@@ -591,7 +591,9 @@ export const Property = observer(
                         options = [];
                     }
 
-                    options.unshift(<option key="__empty" value="" />);
+                    if (!propertyInfo.enumDisallowUndefined) {
+                        options.unshift(<option key="__empty" value="" />);
+                    }
 
                     return (
                         <select

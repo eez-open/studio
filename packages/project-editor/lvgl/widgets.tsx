@@ -14,6 +14,7 @@ import {
     LVGL_STATE_CODES
 } from "project-editor/core/object";
 import {
+    getAncestorOfType,
     getClassInfo,
     Message,
     propertyNotSetMessage
@@ -42,6 +43,8 @@ import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { ProjectContext } from "project-editor/project/context";
 import { humanize } from "eez-studio-shared/string";
+import type { Page } from "project-editor/features/page/page";
+import { ComponentsContainerEnclosure } from "project-editor/flow/editor/render";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -522,6 +525,39 @@ export class LVGLWidget extends Widget {
         });
     }
 
+    override get relativePosition() {
+        if (this._lvglObj) {
+            const page = getAncestorOfType(
+                this,
+                ProjectEditor.PageClass.classInfo
+            ) as Page;
+            if (page._lvglRuntime) {
+                return {
+                    left: page._lvglRuntime.wasm._lvglGetObjRelX(this._lvglObj),
+                    top: page._lvglRuntime.wasm._lvglGetObjRelY(this._lvglObj)
+                };
+            }
+        }
+        return super.relativePosition;
+    }
+
+    override fromRelativePosition(left: number, top: number) {
+        if (this._lvglObj) {
+            const page = getAncestorOfType(
+                this,
+                ProjectEditor.PageClass.classInfo
+            ) as Page;
+            if (page._lvglRuntime) {
+                return {
+                    left: left - this.relativePosition.left + this.left,
+                    top: top - this.relativePosition.top + this.top
+                };
+            }
+        }
+
+        return { left, top };
+    }
+
     override lvglCreate(
         runtime: LVGLPageRuntime,
         parentObj: number
@@ -608,7 +644,7 @@ export class LVGLWidget extends Widget {
         let flags = "";
         {
             const { added, cleared } = changes(
-                (classInfo.defaultValue?.flags ?? "").split("|"),
+                (classInfo.lvgl!.defaultFlags ?? "").split("|"),
                 (this.flags || "").split(
                     "|"
                 ) as (keyof typeof LVGL_FLAG_CODES)[]
@@ -631,7 +667,7 @@ export class LVGLWidget extends Widget {
         let states = "";
         {
             const { added, cleared } = changes(
-                (classInfo.defaultValue?.states ?? "").split("|"),
+                (classInfo.lvgl!.defaultStates ?? "").split("|"),
                 (this.states || "").split(
                     "|"
                 ) as (keyof typeof LVGL_STATE_CODES)[]
@@ -723,7 +759,18 @@ ${widgets}`;
     }
 
     render(flowContext: IFlowContext, width: number, height: number) {
-        return <>{super.render(flowContext, width, height)}</>;
+        return (
+            <>
+                <ComponentsContainerEnclosure
+                    parent={this}
+                    components={this.children}
+                    flowContext={flowContext}
+                    width={width}
+                    height={height}
+                />
+                {super.render(flowContext, width, height)}
+            </>
+        );
     }
 }
 

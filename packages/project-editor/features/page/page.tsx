@@ -182,6 +182,10 @@ export class Page extends Flow {
 
     _lvglRuntime: LVGLPageRuntime | undefined;
 
+    get _lvglObj() {
+        return this._lvglRuntime?.pageObj ?? 0;
+    }
+
     constructor() {
         super();
 
