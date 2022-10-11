@@ -187,9 +187,11 @@ function loadObjectInternal(
         currentProject = object;
     }
 
-    if (object instanceof ProjectEditor.FlowClass) {
-        wireIDToObjID = new Map<string, string>();
-        flowToWireIDToObjID.set(object, wireIDToObjID);
+    if (isLoadProject) {
+        if (object instanceof ProjectEditor.FlowClass) {
+            wireIDToObjID = new Map<string, string>();
+            flowToWireIDToObjID.set(object, wireIDToObjID);
+        }
     }
 
     if (object instanceof ProjectEditor.ConnectionLineClass) {

@@ -1,6 +1,6 @@
 import { humanize } from "eez-studio-shared/string";
 import { observer } from "mobx-react";
-import { runInAction } from "mobx";
+import { computed, makeObservable, runInAction } from "mobx";
 import classNames from "classnames";
 
 import { EezObject, PropertyProps } from "project-editor/core/object";
@@ -10,6 +10,7 @@ import { getAncestorOfType, ProjectEditorStore } from "project-editor/store";
 import React from "react";
 import {
     getStylePropDefaultValue,
+    LVGLParts,
     lvglProperties,
     LVGLStylesDefinition,
     PropertiesGroup
@@ -29,6 +30,47 @@ export const LVGLStylesDefinitionProperty = observer(
     class LVGLStylesDefinitionProperty extends React.Component<PropertyProps> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                lvglPart: computed,
+                lvglState: computed
+            });
+        }
+
+        get lvglPart() {
+            let part: LVGLParts | undefined;
+
+            this.props.objects.forEach(widget => {
+                if (!part) {
+                    part = (widget as LVGLWidget).part;
+                } else {
+                    if (part != (widget as LVGLWidget).part) {
+                        part = "MAIN";
+                    }
+                }
+            });
+
+            return part || "MAIN";
+        }
+
+        get lvglState() {
+            let state = "";
+
+            this.props.objects.forEach(widget => {
+                if (!state) {
+                    state = (widget as LVGLWidget).state;
+                } else {
+                    if (state != (widget as LVGLWidget).state) {
+                        state = "DEFAULT";
+                    }
+                }
+            });
+
+            return state || "DEFAULT";
+        }
 
         isExpanded = (propertiesGroup: PropertiesGroup) => {
             return (
@@ -71,8 +113,8 @@ export const LVGLStylesDefinitionProperty = observer(
                 let definedValues = stylesDefinitions.map(stylesDefinition =>
                     stylesDefinition.getPropertyValue(
                         propertyInfo,
-                        this.context.uiStateStore.lvglPart,
-                        this.context.uiStateStore.lvglState
+                        this.lvglPart,
+                        this.lvglState
                     )
                 );
 
@@ -122,8 +164,8 @@ export const LVGLStylesDefinitionProperty = observer(
                 runtime = page._lvglRuntime;
             }
 
-            const part = this.context.uiStateStore.lvglPart;
-            const state = this.context.uiStateStore.lvglState;
+            const part = this.lvglPart;
+            const state = this.lvglState;
 
             return (
                 <div className="EezStudio_LVGLStylesDefinition">

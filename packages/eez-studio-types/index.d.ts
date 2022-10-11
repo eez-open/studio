@@ -399,6 +399,8 @@ export interface IWasmFlowRuntime {
     _lvglObjSetLocalStylePropBuiltInFont(obj: number, prop: number, fontIndex: number, selector: number): void;
     _lvglGetObjRelX(obj: number): number;
     _lvglGetObjRelY(obj: number): number;
+    _lvglGetObjWidth(obj: number): number;
+    _lvglGetObjHeight(obj: number): number;
 }
 
 export interface IDashboardComponentContext {

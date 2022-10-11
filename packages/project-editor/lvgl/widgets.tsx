@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, makeObservable, runInAction } from "mobx";
+import { observable, makeObservable, runInAction, computed } from "mobx";
 import { observer } from "mobx-react";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
@@ -17,6 +17,7 @@ import {
     getAncestorOfType,
     getClassInfo,
     Message,
+    propertyNotFoundMessage,
     propertyNotSetMessage
 } from "project-editor/store";
 
@@ -24,10 +25,11 @@ import { ProjectType } from "project-editor/project/project";
 
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
-import { Widget } from "project-editor/flow/component";
+import { AutoSize, Widget } from "project-editor/flow/component";
 
 import {
     generalGroup,
+    geometryGroup,
     specificGroup,
     styleGroup
 } from "project-editor/ui-components/PropertyGrid/groups";
@@ -45,6 +47,20 @@ import { ProjectContext } from "project-editor/project/context";
 import { humanize } from "eez-studio-shared/string";
 import type { Page } from "project-editor/features/page/page";
 import { ComponentsContainerEnclosure } from "project-editor/flow/editor/render";
+
+////////////////////////////////////////////////////////////////////////////////
+
+const _LV_COORD_TYPE_SHIFT = 13;
+const _LV_COORD_TYPE_SPEC = 1 << _LV_COORD_TYPE_SHIFT;
+function LV_COORD_SET_SPEC(x: number) {
+    return x | _LV_COORD_TYPE_SPEC;
+}
+
+function LV_PCT(x: number) {
+    return x < 0 ? LV_COORD_SET_SPEC(1000 - x) : LV_COORD_SET_SPEC(x);
+}
+
+const LV_SIZE_CONTENT = LV_COORD_SET_SPEC(2001);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -368,6 +384,13 @@ function getCode<T extends string>(
 ////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLWidget extends Widget {
+    identifier: string;
+
+    leftUnit: "px" | "%";
+    topUnit: "px" | "%";
+    widthUnit: "px" | "%" | "content";
+    heightUnit: "px" | "%" | "content";
+
     children: Widget[];
     flags: string;
     scrollbarMode: string;
@@ -376,12 +399,69 @@ export class LVGLWidget extends Widget {
     localStyles: LVGLStylesDefinition;
 
     _lvglObj: number;
+    _refreshCounter: number = 0;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
+        label: (widget: LVGLWidget) => {
+            let name = getComponentName(widget.type);
+
+            if (widget.identifier) {
+                return `${name} [${widget.identifier}]`;
+            }
+
+            return name;
+        },
+
         properties: [
+            {
+                name: "identifier",
+                displayName: "Name",
+                type: PropertyType.String,
+                unique: true,
+                isOptional: true,
+                propertyGridGroup: generalGroup
+            },
+            {
+                name: "leftUnit",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "px", label: "px" },
+                    { id: "%", label: "%" }
+                ],
+                propertyGridGroup: geometryGroup
+            },
+            {
+                name: "topUnit",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "px", label: "px" },
+                    { id: "%", label: "%" }
+                ],
+                propertyGridGroup: geometryGroup
+            },
+            {
+                name: "widthUnit",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "px", label: "px" },
+                    { id: "%", label: "%" },
+                    { id: "content", label: "content" }
+                ],
+                propertyGridGroup: geometryGroup
+            },
+            {
+                name: "heightUnit",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "px", label: "px" },
+                    { id: "%", label: "%" },
+                    { id: "content", label: "content" }
+                ],
+                propertyGridGroup: geometryGroup
+            },
             {
                 name: "children",
                 type: PropertyType.Array,
@@ -468,7 +548,8 @@ export class LVGLWidget extends Widget {
                 enumItems: (widget: LVGLWidget) => {
                     const classInfo = getClassInfo(widget);
                     return classInfo.lvgl!.parts.map(lvglPart => ({
-                        id: lvglPart
+                        id: lvglPart,
+                        label: lvglPart
                     }));
                 },
                 enumDisallowUndefined: true,
@@ -480,12 +561,12 @@ export class LVGLWidget extends Widget {
                 name: "state",
                 type: PropertyType.Enum,
                 enumItems: [
-                    { id: "default", label: "DEFAULT" },
-                    { id: "checked", label: "CHECKED" },
-                    { id: "pressed", label: "PRESSED" },
-                    { id: "checked|pressed", label: "CHECKED | PRESSED" },
-                    { id: "disabled", label: "DISABLED" },
-                    { id: "focused", label: "FOCUSED" }
+                    { id: "DEFAULT", label: "DEFAULT" },
+                    { id: "CHECKED", label: "CHECKED" },
+                    { id: "PRESSED", label: "PRESSED" },
+                    { id: "CHECKED|PRESSED", label: "CHECKED | PRESSED" },
+                    { id: "DISABLED", label: "DISABLED" },
+                    { id: "FOCUSED", label: "FOCUSED" }
                 ],
                 enumDisallowUndefined: true,
                 propertyGridGroup: styleGroup,
@@ -502,7 +583,26 @@ export class LVGLWidget extends Widget {
             }
         ],
 
+        beforeLoadHook: (widget: LVGLWidget, jsWidget: Partial<LVGLWidget>) => {
+            if (jsWidget.leftUnit == undefined) {
+                jsWidget.leftUnit = "px";
+            }
+            if (jsWidget.topUnit == undefined) {
+                jsWidget.topUnit = "px";
+            }
+            if (jsWidget.widthUnit == undefined) {
+                jsWidget.widthUnit = "px";
+            }
+            if (jsWidget.heightUnit == undefined) {
+                jsWidget.heightUnit = "px";
+            }
+        },
+
         defaultValue: {
+            leftUnit: "px",
+            topUnit: "px",
+            widthUnit: "px",
+            heightUnit: "px",
             scrollbarMode: "auto",
             scrollDirection: "all"
         },
@@ -520,16 +620,26 @@ export class LVGLWidget extends Widget {
         super();
 
         makeObservable(this, {
+            identifier: observable,
+            leftUnit: observable,
+            topUnit: observable,
+            widthUnit: observable,
+            heightUnit: observable,
+            children: observable,
             flags: observable,
             scrollbarMode: observable,
             scrollDirection: observable,
             states: observable,
             localStyles: observable,
-            _lvglObj: observable
+            _lvglObj: observable,
+            state: computed,
+            part: computed,
+            _refreshCounter: observable
         });
     }
 
     override get relativePosition() {
+        this._refreshCounter;
         if (this._lvglObj) {
             const page = getAncestorOfType(
                 this,
@@ -560,6 +670,47 @@ export class LVGLWidget extends Widget {
         }
 
         return { left, top };
+    }
+
+    override get autoSize(): AutoSize {
+        if (this.widthUnit == "content" && this.heightUnit == "content") {
+            return "both";
+        }
+        if (this.widthUnit == "content") {
+            return "width";
+        }
+        if (this.heightUnit == "content") {
+            return "height";
+        }
+        return "none";
+    }
+
+    override get componentWidth() {
+        this._refreshCounter;
+        if (this._lvglObj) {
+            const page = getAncestorOfType(
+                this,
+                ProjectEditor.PageClass.classInfo
+            ) as Page;
+            if (page._lvglRuntime) {
+                return page._lvglRuntime.wasm._lvglGetObjWidth(this._lvglObj);
+            }
+        }
+        return this.width ?? 0;
+    }
+
+    override get componentHeight() {
+        this._refreshCounter;
+        if (this._lvglObj) {
+            const page = getAncestorOfType(
+                this,
+                ProjectEditor.PageClass.classInfo
+            ) as Page;
+            if (page._lvglRuntime) {
+                return page._lvglRuntime.wasm._lvglGetObjHeight(this._lvglObj);
+            }
+        }
+        return this.height ?? 0;
     }
 
     override lvglCreate(
@@ -690,7 +841,13 @@ export class LVGLWidget extends Widget {
             }
         }
 
-        let result = this.lvglBuildObj();
+        let result = "";
+
+        if (this.identifier) {
+            result = `// ${this.identifier}\n`;
+        }
+
+        result += this.lvglBuildObj();
 
         if (flags) {
             result += "\n" + flags;
@@ -718,13 +875,82 @@ export class LVGLWidget extends Widget {
                 (widget: LVGLWidget) =>
                     `{\n${indent(TAB, widget.lvglBuild())}\n}`
             )
-            .join("\n\n");
+            .join("\n");
 
         return `${result}
+{
+    lv_obj_t *parent_obj = obj;
+${indent(TAB, widgets)}
+}`;
+    }
 
-lv_obj_t *parent_obj = obj;
+    get lvglCreateLeft() {
+        if (this.leftUnit == "%") {
+            return LV_PCT(this.left);
+        }
+        return this.left;
+    }
 
-${widgets}`;
+    get lvglCreateTop() {
+        if (this.topUnit == "%") {
+            return LV_PCT(this.top);
+        }
+        return this.top;
+    }
+
+    get lvglCreateWidth() {
+        if (this.widthUnit == "content") {
+            return LV_SIZE_CONTENT;
+        } else if (this.widthUnit == "%") {
+            return LV_PCT(this.width);
+        }
+        return this.width;
+    }
+
+    get lvglCreateHeight() {
+        if (this.heightUnit == "content") {
+            return LV_SIZE_CONTENT;
+        } else if (this.heightUnit == "%") {
+            return LV_PCT(this.height);
+        }
+        return this.height;
+    }
+
+    get lvglBuildLeft() {
+        if (this.leftUnit == "%") {
+            return `LV_PCT(${this.left})`;
+        }
+        return this.left;
+    }
+
+    get lvglBuildTop() {
+        if (this.topUnit == "%") {
+            return `LV_PCT(${this.top})`;
+        }
+        return this.top;
+    }
+
+    get lvglBuildWidth() {
+        if (this.widthUnit == "content") {
+            return "LV_SIZE_CONTENT";
+        } else if (this.widthUnit == "%") {
+            return `LV_PCT(${this.width})`;
+        }
+        return this.width;
+    }
+
+    get lvglBuildHeight() {
+        if (this.heightUnit == "content") {
+            return "LV_SIZE_CONTENT";
+        } else if (this.heightUnit == "%") {
+            return `LV_PCT(${this.height})`;
+        }
+        return this.height;
+    }
+
+    get lvglBuildPosAndSize() {
+        return `lv_obj_set_pos(obj, ${this.lvglBuildLeft}, ${this.lvglBuildTop});
+lv_obj_set_size(obj, ${this.lvglBuildWidth}, ${this.lvglBuildHeight});`;
     }
 
     lvglBuildObj(): string {
@@ -742,7 +968,7 @@ ${widgets}`;
         ) {
             return project._DocumentStore.uiStateStore.lvglPart;
         }
-        return "main";
+        return "MAIN";
     }
     set part(part: LVGLParts) {
         const project = ProjectEditor.getProject(this);
@@ -800,6 +1026,10 @@ export class LVGLLabelWidget extends LVGLWidget {
         label: (widget: LVGLLabelWidget) => {
             let name = getComponentName(widget.type);
 
+            if (widget.identifier) {
+                name = `${name} [${widget.identifier}]`;
+            }
+
             if (widget.text) {
                 return `${name}: ${widget.text}`;
             }
@@ -851,8 +1081,10 @@ export class LVGLLabelWidget extends LVGLWidget {
         defaultValue: {
             left: 0,
             top: 0,
-            width: 64,
-            height: 32,
+            width: 0,
+            height: 0,
+            widthUnit: "content",
+            heightUnit: "content",
             text: "Text",
             longMode: "WRAP",
             recolor: false,
@@ -886,7 +1118,7 @@ export class LVGLLabelWidget extends LVGLWidget {
         },
 
         lvgl: {
-            parts: ["main", "scrollbar", "selected"],
+            parts: ["MAIN", "SCROLLBAR", "SELECTED"],
             flags: [
                 "HIDDEN",
                 "CLICKABLE",
@@ -925,10 +1157,10 @@ export class LVGLLabelWidget extends LVGLWidget {
     override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
         return runtime.wasm._lvglCreateLabel(
             parentObj,
-            this.left,
-            this.top,
-            this.width,
-            this.height,
+            this.lvglCreateLeft,
+            this.lvglCreateTop,
+            this.lvglCreateWidth,
+            this.lvglCreateHeight,
             runtime.wasm.allocateUTF8(this.text),
             LONG_MODE_CODES[this.longMode],
             this.recolor ? 1 : 0
@@ -945,13 +1177,10 @@ export class LVGLLabelWidget extends LVGLWidget {
             : "";
 
         return `lv_obj_t *obj = lv_label_create(parent_obj);
-lv_obj_set_pos(obj, ${this.left}, ${this.top});
-lv_obj_set_size(obj, ${this.width}, ${this.height});${longMode}
+${this.lvglBuildPosAndSize}${longMode}
 lv_label_set_text(obj, ${escapeCString(this.text)});${recolor}`;
     }
 }
-
-registerClass("LVGLLabelWidget", LVGLLabelWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -980,7 +1209,7 @@ export class LVGLButtonWidget extends LVGLWidget {
         ),
 
         lvgl: {
-            parts: ["main"],
+            parts: ["MAIN"],
             flags: [
                 "HIDDEN",
                 "CLICKABLE",
@@ -1015,21 +1244,18 @@ export class LVGLButtonWidget extends LVGLWidget {
     override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
         return runtime.wasm._lvglCreateButton(
             parentObj,
-            this.left,
-            this.top,
-            this.width,
-            this.height
+            this.lvglCreateLeft,
+            this.lvglCreateTop,
+            this.lvglCreateWidth,
+            this.lvglCreateHeight
         );
     }
 
     override lvglBuildObj() {
         return `lv_obj_t *obj = lv_btn_create(parent_obj);
-lv_obj_set_pos(obj, ${this.left}, ${this.top});
-lv_obj_set_size(obj, ${this.width}, ${this.height});`;
+${this.lvglBuildPosAndSize}`;
     }
 }
-
-registerClass("LVGLButtonWidget", LVGLButtonWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1063,7 +1289,7 @@ export class LVGLPanelWidget extends LVGLWidget {
         ),
 
         lvgl: {
-            parts: ["main", "scrollbar"],
+            parts: ["MAIN", "SCROLLBAR"],
             flags: [
                 "HIDDEN",
                 "CLICKABLE",
@@ -1098,21 +1324,18 @@ export class LVGLPanelWidget extends LVGLWidget {
     override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
         return runtime.wasm._lvglCreatePanel(
             parentObj,
-            this.left,
-            this.top,
-            this.width,
-            this.height
+            this.lvglCreateLeft,
+            this.lvglCreateTop,
+            this.lvglCreateWidth,
+            this.lvglCreateHeight
         );
     }
 
     override lvglBuildObj() {
         return `lv_obj_t *obj = lv_obj_create(parent_obj);
-lv_obj_set_pos(obj, ${this.left}, ${this.top});
-lv_obj_set_size(obj, ${this.width}, ${this.height});`;
+${this.lvglBuildPosAndSize}`;
     }
 }
-
-registerClass("LVGLPanelWidget", LVGLPanelWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1122,6 +1345,7 @@ export class LVGLImageWidget extends LVGLWidget {
     pivotY: number;
     zoom: number;
     angle: number;
+
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
@@ -1131,39 +1355,41 @@ export class LVGLImageWidget extends LVGLWidget {
                 name: "image",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "bitmaps",
-                propertyGridGroup: generalGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "pivotX",
                 displayName: "Pivot X",
                 type: PropertyType.Number,
-                propertyGridGroup: generalGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "pivotY",
                 displayName: "Pivot Y",
                 type: PropertyType.Number,
-                propertyGridGroup: generalGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "zoom",
                 displayName: "Scale",
                 type: PropertyType.Number,
-                propertyGridGroup: generalGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "angle",
                 displayName: "Rotation",
                 type: PropertyType.Number,
-                propertyGridGroup: generalGroup
+                propertyGridGroup: specificGroup
             }
         ],
 
         defaultValue: {
             left: 0,
             top: 0,
-            width: 120,
-            height: 120,
+            width: 0,
+            height: 0,
+            widthUnit: "content",
+            heightUnit: "content",
             pivotX: 0,
             pivotY: 0,
             zoom: 256,
@@ -1188,8 +1414,25 @@ export class LVGLImageWidget extends LVGLWidget {
             </svg>
         ),
 
+        check: (widget: LVGLImageWidget) => {
+            let messages: Message[] = [];
+
+            if (widget.image) {
+                const bitmap = ProjectEditor.findBitmap(
+                    ProjectEditor.getProject(widget),
+                    widget.image
+                );
+
+                if (!bitmap) {
+                    messages.push(propertyNotFoundMessage(widget, "image"));
+                }
+            }
+
+            return messages;
+        },
+
         lvgl: {
-            parts: ["main"],
+            parts: ["MAIN"],
             flags: [
                 "HIDDEN",
                 "CLICKABLE",
@@ -1230,10 +1473,10 @@ export class LVGLImageWidget extends LVGLWidget {
     override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
         const obj = runtime.wasm._lvglCreateImage(
             parentObj,
-            this.left,
-            this.top,
-            this.width,
-            this.height,
+            this.lvglCreateLeft,
+            this.lvglCreateTop,
+            this.lvglCreateWidth,
+            this.lvglCreateHeight,
             0,
             this.pivotX,
             this.pivotY,
@@ -1246,6 +1489,7 @@ export class LVGLImageWidget extends LVGLWidget {
                 obj,
                 await runtime.loadBitmap(this.image)
             );
+            runInAction(() => this._refreshCounter++);
         })();
 
         return obj;
@@ -1253,9 +1497,8 @@ export class LVGLImageWidget extends LVGLWidget {
 
     override lvglBuildObj() {
         return `lv_obj_t *obj = lv_img_create(parent_obj);
-lv_obj_set_pos(obj, ${this.left}, ${this.top});
-lv_obj_set_size(obj, ${this.width}, ${this.height});${
-            this.image ? `\lv_img_set_src(obj, &img_${this.image});` : ""
+${this.lvglBuildPosAndSize}${
+            this.image ? `\nlv_img_set_src(obj, &img_${this.image});` : ""
         }${
             this.pivotX != 0 || this.pivotY != 0
                 ? `\nlv_img_set_pivot(obj, ${this.pivotX}, ${this.pivotY});`
@@ -1265,8 +1508,6 @@ lv_obj_set_size(obj, ${this.width}, ${this.height});${
         }`;
     }
 }
-
-registerClass("LVGLImageWidget", LVGLImageWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1366,7 +1607,7 @@ export class LVGLSliderWidget extends LVGLWidget {
         ),
 
         lvgl: {
-            parts: ["main", "indicator", "knob"],
+            parts: ["MAIN", "INDICATOR", "KNOB"],
             flags: [
                 "HIDDEN",
                 "CLICKABLE",
@@ -1402,10 +1643,10 @@ export class LVGLSliderWidget extends LVGLWidget {
     override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
         return runtime.wasm._lvglCreateSlider(
             parentObj,
-            this.left,
-            this.top,
-            this.width,
-            this.height,
+            this.lvglCreateLeft,
+            this.lvglCreateTop,
+            this.lvglCreateWidth,
+            this.lvglCreateHeight,
             this.min,
             this.max,
             SLIDER_MODES[this.mode],
@@ -1436,12 +1677,9 @@ export class LVGLSliderWidget extends LVGLWidget {
                 : "";
 
         return `lv_obj_t *obj = lv_slider_create(parent_obj);${range}${mode}${value}${valueLeft}
-lv_obj_set_pos(obj, ${this.left}, ${this.top});
-lv_obj_set_size(obj, ${this.width}, ${this.height});`;
+${this.lvglBuildPosAndSize}`;
     }
 }
-
-registerClass("LVGLSliderWidget", LVGLSliderWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1511,7 +1749,7 @@ export class LVGLRollerWidget extends LVGLWidget {
         ),
 
         lvgl: {
-            parts: ["main"],
+            parts: ["MAIN"],
             flags: [
                 "HIDDEN",
                 "CLICKABLE",
@@ -1543,10 +1781,10 @@ export class LVGLRollerWidget extends LVGLWidget {
     override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
         return runtime.wasm._lvglCreateRoller(
             parentObj,
-            this.left,
-            this.top,
-            this.width,
-            this.height,
+            this.lvglCreateLeft,
+            this.lvglCreateTop,
+            this.lvglCreateWidth,
+            this.lvglCreateHeight,
             runtime.wasm.allocateUTF8(this.options),
             ROLLER_MODES[this.mode]
         );
@@ -1554,15 +1792,12 @@ export class LVGLRollerWidget extends LVGLWidget {
 
     override lvglBuildObj() {
         return `lv_obj_t *obj = lv_roller_create(parent_obj);
-lv_obj_set_pos(obj, ${this.left}, ${this.top});
-lv_obj_set_size(obj, ${this.width}, ${this.height});
+${this.lvglBuildPosAndSize}
 lv_roller_set_options(obj, ${escapeCString(this.options)}, LV_ROLLER_MODE_${
             this.mode
         });`;
     }
 }
-
-registerClass("LVGLRollerWidget", LVGLRollerWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1597,7 +1832,7 @@ export class LVGLSwitchWidget extends LVGLWidget {
         ),
 
         lvgl: {
-            parts: ["main"],
+            parts: ["MAIN"],
             flags: [
                 "HIDDEN",
                 "CLICKABLE",
@@ -1627,18 +1862,25 @@ export class LVGLSwitchWidget extends LVGLWidget {
     override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
         return runtime.wasm._lvglCreateSwitch(
             parentObj,
-            this.left,
-            this.top,
-            this.width,
-            this.height
+            this.lvglCreateLeft,
+            this.lvglCreateTop,
+            this.lvglCreateWidth,
+            this.lvglCreateHeight
         );
     }
 
     override lvglBuildObj() {
         return `lv_obj_t *obj = lv_switch_create(parent_obj);
-lv_obj_set_pos(obj, ${this.left}, ${this.top});
-lv_obj_set_size(obj, ${this.width}, ${this.height});`;
+${this.lvglBuildPosAndSize}`;
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+registerClass("LVGLButtonWidget", LVGLButtonWidget);
+registerClass("LVGLImageWidget", LVGLImageWidget);
+registerClass("LVGLLabelWidget", LVGLLabelWidget);
+registerClass("LVGLPanelWidget", LVGLPanelWidget);
+registerClass("LVGLRollerWidget", LVGLRollerWidget);
+registerClass("LVGLSliderWidget", LVGLSliderWidget);
 registerClass("LVGLSwitchWidget", LVGLSwitchWidget);

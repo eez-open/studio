@@ -29,6 +29,10 @@ export class LVGLPageRuntime {
         public ctx: CanvasRenderingContext2D
     ) {
         this.wasm = lvgl_flow_runtime_constructor(() => {
+            runInAction(() => {
+                this.page._lvglRuntime = this;
+            });
+
             this.wasm._init(0, 0, 0);
 
             this.requestAnimationFrameId = window.requestAnimationFrame(
@@ -44,10 +48,6 @@ export class LVGLPageRuntime {
 
                 this.pageObj = pageObj;
             });
-        });
-
-        runInAction(() => {
-            this.page._lvglRuntime = this;
         });
     }
 
@@ -94,6 +94,7 @@ export class LVGLPageRuntime {
 
         if (this.pageObj != undefined) {
             this.wasm._lvglDeleteObject(this.pageObj);
+            this.pageObj = undefined;
         }
 
         runInAction(() => {

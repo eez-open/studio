@@ -19,39 +19,39 @@ import type { PropertyValueHolder } from "project-editor/lvgl/LVGLStylesDefiniti
 ////////////////////////////////////////////////////////////////////////////////
 
 const lvglStates = {
-    default: 0x0000, // LV_STATE_DEFAULT
-    checked: 0x0001, // LV_STATE_CHECKED
-    focused: 0x0002, // LV_STATE_FOCUSED,
-    focus_key: 0x0004, // LV_STATE_FOCUS_KEY
-    edited: 0x0008, // LV_STATE_EDITED,
-    hovered: 0x0010, // LV_STATE_HOVERED
-    pressed: 0x0020, // LV_STATE_PRESSED
-    scrolled: 0x0040, // LV_STATE_SCROLLED
-    disabled: 0x0080, // LV_STATE_DISABLED
+    DEFAULT: 0x0000, // LV_STATE_DEFAULT
+    CHECKED: 0x0001, // LV_STATE_CHECKED
+    FOCUSED: 0x0002, // LV_STATE_FOCUSED,
+    FOCUS_KEY: 0x0004, // LV_STATE_FOCUS_KEY
+    EDITED: 0x0008, // LV_STATE_EDITED,
+    HOVERED: 0x0010, // LV_STATE_HOVERED
+    PRESSED: 0x0020, // LV_STATE_PRESSED
+    SCROLLEd: 0x0040, // LV_STATE_SCROLLED
+    DISABLED: 0x0080, // LV_STATE_DISABLED
 
-    user_1: 0x1000, // LV_STATE_USER_1,
-    user_2: 0x2000, // LV_STATE_USER_1,
-    user_3: 0x4000, // LV_STATE_USER_1,
-    user_4: 0x8000, // LV_STATE_USER_1,
+    USER_1: 0x1000, // LV_STATE_USER_1,
+    USER_2: 0x2000, // LV_STATE_USER_1,
+    USER_3: 0x4000, // LV_STATE_USER_1,
+    USER_4: 0x8000, // LV_STATE_USER_1,
 
-    any: 0xffff // Special value can be used in some functions to target all states
+    ANY: 0xffff // Special value can be used in some functions to target all states
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const lvglParts = {
-    main: 0x000000, // LV_PART_MAIN         A background like rectangle
-    scrollbar: 0x010000, // LV_PART_SCROLLBAR    The scrollbar(s)
-    indicator: 0x020000, // LV_PART_INDICATOR    Indicator, e.g. for slider, bar, switch, or the tick box of the checkbox
-    knob: 0x030000, // LV_PART_KNOB         Like handle to grab to adjust the value
-    selected: 0x040000, // LV_PART_SELECTED     Indicate the currently selected option or section
-    items: 0x050000, // LV_PART_ITEMS        Used if the widget has multiple similar elements (e.g. table cells)
-    ticks: 0x060000, // LV_PART_TICKS        Ticks on scale e.g. for a chart or meter
-    cursor: 0x070000, // LV_PART_CURSOR       Mark a specific place e.g. for text area's cursor or on a chart
+    MAIN: 0x000000, // LV_PART_MAIN         A background like rectangle
+    SCROLLBAR: 0x010000, // LV_PART_SCROLLBAR    The scrollbar(s)
+    INDICATOR: 0x020000, // LV_PART_INDICATOR    Indicator, e.g. for slider, bar, switch, or the tick box of the checkbox
+    KNOB: 0x030000, // LV_PART_KNOB         Like handle to grab to adjust the value
+    SELECTED: 0x040000, // LV_PART_SELECTED     Indicate the currently selected option or section
+    ITEMS: 0x050000, // LV_PART_ITEMS        Used if the widget has multiple similar elements (e.g. table cells)
+    TICKS: 0x060000, // LV_PART_TICKS        Ticks on scale e.g. for a chart or meter
+    CURSOR: 0x070000, // LV_PART_CURSOR       Mark a specific place e.g. for text area's cursor or on a chart
 
-    custom1: 0x080000, // LV_PART_CUSTOM_FIRST Extension point for custom widgets
+    CUSTOM1: 0x080000, // LV_PART_CUSTOM_FIRST Extension point for custom widgets
 
-    any: 0x0f0000 // LV_PART_ANY          Special value can be used in some functions to target all parts
+    ANY: 0x0f0000 // LV_PART_ANY          Special value can be used in some functions to target all parts
 };
 
 export type LVGLParts = keyof typeof lvglParts;
@@ -1190,7 +1190,7 @@ export class LVGLStylesDefinition extends EezObject {
 
         Object.keys(this.definition).forEach(part => {
             Object.keys(this.definition[part]).forEach(state => {
-                const selectorCode = getSelectorCode(part, state);
+                const selectorCode = getSelectorBuildCode(part, state);
                 Object.keys(this.definition[part][state]).forEach(
                     propertyName => {
                         const propertyInfo =
@@ -1265,7 +1265,7 @@ registerClass("LVGLStylesDefinition", LVGLStylesDefinition);
 function getPartCode(part: string) {
     if (part.startsWith("custom")) {
         const partIndex = Number.parseInt(part.substring("custom".length));
-        const custom1Code = lvglParts.custom1;
+        const custom1Code = lvglParts.CUSTOM1;
         return custom1Code + (partIndex - 1);
     } else {
         const partCode = (lvglParts as any)[part];
@@ -1277,6 +1277,10 @@ function getPartCode(part: string) {
     }
 }
 
+function getPartBuildCode(part: string) {
+    return "LV_PART_" + part;
+}
+
 function getStateCode(state: string) {
     const stateCode = (lvglStates as any)[state];
     if (stateCode == undefined) {
@@ -1284,6 +1288,10 @@ function getStateCode(state: string) {
         return 0;
     }
     return stateCode;
+}
+
+function getStateBuildCode(state: string) {
+    return "LV_STATE_" + state;
 }
 
 export function getSelectorCode(partStr: string, statesStr: string) {
@@ -1296,6 +1304,17 @@ export function getSelectorCode(partStr: string, statesStr: string) {
         }, 0);
 
     return partCode | statesCode;
+}
+
+export function getSelectorBuildCode(partStr: string, statesStr: string) {
+    const partCode = getPartBuildCode(partStr);
+
+    const statesCode = statesStr
+        .split("|")
+        .map(state => getStateBuildCode(state))
+        .join(" | ");
+
+    return `${partCode} | ${statesCode}`;
 }
 
 export function getPropertyInfo(propertyName: string) {

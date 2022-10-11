@@ -804,16 +804,15 @@ export class Page extends Flow {
         const widgets = this.components
             .filter(component => component instanceof Widget)
             .map((widget: Widget) => `{\n${indent(TAB, widget.lvglBuild())}\n}`)
-            .join("\n\n");
+            .join("\n");
 
         return `lv_obj_t *obj = lv_obj_create(0);
 lv_obj_set_pos(obj, ${this.left}, ${this.top});
 lv_obj_set_size(obj, ${this.width}, ${this.height});
-
-lv_obj_t *parent_obj = obj;
-
-${widgets}
-
+{
+    lv_obj_t *parent_obj = obj;
+${indent(TAB, widgets)}
+}
 return obj;
 `;
     }

@@ -394,7 +394,7 @@ function ensureUniqueProperties(
     });
 }
 
-function getUniquePropertyValue(
+export function getUniquePropertyValue(
     existingObjects: IEezObject[],
     key: string,
     value: string | number

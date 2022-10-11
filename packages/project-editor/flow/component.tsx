@@ -2472,6 +2472,14 @@ export class Component extends EezObject {
         return { left: this.left, top: this.top };
     }
 
+    get componentWidth() {
+        return this.width ?? 0;
+    }
+
+    get componentHeight() {
+        return this.height ?? 0;
+    }
+
     fromRelativePosition(left: number, top: number) {
         return { left, top };
     }
@@ -2505,8 +2513,8 @@ export class Component extends EezObject {
         return {
             left: this.relativePosition.left,
             top: this.relativePosition.top,
-            width: this.width ?? 0,
-            height: this.height ?? 0
+            width: this.componentWidth,
+            height: this.componentHeight
         };
     }
 

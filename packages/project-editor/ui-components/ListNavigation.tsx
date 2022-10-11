@@ -32,6 +32,7 @@ import { List } from "project-editor/ui-components/List";
 import { ProjectContext } from "project-editor/project/context";
 import classNames from "classnames";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { DropFile } from "project-editor/ui-components/Tree";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -156,6 +157,7 @@ export const ListNavigation = observer(
             dragAndDropManager?: DragAndDropManagerClass;
             searchInput?: boolean;
             editable?: boolean;
+            onFilesDrop?: (files: DropFile[]) => void;
         }>
         implements IPanel
     {
@@ -324,6 +326,7 @@ export const ListNavigation = observer(
                         onFocus={this.onFocus.bind(this)}
                         onEditItem={this.editable ? onEditItem : undefined}
                         renderItem={renderItem}
+                        onFilesDrop={this.props.onFilesDrop}
                     />
                 </div>
             );

@@ -169,12 +169,18 @@ const TreeRow = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export interface DropFile {
+    path: string;
+    type: string;
+}
+
 interface TreeProps {
     treeAdapter: ITreeAdapter;
     tabIndex?: number;
     onFocus?: () => void;
     onEditItem?: (itemId: string) => void;
     renderItem?: (itemId: string) => React.ReactNode;
+    onFilesDrop?: (files: DropFile[]) => void;
 }
 
 export const Tree = observer(
@@ -337,6 +343,14 @@ export const Tree = observer(
         };
 
         onDragOver(event: React.DragEvent) {
+            if (isFileData(event)) {
+                if (this.props.onFilesDrop) {
+                    event.stopPropagation();
+                    event.preventDefault();
+                }
+                return;
+            }
+
             const treeAdapter = this.props.treeAdapter;
             const draggableAdapter = treeAdapter.draggableAdapter!;
 
@@ -593,6 +607,10 @@ export const Tree = observer(
         }
 
         onDragLeave(event: any) {
+            if (isFileData(event)) {
+                return;
+            }
+
             this.dropPosition = undefined;
             this.props.treeAdapter.draggableAdapter!.onDragLeave(event);
         }
@@ -600,6 +618,19 @@ export const Tree = observer(
         onDrop(event: any) {
             event.stopPropagation();
             event.preventDefault();
+
+            if (isFileData(event)) {
+                if (this.props.onFilesDrop) {
+                    const files: DropFile[] = [];
+                    for (let i = 0; i < event.dataTransfer.items.length; i++) {
+                        const item = event.dataTransfer.items[i];
+                        const file = item.getAsFile();
+                        files.push(file);
+                    }
+                    this.props.onFilesDrop(files);
+                }
+                return;
+            }
 
             if (this.props.treeAdapter.draggableAdapter!.dropItem) {
                 let dropPosition = this.dropPosition;
@@ -829,3 +860,24 @@ export const Tree = observer(
         }
     }
 );
+
+////////////////////////////////////////////////////////////////////////////////
+
+function isFileData(event: React.DragEvent) {
+    if (!event.dataTransfer.items) {
+        return false;
+    }
+
+    if (event.dataTransfer.items.length == 0) {
+        return false;
+    }
+
+    for (let i = 0; i < event.dataTransfer.items.length; i++) {
+        const item = event.dataTransfer.items[i];
+        if (item.kind !== "file") {
+            return false;
+        }
+    }
+
+    return true;
+}

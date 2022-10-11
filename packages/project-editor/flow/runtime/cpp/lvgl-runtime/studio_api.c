@@ -184,27 +184,26 @@ EM_PORT_API(void) lvglObjSetLocalStylePropBuiltInFont(lv_obj_t *obj, lv_style_pr
 }
 
 EM_PORT_API(int16_t) lvglGetObjRelX(lv_obj_t *obj) {
-    int16_t x = lv_obj_get_x(obj);
-
     lv_obj_t *parent = lv_obj_get_parent(obj);
     if (parent) {
-        lv_area_t area;
-        lv_obj_get_content_coords(parent, &area);
-        return area.x1 - lv_obj_get_x(parent) + x;
+        return obj->coords.x1 - parent->coords.x1;
     }
-
-    return x;
+    return obj->coords.x1;
 }
 
 EM_PORT_API(int16_t) lvglGetObjRelY(lv_obj_t *obj) {
-    int16_t y = lv_obj_get_y(obj);
-
     lv_obj_t *parent = lv_obj_get_parent(obj);
     if (parent) {
-        lv_area_t area;
-        lv_obj_get_content_coords(parent, &area);
-        return area.y1 - lv_obj_get_y(parent) + y;
+        return obj->coords.y1 - parent->coords.y1;
     }
+    return obj->coords.y1;
+}
 
-    return y;
+EM_PORT_API(int16_t) lvglGetObjWidth(lv_obj_t *obj) {
+
+    return lv_obj_get_width(obj);
+}
+
+EM_PORT_API(int16_t) lvglGetObjHeight(lv_obj_t *obj) {
+    return lv_obj_get_height(obj);
 }

@@ -2,7 +2,7 @@ import React from "react";
 import { observer } from "mobx-react";
 
 import { ITreeAdapter } from "project-editor/core/objectAdapter";
-import { Tree } from "project-editor/ui-components/Tree";
+import { Tree, DropFile } from "project-editor/ui-components/Tree";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -12,6 +12,7 @@ interface ListProps {
     onFocus?: () => void;
     onEditItem?: (itemId: string) => void;
     renderItem?: (itemId: string) => React.ReactNode;
+    onFilesDrop?: (files: DropFile[]) => void;
 }
 
 export const List = observer(
@@ -26,6 +27,7 @@ export const List = observer(
                     onFocus={onFocus}
                     onEditItem={onEditItem}
                     renderItem={renderItem}
+                    onFilesDrop={this.props.onFilesDrop}
                 />
             );
         }

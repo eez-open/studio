@@ -259,6 +259,7 @@ export const ComponentEnclosure = observer(
                 height = this.props.height;
             } else {
                 if (
+                    component instanceof ProjectEditor.LVGLWidgetClass ||
                     !(
                         component.autoSize == "width" ||
                         component.autoSize == "both"
@@ -268,6 +269,7 @@ export const ComponentEnclosure = observer(
                 }
 
                 if (
+                    component instanceof ProjectEditor.LVGLWidgetClass ||
                     !(
                         component.autoSize == "height" ||
                         component.autoSize == "both"
