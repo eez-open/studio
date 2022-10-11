@@ -4,13 +4,13 @@ import type { Page } from "project-editor/features/page/page";
 import type { IWasmFlowRuntime } from "eez-studio-types";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Bitmap } from "project-editor/features/bitmap/bitmap";
+import { visitObjects } from "project-editor/core/search";
 
 const lvgl_flow_runtime_constructor = require("project-editor/flow/runtime/lvgl_runtime.js");
 
 export class LVGLPageRuntime {
     wasm: IWasmFlowRuntime;
 
-    pageObj: number | undefined;
     autorRunDispose: IReactionDisposer | undefined;
     requestAnimationFrameId: number | undefined;
 
@@ -42,11 +42,11 @@ export class LVGLPageRuntime {
             this.autorRunDispose = autorun(() => {
                 const pageObj = this.page.lvglCreate(this, 0).obj;
 
-                if (this.pageObj != undefined) {
-                    this.wasm._lvglDeleteObject(this.pageObj);
+                if (this.page._lvglObj != undefined) {
+                    this.wasm._lvglDeleteObject(this.page._lvglObj);
                 }
 
-                this.pageObj = pageObj;
+                runInAction(() => (this.page._lvglObj = pageObj));
             });
         });
     }
@@ -92,9 +92,26 @@ export class LVGLPageRuntime {
             this.autorRunDispose();
         }
 
-        if (this.pageObj != undefined) {
-            this.wasm._lvglDeleteObject(this.pageObj);
-            this.pageObj = undefined;
+        if (this.page._lvglObj != undefined) {
+            this.wasm._lvglDeleteObject(this.page._lvglObj);
+            runInAction(() => {
+                const v = visitObjects(this.page.components);
+                while (true) {
+                    let visitResult = v.next();
+                    if (visitResult.done) {
+                        break;
+                    }
+                    if (
+                        visitResult.value instanceof
+                        ProjectEditor.LVGLWidgetClass
+                    ) {
+                        const lvglWidget = visitResult.value;
+                        lvglWidget._lvglObj = undefined;
+                    }
+                }
+
+                this.page._lvglObj = undefined;
+            });
         }
 
         runInAction(() => {

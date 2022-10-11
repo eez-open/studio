@@ -181,10 +181,7 @@ export class Page extends Flow {
     dataContextOverrides: string;
 
     _lvglRuntime: LVGLPageRuntime | undefined;
-
-    get _lvglObj() {
-        return this._lvglRuntime?.pageObj ?? 0;
-    }
+    _lvglObj: number | undefined;
 
     constructor() {
         super();
@@ -206,7 +203,8 @@ export class Page extends Flow {
             dataContextOverrides: observable,
             dataContextOverridesObject: computed,
             rect: computed,
-            _lvglRuntime: observable
+            _lvglRuntime: observable,
+            _lvglObj: observable
         });
     }
 

@@ -631,15 +631,17 @@ export class LVGLWidget extends Widget {
             scrollDirection: observable,
             states: observable,
             localStyles: observable,
-            _lvglObj: observable,
             state: computed,
             part: computed,
+            _lvglObj: observable,
             _refreshCounter: observable
         });
     }
 
     override get relativePosition() {
-        this._refreshCounter;
+        if (this instanceof LVGLSliderWidget) {
+            console.log(this._lvglObj);
+        }
         if (this._lvglObj) {
             const page = getAncestorOfType(
                 this,
