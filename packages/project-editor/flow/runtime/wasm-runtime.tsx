@@ -178,7 +178,8 @@ export class WasmRuntime extends RemoteRuntime {
         this.worker = createWasmWorker(
             this.wasmModuleId,
             this.onWorkerMessage,
-            this.projectEditorStore.projectTypeTraits.isLVGL
+            this.projectEditorStore.projectTypeTraits.isLVGL,
+            this.projectEditorStore
         );
     }
 
@@ -189,6 +190,10 @@ export class WasmRuntime extends RemoteRuntime {
 
         if (this.worker) {
             this.worker.terminate();
+        }
+
+        if (this.projectEditorStore.projectTypeTraits.isLVGL) {
+            return;
         }
 
         this.destroyGlobalVariables();

@@ -398,7 +398,7 @@ export class LVGLWidget extends Widget {
     states: string;
     localStyles: LVGLStylesDefinition;
 
-    _lvglObj: number;
+    _lvglObj: number | undefined;
     _refreshCounter: number = 0;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
@@ -639,9 +639,6 @@ export class LVGLWidget extends Widget {
     }
 
     override get relativePosition() {
-        if (this instanceof LVGLSliderWidget) {
-            console.log(this._lvglObj);
-        }
         if (this._lvglObj) {
             const page = getAncestorOfType(
                 this,
@@ -721,7 +718,9 @@ export class LVGLWidget extends Widget {
     ): LVGLCreateResultType {
         const obj = this.lvglCreateObj(runtime, parentObj);
 
-        runInAction(() => (this._lvglObj = obj));
+        if (runtime.isEditor) {
+            runInAction(() => (this._lvglObj = obj));
+        }
 
         const classInfo = getClassInfo(this);
 

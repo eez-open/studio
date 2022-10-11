@@ -164,11 +164,11 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSi
     /*Initialize the HAL (display, input devices, tick) for LittlevGL*/
     hal_init(editor);
 
-    if (!editor) {
-        /*Load a demo*/
-        extern void lv_demo_widgets();
-        lv_demo_widgets();
-    }
+    // if (!editor) {
+    //     /*Load a demo*/
+    //     extern void lv_demo_widgets();
+    //     lv_demo_widgets();
+    // }
 
     initialized = true;
 }

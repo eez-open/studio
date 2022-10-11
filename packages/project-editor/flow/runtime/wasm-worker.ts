@@ -18,6 +18,8 @@ import {
 } from "project-editor/flow/runtime/wasm-value";
 import { DashboardComponentContext } from "project-editor/flow/runtime/worker-dashboard-component-context";
 import { IWasmFlowRuntime } from "eez-studio-types";
+import { ProjectEditorStore } from "project-editor/store";
+import { LVGLPageViewerRuntime } from "project-editor/lvgl/page-runtime";
 
 const eez_flow_runtime_constructor = require("project-editor/flow/runtime/eez_runtime.js");
 const lvgl_flow_runtime_constructor = require("project-editor/flow/runtime/lvgl_runtime.js");
@@ -133,12 +135,32 @@ function onArrayValueFree(wasmModuleId: number, ptr: number) {
 export function createWasmWorker(
     wasmModuleId: number,
     postWorkerToRenderMessage: (data: WorkerToRenderMessage) => void,
-    lvgl: boolean
+    lvgl: boolean,
+    projectEditorStore: ProjectEditorStore
 ) {
-    const WasmFlowRuntime: IWasmFlowRuntime = lvgl
-        ? lvgl_flow_runtime_constructor(postWorkerToRenderMessage)
-        : eez_flow_runtime_constructor(postWorkerToRenderMessage);
+    let WasmFlowRuntime: IWasmFlowRuntime;
+    let lvglRuntime: LVGLPageViewerRuntime | undefined;
 
+    if (lvgl) {
+        const page = projectEditorStore.project.pages[0];
+        if (page) {
+            lvglRuntime = new LVGLPageViewerRuntime(
+                page,
+                page.width,
+                page.height,
+                postWorkerToRenderMessage
+            );
+            WasmFlowRuntime = lvglRuntime.wasm;
+        } else {
+            WasmFlowRuntime = lvgl_flow_runtime_constructor(
+                postWorkerToRenderMessage
+            );
+        }
+    } else {
+        WasmFlowRuntime = eez_flow_runtime_constructor(
+            postWorkerToRenderMessage
+        );
+    }
     wasmFlowRuntimes.set(wasmModuleId, WasmFlowRuntime);
 
     function initObjectGlobalVariableValues(
@@ -320,6 +342,10 @@ export function createWasmWorker(
             WasmFlowRuntime.HEAPU8.set(assets, ptr);
 
             WasmFlowRuntime._init(wasmModuleId, ptr, assets.length);
+
+            if (lvglRuntime) {
+                lvglRuntime.lvglCreate();
+            }
 
             WasmFlowRuntime._free(ptr);
 

@@ -4,7 +4,7 @@ import { observer } from "mobx-react";
 import { ProjectContext } from "project-editor/project/context";
 import type { Page } from "project-editor/features/page/page";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
+import { LVGLPageEditorRuntime } from "project-editor/lvgl/page-runtime";
 
 export const LVGLPage = observer(
     class LVGLPage extends React.Component<{
@@ -18,10 +18,10 @@ export const LVGLPage = observer(
         displayHeight = 480;
 
         canvasRef = React.createRef<HTMLCanvasElement>();
-        runtime: LVGLPageRuntime;
+        runtime: LVGLPageEditorRuntime;
 
         componentDidMount() {
-            this.runtime = new LVGLPageRuntime(
+            this.runtime = new LVGLPageEditorRuntime(
                 this.props.page,
                 this.displayWidth,
                 this.displayHeight,
