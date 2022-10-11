@@ -109,11 +109,12 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
             this.autorRunDispose = autorun(() => {
                 const pageObj = this.page.lvglCreate(this, 0).obj;
 
-                if (this.page._lvglObj != undefined) {
-                    this.wasm._lvglDeleteObject(this.page._lvglObj);
-                }
-
-                runInAction(() => (this.page._lvglObj = pageObj));
+                runInAction(() => {
+                    if (this.page._lvglObj != undefined) {
+                        this.wasm._lvglDeleteObject(this.page._lvglObj);
+                    }
+                    this.page._lvglObj = pageObj;
+                });
             });
         });
     }
