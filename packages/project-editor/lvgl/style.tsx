@@ -780,6 +780,7 @@ export const lvglProperties: PropertiesGroup[] = [
     {
         groupName: "SIZE AND POSITION",
         properties: [
+            align_property_info,
             //width_property_info,
             min_width_property_info,
             max_width_property_info,
@@ -788,7 +789,6 @@ export const lvglProperties: PropertiesGroup[] = [
             max_height_property_info,
             //x_property_info,
             //y_property_info,
-            align_property_info,
             transform_width_property_info,
             transform_height_property_info,
             translate_x_property_info,

@@ -70,5 +70,9 @@ export function indent(tab: string, text: string) {
 }
 
 export function escapeCString(text: string) {
-    return `"${text.replace(/"/g, '\\"')}"`;
+    return `"${text
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, "\\n")
+        .replace(/\t/g, "\\t")
+        .replace(/\r/g, "\\r")}"`;
 }

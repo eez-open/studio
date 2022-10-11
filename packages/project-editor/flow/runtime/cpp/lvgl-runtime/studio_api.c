@@ -17,11 +17,13 @@ EM_PORT_API(lv_obj_t *) lvglCreateContainer(lv_obj_t *parentObj, lv_coord_t x, l
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateLabel(lv_obj_t *parentObj, char *text, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+EM_PORT_API(lv_obj_t *) lvglCreateLabel(lv_obj_t *parentObj, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, char *text, lv_label_long_mode_t long_mode, bool recolor) {
     lv_obj_t *obj = lv_label_create(parentObj);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
+    lv_label_set_long_mode(obj, long_mode);
     lv_label_set_text(obj, text);
+    lv_label_set_recolor(obj, recolor);
     free(text);
     lv_obj_update_layout(obj);
     return obj;
@@ -62,6 +64,38 @@ EM_PORT_API(void) lvglSetImageSrc(lv_obj_t *obj, const void *img_src) {
         lv_img_set_src(obj, img_src);
     }
     lv_obj_update_layout(obj);
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateSlider(lv_obj_t *parentObj, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, int32_t min, int32_t max, lv_slider_mode_t mode, int32_t value, int32_t value_left) {
+    lv_obj_t *obj = lv_slider_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_slider_set_range(obj, min, max);
+    lv_slider_set_mode(obj, mode);
+    lv_slider_set_value(obj, value, LV_ANIM_OFF);
+    if (lv_slider_get_mode(obj) == LV_SLIDER_MODE_RANGE) {
+        lv_slider_set_left_value(obj, value_left, LV_ANIM_OFF);
+    }
+    lv_obj_update_layout(obj);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateRoller(lv_obj_t *parentObj, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, char *options, lv_roller_mode_t mode) {
+    lv_obj_t *obj = lv_roller_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_roller_set_options(obj, options, mode);
+    free(options);
+    lv_obj_update_layout(obj);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateSwitch(lv_obj_t *parentObj, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+    lv_obj_t *obj = lv_switch_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    return obj;
 }
 
 EM_PORT_API(void) lvglDeleteObject(lv_obj_t *obj) {

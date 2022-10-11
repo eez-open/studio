@@ -416,6 +416,7 @@ export class LVGLWidget extends Widget {
                         label: "AUTO"
                     }
                 ],
+                enumDisallowUndefined: true,
                 propertyGridGroup: flagsGroup
             },
             {
@@ -451,6 +452,7 @@ export class LVGLWidget extends Widget {
                         label: "ALL"
                     }
                 ],
+                enumDisallowUndefined: true,
                 propertyGridGroup: flagsGroup
             },
             {
@@ -469,6 +471,7 @@ export class LVGLWidget extends Widget {
                         id: lvglPart
                     }));
                 },
+                enumDisallowUndefined: true,
                 propertyGridGroup: styleGroup,
                 computed: true,
                 modifiable: true
@@ -484,6 +487,7 @@ export class LVGLWidget extends Widget {
                     { id: "disabled", label: "DISABLED" },
                     { id: "focused", label: "FOCUSED" }
                 ],
+                enumDisallowUndefined: true,
                 propertyGridGroup: styleGroup,
                 computed: true,
                 modifiable: true
@@ -776,8 +780,18 @@ ${widgets}`;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const LONG_MODE_CODES = {
+    WRAP: 0,
+    DOT: 1,
+    SCROLL: 2,
+    SCROLL_CIRCULAR: 3,
+    CLIP: 4
+};
+
 export class LVGLLabelWidget extends LVGLWidget {
     text: string;
+    longMode: keyof typeof LONG_MODE_CODES;
+    recolor: boolean;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -798,6 +812,39 @@ export class LVGLLabelWidget extends LVGLWidget {
                 name: "text",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
+            },
+            {
+                name: "longMode",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "WRAP",
+                        label: "WRAP"
+                    },
+                    {
+                        id: "DOT",
+                        label: "DOT"
+                    },
+                    {
+                        id: "SCROLL",
+                        label: "SCROLL"
+                    },
+                    {
+                        id: "SCROLL_CIRCULAR",
+                        label: "SCROLL CIRCULAR"
+                    },
+                    {
+                        id: "CLIP",
+                        label: "CLIP"
+                    }
+                ],
+                enumDisallowUndefined: true,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "recolor",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup
             }
         ],
 
@@ -807,6 +854,8 @@ export class LVGLLabelWidget extends LVGLWidget {
             width: 64,
             height: 32,
             text: "Text",
+            longMode: "WRAP",
+            recolor: false,
             localStyles: {},
             flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
         },
@@ -867,26 +916,38 @@ export class LVGLLabelWidget extends LVGLWidget {
         super();
 
         makeObservable(this, {
-            text: observable
+            text: observable,
+            longMode: observable,
+            recolor: observable
         });
     }
 
     override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
         return runtime.wasm._lvglCreateLabel(
             parentObj,
-            runtime.wasm.allocateUTF8(this.text),
             this.left,
             this.top,
             this.width,
-            this.height
+            this.height,
+            runtime.wasm.allocateUTF8(this.text),
+            LONG_MODE_CODES[this.longMode],
+            this.recolor ? 1 : 0
         );
     }
 
     override lvglBuildObj() {
+        const longMode =
+            this.longMode != "WRAP"
+                ? `\nlv_label_set_long_mode(obj, LV_LABEL_LONG_${this.longMode});`
+                : "";
+        const recolor = this.recolor
+            ? `\nlv_label_set_recolor(obj, true);`
+            : "";
+
         return `lv_obj_t *obj = lv_label_create(parent_obj);
 lv_obj_set_pos(obj, ${this.left}, ${this.top});
-lv_obj_set_size(obj, ${this.width}, ${this.height});
-lv_label_set_text(obj, ${escapeCString(this.text)});`;
+lv_obj_set_size(obj, ${this.width}, ${this.height});${longMode}
+lv_label_set_text(obj, ${escapeCString(this.text)});${recolor}`;
     }
 }
 
@@ -904,8 +965,8 @@ export class LVGLButtonWidget extends LVGLWidget {
         defaultValue: {
             left: 0,
             top: 0,
-            width: 80,
-            height: 40,
+            width: 100,
+            height: 50,
             flags: "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_ON_FOCUS|SCROLL_MOMENTUM|SCROLL_CHAIN"
         },
 
@@ -982,8 +1043,8 @@ export class LVGLPanelWidget extends LVGLWidget {
         defaultValue: {
             left: 0,
             top: 0,
-            width: 120,
-            height: 120,
+            width: 100,
+            height: 50,
             flags: "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
         },
 
@@ -997,8 +1058,7 @@ export class LVGLPanelWidget extends LVGLWidget {
                 viewBox="0 0 24 24"
             >
                 <path d="M0 0h24v24H0z" stroke="none" />
-                <rect x="4" y="4" width="16" height="16" rx="2" />
-                <path d="M4 12h8m0 3h8m-8-6h8m-8-5v16" />
+                <rect x="3" y="5" width="18" height="14" rx="2" />
             </svg>
         ),
 
@@ -1208,6 +1268,377 @@ lv_obj_set_size(obj, ${this.width}, ${this.height});${
 
 registerClass("LVGLImageWidget", LVGLImageWidget);
 
-// slider
-// roller (screen 3)
-// switch (screen 3)
+////////////////////////////////////////////////////////////////////////////////
+
+const SLIDER_MODES = {
+    NORMAL: 0,
+    SYMMETRICAL: 1,
+    RANGE: 2
+};
+
+export class LVGLSliderWidget extends LVGLWidget {
+    min: number;
+    max: number;
+    mode: keyof typeof SLIDER_MODES;
+    value: number;
+    valueLeft: number;
+
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        properties: [
+            {
+                name: "min",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "max",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "mode",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "NORMAL",
+                        label: "NORMAL"
+                    },
+                    {
+                        id: "SYMMETRICAL",
+                        label: "SYMMETRICAL"
+                    },
+                    {
+                        id: "RANGE",
+                        label: "RANGE"
+                    }
+                ],
+                enumDisallowUndefined: true,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "value",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "valueLeft",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup
+            }
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 150,
+            height: 10,
+            flags: "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            min: 0,
+            max: 100,
+            mode: "NORMAL",
+            value: 0,
+            valueLeft: 0
+        },
+
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <circle cx="14" cy="6" r="2"></circle>
+                <line x1="4" y1="6" x2="12" y2="6"></line>
+                <line x1="16" y1="6" x2="20" y2="6"></line>
+                <circle cx="8" cy="12" r="2"></circle>
+                <line x1="4" y1="12" x2="6" y2="12"></line>
+                <line x1="10" y1="12" x2="20" y2="12"></line>
+                <circle cx="17" cy="18" r="2"></circle>
+                <line x1="4" y1="18" x2="15" y2="18"></line>
+                <line x1="19" y1="18" x2="20" y2="18"></line>
+            </svg>
+        ),
+
+        lvgl: {
+            parts: ["main", "indicator", "knob"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "CHECKABLE",
+                "PRESS_LOCK",
+                "CLICK_FOCUSABLE",
+                "ADV_HITTEST",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE",
+                "SCROLL_ON_FOCUS"
+            ],
+            defaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        }
+    });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            min: observable,
+            max: observable,
+            mode: observable,
+            value: observable,
+            valueLeft: observable
+        });
+    }
+
+    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+        return runtime.wasm._lvglCreateSlider(
+            parentObj,
+            this.left,
+            this.top,
+            this.width,
+            this.height,
+            this.min,
+            this.max,
+            SLIDER_MODES[this.mode],
+            this.value,
+            this.valueLeft
+        );
+    }
+
+    override lvglBuildObj() {
+        const range =
+            this.min != 0 || this.max != 100
+                ? `\nlv_slider_set_range(obj, ${this.min}, ${this.max});`
+                : "";
+
+        const mode =
+            this.mode != "NORMAL"
+                ? `\nlv_slider_set_mode(obj, LV_SLIDER_MODE_${this.mode});`
+                : "";
+
+        const value =
+            this.value != 0
+                ? `\nlv_slider_set_value(obj, ${this.value}, LV_ANIM_OFF);`
+                : "";
+
+        const valueLeft =
+            this.valueLeft != 0
+                ? `\nif(lv_slider_get_mode(obj) == LV_SLIDER_MODE_RANGE) lv_slider_set_left_value(obj, ${this.valueLeft}, LV_ANIM_OFF);`
+                : "";
+
+        return `lv_obj_t *obj = lv_slider_create(parent_obj);${range}${mode}${value}${valueLeft}
+lv_obj_set_pos(obj, ${this.left}, ${this.top});
+lv_obj_set_size(obj, ${this.width}, ${this.height});`;
+    }
+}
+
+registerClass("LVGLSliderWidget", LVGLSliderWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+const ROLLER_MODES = {
+    NORMAL: 0,
+    INFINITE: 1
+};
+
+export class LVGLRollerWidget extends LVGLWidget {
+    options: string;
+    mode: keyof typeof ROLLER_MODES;
+
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        properties: [
+            {
+                name: "options",
+                type: PropertyType.MultilineText,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "mode",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "NORMAL",
+                        label: "NORMAL"
+                    },
+                    {
+                        id: "INFINITE",
+                        label: "INFINITE"
+                    }
+                ],
+                enumDisallowUndefined: true,
+                propertyGridGroup: specificGroup
+            }
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 80,
+            height: 100,
+            flags: "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            options: "Option 1\nOption 2\nOption 3",
+            mode: "NORMAL"
+        },
+
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M11 6h9"></path>
+                <path d="M11 12h9"></path>
+                <path d="M12 18h8"></path>
+                <path d="M4 16a2 2 0 1 1 4 0c0 .591 -.5 1 -1 1.5l-3 2.5h4"></path>
+                <path d="M6 10v-6l-2 2"></path>
+            </svg>
+        ),
+
+        lvgl: {
+            parts: ["main"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "CHECKABLE",
+                "PRESS_LOCK",
+                "CLICK_FOCUSABLE",
+                "ADV_HITTEST",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE"
+            ],
+            defaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        }
+    });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            options: observable,
+            mode: observable
+        });
+    }
+
+    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+        return runtime.wasm._lvglCreateRoller(
+            parentObj,
+            this.left,
+            this.top,
+            this.width,
+            this.height,
+            runtime.wasm.allocateUTF8(this.options),
+            ROLLER_MODES[this.mode]
+        );
+    }
+
+    override lvglBuildObj() {
+        return `lv_obj_t *obj = lv_roller_create(parent_obj);
+lv_obj_set_pos(obj, ${this.left}, ${this.top});
+lv_obj_set_size(obj, ${this.width}, ${this.height});
+lv_roller_set_options(obj, ${escapeCString(this.options)}, LV_ROLLER_MODE_${
+            this.mode
+        });`;
+    }
+}
+
+registerClass("LVGLRollerWidget", LVGLRollerWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLSwitchWidget extends LVGLWidget {
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        properties: [],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 50,
+            height: 25,
+            flags: "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE"
+        },
+
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <circle cx="8" cy="12" r="2" />
+                <rect x="2" y="6" width="20" height="12" rx="6" />
+            </svg>
+        ),
+
+        lvgl: {
+            parts: ["main"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "CHECKABLE",
+                "PRESS_LOCK",
+                "CLICK_FOCUSABLE",
+                "ADV_HITTEST",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE",
+                "SCROLL_ON_FOCUS"
+            ],
+            defaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        }
+    });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {});
+    }
+
+    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+        return runtime.wasm._lvglCreateSwitch(
+            parentObj,
+            this.left,
+            this.top,
+            this.width,
+            this.height
+        );
+    }
+
+    override lvglBuildObj() {
+        return `lv_obj_t *obj = lv_switch_create(parent_obj);
+lv_obj_set_pos(obj, ${this.left}, ${this.top});
+lv_obj_set_size(obj, ${this.width}, ${this.height});`;
+    }
+}
+
+registerClass("LVGLSwitchWidget", LVGLSwitchWidget);
