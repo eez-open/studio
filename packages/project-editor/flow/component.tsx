@@ -4511,10 +4511,6 @@ export class Widget extends Component {
             children: []
         };
     }
-
-    lvglBuild() {
-        return "/*NOT IMPLEMENTED*/";
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

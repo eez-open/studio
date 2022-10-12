@@ -216,7 +216,7 @@ input::-webkitcalendar-picker-indicator {
     .EezStudio_TreeRowTriangle {
         display: inline-block;
         height: 18px;
-        color: #333;
+        color: @textColor;
 
         transition: transform 0.2s;
         transform-origin: 50% 50%;
@@ -227,7 +227,7 @@ input::-webkitcalendar-picker-indicator {
     }
 
     .EezStudio_TreeRowTriangle:hover {
-        color: #666;
+        color: @hoverColor;
     }
 }
 
@@ -2697,11 +2697,11 @@ button.EezStudio_Action {
         }
 
         .tree-row-triangle {
-            color: #333;
+            color: @textColor;
         }
 
         .tree-row-triangle:hover {
-            color: #666;
+            color: @hoverColor;
         }
 
         &:hover {
@@ -3994,7 +3994,7 @@ button.EezStudio_Action {
     .EezStudio_TreeRowTriangle {
         display: inline-block;
         height: 18px;
-        color: #333;
+        color: @textColor;
 
         transition: transform 0.2s;
         transform-origin: 50% 50%;
@@ -4005,7 +4005,7 @@ button.EezStudio_Action {
     }
 
     .EezStudio_TreeRowTriangle:hover {
-        color: #666;
+        color: @hoverColor;
     }
 }
 
@@ -4316,6 +4316,7 @@ button.EezStudio_Action {
 
 .flexlayout__tab {
     background-color: @backgroundColor;
+    color: @textColor;
 }
 
 .EezStudio_PropertiesPanel {
@@ -5810,7 +5811,7 @@ button.EezStudio_Action {
             .EezStudio_LVGLStylesDefinition_Property {
                 padding-left: 10px;
                 display: flex;
-                align-items: center;
+                align-items: baseline;
                 .EezStudio_LVGLStylesDefinition_Name {
                     font-size: 95%;
                     min-width: 120px;
@@ -5835,4 +5836,12 @@ button.EezStudio_Action {
         margin-left: 2px;
         flex: 0;
     }
+}
+
+.EezStudio_Property_BitmapPreview {
+    margin-top: 2px;
+    padding: 4px;
+    border: 1px solid @borderColor;
+    max-width: 100%;
+    max-height: 150px;
 }

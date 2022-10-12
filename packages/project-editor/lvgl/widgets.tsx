@@ -12,9 +12,13 @@ import {
     PropertyProps,
     LVGL_FLAG_CODES,
     LVGL_STATE_CODES,
-    findPropertyByNameInClassInfo
+    findPropertyByNameInClassInfo,
+    EezObject,
+    ClassInfo,
+    IEezObject
 } from "project-editor/core/object";
 import {
+    createObject,
     getAncestorOfType,
     getClassInfo,
     Message,
@@ -33,7 +37,7 @@ import {
     Widget
 } from "project-editor/flow/component";
 
-import { escapeCString, indent, TAB } from "project-editor/build/helper";
+import { escapeCString } from "project-editor/build/helper";
 import { LVGLParts, LVGLStylesDefinition } from "project-editor/lvgl/style";
 import {
     LVGLStylesDefinitionProperty,
@@ -49,6 +53,8 @@ import type { Page } from "project-editor/features/page/page";
 import { ComponentsContainerEnclosure } from "project-editor/flow/editor/render";
 import { geometryGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { Property } from "project-editor/ui-components/PropertyGrid/Property";
+import type { LVGLBuild } from "project-editor/lvgl/build";
+import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -89,6 +95,12 @@ const styleGroup: IPropertyGridGroupDefinition = {
 const statesGroup: IPropertyGridGroupDefinition = {
     id: "lvgl-states",
     title: "States",
+    position: 4
+};
+
+const eventsGroup: IPropertyGridGroupDefinition = {
+    id: "lvgl-events",
+    title: "Events",
     position: 4
 };
 
@@ -442,6 +454,113 @@ export const GeometryProperty = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const LVGL_EVENTS = [
+    "PRESSED",
+    "PRESS_LOST",
+    "RELEASED",
+    "CLICKED",
+    "LONG_PRESSED",
+    "LONG_PRESSED_REPEAT",
+    "FOCUSED",
+    "DEFOCUSED",
+    "VALUE_CHANGED",
+    "READY",
+    "CANCEL",
+    "SCREEN_LOADED",
+    "SCREEN_UNLOADED",
+    "SCREEN_LOAD_START",
+    "SCREEN_UNLOAD_START",
+    "CHECKED",
+    "UNCHECKED"
+];
+
+export type ValuesOf<T extends any[]> = T[number];
+
+export class EventHandler extends EezObject {
+    trigger: ValuesOf<typeof LVGL_EVENTS>;
+    action: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            trigger: observable,
+            action: observable
+        });
+    }
+
+    static classInfo: ClassInfo = {
+        properties: [
+            {
+                name: "trigger",
+                type: PropertyType.Enum,
+                enumItems: LVGL_EVENTS.map(eventName => ({
+                    id: eventName,
+                    label: eventName
+                })),
+                enumDisallowUndefined: true
+            },
+            {
+                name: "action",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "actions"
+            }
+        ],
+
+        defaultValue: {},
+
+        newItem: async (parent: IEezObject) => {
+            const project = ProjectEditor.getProject(parent);
+
+            const result = await showGenericDialog({
+                dialogDefinition: {
+                    title: "New Event Handler",
+                    fields: [
+                        {
+                            name: "trigger",
+                            type: "enum",
+                            enumItems: LVGL_EVENTS.map(eventName => ({
+                                id: eventName,
+                                label: eventName
+                            }))
+                        },
+                        {
+                            name: "action",
+                            type: "enum",
+                            enumItems: project.actions
+                                .filter(
+                                    action =>
+                                        action.implementationType == "native"
+                                )
+                                .map(action => ({
+                                    id: action.name,
+                                    label: action.name
+                                }))
+                        }
+                    ]
+                },
+                values: {},
+                dialogContext: ProjectEditor.getProject(parent)
+            });
+
+            const properties: Partial<EventHandler> = {
+                trigger: result.values.trigger,
+                action: result.values.action
+            };
+
+            const customInput = createObject<EventHandler>(
+                project._DocumentStore,
+                properties,
+                EventHandler
+            );
+
+            return customInput;
+        }
+    };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class LVGLWidget extends Widget {
     identifier: string;
 
@@ -450,12 +569,14 @@ export class LVGLWidget extends Widget {
     widthUnit: "px" | "%" | "content";
     heightUnit: "px" | "%" | "content";
 
-    children: Widget[];
+    children: LVGLWidget[];
     flags: string;
     scrollbarMode: string;
     scrollDirection: string;
     states: string;
     localStyles: LVGLStylesDefinition;
+
+    eventHandlers: EventHandler[];
 
     _lvglObj: number | undefined;
     _refreshCounter: number = 0;
@@ -652,6 +773,15 @@ export class LVGLWidget extends Widget {
                 propertyGridCollapsable: true,
                 propertyGridRowComponent: LVGLStylesDefinitionProperty,
                 enumerable: false
+            },
+            {
+                name: "eventHandlers",
+                type: PropertyType.Array,
+                typeClass: EventHandler,
+                propertyGridGroup: eventsGroup,
+                partOfNavigation: false,
+                enumerable: false,
+                defaultValue: []
             }
         ],
 
@@ -703,6 +833,7 @@ export class LVGLWidget extends Widget {
             scrollDirection: observable,
             states: observable,
             localStyles: observable,
+            eventHandlers: observable,
             state: computed,
             part: computed,
             _lvglObj: observable,
@@ -865,11 +996,39 @@ export class LVGLWidget extends Widget {
         return 0;
     }
 
-    override lvglBuild(): string {
+    lvglBuild(build: LVGLBuild): void {
+        if (this.identifier) {
+            build.line(`// ${this.identifier}`);
+        }
+
+        this.lvglBuildObj(build);
+
+        if (this.identifier) {
+            build.line(
+                `screen->${build.getWidgetStructFieldName(this)} = obj;`
+            );
+        }
+
+        build.line(
+            `lv_obj_set_pos(obj, ${this.lvglBuildLeft}, ${this.lvglBuildTop});`
+        );
+        build.line(
+            `lv_obj_set_size(obj, ${this.lvglBuildWidth}, ${this.lvglBuildHeight});`
+        );
+
+        this.lvglBuildSpecific(build);
+
+        if (this.eventHandlers.length > 0) {
+            build.line(
+                `lv_obj_add_event_cb(obj, ${build.getEventHandlerCallbackName(
+                    this
+                )}, LV_EVENT_ALL, screen);`
+            );
+        }
+
         const classInfo = getClassInfo(this);
 
         // add/clear flags
-        let flags = "";
         {
             const { added, cleared } = changes(
                 (classInfo.lvgl!.defaultFlags ?? "").split("|"),
@@ -879,20 +1038,23 @@ export class LVGLWidget extends Widget {
             );
 
             if (added.length > 0) {
-                flags += `lv_obj_add_flag(obj, ${added
-                    .map(flag => "LV_OBJ_FLAG_" + flag)
-                    .join("|")});\n`;
+                build.line(
+                    `lv_obj_add_flag(obj, ${added
+                        .map(flag => "LV_OBJ_FLAG_" + flag)
+                        .join("|")});`
+                );
             }
 
             if (cleared.length > 0) {
-                flags += `lv_obj_clear_flag(obj, ${cleared
-                    .map(flag => "LV_OBJ_FLAG_" + flag)
-                    .join("|")});\n`;
+                build.line(
+                    `lv_obj_clear_flag(obj, ${cleared
+                        .map(flag => "LV_OBJ_FLAG_" + flag)
+                        .join("|")});`
+                );
             }
         }
 
         // add/clear states
-        let states = "";
         {
             const { added, cleared } = changes(
                 (classInfo.lvgl!.defaultStates ?? "").split("|"),
@@ -902,59 +1064,40 @@ export class LVGLWidget extends Widget {
             );
 
             if (added.length > 0) {
-                states += `lv_obj_add_state(obj, ${added
-                    .map(state => "LV_STATE_" + state)
-                    .join("|")});\n`;
+                build.line(
+                    `lv_obj_add_state(obj, ${added
+                        .map(state => "LV_STATE_" + state)
+                        .join("|")});`
+                );
             }
 
             if (cleared.length > 0) {
-                states += `lv_obj_clear_state(obj, ${cleared
-                    .map(state => "LV_STATE_" + state)
-                    .join("|")});\n`;
+                build.line(
+                    `lv_obj_clear_state(obj, ${cleared
+                        .map(state => "LV_STATE_" + state)
+                        .join("|")});`
+                );
             }
         }
 
-        let result = "";
+        this.localStyles.lvglBuild(build);
 
-        if (this.identifier) {
-            result = `// ${this.identifier}\n`;
-        }
+        if (this.children.length > 0) {
+            build.line("{");
+            build.indent();
+            build.line("lv_obj_t *parent_obj = obj;");
 
-        result += this.lvglBuildObj();
-
-        if (flags) {
-            result += "\n" + flags;
-        }
-
-        if (states) {
-            if (!flags) {
-                result += "\n";
+            for (const widget of this.children) {
+                build.line("{");
+                build.indent();
+                widget.lvglBuild(build);
+                build.unindent();
+                build.line("}");
             }
-            result += states;
+
+            build.unindent();
+            build.line("}");
         }
-
-        if (result.endsWith("\n")) {
-            result = result.substring(0, result.length - 1);
-        }
-
-        result += this.localStyles.lvglBuild();
-
-        if (this.children.length == 0) {
-            return result;
-        }
-
-        const widgets = this.children
-            .map(
-                (widget: LVGLWidget) =>
-                    `{\n${indent(TAB, widget.lvglBuild())}\n}`
-            )
-            .join("\n");
-
-        return `${result}
-{
-    lv_obj_t *parent_obj = obj;
-${indent(TAB, widgets)}
-}`;
     }
 
     get lvglCreateLeft() {
@@ -1021,15 +1164,11 @@ ${indent(TAB, widgets)}
         return this.height;
     }
 
-    get lvglBuildPosAndSize() {
-        return `lv_obj_set_pos(obj, ${this.lvglBuildLeft}, ${this.lvglBuildTop});
-lv_obj_set_size(obj, ${this.lvglBuildWidth}, ${this.lvglBuildHeight});`;
+    lvglBuildObj(build: LVGLBuild): void {
+        console.error("UNEXPECTED!");
     }
 
-    lvglBuildObj(): string {
-        console.error("UNEXPECTED!");
-        return "";
-    }
+    lvglBuildSpecific(build: LVGLBuild): void {}
 
     get part() {
         const project = ProjectEditor.getProject(this);
@@ -1246,18 +1385,22 @@ export class LVGLLabelWidget extends LVGLWidget {
         );
     }
 
-    override lvglBuildObj() {
-        const longMode =
-            this.longMode != "WRAP"
-                ? `\nlv_label_set_long_mode(obj, LV_LABEL_LONG_${this.longMode});`
-                : "";
-        const recolor = this.recolor
-            ? `\nlv_label_set_recolor(obj, true);`
-            : "";
+    override lvglBuildObj(build: LVGLBuild) {
+        build.line(`lv_obj_t *obj = lv_label_create(parent_obj);`);
+    }
 
-        return `lv_obj_t *obj = lv_label_create(parent_obj);
-${this.lvglBuildPosAndSize}${longMode}
-lv_label_set_text(obj, ${escapeCString(this.text)});${recolor}`;
+    override lvglBuildSpecific(build: LVGLBuild) {
+        if (this.longMode != "WRAP") {
+            build.line(
+                `lv_label_set_long_mode(obj, LV_LABEL_LONG_${this.longMode});`
+            );
+        }
+
+        if (this.recolor) {
+            build.line(`lv_label_set_recolor(obj, true);`);
+        }
+
+        build.line(`lv_label_set_text(obj, ${escapeCString(this.text)});`);
     }
 }
 
@@ -1330,9 +1473,8 @@ export class LVGLButtonWidget extends LVGLWidget {
         );
     }
 
-    override lvglBuildObj() {
-        return `lv_obj_t *obj = lv_btn_create(parent_obj);
-${this.lvglBuildPosAndSize}`;
+    override lvglBuildObj(build: LVGLBuild) {
+        build.line(`lv_obj_t *obj = lv_btn_create(parent_obj);`);
     }
 }
 
@@ -1410,9 +1552,8 @@ export class LVGLPanelWidget extends LVGLWidget {
         );
     }
 
-    override lvglBuildObj() {
-        return `lv_obj_t *obj = lv_obj_create(parent_obj);
-${this.lvglBuildPosAndSize}`;
+    override lvglBuildObj(build: LVGLBuild) {
+        build.line(`lv_obj_t *obj = lv_obj_create(parent_obj);`);
     }
 }
 
@@ -1580,17 +1721,28 @@ export class LVGLImageWidget extends LVGLWidget {
         return obj;
     }
 
-    override lvglBuildObj() {
-        return `lv_obj_t *obj = lv_img_create(parent_obj);
-${this.lvglBuildPosAndSize}${
-            this.image ? `\nlv_img_set_src(obj, &img_${this.image});` : ""
-        }${
-            this.pivotX != 0 || this.pivotY != 0
-                ? `\nlv_img_set_pivot(obj, ${this.pivotX}, ${this.pivotY});`
-                : ""
-        }${this.zoom != 256 ? `\nlv_img_set_zoom(obj, ${this.zoom});` : ""}${
-            this.angle != 0 ? `\nlv_img_set_angle(obj, ${this.angle});` : ""
-        }`;
+    override lvglBuildObj(build: LVGLBuild) {
+        build.line(`lv_obj_t *obj = lv_img_create(parent_obj);`);
+    }
+
+    override lvglBuildSpecific(build: LVGLBuild) {
+        if (this.image) {
+            build.line(`lv_img_set_src(obj, &img_${this.image});`);
+        }
+
+        if (this.pivotX != 0 || this.pivotY != 0) {
+            build.line(
+                `lv_img_set_pivot(obj, ${this.pivotX}, ${this.pivotY});`
+            );
+        }
+
+        if (this.zoom != 256) {
+            build.line(`lv_img_set_zoom(obj, ${this.zoom});`);
+        }
+
+        if (this.angle != 0) {
+            build.line(`lv_img_set_angle(obj, ${this.angle});`);
+        }
     }
 }
 
@@ -1746,29 +1898,28 @@ export class LVGLSliderWidget extends LVGLWidget {
         );
     }
 
-    override lvglBuildObj() {
-        const range =
-            this.min != 0 || this.max != 100
-                ? `\nlv_slider_set_range(obj, ${this.min}, ${this.max});`
-                : "";
+    override lvglBuildObj(build: LVGLBuild) {
+        build.line(`lv_obj_t *obj = lv_slider_create(parent_obj);`);
+    }
 
-        const mode =
-            this.mode != "NORMAL"
-                ? `\nlv_slider_set_mode(obj, LV_SLIDER_MODE_${this.mode});`
-                : "";
+    override lvglBuildSpecific(build: LVGLBuild) {
+        if (this.min != 0 || this.max != 100) {
+            build.line(`lv_slider_set_range(obj, ${this.min}, ${this.max});`);
+        }
 
-        const value =
-            this.value != 0
-                ? `\nlv_slider_set_value(obj, ${this.value}, LV_ANIM_OFF);`
-                : "";
+        if (this.mode != "NORMAL") {
+            build.line(`lv_slider_set_mode(obj, LV_SLIDER_MODE_${this.mode});`);
+        }
 
-        const valueLeft =
-            this.valueLeft != 0
-                ? `\nif(lv_slider_get_mode(obj) == LV_SLIDER_MODE_RANGE) lv_slider_set_left_value(obj, ${this.valueLeft}, LV_ANIM_OFF);`
-                : "";
+        if (this.value != 0) {
+            build.line(`lv_slider_set_value(obj, ${this.value}, LV_ANIM_OFF);`);
+        }
 
-        return `lv_obj_t *obj = lv_slider_create(parent_obj);${range}${mode}${value}${valueLeft}
-${this.lvglBuildPosAndSize}`;
+        if (this.mode != "RANGE") {
+            build.line(
+                `lv_slider_set_left_value(obj, ${this.valueLeft}, LV_ANIM_OFF);`
+            );
+        }
     }
 }
 
@@ -1887,12 +2038,16 @@ export class LVGLRollerWidget extends LVGLWidget {
         );
     }
 
-    override lvglBuildObj() {
-        return `lv_obj_t *obj = lv_roller_create(parent_obj);
-${this.lvglBuildPosAndSize}
-lv_roller_set_options(obj, ${escapeCString(this.options)}, LV_ROLLER_MODE_${
-            this.mode
-        });`;
+    override lvglBuildObj(build: LVGLBuild) {
+        build.line(`lv_obj_t *obj = lv_roller_create(parent_obj);`);
+    }
+
+    override lvglBuildSpecific(build: LVGLBuild) {
+        build.line(
+            `lv_roller_set_options(obj, ${escapeCString(
+                this.options
+            )}, LV_ROLLER_MODE_${this.mode});`
+        );
     }
 }
 
@@ -1966,9 +2121,8 @@ export class LVGLSwitchWidget extends LVGLWidget {
         );
     }
 
-    override lvglBuildObj() {
-        return `lv_obj_t *obj = lv_switch_create(parent_obj);
-${this.lvglBuildPosAndSize}`;
+    override lvglBuildObj(build: LVGLBuild) {
+        build.line(`lv_obj_t *obj = lv_switch_create(parent_obj);`);
     }
 }
 

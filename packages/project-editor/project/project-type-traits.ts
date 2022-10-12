@@ -187,7 +187,7 @@ export function isFirmwareWithFlowSupportProject(object: IEezObject) {
 
 export function hasFlowSupport(object: IEezObject) {
     const project = ProjectEditor.getProject(object);
-    return !project.projectTypeTraits.hasFlowSupport;
+    return project.projectTypeTraits.hasFlowSupport;
 }
 
 export function isDashboardOrApplet(object: IEezObject) {

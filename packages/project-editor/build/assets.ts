@@ -75,7 +75,7 @@ import { FIRST_DASHBOARD_COMPONENT_TYPE } from "project-editor/flow/components/c
 
 import { DummyDataBuffer, DataBuffer } from "project-editor/build/data-buffer";
 
-import { buildLvglDecl, buildLvglDef } from "project-editor/lvgl/build";
+import { LVGLBuild } from "project-editor/lvgl/build";
 
 export { DummyDataBuffer, DataBuffer } from "project-editor/build/data-buffer";
 
@@ -1371,12 +1371,26 @@ export async function buildAssets(
         }
     }
 
-    if (!sectionNames || sectionNames.indexOf("LVGL_DECL") !== -1) {
-        result.LVGL_DECL = buildLvglDecl(assets.projectEditorStore.project);
+    const lvglBuild = new LVGLBuild(assets.projectEditorStore.project);
+
+    if (!sectionNames || sectionNames.indexOf("LVGL_SCREENS_DECL") !== -1) {
+        result.LVGL_SCREENS_DECL = await lvglBuild.buildScreensDecl();
     }
 
-    if (!sectionNames || sectionNames.indexOf("LVGL_DEF") !== -1) {
-        result.LVGL_DEF = await buildLvglDef(assets.projectEditorStore.project);
+    if (!sectionNames || sectionNames.indexOf("LVGL_SCREENS_DEF") !== -1) {
+        result.LVGL_SCREENS_DEF = await lvglBuild.buildScreensDef();
+    }
+
+    if (!sectionNames || sectionNames.indexOf("LVGL_IMAGES_DECL") !== -1) {
+        result.LVGL_IMAGES_DECL = await lvglBuild.buildImagesDecl();
+    }
+
+    if (!sectionNames || sectionNames.indexOf("LVGL_IMAGES_DEF") !== -1) {
+        result.LVGL_IMAGES_DEF = await lvglBuild.buildImagesDef();
+    }
+
+    if (!sectionNames || sectionNames.indexOf("LVGL_ACTIONS_DECL") !== -1) {
+        result.LVGL_ACTIONS_DECL = await lvglBuild.buildActionsDecl();
     }
 
     return Object.assign(

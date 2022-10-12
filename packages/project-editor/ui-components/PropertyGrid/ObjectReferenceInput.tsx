@@ -10,6 +10,7 @@ import { IEezObject, PropertyInfo } from "project-editor/core/object";
 import { getNameProperty } from "project-editor/project/project";
 import { SortDirectionType } from "project-editor/core/objectAdapter";
 import { closest } from "eez-studio-shared/dom";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -198,27 +199,50 @@ export const ObjectReferenceInput = observer(
                 document.body
             );
 
+            let bitmap;
+            if (
+                this.props.propertyInfo.referencedObjectCollectionPath ===
+                "bitmaps"
+            ) {
+                bitmap = ProjectEditor.findBitmap(
+                    this.context.project,
+                    this.props.value
+                );
+                console.log(bitmap);
+            }
+
             return (
-                <div className="input-group" style={{ position: "relative" }}>
-                    <input
-                        className="form-control"
-                        type="text"
-                        value={value}
-                        onChange={this.onChange}
-                        readOnly={readOnly}
-                    />
-                    {!readOnly && (
-                        <>
-                            <button
-                                ref={this.buttonRef}
-                                className="btn btn-outline-secondary dropdown-toggle EezStudio_ObjectReferenceInput_DropdownButton"
-                                type="button"
-                                onClick={this.openDropdown}
-                            />
-                            {portal}
-                        </>
+                <>
+                    <div
+                        className="input-group"
+                        style={{ position: "relative" }}
+                    >
+                        <input
+                            className="form-control"
+                            type="text"
+                            value={value}
+                            onChange={this.onChange}
+                            readOnly={readOnly}
+                        />
+                        {!readOnly && (
+                            <>
+                                <button
+                                    ref={this.buttonRef}
+                                    className="btn btn-outline-secondary dropdown-toggle EezStudio_ObjectReferenceInput_DropdownButton"
+                                    type="button"
+                                    onClick={this.openDropdown}
+                                />
+                                {portal}
+                            </>
+                        )}
+                    </div>
+                    {bitmap && bitmap.image && (
+                        <img
+                            className="EezStudio_Property_BitmapPreview"
+                            src={bitmap.image}
+                        />
                     )}
-                </div>
+                </>
             );
         }
     }

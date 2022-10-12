@@ -58,10 +58,10 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import { drawBackground } from "project-editor/flow/editor/draw";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
-import { indent, TAB } from "project-editor/build/helper";
 import { LVGLPage } from "project-editor/lvgl/Page";
 import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { LVGLCreateResultType } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
+import type { LVGLBuild } from "project-editor/lvgl/build";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -798,21 +798,38 @@ export class Page extends Flow {
         };
     }
 
-    lvglBuild() {
-        const widgets = this.components
-            .filter(component => component instanceof Widget)
-            .map((widget: Widget) => `{\n${indent(TAB, widget.lvglBuild())}\n}`)
-            .join("\n");
+    lvglBuild(build: LVGLBuild) {
+        const screenStructName = build.getScreenStructName(this);
+        build.line(
+            `${screenStructName} *screen = (${screenStructName} *)lv_mem_alloc(sizeof(${screenStructName}));`
+        );
+        build.line(`lv_obj_t *obj = lv_obj_create(0);`);
+        build.line(`screen->${build.screenObjFieldName} = obj;`);
 
-        return `lv_obj_t *obj = lv_obj_create(0);
-lv_obj_set_pos(obj, ${this.left}, ${this.top});
-lv_obj_set_size(obj, ${this.width}, ${this.height});
-{
-    lv_obj_t *parent_obj = obj;
-${indent(TAB, widgets)}
-}
-return obj;
-`;
+        build.line(`lv_obj_set_pos(obj, ${this.left}, ${this.top});`);
+        build.line(`lv_obj_set_size(obj, ${this.width}, ${this.height});`);
+
+        build.line(`{`);
+        build.indent();
+
+        build.line(`lv_obj_t *parent_obj = obj;`);
+
+        for (const widget of this.components) {
+            if (widget instanceof ProjectEditor.LVGLWidgetClass) {
+                build.line(`{`);
+                build.indent();
+
+                widget.lvglBuild(build);
+
+                build.unindent();
+                build.line(`}`);
+            }
+        }
+
+        build.unindent();
+        build.line(`}`);
+
+        build.line(`return screen;`);
     }
 }
 

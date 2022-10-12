@@ -15,6 +15,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Message } from "project-editor/store";
 import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { PropertyValueHolder } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
+import type { LVGLBuild } from "project-editor/lvgl/build";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1251,12 +1252,10 @@ export class LVGLStylesDefinition extends EezObject {
         });
     }
 
-    lvglBuild() {
+    lvglBuild(build: LVGLBuild) {
         if (!this.definition) {
-            return "";
+            return;
         }
-
-        let result = "";
 
         Object.keys(this.definition).forEach(part => {
             Object.keys(this.definition[part]).forEach(state => {
@@ -1281,8 +1280,9 @@ export class LVGLStylesDefinition extends EezObject {
                                     .toString(16)
                                     .padStart(8, "0");
 
-                            result += `
-lv_obj_set_style_${propertyInfo.name}(obj, lv_color_hex(${colorValue}), ${selectorCode});`;
+                            build.line(
+                                `lv_obj_set_style_${propertyInfo.name}(obj, lv_color_hex(${colorValue}), ${selectorCode});`
+                            );
                         } else if (
                             propertyInfo.type == PropertyType.Number ||
                             propertyInfo.type == PropertyType.Enum
@@ -1290,10 +1290,13 @@ lv_obj_set_style_${propertyInfo.name}(obj, lv_color_hex(${colorValue}), ${select
                             if (propertyInfo == text_font_property_info) {
                                 const index = BUILT_IN_FONTS.indexOf(value);
                                 if (index != -1) {
-                                    result += `
-lv_obj_set_style_${propertyInfo.name}(obj, &lv_font_${(
-                                        value as string
-                                    ).toLowerCase()}, ${selectorCode});`;
+                                    build.line(
+                                        `lv_obj_set_style_${
+                                            propertyInfo.name
+                                        }(obj, &lv_font_${(
+                                            value as string
+                                        ).toLowerCase()}, ${selectorCode});`
+                                    );
                                 }
                             } else {
                                 const numValue =
@@ -1303,28 +1306,29 @@ lv_obj_set_style_${propertyInfo.name}(obj, &lv_font_${(
                                           )
                                         : value;
 
-                                result += `
-lv_obj_set_style_${propertyInfo.name}(obj, ${numValue}, ${selectorCode});`;
+                                build.line(
+                                    `lv_obj_set_style_${propertyInfo.name}(obj, ${numValue}, ${selectorCode});`
+                                );
                             }
                         } else if (propertyInfo.type == PropertyType.Boolean) {
                             const numValue = value ? "true" : "false";
 
-                            result += `
-lv_obj_set_style_${propertyInfo.name}(obj, ${numValue}, ${selectorCode});`;
+                            build.line(
+                                `lv_obj_set_style_${propertyInfo.name}(obj, ${numValue}, ${selectorCode});`
+                            );
                         } else if (
                             propertyInfo.type == PropertyType.ObjectReference &&
                             propertyInfo.referencedObjectCollectionPath ==
                                 "bitmaps"
                         ) {
-                            result += `
-lv_obj_set_style_${propertyInfo.name}(obj, &img_${value}, ${selectorCode});`;
+                            build.line(
+                                `lv_obj_set_style_${propertyInfo.name}(obj, &img_${value}, ${selectorCode});`
+                            );
                         }
                     }
                 );
             });
         });
-
-        return result;
     }
 }
 

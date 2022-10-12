@@ -79,8 +79,9 @@ export class Action extends Flow {
                         id: "flow"
                     }
                 ],
-                hideInPropertyGrid: (action: Action) =>
-                    isNotV1Project(action) && !hasFlowSupport(action)
+                hideInPropertyGrid: (action: Action) => {
+                    return isNotV1Project(action) && !hasFlowSupport(action);
+                }
             },
             {
                 name: "implementation",
