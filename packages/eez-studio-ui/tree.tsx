@@ -12,6 +12,7 @@ export interface ITreeNode<T = any> {
     selected: boolean;
     expanded: boolean;
     data?: T;
+    className?: string;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -26,6 +27,7 @@ export const TreeRow = observer(
         getExpanded: (level: number, node: ITreeNode) => boolean;
         toggleExpanded: (level: number, node: ITreeNode) => void;
         collapsable: boolean;
+        rowPadding?: number;
     }> {
         constructor(props: any) {
             super(props);
@@ -73,6 +75,7 @@ export const TreeRow = observer(
                             getExpanded={this.props.getExpanded}
                             toggleExpanded={this.props.toggleExpanded}
                             collapsable={this.props.collapsable}
+                            rowPadding={this.props.rowPadding}
                         />
                     );
                 });
@@ -83,9 +86,13 @@ export const TreeRow = observer(
             let row: JSX.Element | undefined;
 
             if (!this.props.showOnlyChildren) {
-                let className = classNames("EezStudio_TreeRow", {
-                    EezStudio_Selected: this.props.node.selected
-                });
+                let className = classNames(
+                    "EezStudio_TreeRow",
+                    this.props.node.className,
+                    {
+                        EezStudio_Selected: this.props.node.selected
+                    }
+                );
 
                 let labelText = this.props.node.label;
 
@@ -130,7 +137,10 @@ export const TreeRow = observer(
                     <div
                         data-object-id={this.props.node.id}
                         className={className}
-                        style={{ paddingLeft: this.props.level * 20 }}
+                        style={{
+                            paddingLeft:
+                                this.props.level * (this.props.rowPadding ?? 20)
+                        }}
                         onClick={this.onClick.bind(this)}
                     >
                         {triangle}
@@ -170,6 +180,7 @@ export const Tree = observer(
             className?: string;
             style?: React.CSSProperties;
             collapsable?: boolean;
+            rowPadding?: number;
         },
         {}
     > {
@@ -212,6 +223,7 @@ export const Tree = observer(
                         getExpanded={this.getExpanded}
                         toggleExpanded={this.toggleExpanded}
                         collapsable={this.props.collapsable ?? true}
+                        rowPadding={this.props.rowPadding}
                     />
                 </div>
             );

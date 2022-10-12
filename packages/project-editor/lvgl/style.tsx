@@ -60,6 +60,7 @@ export type LVGLParts = keyof typeof lvglParts;
 
 function makeEnumPropertyInfo(
     name: string,
+    displayName: string,
     lvglStylePropCode: LVGLStylePropCode,
     enumItemToCodeOrStringArray: { [key: string]: number } | string[],
     buildPrefix: string
@@ -83,6 +84,7 @@ function makeEnumPropertyInfo(
 
     return {
         name,
+        displayName,
         type: PropertyType.Enum,
         enumItems: Object.keys(enumItemToCode).map(id => ({
             id,
@@ -236,7 +238,7 @@ enum LVGLStylePropCode {
 }
 
 //
-// SIZE AND POSITION
+// POSITION AND SIZE
 //
 
 // const width_property_info: LVGLPropertyInfo = {
@@ -246,11 +248,13 @@ enum LVGLStylePropCode {
 // };
 const min_width_property_info: LVGLPropertyInfo = {
     name: "min_width",
+    displayName: "Min. width",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_MIN_WIDTH
 };
 const max_width_property_info: LVGLPropertyInfo = {
     name: "max_width",
+    displayName: "Max. width",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_MAX_WIDTH
 };
@@ -261,11 +265,13 @@ const max_width_property_info: LVGLPropertyInfo = {
 // };
 const min_height_property_info: LVGLPropertyInfo = {
     name: "min_height",
+    displayName: "Min. height",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_MIN_HEIGHT
 };
 const max_height_property_info: LVGLPropertyInfo = {
     name: "max_height",
+    displayName: "Max. height",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_MAX_HEIGHT
 };
@@ -281,6 +287,7 @@ const max_height_property_info: LVGLPropertyInfo = {
 // };
 const align_property_info = makeEnumPropertyInfo(
     "align",
+    "Align",
     LVGLStylePropCode.LV_STYLE_ALIGN,
     [
         "DEFAULT",
@@ -321,11 +328,13 @@ const transform_height_property_info: LVGLPropertyInfo = {
 };
 const translate_x_property_info: LVGLPropertyInfo = {
     name: "translate_x",
+    displayName: "Translate X",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_TRANSLATE_X
 };
 const translate_y_property_info: LVGLPropertyInfo = {
     name: "translate_y",
+    displayName: "Translate Y",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_TRANSLATE_Y
 };
@@ -341,11 +350,13 @@ const transform_angle_property_info: LVGLPropertyInfo = {
 };
 const transform_pivot_x_property_info: LVGLPropertyInfo = {
     name: "transform_pivot_x",
+    displayName: "Transform pivot X",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_TRANSFORM_PIVOT_X
 };
 const transform_pivot_y_property_info: LVGLPropertyInfo = {
     name: "transform_pivot_y",
+    displayName: "Transform pivot Y",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_TRANSFORM_PIVOT_Y
 };
@@ -356,31 +367,37 @@ const transform_pivot_y_property_info: LVGLPropertyInfo = {
 
 const pad_top_property_info: LVGLPropertyInfo = {
     name: "pad_top",
+    displayName: "Top",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_PAD_TOP
 };
 const pad_bottom_property_info: LVGLPropertyInfo = {
     name: "pad_bottom",
+    displayName: "Bottom",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_PAD_BOTTOM
 };
 const pad_left_property_info: LVGLPropertyInfo = {
     name: "pad_left",
+    displayName: "Left",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_PAD_LEFT
 };
 const pad_right_property_info: LVGLPropertyInfo = {
     name: "pad_right",
+    displayName: "Right",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_PAD_RIGHT
 };
 const pad_row_property_info: LVGLPropertyInfo = {
     name: "pad_row",
+    displayName: "Row",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_PAD_ROW
 };
 const pad_column_property_info: LVGLPropertyInfo = {
     name: "pad_column",
+    displayName: "Column",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_PAD_COLUMN
 };
@@ -391,21 +408,25 @@ const pad_column_property_info: LVGLPropertyInfo = {
 
 const bg_color_property_info: LVGLPropertyInfo = {
     name: "bg_color",
+    displayName: "Color",
     type: PropertyType.ThemedColor,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BG_COLOR
 };
 const bg_opa_property_info: LVGLPropertyInfo = {
     name: "bg_opa",
+    displayName: "Opacity",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BG_OPA
 };
 const bg_grad_color_property_info: LVGLPropertyInfo = {
     name: "bg_grad_color",
+    displayName: "Grad. color",
     type: PropertyType.ThemedColor,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BG_GRAD_COLOR
 };
 const bg_grad_dir_property_info = makeEnumPropertyInfo(
     "bg_grad_dir",
+    "Grad. direction",
     LVGLStylePropCode.LV_STYLE_BG_GRAD_DIR,
     [
         "NONE", // No gradient (the `grad_color` property is ignored)
@@ -416,11 +437,13 @@ const bg_grad_dir_property_info = makeEnumPropertyInfo(
 );
 const bg_main_stop_property_info: LVGLPropertyInfo = {
     name: "bg_main_stop",
+    displayName: "Main stop",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BG_MAIN_STOP
 };
 const bg_grad_stop_property_info: LVGLPropertyInfo = {
     name: "bg_grad_stop",
+    displayName: "Gradient stop",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BG_GRAD_STOP
 };
@@ -433,6 +456,7 @@ const bg_grad_property_info: LVGLPropertyInfo = {
 */
 const bg_dither_mode_property_info = makeEnumPropertyInfo(
     "bg_dither_mode",
+    "Dither mode",
     LVGLStylePropCode.LV_STYLE_BG_DITHER_MODE,
     [
         "NONE", // No dithering, colors are just quantized to the output resolution
@@ -443,27 +467,32 @@ const bg_dither_mode_property_info = makeEnumPropertyInfo(
 );
 const bg_img_src_property_info: LVGLPropertyInfo = {
     name: "bg_img_src",
+    displayName: "Image source",
     type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: "bitmaps",
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BG_IMG_SRC
 };
 const bg_img_opa_property_info: LVGLPropertyInfo = {
     name: "bg_img_opa",
+    displayName: "Image opacity",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BG_IMG_OPA
 };
 const bg_img_recolor_property_info: LVGLPropertyInfo = {
     name: "bg_img_recolor",
+    displayName: "Image recolor",
     type: PropertyType.ThemedColor,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BG_IMG_RECOLOR
 };
 const bg_img_recolor_opa_property_info: LVGLPropertyInfo = {
     name: "bg_img_recolor_opa",
+    displayName: "Image recolor opa.",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BG_IMG_RECOLOR_OPA
 };
 const bg_img_tiled_property_info: LVGLPropertyInfo = {
     name: "bg_img_tiled",
+    displayName: "Image tiled",
     type: PropertyType.Boolean,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BG_IMG_TILED
 };
@@ -474,21 +503,25 @@ const bg_img_tiled_property_info: LVGLPropertyInfo = {
 
 const border_color_property_info: LVGLPropertyInfo = {
     name: "border_color",
+    displayName: "Color",
     type: PropertyType.ThemedColor,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BORDER_COLOR
 };
 const border_opa_property_info: LVGLPropertyInfo = {
     name: "border_opa",
+    displayName: "Opacity",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BORDER_OPA
 };
 const border_width_property_info: LVGLPropertyInfo = {
     name: "border_width",
+    displayName: "Width",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BORDER_WIDTH
 };
 const border_side_property_info = makeEnumPropertyInfo(
     "border_side",
+    "Side",
     LVGLStylePropCode.LV_STYLE_BORDER_SIDE,
     {
         NONE: 0x00,
@@ -503,6 +536,7 @@ const border_side_property_info = makeEnumPropertyInfo(
 );
 const border_post_property_info: LVGLPropertyInfo = {
     name: "border_post",
+    displayName: "Post",
     type: PropertyType.Boolean,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BORDER_POST
 };
@@ -513,21 +547,25 @@ const border_post_property_info: LVGLPropertyInfo = {
 
 const outline_width_property_info: LVGLPropertyInfo = {
     name: "outline_width",
+    displayName: "Width",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_OUTLINE_WIDTH
 };
 const outline_color_property_info: LVGLPropertyInfo = {
     name: "outline_color",
+    displayName: "Color",
     type: PropertyType.ThemedColor,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_OUTLINE_COLOR
 };
 const outline_opa_property_info: LVGLPropertyInfo = {
     name: "outline_opa",
+    displayName: "Opacity",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_OUTLINE_OPA
 };
 const outline_pad_property_info: LVGLPropertyInfo = {
     name: "outline_pad",
+    displayName: "Padding",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_OUTLINE_PAD
 };
@@ -538,31 +576,37 @@ const outline_pad_property_info: LVGLPropertyInfo = {
 
 const shadow_width_property_info: LVGLPropertyInfo = {
     name: "shadow_width",
+    displayName: "Width",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_SHADOW_WIDTH
 };
 const shadow_ofs_x_property_info: LVGLPropertyInfo = {
     name: "shadow_ofs_x",
+    displayName: "X offset",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_SHADOW_OFS_X
 };
 const shadow_ofs_y_property_info: LVGLPropertyInfo = {
     name: "shadow_ofs_y",
+    displayName: "Y offset",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_SHADOW_OFS_Y
 };
 const shadow_spread_property_info: LVGLPropertyInfo = {
     name: "shadow_spread",
+    displayName: "Spread",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_SHADOW_SPREAD
 };
 const shadow_color_property_info: LVGLPropertyInfo = {
     name: "shadow_color",
+    displayName: "Color",
     type: PropertyType.ThemedColor,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_SHADOW_COLOR
 };
 const shadow_opa_property_info: LVGLPropertyInfo = {
     name: "shadow_opa",
+    displayName: "Opacity",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_SHADOW_OPA
 };
@@ -573,16 +617,19 @@ const shadow_opa_property_info: LVGLPropertyInfo = {
 
 const img_opa_property_info: LVGLPropertyInfo = {
     name: "img_opa",
+    displayName: "Opacity",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_IMG_OPA
 };
 const img_recolor_property_info: LVGLPropertyInfo = {
     name: "img_recolor",
+    displayName: "Recolor",
     type: PropertyType.ThemedColor,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_IMG_RECOLOR
 };
 const img_recolor_opa_property_info: LVGLPropertyInfo = {
     name: "img_recolor_opa",
+    displayName: "Recolor opacity",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_IMG_RECOLOR_OPA
 };
@@ -593,31 +640,37 @@ const img_recolor_opa_property_info: LVGLPropertyInfo = {
 
 const line_width_property_info: LVGLPropertyInfo = {
     name: "line_width",
+    displayName: "Width",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_LINE_WIDTH
 };
 const line_dash_width_property_info: LVGLPropertyInfo = {
     name: "line_dash_width",
+    displayName: "Dash width",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_LINE_DASH_WIDTH
 };
 const line_dash_gap_property_info: LVGLPropertyInfo = {
     name: "line_dash_gap",
+    displayName: "Dash gap",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_LINE_DASH_GAP
 };
 const line_rounded_property_info: LVGLPropertyInfo = {
     name: "line_rounded",
+    displayName: "Rounded",
     type: PropertyType.Boolean,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_LINE_ROUNDED
 };
 const line_color_property_info: LVGLPropertyInfo = {
     name: "line_color",
+    displayName: "Color",
     type: PropertyType.ThemedColor,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_LINE_COLOR
 };
 const line_opa_property_info: LVGLPropertyInfo = {
     name: "line_opa",
+    displayName: "Opacity",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_LINE_OPA
 };
@@ -628,26 +681,31 @@ const line_opa_property_info: LVGLPropertyInfo = {
 
 const arc_width_property_info: LVGLPropertyInfo = {
     name: "arc_width",
+    displayName: "Width",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ARC_WIDTH
 };
 const arc_rounded_property_info: LVGLPropertyInfo = {
     name: "arc_rounded",
+    displayName: "Rounded",
     type: PropertyType.Boolean,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ARC_ROUNDED
 };
 const arc_color_property_info: LVGLPropertyInfo = {
     name: "arc_color",
+    displayName: "Color",
     type: PropertyType.ThemedColor,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ARC_COLOR
 };
 const arc_opa_property_info: LVGLPropertyInfo = {
     name: "arc_opa",
+    displayName: "Opacity",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ARC_OPA
 };
 const arc_img_src_property_info: LVGLPropertyInfo = {
     name: "arc_img_src",
+    displayName: "Image source",
     type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: "bitmaps",
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ARC_IMG_SRC
@@ -659,16 +717,19 @@ const arc_img_src_property_info: LVGLPropertyInfo = {
 
 const text_color_property_info: LVGLPropertyInfo = {
     name: "text_color",
+    displayName: "Color",
     type: PropertyType.ThemedColor,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_TEXT_COLOR
 };
 const text_opa_property_info: LVGLPropertyInfo = {
     name: "text_opa",
+    displayName: "Opacity",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_TEXT_OPA
 };
 const text_font_property_info: LVGLPropertyInfo = {
     name: "text_font",
+    displayName: "Font",
     type: PropertyType.Enum,
     enumItems: (propertyValueHolder: PropertyValueHolder) => {
         return [...BUILT_IN_FONTS.map(id => ({ id }))];
@@ -677,22 +738,26 @@ const text_font_property_info: LVGLPropertyInfo = {
 };
 const text_letter_space_property_info: LVGLPropertyInfo = {
     name: "text_letter_space",
+    displayName: "Letter space",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_TEXT_LETTER_SPACE
 };
 const text_line_space_property_info: LVGLPropertyInfo = {
     name: "text_line_space",
+    displayName: "Line space",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_TEXT_LINE_SPACE
 };
 const text_decor_property_info = makeEnumPropertyInfo(
     "text_decor",
+    "Decoration",
     LVGLStylePropCode.LV_STYLE_TEXT_DECOR,
     ["NONE", "UNDERLINE", "STRIKETHROUGH"],
     "LV_TEXT_DECOR_"
 );
 const text_align_property_info = makeEnumPropertyInfo(
     "text_align",
+    "Align",
     LVGLStylePropCode.LV_STYLE_TEXT_ALIGN,
     ["AUTO", "LEFT", "CENTER", "RIGHT"],
     "LV_TEXT_ALIGN_"
@@ -704,44 +769,47 @@ const text_align_property_info = makeEnumPropertyInfo(
 
 const radius_property_info: LVGLPropertyInfo = {
     name: "radius",
+    displayName: "Radius",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_RADIUS
 };
 const clip_corner_property_info: LVGLPropertyInfo = {
     name: "clip_corner",
+    displayName: "Clip corner",
     type: PropertyType.Boolean,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_CLIP_CORNER
 };
 const opa_property_info: LVGLPropertyInfo = {
     name: "opa",
+    displayName: "Opacity",
     type: PropertyType.Number,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_OPA
 };
-const color_filter_dsc_property_info: LVGLPropertyInfo = {
-    name: "color_filter_dsc",
-    type: PropertyType.Number,
-    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_COLOR_FILTER_DSC
-};
-const color_filter_opa_property_info: LVGLPropertyInfo = {
-    name: "color_filter_opa",
-    type: PropertyType.Number,
-    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_COLOR_FILTER_OPA
-};
+// const color_filter_dsc_property_info: LVGLPropertyInfo = {
+//     name: "color_filter_dsc",
+//     type: PropertyType.Number,
+//     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_COLOR_FILTER_DSC
+// };
+// const color_filter_opa_property_info: LVGLPropertyInfo = {
+//     name: "color_filter_opa",
+//     type: PropertyType.Number,
+//     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_COLOR_FILTER_OPA
+// };
 // const anim_property_info: LVGLPropertyInfo = {
 //     name: "anim",
 //     type: PropertyType.Any,
 //     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ANIM
 // };
-const anim_time_property_info: LVGLPropertyInfo = {
-    name: "anim_time",
-    type: PropertyType.Number,
-    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ANIM_TIME
-};
-const anim_speed_property_info: LVGLPropertyInfo = {
-    name: "anim_speed",
-    type: PropertyType.Number,
-    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ANIM_SPEED
-};
+// const anim_time_property_info: LVGLPropertyInfo = {
+//     name: "anim_time",
+//     type: PropertyType.Number,
+//     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ANIM_TIME
+// };
+// const anim_speed_property_info: LVGLPropertyInfo = {
+//     name: "anim_speed",
+//     type: PropertyType.Number,
+//     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ANIM_SPEED
+// };
 // const transition_property_info: LVGLPropertyInfo = {
 //     name: "transition",
 //     type: PropertyType.Any,
@@ -749,6 +817,7 @@ const anim_speed_property_info: LVGLPropertyInfo = {
 // };
 const blend_mode_property_info = makeEnumPropertyInfo(
     "blend_mode",
+    "Blend mode",
     LVGLStylePropCode.LV_STYLE_BLEND_MODE,
     [
         "NORMAL", // Simply mix according to the opacity value
@@ -759,13 +828,14 @@ const blend_mode_property_info = makeEnumPropertyInfo(
     ],
     "LV_BLEND_MODE_"
 );
-const layout_property_info: LVGLPropertyInfo = {
-    name: "layout",
-    type: PropertyType.Any,
-    lvglStylePropCode: LVGLStylePropCode.LV_STYLE_LAYOUT
-};
+// const layout_property_info: LVGLPropertyInfo = {
+//     name: "layout",
+//     type: PropertyType.Any,
+//     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_LAYOUT
+// };
 const base_dir_property_info = makeEnumPropertyInfo(
     "base_dir",
+    "Base direction",
     LVGLStylePropCode.LV_STYLE_BASE_DIR,
     ["LTR", "RTL", "AUTO"],
     "LV_BASE_DIR_"
@@ -778,7 +848,7 @@ export interface PropertiesGroup {
 
 export const lvglProperties: PropertiesGroup[] = [
     {
-        groupName: "SIZE AND POSITION",
+        groupName: "POSITION AND SIZE",
         properties: [
             align_property_info,
             //width_property_info,
@@ -915,14 +985,14 @@ export const lvglProperties: PropertiesGroup[] = [
             radius_property_info,
             clip_corner_property_info,
             opa_property_info,
-            color_filter_dsc_property_info,
-            color_filter_opa_property_info,
+            //color_filter_dsc_property_info,
+            //color_filter_opa_property_info,
             //anim_property_info,
-            anim_time_property_info,
-            anim_speed_property_info,
+            //anim_time_property_info,
+            //anim_speed_property_info,
             //transition_property_info,
             blend_mode_property_info,
-            layout_property_info,
+            //layout_property_info,
             base_dir_property_info
         ]
     }

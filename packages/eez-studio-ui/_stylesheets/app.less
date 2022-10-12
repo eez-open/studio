@@ -2683,8 +2683,8 @@ button.EezStudio_Action {
 
     .tree-row {
         display: flex;
-
         white-space: nowrap;
+        position: relative;
 
         &.drag-source {
             background-color: @dragSourceBackgroundColor;
@@ -5228,11 +5228,9 @@ button.EezStudio_Action {
 }
 
 .EezStudio_WidgetTreeTrow {
-    position: relative;
     display: flex;
     flex: 1;
     justify-content: space-between;
-    width: 100%;
     height: 20px;
 
     &.dimmed {
@@ -5242,6 +5240,8 @@ button.EezStudio_Action {
     span {
         flex: 1;
         white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
     }
 
     .EezStudio_IconAction {
@@ -5743,13 +5743,56 @@ button.EezStudio_Action {
 }
 
 .EezStudio_LVGLStylesDefinition {
-    padding-top: 5px;
     padding-left: 5px;
+    padding-bottom: 5px;
+    display: flex;
+    width: 100%;
+
+    & > div:nth-child(1) {
+        border: 1px solid @panelBorderColor;
+        padding: 5px;
+    }
+
+    & > div:nth-child(2) {
+        border: 1px solid @panelBorderColor;
+        border-left: none;
+        flex: 1;
+        padding: 5px;
+    }
+
+    .EezStudio_SimpleTree {
+        padding: 0;
+        border: 0;
+        .EezStudio_TreeRow {
+            font-size: 85%;
+            &.part {
+                cursor: default;
+                .EezStudio_TreeRowTriangle {
+                    cursor: pointer;
+                }
+            }
+            &.modified {
+                font-weight: bold;
+            }
+        }
+
+        .EezStudio_TreeRowEnclosure:not(:first-child) {
+            > .EezStudio_TreeRow.part {
+                padding-top: 5px;
+            }
+        }
+
+        .EezStudio_TreeRowTriangle {
+            &.EezStudio_Expanded {
+                transform: translate(1px, -1px) rotate(90deg);
+            }
+        }
+    }
 
     .EezStudio_LVGLStylesDefinition_GroupContainer {
         .EezStudio_LVGLStylesDefinition_GroupName {
             width: 100%;
-            font-size: 80%;
+            font-size: 85%;
             text-transform: uppercase;
             &.modified {
                 font-weight: 700;
@@ -5770,7 +5813,7 @@ button.EezStudio_Action {
                 align-items: center;
                 .EezStudio_LVGLStylesDefinition_Name {
                     font-size: 95%;
-                    min-width: 130px;
+                    min-width: 120px;
                 }
                 .EezStudio_LVGLStylesDefinition_Value {
                     input[type="color"] {
@@ -5781,5 +5824,15 @@ button.EezStudio_Action {
                 }
             }
         }
+    }
+}
+
+.EezStudio_LVGLGeometryProperty {
+    width: 100%;
+    display: flex;
+    & > select {
+        min-width: 95px;
+        margin-left: 2px;
+        flex: 0;
     }
 }

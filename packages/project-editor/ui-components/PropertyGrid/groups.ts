@@ -35,7 +35,11 @@ export const geometryGroup: IPropertyGridGroupDefinition = {
     id: "geometry",
     title: "Position and size",
     position: (object: IEezObject) =>
-        object instanceof ProjectEditor.ActionComponentClass ? 3 : 0
+        object instanceof ProjectEditor.ActionComponentClass
+            ? 3
+            : object instanceof ProjectEditor.LVGLWidgetClass
+            ? 2
+            : 0
 };
 
 export const styleGroup: IPropertyGridGroupDefinition = {

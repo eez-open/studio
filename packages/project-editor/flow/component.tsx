@@ -5329,11 +5329,11 @@ export function getTimelineEditorState(component: Component) {
     return undefined;
 }
 
-function isTimelineEditorActive(component: Component) {
+export function isTimelineEditorActive(component: Component) {
     return getTimelineEditorState(component) != undefined;
 }
 
-function isTimelineEditorActiveOrActionComponent(component: Component) {
+export function isTimelineEditorActiveOrActionComponent(component: Component) {
     return (
         getTimelineEditorState(component) != undefined ||
         component instanceof ActionComponent

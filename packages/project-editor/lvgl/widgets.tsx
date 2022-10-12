@@ -11,7 +11,8 @@ import {
     IPropertyGridGroupDefinition,
     PropertyProps,
     LVGL_FLAG_CODES,
-    LVGL_STATE_CODES
+    LVGL_STATE_CODES,
+    findPropertyByNameInClassInfo
 } from "project-editor/core/object";
 import {
     getAncestorOfType,
@@ -25,14 +26,13 @@ import { ProjectType } from "project-editor/project/project";
 
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
-import { AutoSize, Widget } from "project-editor/flow/component";
-
 import {
-    generalGroup,
-    geometryGroup,
-    specificGroup,
-    styleGroup
-} from "project-editor/ui-components/PropertyGrid/groups";
+    AutoSize,
+    isTimelineEditorActive,
+    isTimelineEditorActiveOrActionComponent,
+    Widget
+} from "project-editor/flow/component";
+
 import { escapeCString, indent, TAB } from "project-editor/build/helper";
 import { LVGLParts, LVGLStylesDefinition } from "project-editor/lvgl/style";
 import {
@@ -47,6 +47,8 @@ import { ProjectContext } from "project-editor/project/context";
 import { humanize } from "eez-studio-shared/string";
 import type { Page } from "project-editor/features/page/page";
 import { ComponentsContainerEnclosure } from "project-editor/flow/editor/render";
+import { geometryGroup } from "project-editor/ui-components/PropertyGrid/groups";
+import { Property } from "project-editor/ui-components/PropertyGrid/Property";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,14 +66,28 @@ const LV_SIZE_CONTENT = LV_COORD_SET_SPEC(2001);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const flagsGroup: IPropertyGridGroupDefinition = {
-    id: "flags",
+const generalGroup: IPropertyGridGroupDefinition = {
+    id: "lvgl-general",
+    title: "General",
+    position: 0
+};
+
+const SPECIFIC_GROUP_POSITION = 1;
+
+const flagsGroup: IPropertyGridGroupDefinition = {
+    id: "lvgl-flags",
     title: "Flags",
     position: 4
 };
 
-export const statesGroup: IPropertyGridGroupDefinition = {
-    id: "states",
+const styleGroup: IPropertyGridGroupDefinition = {
+    id: "lvgl-style",
+    title: "Style",
+    position: 3
+};
+
+const statesGroup: IPropertyGridGroupDefinition = {
+    id: "lvgl-states",
     title: "States",
     position: 4
 };
@@ -383,6 +399,49 @@ function getCode<T extends string>(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const GeometryProperty = observer(
+    class GeometryProperty extends React.Component<PropertyProps> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        render() {
+            const classInfo = getClassInfo(this.props.objects[0]);
+            const unitPropertyInfo = findPropertyByNameInClassInfo(
+                classInfo,
+                this.props.propertyInfo.name + "Unit"
+            );
+
+            return (
+                <div className="EezStudio_LVGLGeometryProperty">
+                    <Property
+                        propertyInfo={Object.assign(
+                            {},
+                            this.props.propertyInfo,
+                            {
+                                propertyGridColumnComponent: undefined
+                            }
+                        )}
+                        objects={this.props.objects}
+                        readOnly={this.props.readOnly}
+                        updateObject={this.props.updateObject}
+                    />
+
+                    {unitPropertyInfo && (
+                        <Property
+                            propertyInfo={unitPropertyInfo}
+                            objects={this.props.objects}
+                            readOnly={this.props.readOnly}
+                            updateObject={this.props.updateObject}
+                        />
+                    )}
+                </div>
+            );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class LVGLWidget extends Widget {
     identifier: string;
 
@@ -425,13 +484,29 @@ export class LVGLWidget extends Widget {
                 propertyGridGroup: generalGroup
             },
             {
+                name: "left",
+                type: PropertyType.Number,
+                propertyGridColumnComponent: GeometryProperty,
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: isTimelineEditorActive
+            },
+            {
                 name: "leftUnit",
                 type: PropertyType.Enum,
                 enumItems: [
                     { id: "px", label: "px" },
                     { id: "%", label: "%" }
                 ],
-                propertyGridGroup: geometryGroup
+                enumDisallowUndefined: true,
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "top",
+                type: PropertyType.Number,
+                propertyGridColumnComponent: GeometryProperty,
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: isTimelineEditorActive
             },
             {
                 name: "topUnit",
@@ -440,7 +515,16 @@ export class LVGLWidget extends Widget {
                     { id: "px", label: "px" },
                     { id: "%", label: "%" }
                 ],
-                propertyGridGroup: geometryGroup
+                enumDisallowUndefined: true,
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "width",
+                type: PropertyType.Number,
+                propertyGridColumnComponent: GeometryProperty,
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: isTimelineEditorActiveOrActionComponent
             },
             {
                 name: "widthUnit",
@@ -450,7 +534,16 @@ export class LVGLWidget extends Widget {
                     { id: "%", label: "%" },
                     { id: "content", label: "content" }
                 ],
-                propertyGridGroup: geometryGroup
+                enumDisallowUndefined: true,
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "height",
+                type: PropertyType.Number,
+                propertyGridColumnComponent: GeometryProperty,
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: isTimelineEditorActiveOrActionComponent
             },
             {
                 name: "heightUnit",
@@ -460,7 +553,16 @@ export class LVGLWidget extends Widget {
                     { id: "%", label: "%" },
                     { id: "content", label: "content" }
                 ],
-                propertyGridGroup: geometryGroup
+                enumDisallowUndefined: true,
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "absolutePosition",
+                type: PropertyType.String,
+                propertyGridGroup: geometryGroup,
+                computed: true,
+                hideInPropertyGrid: true
             },
             {
                 name: "children",
@@ -543,41 +645,11 @@ export class LVGLWidget extends Widget {
                 enumerable: false
             },
             {
-                name: "part",
-                type: PropertyType.Enum,
-                enumItems: (widget: LVGLWidget) => {
-                    const classInfo = getClassInfo(widget);
-                    return classInfo.lvgl!.parts.map(lvglPart => ({
-                        id: lvglPart,
-                        label: lvglPart
-                    }));
-                },
-                enumDisallowUndefined: true,
-                propertyGridGroup: styleGroup,
-                computed: true,
-                modifiable: true
-            },
-            {
-                name: "state",
-                type: PropertyType.Enum,
-                enumItems: [
-                    { id: "DEFAULT", label: "DEFAULT" },
-                    { id: "CHECKED", label: "CHECKED" },
-                    { id: "PRESSED", label: "PRESSED" },
-                    { id: "CHECKED|PRESSED", label: "CHECKED | PRESSED" },
-                    { id: "DISABLED", label: "DISABLED" },
-                    { id: "FOCUSED", label: "FOCUSED" }
-                ],
-                enumDisallowUndefined: true,
-                propertyGridGroup: styleGroup,
-                computed: true,
-                modifiable: true
-            },
-            {
                 name: "localStyles",
                 type: PropertyType.Object,
                 typeClass: LVGLStylesDefinition,
                 propertyGridGroup: styleGroup,
+                propertyGridCollapsable: true,
                 propertyGridRowComponent: LVGLStylesDefinitionProperty,
                 enumerable: false
             }
@@ -1015,6 +1087,12 @@ const LONG_MODE_CODES = {
     CLIP: 4
 };
 
+const labelGroup: IPropertyGridGroupDefinition = {
+    id: "lvgl-label",
+    title: "Label",
+    position: SPECIFIC_GROUP_POSITION
+};
+
 export class LVGLLabelWidget extends LVGLWidget {
     text: string;
     longMode: keyof typeof LONG_MODE_CODES;
@@ -1042,7 +1120,7 @@ export class LVGLLabelWidget extends LVGLWidget {
             {
                 name: "text",
                 type: PropertyType.String,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: labelGroup
             },
             {
                 name: "longMode",
@@ -1070,12 +1148,12 @@ export class LVGLLabelWidget extends LVGLWidget {
                     }
                 ],
                 enumDisallowUndefined: true,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: labelGroup
             },
             {
                 name: "recolor",
                 type: PropertyType.Boolean,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: labelGroup
             }
         ],
 
@@ -1340,6 +1418,12 @@ ${this.lvglBuildPosAndSize}`;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const imageGroup: IPropertyGridGroupDefinition = {
+    id: "lvgl-image",
+    title: "Image",
+    position: SPECIFIC_GROUP_POSITION
+};
+
 export class LVGLImageWidget extends LVGLWidget {
     image: string;
     pivotX: number;
@@ -1356,31 +1440,31 @@ export class LVGLImageWidget extends LVGLWidget {
                 name: "image",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "bitmaps",
-                propertyGridGroup: specificGroup
+                propertyGridGroup: imageGroup
             },
             {
                 name: "pivotX",
                 displayName: "Pivot X",
                 type: PropertyType.Number,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: imageGroup
             },
             {
                 name: "pivotY",
                 displayName: "Pivot Y",
                 type: PropertyType.Number,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: imageGroup
             },
             {
                 name: "zoom",
                 displayName: "Scale",
                 type: PropertyType.Number,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: imageGroup
             },
             {
                 name: "angle",
                 displayName: "Rotation",
                 type: PropertyType.Number,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: imageGroup
             }
         ],
 
@@ -1518,6 +1602,12 @@ const SLIDER_MODES = {
     RANGE: 2
 };
 
+export const sliderGroup: IPropertyGridGroupDefinition = {
+    id: "lvgl-slider",
+    title: "Slider",
+    position: SPECIFIC_GROUP_POSITION
+};
+
 export class LVGLSliderWidget extends LVGLWidget {
     min: number;
     max: number;
@@ -1533,12 +1623,12 @@ export class LVGLSliderWidget extends LVGLWidget {
             {
                 name: "min",
                 type: PropertyType.Number,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: sliderGroup
             },
             {
                 name: "max",
                 type: PropertyType.Number,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: sliderGroup
             },
             {
                 name: "mode",
@@ -1558,17 +1648,17 @@ export class LVGLSliderWidget extends LVGLWidget {
                     }
                 ],
                 enumDisallowUndefined: true,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: sliderGroup
             },
             {
                 name: "value",
                 type: PropertyType.Number,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: sliderGroup
             },
             {
                 name: "valueLeft",
                 type: PropertyType.Number,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: sliderGroup
             }
         ],
 
@@ -1689,6 +1779,12 @@ const ROLLER_MODES = {
     INFINITE: 1
 };
 
+export const rollerGroup: IPropertyGridGroupDefinition = {
+    id: "lvgl-roller",
+    title: "Roller",
+    position: SPECIFIC_GROUP_POSITION
+};
+
 export class LVGLRollerWidget extends LVGLWidget {
     options: string;
     mode: keyof typeof ROLLER_MODES;
@@ -1701,7 +1797,7 @@ export class LVGLRollerWidget extends LVGLWidget {
             {
                 name: "options",
                 type: PropertyType.MultilineText,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: rollerGroup
             },
             {
                 name: "mode",
@@ -1717,7 +1813,7 @@ export class LVGLRollerWidget extends LVGLWidget {
                     }
                 ],
                 enumDisallowUndefined: true,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: rollerGroup
             }
         ],
 
