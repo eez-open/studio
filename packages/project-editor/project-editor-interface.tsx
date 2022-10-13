@@ -24,7 +24,7 @@ import type {
     Component,
     Widget
 } from "project-editor/flow/component";
-import type { Glyph } from "project-editor/features/font/font";
+import type { findFont, Glyph } from "project-editor/features/font/font";
 import type { ConnectionLine, Flow } from "project-editor/flow/flow";
 import type { Action, findAction } from "project-editor/features/action/action";
 import type {
@@ -104,6 +104,7 @@ export interface IProjectEditor {
     findPage: typeof findPage;
     findAction: typeof findAction;
     findBitmap: typeof findBitmap;
+    findFont: typeof findFont;
     getBitmapData: typeof getBitmapData;
     migrateProjectVersion: typeof migrateProjectVersion;
     migrateProjectType: typeof migrateProjectType;

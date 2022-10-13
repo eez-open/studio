@@ -1,4 +1,4 @@
-export type FontRenderingEngine = "freetype" | "opentype";
+export type FontRenderingEngine = "freetype" | "opentype" | "LVGL";
 
 export interface FontProperties {
     name: string;
@@ -10,6 +10,8 @@ export interface FontProperties {
     ascent: number;
     descent: number;
     glyphs: GlyphProperties[];
+    lvglBinFilePath?: string;
+    lvglSourceFilePath?: string;
 }
 
 export interface FontSourceProperties {
@@ -75,9 +77,13 @@ export async function createFontExtract(params: Params): Promise<IFontExtract> {
         renderingEngineModule = await import(
             "project-editor/features/font/font-extract/freetype"
         );
-    } else {
+    } else if (params.renderingEngine == "opentype") {
         renderingEngineModule = await import(
             "project-editor/features/font/font-extract/opentype"
+        );
+    } else {
+        renderingEngineModule = await import(
+            "project-editor/features/font/font-extract/lvgl"
         );
     }
 
@@ -105,6 +111,7 @@ export async function extractFont(params: Params) {
                 }
             }
         }
+
         return extractFont.fontProperties;
     } finally {
         extractFont.freeResources();

@@ -166,7 +166,9 @@ export interface PropertyInfo {
         object: IEezObject,
         propertyInfo: PropertyInfo
     ) => string;
-    embeddedImage?: boolean;
+    defaultImagesPath?: (
+        projectEditorStore: ProjectEditorStore
+    ) => string | undefined;
     partOfNavigation?: boolean;
     fileFilters?: any;
 

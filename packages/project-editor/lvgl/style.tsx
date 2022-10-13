@@ -1,5 +1,5 @@
 import tinycolor from "tinycolor2";
-import { makeObservable, observable } from "mobx";
+import { makeObservable, observable, runInAction } from "mobx";
 
 import {
     ClassInfo,
@@ -12,7 +12,7 @@ import {
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import { getProject } from "project-editor/project/project";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { Message } from "project-editor/store";
+import { getAncestorOfType, Message } from "project-editor/store";
 import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { PropertyValueHolder } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import type { LVGLBuild } from "project-editor/lvgl/build";
@@ -733,7 +733,12 @@ const text_font_property_info: LVGLPropertyInfo = {
     displayName: "Font",
     type: PropertyType.Enum,
     enumItems: (propertyValueHolder: PropertyValueHolder) => {
-        return [...BUILT_IN_FONTS.map(id => ({ id }))];
+        return [
+            ...propertyValueHolder.projectEditorStore.project.fonts.map(
+                font => ({ id: font.name, label: font.name })
+            ),
+            ...BUILT_IN_FONTS.map(id => ({ id }))
+        ];
     },
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_TEXT_FONT
 };
@@ -1202,6 +1207,29 @@ export class LVGLStylesDefinition extends EezObject {
                                         index,
                                         selectorCode
                                     );
+                                } else {
+                                    (async () => {
+                                        const fontPtr = await runtime.loadFont(
+                                            value
+                                        );
+                                        if (fontPtr != 0) {
+                                            runtime.wasm._lvglObjSetLocalStylePropPtr(
+                                                obj,
+                                                propertyInfo.lvglStylePropCode,
+                                                fontPtr,
+                                                selectorCode
+                                            );
+
+                                            const widget = getAncestorOfType(
+                                                this,
+                                                ProjectEditor.LVGLWidgetClass
+                                                    .classInfo
+                                            ) as LVGLWidget;
+                                            runInAction(
+                                                () => widget._refreshCounter++
+                                            );
+                                        }
+                                    })();
                                 }
                             } else {
                                 const numValue =
@@ -1243,6 +1271,12 @@ export class LVGLStylesDefinition extends EezObject {
                                         bitmapPtr,
                                         selectorCode
                                     );
+
+                                    const widget = getAncestorOfType(
+                                        this,
+                                        ProjectEditor.LVGLWidgetClass.classInfo
+                                    ) as LVGLWidget;
+                                    runInAction(() => widget._refreshCounter++);
                                 }
                             })();
                         }
@@ -1296,6 +1330,14 @@ export class LVGLStylesDefinition extends EezObject {
                                         }(obj, &lv_font_${(
                                             value as string
                                         ).toLowerCase()}, ${selectorCode});`
+                                    );
+                                } else {
+                                    build.line(
+                                        `lv_obj_set_style_${
+                                            propertyInfo.name
+                                        }(obj, &${build.getFontVariableName(
+                                            value
+                                        )}, ${selectorCode});`
                                     );
                                 }
                             } else {

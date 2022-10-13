@@ -1,18 +1,12 @@
-import fs from "fs";
-import path from "path";
 import { computed, makeObservable } from "mobx";
 import React from "react";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
-import {
-    createObject,
-    getUniquePropertyValue,
-    LayoutModels
-} from "project-editor/store";
+import { LayoutModels } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
 import { NavigationComponent } from "project-editor/project/NavigationComponent";
-import { Bitmap } from "./bitmap";
+import { Bitmap, createBitmap } from "./bitmap";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -54,44 +48,21 @@ export const BitmapsNavigation = observer(
                         selectedObject={
                             this.context.navigationStore.selectedBitmapObject
                         }
-                        onFilesDrop={files => {
+                        onFilesDrop={async files => {
                             this.context.undoManager.setCombineCommands(true);
 
                             for (const file of files) {
                                 if (file.type.startsWith("image/")) {
-                                    try {
-                                        const result = fs.readFileSync(
-                                            file.path,
-                                            "base64"
-                                        );
-
-                                        const bitmapProperties: Partial<Bitmap> =
-                                            {
-                                                name: getUniquePropertyValue(
-                                                    this.context.project
-                                                        .bitmaps,
-                                                    "name",
-                                                    path.parse(file.path).name
-                                                ) as string,
-                                                image:
-                                                    `data:${file.type};base64,` +
-                                                    result,
-                                                bpp: 32,
-                                                alwaysBuild: false
-                                            };
-
-                                        const bitmap = createObject<Bitmap>(
-                                            this.context,
-                                            bitmapProperties,
-                                            Bitmap
-                                        );
-
+                                    const bitmap = await createBitmap(
+                                        this.context,
+                                        file.path,
+                                        file.type
+                                    );
+                                    if (bitmap) {
                                         this.context.addObject(
                                             this.context.project.bitmaps,
                                             bitmap
                                         );
-                                    } catch (err) {
-                                        console.error(err);
                                     }
                                 }
                             }
@@ -140,7 +111,7 @@ const BitmapEditor = observer(
             return (
                 <div className="EezStudio_BitmapEditorContainer">
                     <img
-                        src={bitmap.image}
+                        src={bitmap.imageSrc}
                         style={{ backgroundColor: bitmap.backgroundColor }}
                     />
                     <h4>

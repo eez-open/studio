@@ -893,6 +893,8 @@ export class Font extends EezObject {
     glyphs: Glyph[];
     screenOrientation: string;
     alwaysBuild: boolean;
+    lvglBinFilePath?: string;
+    lvglSourceFilePath?: string;
 
     constructor() {
         super();
@@ -911,6 +913,8 @@ export class Font extends EezObject {
             glyphs: observable,
             screenOrientation: observable,
             alwaysBuild: observable,
+            lvglBinFilePath: observable,
+            lvglSourceFilePath: observable,
             glyphsMap: computed,
             maxDx: computed
         });
@@ -1002,6 +1006,16 @@ export class Font extends EezObject {
             {
                 name: "alwaysBuild",
                 type: PropertyType.Boolean
+            },
+            {
+                name: "lvglBinFilePath",
+                type: PropertyType.String,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "lvglSourceFilePath",
+                type: PropertyType.String,
+                hideInPropertyGrid: true
             }
         ],
         beforeLoadHook: (font: Font, fontJs: Partial<Font>) => {
@@ -1037,89 +1051,159 @@ export class Font extends EezObject {
             const projectEditorStore = getProjectEditorStore(parent);
 
             try {
-                const result = await showGenericDialog(projectEditorStore, {
-                    dialogDefinition: {
-                        title: "New Font",
-                        fields: [
-                            {
-                                name: "name",
-                                type: "string",
-                                validators: [
-                                    validators.required,
-                                    validators.unique(undefined, parent)
-                                ]
-                            },
-                            {
-                                name: "filePath",
-                                displayName: "Based on font",
-                                type: RelativeFileInput,
-                                validators: [validators.required],
-                                options: {
-                                    filters: [
-                                        {
-                                            name: "Font files",
-                                            extensions: ["ttf", "otf"]
-                                        },
-                                        { name: "All Files", extensions: ["*"] }
+                let result;
+
+                if (projectEditorStore.projectTypeTraits.isLVGL) {
+                    result = await showGenericDialog(projectEditorStore, {
+                        dialogDefinition: {
+                            title: "New Font",
+                            fields: [
+                                {
+                                    name: "name",
+                                    type: "string",
+                                    validators: [
+                                        validators.required,
+                                        validators.unique(undefined, parent)
                                     ]
+                                },
+                                {
+                                    name: "filePath",
+                                    displayName: "Based on font",
+                                    type: RelativeFileInput,
+                                    validators: [validators.required],
+                                    options: {
+                                        filters: [
+                                            {
+                                                name: "Font files",
+                                                extensions: ["ttf", "otf"]
+                                            },
+                                            {
+                                                name: "All Files",
+                                                extensions: ["*"]
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    name: "bpp",
+                                    displayName: "Bits per pixel",
+                                    type: "enum",
+                                    enumItems: [1, 2, 4, 8]
+                                },
+                                {
+                                    name: "size",
+                                    type: "number"
+                                },
+                                {
+                                    name: "fromGlyph",
+                                    type: "number"
+                                },
+                                {
+                                    name: "toGlyph",
+                                    type: "number"
                                 }
-                            },
-                            {
-                                name: "renderingEngine",
-                                displayName: "Rendering engine",
-                                type: "enum",
-                                enumItems: [
-                                    { id: "freetype", label: "FreeType" },
-                                    { id: "opentype", label: "OpenType" }
-                                ]
-                            },
-                            {
-                                name: "bpp",
-                                displayName: "Bits per pixel",
-                                type: "enum",
-                                enumItems: [1, 8]
-                            },
-                            {
-                                name: "size",
-                                type: "number"
-                            },
-                            {
-                                name: "threshold",
-                                type: "number",
-                                visible: is1BitPerPixel
-                            },
-                            {
-                                name: "createGlyphs",
-                                type: "boolean"
-                            },
-                            {
-                                name: "fromGlyph",
-                                type: "number",
-                                visible: isCreateGlyphs
-                            },
-                            {
-                                name: "toGlyph",
-                                type: "number",
-                                visible: isCreateGlyphs
-                            },
-                            {
-                                name: "createBlankGlyphs",
-                                type: "boolean",
-                                visible: isCreateGlyphs
-                            }
-                        ]
-                    },
-                    values: {
-                        renderingEngine: "opentype",
-                        size: 14,
-                        bpp: 8,
-                        threshold: 128,
-                        fromGlyph: 32,
-                        toGlyph: 127,
-                        createGlyphs: true,
-                        createBlankGlyphs: false
-                    }
-                });
+                            ]
+                        },
+                        values: {
+                            size: 14,
+                            bpp: 8,
+                            fromGlyph: 32,
+                            toGlyph: 255
+                        }
+                    });
+
+                    result.values.renderingEngine = "LVGL";
+                    result.values.threshold = 128;
+                    result.values.createGlyphs = true;
+                    result.values.createBlankGlyphs = false;
+                } else {
+                    result = await showGenericDialog(projectEditorStore, {
+                        dialogDefinition: {
+                            title: "New Font",
+                            fields: [
+                                {
+                                    name: "name",
+                                    type: "string",
+                                    validators: [
+                                        validators.required,
+                                        validators.unique(undefined, parent)
+                                    ]
+                                },
+                                {
+                                    name: "filePath",
+                                    displayName: "Based on font",
+                                    type: RelativeFileInput,
+                                    validators: [validators.required],
+                                    options: {
+                                        filters: [
+                                            {
+                                                name: "Font files",
+                                                extensions: ["ttf", "otf"]
+                                            },
+                                            {
+                                                name: "All Files",
+                                                extensions: ["*"]
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    name: "renderingEngine",
+                                    displayName: "Rendering engine",
+                                    type: "enum",
+                                    enumItems: [
+                                        { id: "freetype", label: "FreeType" },
+                                        { id: "opentype", label: "OpenType" }
+                                    ]
+                                },
+                                {
+                                    name: "bpp",
+                                    displayName: "Bits per pixel",
+                                    type: "enum",
+                                    enumItems: [1, 8]
+                                },
+                                {
+                                    name: "size",
+                                    type: "number"
+                                },
+                                {
+                                    name: "threshold",
+                                    type: "number",
+                                    visible: is1BitPerPixel
+                                },
+                                {
+                                    name: "createGlyphs",
+                                    type: "boolean"
+                                },
+                                {
+                                    name: "fromGlyph",
+                                    type: "number",
+                                    visible: isCreateGlyphs
+                                },
+                                {
+                                    name: "toGlyph",
+                                    type: "number",
+                                    visible: isCreateGlyphs
+                                },
+                                {
+                                    name: "createBlankGlyphs",
+                                    type: "boolean",
+                                    visible: isCreateGlyphs
+                                }
+                            ]
+                        },
+                        values: {
+                            renderingEngine: "opentype",
+                            size: 14,
+                            bpp: 8,
+                            threshold: 128,
+                            fromGlyph: 32,
+                            toGlyph: 127,
+                            createGlyphs: true,
+                            createBlankGlyphs: false
+                        }
+                    });
+                }
 
                 try {
                     const fontProperties = await extractFont({
@@ -1144,6 +1228,20 @@ export class Font extends EezObject {
                         createBlankGlyphs: result.values.createBlankGlyphs,
                         doNotAddGlyphIfNotFound: false
                     });
+
+                    if (fontProperties.lvglBinFilePath) {
+                        fontProperties.lvglBinFilePath =
+                            projectEditorStore.getFilePathRelativeToProjectPath(
+                                fontProperties.lvglBinFilePath
+                            );
+                    }
+
+                    if (fontProperties.lvglSourceFilePath) {
+                        fontProperties.lvglSourceFilePath =
+                            projectEditorStore.getFilePathRelativeToProjectPath(
+                                fontProperties.lvglSourceFilePath
+                            );
+                    }
 
                     const font = createObject<Font>(
                         projectEditorStore,

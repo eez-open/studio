@@ -207,3 +207,11 @@ EM_PORT_API(int16_t) lvglGetObjWidth(lv_obj_t *obj) {
 EM_PORT_API(int16_t) lvglGetObjHeight(lv_obj_t *obj) {
     return lv_obj_get_height(obj);
 }
+
+EM_PORT_API(lv_font_t *) lvglLoadFont(const char *font_file_path) {
+    return lv_font_load(font_file_path);
+}
+
+EM_PORT_API(void) lvglFreeFont(lv_font_t *font) {
+    return lv_font_free(font);
+}

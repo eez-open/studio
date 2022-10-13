@@ -1,3 +1,5 @@
+import path from "path";
+import { copyFile } from "eez-studio-shared/util-electron";
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 import { visitObjects } from "project-editor/core/search";
 import type { Bitmap } from "project-editor/features/bitmap/bitmap";
@@ -117,6 +119,14 @@ export class LVGLBuild {
         return `event_handler_cb_${this.getScreenIdentifier(
             page
         )}_${this.getWidgetIdentifier(widget)}`;
+    }
+
+    getFontVariableName(fontName: string) {
+        return getName(
+            "ui_font_",
+            fontName,
+            NamingConvention.UnderscoreLowerCase
+        );
     }
 
     get screenObjFieldName() {
@@ -317,6 +327,20 @@ export class LVGLBuild {
         return this.result;
     }
 
+    async buildFontsDecl() {
+        this.result = "";
+        this.indentation = "";
+        const build = this;
+
+        for (const font of this.project.fonts) {
+            build.line(
+                `extern const lv_font_t ${this.getFontVariableName(font.name)};`
+            );
+        }
+
+        return this.result;
+    }
+
     async buildActionsDecl() {
         this.result = "";
         this.indentation = "";
@@ -333,5 +357,25 @@ export class LVGLBuild {
         }
 
         return this.result;
+    }
+
+    async copyFontFiles() {
+        if (!this.project.settings.build.destinationFolder) {
+            return;
+        }
+        for (const font of this.project.fonts) {
+            if (font.lvglSourceFilePath) {
+                copyFile(
+                    this.project._DocumentStore.getAbsoluteFilePath(
+                        font.lvglSourceFilePath
+                    ),
+                    this.project._DocumentStore.getAbsoluteFilePath(
+                        this.project.settings.build.destinationFolder
+                    ) +
+                        "/" +
+                        path.basename(font.lvglSourceFilePath)
+                );
+            }
+        }
     }
 }

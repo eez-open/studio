@@ -2946,7 +2946,7 @@ export class BitmapWidget extends Widget {
                     .isDashboard ? (
                     bitmap ? (
                         bitmap instanceof Bitmap ? (
-                            <img src={bitmap.image} />
+                            <img src={bitmap.imageSrc} />
                         ) : (
                             <img src={bitmap} />
                         )

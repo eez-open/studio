@@ -82,6 +82,108 @@ void my_mousewheel_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data) {
     mouse_wheel_delta = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// memory based file system
+
+uint16_t my_cache_size = 0;
+
+#if LV_USE_USER_DATA
+void *my_user_data = 0;
+#endif
+
+typedef struct {
+    uint8_t *ptr;
+    uint32_t pos;
+} my_file_t;
+
+bool my_ready_cb(struct _lv_fs_drv_t * drv) {
+    return true;
+}
+
+void *my_open_cb(struct _lv_fs_drv_t * drv, const char * path, lv_fs_mode_t mode) {
+    my_file_t *file = (my_file_t *)lv_malloc(sizeof(my_file_t));
+    file->ptr = (void *)atoi(path);
+    file->pos = 0;
+    return file;
+}
+
+lv_fs_res_t my_close_cb(struct _lv_fs_drv_t * drv, void * file_p) {
+    lv_free(file_p);
+    return LV_FS_RES_OK;
+}
+
+lv_fs_res_t my_read_cb(struct _lv_fs_drv_t * drv, void * file_p, void * buf, uint32_t btr, uint32_t * br) {
+    my_file_t *file = (my_file_t *)file_p;
+    memcpy(buf, file->ptr + file->pos, btr);
+    file->pos += btr;
+    if (br != 0)
+        *br = btr;
+    return LV_FS_RES_OK;
+}
+
+lv_fs_res_t my_write_cb(struct _lv_fs_drv_t * drv, void * file_p, const void * buf, uint32_t btw, uint32_t * bw) {
+    return LV_FS_RES_NOT_IMP;
+}
+
+lv_fs_res_t my_seek_cb(struct _lv_fs_drv_t * drv, void * file_p, uint32_t pos, lv_fs_whence_t whence) {
+    my_file_t *file = (my_file_t *)file_p;
+    if (whence == LV_FS_SEEK_SET) {
+        file->pos = pos;
+        return LV_FS_RES_OK;
+    }
+    if (whence == LV_FS_SEEK_CUR) {
+        file->pos += pos;
+        return LV_FS_RES_OK;
+    }
+    return LV_FS_RES_NOT_IMP;
+}
+
+lv_fs_res_t my_tell_cb(struct _lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p) {
+    my_file_t *file = (my_file_t *)file_p;
+    *pos_p = file->pos;
+    return LV_FS_RES_OK;
+}
+
+void *my_dir_open_cb(struct _lv_fs_drv_t * drv, const char * path) {
+    return 0;
+}
+
+lv_fs_res_t my_dir_read_cb(struct _lv_fs_drv_t * drv, void * rddir_p, char * fn) {
+    return LV_FS_RES_NOT_IMP;
+}
+
+lv_fs_res_t my_dir_close_cb(struct _lv_fs_drv_t * drv, void * rddir_p) {
+    return LV_FS_RES_NOT_IMP;
+}
+
+static void init_fs_driver() {
+    static lv_fs_drv_t drv;                   /*Needs to be static or global*/
+    lv_fs_drv_init(&drv);                     /*Basic initialization*/
+
+    drv.letter = 'M';                         /*An uppercase letter to identify the drive */
+    drv.cache_size = my_cache_size;           /*Cache size for reading in bytes. 0 to not cache.*/
+
+    drv.ready_cb = my_ready_cb;               /*Callback to tell if the drive is ready to use */
+    drv.open_cb = my_open_cb;                 /*Callback to open a file */
+    drv.close_cb = my_close_cb;               /*Callback to close a file */
+    drv.read_cb = my_read_cb;                 /*Callback to read a file */
+    drv.write_cb = my_write_cb;               /*Callback to write a file */
+    drv.seek_cb = my_seek_cb;                 /*Callback to seek in a file (Move cursor) */
+    drv.tell_cb = my_tell_cb;                 /*Callback to tell the cursor position  */
+
+    drv.dir_open_cb = my_dir_open_cb;         /*Callback to open directory to read its content */
+    drv.dir_read_cb = my_dir_read_cb;         /*Callback to read a directory's content */
+    drv.dir_close_cb = my_dir_close_cb;       /*Callback to close a directory */
+
+#if LV_USE_USER_DATA
+    drv.user_data = my_user_data;             /*Any custom data if required*/
+#endif
+
+    lv_fs_drv_register(&drv);                 /*Finally register the drive*/
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static void hal_init(bool editor) {
     // alloc memory for the display front buffer
     display_fb = (uint32_t *)malloc(sizeof(uint32_t) * hor_res * ver_res);
@@ -136,6 +238,8 @@ static void hal_init(bool editor) {
         * Create a memory monitor task which prints the memory usage in periodically.*/
         lv_timer_create(memory_monitor, 3000, NULL);
     }
+
+    init_fs_driver();
 }
 
 /**

@@ -55,6 +55,7 @@ import {
     createObject
 } from "project-editor/store";
 import {
+    isLVGLProject,
     isNotV1Project,
     RuntimeType
 } from "project-editor/project/project-type-traits";
@@ -686,6 +687,7 @@ export type ProjectVersion = "v1" | "v2" | "v3";
 export class General extends EezObject {
     projectVersion: ProjectVersion = "v3";
     projectType: ProjectType;
+    assetsFolder?: string;
     scpiDocFolder?: string;
     namespace: string;
     masterProject: string;
@@ -701,7 +703,8 @@ export class General extends EezObject {
             {
                 name: "projectVersion",
                 type: PropertyType.Enum,
-                enumItems: [{ id: "v1" }, { id: "v2" }, { id: "v3" }]
+                enumItems: [{ id: "v1" }, { id: "v2" }, { id: "v3" }],
+                hideInPropertyGrid: isLVGLProject
             },
             {
                 name: "projectType",
@@ -714,6 +717,10 @@ export class General extends EezObject {
                     { id: ProjectType.DASHBOARD },
                     { id: ProjectType.LVGL, label: "LVGL" }
                 ]
+            },
+            {
+                name: "assetsFolder",
+                type: PropertyType.String
             },
             {
                 name: "scpiDocFolder",
@@ -755,7 +762,8 @@ export class General extends EezObject {
                     return (
                         !!getProject(general).masterProject ||
                         projectEditorStore.projectTypeTraits.isDashboard ||
-                        projectEditorStore.projectTypeTraits.isApplet
+                        projectEditorStore.projectTypeTraits.isApplet ||
+                        projectEditorStore.projectTypeTraits.isLVGL
                     );
                 }
             },
@@ -886,6 +894,7 @@ export class General extends EezObject {
         makeObservable(this, {
             projectVersion: observable,
             projectType: observable,
+            assetsFolder: observable,
             scpiDocFolder: observable,
             namespace: observable,
             masterProject: observable,

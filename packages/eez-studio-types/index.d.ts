@@ -396,11 +396,13 @@ export interface IWasmFlowRuntime {
     _lvglObjSetLocalStylePropColor(obj: number, prop: number, color: number, selector: number): void;
     _lvglObjSetLocalStylePropNum(obj: number, prop: number, num: number, selector: number): void;
     _lvglObjSetLocalStylePropPtr(obj: number, prop: number, ptr: number, selector: number): void;
-    _lvglObjSetLocalStylePropBuiltInFont(obj: number, prop: number, fontIndex: number, selector: number): void;
+    _lvglObjSetLocalStylePropBuiltInFont(obj: number, prop: number, font_index: number, selector: number): void;
     _lvglGetObjRelX(obj: number): number;
     _lvglGetObjRelY(obj: number): number;
     _lvglGetObjWidth(obj: number): number;
     _lvglGetObjHeight(obj: number): number;
+    _lvglLoadFont(font_file_path: number): number;
+    _lvglFreeFont(font_ptr: number): void;
 }
 
 export interface IDashboardComponentContext {

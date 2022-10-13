@@ -1,5 +1,8 @@
 import fs from "fs";
+import path from "path";
 import { computed, observable, action, makeObservable } from "mobx";
+
+import * as notification from "eez-studio-ui/notification";
 
 import {
     ClassInfo,
@@ -14,7 +17,9 @@ import { validators } from "eez-studio-shared/validation";
 import {
     createObject,
     getProjectEditorStore,
-    Message
+    getUniquePropertyValue,
+    Message,
+    ProjectEditorStore
 } from "project-editor/store";
 
 import { findStyle } from "project-editor/features/style/style";
@@ -32,6 +37,7 @@ import {
     BitmapColorFormat,
     isLVGLProject
 } from "project-editor/project/project-type-traits";
+import { copyFile, makeFolder } from "eez-studio-shared/util-electron";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -83,7 +89,13 @@ export class Bitmap extends EezObject {
                 name: "image",
                 type: PropertyType.Image,
                 skipSearch: true,
-                embeddedImage: true
+                defaultImagesPath: (projectEditorStore: ProjectEditorStore) =>
+                    projectEditorStore.project.settings.general.assetsFolder
+                        ? projectEditorStore.getAbsoluteFilePath(
+                              projectEditorStore.project.settings.general
+                                  .assetsFolder
+                          )
+                        : undefined
             },
             {
                 name: "bpp",
@@ -160,34 +172,12 @@ export class Bitmap extends EezObject {
                 }
             });
 
-            return new Promise((resolve, reject) => {
-                fs.readFile(
-                    projectEditorStore.getAbsoluteFilePath(
-                        result.values.imageFilePath
-                    ),
-                    "base64",
-                    (err: any, data: any) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            const bitmapProperties: Partial<Bitmap> = {
-                                name: result.values.name,
-                                image: "data:image/png;base64," + data,
-                                bpp: result.values.bpp,
-                                alwaysBuild: false
-                            };
-
-                            const bitmap = createObject<Bitmap>(
-                                projectEditorStore,
-                                bitmapProperties,
-                                Bitmap
-                            );
-
-                            resolve(bitmap);
-                        }
-                    }
-                );
-            });
+            return createBitmap(
+                projectEditorStore,
+                result.values.imageFilePath,
+                "image/png",
+                result.values.bpp
+            );
         },
         icon: "image"
     };
@@ -211,6 +201,20 @@ export class Bitmap extends EezObject {
         return "transparent";
     }
 
+    get imageSrc() {
+        if (!this.image) {
+            return "";
+        }
+
+        if (this.image.startsWith("data:image/")) {
+            return this.image;
+        }
+
+        return ProjectEditor.getProject(
+            this
+        )._DocumentStore.getAbsoluteFilePath(this.image);
+    }
+
     get imageElement() {
         if (!this.image) {
             return null;
@@ -218,7 +222,7 @@ export class Bitmap extends EezObject {
 
         if (this.image !== this._imageElementImage) {
             let imageElement = new Image();
-            imageElement.src = this.image;
+            imageElement.src = this.imageSrc;
 
             imageElement.onload = action(() => {
                 this._imageElement = imageElement;
@@ -231,6 +235,77 @@ export class Bitmap extends EezObject {
 }
 
 registerClass("Bitmap", Bitmap);
+
+export async function createBitmap(
+    projectEditorStore: ProjectEditorStore,
+    filePath: string,
+    fileType: string,
+    bpp?: number
+) {
+    try {
+        if (projectEditorStore.project.settings.general.assetsFolder) {
+            const assetsFolder = projectEditorStore.getAbsoluteFilePath(
+                projectEditorStore.project.settings.general.assetsFolder
+            );
+            await makeFolder(assetsFolder);
+
+            let relativePath = path
+                .relative(assetsFolder, filePath)
+                .replace(/\\/g, "/");
+
+            if (relativePath.startsWith("..")) {
+                relativePath = path.basename(filePath);
+                copyFile(filePath, assetsFolder + "/" + relativePath);
+            }
+
+            const bitmapProperties: Partial<Bitmap> = {
+                name: getUniquePropertyValue(
+                    projectEditorStore.project.bitmaps,
+                    "name",
+                    path.parse(filePath).name
+                ) as string,
+                image:
+                    projectEditorStore.project.settings.general.assetsFolder +
+                    "/" +
+                    relativePath,
+                bpp: bpp ?? 32,
+                alwaysBuild: false
+            };
+
+            const bitmap = createObject<Bitmap>(
+                projectEditorStore,
+                bitmapProperties,
+                Bitmap
+            );
+
+            return bitmap;
+        } else {
+            const result = fs.readFileSync(filePath, "base64");
+
+            const bitmapProperties: Partial<Bitmap> = {
+                name: getUniquePropertyValue(
+                    projectEditorStore.project.bitmaps,
+                    "name",
+                    path.parse(filePath).name
+                ) as string,
+                image: `data:${fileType};base64,` + result,
+                bpp: bpp ?? 32,
+                alwaysBuild: false
+            };
+
+            const bitmap = createObject<Bitmap>(
+                projectEditorStore,
+                bitmapProperties,
+                Bitmap
+            );
+
+            return bitmap;
+        }
+    } catch (err) {
+        notification.error(err);
+        return undefined;
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -246,7 +321,7 @@ export function getBitmapData(bitmap: Bitmap): Promise<BitmapData> {
     return new Promise((resolve, reject) => {
         let image = new Image();
 
-        image.src = bitmap.image;
+        image.src = bitmap.imageSrc;
 
         image.onload = () => {
             let canvas = document.createElement("canvas");
@@ -363,6 +438,7 @@ export default {
 
         if (
             !ProjectEditor.getProject(object).projectTypeTraits.isDashboard &&
+            !ProjectEditor.getProject(object).projectTypeTraits.isLVGL &&
             !findStyle(getProjectEditorStore(object).project, "default")
         ) {
             messages.push(

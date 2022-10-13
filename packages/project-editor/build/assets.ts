@@ -1371,28 +1371,37 @@ export async function buildAssets(
         }
     }
 
-    const lvglBuild = new LVGLBuild(assets.projectEditorStore.project);
+    if (assets.projectEditorStore.projectTypeTraits.isLVGL) {
+        const lvglBuild = new LVGLBuild(assets.projectEditorStore.project);
 
-    if (!sectionNames || sectionNames.indexOf("LVGL_SCREENS_DECL") !== -1) {
-        result.LVGL_SCREENS_DECL = await lvglBuild.buildScreensDecl();
+        if (!sectionNames || sectionNames.indexOf("LVGL_SCREENS_DECL") !== -1) {
+            result.LVGL_SCREENS_DECL = await lvglBuild.buildScreensDecl();
+        }
+
+        if (!sectionNames || sectionNames.indexOf("LVGL_SCREENS_DEF") !== -1) {
+            result.LVGL_SCREENS_DEF = await lvglBuild.buildScreensDef();
+        }
+
+        if (!sectionNames || sectionNames.indexOf("LVGL_IMAGES_DECL") !== -1) {
+            result.LVGL_IMAGES_DECL = await lvglBuild.buildImagesDecl();
+        }
+
+        if (!sectionNames || sectionNames.indexOf("LVGL_IMAGES_DEF") !== -1) {
+            result.LVGL_IMAGES_DEF = await lvglBuild.buildImagesDef();
+        }
+
+        if (!sectionNames || sectionNames.indexOf("LVGL_FONTS_DECL") !== -1) {
+            result.LVGL_FONTS_DECL = await lvglBuild.buildFontsDecl();
+        }
+
+        if (!sectionNames || sectionNames.indexOf("LVGL_ACTIONS_DECL") !== -1) {
+            result.LVGL_ACTIONS_DECL = await lvglBuild.buildActionsDecl();
+        }
+
+        if (option == "buildFiles") {
+            await lvglBuild.copyFontFiles();
+        }
     }
-
-    if (!sectionNames || sectionNames.indexOf("LVGL_SCREENS_DEF") !== -1) {
-        result.LVGL_SCREENS_DEF = await lvglBuild.buildScreensDef();
-    }
-
-    if (!sectionNames || sectionNames.indexOf("LVGL_IMAGES_DECL") !== -1) {
-        result.LVGL_IMAGES_DECL = await lvglBuild.buildImagesDecl();
-    }
-
-    if (!sectionNames || sectionNames.indexOf("LVGL_IMAGES_DEF") !== -1) {
-        result.LVGL_IMAGES_DEF = await lvglBuild.buildImagesDef();
-    }
-
-    if (!sectionNames || sectionNames.indexOf("LVGL_ACTIONS_DECL") !== -1) {
-        result.LVGL_ACTIONS_DECL = await lvglBuild.buildActionsDecl();
-    }
-
     return Object.assign(
         result,
         await buildVariables(assets, sectionNames),

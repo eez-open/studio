@@ -1055,6 +1055,10 @@ export class Style extends EezObject {
 
             const projectEditorStore = getProjectEditorStore(style);
 
+            if (projectEditorStore.projectTypeTraits.isLVGL) {
+                return [];
+            }
+
             function checkColor(propertyName: string) {
                 const color = (style as any)[propertyName];
                 if (color) {
@@ -1905,7 +1909,7 @@ export class Style extends EezObject {
             if (bitmap) {
                 spec[0].attrs.push([
                     "background-image",
-                    `url(${bitmap.image})`
+                    `url(${bitmap.imageSrc})`
                 ]);
                 spec[0].attrs.push(["background-repeat", `no-repeat`]);
             }

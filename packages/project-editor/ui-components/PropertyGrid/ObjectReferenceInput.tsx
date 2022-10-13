@@ -208,7 +208,6 @@ export const ObjectReferenceInput = observer(
                     this.context.project,
                     this.props.value
                 );
-                console.log(bitmap);
             }
 
             return (
@@ -236,10 +235,10 @@ export const ObjectReferenceInput = observer(
                             </>
                         )}
                     </div>
-                    {bitmap && bitmap.image && (
+                    {bitmap && bitmap.imageSrc && (
                         <img
                             className="EezStudio_Property_BitmapPreview"
-                            src={bitmap.image}
+                            src={bitmap.imageSrc}
                         />
                     )}
                 </>

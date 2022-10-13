@@ -911,6 +911,8 @@ export const Property = observer(
                     </div>
                 );
             } else if (propertyInfo.type === PropertyType.Image) {
+                const imageValue = this._value || "";
+                const embeddedImage = imageValue.startsWith("data:image");
                 return (
                     <div>
                         <div className="input-group">
@@ -918,9 +920,9 @@ export const Property = observer(
                                 type="text"
                                 className="form-control"
                                 value={
-                                    propertyInfo.embeddedImage
+                                    embeddedImage
                                         ? "<embedded image>"
-                                        : this._value || ""
+                                        : imageValue
                                 }
                                 readOnly
                             />
@@ -945,11 +947,17 @@ export const Property = observer(
                                                         name: "All Files",
                                                         extensions: ["*"]
                                                     }
-                                                ]
+                                                ],
+                                                defaultPath:
+                                                    propertyInfo.defaultImagesPath
+                                                        ? propertyInfo.defaultImagesPath(
+                                                              this.context
+                                                          )
+                                                        : undefined
                                             });
                                         const filePaths = result.filePaths;
                                         if (filePaths && filePaths[0]) {
-                                            if (propertyInfo.embeddedImage) {
+                                            if (embeddedImage) {
                                                 fs.readFile(
                                                     this.context.getAbsoluteFilePath(
                                                         filePaths[0]
@@ -978,7 +986,7 @@ export const Property = observer(
                                 </button>
                             )}
                         </div>
-                        {this._value && !propertyInfo.embeddedImage && (
+                        {this._value && (
                             <img
                                 src={
                                     this._value &&

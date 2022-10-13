@@ -1,3 +1,4 @@
+import fs from "fs";
 import { IReactionDisposer, autorun, runInAction } from "mobx";
 
 import type { Page } from "project-editor/features/page/page";
@@ -6,6 +7,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Bitmap } from "project-editor/features/bitmap/bitmap";
 import { visitObjects } from "project-editor/core/search";
 import type { WorkerToRenderMessage } from "project-editor/flow/runtime/wasm-worker-interfaces";
+import type { Font } from "project-editor/features/font/font";
 
 const lvgl_flow_runtime_constructor = require("project-editor/flow/runtime/lvgl_runtime.js");
 
@@ -16,7 +18,15 @@ export abstract class LVGLPageRuntime {
         Bitmap,
         {
             image: string;
-            bitmapPtr: number;
+            bitmapPtrPromise: Promise<number>;
+        }
+    >();
+
+    fontsCache = new Map<
+        Font,
+        {
+            lvglBinFilePath: string;
+            fontPtrPromise: Promise<number>;
         }
     >();
 
@@ -24,7 +34,7 @@ export abstract class LVGLPageRuntime {
 
     abstract get isEditor(): boolean;
 
-    async loadBitmap(bitmapName: string) {
+    async loadBitmap(bitmapName: string): Promise<number> {
         const bitmap = ProjectEditor.findBitmap(
             ProjectEditor.getProject(this.page),
             bitmapName
@@ -34,52 +44,125 @@ export abstract class LVGLPageRuntime {
             return 0;
         }
 
-        const cashed = this.bitmapsCache.get(bitmap);
-        if (cashed) {
-            if (cashed.image == bitmap.image) {
-                return cashed.bitmapPtr;
+        const doLoad = async (bitmap: Bitmap) => {
+            const bitmapData = await ProjectEditor.getBitmapData(bitmap);
+
+            let bitmapPtr = this.wasm._malloc(
+                4 + 4 + 4 + bitmapData.pixels.length
+            );
+
+            if (!bitmapPtr) {
+                return 0;
             }
 
-            this.bitmapsCache.delete(bitmap);
-            this.wasm._free(cashed.bitmapPtr);
+            let header =
+                ((bitmapData.bpp == 24 ? 4 : 5) << 0) |
+                (bitmapData.width << 10) |
+                (bitmapData.height << 21);
+
+            this.wasm.HEAP32[(bitmapPtr >> 2) + 0] = header;
+
+            this.wasm.HEAP32[(bitmapPtr >> 2) + 1] = bitmapData.pixels.length;
+
+            this.wasm.HEAP32[(bitmapPtr >> 2) + 2] = bitmapPtr + 12;
+
+            const offset = bitmapPtr + 12;
+            for (let i = 0; i < bitmapData.pixels.length; i += 4) {
+                this.wasm.HEAP8[offset + i] = bitmapData.pixels[i + 2];
+
+                this.wasm.HEAP8[offset + i + 1] = bitmapData.pixels[i + 1];
+
+                this.wasm.HEAP8[offset + i + 2] = bitmapData.pixels[i + 0];
+
+                this.wasm.HEAP8[offset + i + 3] = bitmapData.pixels[i + 3];
+            }
+
+            return bitmapPtr;
+        };
+
+        let cashed = this.bitmapsCache.get(bitmap);
+        if (!cashed) {
+            cashed = {
+                image: bitmap.image,
+                bitmapPtrPromise: doLoad(bitmap)
+            };
+
+            this.bitmapsCache.set(bitmap, cashed);
         }
 
-        const bitmapData = await ProjectEditor.getBitmapData(bitmap);
+        const bitmapPtr = await cashed.bitmapPtrPromise;
 
-        let bitmapPtr = this.wasm._malloc(4 + 4 + 4 + bitmapData.pixels.length);
+        if (cashed.image == bitmap.image) {
+            return bitmapPtr;
+        }
 
-        if (!bitmapPtr) {
+        this.bitmapsCache.delete(bitmap);
+        this.wasm._free(bitmapPtr);
+
+        return this.loadBitmap(bitmapName);
+    }
+
+    async loadFont(fontName: string): Promise<number> {
+        const font = ProjectEditor.findFont(
+            ProjectEditor.getProject(this.page),
+            fontName
+        );
+
+        if (!font || !font.lvglBinFilePath) {
             return 0;
         }
 
-        let header =
-            ((bitmapData.bpp == 24 ? 4 : 5) << 0) |
-            (bitmapData.width << 10) |
-            (bitmapData.height << 21);
+        const doLoad = async (font: Font) => {
+            const projectEditorStore = ProjectEditor.getProject(
+                this.page
+            )._DocumentStore;
 
-        this.wasm.HEAP32[(bitmapPtr >> 2) + 0] = header;
+            const binStr = await fs.promises.readFile(
+                projectEditorStore.getAbsoluteFilePath(font.lvglBinFilePath!),
+                {
+                    encoding: "binary"
+                }
+            );
 
-        this.wasm.HEAP32[(bitmapPtr >> 2) + 1] = bitmapData.pixels.length;
+            const bin = Buffer.from(binStr, "binary");
 
-        this.wasm.HEAP32[(bitmapPtr >> 2) + 2] = bitmapPtr + 12;
+            const fontMemPtr = this.wasm._malloc(bin.length);
+            if (!fontMemPtr) {
+                return 0;
+            }
+            for (let i = 0; i < bin.length; i++) {
+                this.wasm.HEAP8[fontMemPtr + i] = bin[i];
+            }
 
-        const offset = bitmapPtr + 12;
-        for (let i = 0; i < bitmapData.pixels.length; i += 4) {
-            this.wasm.HEAP8[offset + i] = bitmapData.pixels[i + 2];
+            let fontPtr = this.wasm._lvglLoadFont(
+                this.wasm.allocateUTF8("M:" + fontMemPtr)
+            );
 
-            this.wasm.HEAP8[offset + i + 1] = bitmapData.pixels[i + 1];
+            this.wasm._free(fontMemPtr);
 
-            this.wasm.HEAP8[offset + i + 2] = bitmapData.pixels[i + 0];
+            return fontPtr;
+        };
 
-            this.wasm.HEAP8[offset + i + 3] = bitmapData.pixels[i + 3];
+        let cashed = this.fontsCache.get(font);
+        if (!cashed) {
+            cashed = {
+                lvglBinFilePath: font.lvglBinFilePath,
+                fontPtrPromise: doLoad(font)
+            };
+
+            this.fontsCache.set(font, cashed);
         }
 
-        this.bitmapsCache.set(bitmap, {
-            image: bitmap.image,
-            bitmapPtr
-        });
+        const fontPtr = await cashed.fontPtrPromise;
 
-        return bitmapPtr;
+        if (cashed.lvglBinFilePath == font.lvglBinFilePath) {
+            return fontPtr;
+        }
+
+        this.fontsCache.delete(font);
+        this.wasm._lvglFreeFont(fontPtr);
+
+        return this.loadFont(fontName);
     }
 }
 
