@@ -203,8 +203,8 @@ static void hal_init(bool editor) {
     disp_drv.ver_res = ver_res;
     disp1 = lv_disp_drv_register(&disp_drv);
 
-    lv_group_t * g = lv_group_create();
-    lv_group_set_default(g);
+    // lv_group_t * g = lv_group_create();
+    // lv_group_set_default(g);
 
     if (!editor) {
         /* Add the mouse as input device
@@ -224,7 +224,7 @@ static void hal_init(bool editor) {
         indev_drv_2.type = LV_INDEV_TYPE_KEYPAD;
         indev_drv_2.read_cb = my_keyboard_read;
         lv_indev_t *kb_indev = lv_indev_drv_register(&indev_drv_2);
-        lv_indev_set_group(kb_indev, g);
+        //lv_indev_set_group(kb_indev, g);
         //mousewheel_init();
         static lv_indev_drv_t indev_drv_3;
         lv_indev_drv_init(&indev_drv_3); /*Basic initialization*/
@@ -232,7 +232,7 @@ static void hal_init(bool editor) {
         indev_drv_3.read_cb = my_mousewheel_read;
 
         lv_indev_t * enc_indev = lv_indev_drv_register(&indev_drv_3);
-        lv_indev_set_group(enc_indev, g);
+        //lv_indev_set_group(enc_indev, g);
     } else {
         /* Optional:
         * Create a memory monitor task which prints the memory usage in periodically.*/

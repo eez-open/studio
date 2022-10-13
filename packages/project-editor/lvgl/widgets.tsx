@@ -1241,6 +1241,8 @@ export class LVGLLabelWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
+        componentPaletteGroupName: "!1Basic Widgets",
+
         label: (widget: LVGLLabelWidget) => {
             let name = getComponentName(widget.type);
 
@@ -1411,6 +1413,8 @@ export class LVGLButtonWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
+        componentPaletteGroupName: "!1Basic Widgets",
+
         properties: [],
 
         defaultValue: {
@@ -1484,6 +1488,8 @@ export class LVGLPanelWidget extends LVGLWidget {
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
+
+        componentPaletteGroupName: "!1Basic Widgets",
 
         properties: [],
 
@@ -1575,6 +1581,8 @@ export class LVGLImageWidget extends LVGLWidget {
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
+
+        componentPaletteGroupName: "!1Basic Widgets",
 
         properties: [
             {
@@ -1771,6 +1779,8 @@ export class LVGLSliderWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
+        componentPaletteGroupName: "!1Input Widgets",
+
         properties: [
             {
                 name: "min",
@@ -1944,6 +1954,8 @@ export class LVGLRollerWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
+        componentPaletteGroupName: "!1Input Widgets",
+
         properties: [
             {
                 name: "options",
@@ -2057,6 +2069,8 @@ export class LVGLSwitchWidget extends LVGLWidget {
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
+
+        componentPaletteGroupName: "!1Input Widgets",
 
         properties: [],
 

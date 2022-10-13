@@ -8,7 +8,8 @@ import { objectClone } from "eez-studio-shared/util";
 
 import {
     getClassesDerivedFrom,
-    IObjectClassInfo
+    IObjectClassInfo,
+    isProperSubclassOf
 } from "project-editor/core/object";
 import { createObject } from "project-editor/store";
 import { DragAndDropManager } from "project-editor/core/dd";
@@ -80,10 +81,16 @@ export const ComponentsPalette = observer(
 
             const stockComponents = getClassesDerivedFrom(baseClass).filter(
                 objectClassInfo =>
-                    this.context.projectTypeTraits.isFirmware &&
+                    (this.context.projectTypeTraits.isFirmware ||
+                        this.context.projectTypeTraits.isLVGL) &&
                     this.context.projectTypeTraits.hasFlowSupport
                         ? objectClassInfo.objectClass.classInfo
-                              .flowComponentId != undefined
+                              .flowComponentId != undefined ||
+                          (this.context.projectTypeTraits.isLVGL &&
+                              isProperSubclassOf(
+                                  objectClassInfo.objectClass.classInfo,
+                                  ProjectEditor.WidgetClass.classInfo
+                              ))
                         : true
             );
 
