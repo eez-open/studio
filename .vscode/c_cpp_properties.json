@@ -12,11 +12,9 @@
             ],
             "defines": [
                 "DEBUG",
-                "OPTION_DISPLAY",
-                "EEZ_PLATFORM_SIMULATOR",
-                "OPTION_ENCODER",
-                "OPTION_ETHERNET",
-                "__EMSCRIPTEN__"
+                "EEZ_PLATFORM_LVGL",
+                "__EMSCRIPTEN__",
+                "OPTION_GUI=0"
             ],
             "windowsSdkVersion": "10.0.17134.0",
             "compilerPath": "C:/MinGW/bin/g++.exe",

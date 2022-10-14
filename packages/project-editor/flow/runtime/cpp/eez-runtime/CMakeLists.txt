@@ -15,6 +15,8 @@ add_definitions(-DEEZ_PLATFORM_SIMULATOR)
 add_definitions(-DEEZ_PLATFORM_SIMULATOR_UNIX)
 add_definitions(-DEEZ_PLATFORM_SIMULATOR_EMSCRIPTEN)
 
+add_definitions(-DOPTION_GUI=1)
+
 include_directories(
     ../
     ../eez/libs/agg

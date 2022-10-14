@@ -61,7 +61,7 @@ void executeDashboardComponent(uint16_t componentType, int flowStateIndex, int c
     }, eez::flow::g_wasmModuleId, componentType, flowStateIndex, componentIndex);
 }
 
-void onArrayValueFree(eez::gui::ArrayValue *arrayValue) {
+void onArrayValueFree(eez::ArrayValue *arrayValue) {
     EM_ASM({
         onArrayValueFree($0, $1);
     }, eez::flow::g_wasmModuleId, arrayValue);
@@ -81,18 +81,17 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSi
     eez::flow::g_wasmModuleId = wasmModuleId;
 
     eez::initAssetsMemory();
-    eez::gui::loadMainAssets(assets, assetsSize);
-    DISPLAY_WIDTH = eez::gui::g_mainAssets->settings->displayWidth;
-    DISPLAY_HEIGHT = eez::gui::g_mainAssets->settings->displayHeight;
+    eez::loadMainAssets(assets, assetsSize);
+    DISPLAY_WIDTH = eez::g_mainAssets->settings->displayWidth;
+    DISPLAY_HEIGHT = eez::g_mainAssets->settings->displayHeight;
     eez::initOtherMemory();
     eez::initAllocHeap(eez::ALLOC_BUFFER, eez::ALLOC_BUFFER_SIZE);
-
-    eez::gui::g_hooks.onArrayValueFreeHook = onArrayValueFree;
 
     eez::flow::startToDebuggerMessageHook = startToDebuggerMessage;
     eez::flow::writeDebuggerBufferHook = writeDebuggerBuffer;
     eez::flow::finishToDebuggerMessageHook = finishToDebuggerMessage;
     eez::flow::executeDashboardComponentHook = executeDashboardComponent;
+    eez::flow::onArrayValueFreeHook = onArrayValueFree;
     eez::flow::stopScriptHook = stopScript;
     eez::flow::registerComponent(eez::flow::defs_v3::COMPONENT_TYPE_SCPIACTION, eez::flow::executeScpiComponent);
 
@@ -104,7 +103,7 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSi
 }
 
 EM_PORT_API(void) startFlow() {
-    eez::flow::start(eez::gui::g_mainAssets);
+    eez::flow::start(eez::g_mainAssets);
 }
 
 EM_PORT_API(bool) mainLoop() {

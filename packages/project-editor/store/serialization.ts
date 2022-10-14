@@ -192,17 +192,17 @@ function loadObjectInternal(
             wireIDToObjID = new Map<string, string>();
             flowToWireIDToObjID.set(object, wireIDToObjID);
         }
-    }
 
-    if (object instanceof ProjectEditor.ConnectionLineClass) {
-        const source = wireIDToObjID.get(jsObject.source);
-        if (source) {
-            jsObject.source = source;
-        }
+        if (object instanceof ProjectEditor.ConnectionLineClass) {
+            const source = wireIDToObjID.get(jsObject.source);
+            if (source) {
+                jsObject.source = source;
+            }
 
-        const target = wireIDToObjID.get(jsObject.target);
-        if (target) {
-            jsObject.target = target;
+            const target = wireIDToObjID.get(jsObject.target);
+            if (target) {
+                jsObject.target = target;
+            }
         }
     }
 

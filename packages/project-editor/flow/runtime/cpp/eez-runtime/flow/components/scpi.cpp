@@ -103,7 +103,7 @@ struct ScpiComponentExecutionState : public ComponenentExecutionState {
         }
     }
 
-	ScpiResultStatus scpi(eez::gui::ArrayValue *instrument, bool isQuery) {
+	ScpiResultStatus scpi(eez::ArrayValue *instrument, bool isQuery) {
 		if (g_waitingForScpiResult) {
 			if (g_waitingForScpiResult == this && g_waitingForScpiResult->resultIsReady) {
 				g_waitingForScpiResult = nullptr;
@@ -129,11 +129,11 @@ struct ScpiComponentExecutionState : public ComponenentExecutionState {
 		return SCPI_RESULT_STATUS_QUEUED;
 	}
 
-    ScpiResultStatus scpiCommand(eez::gui::ArrayValue *instrument) {
+    ScpiResultStatus scpiCommand(eez::ArrayValue *instrument) {
         return scpi(instrument, false);
     }
 
-    ScpiResultStatus scpiQuery(eez::gui::ArrayValue *instrument) {
+    ScpiResultStatus scpiQuery(eez::ArrayValue *instrument) {
         return scpi(instrument, true);
     }
 

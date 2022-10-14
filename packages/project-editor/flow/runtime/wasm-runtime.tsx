@@ -192,10 +192,6 @@ export class WasmRuntime extends RemoteRuntime {
             this.worker.terminate();
         }
 
-        if (this.projectEditorStore.projectTypeTraits.isLVGL) {
-            return;
-        }
-
         this.destroyGlobalVariables();
 
         clarStremIDs();

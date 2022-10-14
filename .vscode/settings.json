@@ -48,7 +48,10 @@
         "ratio": "c",
         "array": "c",
         "tuple": "c",
-        "utility": "c"
+        "utility": "c",
+        "string_view": "cpp",
+        "fstream": "cpp",
+        "stdint.h": "c"
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "workbench.editor.enablePreview": false,

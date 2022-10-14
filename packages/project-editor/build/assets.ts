@@ -1090,7 +1090,10 @@ export class Assets {
             });
         });
 
-        if (this.projectEditorStore.projectTypeTraits.isDashboard) {
+        if (
+            this.projectEditorStore.projectTypeTraits.isDashboard ||
+            this.projectEditorStore.projectTypeTraits.isLVGL
+        ) {
             this.map.dashboardComponentTypeToNameMap =
                 this.dashboardComponentTypeToNameMap;
         }
@@ -1215,14 +1218,25 @@ export async function buildGuiAssetsData(assets: Assets) {
         dataBuffer.writeUint16(assets.map.displayHeight);
     });
 
-    buildGuiDocumentData(assets, dataBuffer);
-    buildGuiStylesData(assets, dataBuffer);
-    await buildGuiFontsData(assets, dataBuffer);
-    await buildGuiBitmapsData(assets, dataBuffer);
+    if (!assets.projectEditorStore.projectTypeTraits.isLVGL) {
+        // pages
+        buildGuiDocumentData(assets, dataBuffer);
+        // styles
+        buildGuiStylesData(assets, dataBuffer);
+        // fonts
+        await buildGuiFontsData(assets, dataBuffer);
+        // bitmaps
+        await buildGuiBitmapsData(assets, dataBuffer);
+    }
+    // colorsDefinition
     buildGuiColors(assets, dataBuffer);
+    // actionNames
     buildActionNames(assets, dataBuffer);
+    // variableNames
     buildVariableNames(assets, dataBuffer);
+    // flowDefinition
     buildFlowData(assets, dataBuffer);
+    // languages
     buildLanguages(assets, dataBuffer);
 
     dataBuffer.finalize();

@@ -9,6 +9,8 @@
 #include "lv_drivers/indev/mousewheel.h"
 #include "lv_drivers/indev/keyboard.h"
 
+#include "flow.h"
+
 #define EM_PORT_API(rettype) rettype EMSCRIPTEN_KEEPALIVE
 
 static void hal_init(bool editor);
@@ -268,16 +270,11 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSi
     /*Initialize the HAL (display, input devices, tick) for LittlevGL*/
     hal_init(editor);
 
-    // if (!editor) {
-    //     /*Load a demo*/
-    //     extern void lv_demo_widgets();
-    //     lv_demo_widgets();
-    // }
+    if (!editor) {
+        flowInit(wasmModuleId, assets, assetsSize);
+    }
 
     initialized = true;
-}
-
-EM_PORT_API(void) startFlow() {
 }
 
 EM_PORT_API(bool) mainLoop() {
@@ -289,13 +286,7 @@ EM_PORT_API(bool) mainLoop() {
      * It could be done in a timer interrupt or an OS task too.*/
     lv_task_handler();
 
-    return true;
-}
-
-EM_PORT_API(void) onMessageFromDebugger(char *messageData, uint32_t messageDataSize) {
-}
-
-EM_PORT_API(void) stopScript() {
+    return flowTick();
 }
 
 EM_PORT_API(uint8_t*) getSyncedBuffer() {
