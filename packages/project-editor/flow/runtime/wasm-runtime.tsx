@@ -47,7 +47,13 @@ import {
 } from "project-editor/flow/component";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
-import { makeObservable, observable, runInAction } from "mobx";
+import {
+    IReactionDisposer,
+    makeObservable,
+    observable,
+    reaction,
+    runInAction
+} from "mobx";
 import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
 import type {
     IObjectVariableType,
@@ -60,6 +66,7 @@ import { IExpressionContext } from "project-editor/flow/expression";
 import { FileHistoryItem } from "instrument/window/history/items/file";
 import type { Page } from "project-editor/features/page/page";
 import { createWasmWorker } from "project-editor/flow/runtime/wasm-worker";
+import { LVGLPageViewerRuntime } from "project-editor/lvgl/page-runtime";
 
 interface IGlobalVariableBase {
     variable: IVariable;
@@ -118,6 +125,9 @@ export class WasmRuntime extends RemoteRuntime {
     requestAnimationFrameId: number | undefined;
 
     componentProperties = new ComponentProperties(this);
+
+    lgvlPageRuntime: LVGLPageViewerRuntime | undefined;
+    lvglReactionDispose: IReactionDisposer | undefined;
 
     ////////////////////////////////////////////////////////////////////////////////
 
@@ -178,9 +188,17 @@ export class WasmRuntime extends RemoteRuntime {
         this.worker = createWasmWorker(
             this.wasmModuleId,
             this.onWorkerMessage,
-            this.projectEditorStore.projectTypeTraits.isLVGL,
-            this.projectEditorStore
+            this.projectEditorStore.projectTypeTraits.isLVGL
         );
+
+        if (this.projectEditorStore.projectTypeTraits.isLVGL) {
+            this.lgvlPageRuntime = new LVGLPageViewerRuntime(
+                this.selectedPage,
+                this.displayWidth,
+                this.displayHeight,
+                this.worker.wasm
+            );
+        }
     }
 
     async doStopRuntime(notifyUser: boolean) {
@@ -195,6 +213,21 @@ export class WasmRuntime extends RemoteRuntime {
         this.destroyGlobalVariables();
 
         clarStremIDs();
+
+        if (this.lgvlPageRuntime) {
+            if (this.lvglReactionDispose) {
+                this.lvglReactionDispose();
+            }
+
+            for (const page of this.projectEditorStore.project.pages) {
+                if (page._lvglObj) {
+                    this.worker.wasm._lvglDeleteObject(page._lvglObj);
+                    runInAction(() => {
+                        page._lvglObj = undefined;
+                    });
+                }
+            }
+        }
 
         if (this.error) {
             if (notifyUser) {
@@ -257,7 +290,31 @@ export class WasmRuntime extends RemoteRuntime {
                 displayHeight: this.displayHeight
             };
 
-            this.worker.postMessage(message);
+            await this.worker.postMessage(message);
+
+            const lgvlPageRuntime = this.lgvlPageRuntime;
+            if (lgvlPageRuntime) {
+                const obj = lgvlPageRuntime.lvglCreate(this.selectedPage);
+
+                const pagePath = getObjectPathAsString(this.selectedPage);
+                const pageIndex = this.assetsMap.flowIndexes[pagePath];
+                this.worker.wasm._lvglScreenLoad(pageIndex, obj);
+                runInAction(() => (this.selectedPage._lvglObj = obj));
+
+                this.lvglReactionDispose = reaction(
+                    () => this.selectedPage,
+                    selectedPage => {
+                        let obj = selectedPage._lvglObj;
+                        if (!obj) {
+                            obj = lgvlPageRuntime.lvglCreate(selectedPage);
+                            runInAction(
+                                () => (this.selectedPage._lvglObj = obj)
+                            );
+                        }
+                        this.worker.wasm._lvglScreenLoad(-1, obj);
+                    }
+                );
+            }
 
             this.debuggerConnection.onConnected();
         } else {

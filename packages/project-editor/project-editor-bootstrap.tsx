@@ -46,7 +46,7 @@ import {
 import { findPage, Page } from "project-editor/features/page/page";
 import { Widget } from "project-editor/flow/component";
 import { findFont, Glyph } from "project-editor/features/font/font";
-import { ConnectionLine, Flow } from "project-editor/flow/flow";
+import { ConnectionLine, Flow, FlowFragment } from "project-editor/flow/flow";
 import { Action, findAction } from "project-editor/features/action/action";
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import {
@@ -180,6 +180,7 @@ export async function initProjectEditor(
         getAllMetrics,
         ProjectClass: Project,
         FlowClass: Flow,
+        FlowFragmentClass: FlowFragment,
         PageClass: Page,
         ActionClass: Action,
         ComponentClass: Component,

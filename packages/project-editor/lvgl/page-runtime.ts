@@ -6,7 +6,6 @@ import type { IWasmFlowRuntime } from "eez-studio-types";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Bitmap } from "project-editor/features/bitmap/bitmap";
 import { visitObjects } from "project-editor/core/search";
-import type { WorkerToRenderMessage } from "project-editor/flow/runtime/wasm-worker-interfaces";
 import type { Font } from "project-editor/features/font/font";
 
 const lvgl_flow_runtime_constructor = require("project-editor/flow/runtime/lvgl_runtime.js");
@@ -191,6 +190,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
 
             this.autorRunDispose = autorun(() => {
                 const pageObj = this.page.lvglCreate(this, 0).obj;
+                this.wasm._lvglScreenLoad(-1, pageObj);
 
                 runInAction(() => {
                     if (this.page._lvglObj != undefined) {
@@ -276,24 +276,23 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
 }
 
 export class LVGLPageViewerRuntime extends LVGLPageRuntime {
-    autorRunDispose: IReactionDisposer | undefined;
-    requestAnimationFrameId: number | undefined;
-
     constructor(
         page: Page,
         public displayWidth: number,
         public displayHeight: number,
-        postWorkerToRenderMessage: (data: WorkerToRenderMessage) => void
+        wasm: IWasmFlowRuntime
     ) {
         super(page);
-        this.wasm = lvgl_flow_runtime_constructor(postWorkerToRenderMessage);
+        this.wasm = wasm;
     }
 
     get isEditor() {
         return false;
     }
 
-    lvglCreate() {
-        this.page.lvglCreate(this, 0);
+    lvglCreate(page: Page) {
+        this.page = page;
+        const pageObj = this.page.lvglCreate(this, 0).obj;
+        return pageObj;
     }
 }

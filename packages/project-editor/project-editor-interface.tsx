@@ -25,7 +25,11 @@ import type {
     Widget
 } from "project-editor/flow/component";
 import type { findFont, Glyph } from "project-editor/features/font/font";
-import type { ConnectionLine, Flow } from "project-editor/flow/flow";
+import type {
+    ConnectionLine,
+    Flow,
+    FlowFragment
+} from "project-editor/flow/flow";
 import type { Action, findAction } from "project-editor/features/action/action";
 import type {
     ScpiCommand,
@@ -81,6 +85,7 @@ export interface IProjectEditor {
     getAllMetrics: typeof getAllMetrics;
     ProjectClass: typeof Project;
     FlowClass: typeof Flow;
+    FlowFragmentClass: typeof FlowFragment;
     PageClass: typeof Page;
     ActionClass: typeof Action;
     ComponentClass: typeof Component;

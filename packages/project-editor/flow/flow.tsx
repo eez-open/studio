@@ -516,10 +516,22 @@ export abstract class Flow extends EezObject {
         flowFragment.rewire();
     }
 
-    pasteFlowFragment(flowFragment: FlowFragment, object: IEezObject) {
+    pasteFlowFragment(pasteFlowFragment: FlowFragment, object: IEezObject) {
         const projectEditorStore = getProjectEditorStore(this);
 
-        projectEditorStore.undoManager.setCombineCommands(true);
+        const flowFragment = createObject(
+            projectEditorStore,
+            pasteFlowFragment,
+            FlowFragment,
+            undefined,
+            true
+        );
+
+        let closeCombineCommands = false;
+        if (!projectEditorStore.undoManager.combineCommands) {
+            projectEditorStore.undoManager.setCombineCommands(true);
+            closeCombineCommands = true;
+        }
 
         let components: EezObject[];
 
@@ -553,7 +565,9 @@ export abstract class Flow extends EezObject {
             }
         }
 
-        projectEditorStore.undoManager.setCombineCommands(false);
+        if (closeCombineCommands) {
+            projectEditorStore.undoManager.setCombineCommands(false);
+        }
 
         return components;
     }
@@ -689,6 +703,7 @@ export class FlowFragment extends EezObject {
             }
         ) => {
             const flow = ProjectEditor.getFlow(clipboardData.pastePlace);
+
             return flow.pasteFlowFragment(
                 clipboardData.serializedData.object as FlowFragment,
                 object
@@ -781,6 +796,7 @@ export class FlowFragment extends EezObject {
         });
 
         this.connectionLines.forEach(connectionLine => {
+            connectionLine.objID = guid();
             const newSource = objIDMap.get(connectionLine.source)!;
             const newTarget = objIDMap.get(connectionLine.target)!;
             connectionLine.source = newSource;

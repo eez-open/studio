@@ -33,9 +33,10 @@ void onArrayValueFree(eez::ArrayValue *arrayValue) {
     }, eez::flow::g_wasmModuleId, arrayValue);
 }
 
-EM_PORT_API(void) startFlow() {
-    eez::flow::start(eez::g_mainAssets);
-    eez::flow::getPageFlowState(eez::g_mainAssets, 0);
+void replacePageHook(int16_t pageId) {
+    static int16_t currentPageId = -1;
+    eez::flow::onPageChanged(currentPageId, pageId);
+    currentPageId = pageId;
 }
 
 EM_PORT_API(void) stopScript() {
@@ -61,7 +62,10 @@ extern "C" void flowInit(uint32_t wasmModuleId, uint8_t *assets, uint32_t assets
     eez::flow::writeDebuggerBufferHook = writeDebuggerBuffer;
     eez::flow::finishToDebuggerMessageHook = finishToDebuggerMessage;
     eez::flow::onArrayValueFreeHook = onArrayValueFree;
+    eez::flow::replacePageHook = replacePageHook;
     eez::flow::stopScriptHook = stopScript;
+
+    eez::flow::start(eez::g_mainAssets);
 
     eez::flow::onDebuggerClientConnected();
 }
@@ -72,4 +76,13 @@ extern "C" bool flowTick() {
     }
     eez::flow::tick();
     return true;
+}
+
+extern "C" void flowOnPageLoaded(int pageIndex) {
+    eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
+}
+
+extern "C" void flowPropagateValue(unsigned pageIndex, unsigned componentIndex, unsigned outputIndex) {
+    eez::flow::FlowState *flowState = eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
+    eez::flow::propagateValue(flowState, componentIndex, outputIndex);
 }

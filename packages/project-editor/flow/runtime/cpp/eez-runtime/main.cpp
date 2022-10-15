@@ -100,9 +100,7 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSi
     eez::gui::startThread();
     eez::gui::display::turnOn();
     eez::gui::display::init();
-}
 
-EM_PORT_API(void) startFlow() {
     eez::flow::start(eez::g_mainAssets);
 }
 

@@ -21,6 +21,7 @@ import {
     createObject,
     getAncestorOfType,
     getClassInfo,
+    getObjectPathAsString,
     Message,
     propertyNotFoundMessage,
     propertyNotSetMessage
@@ -32,6 +33,7 @@ import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
 import {
     AutoSize,
+    ComponentOutput,
     isTimelineEditorActive,
     isTimelineEditorActiveOrActionComponent,
     Widget
@@ -55,6 +57,7 @@ import { geometryGroup } from "project-editor/ui-components/PropertyGrid/groups"
 import { Property } from "project-editor/ui-components/PropertyGrid/Property";
 import type { LVGLBuild } from "project-editor/lvgl/build";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
+import { ValueType } from "project-editor/features/variable/value-type";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -454,30 +457,34 @@ export const GeometryProperty = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const LVGL_EVENTS = [
-    "PRESSED",
-    "PRESS_LOST",
-    "RELEASED",
-    "CLICKED",
-    "LONG_PRESSED",
-    "LONG_PRESSED_REPEAT",
-    "FOCUSED",
-    "DEFOCUSED",
-    "VALUE_CHANGED",
-    "READY",
-    "CANCEL",
-    "SCREEN_LOADED",
-    "SCREEN_UNLOADED",
-    "SCREEN_LOAD_START",
-    "SCREEN_UNLOAD_START",
-    "CHECKED",
-    "UNCHECKED"
-];
+const LV_EVENT_CHECKED = 0x7e;
+const LV_EVENT_UNCHECKED = 0x7f;
+
+const LVGL_EVENTS = {
+    PRESSED: 1,
+    PRESS_LOST: 3,
+    RELEASED: 8,
+    CLICKED: 7,
+    LONG_PRESSED: 5,
+    LONG_PRESSED_REPEAT: 6,
+    FOCUSED: 14,
+    DEFOCUSED: 15,
+    VALUE_CHANGED: 28,
+    READY: 31,
+    CANCEL: 32,
+    SCREEN_LOADED: 39,
+    SCREEN_UNLOADED: 40,
+    SCREEN_LOAD_START: 38,
+    SCREEN_UNLOAD_START: 37,
+    CHECKED: LV_EVENT_CHECKED,
+    UNCHECKED: LV_EVENT_UNCHECKED
+};
 
 export type ValuesOf<T extends any[]> = T[number];
 
 export class EventHandler extends EezObject {
-    trigger: ValuesOf<typeof LVGL_EVENTS>;
+    trigger: keyof typeof LVGL_EVENTS;
+    handlerType: "flow" | "action";
     action: string;
 
     constructor() {
@@ -485,6 +492,7 @@ export class EventHandler extends EezObject {
 
         makeObservable(this, {
             trigger: observable,
+            handlerType: observable,
             action: observable
         });
     }
@@ -494,20 +502,35 @@ export class EventHandler extends EezObject {
             {
                 name: "trigger",
                 type: PropertyType.Enum,
-                enumItems: LVGL_EVENTS.map(eventName => ({
+                enumItems: Object.keys(LVGL_EVENTS).map(eventName => ({
                     id: eventName,
                     label: eventName
                 })),
                 enumDisallowUndefined: true
             },
             {
+                name: "handlerType",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "flow", label: "Flow" },
+                    { id: "action", label: "Action" }
+                ],
+                enumDisallowUndefined: true
+            },
+            {
                 name: "action",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "actions"
+                referencedObjectCollectionPath: "actions",
+                hideInPropertyGrid: (eventHandler: EventHandler) => {
+                    console.log(eventHandler, eventHandler.action);
+                    return eventHandler.handlerType != "action";
+                }
             }
         ],
 
-        defaultValue: {},
+        defaultValue: {
+            handlerType: "action"
+        },
 
         newItem: async (parent: IEezObject) => {
             const project = ProjectEditor.getProject(parent);
@@ -519,10 +542,20 @@ export class EventHandler extends EezObject {
                         {
                             name: "trigger",
                             type: "enum",
-                            enumItems: LVGL_EVENTS.map(eventName => ({
-                                id: eventName,
-                                label: eventName
-                            }))
+                            enumItems: Object.keys(LVGL_EVENTS).map(
+                                eventName => ({
+                                    id: eventName,
+                                    label: eventName
+                                })
+                            )
+                        },
+                        {
+                            name: "handlerType",
+                            type: "enum",
+                            enumItems: [
+                                { id: "flow", label: "Flow" },
+                                { id: "action", label: "Action" }
+                            ]
                         },
                         {
                             name: "action",
@@ -533,18 +566,24 @@ export class EventHandler extends EezObject {
                                         action.implementationType == "native"
                                 )
                                 .map(action => ({
-                                    id: action.name,
+                                    id: `action:${action.name}`,
                                     label: action.name
-                                }))
+                                })),
+                            visible: (values: any) => {
+                                return values.handlerType == "action";
+                            }
                         }
                     ]
                 },
-                values: {},
+                values: {
+                    handlerType: "action"
+                },
                 dialogContext: ProjectEditor.getProject(parent)
             });
 
             const properties: Partial<EventHandler> = {
                 trigger: result.values.trigger,
+                handlerType: result.values.handlerType,
                 action: result.values.action
             };
 
@@ -557,6 +596,10 @@ export class EventHandler extends EezObject {
             return customInput;
         }
     };
+
+    get triggerCode() {
+        return LVGL_EVENTS[this.trigger];
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -915,6 +958,20 @@ export class LVGLWidget extends Widget {
         return this.height ?? 0;
     }
 
+    getOutputs(): ComponentOutput[] {
+        return [
+            ...super.getOutputs(),
+            ...this.eventHandlers
+                .filter(eventHandler => eventHandler.handlerType == "flow")
+                .map(eventHandler => ({
+                    name: eventHandler.trigger,
+                    type: "any" as ValueType,
+                    isOptionalOutput: false,
+                    isSequenceOutput: false
+                }))
+        ];
+    }
+
     override lvglCreate(
         runtime: LVGLPageRuntime,
         parentObj: number
@@ -923,6 +980,36 @@ export class LVGLWidget extends Widget {
 
         if (runtime.isEditor) {
             runInAction(() => (this._lvglObj = obj));
+        }
+
+        if (runtime.wasm.assetsMap) {
+            const pagePath = getObjectPathAsString(runtime.page);
+            const flowIndex = runtime.wasm.assetsMap.flowIndexes[pagePath];
+            if (flowIndex != undefined) {
+                const flow = runtime.wasm.assetsMap.flows[flowIndex];
+
+                for (const eventHandler of this.eventHandlers) {
+                    if (eventHandler.handlerType == "flow") {
+                        const componentPath = getObjectPathAsString(this);
+                        const componentIndex =
+                            flow.componentIndexes[componentPath];
+                        if (componentIndex != undefined) {
+                            const component = flow.components[componentIndex];
+                            const outputIndex =
+                                component.outputIndexes[eventHandler.trigger];
+                            if (outputIndex != undefined) {
+                                runtime.wasm._lvglAddObjectFlowCallback(
+                                    obj,
+                                    eventHandler.triggerCode,
+                                    flowIndex,
+                                    componentIndex,
+                                    outputIndex
+                                );
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         const classInfo = getClassInfo(this);

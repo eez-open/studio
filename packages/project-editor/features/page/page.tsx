@@ -562,6 +562,9 @@ export class Page extends Flow {
         }
 
         if (flowContext.projectEditorStore.projectTypeTraits.isLVGL) {
+            if (flowContext.projectEditorStore.runtime) {
+                return null;
+            }
             return (
                 <>
                     <ComponentEnclosure

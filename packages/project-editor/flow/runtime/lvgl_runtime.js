@@ -1175,11 +1175,11 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  973448: ($0) => { startToDebuggerMessage($0); },  
- 973480: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 973555: ($0) => { finishToDebuggerMessage($0); },  
- 973588: ($0, $1) => { onArrayValueFree($0, $1); },  
- 973618: ($0, $1) => { freeComponentExecutionState($0, $1); }
+  973464: ($0) => { startToDebuggerMessage($0); },  
+ 973496: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 973571: ($0) => { finishToDebuggerMessage($0); },  
+ 973604: ($0, $1) => { onArrayValueFree($0, $1); },  
+ 973634: ($0, $1) => { freeComponentExecutionState($0, $1); }
 };
 
 
@@ -4649,9 +4649,6 @@ var asm = createWasm();
 var ___wasm_call_ctors = Module["___wasm_call_ctors"] = createExportWrapper("__wasm_call_ctors");
 
 /** @type {function(...*):?} */
-var _startFlow = Module["_startFlow"] = createExportWrapper("startFlow");
-
-/** @type {function(...*):?} */
 var _stopScript = Module["_stopScript"] = createExportWrapper("stopScript");
 
 /** @type {function(...*):?} */
@@ -4709,6 +4706,9 @@ var _lvglCreateRoller = Module["_lvglCreateRoller"] = createExportWrapper("lvglC
 var _lvglCreateSwitch = Module["_lvglCreateSwitch"] = createExportWrapper("lvglCreateSwitch");
 
 /** @type {function(...*):?} */
+var _lvglScreenLoad = Module["_lvglScreenLoad"] = createExportWrapper("lvglScreenLoad");
+
+/** @type {function(...*):?} */
 var _lvglDeleteObject = Module["_lvglDeleteObject"] = createExportWrapper("lvglDeleteObject");
 
 /** @type {function(...*):?} */
@@ -4758,6 +4758,9 @@ var _lvglLoadFont = Module["_lvglLoadFont"] = createExportWrapper("lvglLoadFont"
 
 /** @type {function(...*):?} */
 var _lvglFreeFont = Module["_lvglFreeFont"] = createExportWrapper("lvglFreeFont");
+
+/** @type {function(...*):?} */
+var _lvglAddObjectFlowCallback = Module["_lvglAddObjectFlowCallback"] = createExportWrapper("lvglAddObjectFlowCallback");
 
 /** @type {function(...*):?} */
 var _createUndefinedValue = Module["_createUndefinedValue"] = createExportWrapper("createUndefinedValue");

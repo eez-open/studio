@@ -306,7 +306,6 @@ export interface IWasmFlowRuntime {
 
     // eez framework API
     _init(wasmModuleId: number, assets: number, assetsSize: number);
-    _startFlow();
     _mainLoop();
     _getSyncedBuffer(): number;
     _onMouseWheelEvent(wheelDeltaY: number, wheelClicked: number);
@@ -386,6 +385,7 @@ export interface IWasmFlowRuntime {
     _lvglCreateSlider(parentObj: number, x: number, y: number, w: number, h: number, min: number, max: number, mode: number, value: number, value_left: number): number;
     _lvglCreateRoller(parentObj: number, x: number, y: number, w: number, h: number, options: number, mode: number): number;
     _lvglCreateSwitch(parentObj: number, x: number, y: number, w: number, h: number): number;
+    _lvglScreenLoad(page_index: number, obj: number);
     _lvglDeleteObject(obj: number): void;
     _lvglObjAddFlag(obj: number, f: number): void;
     _lvglObjClearFlag(obj: number, f: number): void;
@@ -403,6 +403,7 @@ export interface IWasmFlowRuntime {
     _lvglGetObjHeight(obj: number): number;
     _lvglLoadFont(font_file_path: number): number;
     _lvglFreeFont(font_ptr: number): void;
+    _lvglAddObjectFlowCallback(obj: number, filter: number, page_index: number, component_index: number, output_index: number): void;
 }
 
 export interface IDashboardComponentContext {

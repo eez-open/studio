@@ -681,10 +681,18 @@ export function pasteItem(object: IEezObject) {
                         isArray(c.pastePlace as IEezObject) &&
                         getParent(object) === (c.pastePlace as IEezObject)
                     ) {
+                        const pasteObject = createObject(
+                            projectEditorStore,
+                            c.serializedData.object,
+                            getClass(c.serializedData.object),
+                            undefined,
+                            true
+                        );
+
                         return projectEditorStore.insertObject(
                             c.pastePlace as IEezObject,
                             (c.pastePlace as any).indexOf(object) + 1,
-                            c.serializedData.object
+                            pasteObject
                         );
                     } else {
                         const aClass = getClassByName(
@@ -695,15 +703,33 @@ export function pasteItem(object: IEezObject) {
                             return aClass.classInfo.pasteItemHook(object, c);
                         }
 
+                        const pasteObject = createObject(
+                            projectEditorStore,
+                            c.serializedData.object,
+                            getClass(c.serializedData.object),
+                            undefined,
+                            true
+                        );
+
                         return projectEditorStore.addObject(
                             c.pastePlace as IEezObject,
-                            c.serializedData.object
+                            pasteObject
                         );
                     }
                 } else if (c.serializedData.objects) {
+                    const pasteObjects = c.serializedData.objects.map(object =>
+                        createObject(
+                            projectEditorStore,
+                            object,
+                            getClass(object),
+                            undefined,
+                            true
+                        )
+                    );
+
                     return projectEditorStore.addObjects(
                         c.pastePlace as IEezObject,
-                        c.serializedData.objects
+                        pasteObjects
                     );
                 }
             }

@@ -17,7 +17,11 @@ import {
     getKey
 } from "project-editor/core/object";
 import { Component } from "project-editor/flow/component";
-import type { ConnectionLine, Flow } from "project-editor/flow/flow";
+import type {
+    ConnectionLine,
+    Flow,
+    FlowFragment
+} from "project-editor/flow/flow";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Project } from "project-editor/project/project";
 
@@ -39,10 +43,8 @@ export function createObject<T extends EezObject>(
     currentDocumentStore = projectEditorStore;
     createNewObjectobjIDs = _createNewObjectobjIDs ?? true;
     isLoadProject = false;
-    currentProject = projectEditorStore.project;
     const result = loadObjectInternal(undefined, jsObject, aClass, key);
     currentDocumentStore = undefined;
-    currentProject = undefined;
     return result as T;
 }
 
@@ -71,7 +73,6 @@ export function loadProject(
     }
 
     currentDocumentStore = undefined;
-    currentProject = undefined;
 
     fixConnectionLines(project);
 
@@ -120,7 +121,6 @@ export function objectToJson(
 ////////////////////////////////////////////////////////////////////////////////
 
 let currentDocumentStore: ProjectEditorStore | undefined;
-let currentProject: Project | undefined;
 let isLoadProject: boolean;
 let createNewObjectobjIDs: boolean;
 let wireIDToObjID: Map<string, string>;
@@ -183,10 +183,6 @@ function loadObjectInternal(
         return new EezObject();
     }
 
-    if (object instanceof ProjectEditor.ProjectClass) {
-        currentProject = object;
-    }
-
     if (isLoadProject) {
         if (object instanceof ProjectEditor.FlowClass) {
             wireIDToObjID = new Map<string, string>();
@@ -216,20 +212,20 @@ function loadObjectInternal(
 
     let objID = getObjID(object, jsObject, classInfo, key);
     object.objID = objID;
-    currentProject?._objectsMap.set(objID, object);
 
     if (classInfo.beforeLoadHook) {
         classInfo.beforeLoadHook(object, jsObject);
     }
 
-    let rewireFlow = false;
+    let flowOrFlowFragment: Flow | FlowFragment | undefined;
     if (
         !isLoadProject &&
         createNewObjectobjIDs &&
-        object instanceof ProjectEditor.FlowClass
+        (object instanceof ProjectEditor.FlowClass ||
+            object instanceof ProjectEditor.FlowFragmentClass)
     ) {
         createNewObjectobjIDs = false;
-        rewireFlow = true;
+        flowOrFlowFragment = object;
     }
 
     for (const propertyInfo of classInfo.properties) {
@@ -281,8 +277,8 @@ function loadObjectInternal(
         }
     }
 
-    if (rewireFlow) {
-        (object as Flow).rewire();
+    if (flowOrFlowFragment) {
+        flowOrFlowFragment.rewire();
         createNewObjectobjIDs = true;
     }
 

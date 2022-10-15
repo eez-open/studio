@@ -73,7 +73,8 @@ import type { MicroPython } from "project-editor/features/micropython/micropytho
 import {
     usage,
     startSearch,
-    SearchCallbackMessage
+    SearchCallbackMessage,
+    visitObjects
 } from "project-editor/core/search";
 import { Color, Theme } from "project-editor/features/style/theme";
 import { Page } from "project-editor/features/page/page";
@@ -1456,7 +1457,22 @@ export class Project extends EezObject {
         id: new AssetsMap(this, "id")
     };
 
-    _objectsMap = new Map<string, EezObject>();
+    get _objectsMap() {
+        const objectsMap = new Map<string, EezObject>();
+
+        const v = visitObjects(this);
+        while (true) {
+            let visitResult = v.next();
+            if (visitResult.done) {
+                break;
+            }
+            if (visitResult.value instanceof EezObject) {
+                objectsMap.set(visitResult.value.objID, visitResult.value);
+            }
+        }
+
+        return objectsMap;
+    }
 
     settings: Settings;
     variables: ProjectVariables;
@@ -1506,7 +1522,8 @@ export class Project extends EezObject {
             setThemeColor: action,
             colorToIndexMap: computed,
             buildColors: computed({ keepAlive: true }),
-            projectTypeTraits: computed
+            projectTypeTraits: computed,
+            _objectsMap: computed
         });
     }
 

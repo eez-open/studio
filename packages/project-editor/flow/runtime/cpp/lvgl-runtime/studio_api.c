@@ -4,15 +4,14 @@
 
 #include "lvgl/lvgl.h"
 
+#include "flow.h"
+
 #define EM_PORT_API(rettype) rettype EMSCRIPTEN_KEEPALIVE
 
 EM_PORT_API(lv_obj_t *) lvglCreateContainer(lv_obj_t *parentObj, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
     lv_obj_t *obj = lv_obj_create(parentObj);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
-    if (parentObj == 0) {
-        lv_scr_load(obj);
-    }
     lv_obj_update_layout(obj);
     return obj;
 }
@@ -26,6 +25,7 @@ EM_PORT_API(lv_obj_t *) lvglCreateLabel(lv_obj_t *parentObj, lv_coord_t x, lv_co
     lv_label_set_recolor(obj, recolor);
     free(text);
     lv_obj_update_layout(obj);
+
     return obj;
 }
 
@@ -96,6 +96,13 @@ EM_PORT_API(lv_obj_t *) lvglCreateSwitch(lv_obj_t *parentObj, lv_coord_t x, lv_c
     lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
     return obj;
+}
+
+EM_PORT_API(void) lvglScreenLoad(unsigned page_index, lv_obj_t *obj) {
+    lv_scr_load(obj);
+    if (page_index != -1) {
+        flowOnPageLoaded(page_index);
+    }
 }
 
 EM_PORT_API(void) lvglDeleteObject(lv_obj_t *obj) {
@@ -215,3 +222,63 @@ EM_PORT_API(lv_font_t *) lvglLoadFont(const char *font_file_path) {
 EM_PORT_API(void) lvglFreeFont(lv_font_t *font) {
     return lv_font_free(font);
 }
+
+void trt(lv_event_t *e) {
+    printf("label deleted\n");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+#define LV_EVENT_CHECKED   0x7E
+#define LV_EVENT_UNCHECKED 0x7F
+
+typedef struct {
+    unsigned page_index;
+    unsigned component_index;
+    unsigned output_index;
+} FlowEventCallbackData;
+
+void flow_event_callback(lv_event_t *e) {
+    FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+    flowPropagateValue(data->page_index, data->component_index, data->output_index);
+}
+
+void flow_event_checked_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    lv_obj_t *ta = lv_event_get_target(e);
+    if (event == LV_EVENT_VALUE_CHANGED && lv_obj_has_state(ta, LV_STATE_CHECKED)) {
+        flow_event_callback(e);
+    }
+}
+
+void flow_event_unchecked_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    lv_obj_t *ta = lv_event_get_target(e);
+    if (event == LV_EVENT_VALUE_CHANGED && !lv_obj_has_state(ta, LV_STATE_CHECKED)) {
+        flow_event_callback(e);
+    }
+}
+
+void flow_event_callback_delete_user_data(lv_event_t *e) {
+    lv_free(e->user_data);
+}
+
+EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filter, unsigned page_index, unsigned component_index, unsigned output_index) {
+    FlowEventCallbackData *data = (FlowEventCallbackData *)lv_malloc(sizeof(FlowEventCallbackData));
+
+    data->page_index = page_index;
+    data->component_index = component_index;
+    data->output_index = output_index;
+
+    if (filter == LV_EVENT_CHECKED) {
+        lv_obj_add_event_cb(obj, flow_event_checked_callback, LV_EVENT_VALUE_CHANGED, data);
+    } else if (filter == LV_EVENT_UNCHECKED) {
+        lv_obj_add_event_cb(obj, flow_event_unchecked_callback, LV_EVENT_VALUE_CHANGED, data);
+    } else {
+        lv_obj_add_event_cb(obj, flow_event_callback, filter, data);
+    }
+
+    lv_obj_add_event_cb(obj, flow_event_callback_delete_user_data, LV_EVENT_DELETE, data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
