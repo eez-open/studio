@@ -76,6 +76,17 @@ foreach(TMP_PATH ${src_eez})
     endif()
 endforeach(TMP_PATH)
 
+# exclude agg
+set(EXCLUDE_DIR "../eez/libs/agg")
+
+foreach(TMP_PATH ${src_eez})
+    string(FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
+
+    if(NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
+        list(REMOVE_ITEM src_eez ${TMP_PATH})
+    endif()
+endforeach(TMP_PATH)
+
 list(APPEND src_files ${src_eez})
 
 file(GLOB_RECURSE src_eez_runtime

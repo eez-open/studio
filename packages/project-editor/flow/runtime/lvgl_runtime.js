@@ -1175,11 +1175,11 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  973464: ($0) => { startToDebuggerMessage($0); },  
- 973496: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 973571: ($0) => { finishToDebuggerMessage($0); },  
- 973604: ($0, $1) => { onArrayValueFree($0, $1); },  
- 973634: ($0, $1) => { freeComponentExecutionState($0, $1); }
+  972672: ($0, $1) => { freeComponentExecutionState($0, $1); },  
+ 972713: ($0) => { startToDebuggerMessage($0); },  
+ 972745: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 972820: ($0) => { finishToDebuggerMessage($0); },  
+ 972853: ($0, $1) => { onArrayValueFree($0, $1); }
 };
 
 
@@ -4649,12 +4649,6 @@ var asm = createWasm();
 var ___wasm_call_ctors = Module["___wasm_call_ctors"] = createExportWrapper("__wasm_call_ctors");
 
 /** @type {function(...*):?} */
-var _stopScript = Module["_stopScript"] = createExportWrapper("stopScript");
-
-/** @type {function(...*):?} */
-var _onMessageFromDebugger = Module["_onMessageFromDebugger"] = createExportWrapper("onMessageFromDebugger");
-
-/** @type {function(...*):?} */
 var _init = Module["_init"] = createExportWrapper("init");
 
 /** @type {function(...*):?} */
@@ -4676,13 +4670,133 @@ var _onPointerEvent = Module["_onPointerEvent"] = createExportWrapper("onPointer
 var _onMouseWheelEvent = Module["_onMouseWheelEvent"] = createExportWrapper("onMouseWheelEvent");
 
 /** @type {function(...*):?} */
+var _createUndefinedValue = Module["_createUndefinedValue"] = createExportWrapper("createUndefinedValue");
+
+/** @type {function(...*):?} */
+var _createNullValue = Module["_createNullValue"] = createExportWrapper("createNullValue");
+
+/** @type {function(...*):?} */
+var _createIntValue = Module["_createIntValue"] = createExportWrapper("createIntValue");
+
+/** @type {function(...*):?} */
+var _createDoubleValue = Module["_createDoubleValue"] = createExportWrapper("createDoubleValue");
+
+/** @type {function(...*):?} */
+var _createBooleanValue = Module["_createBooleanValue"] = createExportWrapper("createBooleanValue");
+
+/** @type {function(...*):?} */
+var _createStringValue = Module["_createStringValue"] = createExportWrapper("createStringValue");
+
+/** @type {function(...*):?} */
+var _createArrayValue = Module["_createArrayValue"] = createExportWrapper("createArrayValue");
+
+/** @type {function(...*):?} */
+var _createStreamValue = Module["_createStreamValue"] = createExportWrapper("createStreamValue");
+
+/** @type {function(...*):?} */
+var _createDateValue = Module["_createDateValue"] = createExportWrapper("createDateValue");
+
+/** @type {function(...*):?} */
+var _arrayValueSetElementValue = Module["_arrayValueSetElementValue"] = createExportWrapper("arrayValueSetElementValue");
+
+/** @type {function(...*):?} */
+var _valueFree = Module["_valueFree"] = createExportWrapper("valueFree");
+
+/** @type {function(...*):?} */
+var _setGlobalVariable = Module["_setGlobalVariable"] = createExportWrapper("setGlobalVariable");
+
+/** @type {function(...*):?} */
+var _updateGlobalVariable = Module["_updateGlobalVariable"] = createExportWrapper("updateGlobalVariable");
+
+/** @type {function(...*):?} */
+var _getFlowIndex = Module["_getFlowIndex"] = createExportWrapper("getFlowIndex");
+
+/** @type {function(...*):?} */
+var _getComponentExecutionState = Module["_getComponentExecutionState"] = createExportWrapper("getComponentExecutionState");
+
+/** @type {function(...*):?} */
+var _setComponentExecutionState = Module["_setComponentExecutionState"] = createExportWrapper("setComponentExecutionState");
+
+/** @type {function(...*):?} */
+var _getUint32Param = Module["_getUint32Param"] = createExportWrapper("getUint32Param");
+
+/** @type {function(...*):?} */
+var _getStringParam = Module["_getStringParam"] = createExportWrapper("getStringParam");
+
+/** @type {function(...*):?} */
+var _getExpressionListParam = Module["_getExpressionListParam"] = createExportWrapper("getExpressionListParam");
+
+/** @type {function(...*):?} */
+var _freeExpressionListParam = Module["_freeExpressionListParam"] = createExportWrapper("freeExpressionListParam");
+
+/** @type {function(...*):?} */
+var _free = Module["_free"] = createExportWrapper("free");
+
+/** @type {function(...*):?} */
+var _getListParamSize = Module["_getListParamSize"] = createExportWrapper("getListParamSize");
+
+/** @type {function(...*):?} */
+var _evalListParamElementExpression = Module["_evalListParamElementExpression"] = createExportWrapper("evalListParamElementExpression");
+
+/** @type {function(...*):?} */
+var _getInputValue = Module["_getInputValue"] = createExportWrapper("getInputValue");
+
+/** @type {function(...*):?} */
+var _clearInputValue = Module["_clearInputValue"] = createExportWrapper("clearInputValue");
+
+/** @type {function(...*):?} */
+var _evalProperty = Module["_evalProperty"] = createExportWrapper("evalProperty");
+
+/** @type {function(...*):?} */
+var _assignProperty = Module["_assignProperty"] = createExportWrapper("assignProperty");
+
+/** @type {function(...*):?} */
+var _setPropertyField = Module["_setPropertyField"] = createExportWrapper("setPropertyField");
+
+/** @type {function(...*):?} */
+var _propagateValue = Module["_propagateValue"] = createExportWrapper("propagateValue");
+
+/** @type {function(...*):?} */
+var _propagateValueThroughSeqout = Module["_propagateValueThroughSeqout"] = createExportWrapper("propagateValueThroughSeqout");
+
+/** @type {function(...*):?} */
+var _startAsyncExecution = Module["_startAsyncExecution"] = createExportWrapper("startAsyncExecution");
+
+/** @type {function(...*):?} */
+var _endAsyncExecution = Module["_endAsyncExecution"] = createExportWrapper("endAsyncExecution");
+
+/** @type {function(...*):?} */
+var _executeCallAction = Module["_executeCallAction"] = createExportWrapper("executeCallAction");
+
+/** @type {function(...*):?} */
+var _logInfo = Module["_logInfo"] = createExportWrapper("logInfo");
+
+/** @type {function(...*):?} */
+var _throwError = Module["_throwError"] = createExportWrapper("throwError");
+
+/** @type {function(...*):?} */
+var _getFirstRootFlowState = Module["_getFirstRootFlowState"] = createExportWrapper("getFirstRootFlowState");
+
+/** @type {function(...*):?} */
+var _getFirstChildFlowState = Module["_getFirstChildFlowState"] = createExportWrapper("getFirstChildFlowState");
+
+/** @type {function(...*):?} */
+var _getNextSiblingFlowState = Module["_getNextSiblingFlowState"] = createExportWrapper("getNextSiblingFlowState");
+
+/** @type {function(...*):?} */
+var _getFlowStateFlowIndex = Module["_getFlowStateFlowIndex"] = createExportWrapper("getFlowStateFlowIndex");
+
+/** @type {function(...*):?} */
+var _stopScript = Module["_stopScript"] = createExportWrapper("stopScript");
+
+/** @type {function(...*):?} */
+var _onMessageFromDebugger = Module["_onMessageFromDebugger"] = createExportWrapper("onMessageFromDebugger");
+
+/** @type {function(...*):?} */
 var _lvglCreateContainer = Module["_lvglCreateContainer"] = createExportWrapper("lvglCreateContainer");
 
 /** @type {function(...*):?} */
 var _lvglCreateLabel = Module["_lvglCreateLabel"] = createExportWrapper("lvglCreateLabel");
-
-/** @type {function(...*):?} */
-var _free = Module["_free"] = createExportWrapper("free");
 
 /** @type {function(...*):?} */
 var _lvglCreateButton = Module["_lvglCreateButton"] = createExportWrapper("lvglCreateButton");
@@ -4761,120 +4875,6 @@ var _lvglFreeFont = Module["_lvglFreeFont"] = createExportWrapper("lvglFreeFont"
 
 /** @type {function(...*):?} */
 var _lvglAddObjectFlowCallback = Module["_lvglAddObjectFlowCallback"] = createExportWrapper("lvglAddObjectFlowCallback");
-
-/** @type {function(...*):?} */
-var _createUndefinedValue = Module["_createUndefinedValue"] = createExportWrapper("createUndefinedValue");
-
-/** @type {function(...*):?} */
-var _createNullValue = Module["_createNullValue"] = createExportWrapper("createNullValue");
-
-/** @type {function(...*):?} */
-var _createIntValue = Module["_createIntValue"] = createExportWrapper("createIntValue");
-
-/** @type {function(...*):?} */
-var _createDoubleValue = Module["_createDoubleValue"] = createExportWrapper("createDoubleValue");
-
-/** @type {function(...*):?} */
-var _createBooleanValue = Module["_createBooleanValue"] = createExportWrapper("createBooleanValue");
-
-/** @type {function(...*):?} */
-var _createStringValue = Module["_createStringValue"] = createExportWrapper("createStringValue");
-
-/** @type {function(...*):?} */
-var _createArrayValue = Module["_createArrayValue"] = createExportWrapper("createArrayValue");
-
-/** @type {function(...*):?} */
-var _createStreamValue = Module["_createStreamValue"] = createExportWrapper("createStreamValue");
-
-/** @type {function(...*):?} */
-var _createDateValue = Module["_createDateValue"] = createExportWrapper("createDateValue");
-
-/** @type {function(...*):?} */
-var _arrayValueSetElementValue = Module["_arrayValueSetElementValue"] = createExportWrapper("arrayValueSetElementValue");
-
-/** @type {function(...*):?} */
-var _valueFree = Module["_valueFree"] = createExportWrapper("valueFree");
-
-/** @type {function(...*):?} */
-var _setGlobalVariable = Module["_setGlobalVariable"] = createExportWrapper("setGlobalVariable");
-
-/** @type {function(...*):?} */
-var _updateGlobalVariable = Module["_updateGlobalVariable"] = createExportWrapper("updateGlobalVariable");
-
-/** @type {function(...*):?} */
-var _getFlowIndex = Module["_getFlowIndex"] = createExportWrapper("getFlowIndex");
-
-/** @type {function(...*):?} */
-var _getComponentExecutionState = Module["_getComponentExecutionState"] = createExportWrapper("getComponentExecutionState");
-
-/** @type {function(...*):?} */
-var _setComponentExecutionState = Module["_setComponentExecutionState"] = createExportWrapper("setComponentExecutionState");
-
-/** @type {function(...*):?} */
-var _getUint32Param = Module["_getUint32Param"] = createExportWrapper("getUint32Param");
-
-/** @type {function(...*):?} */
-var _getStringParam = Module["_getStringParam"] = createExportWrapper("getStringParam");
-
-/** @type {function(...*):?} */
-var _getExpressionListParam = Module["_getExpressionListParam"] = createExportWrapper("getExpressionListParam");
-
-/** @type {function(...*):?} */
-var _freeExpressionListParam = Module["_freeExpressionListParam"] = createExportWrapper("freeExpressionListParam");
-
-/** @type {function(...*):?} */
-var _getListParamSize = Module["_getListParamSize"] = createExportWrapper("getListParamSize");
-
-/** @type {function(...*):?} */
-var _evalListParamElementExpression = Module["_evalListParamElementExpression"] = createExportWrapper("evalListParamElementExpression");
-
-/** @type {function(...*):?} */
-var _getInputValue = Module["_getInputValue"] = createExportWrapper("getInputValue");
-
-/** @type {function(...*):?} */
-var _clearInputValue = Module["_clearInputValue"] = createExportWrapper("clearInputValue");
-
-/** @type {function(...*):?} */
-var _evalProperty = Module["_evalProperty"] = createExportWrapper("evalProperty");
-
-/** @type {function(...*):?} */
-var _assignProperty = Module["_assignProperty"] = createExportWrapper("assignProperty");
-
-/** @type {function(...*):?} */
-var _setPropertyField = Module["_setPropertyField"] = createExportWrapper("setPropertyField");
-
-/** @type {function(...*):?} */
-var _propagateValue = Module["_propagateValue"] = createExportWrapper("propagateValue");
-
-/** @type {function(...*):?} */
-var _propagateValueThroughSeqout = Module["_propagateValueThroughSeqout"] = createExportWrapper("propagateValueThroughSeqout");
-
-/** @type {function(...*):?} */
-var _startAsyncExecution = Module["_startAsyncExecution"] = createExportWrapper("startAsyncExecution");
-
-/** @type {function(...*):?} */
-var _endAsyncExecution = Module["_endAsyncExecution"] = createExportWrapper("endAsyncExecution");
-
-/** @type {function(...*):?} */
-var _executeCallAction = Module["_executeCallAction"] = createExportWrapper("executeCallAction");
-
-/** @type {function(...*):?} */
-var _logInfo = Module["_logInfo"] = createExportWrapper("logInfo");
-
-/** @type {function(...*):?} */
-var _throwError = Module["_throwError"] = createExportWrapper("throwError");
-
-/** @type {function(...*):?} */
-var _getFirstRootFlowState = Module["_getFirstRootFlowState"] = createExportWrapper("getFirstRootFlowState");
-
-/** @type {function(...*):?} */
-var _getFirstChildFlowState = Module["_getFirstChildFlowState"] = createExportWrapper("getFirstChildFlowState");
-
-/** @type {function(...*):?} */
-var _getNextSiblingFlowState = Module["_getNextSiblingFlowState"] = createExportWrapper("getNextSiblingFlowState");
-
-/** @type {function(...*):?} */
-var _getFlowStateFlowIndex = Module["_getFlowStateFlowIndex"] = createExportWrapper("getFlowStateFlowIndex");
 
 /** @type {function(...*):?} */
 var ___errno_location = Module["___errno_location"] = createExportWrapper("__errno_location");

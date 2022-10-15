@@ -51,7 +51,8 @@
         "utility": "c",
         "string_view": "cpp",
         "fstream": "cpp",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "string": "c"
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "workbench.editor.enablePreview": false,

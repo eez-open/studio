@@ -4,9 +4,9 @@
 
 #include "lvgl/lvgl.h"
 
-#include "flow.h"
+#include <eez/core/os.h>
 
-#define EM_PORT_API(rettype) rettype EMSCRIPTEN_KEEPALIVE
+#include "flow.h"
 
 EM_PORT_API(lv_obj_t *) lvglCreateContainer(lv_obj_t *parentObj, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
     lv_obj_t *obj = lv_obj_create(parentObj);
@@ -232,11 +232,11 @@ void trt(lv_event_t *e) {
 #define LV_EVENT_CHECKED   0x7E
 #define LV_EVENT_UNCHECKED 0x7F
 
-typedef struct {
+struct FlowEventCallbackData {
     unsigned page_index;
     unsigned component_index;
     unsigned output_index;
-} FlowEventCallbackData;
+};
 
 void flow_event_callback(lv_event_t *e) {
     FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
@@ -260,11 +260,11 @@ void flow_event_unchecked_callback(lv_event_t *e) {
 }
 
 void flow_event_callback_delete_user_data(lv_event_t *e) {
-    lv_free(e->user_data);
+    lv_mem_free(e->user_data);
 }
 
 EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filter, unsigned page_index, unsigned component_index, unsigned output_index) {
-    FlowEventCallbackData *data = (FlowEventCallbackData *)lv_malloc(sizeof(FlowEventCallbackData));
+    FlowEventCallbackData *data = (FlowEventCallbackData *)lv_mem_alloc(sizeof(FlowEventCallbackData));
 
     data->page_index = page_index;
     data->component_index = component_index;

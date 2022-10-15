@@ -4,6 +4,7 @@ import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 
 import type { Action } from "project-editor/features/action/action";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
+import type { ProjectEditorStore } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -22,13 +23,18 @@ function buildActionsEnum(projectActions: Action[]) {
     return `enum ActionsEnum {\n${actions.join(",\n")}\n};`;
 }
 
-function buildActionsFuncsDecl(projectActions: Action[]) {
+function buildActionsFuncsDecl(
+    projectEditorStore: ProjectEditorStore,
+    projectActions: Action[]
+) {
     let actions = projectActions.map(action => {
         return `void ${getName(
             "action_",
             action,
             NamingConvention.UnderscoreLowerCase
-        )}();`;
+        )}(${
+            projectEditorStore.projectTypeTraits.isLVGL ? "lv_event_t * e" : ""
+        });`;
     });
 
     return actions.join("\n");
@@ -104,7 +110,10 @@ export function buildActions(
             !sectionNames ||
             sectionNames.indexOf("ACTIONS_FUNCS_DECL") !== -1
         ) {
-            result.ACTIONS_FUNCS_DECL = buildActionsFuncsDecl(projectActions);
+            result.ACTIONS_FUNCS_DECL = buildActionsFuncsDecl(
+                assets.projectEditorStore,
+                projectActions
+            );
         }
 
         if (!sectionNames || sectionNames.indexOf("ACTIONS_FUNCS_DEF") !== -1) {

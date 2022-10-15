@@ -9,7 +9,7 @@
 #include "lv_drivers/indev/mousewheel.h"
 #include "lv_drivers/indev/keyboard.h"
 
-#include "flow.h"
+#include "src/flow.h"
 
 #define EM_PORT_API(rettype) rettype EMSCRIPTEN_KEEPALIVE
 
@@ -103,14 +103,14 @@ bool my_ready_cb(struct _lv_fs_drv_t * drv) {
 }
 
 void *my_open_cb(struct _lv_fs_drv_t * drv, const char * path, lv_fs_mode_t mode) {
-    my_file_t *file = (my_file_t *)lv_malloc(sizeof(my_file_t));
+    my_file_t *file = (my_file_t *)lv_mem_alloc(sizeof(my_file_t));
     file->ptr = (void *)atoi(path);
     file->pos = 0;
     return file;
 }
 
 lv_fs_res_t my_close_cb(struct _lv_fs_drv_t * drv, void * file_p) {
-    lv_free(file_p);
+    lv_mem_free(file_p);
     return LV_FS_RES_OK;
 }
 

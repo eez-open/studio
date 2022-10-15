@@ -1386,7 +1386,7 @@ export async function buildAssets(
     }
 
     if (assets.projectEditorStore.projectTypeTraits.isLVGL) {
-        const lvglBuild = new LVGLBuild(assets.projectEditorStore.project);
+        const lvglBuild = new LVGLBuild(assets);
 
         if (!sectionNames || sectionNames.indexOf("LVGL_SCREENS_DECL") !== -1) {
             result.LVGL_SCREENS_DECL = await lvglBuild.buildScreensDecl();

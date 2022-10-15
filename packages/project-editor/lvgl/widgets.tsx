@@ -522,7 +522,6 @@ export class EventHandler extends EezObject {
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "actions",
                 hideInPropertyGrid: (eventHandler: EventHandler) => {
-                    console.log(eventHandler, eventHandler.action);
                     return eventHandler.handlerType != "action";
                 }
             }
@@ -1106,11 +1105,36 @@ export class LVGLWidget extends Widget {
         this.lvglBuildSpecific(build);
 
         if (this.eventHandlers.length > 0) {
-            build.line(
-                `lv_obj_add_event_cb(obj, ${build.getEventHandlerCallbackName(
-                    this
-                )}, LV_EVENT_ALL, screen);`
-            );
+            if (this.eventHandlers[0].handlerType == "action") {
+                build.line(
+                    `lv_obj_add_event_cb(obj, ${build.getEventHandlerCallbackName(
+                        this
+                    )}, LV_EVENT_ALL, screen);`
+                );
+            } else {
+                let page = getAncestorOfType(
+                    this,
+                    ProjectEditor.PageClass.classInfo
+                ) as Page;
+                let flowIndex = build.assets.getFlowIndex(page);
+                let componentIndex = build.assets.getComponentIndex(this);
+                const outputIndex = 1;
+
+                build.line(
+                    "FlowEventCallbackData *data = (FlowEventCallbackData *)lv_mem_alloc(sizeof(FlowEventCallbackData));"
+                );
+                build.line(`data->page_index = ${flowIndex};`);
+                build.line(`data->component_index = ${componentIndex};`);
+                build.line(`data->output_index = ${outputIndex};`);
+                build.line(
+                    `lv_obj_add_event_cb(obj, ${build.getEventHandlerCallbackName(
+                        this
+                    )}, LV_EVENT_ALL, data);`
+                );
+                build.line(
+                    "lv_obj_add_event_cb(obj, flow_event_callback_delete_user_data, LV_EVENT_DELETE, data);"
+                );
+            }
         }
 
         const classInfo = getClassInfo(this);

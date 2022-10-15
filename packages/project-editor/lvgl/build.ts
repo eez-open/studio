@@ -8,9 +8,14 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Project } from "project-editor/project/project";
 import { getAncestorOfType } from "project-editor/store";
 import type { LVGLWidget } from "./widgets";
+import type { Assets } from "project-editor/build/assets";
 
 export class LVGLBuild {
-    constructor(public project: Project) {}
+    project: Project;
+
+    constructor(public assets: Assets) {
+        this.project = assets.projectEditorStore.project;
+    }
 
     result: string;
     indentation: string;
@@ -184,6 +189,7 @@ export class LVGLBuild {
         this.indentation = "";
         const build = this;
 
+        let hasEventHandler = false;
         for (const page of this.project.pages) {
             const v = visitObjects(page.components);
             while (true) {
@@ -194,6 +200,28 @@ export class LVGLBuild {
                 const widget = visitResult.value;
                 if (widget instanceof ProjectEditor.LVGLWidgetClass) {
                     if (widget.eventHandlers.length > 0) {
+                        if (!hasEventHandler) {
+                            hasEventHandler = true;
+
+                            build.line("typedef struct {");
+                            build.indent();
+                            build.line("unsigned page_index;");
+                            build.line("unsigned component_index;");
+                            build.line("unsigned output_index;");
+                            build.unindent();
+                            build.line("} FlowEventCallbackData;");
+                            build.line("");
+
+                            build.line(
+                                "void flow_event_callback_delete_user_data(lv_event_t *e) {"
+                            );
+                            build.indent();
+                            build.line("lv_mem_free(e->user_data);");
+                            build.unindent();
+                            build.line("}");
+                            build.line("");
+                        }
+
                         build.line(
                             `static void ${build.getEventHandlerCallbackName(
                                 widget
@@ -233,11 +261,20 @@ export class LVGLBuild {
                             }
 
                             build.indent();
-                            build.line(
-                                `${this.getActionFunctionName(
-                                    eventHandler.action
-                                )}(e);`
-                            );
+                            if (eventHandler.handlerType == "action") {
+                                build.line(
+                                    `${this.getActionFunctionName(
+                                        eventHandler.action
+                                    )}(e);`
+                                );
+                            } else {
+                                build.line(
+                                    `FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;`
+                                );
+                                build.line(
+                                    `flowPropagateValue(data->page_index, data->component_index, data->output_index);`
+                                );
+                            }
                             build.unindent();
                             build.line("}");
                         }
