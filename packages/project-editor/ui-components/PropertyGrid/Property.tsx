@@ -17,7 +17,8 @@ import {
     PropertyProps,
     getParent,
     PropertyInfo,
-    IEezObject
+    IEezObject,
+    getObjectPropertyDisplayName
 } from "project-editor/core/object";
 import { info } from "project-editor/core/util";
 import { replaceObjectReference } from "project-editor/core/search";
@@ -673,20 +674,41 @@ export const Property = observer(
                     }
                 }
             } else if (propertyInfo.type === PropertyType.Boolean) {
-                return (
-                    <div className="form-check form-switch">
-                        <input
-                            ref={(ref: any) => (this.input = ref)}
-                            className="form-check-input"
-                            type="checkbox"
-                            role="switch"
-                            checked={this._value || false}
-                            onChange={this.onChange}
-                            readOnly={readOnly}
-                            disabled={readOnly}
-                        />
-                    </div>
-                );
+                if (propertyInfo.checkboxStyleSwitch) {
+                    return (
+                        <div className="form-check form-switch">
+                            <input
+                                ref={(ref: any) => (this.input = ref)}
+                                className="form-check-input"
+                                type="checkbox"
+                                role="switch"
+                                checked={this._value || false}
+                                onChange={this.onChange}
+                                readOnly={readOnly}
+                                disabled={readOnly}
+                            />
+                        </div>
+                    );
+                } else {
+                    return (
+                        <label className="EezStudio_PropertyGrid_Checkbox">
+                            <input
+                                ref={(ref: any) => (this.input = ref)}
+                                type="checkbox"
+                                checked={this._value || false}
+                                onChange={this.onChange}
+                                readOnly={readOnly}
+                            />
+                            <span>
+                                {" " +
+                                    getObjectPropertyDisplayName(
+                                        this.props.objects[0],
+                                        propertyInfo
+                                    )}
+                            </span>
+                        </label>
+                    );
+                }
             } else if (propertyInfo.type === PropertyType.GUID) {
                 return (
                     <div className="input-group">

@@ -495,6 +495,7 @@ const bg_img_tiled_property_info: LVGLPropertyInfo = {
     name: "bg_img_tiled",
     displayName: "Image tiled",
     type: PropertyType.Boolean,
+    checkboxStyleSwitch: true,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BG_IMG_TILED
 };
 
@@ -539,6 +540,7 @@ const border_post_property_info: LVGLPropertyInfo = {
     name: "border_post",
     displayName: "Post",
     type: PropertyType.Boolean,
+    checkboxStyleSwitch: true,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_BORDER_POST
 };
 
@@ -661,6 +663,7 @@ const line_rounded_property_info: LVGLPropertyInfo = {
     name: "line_rounded",
     displayName: "Rounded",
     type: PropertyType.Boolean,
+    checkboxStyleSwitch: true,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_LINE_ROUNDED
 };
 const line_color_property_info: LVGLPropertyInfo = {
@@ -690,6 +693,7 @@ const arc_rounded_property_info: LVGLPropertyInfo = {
     name: "arc_rounded",
     displayName: "Rounded",
     type: PropertyType.Boolean,
+    checkboxStyleSwitch: true,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_ARC_ROUNDED
 };
 const arc_color_property_info: LVGLPropertyInfo = {
@@ -783,6 +787,7 @@ const clip_corner_property_info: LVGLPropertyInfo = {
     name: "clip_corner",
     displayName: "Clip corner",
     type: PropertyType.Boolean,
+    checkboxStyleSwitch: true,
     lvglStylePropCode: LVGLStylePropCode.LV_STYLE_CLIP_CORNER
 };
 const opa_property_info: LVGLPropertyInfo = {

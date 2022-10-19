@@ -183,6 +183,8 @@ export interface PropertyInfo {
     disableSpellcheck?: boolean;
 
     cssAttributeName?: string;
+
+    checkboxStyleSwitch?: boolean;
 }
 
 export type InheritedValue =

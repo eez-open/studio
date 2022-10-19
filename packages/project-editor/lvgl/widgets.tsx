@@ -15,7 +15,7 @@ import {
     findPropertyByNameInClassInfo,
     EezObject,
     ClassInfo,
-    IEezObject
+    getParent
 } from "project-editor/core/object";
 import {
     createObject,
@@ -482,6 +482,21 @@ const LVGL_EVENTS = {
 
 export type ValuesOf<T extends any[]> = T[number];
 
+function getTriggerEnumItems(
+    eventHandlers: EventHandler[],
+    eventHandler: EventHandler | undefined
+) {
+    const eventNames: string[] = eventHandlers
+        .filter(eh => eh != eventHandler)
+        .map(eventHandler => eventHandler.trigger);
+    return Object.keys(LVGL_EVENTS)
+        .filter(eventName => eventNames.indexOf(eventName) == -1)
+        .map(eventName => ({
+            id: eventName,
+            label: eventName
+        }));
+}
+
 export class EventHandler extends EezObject {
     trigger: keyof typeof LVGL_EVENTS;
     handlerType: "flow" | "action";
@@ -502,10 +517,12 @@ export class EventHandler extends EezObject {
             {
                 name: "trigger",
                 type: PropertyType.Enum,
-                enumItems: Object.keys(LVGL_EVENTS).map(eventName => ({
-                    id: eventName,
-                    label: eventName
-                })),
+                enumItems: (eventHandler: EventHandler) => {
+                    const eventHandlers = getParent(
+                        eventHandler
+                    ) as EventHandler[];
+                    return getTriggerEnumItems(eventHandlers, eventHandler);
+                },
                 enumDisallowUndefined: true
             },
             {
@@ -527,12 +544,43 @@ export class EventHandler extends EezObject {
             }
         ],
 
+        updateObjectValueHook: (eventHandler: EventHandler, values: any) => {
+            if (
+                values.trigger != undefined &&
+                eventHandler.trigger != values.trigger
+            ) {
+                const widget = getAncestorOfType<LVGLWidget>(
+                    eventHandler,
+                    LVGLWidget.classInfo
+                );
+                if (widget) {
+                    ProjectEditor.getFlow(widget).rerouteConnectionLinesOutput(
+                        widget,
+                        eventHandler.trigger,
+                        values.trigger
+                    );
+                }
+            }
+        },
+
+        deleteObjectRefHook: (eventHandler: EventHandler) => {
+            const widget = getAncestorOfType<LVGLWidget>(
+                eventHandler,
+                LVGLWidget.classInfo
+            )!;
+
+            ProjectEditor.getFlow(widget).deleteConnectionLinesFromOutput(
+                widget,
+                eventHandler.trigger
+            );
+        },
+
         defaultValue: {
             handlerType: "action"
         },
 
-        newItem: async (parent: IEezObject) => {
-            const project = ProjectEditor.getProject(parent);
+        newItem: async (eventHandlers: EventHandler[]) => {
+            const project = ProjectEditor.getProject(eventHandlers);
 
             const result = await showGenericDialog({
                 dialogDefinition: {
@@ -541,11 +589,9 @@ export class EventHandler extends EezObject {
                         {
                             name: "trigger",
                             type: "enum",
-                            enumItems: Object.keys(LVGL_EVENTS).map(
-                                eventName => ({
-                                    id: eventName,
-                                    label: eventName
-                                })
+                            enumItems: getTriggerEnumItems(
+                                eventHandlers,
+                                undefined
                             )
                         },
                         {
@@ -577,7 +623,7 @@ export class EventHandler extends EezObject {
                 values: {
                     handlerType: "action"
                 },
-                dialogContext: ProjectEditor.getProject(parent)
+                dialogContext: project
             });
 
             const properties: Partial<EventHandler> = {
@@ -1105,36 +1151,11 @@ export class LVGLWidget extends Widget {
         this.lvglBuildSpecific(build);
 
         if (this.eventHandlers.length > 0) {
-            if (this.eventHandlers[0].handlerType == "action") {
-                build.line(
-                    `lv_obj_add_event_cb(obj, ${build.getEventHandlerCallbackName(
-                        this
-                    )}, LV_EVENT_ALL, screen);`
-                );
-            } else {
-                let page = getAncestorOfType(
-                    this,
-                    ProjectEditor.PageClass.classInfo
-                ) as Page;
-                let flowIndex = build.assets.getFlowIndex(page);
-                let componentIndex = build.assets.getComponentIndex(this);
-                const outputIndex = 1;
-
-                build.line(
-                    "FlowEventCallbackData *data = (FlowEventCallbackData *)lv_mem_alloc(sizeof(FlowEventCallbackData));"
-                );
-                build.line(`data->page_index = ${flowIndex};`);
-                build.line(`data->component_index = ${componentIndex};`);
-                build.line(`data->output_index = ${outputIndex};`);
-                build.line(
-                    `lv_obj_add_event_cb(obj, ${build.getEventHandlerCallbackName(
-                        this
-                    )}, LV_EVENT_ALL, data);`
-                );
-                build.line(
-                    "lv_obj_add_event_cb(obj, flow_event_callback_delete_user_data, LV_EVENT_DELETE, data);"
-                );
-            }
+            build.line(
+                `lv_obj_add_event_cb(obj, ${build.getEventHandlerCallbackName(
+                    this
+                )}, LV_EVENT_ALL, screen);`
+            );
         }
 
         const classInfo = getClassInfo(this);

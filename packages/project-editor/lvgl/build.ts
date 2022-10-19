@@ -189,7 +189,6 @@ export class LVGLBuild {
         this.indentation = "";
         const build = this;
 
-        let hasEventHandler = false;
         for (const page of this.project.pages) {
             const v = visitObjects(page.components);
             while (true) {
@@ -200,28 +199,6 @@ export class LVGLBuild {
                 const widget = visitResult.value;
                 if (widget instanceof ProjectEditor.LVGLWidgetClass) {
                     if (widget.eventHandlers.length > 0) {
-                        if (!hasEventHandler) {
-                            hasEventHandler = true;
-
-                            build.line("typedef struct {");
-                            build.indent();
-                            build.line("unsigned page_index;");
-                            build.line("unsigned component_index;");
-                            build.line("unsigned output_index;");
-                            build.unindent();
-                            build.line("} FlowEventCallbackData;");
-                            build.line("");
-
-                            build.line(
-                                "void flow_event_callback_delete_user_data(lv_event_t *e) {"
-                            );
-                            build.indent();
-                            build.line("lv_mem_free(e->user_data);");
-                            build.unindent();
-                            build.line("}");
-                            build.line("");
-                        }
-
                         build.line(
                             `static void ${build.getEventHandlerCallbackName(
                                 widget
@@ -268,11 +245,17 @@ export class LVGLBuild {
                                     )}(e);`
                                 );
                             } else {
+                                let flowIndex = build.assets.getFlowIndex(page);
+                                let componentIndex =
+                                    build.assets.getComponentIndex(widget);
+                                const outputIndex =
+                                    build.assets.getComponentOutputIndex(
+                                        widget,
+                                        eventHandler.trigger
+                                    );
+
                                 build.line(
-                                    `FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;`
-                                );
-                                build.line(
-                                    `flowPropagateValue(data->page_index, data->component_index, data->output_index);`
+                                    `flowPropagateValue(${flowIndex}, ${componentIndex}, ${outputIndex});`
                                 );
                             }
                             build.unindent();

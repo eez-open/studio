@@ -1045,6 +1045,12 @@ export class Assets {
         }
     }
 
+    getComponentOutputIndex(component: Component, outputName: string) {
+        return component.buildOutputs.findIndex(
+            output => output.name == outputName
+        );
+    }
+
     finalizeMap() {
         this.map.constants = this.constants;
 

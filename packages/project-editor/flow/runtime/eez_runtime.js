@@ -5752,9 +5752,6 @@ var _stopScript = Module["_stopScript"] = createExportWrapper("stopScript");
 var _init = Module["_init"] = createExportWrapper("init");
 
 /** @type {function(...*):?} */
-var _startFlow = Module["_startFlow"] = createExportWrapper("startFlow");
-
-/** @type {function(...*):?} */
 var _mainLoop = Module["_mainLoop"] = createExportWrapper("mainLoop");
 
 /** @type {function(...*):?} */
