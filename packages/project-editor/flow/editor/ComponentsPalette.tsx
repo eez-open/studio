@@ -286,7 +286,7 @@ export function getComponentName(componentClassName: string) {
         name = componentClassName;
     }
 
-    if (name.startsWith("LVGL")) {
+    if (name.startsWith("LVGL") && !name.endsWith("ActionComponent")) {
         name = name.substring("LVGL".length);
     }
 

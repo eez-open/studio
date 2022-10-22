@@ -131,7 +131,8 @@ void onArrayValueFree(eez::ArrayValue *arrayValue) {
     }, eez::flow::g_wasmModuleId, arrayValue);
 }
 
-void replacePageHook(int16_t pageId) {
+void replacePageHook(int16_t pageId, uint32_t animType, uint32_t speed, uint32_t delay) {
+    printf("replacePageHook %d %d %d %d\n", (int)pageId, (int)animType, (int)speed, (int)delay);
     static int16_t currentPageId = -1;
     eez::flow::onPageChanged(currentPageId, pageId);
     currentPageId = pageId;

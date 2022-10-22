@@ -69,6 +69,7 @@ import "project-editor/flow/components/widgets/plotly";
 import "project-editor/flow/components/widgets/terminal";
 
 import "project-editor/lvgl/widgets";
+import "project-editor/lvgl/actions";
 
 import type {
     IActionComponentDefinition,
