@@ -1686,7 +1686,13 @@ export class LVGLLabelWidget extends LVGLWidget {
             this.lvglCreateTop,
             this.lvglCreateWidth,
             this.lvglCreateHeight,
-            textExpr ? 0 : runtime.wasm.allocateUTF8(this.text),
+            textExpr
+                ? 0
+                : runtime.wasm.allocateUTF8(
+                      this.textType == "expression"
+                          ? `{${this.text}}`
+                          : this.text
+                  ),
             LONG_MODE_CODES[this.longMode],
             this.recolor ? 1 : 0
         );
