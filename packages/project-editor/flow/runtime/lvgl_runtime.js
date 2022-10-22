@@ -1175,11 +1175,11 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  972672: ($0, $1) => { freeComponentExecutionState($0, $1); },  
- 972713: ($0) => { startToDebuggerMessage($0); },  
- 972745: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 972820: ($0) => { finishToDebuggerMessage($0); },  
- 972853: ($0, $1) => { onArrayValueFree($0, $1); }
+  972880: ($0, $1) => { freeComponentExecutionState($0, $1); },  
+ 972921: ($0) => { startToDebuggerMessage($0); },  
+ 972953: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 973028: ($0) => { finishToDebuggerMessage($0); },  
+ 973061: ($0, $1) => { onArrayValueFree($0, $1); }
 };
 
 
@@ -4875,6 +4875,15 @@ var _lvglFreeFont = Module["_lvglFreeFont"] = createExportWrapper("lvglFreeFont"
 
 /** @type {function(...*):?} */
 var _lvglAddObjectFlowCallback = Module["_lvglAddObjectFlowCallback"] = createExportWrapper("lvglAddObjectFlowCallback");
+
+/** @type {function(...*):?} */
+var _lvglUpdateLabelText = Module["_lvglUpdateLabelText"] = createExportWrapper("lvglUpdateLabelText");
+
+/** @type {function(...*):?} */
+var _lvglUpdateSliderValue = Module["_lvglUpdateSliderValue"] = createExportWrapper("lvglUpdateSliderValue");
+
+/** @type {function(...*):?} */
+var _lvglUpdateSliderValueLeft = Module["_lvglUpdateSliderValueLeft"] = createExportWrapper("lvglUpdateSliderValueLeft");
 
 /** @type {function(...*):?} */
 var ___errno_location = Module["___errno_location"] = createExportWrapper("__errno_location");

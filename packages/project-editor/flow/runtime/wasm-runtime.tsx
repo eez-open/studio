@@ -1298,7 +1298,7 @@ class ComponentProperties {
         const classInfo = getClassInfo(component);
 
         const properties = classInfo.properties.filter(propertyInfo =>
-            isFlowProperty(propertyInfo, [
+            isFlowProperty(component, propertyInfo, [
                 "input",
                 "template-literal",
                 "assignable"

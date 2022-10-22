@@ -166,13 +166,7 @@ function buildComponent(
     });
 
     // property values
-    const properties = getClassInfo(component).properties.filter(propertyInfo =>
-        isFlowProperty(propertyInfo, [
-            "input",
-            "template-literal",
-            "assignable"
-        ])
-    );
+    const properties = assets.getComponentProperties(component);
     properties.forEach((propertyInfo, propertyValueIndex) =>
         assets.registerComponentProperty(
             component,
@@ -486,7 +480,7 @@ export function buildFlowDefs(assets: Assets) {
         const properties =
             componentType.objectClass.classInfo.properties.filter(
                 propertyInfo =>
-                    isFlowProperty(propertyInfo, [
+                    isFlowProperty(undefined, propertyInfo, [
                         "input",
                         "template-literal",
                         "assignable"

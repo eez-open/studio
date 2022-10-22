@@ -15,7 +15,11 @@ import {
     findPropertyByNameInClassInfo,
     EezObject,
     ClassInfo,
-    getParent
+    getParent,
+    FlowPropertyType,
+    IEezObject,
+    PropertyInfo,
+    IOnSelectParams
 } from "project-editor/core/object";
 import {
     createObject,
@@ -58,6 +62,7 @@ import { Property } from "project-editor/ui-components/PropertyGrid/Property";
 import type { LVGLBuild } from "project-editor/lvgl/build";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { ValueType } from "project-editor/features/variable/value-type";
+import { expressionBuilder } from "project-editor/flow/expression/ExpressionBuilder";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -457,6 +462,8 @@ export const GeometryProperty = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const LV_EVENT_SLIDER_VALUE_CHANGED = 0x7c;
+const LV_EVENT_SLIDER_VALUE_LEFT_CHANGED = 0x7d;
 const LV_EVENT_CHECKED = 0x7e;
 const LV_EVENT_UNCHECKED = 0x7f;
 
@@ -1017,6 +1024,38 @@ export class LVGLWidget extends Widget {
         ];
     }
 
+    getExpressionPropertyData(runtime: LVGLPageRuntime, propertyName: string) {
+        if (!runtime.wasm.assetsMap) {
+            return undefined;
+        }
+
+        const isExpr = (this as any)[propertyName + "Type"] == "expression";
+
+        if (!isExpr) {
+            return undefined;
+        }
+
+        const pagePath = getObjectPathAsString(runtime.page);
+        const flowIndex = runtime.wasm.assetsMap.flowIndexes[pagePath];
+        if (flowIndex == undefined) {
+            return undefined;
+        }
+        const flow = runtime.wasm.assetsMap.flows[flowIndex];
+        const componentPath = getObjectPathAsString(this);
+        const componentIndex = flow.componentIndexes[componentPath];
+        if (componentIndex == undefined) {
+            return undefined;
+        }
+
+        const component = flow.components[componentIndex];
+        const propertyIndex = component.propertyIndexes[propertyName];
+        if (propertyIndex == undefined) {
+            return undefined;
+        }
+
+        return { flowIndex, componentIndex, propertyIndex };
+    }
+
     override lvglCreate(
         runtime: LVGLPageRuntime,
         parentObj: number
@@ -1053,6 +1092,10 @@ export class LVGLWidget extends Widget {
                             }
                         }
                     }
+                }
+
+                if (this.hasEventHandler) {
+                    this.createEventHandlerSpecific(runtime, obj);
                 }
             }
         }
@@ -1128,6 +1171,8 @@ export class LVGLWidget extends Widget {
         return 0;
     }
 
+    createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {}
+
     lvglBuild(build: LVGLBuild): void {
         if (this.identifier) {
             build.line(`// ${this.identifier}`);
@@ -1150,7 +1195,7 @@ export class LVGLWidget extends Widget {
 
         this.lvglBuildSpecific(build);
 
-        if (this.eventHandlers.length > 0) {
+        if (this.eventHandlers.length > 0 || this.hasEventHandler) {
             build.line(
                 `lv_obj_add_event_cb(obj, ${build.getEventHandlerCallbackName(
                     this
@@ -1231,6 +1276,15 @@ export class LVGLWidget extends Widget {
             build.line("}");
         }
     }
+
+    lvglBuildTick(build: LVGLBuild): void {
+        this.lvglBuildTickSpecific(build);
+        for (const widget of this.children) {
+            widget.lvglBuildTick(build);
+        }
+    }
+
+    lvglBuildTickSpecific(build: LVGLBuild): void {}
 
     get lvglCreateLeft() {
         if (this.leftUnit == "%") {
@@ -1332,6 +1386,12 @@ export class LVGLWidget extends Widget {
         );
     }
 
+    get hasEventHandler() {
+        return false;
+    }
+
+    buildEventHandlerSpecific(build: LVGLBuild) {}
+
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
@@ -1346,6 +1406,115 @@ export class LVGLWidget extends Widget {
             </>
         );
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+type LVGLPropertyType = "literal" | "expression" | "variable" | "text-resource";
+
+export const LVGLProperty = observer(
+    class GeometryProperty extends React.Component<PropertyProps> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        render() {
+            const classInfo = getClassInfo(this.props.objects[0]);
+            const typePropertyInfo = findPropertyByNameInClassInfo(
+                classInfo,
+                this.props.propertyInfo.name + "Type"
+            );
+
+            const type: LVGLPropertyType = (this.props.objects[0] as any)[
+                typePropertyInfo!.name
+            ];
+
+            return (
+                <div className="EezStudio_LVGProperty">
+                    <Property
+                        propertyInfo={Object.assign(
+                            {},
+                            this.props.propertyInfo,
+                            {
+                                type:
+                                    type == "expression"
+                                        ? PropertyType.MultilineText
+                                        : this.props.propertyInfo.type,
+
+                                propertyGridColumnComponent: undefined,
+
+                                onSelect:
+                                    type == "expression"
+                                        ? (
+                                              object: IEezObject,
+                                              propertyInfo: PropertyInfo,
+                                              params: IOnSelectParams
+                                          ) =>
+                                              expressionBuilder(
+                                                  object,
+                                                  propertyInfo,
+                                                  {
+                                                      assignableExpression:
+                                                          false,
+                                                      title: "Expression Builder"
+                                                  },
+                                                  params
+                                              )
+                                        : undefined
+                            }
+                        )}
+                        objects={this.props.objects}
+                        readOnly={this.props.readOnly}
+                        updateObject={this.props.updateObject}
+                    />
+
+                    {typePropertyInfo && (
+                        <Property
+                            propertyInfo={typePropertyInfo}
+                            objects={this.props.objects}
+                            readOnly={this.props.readOnly}
+                            updateObject={this.props.updateObject}
+                        />
+                    )}
+                </div>
+            );
+        }
+    }
+);
+
+function makeExpressionProperty(
+    name: string,
+    propertyGridGroup: IPropertyGridGroupDefinition,
+    flowProperty: FlowPropertyType,
+    types: LVGLPropertyType[],
+    hideInPropertyGrid?:
+        | boolean
+        | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean)
+) {
+    return [
+        {
+            name,
+            type: PropertyType.String,
+            propertyGridColumnComponent: LVGLProperty,
+            propertyGridGroup,
+            flowProperty: (widget: LVGLLabelWidget | undefined) => {
+                if (widget == undefined) {
+                    return flowProperty;
+                }
+                return (widget as any)[name + "Type"] == "expression"
+                    ? flowProperty
+                    : undefined;
+            },
+            hideInPropertyGrid
+        },
+        {
+            name: name + "Type",
+            type: PropertyType.Enum,
+            enumItems: types.map(id => ({ id })),
+            enumDisallowUndefined: true,
+            propertyGridGroup,
+            hideInPropertyGrid: true
+        }
+    ];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1366,6 +1535,7 @@ const labelGroup: IPropertyGridGroupDefinition = {
 
 export class LVGLLabelWidget extends LVGLWidget {
     text: string;
+    textType: LVGLPropertyType;
     longMode: keyof typeof LONG_MODE_CODES;
     recolor: boolean;
 
@@ -1390,11 +1560,10 @@ export class LVGLLabelWidget extends LVGLWidget {
         },
 
         properties: [
-            {
-                name: "text",
-                type: PropertyType.String,
-                propertyGridGroup: labelGroup
-            },
+            ...makeExpressionProperty("text", labelGroup, "input", [
+                "literal",
+                "expression"
+            ]),
             {
                 name: "longMode",
                 type: PropertyType.Enum,
@@ -1438,6 +1607,7 @@ export class LVGLLabelWidget extends LVGLWidget {
             widthUnit: "content",
             heightUnit: "content",
             text: "Text",
+            textType: "literal",
             longMode: "WRAP",
             recolor: false,
             localStyles: {},
@@ -1501,22 +1671,36 @@ export class LVGLLabelWidget extends LVGLWidget {
 
         makeObservable(this, {
             text: observable,
+            textType: observable,
             longMode: observable,
             recolor: observable
         });
     }
 
     override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
-        return runtime.wasm._lvglCreateLabel(
+        const textExpr = this.getExpressionPropertyData(runtime, "text");
+
+        const obj = runtime.wasm._lvglCreateLabel(
             parentObj,
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
             this.lvglCreateHeight,
-            runtime.wasm.allocateUTF8(this.text),
+            textExpr ? 0 : runtime.wasm.allocateUTF8(this.text),
             LONG_MODE_CODES[this.longMode],
             this.recolor ? 1 : 0
         );
+
+        if (textExpr) {
+            runtime.wasm._lvglUpdateLabelText(
+                obj,
+                textExpr.flowIndex,
+                textExpr.componentIndex,
+                textExpr.propertyIndex
+            );
+        }
+
+        return obj;
     }
 
     override lvglBuildObj(build: LVGLBuild) {
@@ -1534,7 +1718,47 @@ export class LVGLLabelWidget extends LVGLWidget {
             build.line(`lv_label_set_recolor(obj, true);`);
         }
 
-        build.line(`lv_label_set_text(obj, ${escapeCString(this.text)});`);
+        if (this.textType == "literal") {
+            build.line(`lv_label_set_text(obj, ${escapeCString(this.text)});`);
+        }
+    }
+
+    override lvglBuildTickSpecific(build: LVGLBuild) {
+        if (this.textType == "expression") {
+            build.line(`{`);
+            build.indent();
+
+            const page = getAncestorOfType(
+                this,
+                ProjectEditor.PageClass.classInfo
+            ) as Page;
+
+            let flowIndex = build.assets.getFlowIndex(page);
+            let componentIndex = build.assets.getComponentIndex(this);
+            const propertyIndex = build.assets.getComponentPropertyIndex(
+                this,
+                "text"
+            );
+
+            build.line(
+                `const char *text_new = evalTextProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Text in Label widget");`
+            );
+
+            build.line(
+                `const char *text_cur = lv_label_get_text(screen->${build.getWidgetObjFieldName(
+                    this
+                )});`
+            );
+
+            build.line(
+                `if (strcmp(text_new, text_cur) != 0) lv_label_set_text(screen->${build.getWidgetObjFieldName(
+                    this
+                )}, text_new);`
+            );
+
+            build.unindent();
+            build.line(`}`);
+        }
     }
 }
 
@@ -1905,7 +2129,9 @@ export class LVGLSliderWidget extends LVGLWidget {
     max: number;
     mode: keyof typeof SLIDER_MODES;
     value: number;
+    valueType: LVGLPropertyType;
     valueLeft: number;
+    valueLeftType: LVGLPropertyType;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -1944,16 +2170,17 @@ export class LVGLSliderWidget extends LVGLWidget {
                 enumDisallowUndefined: true,
                 propertyGridGroup: sliderGroup
             },
-            {
-                name: "value",
-                type: PropertyType.Number,
-                propertyGridGroup: sliderGroup
-            },
-            {
-                name: "valueLeft",
-                type: PropertyType.Number,
-                propertyGridGroup: sliderGroup
-            }
+            ...makeExpressionProperty("value", sliderGroup, "assignable", [
+                "literal",
+                "expression"
+            ]),
+            ...makeExpressionProperty(
+                "valueLeft",
+                sliderGroup,
+                "assignable",
+                ["literal", "expression"],
+                (slider: LVGLSliderWidget) => slider.mode != "RANGE"
+            )
         ],
 
         defaultValue: {
@@ -1966,7 +2193,9 @@ export class LVGLSliderWidget extends LVGLWidget {
             max: 100,
             mode: "NORMAL",
             value: 0,
-            valueLeft: 0
+            valueType: "literal",
+            valueLeft: 0,
+            valueLeftType: "literal"
         },
 
         icon: (
@@ -2021,12 +2250,27 @@ export class LVGLSliderWidget extends LVGLWidget {
             max: observable,
             mode: observable,
             value: observable,
-            valueLeft: observable
+            valueType: observable,
+            valueLeft: observable,
+            valueLeftType: observable
         });
     }
 
+    override get hasEventHandler() {
+        return (
+            this.valueType == "expression" ||
+            (this.mode == "RANGE" && this.valueLeftType == "expression")
+        );
+    }
+
     override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
-        return runtime.wasm._lvglCreateSlider(
+        const valueExpr = this.getExpressionPropertyData(runtime, "value");
+        const valueLeftExpr =
+            this.mode == "RANGE"
+                ? this.getExpressionPropertyData(runtime, "valueLeft")
+                : undefined;
+
+        const obj = runtime.wasm._lvglCreateSlider(
             parentObj,
             this.lvglCreateLeft,
             this.lvglCreateTop,
@@ -2035,9 +2279,56 @@ export class LVGLSliderWidget extends LVGLWidget {
             this.min,
             this.max,
             SLIDER_MODES[this.mode],
-            this.value,
-            this.valueLeft
+            valueExpr ? 0 : this.value,
+            valueLeftExpr ? 0 : this.valueLeft
         );
+
+        if (valueExpr) {
+            runtime.wasm._lvglUpdateSliderValue(
+                obj,
+                valueExpr.flowIndex,
+                valueExpr.componentIndex,
+                valueExpr.propertyIndex
+            );
+        }
+
+        if (valueLeftExpr) {
+            runtime.wasm._lvglUpdateSliderValueLeft(
+                obj,
+                valueLeftExpr.flowIndex,
+                valueLeftExpr.componentIndex,
+                valueLeftExpr.propertyIndex
+            );
+        }
+
+        return obj;
+    }
+
+    override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
+        const valueExpr = this.getExpressionPropertyData(runtime, "value");
+        if (valueExpr) {
+            runtime.wasm._lvglAddObjectFlowCallback(
+                obj,
+                LV_EVENT_SLIDER_VALUE_CHANGED,
+                valueExpr.flowIndex,
+                valueExpr.componentIndex,
+                valueExpr.propertyIndex
+            );
+        }
+
+        const valueLeftExpr =
+            this.mode == "RANGE"
+                ? this.getExpressionPropertyData(runtime, "valueLeft")
+                : undefined;
+        if (valueLeftExpr) {
+            runtime.wasm._lvglAddObjectFlowCallback(
+                obj,
+                LV_EVENT_SLIDER_VALUE_LEFT_CHANGED,
+                valueLeftExpr.flowIndex,
+                valueLeftExpr.componentIndex,
+                valueLeftExpr.propertyIndex
+            );
+        }
     }
 
     override lvglBuildObj(build: LVGLBuild) {
@@ -2053,14 +2344,146 @@ export class LVGLSliderWidget extends LVGLWidget {
             build.line(`lv_slider_set_mode(obj, LV_SLIDER_MODE_${this.mode});`);
         }
 
-        if (this.value != 0) {
-            build.line(`lv_slider_set_value(obj, ${this.value}, LV_ANIM_OFF);`);
+        if (this.valueType == "literal") {
+            if (this.value != 0) {
+                build.line(
+                    `lv_slider_set_value(obj, ${this.value}, LV_ANIM_OFF);`
+                );
+            }
         }
 
-        if (this.mode != "RANGE") {
+        if (this.mode == "RANGE" && this.valueType == "literal") {
             build.line(
                 `lv_slider_set_left_value(obj, ${this.valueLeft}, LV_ANIM_OFF);`
             );
+        }
+    }
+
+    override lvglBuildTickSpecific(build: LVGLBuild) {
+        if (this.valueType == "expression") {
+            build.line(`{`);
+            build.indent();
+
+            const page = getAncestorOfType(
+                this,
+                ProjectEditor.PageClass.classInfo
+            ) as Page;
+
+            let flowIndex = build.assets.getFlowIndex(page);
+            let componentIndex = build.assets.getComponentIndex(this);
+            const propertyIndex = build.assets.getComponentPropertyIndex(
+                this,
+                "value"
+            );
+
+            build.line(
+                `int32_t value_new = evalIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Value in Slider widget");`
+            );
+
+            build.line(
+                `int32_t value_cur = lv_slider_get_value(screen->${build.getWidgetObjFieldName(
+                    this
+                )});`
+            );
+
+            build.line(
+                `if (value_new != value_cur) lv_slider_set_value(screen->${build.getWidgetObjFieldName(
+                    this
+                )}, value_new, LV_ANIM_OFF);`
+            );
+
+            build.unindent();
+            build.line(`}`);
+        }
+
+        if (this.mode == "RANGE" && this.valueLeftType == "expression") {
+            build.line(`{`);
+            build.indent();
+
+            const page = getAncestorOfType(
+                this,
+                ProjectEditor.PageClass.classInfo
+            ) as Page;
+
+            let flowIndex = build.assets.getFlowIndex(page);
+            let componentIndex = build.assets.getComponentIndex(this);
+            const propertyIndex = build.assets.getComponentPropertyIndex(
+                this,
+                "valueLeft"
+            );
+
+            build.line(
+                `int32_t value_new = evalIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Value Left in Slider widget");`
+            );
+
+            build.line(
+                `int32_t value_cur = lv_slider_get_left_value(screen->${build.getWidgetObjFieldName(
+                    this
+                )});`
+            );
+
+            build.line(
+                `if (value_new != value_cur) lv_slider_set_left_value(screen->${build.getWidgetObjFieldName(
+                    this
+                )}, value_new, LV_ANIM_OFF);`
+            );
+
+            build.unindent();
+            build.line(`}`);
+        }
+    }
+
+    override buildEventHandlerSpecific(build: LVGLBuild) {
+        if (this.valueType == "expression") {
+            build.line("if (event == LV_EVENT_VALUE_CHANGED) {");
+            build.indent();
+
+            build.line(`lv_obj_t *ta = lv_event_get_target(e);`);
+            build.line(`int32_t value = lv_slider_get_value(ta);`);
+
+            const page = getAncestorOfType(
+                this,
+                ProjectEditor.PageClass.classInfo
+            ) as Page;
+            let flowIndex = build.assets.getFlowIndex(page);
+            let componentIndex = build.assets.getComponentIndex(this);
+            const propertyIndex = build.assets.getComponentPropertyIndex(
+                this,
+                "value"
+            );
+
+            build.line(
+                `assignIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, value, "Failed to assign Value in Slider widget");`
+            );
+
+            build.unindent();
+            build.line("}");
+        }
+
+        if (this.mode == "RANGE" && this.valueLeftType == "expression") {
+            build.line("if (event == LV_EVENT_VALUE_CHANGED) {");
+            build.indent();
+
+            build.line(`lv_obj_t *ta = lv_event_get_target(e);`);
+            build.line(`int32_t value = lv_slider_get_left_value(ta);`);
+
+            const page = getAncestorOfType(
+                this,
+                ProjectEditor.PageClass.classInfo
+            ) as Page;
+            let flowIndex = build.assets.getFlowIndex(page);
+            let componentIndex = build.assets.getComponentIndex(this);
+            const propertyIndex = build.assets.getComponentPropertyIndex(
+                this,
+                "valueLeft"
+            );
+
+            build.line(
+                `assignIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, value, "Failed to assign Value Left in Slider widget");`
+            );
+
+            build.unindent();
+            build.line("}");
         }
     }
 }

@@ -55,6 +55,10 @@ export class LVGLBuild {
         return `create_${this.getScreenIdentifier(page)}`;
     }
 
+    getScreenTickFunctionName(page: Page) {
+        return `tick_${this.getScreenIdentifier(page)}`;
+    }
+
     getImageVariableName(bitmap: Bitmap) {
         return getName("img_", bitmap, NamingConvention.UnderscoreLowerCase);
     }
@@ -138,6 +142,14 @@ export class LVGLBuild {
         return "screen_obj";
     }
 
+    getWidgetObjFieldName(widget: LVGLWidget) {
+        return getName(
+            "obj_",
+            widget.identifier,
+            NamingConvention.UnderscoreLowerCase
+        );
+    }
+
     async buildScreensDecl() {
         this.result = "";
         this.indentation = "";
@@ -160,11 +172,7 @@ export class LVGLBuild {
                 if (widget instanceof ProjectEditor.LVGLWidgetClass) {
                     if (widget.identifier) {
                         build.line(
-                            `lv_obj_t *${getName(
-                                "obj_",
-                                widget.identifier,
-                                NamingConvention.UnderscoreLowerCase
-                            )};`
+                            `lv_obj_t *${this.getWidgetObjFieldName(widget)};`
                         );
                     }
                 }
@@ -177,6 +185,11 @@ export class LVGLBuild {
                 `${screenStructName} *${this.getScreenCreateFunctionName(
                     page
                 )}();`
+            );
+            build.line(
+                `void ${this.getScreenTickFunctionName(
+                    page
+                )}(${screenStructName} *screen);`
             );
             build.line(``);
         }
@@ -198,7 +211,10 @@ export class LVGLBuild {
                 }
                 const widget = visitResult.value;
                 if (widget instanceof ProjectEditor.LVGLWidgetClass) {
-                    if (widget.eventHandlers.length > 0) {
+                    if (
+                        widget.eventHandlers.length > 0 ||
+                        widget.hasEventHandler
+                    ) {
                         build.line(
                             `static void ${build.getEventHandlerCallbackName(
                                 widget
@@ -262,6 +278,10 @@ export class LVGLBuild {
                             build.line("}");
                         }
 
+                        if (widget.hasEventHandler) {
+                            widget.buildEventHandlerSpecific(build);
+                        }
+
                         build.unindent();
                         build.line("}");
                         build.line("");
@@ -272,6 +292,7 @@ export class LVGLBuild {
 
         for (const page of this.project.pages) {
             const screenStructName = build.getScreenStructName(page);
+
             build.line(
                 `${screenStructName} *${this.getScreenCreateFunctionName(
                     page
@@ -279,6 +300,17 @@ export class LVGLBuild {
             );
             build.indent();
             page.lvglBuild(this);
+            build.unindent();
+            build.line("}");
+            build.line("");
+
+            build.line(
+                `void ${this.getScreenTickFunctionName(
+                    page
+                )}(${screenStructName} *screen) {`
+            );
+            build.indent();
+            page.lvglBuildTick(this);
             build.unindent();
             build.line("}");
             build.line("");

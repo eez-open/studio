@@ -172,7 +172,9 @@ export interface PropertyInfo {
     partOfNavigation?: boolean;
     fileFilters?: any;
 
-    flowProperty?: FlowPropertyType;
+    flowProperty?:
+        | FlowPropertyType
+        | ((object: IEezObject | undefined) => FlowPropertyType | undefined);
     expressionType?: ValueType;
     expressionIsConstant?: boolean;
     isOutputOptional?:

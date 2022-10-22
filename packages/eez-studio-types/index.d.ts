@@ -403,7 +403,10 @@ export interface IWasmFlowRuntime {
     _lvglGetObjHeight(obj: number): number;
     _lvglLoadFont(font_file_path: number): number;
     _lvglFreeFont(font_ptr: number): void;
-    _lvglAddObjectFlowCallback(obj: number, filter: number, page_index: number, component_index: number, output_index: number): void;
+    _lvglAddObjectFlowCallback(obj: number, filter: number, page_index: number, component_index: number, output_or_property_index: number): void;
+    _lvglUpdateLabelText(obj: number, page_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateSliderValue(obj: number, page_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateSliderValueLeft(obj: number, page_index: number, component_index: number, property_index: number): void;
 }
 
 export interface IDashboardComponentContext {

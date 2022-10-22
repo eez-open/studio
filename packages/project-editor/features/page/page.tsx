@@ -834,6 +834,14 @@ export class Page extends Flow {
 
         build.line(`return screen;`);
     }
+
+    lvglBuildTick(build: LVGLBuild) {
+        for (const widget of this.components) {
+            if (widget instanceof ProjectEditor.LVGLWidgetClass) {
+                widget.lvglBuildTick(build);
+            }
+        }
+    }
 }
 
 registerClass("Page", Page);

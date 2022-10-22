@@ -229,18 +229,42 @@ void trt(lv_event_t *e) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#define LV_EVENT_SLIDER_VALUE_CHANGED 0x7C
+#define LV_EVENT_SLIDER_VALUE_LEFT_CHANGED 0x7D
 #define LV_EVENT_CHECKED   0x7E
 #define LV_EVENT_UNCHECKED 0x7F
 
 struct FlowEventCallbackData {
     unsigned page_index;
     unsigned component_index;
-    unsigned output_index;
+    unsigned output_or_property_index;
 };
 
 void flow_event_callback(lv_event_t *e) {
     FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
-    flowPropagateValue(data->page_index, data->component_index, data->output_index);
+    flowPropagateValue(data->page_index, data->component_index, data->output_or_property_index);
+}
+
+void flow_event_slider_value_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target(e);
+
+        FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+        int32_t value = lv_slider_get_value(ta);
+        assignIntegerProperty(data->page_index, data->component_index, data->output_or_property_index, value, "Failed to assign Value in Slider widget");
+    }
+}
+
+void flow_event_slider_value_left_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target(e);
+
+        FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+        int32_t value = lv_slider_get_left_value(ta);
+        assignIntegerProperty(data->page_index, data->component_index, data->output_or_property_index, value, "Failed to assign Value Left in Slider widget");
+    }
 }
 
 void flow_event_checked_callback(lv_event_t *e) {
@@ -263,14 +287,18 @@ void flow_event_callback_delete_user_data(lv_event_t *e) {
     lv_mem_free(e->user_data);
 }
 
-EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filter, unsigned page_index, unsigned component_index, unsigned output_index) {
+EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filter, unsigned page_index, unsigned component_index, unsigned output_or_property_index) {
     FlowEventCallbackData *data = (FlowEventCallbackData *)lv_mem_alloc(sizeof(FlowEventCallbackData));
 
     data->page_index = page_index;
     data->component_index = component_index;
-    data->output_index = output_index;
+    data->output_or_property_index = output_or_property_index;
 
-    if (filter == LV_EVENT_CHECKED) {
+    if (filter == LV_EVENT_SLIDER_VALUE_CHANGED) {
+        lv_obj_add_event_cb(obj, flow_event_slider_value_changed_callback, LV_EVENT_VALUE_CHANGED, data);
+    } else if (filter == LV_EVENT_SLIDER_VALUE_LEFT_CHANGED) {
+        lv_obj_add_event_cb(obj, flow_event_slider_value_left_changed_callback, LV_EVENT_VALUE_CHANGED, data);
+    } else if (filter == LV_EVENT_CHECKED) {
         lv_obj_add_event_cb(obj, flow_event_checked_callback, LV_EVENT_VALUE_CHANGED, data);
     } else if (filter == LV_EVENT_UNCHECKED) {
         lv_obj_add_event_cb(obj, flow_event_unchecked_callback, LV_EVENT_VALUE_CHANGED, data);
@@ -279,6 +307,18 @@ EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filte
     }
 
     lv_obj_add_event_cb(obj, flow_event_callback_delete_user_data, LV_EVENT_DELETE, data);
+}
+
+EM_PORT_API(void) lvglUpdateLabelText(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_LABEL_TEXT, obj, page_index, component_index, property_index);
+}
+
+EM_PORT_API(void) lvglUpdateSliderValue(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_SLIDER_VALUE, obj, page_index, component_index, property_index);
+}
+
+EM_PORT_API(void) lvglUpdateSliderValueLeft(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_SLIDER_VALUE_LEFT, obj, page_index, component_index, property_index);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

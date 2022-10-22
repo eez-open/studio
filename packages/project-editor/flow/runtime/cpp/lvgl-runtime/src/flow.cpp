@@ -5,10 +5,13 @@
 #include <eez/core/action.h>
 
 #include <eez/flow/flow.h>
+#include <eez/flow/expression.h>
 #include <eez/flow/hooks.h>
 #include <eez/flow/debugger.h>
 #include <eez/flow/components.h>
 #include <eez/flow/flow_defs_v3.h>
+
+#include "flow.h"
 
 namespace eez {
 
@@ -17,6 +20,92 @@ ActionExecFunc g_actionExecFunctions[] = {
 };
 
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct UpdateTask {
+    UpdateTaskType updateTaskType;
+    lv_obj_t *obj;
+    unsigned page_index;
+    unsigned component_index;
+    unsigned property_index;
+};
+
+std::vector<UpdateTask> updateTasks;
+
+extern "C" void addUpdateTask(UpdateTaskType updateTaskType, lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
+    UpdateTask updateTask;
+    updateTask.updateTaskType = updateTaskType;
+    updateTask.obj = obj;
+    updateTask.page_index = page_index;
+    updateTask.component_index = component_index;
+    updateTask.property_index = property_index;
+    updateTasks.push_back(updateTask);
+}
+
+static char textValue[1000];
+
+const char *evalTextProperty(unsigned pageIndex, unsigned componentIndex, unsigned propertyIndex, const char *errorMessage) {
+    eez::flow::FlowState *flowState = eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
+    eez::Value value;
+    if (!eez::flow::evalProperty(flowState, componentIndex, propertyIndex, value, errorMessage)) {
+        return "";
+    }
+    value.toText(textValue, sizeof(textValue));
+    return textValue;
+}
+
+extern "C" int32_t evalIntegerProperty(unsigned pageIndex, unsigned componentIndex, unsigned propertyIndex, const char *errorMessage) {
+    eez::flow::FlowState *flowState = eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
+    eez::Value value;
+    if (!eez::flow::evalProperty(flowState, componentIndex, propertyIndex, value, errorMessage)) {
+        return 0;
+    }
+    int err;
+    int32_t intValue = value.toInt32(&err);
+    if (err) {
+        eez::flow::throwError(flowState, componentIndex, errorMessage);
+        return 0;
+    }
+    return intValue;
+}
+
+extern "C" void assignIntegerProperty(unsigned pageIndex, unsigned componentIndex, unsigned propertyIndex, int32_t value, const char *errorMessage) {
+    eez::flow::FlowState *flowState = eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
+
+    auto component = flowState->flow->components[componentIndex];
+
+    eez::Value dstValue;
+    if (!eez::flow::evalAssignableExpression(flowState, componentIndex, component->properties[propertyIndex]->evalInstructions, dstValue, errorMessage)) {
+        return;
+    }
+
+    eez::Value srcValue(value, eez::VALUE_TYPE_INT32);
+
+    eez::flow::assignValue(flowState, componentIndex, dstValue, srcValue);
+}
+
+void doUpdateTasks() {
+    for (auto it = updateTasks.begin(); it != updateTasks.end(); it++) {
+        UpdateTask &updateTask = *it;
+        if (updateTask.updateTaskType == UPDATE_TASK_TYPE_LABEL_TEXT) {
+            const char *text_new = evalTextProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Text in Label widget");
+            const char *text_cur = lv_label_get_text(updateTask.obj);
+            if (strcmp(text_new, text_cur) != 0) lv_label_set_text(updateTask.obj, text_new);
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_SLIDER_VALUE) {
+            int32_t value_new = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Slider widget");
+            int32_t value_cur = lv_slider_get_value(updateTask.obj);
+            if (value_new != value_cur) lv_slider_set_value(updateTask.obj, value_new, LV_ANIM_OFF);
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_SLIDER_VALUE_LEFT) {
+            int32_t value_new = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value Left in Slider widget");
+            int32_t value_cur = lv_slider_get_left_value(updateTask.obj);
+            if (value_new != value_cur) lv_slider_set_left_value(updateTask.obj, value_new, LV_ANIM_OFF);
+        }
+    }
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void startToDebuggerMessage() {
     EM_ASM({
@@ -83,11 +172,15 @@ extern "C" bool flowTick() {
     if (eez::flow::isFlowStopped()) {
         return false;
     }
+
     eez::flow::tick();
+
+    doUpdateTasks();
+
     return true;
 }
 
-extern "C" void flowOnPageLoaded(int pageIndex) {
+extern "C" void flowOnPageLoaded(unsigned pageIndex) {
     eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
 }
 

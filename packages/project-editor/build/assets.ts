@@ -27,9 +27,10 @@ import {
     findVariable
 } from "project-editor/features/variable/variable";
 import { Flow } from "project-editor/flow/flow";
-import type {
+import {
     Component,
     ComponentInput,
+    isFlowProperty,
     Widget
 } from "project-editor/flow/component";
 
@@ -57,6 +58,7 @@ import {
 import { buildWidget } from "project-editor/build/widgets";
 import { FlowValue, getValueType } from "project-editor/build/values";
 import {
+    getClassInfo,
     getObjectPathAsString,
     propertyNotFoundMessage,
     Section
@@ -961,6 +963,30 @@ export class Assets {
             flowState.flowWidgetFromDataIndex.set(index, widget);
         }
         return -(index + 1);
+    }
+
+    getComponentProperties(component: Component) {
+        return getClassInfo(component).properties.filter(propertyInfo =>
+            isFlowProperty(component, propertyInfo, [
+                "input",
+                "template-literal",
+                "assignable"
+            ])
+        );
+    }
+
+    getComponentPropertyIndex(component: Component, propertyName: string) {
+        const properties = getClassInfo(component).properties.filter(
+            propertyInfo =>
+                isFlowProperty(component, propertyInfo, [
+                    "input",
+                    "template-literal",
+                    "assignable"
+                ])
+        );
+        return properties.findIndex(
+            propertyInfo => propertyInfo.name == propertyName
+        );
     }
 
     getFlowWidgetActionIndex(widget: Widget, propertyName: string) {

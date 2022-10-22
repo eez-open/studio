@@ -575,6 +575,7 @@ export function makeToggablePropertyToOutput(
 }
 
 export function isFlowProperty(
+    object: IEezObject | undefined,
     propertyInfo: PropertyInfo,
     flowPropertyTypes: FlowPropertyType[]
 ) {
@@ -582,15 +583,25 @@ export function isFlowProperty(
         return false;
     }
 
+    let flowProperty;
+    if (typeof propertyInfo.flowProperty == "string") {
+        flowProperty = propertyInfo.flowProperty;
+    } else {
+        flowProperty = propertyInfo.flowProperty(object);
+        if (!flowProperty) {
+            return false;
+        }
+    }
+
     if (
-        propertyInfo.flowProperty == "input" &&
+        flowProperty == "input" &&
         propertyInfo.type == PropertyType.ObjectReference &&
         propertyInfo.referencedObjectCollectionPath == "actions"
     ) {
         return false;
     }
 
-    return flowPropertyTypes.indexOf(propertyInfo.flowProperty) != -1;
+    return flowPropertyTypes.indexOf(flowProperty) != -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2327,7 +2338,7 @@ export class Component extends EezObject {
                         continue;
                     }
 
-                    if (isFlowProperty(propertyInfo, ["input"])) {
+                    if (isFlowProperty(component, propertyInfo, ["input"])) {
                         const value = getProperty(component, propertyInfo.name);
                         if (value != undefined && value !== "") {
                             try {
@@ -2364,7 +2375,9 @@ export class Component extends EezObject {
                                 )
                             );
                         }
-                    } else if (isFlowProperty(propertyInfo, ["assignable"])) {
+                    } else if (
+                        isFlowProperty(component, propertyInfo, ["assignable"])
+                    ) {
                         const value = getProperty(component, propertyInfo.name);
                         if (value != undefined && value !== "") {
                             try {
@@ -2393,7 +2406,9 @@ export class Component extends EezObject {
                             );
                         }
                     } else if (
-                        isFlowProperty(propertyInfo, ["template-literal"])
+                        isFlowProperty(component, propertyInfo, [
+                            "template-literal"
+                        ])
                     ) {
                         const value = getProperty(component, propertyInfo.name);
                         if (value != undefined && value !== "") {
@@ -2633,7 +2648,7 @@ export class Component extends EezObject {
         }[] = [];
 
         for (const propertyInfo of getClassInfo(this).properties) {
-            if (isFlowProperty(propertyInfo, ["output"])) {
+            if (isFlowProperty(this, propertyInfo, ["output"])) {
                 outputs.push({
                     name: propertyInfo.name,
                     type:
