@@ -14,6 +14,10 @@ enum UpdateTaskType {
 extern "C" {
 #endif
 
+extern uint32_t screenLoad_animType;
+extern uint32_t screenLoad_speed;
+extern uint32_t screenLoad_delay;
+
 void flowInit(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSize);
 bool flowTick();
 void flowOnPageLoaded(unsigned pageIndex);

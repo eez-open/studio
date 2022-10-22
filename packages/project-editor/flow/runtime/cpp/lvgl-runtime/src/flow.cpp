@@ -23,6 +23,12 @@ ActionExecFunc g_actionExecFunctions[] = {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+uint32_t screenLoad_animType = 0;
+uint32_t screenLoad_speed = 0;
+uint32_t screenLoad_delay = 0;
+
+////////////////////////////////////////////////////////////////////////////////
+
 struct UpdateTask {
     UpdateTaskType updateTaskType;
     lv_obj_t *obj;
@@ -132,7 +138,9 @@ void onArrayValueFree(eez::ArrayValue *arrayValue) {
 }
 
 void replacePageHook(int16_t pageId, uint32_t animType, uint32_t speed, uint32_t delay) {
-    printf("replacePageHook %d %d %d %d\n", (int)pageId, (int)animType, (int)speed, (int)delay);
+    screenLoad_animType = animType;
+    screenLoad_speed = speed;
+    screenLoad_delay = delay;
     static int16_t currentPageId = -1;
     eez::flow::onPageChanged(currentPageId, pageId);
     currentPageId = pageId;

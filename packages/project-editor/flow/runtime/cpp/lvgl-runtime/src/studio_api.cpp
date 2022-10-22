@@ -99,7 +99,10 @@ EM_PORT_API(lv_obj_t *) lvglCreateSwitch(lv_obj_t *parentObj, lv_coord_t x, lv_c
 }
 
 EM_PORT_API(void) lvglScreenLoad(unsigned page_index, lv_obj_t *obj) {
-    lv_scr_load(obj);
+    lv_scr_load_anim(obj, (lv_scr_load_anim_t)screenLoad_animType, screenLoad_speed, screenLoad_delay, false);
+    screenLoad_animType = 0;
+    screenLoad_speed = 0;
+    screenLoad_delay = 0;
     if (page_index != -1) {
         flowOnPageLoaded(page_index);
     }
