@@ -149,7 +149,7 @@ const NewProjectWizard = observer(
         location: string | undefined = getHomePath("eez-projects");
         locationError: string | undefined;
 
-        createDirectory: boolean = false;
+        createDirectory: boolean = true;
 
         bb3ProjectOption: "download" | "local" = "download";
         bb3ProjectFileDownloadError: string | undefined;
