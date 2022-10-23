@@ -13,9 +13,7 @@ EM_PORT_API(lv_obj_t *) lvglCreateContainer(lv_obj_t *parentObj, int32_t index, 
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
-    if (index >= 0 && index < MAX_OBJECTS) {
-        indexToObject[index] = obj;
-    }
+    setObjectIndex(obj, index);
     return obj;
 }
 
@@ -28,9 +26,7 @@ EM_PORT_API(lv_obj_t *) lvglCreateLabel(lv_obj_t *parentObj, int32_t index, lv_c
     lv_label_set_recolor(obj, recolor);
     free(text);
     lv_obj_update_layout(obj);
-    if (index >= 0 && index < MAX_OBJECTS) {
-        indexToObject[index] = obj;
-    }
+    setObjectIndex(obj, index);
     return obj;
 }
 
@@ -39,9 +35,7 @@ EM_PORT_API(lv_obj_t *) lvglCreateButton(lv_obj_t *parentObj, int32_t index, lv_
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
-    if (index >= 0 && index < MAX_OBJECTS) {
-        indexToObject[index] = obj;
-    }
+    setObjectIndex(obj, index);
     return obj;
 }
 
@@ -50,9 +44,7 @@ EM_PORT_API(lv_obj_t *) lvglCreatePanel(lv_obj_t *parentObj, int32_t index, lv_c
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
-    if (index >= 0 && index < MAX_OBJECTS) {
-        indexToObject[index] = obj;
-    }
+    setObjectIndex(obj, index);
     return obj;
 }
 
@@ -67,9 +59,7 @@ EM_PORT_API(lv_obj_t *) lvglCreateImage(lv_obj_t *parentObj, int32_t index, lv_c
     lv_img_set_zoom(obj, zoom);
     lv_img_set_angle(obj, angle);
     lv_obj_update_layout(obj);
-    if (index >= 0 && index < MAX_OBJECTS) {
-        indexToObject[index] = obj;
-    }
+    setObjectIndex(obj, index);
     return obj;
 }
 
@@ -91,9 +81,7 @@ EM_PORT_API(lv_obj_t *) lvglCreateSlider(lv_obj_t *parentObj, int32_t index, lv_
         lv_slider_set_left_value(obj, value_left, LV_ANIM_OFF);
     }
     lv_obj_update_layout(obj);
-    if (index >= 0 && index < MAX_OBJECTS) {
-        indexToObject[index] = obj;
-    }
+    setObjectIndex(obj, index);
     return obj;
 }
 
@@ -104,9 +92,7 @@ EM_PORT_API(lv_obj_t *) lvglCreateRoller(lv_obj_t *parentObj, int32_t index, lv_
     lv_roller_set_options(obj, options, mode);
     free(options);
     lv_obj_update_layout(obj);
-    if (index >= 0 && index < MAX_OBJECTS) {
-        indexToObject[index] = obj;
-    }
+    setObjectIndex(obj, index);
     return obj;
 }
 
@@ -115,9 +101,7 @@ EM_PORT_API(lv_obj_t *) lvglCreateSwitch(lv_obj_t *parentObj, int32_t index, lv_
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
-    if (index >= 0 && index < MAX_OBJECTS) {
-        indexToObject[index] = obj;
-    }
+    setObjectIndex(obj, index);
     return obj;
 }
 

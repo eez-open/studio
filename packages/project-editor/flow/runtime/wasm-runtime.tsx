@@ -307,13 +307,19 @@ export class WasmRuntime extends RemoteRuntime {
                     () => this.selectedPage,
                     selectedPage => {
                         let obj = selectedPage._lvglObj;
+                        let newObj = !obj;
                         if (!obj) {
                             obj = lgvlPageRuntime.lvglCreate(selectedPage);
                             runInAction(
                                 () => (this.selectedPage._lvglObj = obj)
                             );
                         }
-                        this.worker.wasm._lvglScreenLoad(-1, obj);
+                        const pagePath = getObjectPathAsString(selectedPage);
+                        const pageIndex = this.assetsMap.flowIndexes[pagePath];
+                        this.worker.wasm._lvglScreenLoad(
+                            newObj ? pageIndex : -1,
+                            obj
+                        );
                     }
                 );
             }

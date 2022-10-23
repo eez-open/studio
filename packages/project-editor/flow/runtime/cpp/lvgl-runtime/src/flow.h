@@ -14,9 +14,6 @@ enum UpdateTaskType {
 extern "C" {
 #endif
 
-#define MAX_OBJECTS 1000
-extern lv_obj_t *indexToObject[MAX_OBJECTS];
-
 extern uint32_t screenLoad_animType;
 extern uint32_t screenLoad_speed;
 extern uint32_t screenLoad_delay;
@@ -28,6 +25,8 @@ void flowPropagateValue(unsigned pageIndex, unsigned componentIndex, unsigned ou
 
 void addUpdateTask(enum UpdateTaskType updateTaskType, lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index);
 void assignIntegerProperty(unsigned pageIndex, unsigned componentIndex, unsigned propertyIndex, int32_t value, const char *errorMessage);
+
+void setObjectIndex(lv_obj_t *obj, int32_t index);
 
 #ifdef __cplusplus
 }

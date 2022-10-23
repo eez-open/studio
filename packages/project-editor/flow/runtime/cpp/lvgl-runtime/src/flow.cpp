@@ -23,7 +23,7 @@ ActionExecFunc g_actionExecFunctions[] = {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-lv_obj_t *indexToObject[MAX_OBJECTS];
+static int16_t currentPageId = -1;
 
 uint32_t screenLoad_animType = 0;
 uint32_t screenLoad_speed = 0;
@@ -143,7 +143,6 @@ void replacePageHook(int16_t pageId, uint32_t animType, uint32_t speed, uint32_t
     screenLoad_animType = animType;
     screenLoad_speed = speed;
     screenLoad_delay = delay;
-    static int16_t currentPageId = -1;
     eez::flow::onPageChanged(currentPageId, pageId);
     currentPageId = pageId;
 }
@@ -156,12 +155,40 @@ EM_PORT_API(void) onMessageFromDebugger(char *messageData, uint32_t messageDataS
     eez::flow::processDebuggerInput(messageData, messageDataSize);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+#define MAX_PAGES 100
+#define MAX_OBJECTS 10000
+
+static int32_t pageStartIndex[MAX_PAGES];
+static lv_obj_t *indexToObject[MAX_OBJECTS];
+static int32_t startIndex = 0;
+static int32_t maxIndex = -1;
+
+void setObjectIndex(lv_obj_t *obj, int32_t index) {
+    if (index >= 0 && index < MAX_OBJECTS) {
+        indexToObject[startIndex + index] = obj;
+        if (index > maxIndex) {
+            maxIndex = index;
+        }
+    }
+}
+
+void closeIndexesForPage(int pageIndex) {
+    pageStartIndex[pageIndex] = startIndex;
+    startIndex = startIndex + maxIndex + 1;
+    maxIndex = -1;
+    printf("closeIndexesForPage %d\n", pageIndex);
+}
+
 static lv_obj_t *getLvglObjectFromIndex(int32_t index) {
     if (index >= 0 && index < MAX_OBJECTS) {
-        return indexToObject[index];
+        return indexToObject[pageStartIndex[currentPageId - 1] + index];
     }
     return 0;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 extern "C" void flowInit(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSize) {
     //DISPLAY_WIDTH = eez::g_mainAssets->settings->displayWidth;
@@ -200,6 +227,7 @@ extern "C" bool flowTick() {
 }
 
 extern "C" void flowOnPageLoaded(unsigned pageIndex) {
+    closeIndexesForPage(pageIndex);
     eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
 }
 
