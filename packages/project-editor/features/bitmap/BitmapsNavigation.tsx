@@ -110,14 +110,14 @@ const BitmapEditor = observer(
 
             return (
                 <div className="EezStudio_BitmapEditorContainer">
+                    <p>
+                        Dimension: {bitmap.imageElement.width} x{" "}
+                        {bitmap.imageElement.height} px
+                    </p>
                     <img
                         src={bitmap.imageSrc}
                         style={{ backgroundColor: bitmap.backgroundColor }}
                     />
-                    <h4>
-                        Dimension: {bitmap.imageElement.width} x{" "}
-                        {bitmap.imageElement.height}
-                    </h4>
                 </div>
             );
         }

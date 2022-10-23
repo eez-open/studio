@@ -14,7 +14,8 @@ import {
     setParent,
     setPropertyInfo,
     getParent,
-    getKey
+    getKey,
+    isPropertyOptional
 } from "project-editor/core/object";
 import { Component } from "project-editor/flow/component";
 import type {
@@ -245,7 +246,7 @@ function loadObjectInternal(
                     propertyInfo.typeClass!,
                     propertyInfo.name
                 );
-            } else if (!propertyInfo.isOptional) {
+            } else if (!isPropertyOptional(object, propertyInfo)) {
                 let typeClass = propertyInfo.typeClass!;
                 childObject = loadObjectInternal(
                     object,
@@ -259,7 +260,7 @@ function loadObjectInternal(
                 (object as any)[propertyInfo.name] = childObject;
             }
         } else if (propertyInfo.type === PropertyType.Array) {
-            if (!value && !propertyInfo.isOptional) {
+            if (!value && !isPropertyOptional(object, propertyInfo)) {
                 value = [];
             }
 

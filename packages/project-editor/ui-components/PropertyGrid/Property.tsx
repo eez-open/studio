@@ -18,7 +18,8 @@ import {
     getParent,
     PropertyInfo,
     IEezObject,
-    getObjectPropertyDisplayName
+    getObjectPropertyDisplayName,
+    isPropertyOptional
 } from "project-editor/core/object";
 import { info } from "project-editor/core/util";
 import { replaceObjectReference } from "project-editor/core/search";
@@ -172,7 +173,10 @@ export const Property = observer(
             if (this.props.propertyInfo.type === PropertyType.Number) {
                 if (
                     newValue.trim() === "" &&
-                    this.props.propertyInfo.isOptional
+                    isPropertyOptional(
+                        this.props.objects[0],
+                        this.props.propertyInfo
+                    )
                 ) {
                     newValue = undefined;
                 } else {
@@ -304,7 +308,10 @@ export const Property = observer(
                                           this.props.propertyInfo
                                       )
                             ].concat(
-                                this.props.propertyInfo.isOptional
+                                isPropertyOptional(
+                                    this.props.objects[0],
+                                    this.props.propertyInfo
+                                )
                                     ? []
                                     : [validators.required]
                             )

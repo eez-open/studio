@@ -27,7 +27,8 @@ import {
     EezObject,
     getRootObject,
     getClassByName,
-    setId
+    setId,
+    isPropertyOptional
 } from "project-editor/core/object";
 
 import { getProject, Project } from "project-editor/project/project";
@@ -592,7 +593,7 @@ function isOptional(object: IEezObject) {
         return false;
     }
 
-    return property.isOptional;
+    return isPropertyOptional(object, property);
 }
 
 export function canDelete(object: IEezObject) {

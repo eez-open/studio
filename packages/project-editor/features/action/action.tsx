@@ -13,7 +13,9 @@ import {
 import { createObject, Message } from "project-editor/store";
 import {
     hasFlowSupport,
-    isDashboardOrApplet,
+    isAppletProject,
+    isDashboardProject,
+    isLVGLProject,
     isNotV1Project
 } from "project-editor/project/project-type-traits";
 import type { Project } from "project-editor/project/project";
@@ -57,7 +59,8 @@ export class Action extends Flow {
                 type: PropertyType.Number,
                 isOptional: true,
                 unique: true,
-                propertyGridGroup: generalGroup
+                propertyGridGroup: generalGroup,
+                hideInPropertyGrid: isLVGLProject
             },
             {
                 name: "name",
@@ -92,7 +95,10 @@ export class Action extends Flow {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
-                hideInPropertyGrid: isDashboardOrApplet
+                hideInPropertyGrid: object =>
+                    isDashboardProject(object) ||
+                    isLVGLProject(object) ||
+                    isAppletProject(object)
             }
         ],
         check: (action: Action) => {

@@ -27,7 +27,10 @@ import {
     Message,
     createObject
 } from "project-editor/store";
-import { isNotV1Project } from "project-editor/project/project-type-traits";
+import {
+    isLVGLProject,
+    isNotV1Project
+} from "project-editor/project/project-type-traits";
 
 import type { Project } from "project-editor/project/project";
 
@@ -927,7 +930,8 @@ export class Font extends EezObject {
                 type: PropertyType.Number,
                 isOptional: true,
                 unique: true,
-                propertyGridGroup: generalGroup
+                propertyGridGroup: generalGroup,
+                hideInPropertyGrid: isLVGLProject
             },
             {
                 name: "name",
@@ -949,6 +953,10 @@ export class Font extends EezObject {
                     {
                         id: "opentype",
                         label: "OpenType"
+                    },
+                    {
+                        id: "LVGL",
+                        label: "LVGL"
                     }
                 ]
             },
@@ -1005,7 +1013,8 @@ export class Font extends EezObject {
             },
             {
                 name: "alwaysBuild",
-                type: PropertyType.Boolean
+                type: PropertyType.Boolean,
+                hideInPropertyGrid: isLVGLProject
             },
             {
                 name: "lvglBinFilePath",

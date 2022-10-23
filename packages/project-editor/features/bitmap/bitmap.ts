@@ -74,7 +74,8 @@ export class Bitmap extends EezObject {
                 type: PropertyType.Number,
                 isOptional: true,
                 unique: true,
-                propertyGridGroup: generalGroup
+                propertyGridGroup: generalGroup,
+                hideInPropertyGrid: isLVGLProject
             },
             {
                 name: "name",
@@ -112,7 +113,8 @@ export class Bitmap extends EezObject {
             },
             {
                 name: "alwaysBuild",
-                type: PropertyType.Boolean
+                type: PropertyType.Boolean,
+                hideInPropertyGrid: isLVGLProject
             }
         ],
         check: (bitmap: Bitmap) => {

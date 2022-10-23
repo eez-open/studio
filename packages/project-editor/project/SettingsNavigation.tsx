@@ -76,7 +76,18 @@ const ProjectFeature = observer(
             if (
                 getProperty(this.context.project, this.props.projectFeature.key)
             ) {
-                if (this.props.projectFeature.mandatory) {
+                let mandatory = this.props.projectFeature.mandatory;
+
+                if (this.context.projectTypeTraits.isLVGL) {
+                    if (
+                        this.props.projectFeature.key == "fonts" ||
+                        this.props.projectFeature.key == "bitmaps"
+                    ) {
+                        mandatory = true;
+                    }
+                }
+
+                if (mandatory) {
                     button = (
                         <button
                             className="btn btn-secondary float-right"
@@ -238,14 +249,28 @@ export const SettingsEditor = observer(
 
         render() {
             if (this.object === this.context.project.settings.general) {
-                let projectFeatures = ProjectEditor.extensions.map(
-                    extension => (
+                let projectFeatures = ProjectEditor.extensions
+                    .filter(extension => {
+                        if (this.context.projectTypeTraits.isLVGL) {
+                            if (
+                                extension.key == "styles" ||
+                                extension.key == "texts" ||
+                                extension.key == "micropython" ||
+                                extension.key == "extensionDefinitions" ||
+                                extension.key == "scpi" ||
+                                extension.key == "shortcuts"
+                            ) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    })
+                    .map(extension => (
                         <ProjectFeature
                             key={extension.name}
                             projectFeature={extension}
                         />
-                    )
-                );
+                    ));
 
                 return (
                     <div className="EezStudio_SettingsEditor">

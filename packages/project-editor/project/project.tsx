@@ -290,6 +290,7 @@ export class Build extends EezObject {
                 name: "configurations",
                 type: PropertyType.Array,
                 typeClass: BuildConfiguration,
+                enumerable: object => !isLVGLProject(object),
                 hideInPropertyGrid: true,
                 showOnlyChildrenInTree: false
             },
@@ -991,6 +992,13 @@ function getProjectClassInfo() {
             label: () => "Project",
             properties: projectProperties,
             beforeLoadHook: (project: Project, projectJs: any) => {
+                if (
+                    projectJs.settings.general.projectType == ProjectType.LVGL
+                ) {
+                    delete projectJs.styles;
+                    delete projectJs.texts;
+                }
+
                 if (projectJs.data) {
                     projectJs.globalVariables = projectJs.data;
                     delete projectJs.data;
@@ -1171,20 +1179,40 @@ function getProjectClassInfo() {
     if (numProjectFeatures != projectFeatures.length) {
         numProjectFeatures = projectFeatures.length;
 
-        let projectFeatureProperties: PropertyInfo[] = projectFeatures.map(
-            projectFeature => {
-                return {
-                    name: projectFeature.key,
-                    displayName: projectFeature.displayName,
-                    type: projectFeature.type,
-                    typeClass: projectFeature.typeClass,
-                    isOptional: !projectFeature.mandatory,
-                    hideInPropertyGrid: true,
-                    check: projectFeature.check,
-                    enumerable: projectFeature.enumerable
-                };
-            }
-        );
+        let projectFeatureProperties = projectFeatures.map(projectFeature => {
+            return {
+                name: projectFeature.key,
+                displayName: projectFeature.displayName,
+                type: projectFeature.type,
+                typeClass: projectFeature.typeClass,
+                isOptional: (project: Project) => {
+                    if (
+                        project.settings.general.projectType == ProjectType.LVGL
+                    ) {
+                        if (
+                            projectFeature.key == "fonts" ||
+                            projectFeature.key == "bitmaps"
+                        ) {
+                            return false;
+                        }
+                        if (
+                            projectFeature.key == "styles" ||
+                            projectFeature.key == "texts" ||
+                            projectFeature.key == "micropython" ||
+                            projectFeature.key == "extensionDefinitions" ||
+                            projectFeature.key == "scpi" ||
+                            projectFeature.key == "shortcuts"
+                        ) {
+                            return true;
+                        }
+                    }
+                    return !projectFeature.mandatory;
+                },
+                hideInPropertyGrid: true,
+                check: projectFeature.check,
+                enumerable: projectFeature.enumerable
+            } as PropertyInfo;
+        });
 
         projectProperties.splice(
             0,

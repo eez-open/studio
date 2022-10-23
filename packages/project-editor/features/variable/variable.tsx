@@ -31,8 +31,9 @@ import {
 } from "project-editor/store";
 import {
     isDashboardProject,
-    isDashboardOrApplet,
-    hasFlowSupport
+    hasFlowSupport,
+    isLVGLProject,
+    isAppletProject
 } from "project-editor/project/project-type-traits";
 import type { Project } from "project-editor/project/project";
 import { metrics } from "project-editor/features/variable/metrics";
@@ -318,7 +319,7 @@ export class Variable extends EezObject {
                 unique: true,
                 propertyGridGroup: generalGroup,
                 hideInPropertyGrid: (variable: Variable) =>
-                    !isGlobalVariable(variable)
+                    !isGlobalVariable(variable) || isLVGLProject(variable)
             },
             {
                 name: "name",
@@ -347,30 +348,41 @@ export class Variable extends EezObject {
             {
                 name: "defaultValueList",
                 type: PropertyType.MultilineText,
-                hideInPropertyGrid: isDashboardOrApplet,
+                hideInPropertyGrid: object =>
+                    isDashboardProject(object) ||
+                    isLVGLProject(object) ||
+                    isAppletProject(object),
                 monospaceFont: true,
                 disableSpellcheck: true
             },
             {
                 name: "defaultMinValue",
                 type: PropertyType.Number,
-                hideInPropertyGrid: isDashboardOrApplet
+                hideInPropertyGrid: object =>
+                    isDashboardProject(object) ||
+                    isLVGLProject(object) ||
+                    isAppletProject(object)
             },
             {
                 name: "defaultMaxValue",
                 type: PropertyType.Number,
-                hideInPropertyGrid: isDashboardOrApplet
+                hideInPropertyGrid: object =>
+                    isDashboardProject(object) ||
+                    isLVGLProject(object) ||
+                    isAppletProject(object)
             },
             {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
-                hideInPropertyGrid: isDashboardProject
+                hideInPropertyGrid: object =>
+                    isDashboardProject(object) || isLVGLProject(object)
             },
             {
                 name: "persistent",
                 type: PropertyType.Boolean,
                 hideInPropertyGrid: (variable: Variable) =>
+                    isLVGLProject(variable) ||
                     !isGlobalVariable(variable) ||
                     variable.native ||
                     (isObjectType(variable.type) &&
@@ -383,6 +395,7 @@ export class Variable extends EezObject {
                 computed: true,
                 propertyGridRowComponent: RenderVariableStatusPropertyUI,
                 hideInPropertyGrid: (variable: Variable) =>
+                    isLVGLProject(variable) ||
                     !variable.persistent ||
                     !isObjectType(variable.type) ||
                     !isGlobalVariable(variable) ||

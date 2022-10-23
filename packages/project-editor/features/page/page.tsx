@@ -27,7 +27,10 @@ import {
     propertyInvalidValueMessage,
     propertyNotFoundMessage
 } from "project-editor/store";
-import { isDashboardProject } from "project-editor/project/project-type-traits";
+import {
+    isDashboardProject,
+    isLVGLProject
+} from "project-editor/project/project-type-traits";
 
 import type {
     IResizeHandler,
@@ -218,7 +221,8 @@ export class Page extends Flow {
                 type: PropertyType.Number,
                 isOptional: true,
                 unique: true,
-                propertyGridGroup: generalGroup
+                propertyGridGroup: generalGroup,
+                hideInPropertyGrid: isLVGLProject
             },
             {
                 name: "name",
@@ -263,7 +267,8 @@ export class Page extends Flow {
                 name: "dataContextOverrides",
                 displayName: "Data context",
                 type: PropertyType.JSON,
-                propertyGridGroup: generalGroup
+                propertyGridGroup: generalGroup,
+                hideInPropertyGrid: isLVGLProject
             },
             {
                 name: "left",
@@ -288,20 +293,23 @@ export class Page extends Flow {
             {
                 name: "scaleToFit",
                 type: PropertyType.Boolean,
-                propertyGridGroup: geometryGroup
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: isLVGLProject
             },
             {
                 name: "style",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "styles",
-                propertyGridGroup: styleGroup
+                propertyGridGroup: styleGroup,
+                hideInPropertyGrid: isLVGLProject
             },
             {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
                 propertyGridGroup: generalGroup,
-                hideInPropertyGrid: isDashboardProject
+                hideInPropertyGrid: object =>
+                    isDashboardProject(object) || isLVGLProject(object)
             },
             {
                 name: "portrait",
@@ -314,13 +322,15 @@ export class Page extends Flow {
             {
                 name: "isUsedAsCustomWidget",
                 type: PropertyType.Boolean,
-                propertyGridGroup: generalGroup
+                propertyGridGroup: generalGroup,
+                hideInPropertyGrid: isLVGLProject
             },
             {
                 name: "closePageIfTouchedOutside",
                 type: PropertyType.Boolean,
                 propertyGridGroup: generalGroup,
-                hideInPropertyGrid: isDashboardProject
+                hideInPropertyGrid: object =>
+                    isDashboardProject(object) || isLVGLProject(object)
             }
         ],
         label: (page: Page) => {

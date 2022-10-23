@@ -143,7 +143,9 @@ export interface PropertyInfo {
         | boolean
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
     showOnlyChildrenInTree?: boolean;
-    isOptional?: boolean;
+    isOptional?:
+        | boolean
+        | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
     defaultValue?: any;
     inheritable?: boolean;
     propertyMenu?: (props: PropertyProps) => Electron.MenuItem[];
@@ -663,6 +665,21 @@ export function isPropertyEnumerable(
     }
 
     return propertyInfo.enumerable(object, propertyInfo);
+}
+
+export function isPropertyOptional(
+    object: IEezObject,
+    propertyInfo: PropertyInfo
+) {
+    if (!propertyInfo.isOptional) {
+        return false;
+    }
+
+    if (typeof propertyInfo.isOptional == "boolean") {
+        return propertyInfo.isOptional;
+    }
+
+    return propertyInfo.isOptional(object, propertyInfo);
 }
 
 export function getProperty(object: IEezObject, name: string) {
