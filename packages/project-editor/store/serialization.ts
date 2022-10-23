@@ -214,7 +214,7 @@ function loadObjectInternal(
     object.objID = objID;
 
     if (classInfo.beforeLoadHook) {
-        classInfo.beforeLoadHook(object, jsObject);
+        classInfo.beforeLoadHook(object, jsObject, currentDocumentStore!);
     }
 
     let flowOrFlowFragment: Flow | FlowFragment | undefined;

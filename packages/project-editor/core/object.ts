@@ -48,6 +48,8 @@ export const enum PropertyType {
     ConfigurationReference,
     Any,
 
+    LVGLWidget,
+
     Null
 }
 
@@ -187,6 +189,8 @@ export interface PropertyInfo {
     cssAttributeName?: string;
 
     checkboxStyleSwitch?: boolean;
+
+    arrayItemOrientation?: "vertical" | "horizontal";
 }
 
 export type InheritedValue =
@@ -273,7 +277,11 @@ export interface ClassInfo {
 
     propertyGridTableComponent?: any;
 
-    beforeLoadHook?: (object: IEezObject, jsObject: any) => void;
+    beforeLoadHook?: (
+        object: IEezObject,
+        jsObject: any,
+        projectEditorStore: ProjectEditorStore
+    ) => void;
 
     updateObjectValueHook?: (object: IEezObject, values: any) => void;
 
@@ -387,10 +395,11 @@ export function makeDerivedClassInfo(
     if (baseBeforeLoadHook && derivedBeforeLoadHook) {
         derivedClassInfoProperties.beforeLoadHook = (
             object: IEezObject,
-            jsObject: any
+            jsObject: any,
+            projectEditorStore: ProjectEditorStore
         ) => {
-            baseBeforeLoadHook(object, jsObject);
-            derivedBeforeLoadHook(object, jsObject);
+            baseBeforeLoadHook(object, jsObject, projectEditorStore);
+            derivedBeforeLoadHook(object, jsObject, projectEditorStore);
         };
     }
 

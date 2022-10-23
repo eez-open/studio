@@ -23,6 +23,8 @@ ActionExecFunc g_actionExecFunctions[] = {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+lv_obj_t *indexToObject[MAX_OBJECTS];
+
 uint32_t screenLoad_animType = 0;
 uint32_t screenLoad_speed = 0;
 uint32_t screenLoad_delay = 0;
@@ -154,6 +156,13 @@ EM_PORT_API(void) onMessageFromDebugger(char *messageData, uint32_t messageDataS
     eez::flow::processDebuggerInput(messageData, messageDataSize);
 }
 
+static lv_obj_t *getLvglObjectFromIndex(int32_t index) {
+    if (index >= 0 && index < MAX_OBJECTS) {
+        return indexToObject[index];
+    }
+    return 0;
+}
+
 extern "C" void flowInit(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSize) {
     //DISPLAY_WIDTH = eez::g_mainAssets->settings->displayWidth;
     //DISPLAY_HEIGHT = eez::g_mainAssets->settings->displayHeight;
@@ -171,6 +180,7 @@ extern "C" void flowInit(uint32_t wasmModuleId, uint8_t *assets, uint32_t assets
     eez::flow::onArrayValueFreeHook = onArrayValueFree;
     eez::flow::replacePageHook = replacePageHook;
     eez::flow::stopScriptHook = stopScript;
+    eez::flow::getLvglObjectFromIndexHook = getLvglObjectFromIndex;
 
     eez::flow::start(eez::g_mainAssets);
 

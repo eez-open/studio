@@ -19,7 +19,8 @@ import {
     FlowPropertyType,
     IEezObject,
     PropertyInfo,
-    IOnSelectParams
+    IOnSelectParams,
+    getProperty
 } from "project-editor/core/object";
 import {
     createObject,
@@ -639,13 +640,13 @@ export class EventHandler extends EezObject {
                 action: result.values.action
             };
 
-            const customInput = createObject<EventHandler>(
+            const eventHandler = createObject<EventHandler>(
                 project._DocumentStore,
                 properties,
                 EventHandler
             );
 
-            return customInput;
+            return eventHandler;
         }
     };
 
@@ -695,7 +696,39 @@ export class LVGLWidget extends Widget {
                 name: "identifier",
                 displayName: "Name",
                 type: PropertyType.String,
-                unique: true,
+                unique: (
+                    object: IEezObject,
+                    parent: IEezObject,
+                    propertyInfo?: PropertyInfo
+                ) => {
+                    const oldIdentifier = propertyInfo
+                        ? getProperty(object, propertyInfo.name)
+                        : undefined;
+
+                    return (object: any, ruleName: string) => {
+                        const newIdentifer = object[ruleName];
+                        if (
+                            oldIdentifier != undefined &&
+                            newIdentifer == oldIdentifier
+                        ) {
+                            return null;
+                        }
+
+                        const page = getAncestorOfType(
+                            parent,
+                            ProjectEditor.PageClass.classInfo
+                        ) as Page;
+
+                        if (
+                            page.lvglWidgetIdentifiers.indexOf(newIdentifer) ==
+                            -1
+                        ) {
+                            return null;
+                        }
+
+                        return "Not an unique name";
+                    };
+                },
                 isOptional: true,
                 propertyGridGroup: generalGroup
             },
@@ -934,6 +967,17 @@ export class LVGLWidget extends Widget {
             _lvglObj: observable,
             _refreshCounter: observable
         });
+    }
+
+    get widgetIndex() {
+        if (!this.identifier) {
+            return -1;
+        }
+        const page = getAncestorOfType(
+            this,
+            ProjectEditor.PageClass.classInfo
+        ) as Page;
+        return page.lvglWidgetIdentifiers.indexOf(this.identifier);
     }
 
     override get relativePosition() {
@@ -1682,6 +1726,7 @@ export class LVGLLabelWidget extends LVGLWidget {
 
         const obj = runtime.wasm._lvglCreateLabel(
             parentObj,
+            this.widgetIndex,
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -1832,6 +1877,7 @@ export class LVGLButtonWidget extends LVGLWidget {
     override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
         return runtime.wasm._lvglCreateButton(
             parentObj,
+            this.widgetIndex,
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -1913,6 +1959,7 @@ export class LVGLPanelWidget extends LVGLWidget {
     override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
         return runtime.wasm._lvglCreatePanel(
             parentObj,
+            this.widgetIndex,
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -2069,6 +2116,7 @@ export class LVGLImageWidget extends LVGLWidget {
     override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
         const obj = runtime.wasm._lvglCreateImage(
             parentObj,
+            this.widgetIndex,
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -2278,6 +2326,7 @@ export class LVGLSliderWidget extends LVGLWidget {
 
         const obj = runtime.wasm._lvglCreateSlider(
             parentObj,
+            this.widgetIndex,
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -2602,6 +2651,7 @@ export class LVGLRollerWidget extends LVGLWidget {
     override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
         return runtime.wasm._lvglCreateRoller(
             parentObj,
+            this.widgetIndex,
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -2689,6 +2739,7 @@ export class LVGLSwitchWidget extends LVGLWidget {
     override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
         return runtime.wasm._lvglCreateSwitch(
             parentObj,
+            this.widgetIndex,
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,

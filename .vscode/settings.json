@@ -52,7 +52,8 @@
         "string_view": "cpp",
         "fstream": "cpp",
         "stdint.h": "c",
-        "string": "c"
+        "string": "c",
+        "unordered_map": "cpp"
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "workbench.editor.enablePreview": false,

@@ -376,15 +376,15 @@ export interface IWasmFlowRuntime {
     _isRTL(): boolean;
 
     // LVGL API
-    _lvglCreateContainer(parentObj: number, x: number, y: number, w: number, h: number): number;
-    _lvglCreateLabel(parentObj: number, x: number, y: number, w: number, h: number, text: number, long_mode: number, recolor: number): number;
-    _lvglCreateButton(parentObj: number, x: number, y: number, w: number, h: number): number;
-    _lvglCreatePanel(parentObj: number, x: number, y: number, w: number, h: number): number;
-    _lvglCreateImage(parentObj: number, x: number, y: number, w: number, h: number, img_src: number, pivotX: number, pivotY: number, zoom: number, angle: number): number;
+    _lvglCreateContainer(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
+    _lvglCreateLabel(parentObj: number, index: number, x: number, y: number, w: number, h: number, text: number, long_mode: number, recolor: number): number;
+    _lvglCreateButton(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
+    _lvglCreatePanel(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
+    _lvglCreateImage(parentObj: number, index: number, x: number, y: number, w: number, h: number, img_src: number, pivotX: number, pivotY: number, zoom: number, angle: number): number;
     _lvglSetImageSrc(parentObj: number, img_src: number): void;
-    _lvglCreateSlider(parentObj: number, x: number, y: number, w: number, h: number, min: number, max: number, mode: number, value: number, value_left: number): number;
-    _lvglCreateRoller(parentObj: number, x: number, y: number, w: number, h: number, options: number, mode: number): number;
-    _lvglCreateSwitch(parentObj: number, x: number, y: number, w: number, h: number): number;
+    _lvglCreateSlider(parentObj: number, index: number, x: number, y: number, w: number, h: number, min: number, max: number, mode: number, value: number, value_left: number): number;
+    _lvglCreateRoller(parentObj: number, index: number, x: number, y: number, w: number, h: number, options: number, mode: number): number;
+    _lvglCreateSwitch(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglScreenLoad(page_index: number, obj: number);
     _lvglDeleteObject(obj: number): void;
     _lvglObjAddFlag(obj: number, f: number): void;

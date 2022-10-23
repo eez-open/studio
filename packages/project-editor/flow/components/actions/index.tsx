@@ -1832,7 +1832,7 @@ export class CallActionActionComponent extends ActionComponent {
         ],
         label: (component: CallActionActionComponent) => {
             if (!component.action) {
-                return ActionComponent.classInfo.label!(component);
+                return "CallAction";
             }
             return component.action;
         },

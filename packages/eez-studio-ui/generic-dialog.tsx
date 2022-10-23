@@ -419,7 +419,7 @@ export const GenericDialog = observer(
                                     ? fieldProperties.displayName
                                     : humanize(fieldProperties.name);
                             const value =
-                                this.fieldValues[fieldProperties.name] || "";
+                                this.fieldValues[fieldProperties.name] ?? "";
                             const onChange = this.onChange.bind(
                                 this,
                                 fieldProperties

@@ -14,6 +14,9 @@ enum UpdateTaskType {
 extern "C" {
 #endif
 
+#define MAX_OBJECTS 1000
+extern lv_obj_t *indexToObject[MAX_OBJECTS];
+
 extern uint32_t screenLoad_animType;
 extern uint32_t screenLoad_speed;
 extern uint32_t screenLoad_delay;

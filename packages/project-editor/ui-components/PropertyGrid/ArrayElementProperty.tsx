@@ -41,6 +41,7 @@ const ArrayElementProperty = observer(
         propertyInfo: PropertyInfo;
         object: IEezObject;
         readOnly: boolean;
+        vertical: boolean;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
@@ -56,37 +57,36 @@ const ArrayElementProperty = observer(
         };
 
         render() {
-            const { propertyInfo } = this.props;
+            const { object, propertyInfo, readOnly } = this.props;
 
             const className = classNames(propertyInfo.name, {
-                inError: isPropertyInError(
-                    this.props.object,
-                    this.props.propertyInfo
-                ),
-                highlighted: isHighlightedProperty(
-                    this.props.object,
-                    this.props.propertyInfo
-                )
+                inError: isPropertyInError(object, propertyInfo),
+                highlighted: isHighlightedProperty(object, propertyInfo)
             });
 
-            if (
-                isArrayElementPropertyVisible(propertyInfo, this.props.object)
-            ) {
+            if (isArrayElementPropertyVisible(propertyInfo, object)) {
                 return (
-                    <td key={propertyInfo.name} className={className}>
-                        <Property
-                            propertyInfo={propertyInfo}
-                            objects={[this.props.object]}
-                            readOnly={
-                                this.props.readOnly ||
-                                isPropertyReadOnly(
-                                    this.props.object,
+                    <>
+                        {this.props.vertical && (
+                            <td className={propertyInfo.name}>
+                                {getObjectPropertyDisplayName(
+                                    object,
                                     propertyInfo
-                                )
-                            }
-                            updateObject={this.updateObject}
-                        />
-                    </td>
+                                )}
+                            </td>
+                        )}
+                        <td className={className}>
+                            <Property
+                                propertyInfo={propertyInfo}
+                                objects={[object]}
+                                readOnly={
+                                    readOnly ||
+                                    isPropertyReadOnly(object, propertyInfo)
+                                }
+                                updateObject={this.updateObject}
+                            />
+                        </td>
+                    </>
                 );
             } else {
                 return null;
@@ -102,6 +102,7 @@ const ArrayElementProperties = observer(
         className?: string;
         selected: boolean;
         selectObject: (object: IEezObject) => void;
+        vertical: boolean;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
@@ -112,14 +113,36 @@ const ArrayElementProperties = observer(
                     className={classNames({ selected: this.props.selected })}
                     onClick={() => this.props.selectObject(this.props.object)}
                 >
-                    {getClassInfo(this.props.object).properties.map(
-                        propertyInfo => (
-                            <ArrayElementProperty
-                                key={propertyInfo.name}
-                                propertyInfo={propertyInfo}
-                                object={this.props.object}
-                                readOnly={this.props.readOnly}
-                            />
+                    {this.props.vertical ? (
+                        <td className="inner-table">
+                            <table>
+                                <tbody>
+                                    {getClassInfo(
+                                        this.props.object
+                                    ).properties.map(propertyInfo => (
+                                        <tr key={propertyInfo.name}>
+                                            <ArrayElementProperty
+                                                propertyInfo={propertyInfo}
+                                                object={this.props.object}
+                                                readOnly={this.props.readOnly}
+                                                vertical={this.props.vertical}
+                                            />
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </td>
+                    ) : (
+                        getClassInfo(this.props.object).properties.map(
+                            propertyInfo => (
+                                <ArrayElementProperty
+                                    key={propertyInfo.name}
+                                    propertyInfo={propertyInfo}
+                                    object={this.props.object}
+                                    readOnly={this.props.readOnly}
+                                    vertical={this.props.vertical}
+                                />
+                            )
                         )
                     )}
                 </tr>
@@ -350,39 +373,67 @@ export const ArrayProperty = observer(
             const properties = typeClass.classInfo.properties.filter(
                 propertyInfo => isArrayElementPropertyVisible(propertyInfo)
             );
-            const tableContent = (
-                <React.Fragment>
-                    <thead>
-                        <tr>
-                            {properties.map(propertyInfo => (
-                                <th
-                                    key={propertyInfo.name}
-                                    className={propertyInfo.name}
-                                    style={{
-                                        width: `${100 / properties.length}%`
-                                    }}
-                                >
-                                    {getObjectPropertyDisplayName(
-                                        objects[0],
-                                        propertyInfo
-                                    )}
-                                </th>
+            let tableContent;
+
+            let vertical =
+                propertyInfo.arrayItemOrientation &&
+                propertyInfo.arrayItemOrientation == "vertical"
+                    ? true
+                    : false;
+
+            if (vertical) {
+                tableContent = (
+                    <React.Fragment>
+                        <tbody>
+                            {array.map(object => (
+                                <ArrayElementProperties
+                                    key={getId(object)}
+                                    object={object}
+                                    readOnly={this.props.readOnly}
+                                    selected={object == this.selectedObject}
+                                    selectObject={this.selectObject}
+                                    vertical={vertical}
+                                />
                             ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {array.map(object => (
-                            <ArrayElementProperties
-                                key={getId(object)}
-                                object={object}
-                                readOnly={this.props.readOnly}
-                                selected={object == this.selectedObject}
-                                selectObject={this.selectObject}
-                            />
-                        ))}
-                    </tbody>
-                </React.Fragment>
-            );
+                        </tbody>
+                    </React.Fragment>
+                );
+            } else {
+                tableContent = (
+                    <React.Fragment>
+                        <thead>
+                            <tr>
+                                {properties.map(propertyInfo => (
+                                    <th
+                                        key={propertyInfo.name}
+                                        className={propertyInfo.name}
+                                        style={{
+                                            width: `${100 / properties.length}%`
+                                        }}
+                                    >
+                                        {getObjectPropertyDisplayName(
+                                            objects[0],
+                                            propertyInfo
+                                        )}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {array.map(object => (
+                                <ArrayElementProperties
+                                    key={getId(object)}
+                                    object={object}
+                                    readOnly={this.props.readOnly}
+                                    selected={object == this.selectedObject}
+                                    selectObject={this.selectObject}
+                                    vertical={vertical}
+                                />
+                            ))}
+                        </tbody>
+                    </React.Fragment>
+                );
+            }
 
             const table = typeClass.classInfo.propertyGridTableComponent ? (
                 <typeClass.classInfo.propertyGridTableComponent>
@@ -393,7 +444,12 @@ export const ArrayProperty = observer(
             );
 
             return (
-                <div className="shadow-sm rounded EezStudio_ArrayProperty">
+                <div
+                    className={classNames(
+                        "shadow-sm rounded EezStudio_ArrayProperty",
+                        { "vertical-orientation": vertical }
+                    )}
+                >
                     {toolbar}
                     {array.length > 0 && table}
                 </div>

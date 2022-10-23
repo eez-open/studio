@@ -4,7 +4,9 @@ import { makeObservable, observable } from "mobx";
 import {
     registerClass,
     makeDerivedClassInfo,
-    PropertyType
+    PropertyType,
+    EezObject,
+    ClassInfo
 } from "project-editor/core/object";
 
 import { ActionComponent } from "project-editor/flow/component";
@@ -15,17 +17,21 @@ import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { humanize } from "eez-studio-shared/string";
 import {
+    createObject,
+    getAncestorOfType,
     Message,
     propertyNotFoundMessage,
     propertyNotSetMessage
 } from "project-editor/store";
 import { getProject } from "project-editor/project/project";
-import { findPage } from "project-editor/features/page/page";
+import { findPage, Page } from "project-editor/features/page/page";
 import { Assets, DataBuffer } from "project-editor/build/assets";
+import { ProjectEditor } from "project-editor/project-editor-interface";
+import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const LVGL_ACTIONS = { CHANGE_SCREEN: 0 };
+const LVGL_ACTIONS = { CHANGE_SCREEN: 0, PLAY_ANIMATION: 1 };
 
 const FADE_MODES = {
     NONE: 0,
@@ -44,6 +50,186 @@ const FADE_MODES = {
     OUT_TOP: 13,
     OUT_BOTTOM: 14
 };
+
+const ANIM_PROPERTIES = {
+    POSITION_X: 0,
+    POSITION_Y: 1,
+    WIDTH: 2,
+    HEIGHT: 3,
+    OPACITY: 4,
+    IMAGE_ANGLE: 5,
+    IMAGE_ZOOM: 6
+};
+
+const ANIM_PATHS = {
+    LINEAR: 0,
+    EASE_IN: 1,
+    EASE_OUT: 2,
+    EASE_IN_OUT: 3,
+    OVERSHOOT: 4,
+    BOUNCE: 5
+};
+
+export class AnimationItem extends EezObject {
+    property: keyof typeof ANIM_PROPERTIES;
+    start: number;
+    end: number;
+    delay: number;
+    time: number;
+    relative: boolean;
+    instant: boolean;
+    path: keyof typeof ANIM_PATHS;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            property: observable,
+            start: observable,
+            end: observable,
+            delay: observable,
+            time: observable,
+            relative: observable,
+            instant: observable,
+            path: observable
+        });
+    }
+
+    static classInfo: ClassInfo = {
+        properties: [
+            {
+                name: "property",
+                type: PropertyType.Enum,
+                enumItems: Object.keys(ANIM_PROPERTIES).map(id => ({ id })),
+                enumDisallowUndefined: true
+            },
+            {
+                name: "start",
+                type: PropertyType.Number
+            },
+            {
+                name: "end",
+                type: PropertyType.Number
+            },
+            {
+                name: "delay",
+                type: PropertyType.Number
+            },
+            {
+                name: "time",
+                type: PropertyType.Number
+            },
+            {
+                name: "relative",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
+            },
+            {
+                name: "instant",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
+            },
+            {
+                name: "path",
+                type: PropertyType.Enum,
+                enumItems: Object.keys(ANIM_PATHS).map(id => ({ id })),
+                enumDisallowUndefined: true
+            }
+        ],
+
+        defaultValue: {
+            property: "POSITION_X",
+            start: 0,
+            end: 100,
+            delay: 0,
+            time: 1000,
+            relative: true,
+            instant: false,
+            path: ""
+        },
+
+        newItem: async (eventHandlers: AnimationItem[]) => {
+            const project = ProjectEditor.getProject(eventHandlers);
+
+            const result = await showGenericDialog({
+                dialogDefinition: {
+                    title: "New Event Handler",
+                    fields: [
+                        {
+                            name: "property",
+                            type: "enum",
+                            enumItems: Object.keys(ANIM_PROPERTIES).map(id => ({
+                                id,
+                                label: humanize(id)
+                            }))
+                        },
+                        {
+                            name: "start",
+                            type: "integer"
+                        },
+                        {
+                            name: "end",
+                            type: "integer"
+                        },
+                        {
+                            name: "delay",
+                            type: "integer"
+                        },
+                        {
+                            name: "time",
+                            type: "integer"
+                        },
+                        {
+                            name: "relative",
+                            type: "boolean"
+                        },
+                        {
+                            name: "instant",
+                            type: "boolean"
+                        },
+                        {
+                            name: "path",
+                            type: "enum",
+                            enumItems: Object.keys(ANIM_PATHS).map(id => ({
+                                id,
+                                label: humanize(id)
+                            }))
+                        }
+                    ]
+                },
+                values: {
+                    start: 0,
+                    end: 100,
+                    delay: 0,
+                    time: 1000,
+                    relative: true,
+                    instant: false,
+                    path: ""
+                },
+                dialogContext: project
+            });
+
+            const properties: Partial<AnimationItem> = {
+                property: result.values.property,
+                start: result.values.start,
+                end: result.values.end,
+                delay: result.values.delay,
+                time: result.values.time,
+                relative: result.values.relative,
+                instant: result.values.instant,
+                path: result.values.path
+            };
+
+            const playAnimationItem = createObject<AnimationItem>(
+                project._DocumentStore,
+                properties,
+                AnimationItem
+            );
+
+            return playAnimationItem;
+        }
+    };
+}
 
 export class LVGLActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
@@ -90,7 +276,49 @@ export class LVGLActionComponent extends ActionComponent {
                 name: "delay",
                 displayName: "Delay (ms):",
                 type: PropertyType.Number,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: (lvglAction: LVGLActionComponent) =>
+                    lvglAction.action != "CHANGE_SCREEN"
+            },
+            // PLAY_ANIMATION
+            {
+                name: "animTarget",
+                displayName: "Target",
+                type: PropertyType.Enum,
+                enumItems: (component: LVGLActionComponent) => {
+                    const page = getAncestorOfType(
+                        component,
+                        ProjectEditor.PageClass.classInfo
+                    ) as Page;
+                    return page.lvglWidgetIdentifiers.map(id => ({
+                        id,
+                        label: id
+                    }));
+                },
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: (lvglAction: LVGLActionComponent) =>
+                    lvglAction.action != "PLAY_ANIMATION"
+            },
+            {
+                name: "animDelay",
+                displayName: "Delay (ms):",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: (lvglAction: LVGLActionComponent) =>
+                    lvglAction.action != "PLAY_ANIMATION"
+            },
+            {
+                name: "animItems",
+                displayName: "Property animation definitions",
+                type: PropertyType.Array,
+                typeClass: AnimationItem,
+                arrayItemOrientation: "vertical",
+                propertyGridGroup: specificGroup,
+                partOfNavigation: false,
+                enumerable: false,
+                defaultValue: [],
+                hideInPropertyGrid: (lvglAction: LVGLActionComponent) =>
+                    lvglAction.action != "PLAY_ANIMATION"
             }
         ],
         check: (object: LVGLActionComponent) => {
@@ -107,6 +335,23 @@ export class LVGLActionComponent extends ActionComponent {
                         );
                     }
                 }
+            } else if (object.action == "PLAY_ANIMATION") {
+                if (!object.animTarget) {
+                    messages.push(propertyNotSetMessage(object, "animTarget"));
+                } else {
+                    const page = getAncestorOfType(
+                        object,
+                        ProjectEditor.PageClass.classInfo
+                    ) as Page;
+                    if (
+                        page.lvglWidgetIdentifiers.indexOf(object.animTarget) ==
+                        -1
+                    ) {
+                        messages.push(
+                            propertyNotFoundMessage(object, "animTarget")
+                        );
+                    }
+                }
             }
 
             return messages;
@@ -119,7 +364,8 @@ export class LVGLActionComponent extends ActionComponent {
             action: "CHANGE_SCREEN",
             fadeMode: "FADE_ON",
             speed: 200,
-            delay: 0
+            delay: 0,
+            animDelay: 0
         }
     });
 
@@ -131,6 +377,11 @@ export class LVGLActionComponent extends ActionComponent {
     speed: number;
     delay: number;
 
+    // PLAY_ANIMATION
+    animTarget: string;
+    animDelay: number;
+    animItems: AnimationItem[];
+
     constructor() {
         super();
 
@@ -139,7 +390,10 @@ export class LVGLActionComponent extends ActionComponent {
             screen: observable,
             fadeMode: observable,
             speed: observable,
-            delay: observable
+            delay: observable,
+            animTarget: observable,
+            animDelay: observable,
+            animItems: observable
         });
     }
 
@@ -167,12 +421,36 @@ export class LVGLActionComponent extends ActionComponent {
         ];
     }
 
+    get actionDescription() {
+        if (this.action == "CHANGE_SCREEN") {
+            return `${this.screen}, ${humanize(this.fadeMode)}, Speed=${
+                this.speed
+            } Delay=${this.delay}`;
+        } else if (this.action == "PLAY_ANIMATION") {
+            return (
+                `${this.animTarget}, Delay=${this.animDelay}\n\n` +
+                this.animItems
+                    .map(
+                        item =>
+                            `${item.property} Start=${item.start} End=${
+                                item.end
+                            } Delay=${item.delay} Time=${item.time} Relative=${
+                                item.relative ? "On" : "Off"
+                            } Instant=${item.instant ? "On" : "Off"} ${
+                                item.path
+                            }`
+                    )
+                    .join("\n")
+            );
+        }
+        return ``;
+    }
+
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
             <div className="body">
                 <pre>
-                    {humanize(this.action)}: {this.screen},{" "}
-                    {humanize(this.fadeMode)}, {this.speed}, {this.delay}
+                    {humanize(this.action)}: {this.actionDescription}
                 </pre>
             </div>
         );
@@ -198,6 +476,46 @@ export class LVGLActionComponent extends ActionComponent {
 
             // delay
             dataBuffer.writeUint32(this.delay);
+        } else if (this.action == "PLAY_ANIMATION") {
+            // target
+            const page = getAncestorOfType(
+                this,
+                ProjectEditor.PageClass.classInfo
+            ) as Page;
+            dataBuffer.writeInt32(
+                page.lvglWidgetIdentifiers.indexOf(this.animTarget)
+            );
+
+            // delay
+            dataBuffer.writeUint32(this.animDelay);
+
+            dataBuffer.writeArray(this.animItems, item => {
+                // property
+                dataBuffer.writeUint32(ANIM_PROPERTIES[item.property]);
+
+                // start
+                dataBuffer.writeInt32(item.start);
+
+                // end
+                dataBuffer.writeInt32(item.end);
+
+                // delay
+                dataBuffer.writeUint32(item.delay);
+
+                // time
+                dataBuffer.writeUint32(item.time);
+
+                // flags
+                const ANIMATION_ITEM_FLAG_RELATIVE = 1 << 0;
+                const ANIMATION_ITEM_FLAG_INSTANT = 1 << 1;
+                dataBuffer.writeUint32(
+                    (item.relative ? ANIMATION_ITEM_FLAG_RELATIVE : 0) |
+                        (item.instant ? ANIMATION_ITEM_FLAG_INSTANT : 0)
+                );
+
+                // delay
+                dataBuffer.writeUint32(ANIM_PATHS[item.path]);
+            });
         }
     }
 }

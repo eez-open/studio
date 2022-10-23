@@ -14,7 +14,9 @@ import {
     getParent,
     getId,
     makeDerivedClassInfo,
-    MessageType
+    MessageType,
+    PropertyInfo,
+    getProperty
 } from "project-editor/core/object";
 import {
     createObject,
@@ -62,6 +64,7 @@ import { LVGLPage } from "project-editor/lvgl/Page";
 import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { LVGLCreateResultType } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import type { LVGLBuild } from "project-editor/lvgl/build";
+import { visitObjects } from "project-editor/core/search";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -220,7 +223,35 @@ export class Page extends Flow {
             {
                 name: "name",
                 type: PropertyType.String,
-                unique: true,
+                unique: (
+                    object: IEezObject,
+                    parent: IEezObject,
+                    propertyInfo?: PropertyInfo
+                ) => {
+                    const page = object as Page;
+                    const oldIdentifier = propertyInfo
+                        ? getProperty(object, propertyInfo.name)
+                        : undefined;
+
+                    return (object: any, ruleName: string) => {
+                        const newIdentifer = object[ruleName];
+                        if (
+                            oldIdentifier != undefined &&
+                            newIdentifer == oldIdentifier
+                        ) {
+                            return null;
+                        }
+
+                        if (
+                            page.lvglWidgetIdentifiers.indexOf(newIdentifer) ==
+                            -1
+                        ) {
+                            return null;
+                        }
+
+                        return "Not an unique name";
+                    };
+                },
                 propertyGridGroup: generalGroup
             },
             {
@@ -785,6 +816,7 @@ export class Page extends Flow {
     ): LVGLCreateResultType {
         const obj = runtime.wasm._lvglCreateContainer(
             parentObj,
+            0,
             this.left,
             this.top,
             this.width,
@@ -841,6 +873,28 @@ export class Page extends Flow {
                 widget.lvglBuildTick(build);
             }
         }
+    }
+
+    get lvglWidgetIdentifiers() {
+        const widgetIdentifiers: string[] = [];
+
+        widgetIdentifiers.push(this.name);
+
+        const v = visitObjects(this.components);
+        while (true) {
+            let visitResult = v.next();
+            if (visitResult.done) {
+                break;
+            }
+            const widget = visitResult.value;
+            if (widget instanceof ProjectEditor.LVGLWidgetClass) {
+                if (widget.identifier) {
+                    widgetIdentifiers.push(widget.identifier);
+                }
+            }
+        }
+
+        return widgetIdentifiers;
     }
 }
 

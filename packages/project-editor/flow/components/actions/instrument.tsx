@@ -35,7 +35,8 @@ import { Assets, DataBuffer } from "project-editor/build/assets";
 import {
     getChildOfObject,
     getProjectEditorStore,
-    Message
+    Message,
+    ProjectEditorStore
 } from "project-editor/store";
 import { isDashboardProject } from "project-editor/project/project-type-traits";
 import {
@@ -60,7 +61,6 @@ import {
     SCPI_PART_QUERY_WITH_ASSIGNMENT,
     SCPI_PART_STRING
 } from "eez-studio-shared/scpi-parser";
-import { ProjectEditor } from "project-editor/project-editor-interface";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { COMPONENT_TYPE_SCPIACTION } from "project-editor/flow/components/component_types";
 
@@ -87,7 +87,11 @@ export class SCPIActionComponent extends ActionComponent {
                 disableSpellcheck: true
             }
         ],
-        beforeLoadHook: (component: SCPIActionComponent, jsObject: any) => {
+        beforeLoadHook: (
+            component: SCPIActionComponent,
+            jsObject: any,
+            projectEditorStore: ProjectEditorStore
+        ) => {
             if (jsObject.scpi) {
                 if (!jsObject.customInputs && !jsObject.customOutputs) {
                     jsObject.customInputs = [];
@@ -129,8 +133,7 @@ export class SCPIActionComponent extends ActionComponent {
                 }
             }
 
-            const project = ProjectEditor.getProject(component);
-            if (!project.projectTypeTraits.isDashboard) {
+            if (!projectEditorStore.projectTypeTraits.isDashboard) {
                 jsObject.instrument = undefined;
             }
         },
