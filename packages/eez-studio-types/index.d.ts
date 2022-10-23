@@ -305,7 +305,7 @@ export interface IWasmFlowRuntime {
     postWorkerToRendererMessage: (workerToRenderMessage: WorkerToRenderMessage) => void
 
     // eez framework API
-    _init(wasmModuleId: number, assets: number, assetsSize: number);
+    _init(wasmModuleId: number, assets: number, assetsSize: number, displayWidth: number, displayHeight: number);
     _mainLoop();
     _getSyncedBuffer(): number;
     _onMouseWheelEvent(wheelDeltaY: number, wheelClicked: number);

@@ -182,7 +182,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                 this.page._lvglRuntime = this;
             });
 
-            this.wasm._init(0, 0, 0);
+            this.wasm._init(0, 0, 0, page.width, page.height);
 
             this.requestAnimationFrameId = window.requestAnimationFrame(
                 this.tick

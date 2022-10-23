@@ -258,11 +258,11 @@ static void memory_monitor(lv_timer_t * param)
 
 bool initialized = false;
 
-EM_PORT_API(void) init(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSize) {
+EM_PORT_API(void) init(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSize, uint32_t displayWidth, uint32_t displayHeight) {
     bool editor = assetsSize == 0;
 
-    hor_res = 800;
-    ver_res = 480;
+    hor_res = displayWidth;
+    ver_res = displayHeight;
 
     /*Initialize LittlevGL*/
     lv_init();

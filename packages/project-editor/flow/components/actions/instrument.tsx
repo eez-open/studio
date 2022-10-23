@@ -132,10 +132,6 @@ export class SCPIActionComponent extends ActionComponent {
                     }
                 }
             }
-
-            if (!projectEditorStore.projectTypeTraits.isDashboard) {
-                jsObject.instrument = undefined;
-            }
         },
         check: (component: SCPIActionComponent) => {
             let messages: Message[] = [];

@@ -75,6 +75,8 @@ export function loadProject(
 
     currentDocumentStore = undefined;
 
+    project._DocumentStore = projectEditorStore;
+
     fixConnectionLines(project);
 
     wireIDToObjID = undefined as any;

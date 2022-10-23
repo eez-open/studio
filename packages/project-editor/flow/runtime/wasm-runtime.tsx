@@ -188,7 +188,9 @@ export class WasmRuntime extends RemoteRuntime {
         this.worker = createWasmWorker(
             this.wasmModuleId,
             this.onWorkerMessage,
-            this.projectEditorStore.projectTypeTraits.isLVGL
+            this.projectEditorStore.projectTypeTraits.isLVGL,
+            this.displayWidth,
+            this.displayHeight
         );
 
         if (this.projectEditorStore.projectTypeTraits.isLVGL) {

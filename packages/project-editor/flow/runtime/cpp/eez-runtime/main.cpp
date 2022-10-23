@@ -77,13 +77,13 @@ namespace eez {
     }
 }
 
-EM_PORT_API(void) init(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSize) {
+EM_PORT_API(void) init(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSize, uint32_t displayWidth, uint32_t displayHeight) {
     eez::flow::g_wasmModuleId = wasmModuleId;
 
     eez::initAssetsMemory();
     eez::loadMainAssets(assets, assetsSize);
-    DISPLAY_WIDTH = eez::g_mainAssets->settings->displayWidth;
-    DISPLAY_HEIGHT = eez::g_mainAssets->settings->displayHeight;
+    DISPLAY_WIDTH = displayWidth;
+    DISPLAY_HEIGHT = displayHeight;
     eez::initOtherMemory();
     eez::initAllocHeap(eez::ALLOC_BUFFER, eez::ALLOC_BUFFER_SIZE);
 

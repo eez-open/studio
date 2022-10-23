@@ -133,7 +133,9 @@ function onArrayValueFree(wasmModuleId: number, ptr: number) {
 export function createWasmWorker(
     wasmModuleId: number,
     postWorkerToRenderMessage: (data: WorkerToRenderMessage) => void,
-    lvgl: boolean
+    lvgl: boolean,
+    displayWidth: number,
+    displayHeight: number
 ) {
     let WasmFlowRuntime: IWasmFlowRuntime;
 
@@ -326,7 +328,13 @@ export function createWasmWorker(
             var ptr = WasmFlowRuntime._malloc(assets.length);
             WasmFlowRuntime.HEAPU8.set(assets, ptr);
 
-            WasmFlowRuntime._init(wasmModuleId, ptr, assets.length);
+            WasmFlowRuntime._init(
+                wasmModuleId,
+                ptr,
+                assets.length,
+                displayWidth,
+                displayHeight
+            );
 
             WasmFlowRuntime._free(ptr);
 
