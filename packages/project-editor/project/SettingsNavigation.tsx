@@ -333,7 +333,9 @@ export const SettingsNavigation = observer(
 
         render() {
             const navigationObjectAdapter = new TreeObjectAdapter(
-                this.context.project.settings
+                this.context.project.settings,
+                undefined,
+                true // expanded
             );
 
             return (

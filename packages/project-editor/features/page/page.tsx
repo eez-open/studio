@@ -940,9 +940,7 @@ export class Page extends Flow {
     }
 
     get _lvglWidgets() {
-        const widgets: (Page | LVGLWidget)[] = [];
-
-        widgets.push(this);
+        const widgets: LVGLWidget[] = [];
 
         const v = visitObjects(this.components);
         while (true) {

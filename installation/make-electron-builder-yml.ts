@@ -242,7 +242,7 @@ let files = [
             target: [
                 {
                     target: "dmg",
-                    arch: ["x64", "arm64"]
+                    arch: ["x64"]
                 },
                 {
                     target: "pkg",

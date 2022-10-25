@@ -494,10 +494,15 @@ export class LVGLWidget extends Widget {
             this,
             ProjectEditor.PageClass.classInfo
         ) as Page;
-        return page._lvglWidgets.indexOf(this);
+        const widgetIndex = page._lvglWidgets.indexOf(this);
+        if (widgetIndex == -1) {
+            return -1;
+        }
+        return widgetIndex + 1;
     }
 
     override get relativePosition() {
+        this._refreshCounter;
         if (this._lvglObj) {
             const page = getAncestorOfType(
                 this,
@@ -680,6 +685,13 @@ export class LVGLWidget extends Widget {
                 runtime.wasm._lvglObjClearFlag(
                     obj,
                     getCode(cleared, LVGL_FLAG_CODES)
+                );
+            }
+
+            if (this.hiddenInEditor) {
+                runtime.wasm._lvglObjAddFlag(
+                    obj,
+                    getCode(["HIDDEN"], LVGL_FLAG_CODES)
                 );
             }
         }

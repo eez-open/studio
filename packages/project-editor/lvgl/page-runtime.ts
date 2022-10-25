@@ -5,7 +5,6 @@ import type { Page } from "project-editor/features/page/page";
 import type { IWasmFlowRuntime } from "eez-studio-types";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Bitmap } from "project-editor/features/bitmap/bitmap";
-import { visitObjects } from "project-editor/core/search";
 import type { Font } from "project-editor/features/font/font";
 import {
     getObjectPathAsString,
@@ -71,8 +70,6 @@ export abstract class LVGLPageRuntime {
             this.wasm.HEAP32[(bitmapPtr >> 2) + 1] = bitmapData.pixels.length;
 
             this.wasm.HEAP32[(bitmapPtr >> 2) + 2] = bitmapPtr + 12;
-
-            console.log(bitmapData);
 
             const offset = bitmapPtr + 12;
             for (let i = 0; i < bitmapData.pixels.length; i++) {
@@ -163,34 +160,21 @@ export abstract class LVGLPageRuntime {
     }
 
     static detachRuntimeFromPage(page: Page) {
-        const runtime = page._lvglRuntime;
-        if (!runtime) {
-            return;
-        }
-
-        if (page._lvglObj != undefined) {
-            runtime.wasm._lvglDeleteObject(page._lvglObj);
-
-            const v = visitObjects(page.components);
-            while (true) {
-                let visitResult = v.next();
-                if (visitResult.done) {
-                    break;
-                }
-                if (
-                    visitResult.value instanceof ProjectEditor.LVGLWidgetClass
-                ) {
-                    const lvglWidget = visitResult.value;
-                    runInAction(() => {
-                        lvglWidget._lvglObj = undefined;
-                    });
-                }
+        runInAction(() => {
+            const runtime = page._lvglRuntime;
+            if (!runtime) {
+                return;
             }
 
-            page._lvglObj = undefined;
-        }
+            if (page._lvglObj != undefined) {
+                runtime.wasm._lvglDeleteObject(page._lvglObj);
+                page._lvglObj = undefined;
 
-        runInAction(() => {
+                page._lvglWidgets.forEach(
+                    widget => (widget._lvglObj = undefined)
+                );
+            }
+
             page._lvglRuntime = undefined;
         });
     }
@@ -229,6 +213,13 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
             );
 
             this.autorRunDispose = autorun(() => {
+                // set all _lvglObj to undefined
+                runInAction(() => {
+                    this.page._lvglWidgets.forEach(
+                        widget => (widget._lvglObj = undefined)
+                    );
+                });
+
                 const pageObj = this.page.lvglCreate(this, 0).obj;
                 this.wasm._lvglScreenLoad(-1, pageObj);
 
@@ -487,17 +478,7 @@ function getObjects(page: Page) {
     const objects = [];
     objects.push(page._lvglObj!);
 
-    const v = visitObjects(page.components);
-    while (true) {
-        let visitResult = v.next();
-        if (visitResult.done) {
-            break;
-        }
-        if (visitResult.value instanceof ProjectEditor.LVGLWidgetClass) {
-            const lvglWidget = visitResult.value;
-            objects.push(lvglWidget._lvglObj!);
-        }
-    }
+    page._lvglWidgets.forEach(widget => objects.push(widget._lvglObj!));
 
     return objects;
 }
@@ -511,20 +492,11 @@ function setObjects(
 
     runInAction(() => {
         page._lvglRuntime = lvglRuntime;
-        page._lvglObj = objects[index++];
-    });
 
-    const v = visitObjects(page.components);
-    while (true) {
-        let visitResult = v.next();
-        if (visitResult.done) {
-            break;
-        }
-        if (visitResult.value instanceof ProjectEditor.LVGLWidgetClass) {
-            const lvglWidget = visitResult.value;
-            runInAction(() => {
-                lvglWidget._lvglObj = objects[index++];
-            });
-        }
-    }
+        page._lvglObj = objects[index++];
+
+        page._lvglWidgets.forEach(
+            widget => (widget._lvglObj = objects[index++])
+        );
+    });
 }

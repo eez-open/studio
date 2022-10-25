@@ -211,6 +211,8 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         transformer?: (object: IEezObject) => ITreeObjectAdapter,
         expanded?: boolean
     ) {
+        this.expanded = expanded ?? false;
+
         makeObservable(this, {
             selected: observable,
             expanded: observable,
@@ -237,10 +239,13 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             this.transformer = transformer;
         } else {
             this.transformer = createTransformer((object: IEezObject) => {
-                return new TreeObjectAdapter(object, this.transformer);
+                return new TreeObjectAdapter(
+                    object,
+                    this.transformer,
+                    expanded
+                );
             });
         }
-        this.expanded = expanded || false;
     }
 
     get id() {
@@ -284,7 +289,8 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             if (isArray(childObject)) {
                 children[propertyInfo.name] = new TreeObjectAdapter(
                     childObject,
-                    this.transformer
+                    this.transformer,
+                    this.expanded
                 );
             } else {
                 children[propertyInfo.name] = this.transformer(childObject);

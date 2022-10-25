@@ -1,7 +1,6 @@
 import path from "path";
 import { copyFile } from "eez-studio-shared/util-electron";
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
-import { visitObjects } from "project-editor/core/search";
 import type { Bitmap } from "project-editor/features/bitmap/bitmap";
 import { Page } from "project-editor/features/page/page";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -160,19 +159,11 @@ export class LVGLBuild {
             build.line(`lv_obj_t *${this.screenObjFieldName};`);
             build.line("");
 
-            const v = visitObjects(page.components);
-            while (true) {
-                let visitResult = v.next();
-                if (visitResult.done) {
-                    break;
-                }
-                const widget = visitResult.value;
-                if (widget instanceof ProjectEditor.LVGLWidgetClass) {
-                    build.line(
-                        `lv_obj_t *${this.getWidgetStructFieldName(widget)};`
-                    );
-                }
-            }
+            page._lvglWidgets.forEach(widget =>
+                build.line(
+                    `lv_obj_t *${this.getWidgetStructFieldName(widget)};`
+                )
+            );
 
             build.unindent();
             build.line(`} ${screenStructName};`);
@@ -199,91 +190,78 @@ export class LVGLBuild {
         const build = this;
 
         for (const page of this.project.pages) {
-            const v = visitObjects(page.components);
-            while (true) {
-                let visitResult = v.next();
-                if (visitResult.done) {
-                    break;
-                }
-                const widget = visitResult.value;
-                if (widget instanceof ProjectEditor.LVGLWidgetClass) {
-                    if (
-                        widget.eventHandlers.length > 0 ||
-                        widget.hasEventHandler
-                    ) {
-                        build.line(
-                            `static void ${build.getEventHandlerCallbackName(
-                                widget
-                            )}(lv_event_t *e) {`
-                        );
+            page._lvglWidgets.forEach(widget => {
+                if (widget.eventHandlers.length > 0 || widget.hasEventHandler) {
+                    build.line(
+                        `static void ${build.getEventHandlerCallbackName(
+                            widget
+                        )}(lv_event_t *e) {`
+                    );
+                    build.indent();
+
+                    build.line(`lv_event_code_t event = lv_event_get_code(e);`);
+
+                    for (const eventHandler of widget.eventHandlers) {
+                        if (
+                            eventHandler.trigger == "CHECKED" ||
+                            eventHandler.trigger == "UNCHECKED"
+                        ) {
+                            build.line(
+                                `lv_obj_t *ta = lv_event_get_target(e);`
+                            );
+                            break;
+                        }
+                    }
+
+                    for (const eventHandler of widget.eventHandlers) {
+                        if (eventHandler.trigger == "CHECKED") {
+                            build.line(
+                                `if (event == LV_EVENT_VALUE_CHANGED && lv_obj_has_state(ta, LV_STATE_CHECKED)) {`
+                            );
+                        } else if (eventHandler.trigger == "UNCHECKED") {
+                            build.line(
+                                `if (event == LV_EVENT_VALUE_CHANGED && !lv_obj_has_state(ta, LV_STATE_CHECKED)) {`
+                            );
+                        } else {
+                            build.line(
+                                `if (event == LV_EVENT_${eventHandler.trigger}) {`
+                            );
+                        }
+
                         build.indent();
-
-                        build.line(
-                            `lv_event_code_t event = lv_event_get_code(e);`
-                        );
-
-                        for (const eventHandler of widget.eventHandlers) {
-                            if (
-                                eventHandler.trigger == "CHECKED" ||
-                                eventHandler.trigger == "UNCHECKED"
-                            ) {
-                                build.line(
-                                    `lv_obj_t *ta = lv_event_get_target(e);`
+                        if (eventHandler.handlerType == "action") {
+                            build.line(
+                                `${this.getActionFunctionName(
+                                    eventHandler.action
+                                )}(e);`
+                            );
+                        } else {
+                            let flowIndex = build.assets.getFlowIndex(page);
+                            let componentIndex =
+                                build.assets.getComponentIndex(widget);
+                            const outputIndex =
+                                build.assets.getComponentOutputIndex(
+                                    widget,
+                                    eventHandler.trigger
                                 );
-                                break;
-                            }
+
+                            build.line(
+                                `flowPropagateValue(${flowIndex}, ${componentIndex}, ${outputIndex});`
+                            );
                         }
-
-                        for (const eventHandler of widget.eventHandlers) {
-                            if (eventHandler.trigger == "CHECKED") {
-                                build.line(
-                                    `if (event == LV_EVENT_VALUE_CHANGED && lv_obj_has_state(ta, LV_STATE_CHECKED)) {`
-                                );
-                            } else if (eventHandler.trigger == "UNCHECKED") {
-                                build.line(
-                                    `if (event == LV_EVENT_VALUE_CHANGED && !lv_obj_has_state(ta, LV_STATE_CHECKED)) {`
-                                );
-                            } else {
-                                build.line(
-                                    `if (event == LV_EVENT_${eventHandler.trigger}) {`
-                                );
-                            }
-
-                            build.indent();
-                            if (eventHandler.handlerType == "action") {
-                                build.line(
-                                    `${this.getActionFunctionName(
-                                        eventHandler.action
-                                    )}(e);`
-                                );
-                            } else {
-                                let flowIndex = build.assets.getFlowIndex(page);
-                                let componentIndex =
-                                    build.assets.getComponentIndex(widget);
-                                const outputIndex =
-                                    build.assets.getComponentOutputIndex(
-                                        widget,
-                                        eventHandler.trigger
-                                    );
-
-                                build.line(
-                                    `flowPropagateValue(${flowIndex}, ${componentIndex}, ${outputIndex});`
-                                );
-                            }
-                            build.unindent();
-                            build.line("}");
-                        }
-
-                        if (widget.hasEventHandler) {
-                            widget.buildEventHandlerSpecific(build);
-                        }
-
                         build.unindent();
                         build.line("}");
-                        build.line("");
                     }
+
+                    if (widget.hasEventHandler) {
+                        widget.buildEventHandlerSpecific(build);
+                    }
+
+                    build.unindent();
+                    build.line("}");
+                    build.line("");
                 }
-            }
+            });
         }
 
         for (const page of this.project.pages) {
