@@ -9,6 +9,7 @@ import type { Project } from "project-editor/project/project";
 import { getAncestorOfType } from "project-editor/store";
 import type { LVGLWidget } from "./widgets";
 import type { Assets } from "project-editor/build/assets";
+import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 
 export class LVGLBuild {
     project: Project;
@@ -40,7 +41,11 @@ export class LVGLBuild {
     }
 
     line(line: string) {
-        this.result = this.result + this.indentation + line + "\n";
+        this.result += this.indentation + line + "\n";
+    }
+
+    text(text: string) {
+        this.result += text;
     }
 
     getScreenIdentifier(page: Page) {
@@ -48,15 +53,15 @@ export class LVGLBuild {
     }
 
     getScreenStructName(page: Page) {
-        return this.getScreenIdentifier(page);
+        return this.getScreenIdentifier(page) + "_t";
     }
 
     getScreenCreateFunctionName(page: Page) {
-        return `create_${this.getScreenIdentifier(page)}`;
+        return `create_screen_${this.getScreenIdentifier(page)}`;
     }
 
     getScreenTickFunctionName(page: Page) {
-        return `tick_${this.getScreenIdentifier(page)}`;
+        return `tick_screen_${this.getScreenIdentifier(page)}`;
     }
 
     getImageVariableName(bitmap: Bitmap) {
@@ -104,9 +109,10 @@ export class LVGLBuild {
                 }
             } else {
                 let index = 0;
+                let prefix = getComponentName(widget.type) + "_";
                 do {
                     index++;
-                    identifier = "widget_" + index;
+                    identifier = prefix + index;
                 } while (widgetIdentifiers.has(identifier));
             }
             widgetIdentifiers.add(identifier);
@@ -142,14 +148,6 @@ export class LVGLBuild {
         return "screen_obj";
     }
 
-    getWidgetObjFieldName(widget: LVGLWidget) {
-        return getName(
-            "obj_",
-            widget.identifier,
-            NamingConvention.UnderscoreLowerCase
-        );
-    }
-
     async buildScreensDecl() {
         this.result = "";
         this.indentation = "";
@@ -157,7 +155,7 @@ export class LVGLBuild {
 
         for (const page of this.project.pages) {
             const screenStructName = build.getScreenStructName(page);
-            build.line(`typedef struct ${screenStructName}_t {`);
+            build.line(`typedef struct _${screenStructName} {`);
             build.indent();
             build.line(`lv_obj_t *${this.screenObjFieldName};`);
             build.line("");
@@ -170,11 +168,9 @@ export class LVGLBuild {
                 }
                 const widget = visitResult.value;
                 if (widget instanceof ProjectEditor.LVGLWidgetClass) {
-                    if (widget.identifier) {
-                        build.line(
-                            `lv_obj_t *${this.getWidgetObjFieldName(widget)};`
-                        );
-                    }
+                    build.line(
+                        `lv_obj_t *${this.getWidgetStructFieldName(widget)};`
+                    );
                 }
             }
 
@@ -319,6 +315,101 @@ export class LVGLBuild {
         return this.result;
     }
 
+    async buildScreensDeclExt() {
+        this.result = "";
+        this.indentation = "";
+        const build = this;
+
+        build.line("typedef lv_obj_t **screen_t;");
+
+        build.line("");
+
+        build.line("enum {");
+        build.indent();
+        for (const page of this.project.pages) {
+            build.line(
+                `${getName(
+                    "SCREEN_",
+                    page,
+                    NamingConvention.UnderscoreUpperCase
+                )},`
+            );
+        }
+        build.line("NUM_SCREENS");
+        build.unindent();
+        build.line("};");
+
+        build.line("");
+
+        build.line("screen_t get_screen(int screen_index);");
+        build.line("void tick_screen(int screen_index);");
+
+        return this.result;
+    }
+
+    async buildScreensDefExt() {
+        this.result = "";
+        this.indentation = "";
+        const build = this;
+
+        build.line("#include <assert.h>");
+
+        build.line("");
+
+        build.line("typedef screen_t (*create_screen_func_t)();");
+
+        build.line("");
+
+        build.line("create_screen_func_t create_screen_funcs[] = {");
+        build.indent();
+        for (const page of this.project.pages) {
+            build.line(
+                `(create_screen_func_t)${this.getScreenCreateFunctionName(
+                    page
+                )},`
+            );
+        }
+        build.unindent();
+        build.line("};");
+
+        build.line("");
+
+        build.line("typedef void (*tick_screen_func_t)(screen_t);");
+
+        build.line("");
+
+        build.line("tick_screen_func_t tick_screen_funcs[] = {");
+        build.indent();
+        for (const page of this.project.pages) {
+            build.line(
+                `(tick_screen_func_t)${this.getScreenTickFunctionName(page)},`
+            );
+        }
+        build.unindent();
+        build.line("};");
+
+        build.line("");
+
+        build.line("screen_t screens[NUM_SCREENS];");
+
+        build.text(`
+screen_t get_screen(int screen_index) {
+    assert(screen_index >= 0 && screen_index < NUM_SCREENS);
+    if (!screens[screen_index]) {
+        screens[screen_index] = create_screen_funcs[screen_index]();
+    }
+    return screens[screen_index];
+}
+
+void tick_screen(int screen_index) {
+    assert(screen_index >= 0 && screen_index < NUM_SCREENS);
+    tick_screen_funcs[screen_index](get_screen(screen_index));
+}
+`);
+
+        return this.result;
+    }
+
     async buildImagesDecl() {
         this.result = "";
         this.indentation = "";
@@ -346,10 +437,6 @@ export class LVGLBuild {
             const bitmapData = await ProjectEditor.getBitmapData(bitmap);
 
             const bgrPixels = new Uint8Array(bitmapData.pixels);
-            for (let i = 0; i < bgrPixels.length; i += 4) {
-                bgrPixels[i] = bitmapData.pixels[i + 2];
-                bgrPixels[i + 2] = bitmapData.pixels[i];
-            }
 
             build.line(
                 `const LV_ATTRIBUTE_MEM_ALIGN uint8_t ${varName}_data[] = { ${bgrPixels.join(

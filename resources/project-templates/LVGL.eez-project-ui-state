@@ -299,11 +299,11 @@
                         "children": [
                           {
                             "type": "tabset",
-                            "id": "#a65560cd-7ee4-426c-87ee-3956a7b98318",
+                            "id": "#6d71f811-d331-41a1-9ad6-fdcf413edf4d",
                             "children": [
                               {
                                 "type": "tab",
-                                "id": "#c3501889-3016-479f-8d8f-63d2fb7c37a5",
+                                "id": "#cd7c1f6e-08c2-4f5a-804b-dd6f1b615b08",
                                 "name": "Main",
                                 "component": "editor",
                                 "config": {

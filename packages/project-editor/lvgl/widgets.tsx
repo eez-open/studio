@@ -13,9 +13,6 @@ import {
     LVGL_FLAG_CODES,
     LVGL_STATE_CODES,
     findPropertyByNameInClassInfo,
-    EezObject,
-    ClassInfo,
-    getParent,
     FlowPropertyType,
     IEezObject,
     PropertyInfo,
@@ -23,7 +20,6 @@ import {
     getProperty
 } from "project-editor/core/object";
 import {
-    createObject,
     getAncestorOfType,
     getClassInfo,
     getObjectPathAsString,
@@ -46,24 +42,27 @@ import {
 
 import { escapeCString } from "project-editor/build/helper";
 import { LVGLParts, LVGLStylesDefinition } from "project-editor/lvgl/style";
-import {
-    LVGLStylesDefinitionProperty,
-    Checkbox
-} from "project-editor/lvgl/LVGLStylesDefinitionProperty";
+import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import type { LVGLCreateResultType } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { ProjectContext } from "project-editor/project/context";
-import { humanize } from "eez-studio-shared/string";
 import type { Page } from "project-editor/features/page/page";
 import { ComponentsContainerEnclosure } from "project-editor/flow/editor/render";
 import { geometryGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { Property } from "project-editor/ui-components/PropertyGrid/Property";
 import type { LVGLBuild } from "project-editor/lvgl/build";
-import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { ValueType } from "project-editor/features/variable/value-type";
 import { expressionBuilder } from "project-editor/flow/expression/ExpressionBuilder";
+import {
+    EventHandler,
+    eventHandlersProperty,
+    LVGLWidgetFlagsProperty,
+    LVGLWidgetStatesProperty,
+    LV_EVENT_SLIDER_VALUE_CHANGED,
+    LV_EVENT_SLIDER_VALUE_LEFT_CHANGED
+} from "project-editor/lvgl/widget-common";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -106,286 +105,6 @@ const statesGroup: IPropertyGridGroupDefinition = {
     title: "States",
     position: 4
 };
-
-const eventsGroup: IPropertyGridGroupDefinition = {
-    id: "lvgl-events",
-    title: "Events",
-    position: 4
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const LVGLWidgetFlagsProperty = observer(
-    class LVGLWidgetFlagsProperty extends React.Component<PropertyProps> {
-        static contextType = ProjectContext;
-        declare context: React.ContextType<typeof ProjectContext>;
-
-        render() {
-            const flagNames: (keyof typeof LVGL_FLAG_CODES)[] = [];
-
-            this.props.objects.map((widget: LVGLWidget) => {
-                const classInfo = getClassInfo(widget);
-                for (const flagName of classInfo.lvgl!.flags) {
-                    if (flagNames.indexOf(flagName) == -1) {
-                        flagNames.push(flagName);
-                    }
-                }
-            });
-
-            return (
-                <div>
-                    {flagNames.map(flagName => {
-                        let values = this.props.objects.map(
-                            (widget: LVGLWidget) =>
-                                (widget.flags || "")
-                                    .split("|")
-                                    .indexOf(flagName) != -1
-                        );
-
-                        let numEnabled = 0;
-                        let numDisabled = 0;
-                        values.forEach(value => {
-                            if (value) {
-                                numEnabled++;
-                            } else {
-                                numDisabled++;
-                            }
-                        });
-
-                        let state =
-                            numEnabled == 0
-                                ? false
-                                : numDisabled == 0
-                                ? true
-                                : undefined;
-
-                        return (
-                            <Checkbox
-                                key={flagName}
-                                state={state}
-                                label={humanize(flagName)}
-                                onChange={(value: boolean) => {
-                                    this.context.undoManager.setCombineCommands(
-                                        true
-                                    );
-
-                                    if (value) {
-                                        this.props.objects.forEach(
-                                            (widget: LVGLWidget) => {
-                                                const classInfo =
-                                                    getClassInfo(widget);
-                                                if (
-                                                    classInfo.lvgl!.flags.indexOf(
-                                                        flagName
-                                                    ) == -1
-                                                ) {
-                                                    return;
-                                                }
-
-                                                const flagsArr = (
-                                                    widget.flags || ""
-                                                ).split("|");
-                                                if (
-                                                    flagsArr.indexOf(
-                                                        flagName
-                                                    ) == -1
-                                                ) {
-                                                    flagsArr.push(flagName);
-                                                    this.context.updateObject(
-                                                        widget,
-                                                        {
-                                                            flags: flagsArr.join(
-                                                                "|"
-                                                            )
-                                                        }
-                                                    );
-                                                }
-                                            }
-                                        );
-                                    } else {
-                                        this.props.objects.forEach(
-                                            (widget: LVGLWidget) => {
-                                                const classInfo =
-                                                    getClassInfo(widget);
-                                                if (
-                                                    classInfo.lvgl!.flags.indexOf(
-                                                        flagName
-                                                    ) == -1
-                                                ) {
-                                                    return;
-                                                }
-
-                                                const flagsArr = (
-                                                    widget.flags || ""
-                                                ).split("|");
-                                                const i =
-                                                    flagsArr.indexOf(flagName);
-                                                if (i != -1) {
-                                                    flagsArr.splice(i, 1);
-                                                    this.context.updateObject(
-                                                        widget,
-                                                        {
-                                                            flags: flagsArr.join(
-                                                                "|"
-                                                            )
-                                                        }
-                                                    );
-                                                }
-                                            }
-                                        );
-                                    }
-
-                                    this.context.undoManager.setCombineCommands(
-                                        false
-                                    );
-                                }}
-                                readOnly={this.props.readOnly}
-                            />
-                        );
-                    })}
-                </div>
-            );
-        }
-    }
-);
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const LVGLWidgetStatesProperty = observer(
-    class LVGLWidgetStatesProperty extends React.Component<PropertyProps> {
-        static contextType = ProjectContext;
-        declare context: React.ContextType<typeof ProjectContext>;
-
-        render() {
-            const stateNames: (keyof typeof LVGL_STATE_CODES)[] = [];
-
-            this.props.objects.map((widget: LVGLWidget) => {
-                const classInfo = getClassInfo(widget);
-                for (const stateName of classInfo.lvgl!.states) {
-                    if (stateNames.indexOf(stateName) == -1) {
-                        stateNames.push(stateName);
-                    }
-                }
-            });
-
-            return (
-                <div>
-                    {stateNames.map(stateName => {
-                        let values = this.props.objects.map(
-                            (widget: LVGLWidget) =>
-                                (widget.states || "")
-                                    .split("|")
-                                    .indexOf(stateName) != -1
-                        );
-
-                        let numEnabled = 0;
-                        let numDisabled = 0;
-                        values.forEach(value => {
-                            if (value) {
-                                numEnabled++;
-                            } else {
-                                numDisabled++;
-                            }
-                        });
-
-                        let state =
-                            numEnabled == 0
-                                ? false
-                                : numDisabled == 0
-                                ? true
-                                : undefined;
-
-                        return (
-                            <Checkbox
-                                key={stateName}
-                                state={state}
-                                label={humanize(stateName)}
-                                onChange={(value: boolean) => {
-                                    this.context.undoManager.setCombineCommands(
-                                        true
-                                    );
-
-                                    if (value) {
-                                        this.props.objects.forEach(
-                                            (widget: LVGLWidget) => {
-                                                const classInfo =
-                                                    getClassInfo(widget);
-                                                if (
-                                                    classInfo.lvgl!.states.indexOf(
-                                                        stateName
-                                                    ) == -1
-                                                ) {
-                                                    return;
-                                                }
-
-                                                const statesArr = (
-                                                    widget.states || ""
-                                                ).split("|");
-                                                if (
-                                                    statesArr.indexOf(
-                                                        stateName
-                                                    ) == -1
-                                                ) {
-                                                    statesArr.push(stateName);
-                                                    this.context.updateObject(
-                                                        widget,
-                                                        {
-                                                            states: statesArr.join(
-                                                                "|"
-                                                            )
-                                                        }
-                                                    );
-                                                }
-                                            }
-                                        );
-                                    } else {
-                                        this.props.objects.forEach(
-                                            (widget: LVGLWidget) => {
-                                                const classInfo =
-                                                    getClassInfo(widget);
-                                                if (
-                                                    classInfo.lvgl!.states.indexOf(
-                                                        stateName
-                                                    ) == -1
-                                                ) {
-                                                    return;
-                                                }
-
-                                                const statesArr = (
-                                                    widget.states || ""
-                                                ).split("|");
-                                                const i =
-                                                    statesArr.indexOf(
-                                                        stateName
-                                                    );
-                                                if (i != -1) {
-                                                    statesArr.splice(i, 1);
-                                                    this.context.updateObject(
-                                                        widget,
-                                                        {
-                                                            states: statesArr.join(
-                                                                "|"
-                                                            )
-                                                        }
-                                                    );
-                                                }
-                                            }
-                                        );
-                                    }
-
-                                    this.context.undoManager.setCombineCommands(
-                                        false
-                                    );
-                                }}
-                                readOnly={this.props.readOnly}
-                            />
-                        );
-                    })}
-                </div>
-            );
-        }
-    }
-);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -463,200 +182,6 @@ export const GeometryProperty = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const LV_EVENT_SLIDER_VALUE_CHANGED = 0x7c;
-const LV_EVENT_SLIDER_VALUE_LEFT_CHANGED = 0x7d;
-const LV_EVENT_CHECKED = 0x7e;
-const LV_EVENT_UNCHECKED = 0x7f;
-
-const LVGL_EVENTS = {
-    PRESSED: 1,
-    PRESS_LOST: 3,
-    RELEASED: 8,
-    CLICKED: 7,
-    LONG_PRESSED: 5,
-    LONG_PRESSED_REPEAT: 6,
-    FOCUSED: 14,
-    DEFOCUSED: 15,
-    VALUE_CHANGED: 28,
-    READY: 31,
-    CANCEL: 32,
-    SCREEN_LOADED: 39,
-    SCREEN_UNLOADED: 40,
-    SCREEN_LOAD_START: 38,
-    SCREEN_UNLOAD_START: 37,
-    CHECKED: LV_EVENT_CHECKED,
-    UNCHECKED: LV_EVENT_UNCHECKED
-};
-
-export type ValuesOf<T extends any[]> = T[number];
-
-function getTriggerEnumItems(
-    eventHandlers: EventHandler[],
-    eventHandler: EventHandler | undefined
-) {
-    const eventNames: string[] = eventHandlers
-        .filter(eh => eh != eventHandler)
-        .map(eventHandler => eventHandler.trigger);
-    return Object.keys(LVGL_EVENTS)
-        .filter(eventName => eventNames.indexOf(eventName) == -1)
-        .map(eventName => ({
-            id: eventName,
-            label: eventName
-        }));
-}
-
-export class EventHandler extends EezObject {
-    trigger: keyof typeof LVGL_EVENTS;
-    handlerType: "flow" | "action";
-    action: string;
-
-    constructor() {
-        super();
-
-        makeObservable(this, {
-            trigger: observable,
-            handlerType: observable,
-            action: observable
-        });
-    }
-
-    static classInfo: ClassInfo = {
-        properties: [
-            {
-                name: "trigger",
-                type: PropertyType.Enum,
-                enumItems: (eventHandler: EventHandler) => {
-                    const eventHandlers = getParent(
-                        eventHandler
-                    ) as EventHandler[];
-                    return getTriggerEnumItems(eventHandlers, eventHandler);
-                },
-                enumDisallowUndefined: true
-            },
-            {
-                name: "handlerType",
-                type: PropertyType.Enum,
-                enumItems: [
-                    { id: "flow", label: "Flow" },
-                    { id: "action", label: "Action" }
-                ],
-                enumDisallowUndefined: true
-            },
-            {
-                name: "action",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "actions",
-                hideInPropertyGrid: (eventHandler: EventHandler) => {
-                    return eventHandler.handlerType != "action";
-                }
-            }
-        ],
-
-        updateObjectValueHook: (eventHandler: EventHandler, values: any) => {
-            if (
-                values.trigger != undefined &&
-                eventHandler.trigger != values.trigger
-            ) {
-                const widget = getAncestorOfType<LVGLWidget>(
-                    eventHandler,
-                    LVGLWidget.classInfo
-                );
-                if (widget) {
-                    ProjectEditor.getFlow(widget).rerouteConnectionLinesOutput(
-                        widget,
-                        eventHandler.trigger,
-                        values.trigger
-                    );
-                }
-            }
-        },
-
-        deleteObjectRefHook: (eventHandler: EventHandler) => {
-            const widget = getAncestorOfType<LVGLWidget>(
-                eventHandler,
-                LVGLWidget.classInfo
-            )!;
-
-            ProjectEditor.getFlow(widget).deleteConnectionLinesFromOutput(
-                widget,
-                eventHandler.trigger
-            );
-        },
-
-        defaultValue: {
-            handlerType: "action"
-        },
-
-        newItem: async (eventHandlers: EventHandler[]) => {
-            const project = ProjectEditor.getProject(eventHandlers);
-
-            const result = await showGenericDialog({
-                dialogDefinition: {
-                    title: "New Event Handler",
-                    fields: [
-                        {
-                            name: "trigger",
-                            type: "enum",
-                            enumItems: getTriggerEnumItems(
-                                eventHandlers,
-                                undefined
-                            )
-                        },
-                        {
-                            name: "handlerType",
-                            type: "enum",
-                            enumItems: [
-                                { id: "flow", label: "Flow" },
-                                { id: "action", label: "Action" }
-                            ]
-                        },
-                        {
-                            name: "action",
-                            type: "enum",
-                            enumItems: project.actions
-                                .filter(
-                                    action =>
-                                        action.implementationType == "native"
-                                )
-                                .map(action => ({
-                                    id: `action:${action.name}`,
-                                    label: action.name
-                                })),
-                            visible: (values: any) => {
-                                return values.handlerType == "action";
-                            }
-                        }
-                    ]
-                },
-                values: {
-                    handlerType: "action"
-                },
-                dialogContext: project
-            });
-
-            const properties: Partial<EventHandler> = {
-                trigger: result.values.trigger,
-                handlerType: result.values.handlerType,
-                action: result.values.action
-            };
-
-            const eventHandler = createObject<EventHandler>(
-                project._DocumentStore,
-                properties,
-                EventHandler
-            );
-
-            return eventHandler;
-        }
-    };
-
-    get triggerCode() {
-        return LVGL_EVENTS[this.trigger];
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 export class LVGLWidget extends Widget {
     identifier: string;
 
@@ -720,8 +245,8 @@ export class LVGLWidget extends Widget {
                         ) as Page;
 
                         if (
-                            page.lvglWidgetIdentifiers.indexOf(newIdentifer) ==
-                            -1
+                            page._lvglWidgetIdentifiers.get(newIdentifer) ==
+                            undefined
                         ) {
                             return null;
                         }
@@ -902,15 +427,7 @@ export class LVGLWidget extends Widget {
                 propertyGridRowComponent: LVGLStylesDefinitionProperty,
                 enumerable: false
             },
-            {
-                name: "eventHandlers",
-                type: PropertyType.Array,
-                typeClass: EventHandler,
-                propertyGridGroup: eventsGroup,
-                partOfNavigation: false,
-                enumerable: false,
-                defaultValue: []
-            }
+            eventHandlersProperty
         ],
 
         beforeLoadHook: (widget: LVGLWidget, jsWidget: Partial<LVGLWidget>) => {
@@ -965,19 +482,19 @@ export class LVGLWidget extends Widget {
             state: computed,
             part: computed,
             _lvglObj: observable,
-            _refreshCounter: observable
+            _refreshCounter: observable,
+            relativePosition: computed,
+            componentWidth: computed,
+            componentHeight: computed
         });
     }
 
     get widgetIndex() {
-        if (!this.identifier) {
-            return -1;
-        }
         const page = getAncestorOfType(
             this,
             ProjectEditor.PageClass.classInfo
         ) as Page;
-        return page.lvglWidgetIdentifiers.indexOf(this.identifier);
+        return page._lvglWidgets.indexOf(this);
     }
 
     override get relativePosition() {
@@ -1106,9 +623,7 @@ export class LVGLWidget extends Widget {
     ): LVGLCreateResultType {
         const obj = this.lvglCreateObj(runtime, parentObj);
 
-        if (runtime.isEditor) {
-            runInAction(() => (this._lvglObj = obj));
-        }
+        runInAction(() => (this._lvglObj = obj));
 
         if (runtime.wasm.assetsMap) {
             const pagePath = getObjectPathAsString(runtime.page);
@@ -1218,17 +733,11 @@ export class LVGLWidget extends Widget {
     createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {}
 
     lvglBuild(build: LVGLBuild): void {
-        if (this.identifier) {
-            build.line(`// ${this.identifier}`);
-        }
+        build.line(`// ${build.getWidgetIdentifier(this)}`);
 
         this.lvglBuildObj(build);
 
-        if (this.identifier) {
-            build.line(
-                `screen->${build.getWidgetStructFieldName(this)} = obj;`
-            );
-        }
+        build.line(`screen->${build.getWidgetStructFieldName(this)} = obj;`);
 
         build.line(
             `lv_obj_set_pos(obj, ${this.lvglBuildLeft}, ${this.lvglBuildTop});`
@@ -1796,13 +1305,13 @@ export class LVGLLabelWidget extends LVGLWidget {
             );
 
             build.line(
-                `const char *text_cur = lv_label_get_text(screen->${build.getWidgetObjFieldName(
+                `const char *text_cur = lv_label_get_text(screen->${build.getWidgetStructFieldName(
                     this
                 )});`
             );
 
             build.line(
-                `if (strcmp(text_new, text_cur) != 0) lv_label_set_text(screen->${build.getWidgetObjFieldName(
+                `if (strcmp(text_new, text_cur) != 0) lv_label_set_text(screen->${build.getWidgetStructFieldName(
                     this
                 )}, text_new);`
             );
@@ -2128,13 +1637,20 @@ export class LVGLImageWidget extends LVGLWidget {
             this.angle
         );
 
-        (async () => {
-            runtime.wasm._lvglSetImageSrc(
-                obj,
-                await runtime.loadBitmap(this.image)
-            );
-            runInAction(() => this._refreshCounter++);
-        })();
+        const bitmap = ProjectEditor.findBitmap(
+            ProjectEditor.getProject(this),
+            this.image
+        );
+
+        if (bitmap && bitmap.image) {
+            (async () => {
+                const image = await runtime.loadBitmap(bitmap);
+                if (!runtime.isEditor || obj == this._lvglObj) {
+                    runtime.wasm._lvglSetImageSrc(obj, image);
+                    runInAction(() => this._refreshCounter++);
+                }
+            })();
+        }
 
         return obj;
     }
@@ -2436,13 +1952,13 @@ export class LVGLSliderWidget extends LVGLWidget {
             );
 
             build.line(
-                `int32_t value_cur = lv_slider_get_value(screen->${build.getWidgetObjFieldName(
+                `int32_t value_cur = lv_slider_get_value(screen->${build.getWidgetStructFieldName(
                     this
                 )});`
             );
 
             build.line(
-                `if (value_new != value_cur) lv_slider_set_value(screen->${build.getWidgetObjFieldName(
+                `if (value_new != value_cur) lv_slider_set_value(screen->${build.getWidgetStructFieldName(
                     this
                 )}, value_new, LV_ANIM_OFF);`
             );
@@ -2472,13 +1988,13 @@ export class LVGLSliderWidget extends LVGLWidget {
             );
 
             build.line(
-                `int32_t value_cur = lv_slider_get_left_value(screen->${build.getWidgetObjFieldName(
+                `int32_t value_cur = lv_slider_get_left_value(screen->${build.getWidgetStructFieldName(
                     this
                 )});`
             );
 
             build.line(
-                `if (value_new != value_cur) lv_slider_set_left_value(screen->${build.getWidgetObjFieldName(
+                `if (value_new != value_cur) lv_slider_set_left_value(screen->${build.getWidgetStructFieldName(
                     this
                 )}, value_new, LV_ANIM_OFF);`
             );

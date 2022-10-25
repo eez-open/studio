@@ -45,7 +45,11 @@ import {
 } from "project-editor/flow/component";
 
 import { findAction } from "project-editor/features/action/action";
-import { getFlow, getProject } from "project-editor/project/project";
+import {
+    getFlow,
+    getProject,
+    ProjectType
+} from "project-editor/project/project";
 import { findPage } from "project-editor/features/page/page";
 import { Assets, DataBuffer } from "project-editor/build/assets";
 import {
@@ -2511,6 +2515,9 @@ export class OnEventActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_ON_EVENT_ACTION,
 
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL,
+
         properties: [
             {
                 name: "event",
@@ -2584,6 +2591,8 @@ registerClass("OnEventActionComponent", OnEventActionComponent);
 export class ShowPageActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SHOW_PAGE_ACTION,
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL,
         properties: [
             {
                 name: "page",
@@ -2676,6 +2685,8 @@ const MESSAGE_BOX_TYPE_ERROR = 2;
 export class ShowMessageBoxActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SHOW_MESSAGE_BOX_ACTION,
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL,
         properties: [
             {
                 name: "messageType",
@@ -2775,6 +2786,8 @@ registerClass("ShowMessageBoxActionComponent", ShowMessageBoxActionComponent);
 export class ShowKeyboardActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SHOW_KEYBOARD_ACTION,
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL,
         properties: [
             makeExpressionProperty(
                 {
@@ -2902,6 +2915,8 @@ registerClass("ShowKeyboardActionComponent", ShowKeyboardActionComponent);
 export class ShowKeypadActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SHOW_KEYPAD_ACTION,
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL,
         properties: [
             makeExpressionProperty(
                 {
@@ -3029,7 +3044,8 @@ registerClass("ShowKeypadActionComponent", ShowKeypadActionComponent);
 export class SelectLanguageActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SELECT_LANGUAGE_ACTION,
-
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL,
         properties: [
             makeExpressionProperty(
                 {
@@ -3086,7 +3102,8 @@ registerClass("SelectLanguageActionComponent", SelectLanguageActionComponent);
 export class SetPageDirectionActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SET_PAGE_DIRECTION_ACTION,
-
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL,
         properties: [
             {
                 name: "direction",
@@ -3159,7 +3176,8 @@ registerClass(
 export class AnimateActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_ANIMATE_ACTION,
-
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL,
         properties: [
             makeExpressionProperty(
                 {

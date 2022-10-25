@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <vector>
+#include <map>
 #include <emscripten.h>
 
 #include <eez/core/os.h>
@@ -157,35 +159,30 @@ EM_PORT_API(void) onMessageFromDebugger(char *messageData, uint32_t messageDataS
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define MAX_PAGES 100
-#define MAX_OBJECTS 10000
-
-static int32_t pageStartIndex[MAX_PAGES];
-static lv_obj_t *indexToObject[MAX_OBJECTS];
-static int32_t startIndex = 0;
-static int32_t maxIndex = -1;
+static std::map<int, std::map<int, lv_obj_t *>*> pageIndexes;
+static auto indexToObject = new std::map<int, lv_obj_t *>;
 
 void setObjectIndex(lv_obj_t *obj, int32_t index) {
-    if (index >= 0 && index < MAX_OBJECTS) {
-        indexToObject[startIndex + index] = obj;
-        if (index > maxIndex) {
-            maxIndex = index;
-        }
-    }
+    indexToObject->insert(std::make_pair(index, obj));
 }
 
 void closeIndexesForPage(int pageIndex) {
-    pageStartIndex[pageIndex] = startIndex;
-    startIndex = startIndex + maxIndex + 1;
-    maxIndex = -1;
-    printf("closeIndexesForPage %d\n", pageIndex);
+    pageIndexes.insert(std::make_pair(pageIndex, indexToObject));
+    indexToObject = new std::map<int, lv_obj_t *>;
 }
 
 static lv_obj_t *getLvglObjectFromIndex(int32_t index) {
-    if (index >= 0 && index < MAX_OBJECTS) {
-        return indexToObject[pageStartIndex[currentPageId - 1] + index];
+    auto it1 = pageIndexes.find(currentPageId - 1);
+    if (it1 == pageIndexes.end()) {
+        return 0;
     }
-    return 0;
+
+    auto it2 = it1->second->find(index);
+    if (it2 == it1->second->end()) {
+        return 0;
+    }
+
+    return it2->second;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -227,6 +224,9 @@ extern "C" bool flowTick() {
 }
 
 extern "C" void flowOnPageLoaded(unsigned pageIndex) {
+    if (currentPageId == -1) {
+        currentPageId = pageIndex + 1;
+    }
     closeIndexesForPage(pageIndex);
     eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
 }

@@ -23,7 +23,7 @@ import {
     propertyNotFoundMessage,
     propertyNotSetMessage
 } from "project-editor/store";
-import { getProject } from "project-editor/project/project";
+import { getProject, ProjectType } from "project-editor/project/project";
 import { findPage, Page } from "project-editor/features/page/page";
 import { Assets, DataBuffer } from "project-editor/build/assets";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -234,7 +234,12 @@ export class AnimationItem extends EezObject {
 export class LVGLActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_LVGLACTION,
-
+        label: (component: LVGLActionComponent) =>
+            `LVGL ${humanize(component.action)}`,
+        componentPaletteGroupName: "LVGL",
+        componentPaletteLabel: "LVGL Action",
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
         properties: [
             {
                 name: "action",
@@ -290,7 +295,7 @@ export class LVGLActionComponent extends ActionComponent {
                         component,
                         ProjectEditor.PageClass.classInfo
                     ) as Page;
-                    return page.lvglWidgetIdentifiers.map(id => ({
+                    return [...page._lvglWidgetIdentifiers.keys()].map(id => ({
                         id,
                         label: id
                     }));
@@ -344,8 +349,8 @@ export class LVGLActionComponent extends ActionComponent {
                         ProjectEditor.PageClass.classInfo
                     ) as Page;
                     if (
-                        page.lvglWidgetIdentifiers.indexOf(object.animTarget) ==
-                        -1
+                        page._lvglWidgetIdentifiers.get(object.animTarget) ==
+                        undefined
                     ) {
                         messages.push(
                             propertyNotFoundMessage(object, "animTarget")
@@ -428,7 +433,7 @@ export class LVGLActionComponent extends ActionComponent {
             } Delay=${this.delay}`;
         } else if (this.action == "PLAY_ANIMATION") {
             return (
-                `${this.animTarget}, Delay=${this.animDelay}\n\n` +
+                `${this.animTarget}, Delay=${this.animDelay}\n` +
                 this.animItems
                     .map(
                         item =>
@@ -449,9 +454,7 @@ export class LVGLActionComponent extends ActionComponent {
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
             <div className="body">
-                <pre>
-                    {humanize(this.action)}: {this.actionDescription}
-                </pre>
+                <pre>{this.actionDescription}</pre>
             </div>
         );
     }
@@ -483,7 +486,7 @@ export class LVGLActionComponent extends ActionComponent {
                 ProjectEditor.PageClass.classInfo
             ) as Page;
             dataBuffer.writeInt32(
-                page.lvglWidgetIdentifiers.indexOf(this.animTarget)
+                page._lvglWidgetIdentifiers.get(this.animTarget) ?? -1
             );
 
             // delay

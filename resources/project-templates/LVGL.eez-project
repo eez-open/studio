@@ -8,8 +8,8 @@
       "projectType": "lvgl",
       "assetsFolder": "./assets",
       "imports": [],
-      "displayWidth": 480,
-      "displayHeight": 272
+      "displayWidth": 800,
+      "displayHeight": 480
     },
     "build": {
       "objID": "72794a43-a0fc-13c2-7eb5-67dd952141a4",
@@ -23,12 +23,12 @@
         {
           "objID": "05204dce-0fc5-4c81-b733-2ccc8e6c8671",
           "fileName": "screens.h",
-          "template": "#ifndef EEZ_LVGL_UI_SCREENS_H\r\n#define EEZ_LVGL_UI_SCREENS_H\r\n\r\n#include \"lvgl/lvgl.h\"\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_SCREENS_DECL}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_SCREENS_H*/"
+          "template": "#ifndef EEZ_LVGL_UI_SCREENS_H\r\n#define EEZ_LVGL_UI_SCREENS_H\r\n\r\n#include \"lvgl/lvgl.h\"\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\n//${eez-studio LVGL_SCREENS_DECL}\r\n//${eez-studio LVGL_SCREENS_DECL_EXT}\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#endif /*EEZ_LVGL_UI_SCREENS_H*/"
         },
         {
           "objID": "2212bc5e-cf4a-4a81-c9ab-a671066d086f",
           "fileName": "screens.c",
-          "template": "#include \"screens.h\"\n#include \"images.h\"\n#include \"fonts.h\"\n#include \"actions.h\"\n#include \"../flow.h\"\n\n//${eez-studio LVGL_SCREENS_DEF}"
+          "template": "#include \"screens.h\"\n#include \"images.h\"\n#include \"fonts.h\"\n#include \"actions.h\"\n#include \"../flow.h\"\n\n//${eez-studio LVGL_SCREENS_DEF}\n//${eez-studio LVGL_SCREENS_DEF_EXT}"
         },
         {
           "objID": "81fa9cb7-33e4-4272-9340-49a50037b327",

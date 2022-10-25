@@ -27,7 +27,7 @@ import { getThemedColor } from "project-editor/features/style/theme";
 
 import { showGenericDialog } from "project-editor/core/util";
 
-import { RelativeFileInput } from "project-editor/ui-components/FileInput";
+import { AbsoluteFileInput } from "project-editor/ui-components/FileInput";
 import { getProject, Project } from "project-editor/project/project";
 
 import { metrics } from "project-editor/features/bitmap/metrics";
@@ -38,6 +38,7 @@ import {
     isLVGLProject
 } from "project-editor/project/project-type-traits";
 import { copyFile, makeFolder } from "eez-studio-shared/util-electron";
+import { IFieldProperties } from "eez-studio-types";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -63,7 +64,8 @@ export class Bitmap extends EezObject {
             style: observable,
             _imageElement: observable,
             backgroundColor: computed,
-            imageElement: computed
+            imageElement: computed({ keepAlive: true }),
+            bitmapData: computed({ keepAlive: true })
         });
     }
 
@@ -102,8 +104,12 @@ export class Bitmap extends EezObject {
                 name: "bpp",
                 displayName: "Bits per pixel",
                 type: PropertyType.Enum,
-                enumItems: [{ id: 16 }, { id: 32 }],
-                defaultValue: 16
+                enumItems: (bitmap: Bitmap) =>
+                    isLVGLProject(bitmap)
+                        ? [{ id: 24 }, { id: 32 }]
+                        : [{ id: 16 }, { id: 32 }],
+                defaultValue: 16,
+                readOnlyInPropertyGrid: isLVGLProject
             },
             {
                 name: "style",
@@ -149,7 +155,7 @@ export class Bitmap extends EezObject {
                         {
                             name: "imageFilePath",
                             displayName: "Image",
-                            type: RelativeFileInput,
+                            type: AbsoluteFileInput,
                             validators: [validators.required],
                             options: {
                                 filters: [
@@ -161,12 +167,16 @@ export class Bitmap extends EezObject {
                                 ]
                             }
                         },
-                        {
-                            name: "bpp",
-                            displayName: "Bits per pixel",
-                            type: "enum",
-                            enumItems: [16, 32]
-                        }
+                        ...(projectEditorStore.projectTypeTraits.isLVGL
+                            ? []
+                            : [
+                                  {
+                                      name: "bpp",
+                                      displayName: "Bits per pixel",
+                                      type: "enum",
+                                      enumItems: [16, 32]
+                                  } as IFieldProperties
+                              ])
                     ]
                 },
                 values: {
@@ -177,14 +187,16 @@ export class Bitmap extends EezObject {
             return createBitmap(
                 projectEditorStore,
                 result.values.imageFilePath,
-                "image/png",
-                result.values.bpp
+                undefined,
+                projectEditorStore.projectTypeTraits.isLVGL
+                    ? undefined
+                    : result.values.bpp
             );
         },
         icon: "image"
     };
 
-    private _imageElement: HTMLImageElement | null = null;
+    private _imageElement: HTMLImageElement | null | undefined = undefined;
     private _imageElementImage: string;
 
     get backgroundColor() {
@@ -222,7 +234,7 @@ export class Bitmap extends EezObject {
             return null;
         }
 
-        if (this.image !== this._imageElementImage) {
+        if (!this._imageElement || this.image !== this._imageElementImage) {
             let imageElement = new Image();
             imageElement.src = this.imageSrc;
 
@@ -230,9 +242,96 @@ export class Bitmap extends EezObject {
                 this._imageElement = imageElement;
                 this._imageElementImage = this.image;
             });
+
+            imageElement.onerror = action(() => {
+                this._imageElement = null;
+                this._imageElementImage = this.image;
+            });
+
+            return undefined;
         }
 
         return this._imageElement;
+    }
+
+    get bitmapData() {
+        const image = this.imageElement;
+        if (!(image instanceof HTMLImageElement)) {
+            return image;
+        }
+
+        let canvas = document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+
+        let ctx = canvas.getContext("2d");
+        if (ctx == null) {
+            return undefined;
+        }
+
+        if (this.backgroundColor !== "transparent") {
+            ctx.fillStyle = this.backgroundColor;
+            ctx.fillRect(0, 0, image.width, image.height);
+        } else {
+            ctx.clearRect(0, 0, image.width, image.height);
+        }
+
+        ctx.drawImage(image, 0, 0);
+
+        let imageData = ctx.getImageData(0, 0, image.width, image.height).data;
+
+        let pixels = new Uint8Array(
+            (this.bpp === 32 ? 4 : this.bpp === 24 ? 3 : 2) *
+                image.width *
+                image.height
+        );
+
+        const rgb =
+            getProject(this).projectTypeTraits.bitmapColorFormat ==
+            BitmapColorFormat.RGB;
+
+        for (let i = 0; i < 4 * image.width * image.height; i += 4) {
+            let r = imageData[i];
+            let g = imageData[i + 1];
+            let b = imageData[i + 2];
+
+            if (this.bpp === 32) {
+                if (rgb) {
+                    let a = imageData[i + 3];
+                    pixels[i] = r;
+                    pixels[i + 1] = g;
+                    pixels[i + 2] = b;
+                    pixels[i + 3] = a;
+                } else {
+                    let a = imageData[i + 3];
+                    pixels[i] = b;
+                    pixels[i + 1] = g;
+                    pixels[i + 2] = r;
+                    pixels[i + 3] = a;
+                }
+            } else if (this.bpp == 24) {
+                if (rgb) {
+                    pixels[i] = r;
+                    pixels[i + 1] = g;
+                    pixels[i + 2] = b;
+                } else {
+                    pixels[i] = b;
+                    pixels[i + 1] = g;
+                    pixels[i + 2] = r;
+                }
+            } else {
+                // rrrrrggggggbbbbb
+                pixels[i / 2] = ((g & 28) << 3) | (b >> 3);
+                pixels[i / 2 + 1] = (r & 248) | (g >> 5);
+            }
+        }
+
+        return {
+            width: image.width,
+            height: image.height,
+            bpp: this.bpp,
+            pixels: pixels
+        };
     }
 }
 
@@ -241,9 +340,28 @@ registerClass("Bitmap", Bitmap);
 export async function createBitmap(
     projectEditorStore: ProjectEditorStore,
     filePath: string,
-    fileType: string,
+    fileType?: string,
     bpp?: number
 ) {
+    if (fileType == undefined) {
+        const ext = path.extname(filePath).toLowerCase();
+        if (ext == ".jpg" || ext == ".jpeg") {
+            fileType = "image/jpg";
+        } else {
+            fileType = "image/png";
+        }
+    }
+
+    if (bpp == undefined) {
+        if (fileType == "image/jpg") {
+            bpp = 32; // 24
+        } else {
+            bpp = 32;
+        }
+    }
+
+    console.log("createBitmap", filePath, fileType, bpp);
+
     try {
         if (projectEditorStore.project.settings.general.assetsFolder) {
             const assetsFolder = projectEditorStore.getAbsoluteFilePath(
@@ -270,7 +388,7 @@ export async function createBitmap(
                     projectEditorStore.project.settings.general.assetsFolder +
                     "/" +
                     relativePath,
-                bpp: bpp ?? 32,
+                bpp,
                 alwaysBuild: false
             };
 
@@ -291,7 +409,7 @@ export async function createBitmap(
                     path.parse(filePath).name
                 ) as string,
                 image: `data:${fileType};base64,` + result,
-                bpp: bpp ?? 32,
+                bpp,
                 alwaysBuild: false
             };
 
@@ -319,85 +437,22 @@ export interface BitmapData {
     pixels: Uint8Array;
 }
 
-export function getBitmapData(bitmap: Bitmap): Promise<BitmapData> {
-    return new Promise((resolve, reject) => {
-        let image = new Image();
-
-        image.src = bitmap.imageSrc;
-
-        image.onload = () => {
-            let canvas = document.createElement("canvas");
-            canvas.width = image.width;
-            canvas.height = image.height;
-
-            let ctx = canvas.getContext("2d");
-            if (ctx == null) {
-                reject();
-                return;
-            }
-
-            if (bitmap.backgroundColor !== "transparent") {
-                ctx.fillStyle = bitmap.backgroundColor;
-                ctx.fillRect(0, 0, image.width, image.height);
-            } else {
-                ctx.clearRect(0, 0, image.width, image.height);
-            }
-
-            ctx.drawImage(image, 0, 0);
-
-            let imageData = ctx.getImageData(
-                0,
-                0,
-                image.width,
-                image.height
-            ).data;
-
-            let pixels = new Uint8Array(
-                (bitmap.bpp === 32 ? 4 : 2) * image.width * image.height
-            );
-
-            const rgb =
-                getProject(bitmap).projectTypeTraits.bitmapColorFormat ==
-                BitmapColorFormat.RGB;
-
-            for (let i = 0; i < 4 * image.width * image.height; i += 4) {
-                let r = imageData[i];
-                let g = imageData[i + 1];
-                let b = imageData[i + 2];
-
-                if (bitmap.bpp === 32) {
-                    if (rgb) {
-                        let a = imageData[i + 3];
-                        pixels[i] = r;
-                        pixels[i + 1] = g;
-                        pixels[i + 2] = b;
-                        pixels[i + 3] = a;
-                    } else {
-                        let a = imageData[i + 3];
-                        pixels[i] = b;
-                        pixels[i + 1] = g;
-                        pixels[i + 2] = r;
-                        pixels[i + 3] = a;
-                    }
-                } else {
-                    // rrrrrggggggbbbbb
-                    pixels[i / 2] = ((g & 28) << 3) | (b >> 3);
-                    pixels[i / 2 + 1] = (r & 248) | (g >> 5);
-                }
-            }
-
-            resolve({
-                width: image.width,
-                height: image.height,
-                bpp: bitmap.bpp,
-                pixels: pixels
-            });
-        };
-
-        image.onerror = () => {
-            reject();
-        };
-    });
+export async function getBitmapData(bitmap: Bitmap): Promise<BitmapData> {
+    while (true) {
+        const bitmapData = bitmap.bitmapData;
+        if (bitmapData) {
+            return bitmapData;
+        }
+        if (bitmapData === null) {
+            return {
+                width: 1,
+                height: 1,
+                bpp: 32,
+                pixels: new Uint8Array([0, 0, 0, 0])
+            };
+        }
+        await new Promise(resolve => setTimeout(resolve, 10));
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

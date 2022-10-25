@@ -7,8 +7,15 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Bitmap } from "project-editor/features/bitmap/bitmap";
 import { visitObjects } from "project-editor/core/search";
 import type { Font } from "project-editor/features/font/font";
+import {
+    getObjectPathAsString,
+    ProjectEditorStore
+} from "project-editor/store";
+import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
 
 const lvgl_flow_runtime_constructor = require("project-editor/flow/runtime/lvgl_runtime.js");
+
+////////////////////////////////////////////////////////////////////////////////
 
 export abstract class LVGLPageRuntime {
     wasm: IWasmFlowRuntime;
@@ -33,16 +40,10 @@ export abstract class LVGLPageRuntime {
 
     abstract get isEditor(): boolean;
 
-    async loadBitmap(bitmapName: string): Promise<number> {
-        const bitmap = ProjectEditor.findBitmap(
-            ProjectEditor.getProject(this.page),
-            bitmapName
-        );
+    abstract mount(): void;
+    abstract unmount(): void;
 
-        if (!bitmap) {
-            return 0;
-        }
-
+    async loadBitmap(bitmap: Bitmap): Promise<number> {
         const doLoad = async (bitmap: Bitmap) => {
             const bitmapData = await ProjectEditor.getBitmapData(bitmap);
 
@@ -54,8 +55,14 @@ export abstract class LVGLPageRuntime {
                 return 0;
             }
 
+            const LV_IMG_CF_TRUE_COLOR = 4;
+            const LV_IMG_CF_TRUE_COLOR_ALPHA = 5;
+
             let header =
-                ((bitmapData.bpp == 24 ? 4 : 5) << 0) |
+                ((bitmapData.bpp == 24
+                    ? LV_IMG_CF_TRUE_COLOR
+                    : LV_IMG_CF_TRUE_COLOR_ALPHA) <<
+                    0) |
                 (bitmapData.width << 10) |
                 (bitmapData.height << 21);
 
@@ -65,15 +72,11 @@ export abstract class LVGLPageRuntime {
 
             this.wasm.HEAP32[(bitmapPtr >> 2) + 2] = bitmapPtr + 12;
 
+            console.log(bitmapData);
+
             const offset = bitmapPtr + 12;
-            for (let i = 0; i < bitmapData.pixels.length; i += 4) {
-                this.wasm.HEAP8[offset + i] = bitmapData.pixels[i + 2];
-
-                this.wasm.HEAP8[offset + i + 1] = bitmapData.pixels[i + 1];
-
-                this.wasm.HEAP8[offset + i + 2] = bitmapData.pixels[i + 0];
-
-                this.wasm.HEAP8[offset + i + 3] = bitmapData.pixels[i + 3];
+            for (let i = 0; i < bitmapData.pixels.length; i++) {
+                this.wasm.HEAP8[offset + i] = bitmapData.pixels[i];
             }
 
             return bitmapPtr;
@@ -98,16 +101,11 @@ export abstract class LVGLPageRuntime {
         this.bitmapsCache.delete(bitmap);
         this.wasm._free(bitmapPtr);
 
-        return this.loadBitmap(bitmapName);
+        return this.loadBitmap(bitmap);
     }
 
-    async loadFont(fontName: string): Promise<number> {
-        const font = ProjectEditor.findFont(
-            ProjectEditor.getProject(this.page),
-            fontName
-        );
-
-        if (!font || !font.lvglBinFilePath) {
+    async loadFont(font: Font): Promise<number> {
+        if (!font.lvglBinFilePath) {
             return 0;
         }
 
@@ -161,9 +159,44 @@ export abstract class LVGLPageRuntime {
         this.fontsCache.delete(font);
         this.wasm._lvglFreeFont(fontPtr);
 
-        return this.loadFont(fontName);
+        return this.loadFont(font);
+    }
+
+    static detachRuntimeFromPage(page: Page) {
+        const runtime = page._lvglRuntime;
+        if (!runtime) {
+            return;
+        }
+
+        if (page._lvglObj != undefined) {
+            runtime.wasm._lvglDeleteObject(page._lvglObj);
+
+            const v = visitObjects(page.components);
+            while (true) {
+                let visitResult = v.next();
+                if (visitResult.done) {
+                    break;
+                }
+                if (
+                    visitResult.value instanceof ProjectEditor.LVGLWidgetClass
+                ) {
+                    const lvglWidget = visitResult.value;
+                    runInAction(() => {
+                        lvglWidget._lvglObj = undefined;
+                    });
+                }
+            }
+
+            page._lvglObj = undefined;
+        }
+
+        runInAction(() => {
+            page._lvglRuntime = undefined;
+        });
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLPageEditorRuntime extends LVGLPageRuntime {
     autorRunDispose: IReactionDisposer | undefined;
@@ -176,13 +209,20 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
         public ctx: CanvasRenderingContext2D
     ) {
         super(page);
+    }
 
+    get isEditor() {
+        return true;
+    }
+
+    mount() {
         this.wasm = lvgl_flow_runtime_constructor(() => {
             runInAction(() => {
                 this.page._lvglRuntime = this;
+                this.page._lvglObj = undefined;
             });
 
-            this.wasm._init(0, 0, 0, page.width, page.height);
+            this.wasm._init(0, 0, 0, this.page.width, this.page.height);
 
             this.requestAnimationFrameId = window.requestAnimationFrame(
                 this.tick
@@ -200,10 +240,6 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                 });
             });
         });
-    }
-
-    get isEditor() {
-        return true;
     }
 
     tick = () => {
@@ -247,52 +283,248 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
             this.autorRunDispose();
         }
 
-        if (this.page._lvglObj != undefined) {
-            this.wasm._lvglDeleteObject(this.page._lvglObj);
-            runInAction(() => {
-                const v = visitObjects(this.page.components);
-                while (true) {
-                    let visitResult = v.next();
-                    if (visitResult.done) {
-                        break;
-                    }
-                    if (
-                        visitResult.value instanceof
-                        ProjectEditor.LVGLWidgetClass
-                    ) {
-                        const lvglWidget = visitResult.value;
-                        lvglWidget._lvglObj = undefined;
-                    }
-                }
-
-                this.page._lvglObj = undefined;
-            });
-        }
-
-        runInAction(() => {
-            this.page._lvglRuntime = undefined;
-        });
+        LVGLPageRuntime.detachRuntimeFromPage(this.page);
     }
 }
 
-export class LVGLPageViewerRuntime extends LVGLPageRuntime {
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
+    requestAnimationFrameId: number | undefined;
+
     constructor(
+        public projectEditorStore: ProjectEditorStore,
         page: Page,
         public displayWidth: number,
         public displayHeight: number,
-        wasm: IWasmFlowRuntime
+        public ctx: CanvasRenderingContext2D
     ) {
         super(page);
-        this.wasm = wasm;
     }
 
     get isEditor() {
         return false;
     }
 
+    mount() {
+        this.wasm = lvgl_flow_runtime_constructor(() => {
+            runInAction(() => {
+                this.page._lvglRuntime = this;
+                this.page._lvglObj = undefined;
+            });
+
+            this.wasm._init(0, 0, 0, this.page.width, this.page.height);
+
+            this.requestAnimationFrameId = window.requestAnimationFrame(
+                this.tick
+            );
+
+            const pageObj = this.page.lvglCreate(this, 0).obj;
+            this.wasm._lvglScreenLoad(-1, pageObj);
+            runInAction(() => {
+                this.page._lvglRuntime = this;
+                this.page._lvglObj = pageObj;
+            });
+
+            (
+                this.projectEditorStore.runtime as WasmRuntime
+            ).lgvlPageRuntime!.onNonActivePageViewRuntimeMounted(this);
+        });
+    }
+
+    tick = () => {
+        this.wasm._mainLoop();
+
+        var buf_addr = this.wasm._getSyncedBuffer();
+        if (buf_addr != 0) {
+            const screen = new Uint8ClampedArray(
+                this.wasm.HEAPU8.subarray(
+                    buf_addr,
+                    buf_addr + this.displayWidth * this.displayHeight * 4
+                )
+            );
+
+            var imgData = new ImageData(
+                screen,
+                this.displayWidth,
+                this.displayHeight
+            );
+
+            this.ctx.putImageData(
+                imgData,
+                0,
+                0,
+                0,
+                0,
+                this.displayWidth,
+                this.displayHeight
+            );
+        }
+
+        this.requestAnimationFrameId = window.requestAnimationFrame(this.tick);
+    };
+
+    unmount() {
+        if (this.requestAnimationFrameId != undefined) {
+            window.cancelAnimationFrame(this.requestAnimationFrameId);
+        }
+
+        if (
+            this.projectEditorStore.runtime instanceof
+            ProjectEditor.WasmRuntimeClass
+        ) {
+            this.projectEditorStore.runtime.lgvlPageRuntime!.onNonActivePageViewRuntimeUnmounted(
+                this
+            );
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLPageViewerRuntime extends LVGLPageRuntime {
+    reactionDispose: IReactionDisposer | undefined;
+
+    pageStates = new Map<
+        Page,
+        {
+            page: Page;
+            nonActivePageViewerRuntime:
+                | LVGLNonActivePageViewerRuntime
+                | undefined;
+            activeObjects: number[] | undefined;
+            nonActiveObjects: number[] | undefined;
+        }
+    >();
+
+    constructor(private runtime: WasmRuntime) {
+        super(runtime.selectedPage);
+        this.wasm = runtime.worker.wasm;
+
+        runtime.projectEditorStore.project.pages.forEach(page =>
+            this.pageStates.set(page, {
+                page,
+                nonActivePageViewerRuntime: undefined,
+                activeObjects: undefined,
+                nonActiveObjects: undefined
+            })
+        );
+    }
+
+    get isEditor() {
+        return false;
+    }
+
+    mount() {
+        this.reactionDispose = autorun(() => {
+            const selectedPage = this.runtime.selectedPage;
+            const pageState = this.pageStates.get(selectedPage)!;
+            if (pageState.activeObjects) {
+                setObjects(selectedPage, this, pageState.activeObjects!);
+                this.wasm._lvglScreenLoad(-1, selectedPage._lvglObj!);
+            } else {
+                this.lvglCreate(selectedPage);
+            }
+        });
+    }
+
+    unmount() {
+        if (this.reactionDispose) {
+            this.reactionDispose();
+        }
+
+        const project = ProjectEditor.getProject(this.page);
+
+        for (const page of project.pages) {
+            LVGLPageRuntime.detachRuntimeFromPage(page);
+        }
+    }
+
     lvglCreate(page: Page) {
         this.page = page;
+
+        runInAction(() => {
+            this.page._lvglRuntime = this;
+        });
+
         const pageObj = this.page.lvglCreate(this, 0).obj;
+
+        const pagePath = getObjectPathAsString(this.page);
+        const pageIndex = this.runtime.assetsMap.flowIndexes[pagePath];
+
+        this.wasm._lvglScreenLoad(pageIndex, pageObj);
+
+        runInAction(() => {
+            this.page._lvglObj = pageObj;
+        });
+
+        this.pageStates.get(page)!.activeObjects = getObjects(page);
+
         return pageObj;
+    }
+
+    onNonActivePageViewRuntimeMounted(runtime: LVGLNonActivePageViewerRuntime) {
+        const pageState = this.pageStates.get(runtime.page)!;
+        pageState.nonActivePageViewerRuntime = runtime;
+        pageState.nonActiveObjects = getObjects(runtime.page);
+    }
+
+    onNonActivePageViewRuntimeUnmounted(
+        runtime: LVGLNonActivePageViewerRuntime
+    ) {
+        const pageState = this.pageStates.get(runtime.page)!;
+        pageState.nonActivePageViewerRuntime = undefined;
+        pageState.nonActiveObjects = undefined;
+        if (pageState.activeObjects) {
+            setObjects(pageState.page, this, pageState.activeObjects);
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+function getObjects(page: Page) {
+    const objects = [];
+    objects.push(page._lvglObj!);
+
+    const v = visitObjects(page.components);
+    while (true) {
+        let visitResult = v.next();
+        if (visitResult.done) {
+            break;
+        }
+        if (visitResult.value instanceof ProjectEditor.LVGLWidgetClass) {
+            const lvglWidget = visitResult.value;
+            objects.push(lvglWidget._lvglObj!);
+        }
+    }
+
+    return objects;
+}
+
+function setObjects(
+    page: Page,
+    lvglRuntime: LVGLPageRuntime,
+    objects: number[]
+) {
+    let index = 0;
+
+    runInAction(() => {
+        page._lvglRuntime = lvglRuntime;
+        page._lvglObj = objects[index++];
+    });
+
+    const v = visitObjects(page.components);
+    while (true) {
+        let visitResult = v.next();
+        if (visitResult.done) {
+            break;
+        }
+        if (visitResult.value instanceof ProjectEditor.LVGLWidgetClass) {
+            const lvglWidget = visitResult.value;
+            runInAction(() => {
+                lvglWidget._lvglObj = objects[index++];
+            });
+        }
     }
 }

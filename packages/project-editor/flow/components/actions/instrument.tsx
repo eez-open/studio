@@ -15,7 +15,8 @@ import {
     registerClass,
     PropertyType,
     makeDerivedClassInfo,
-    MessageType
+    MessageType,
+    ProjectType
 } from "project-editor/core/object";
 
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
@@ -69,6 +70,8 @@ import { COMPONENT_TYPE_SCPIACTION } from "project-editor/flow/components/compon
 export class SCPIActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SCPIACTION,
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL,
         properties: [
             makeExpressionProperty(
                 {

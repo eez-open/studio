@@ -1428,6 +1428,21 @@ export async function buildAssets(
             result.LVGL_SCREENS_DEF = await lvglBuild.buildScreensDef();
         }
 
+        if (
+            !sectionNames ||
+            sectionNames.indexOf("LVGL_SCREENS_DECL_EXT") !== -1
+        ) {
+            result.LVGL_SCREENS_DECL_EXT =
+                await lvglBuild.buildScreensDeclExt();
+        }
+
+        if (
+            !sectionNames ||
+            sectionNames.indexOf("LVGL_SCREENS_DEF_EXT") !== -1
+        ) {
+            result.LVGL_SCREENS_DEF_EXT = await lvglBuild.buildScreensDefExt();
+        }
+
         if (!sectionNames || sectionNames.indexOf("LVGL_IMAGES_DECL") !== -1) {
             result.LVGL_IMAGES_DECL = await lvglBuild.buildImagesDecl();
         }

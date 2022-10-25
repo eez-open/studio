@@ -47,13 +47,7 @@ import {
 } from "project-editor/flow/component";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
-import {
-    IReactionDisposer,
-    makeObservable,
-    observable,
-    reaction,
-    runInAction
-} from "mobx";
+import { makeObservable, observable, runInAction } from "mobx";
 import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
 import type {
     IObjectVariableType,
@@ -122,12 +116,12 @@ export class WasmRuntime extends RemoteRuntime {
     wheelDeltaY = 0;
     wheelClicked = 0;
     screen: any;
+    lastScreen: any;
     requestAnimationFrameId: number | undefined;
 
     componentProperties = new ComponentProperties(this);
 
     lgvlPageRuntime: LVGLPageViewerRuntime | undefined;
-    lvglReactionDispose: IReactionDisposer | undefined;
 
     ////////////////////////////////////////////////////////////////////////////////
 
@@ -194,12 +188,7 @@ export class WasmRuntime extends RemoteRuntime {
         );
 
         if (this.projectEditorStore.projectTypeTraits.isLVGL) {
-            this.lgvlPageRuntime = new LVGLPageViewerRuntime(
-                this.selectedPage,
-                this.displayWidth,
-                this.displayHeight,
-                this.worker.wasm
-            );
+            this.lgvlPageRuntime = new LVGLPageViewerRuntime(this);
         }
     }
 
@@ -217,18 +206,7 @@ export class WasmRuntime extends RemoteRuntime {
         clarStremIDs();
 
         if (this.lgvlPageRuntime) {
-            if (this.lvglReactionDispose) {
-                this.lvglReactionDispose();
-            }
-
-            for (const page of this.projectEditorStore.project.pages) {
-                if (page._lvglObj) {
-                    this.worker.wasm._lvglDeleteObject(page._lvglObj);
-                    runInAction(() => {
-                        page._lvglObj = undefined;
-                    });
-                }
-            }
+            this.lgvlPageRuntime.unmount();
         }
 
         if (this.error) {
@@ -294,34 +272,8 @@ export class WasmRuntime extends RemoteRuntime {
 
             await this.worker.postMessage(message);
 
-            const lgvlPageRuntime = this.lgvlPageRuntime;
-            if (lgvlPageRuntime) {
-                const obj = lgvlPageRuntime.lvglCreate(this.selectedPage);
-
-                const pagePath = getObjectPathAsString(this.selectedPage);
-                const pageIndex = this.assetsMap.flowIndexes[pagePath];
-                this.worker.wasm._lvglScreenLoad(pageIndex, obj);
-                runInAction(() => (this.selectedPage._lvglObj = obj));
-
-                this.lvglReactionDispose = reaction(
-                    () => this.selectedPage,
-                    selectedPage => {
-                        let obj = selectedPage._lvglObj;
-                        let newObj = !obj;
-                        if (!obj) {
-                            obj = lgvlPageRuntime.lvglCreate(selectedPage);
-                            runInAction(
-                                () => (this.selectedPage._lvglObj = obj)
-                            );
-                        }
-                        const pagePath = getObjectPathAsString(selectedPage);
-                        const pageIndex = this.assetsMap.flowIndexes[pagePath];
-                        this.worker.wasm._lvglScreenLoad(
-                            newObj ? pageIndex : -1,
-                            obj
-                        );
-                    }
-                );
+            if (this.lgvlPageRuntime) {
+                this.lgvlPageRuntime.mount();
             }
 
             this.debuggerConnection.onConnected();
@@ -424,39 +376,19 @@ export class WasmRuntime extends RemoteRuntime {
 
         this.requestAnimationFrameId = undefined;
 
-        if (this.screen && this.ctx) {
-            var imgData = new ImageData(
-                this.screen,
-                this.displayWidth,
-                this.displayHeight
-            );
-
-            let left;
-            let top;
-            let width;
-            let height;
-            if (this.isDebuggerActive) {
-                this.ctx.clearRect(0, 0, this.displayWidth, this.displayHeight);
-                left = this.selectedPage.left;
-                top = this.selectedPage.top;
-                width = this.selectedPage.width;
-                height = this.selectedPage.height;
-            } else {
-                left = 0;
-                top = 0;
-                width = this.displayWidth;
-                height = this.displayHeight;
-            }
-
-            this.ctx.putImageData(imgData, 0, 0, left, top, width, height);
+        if (this.screen) {
+            this.lastScreen = this.screen;
+            this.updateCanvasContext();
         }
 
         const message: RendererToWorkerMessage = {
-            wheel: {
-                deltaY: this.wheelDeltaY,
-                clicked: this.wheelClicked
-            },
-            pointerEvents: this.pointerEvents,
+            wheel: this.isPaused
+                ? undefined
+                : {
+                      deltaY: this.wheelDeltaY,
+                      clicked: this.wheelClicked
+                  },
+            pointerEvents: this.isPaused ? undefined : this.pointerEvents,
             updateGlobalVariableValues:
                 this.getUpdatedObjectGlobalVariableValues(),
             assignProperties:
@@ -472,6 +404,42 @@ export class WasmRuntime extends RemoteRuntime {
         //this.screen = undefined;
         this.componentProperties.assignPropertiesOnNextTick = [];
     };
+
+    setCanvasContext(ctx: CanvasRenderingContext2D) {
+        this.ctx = ctx;
+        this.updateCanvasContext();
+    }
+
+    updateCanvasContext() {
+        if (!this.lastScreen || !this.ctx) {
+            return;
+        }
+
+        var imgData = new ImageData(
+            this.lastScreen,
+            this.displayWidth,
+            this.displayHeight
+        );
+
+        let left;
+        let top;
+        let width;
+        let height;
+        if (this.isDebuggerActive) {
+            this.ctx.clearRect(0, 0, this.displayWidth, this.displayHeight);
+            left = this.selectedPage.left;
+            top = this.selectedPage.top;
+            width = this.selectedPage.width;
+            height = this.selectedPage.height;
+        } else {
+            left = 0;
+            top = 0;
+            width = this.displayWidth;
+            height = this.displayHeight;
+        }
+
+        this.ctx.putImageData(imgData, 0, 0, left, top, width, height);
+    }
 
     ////////////////////////////////////////////////////////////////////////////////
 
@@ -909,7 +877,8 @@ export const WasmCanvas = observer(
 
             canvas.width = wasmRuntime.displayWidth;
             canvas.height = wasmRuntime.displayHeight;
-            wasmRuntime.ctx = canvas.getContext("2d")!;
+
+            wasmRuntime.setCanvasContext(canvas.getContext("2d")!);
 
             function sendPointerEvent(event: PointerEvent) {
                 var bbox = canvas.getBoundingClientRect();

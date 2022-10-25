@@ -9,11 +9,10 @@ import {
     PropertyType,
     registerClass
 } from "project-editor/core/object";
-import type { LVGLWidget } from "project-editor/lvgl/widgets";
-import { getProject } from "project-editor/project/project";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getAncestorOfType, Message } from "project-editor/store";
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
+import type { LVGLWidget } from "project-editor/lvgl/widgets";
+import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { PropertyValueHolder } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import type { LVGLBuild } from "project-editor/lvgl/build";
 
@@ -1148,7 +1147,7 @@ export class LVGLStylesDefinition extends EezObject {
                                     this.definition[part][state][propertyName];
 
                                 const bitmap = ProjectEditor.findBitmap(
-                                    getProject(this),
+                                    ProjectEditor.getProject(this),
                                     value
                                 );
 
@@ -1213,28 +1212,43 @@ export class LVGLStylesDefinition extends EezObject {
                                         selectorCode
                                     );
                                 } else {
-                                    (async () => {
-                                        const fontPtr = await runtime.loadFont(
-                                            value
-                                        );
-                                        if (fontPtr != 0) {
-                                            runtime.wasm._lvglObjSetLocalStylePropPtr(
-                                                obj,
-                                                propertyInfo.lvglStylePropCode,
-                                                fontPtr,
-                                                selectorCode
-                                            );
+                                    const font = ProjectEditor.findFont(
+                                        ProjectEditor.getProject(this),
+                                        value
+                                    );
 
-                                            const widget = getAncestorOfType(
-                                                this,
-                                                ProjectEditor.LVGLWidgetClass
-                                                    .classInfo
-                                            ) as LVGLWidget;
-                                            runInAction(
-                                                () => widget._refreshCounter++
-                                            );
-                                        }
-                                    })();
+                                    if (font && font.lvglBinFilePath) {
+                                        (async () => {
+                                            const fontPtr =
+                                                await runtime.loadFont(font);
+                                            if (fontPtr != 0) {
+                                                const widget =
+                                                    getAncestorOfType(
+                                                        this,
+                                                        ProjectEditor
+                                                            .LVGLWidgetClass
+                                                            .classInfo
+                                                    ) as LVGLWidget;
+
+                                                if (
+                                                    !runtime.isEditor ||
+                                                    obj == widget._lvglObj
+                                                ) {
+                                                    runtime.wasm._lvglObjSetLocalStylePropPtr(
+                                                        obj,
+                                                        propertyInfo.lvglStylePropCode,
+                                                        fontPtr,
+                                                        selectorCode
+                                                    );
+
+                                                    runInAction(
+                                                        () =>
+                                                            widget._refreshCounter++
+                                                    );
+                                                }
+                                            }
+                                        })();
+                                    }
                                 }
                             } else {
                                 const numValue =
@@ -1265,25 +1279,40 @@ export class LVGLStylesDefinition extends EezObject {
                             propertyInfo.referencedObjectCollectionPath ==
                                 "bitmaps"
                         ) {
-                            (async () => {
-                                const bitmapPtr = await runtime.loadBitmap(
-                                    value
-                                );
-                                if (bitmapPtr) {
-                                    runtime.wasm._lvglObjSetLocalStylePropPtr(
-                                        obj,
-                                        propertyInfo.lvglStylePropCode,
-                                        bitmapPtr,
-                                        selectorCode
+                            const bitmap = ProjectEditor.findBitmap(
+                                ProjectEditor.getProject(this),
+                                value
+                            );
+                            if (bitmap && bitmap.image) {
+                                (async () => {
+                                    const bitmapPtr = await runtime.loadBitmap(
+                                        bitmap
                                     );
+                                    if (bitmapPtr) {
+                                        const widget = getAncestorOfType(
+                                            this,
+                                            ProjectEditor.LVGLWidgetClass
+                                                .classInfo
+                                        ) as LVGLWidget;
 
-                                    const widget = getAncestorOfType(
-                                        this,
-                                        ProjectEditor.LVGLWidgetClass.classInfo
-                                    ) as LVGLWidget;
-                                    runInAction(() => widget._refreshCounter++);
-                                }
-                            })();
+                                        if (
+                                            !runtime.isEditor ||
+                                            obj == widget._lvglObj
+                                        ) {
+                                            runtime.wasm._lvglObjSetLocalStylePropPtr(
+                                                obj,
+                                                propertyInfo.lvglStylePropCode,
+                                                bitmapPtr,
+                                                selectorCode
+                                            );
+
+                                            runInAction(
+                                                () => widget._refreshCounter++
+                                            );
+                                        }
+                                    }
+                                })();
+                            }
                         }
                     }
                 );

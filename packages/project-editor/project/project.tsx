@@ -789,7 +789,8 @@ export class General extends EezObject {
                 hideInPropertyGrid: (general: General) => {
                     return (
                         general.projectType != ProjectType.FIRMWARE &&
-                        general.projectType != ProjectType.FIRMWARE_MODULE
+                        general.projectType != ProjectType.FIRMWARE_MODULE &&
+                        general.projectType != ProjectType.LVGL
                     );
                 }
             },
@@ -799,7 +800,8 @@ export class General extends EezObject {
                 hideInPropertyGrid: (general: General) => {
                     return (
                         general.projectType != ProjectType.FIRMWARE &&
-                        general.projectType != ProjectType.FIRMWARE_MODULE
+                        general.projectType != ProjectType.FIRMWARE_MODULE &&
+                        general.projectType != ProjectType.LVGL
                     );
                 }
             }

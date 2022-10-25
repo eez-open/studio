@@ -251,9 +251,6 @@ static void hal_init(bool editor) {
 static void memory_monitor(lv_timer_t * param)
 {
     (void) param; /*Unused*/
-    // lv_mem_monitor_t mon;
-    // lv_mem_monitor(&mon);
-    // printf("LVGL memory usage: %d%%\n", (int)mon.used_pct);
 }
 
 bool initialized = false;

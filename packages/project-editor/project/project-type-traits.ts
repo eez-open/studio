@@ -163,6 +163,10 @@ class LVGLProjectTypeTraits extends ProjectTypeTraits {
     override get runtimeType() {
         return RuntimeType.WASM;
     }
+
+    override get bitmapColorFormat() {
+        return BitmapColorFormat.BGR;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -233,6 +237,11 @@ export function isV3OrNewerProject(object: IEezObject) {
 export function isLVGLProject(object: IEezObject) {
     const project = ProjectEditor.getProject(object);
     return project.projectTypeTraits.isLVGL;
+}
+
+export function isNotLVGLProject(object: IEezObject) {
+    const project = ProjectEditor.getProject(object);
+    return !project.projectTypeTraits.isLVGL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

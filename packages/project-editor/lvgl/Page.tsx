@@ -4,7 +4,11 @@ import { observer } from "mobx-react";
 import { ProjectContext } from "project-editor/project/context";
 import type { Page } from "project-editor/features/page/page";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
-import { LVGLPageEditorRuntime } from "project-editor/lvgl/page-runtime";
+import {
+    LVGLNonActivePageViewerRuntime,
+    LVGLPageEditorRuntime,
+    LVGLPageRuntime
+} from "project-editor/lvgl/page-runtime";
 
 export const LVGLPage = observer(
     class LVGLPage extends React.Component<{
@@ -14,19 +18,28 @@ export const LVGLPage = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
-        displayWidth = 800;
-        displayHeight = 480;
-
         canvasRef = React.createRef<HTMLCanvasElement>();
-        runtime: LVGLPageEditorRuntime;
+        runtime: LVGLPageRuntime;
 
         componentDidMount() {
-            this.runtime = new LVGLPageEditorRuntime(
-                this.props.page,
-                this.displayWidth,
-                this.displayHeight,
-                this.canvasRef.current!.getContext("2d")!
-            );
+            if (this.context.runtime) {
+                this.runtime = new LVGLNonActivePageViewerRuntime(
+                    this.context,
+                    this.props.page,
+                    this.context.project.settings.general.displayWidth,
+                    this.context.project.settings.general.displayHeight,
+                    this.canvasRef.current!.getContext("2d")!
+                );
+            } else {
+                this.runtime = new LVGLPageEditorRuntime(
+                    this.props.page,
+                    this.context.project.settings.general.displayWidth,
+                    this.context.project.settings.general.displayHeight,
+                    this.canvasRef.current!.getContext("2d")!
+                );
+            }
+
+            this.runtime.mount();
         }
 
         componentWillUnmount() {
@@ -37,8 +50,8 @@ export const LVGLPage = observer(
             return (
                 <canvas
                     ref={this.canvasRef}
-                    width={this.displayWidth}
-                    height={this.displayHeight}
+                    width={this.context.project.settings.general.displayWidth}
+                    height={this.context.project.settings.general.displayHeight}
                     style={{ imageRendering: "pixelated" }}
                 ></canvas>
             );
