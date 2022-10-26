@@ -78,8 +78,8 @@ class FirmwareProjectTypeTraits extends ProjectTypeTraits {
             : BitmapColorFormat.BGR;
     }
 
-    override get runtimeType() {
-        return RuntimeType.WASM;
+    override get runtimeType(): RuntimeType {
+        return this.hasFlowSupport ? RuntimeType.WASM : RuntimeType.NONE;
     }
 }
 
@@ -157,7 +157,7 @@ class LVGLProjectTypeTraits extends ProjectTypeTraits {
     }
 
     override get hasFlowSupport() {
-        return true;
+        return this.project.settings.general.flowSupport;
     }
 
     override get runtimeType() {

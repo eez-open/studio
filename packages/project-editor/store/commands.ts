@@ -221,6 +221,10 @@ export let deleteObject = action((object: any) => {
 });
 
 export let deleteObjects = action((objects: IEezObject[]) => {
+    if (objects.length == 0) {
+        return;
+    }
+
     let undoIndexes: number[];
 
     getProjectEditorStore(objects[0]).undoManager.executeCommand({

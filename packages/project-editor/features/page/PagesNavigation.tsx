@@ -83,7 +83,7 @@ export const PagesNavigation = observer(
                 return <PageStructure />;
             }
 
-            if (component === "local-vars") {
+            if (component === "locals") {
                 return <LocalVariables />;
             }
 

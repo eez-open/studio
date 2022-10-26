@@ -43,7 +43,7 @@ export type {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const basicTypeNames = [
+export const BASIC_TYPE_NAMES = [
     "integer",
     "float",
     "double",
@@ -53,6 +53,14 @@ export const basicTypeNames = [
     "blob",
     "stream",
     "any"
+];
+
+export const LVGL_BASIC_TYPE_NAMES = [
+    "integer",
+    "float",
+    "double",
+    "boolean",
+    "string"
 ];
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -268,6 +276,13 @@ const VariableTypeSelect = observer(
         }
 
         const { value, onChange, project } = props;
+
+        const basicTypeNames =
+            !props.project.projectTypeTraits.isLVGL ||
+            props.project.projectTypeTraits.hasFlowSupport
+                ? BASIC_TYPE_NAMES
+                : LVGL_BASIC_TYPE_NAMES;
+
         const basicTypes = basicTypeNames.map(basicTypeName => {
             return (
                 <option key={basicTypeName} value={addType(basicTypeName)}>
@@ -277,13 +292,15 @@ const VariableTypeSelect = observer(
         });
         basicTypes.unshift(<option key="__empty" value={addType("")} />);
 
-        const objectTypes = [...objectVariableTypes.keys()].map(name => {
-            return (
-                <option key={name} value={addType(`object:${name}`)}>
-                    {humanizeVariableType(`object:${name}`)}
-                </option>
-            );
-        });
+        const objectTypes = props.project.projectTypeTraits.hasFlowSupport
+            ? [...objectVariableTypes.keys()].map(name => {
+                  return (
+                      <option key={name} value={addType(`object:${name}`)}>
+                          {humanizeVariableType(`object:${name}`)}
+                      </option>
+                  );
+              })
+            : [];
 
         const enums = project.variables.enums.map(enumDef => (
             <option key={enumDef.name} value={addType(`enum:${enumDef.name}`)}>
@@ -291,54 +308,72 @@ const VariableTypeSelect = observer(
             </option>
         ));
 
-        const structures = [
-            ...project.variables.structures,
-            ...SYSTEM_STRUCTURES
-        ].map(struct => (
-            <option key={struct.name} value={addType(`struct:${struct.name}`)}>
-                {humanizeVariableType(`struct:${struct.name}`)}
-            </option>
-        ));
+        const structures = props.project.projectTypeTraits.hasFlowSupport
+            ? [...project.variables.structures, ...SYSTEM_STRUCTURES].map(
+                  struct => (
+                      <option
+                          key={struct.name}
+                          value={addType(`struct:${struct.name}`)}
+                      >
+                          {humanizeVariableType(`struct:${struct.name}`)}
+                      </option>
+                  )
+              )
+            : [];
 
-        const arrayOfBasicTypes = basicTypeNames.map(basicTypeName => {
-            return (
-                <option
-                    key={`array:${basicTypeName}`}
-                    value={addType(`array:${basicTypeName}`)}
-                >
-                    {humanizeVariableType(`array:${basicTypeName}`)}
-                </option>
-            );
-        });
+        const arrayOfBasicTypes =
+            !props.project.projectTypeTraits.isLVGL ||
+            props.project.projectTypeTraits.hasFlowSupport
+                ? basicTypeNames.map(basicTypeName => {
+                      return (
+                          <option
+                              key={`array:${basicTypeName}`}
+                              value={addType(`array:${basicTypeName}`)}
+                          >
+                              {humanizeVariableType(`array:${basicTypeName}`)}
+                          </option>
+                      );
+                  })
+                : [];
 
-        const arrayOfObjects = [...objectVariableTypes.keys()].map(name => {
-            return (
-                <option key={name} value={addType(`array:object:${name}`)}>
-                    {humanizeVariableType(`array:object:${name}`)}
-                </option>
-            );
-        });
+        const arrayOfObjects = props.project.projectTypeTraits.hasFlowSupport
+            ? [...objectVariableTypes.keys()].map(name => {
+                  return (
+                      <option
+                          key={name}
+                          value={addType(`array:object:${name}`)}
+                      >
+                          {humanizeVariableType(`array:object:${name}`)}
+                      </option>
+                  );
+              })
+            : [];
 
-        const arrayOfEnums = project.variables.enums.map(enumDef => (
-            <option
-                key={enumDef.name}
-                value={addType(`array:enum:${enumDef.name}`)}
-            >
-                {humanizeVariableType(`array:enum:${enumDef.name}`)}
-            </option>
-        ));
+        const arrayOfEnums =
+            !props.project.projectTypeTraits.isLVGL ||
+            props.project.projectTypeTraits.hasFlowSupport
+                ? project.variables.enums.map(enumDef => (
+                      <option
+                          key={enumDef.name}
+                          value={addType(`array:enum:${enumDef.name}`)}
+                      >
+                          {humanizeVariableType(`array:enum:${enumDef.name}`)}
+                      </option>
+                  ))
+                : [];
 
-        const arrayOfStructures = [
-            ...project.variables.structures,
-            ...SYSTEM_STRUCTURES
-        ].map(struct => (
-            <option
-                key={struct.name}
-                value={addType(`array:struct:${struct.name}`)}
-            >
-                {humanizeVariableType(`array:struct:${struct.name}`)}
-            </option>
-        ));
+        const arrayOfStructures = props.project.projectTypeTraits.hasFlowSupport
+            ? [...project.variables.structures, ...SYSTEM_STRUCTURES].map(
+                  struct => (
+                      <option
+                          key={struct.name}
+                          value={addType(`array:struct:${struct.name}`)}
+                      >
+                          {humanizeVariableType(`array:struct:${struct.name}`)}
+                      </option>
+                  )
+              )
+            : [];
 
         if (!allTypes.has(value)) {
             basicTypes.splice(
@@ -358,26 +393,35 @@ const VariableTypeSelect = observer(
                 onChange={event => onChange(event.target.value)}
             >
                 {basicTypes}
+
                 {objectTypes.length > 0 && (
                     <optgroup label="Objects">{objectTypes}</optgroup>
                 )}
+
                 {enums.length > 0 && (
                     <optgroup label="Enumerations">{enums}</optgroup>
                 )}
+
                 {structures.length > 0 && (
                     <optgroup label="Structures">{structures}</optgroup>
                 )}
-                <optgroup label="Arrays">{arrayOfBasicTypes}</optgroup>
+
+                {arrayOfBasicTypes.length > 0 && (
+                    <optgroup label="Arrays">{arrayOfBasicTypes}</optgroup>
+                )}
+
                 {arrayOfObjects.length > 0 && (
                     <optgroup label="Array of Objects">
                         {arrayOfObjects}
                     </optgroup>
                 )}
+
                 {arrayOfEnums.length > 0 && (
                     <optgroup label="Array of Enumerations">
                         {arrayOfEnums}
                     </optgroup>
                 )}
+
                 {arrayOfStructures.length > 0 && (
                     <optgroup label="Array of Structures">
                         {arrayOfStructures}
@@ -540,7 +584,7 @@ export function isIntegerType(type: string) {
 }
 
 export function isBasicType(type: string) {
-    return basicTypeNames.indexOf(type) != -1;
+    return BASIC_TYPE_NAMES.indexOf(type) != -1;
 }
 
 export function isEnumType(type: string) {

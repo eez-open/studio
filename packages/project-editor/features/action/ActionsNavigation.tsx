@@ -30,7 +30,7 @@ export const ActionsNavigation = observer(
                 );
             }
 
-            if (component === "local-vars") {
+            if (component === "locals") {
                 return <LocalVariables />;
             }
 

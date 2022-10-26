@@ -1459,6 +1459,10 @@ export async function buildAssets(
             result.LVGL_ACTIONS_DECL = await lvglBuild.buildActionsDecl();
         }
 
+        if (!sectionNames || sectionNames.indexOf("LVGL_VARS_DECL") !== -1) {
+            result.LVGL_VARS_DECL = await lvglBuild.buildVariablesDecl();
+        }
+
         if (option == "buildFiles") {
             await lvglBuild.copyFontFiles();
         }

@@ -47,6 +47,9 @@ export class LayoutModels {
     static TEXT_RESOURCES_TAB_ID = "TEXT_RESOURCES";
     static TEXTS_STATISTICS_TAB_ID = "TEXTS_STATISTICS";
 
+    static PAGE_STRUCTURE_TAB_ID = "page-structure";
+    static ACTIONS_TAB_ID = "actions";
+
     static BREAKPOINTS_TAB: FlexLayout.IJsonTabNode = {
         type: "tab",
         enableClose: false,
@@ -69,6 +72,14 @@ export class LayoutModels {
         name: "Structs",
         id: LayoutModels.STRUCTS_TAB_ID,
         component: "structs"
+    };
+
+    static ENUMS_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Enums",
+        id: LayoutModels.ENUMS_TAB_ID,
+        component: "enums"
     };
 
     models: {
@@ -411,13 +422,7 @@ export class LayoutModels {
                                     },
                                     LayoutModels.LOCAL_VARS_TAB,
                                     LayoutModels.STRUCTS_TAB,
-                                    {
-                                        type: "tab",
-                                        enableClose: false,
-                                        name: "Enums",
-                                        id: LayoutModels.ENUMS_TAB_ID,
-                                        component: "enums"
-                                    }
+                                    LayoutModels.ENUMS_TAB
                                 ]
                             }
                         ]
@@ -515,7 +520,7 @@ export class LayoutModels {
             },
             {
                 name: "pagesEditor",
-                version: 3,
+                version: 5,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: [],
@@ -543,14 +548,10 @@ export class LayoutModels {
                                                 type: "tab",
                                                 enableClose: false,
                                                 name: "Page Structure",
-                                                component: "page-structure"
+                                                component: "page-structure",
+                                                id: LayoutModels.PAGE_STRUCTURE_TAB_ID
                                             },
-                                            {
-                                                type: "tab",
-                                                enableClose: false,
-                                                name: "Local Vars",
-                                                component: "local-vars"
-                                            }
+                                            LayoutModels.LOCAL_VARS_TAB
                                         ]
                                     }
                                 ]
@@ -589,7 +590,7 @@ export class LayoutModels {
             },
             {
                 name: "actionsEditor",
-                version: 3,
+                version: 6,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: [],
@@ -606,20 +607,14 @@ export class LayoutModels {
                                                 type: "tab",
                                                 enableClose: false,
                                                 name: "Actions",
-                                                component: "actions"
+                                                component: "actions",
+                                                id: LayoutModels.ACTIONS_TAB_ID
                                             }
                                         ]
                                     },
                                     {
                                         type: "tabset",
-                                        children: [
-                                            {
-                                                type: "tab",
-                                                enableClose: false,
-                                                name: "Local Vars",
-                                                component: "local-vars"
-                                            }
-                                        ]
+                                        children: [LayoutModels.LOCAL_VARS_TAB]
                                     }
                                 ]
                             }

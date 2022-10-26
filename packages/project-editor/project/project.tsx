@@ -56,8 +56,7 @@ import {
 } from "project-editor/store";
 import {
     isLVGLProject,
-    isNotV1Project,
-    RuntimeType
+    isNotV1Project
 } from "project-editor/project/project-type-traits";
 
 import type { Action } from "project-editor/features/action/action";
@@ -776,7 +775,8 @@ export class General extends EezObject {
                 hideInPropertyGrid: (general: General) => {
                     return (
                         general.projectType != ProjectType.FIRMWARE &&
-                        general.projectType != ProjectType.FIRMWARE_MODULE
+                        general.projectType != ProjectType.FIRMWARE_MODULE &&
+                        general.projectType != ProjectType.LVGL
                     );
                 }
             } /*,
@@ -1726,7 +1726,7 @@ export class Project extends EezObject {
         }
 
         if (flowSupport == undefined) {
-            flowSupport = this.settings.general.flowSupport;
+            flowSupport = this.projectTypeTraits.hasFlowSupport;
         }
 
         enableTab(
@@ -1734,7 +1734,7 @@ export class Project extends EezObject {
             LayoutModels.BREAKPOINTS_TAB_ID,
             LayoutModels.BREAKPOINTS_TAB,
             LayoutModels.COMPONENTS_PALETTE_TAB_ID,
-            this.projectTypeTraits.runtimeType != RuntimeType.NONE
+            flowSupport
         );
 
         enableTab(
@@ -1742,7 +1742,15 @@ export class Project extends EezObject {
             LayoutModels.LOCAL_VARS_TAB_ID,
             LayoutModels.LOCAL_VARS_TAB,
             LayoutModels.GLOBAL_VARS_TAB_ID,
-            this.projectTypeTraits.hasFlowSupport
+            flowSupport
+        );
+
+        enableTab(
+            this._DocumentStore.layoutModels.variables,
+            LayoutModels.ENUMS_TAB_ID,
+            LayoutModels.ENUMS_TAB,
+            LayoutModels.GLOBAL_VARS_TAB_ID,
+            flowSupport || !this.projectTypeTraits.isLVGL
         );
 
         enableTab(
@@ -1750,7 +1758,23 @@ export class Project extends EezObject {
             LayoutModels.STRUCTS_TAB_ID,
             LayoutModels.STRUCTS_TAB,
             LayoutModels.GLOBAL_VARS_TAB_ID,
-            this.projectTypeTraits.hasFlowSupport
+            flowSupport
+        );
+
+        enableTab(
+            this._DocumentStore.layoutModels.pagesEditor,
+            LayoutModels.LOCAL_VARS_TAB_ID,
+            LayoutModels.LOCAL_VARS_TAB,
+            LayoutModels.PAGE_STRUCTURE_TAB_ID,
+            flowSupport
+        );
+
+        enableTab(
+            this._DocumentStore.layoutModels.actionsEditor,
+            LayoutModels.LOCAL_VARS_TAB_ID,
+            LayoutModels.LOCAL_VARS_TAB,
+            LayoutModels.ACTIONS_TAB_ID,
+            flowSupport
         );
     }
 }

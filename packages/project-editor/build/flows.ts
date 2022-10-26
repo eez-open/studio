@@ -34,7 +34,7 @@ import {
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 import { FIRST_DASHBOARD_COMPONENT_TYPE } from "project-editor/flow/components/component_types";
 import {
-    basicTypeNames,
+    BASIC_TYPE_NAMES,
     SYSTEM_STRUCTURES,
     ValueType
 } from "project-editor/features/variable/value-type";
@@ -575,7 +575,7 @@ export function buildFlowDefs(assets: Assets) {
 
     // enum ArrayType
     const arrayTypeEnumItems = [];
-    for (const basicType of basicTypeNames) {
+    for (const basicType of BASIC_TYPE_NAMES) {
         arrayTypeEnumItems.push(
             `${TAB}${getName(
                 "ARRAY_TYPE_",

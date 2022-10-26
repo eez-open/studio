@@ -75,6 +75,22 @@ export class LVGLBuild {
         );
     }
 
+    getVariableGetterFunctionName(variableName: string) {
+        return getName(
+            "get_var_",
+            variableName,
+            NamingConvention.UnderscoreLowerCase
+        );
+    }
+
+    getVariableSetterFunctionName(variableName: string) {
+        return getName(
+            "set_var_",
+            variableName,
+            NamingConvention.UnderscoreLowerCase
+        );
+    }
+
     getWidgetIdentifier(widget: LVGLWidget) {
         let widgetToIdentifier;
         let widgetIdentifiers;
@@ -464,11 +480,58 @@ void tick_screen(int screen_index) {
         const build = this;
 
         for (const action of this.project.actions) {
-            if (action.implementationType === "native") {
+            if (
+                !this.assets.projectEditorStore.projectTypeTraits
+                    .hasFlowSupport ||
+                action.implementationType === "native"
+            ) {
                 build.line(
                     `extern void ${this.getActionFunctionName(
                         action.name
                     )}(lv_event_t * e);`
+                );
+            }
+        }
+
+        return this.result;
+    }
+
+    async buildVariablesDecl() {
+        this.result = "";
+        this.indentation = "";
+        const build = this;
+
+        for (const variable of this.project.variables.globalVariables) {
+            if (
+                !this.assets.projectEditorStore.projectTypeTraits
+                    .hasFlowSupport ||
+                variable.native
+            ) {
+                let type;
+                if (variable.type == "integer") {
+                    type = "int32_t ";
+                } else if (variable.type == "float") {
+                    type = "float ";
+                } else if (variable.type == "double") {
+                    type = "double ";
+                } else if (variable.type == "boolean") {
+                    type = "bool ";
+                } else if (variable.type == "string") {
+                    type = "const char *";
+                } else {
+                    type = "void *";
+                }
+
+                build.line(
+                    `extern ${type}${this.getVariableGetterFunctionName(
+                        variable.name
+                    )}();`
+                );
+
+                build.line(
+                    `extern void ${this.getVariableSetterFunctionName(
+                        variable.name
+                    )}(${type}value);`
                 );
             }
         }

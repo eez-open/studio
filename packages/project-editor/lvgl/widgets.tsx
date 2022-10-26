@@ -17,12 +17,15 @@ import {
     IEezObject,
     PropertyInfo,
     IOnSelectParams,
-    getProperty
+    getProperty,
+    EezObject,
+    isPropertyHidden
 } from "project-editor/core/object";
 import {
     getAncestorOfType,
     getClassInfo,
     getObjectPathAsString,
+    getProjectEditorStore,
     Message,
     propertyNotFoundMessage,
     propertyNotSetMessage
@@ -35,6 +38,7 @@ import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import {
     AutoSize,
     ComponentOutput,
+    isFlowProperty,
     isTimelineEditorActive,
     isTimelineEditorActiveOrActionComponent,
     Widget
@@ -1002,8 +1006,14 @@ export const LVGLProperty = observer(
                             {
                                 type:
                                     type == "expression"
-                                        ? PropertyType.MultilineText
+                                        ? this.context.projectTypeTraits
+                                              .hasFlowSupport
+                                            ? PropertyType.MultilineText
+                                            : PropertyType.ObjectReference
                                         : this.props.propertyInfo.type,
+
+                                referencedObjectCollectionPath:
+                                    "variables/globalVariables",
 
                                 propertyGridColumnComponent: undefined,
 
@@ -1024,7 +1034,11 @@ export const LVGLProperty = observer(
                                                   },
                                                   params
                                               )
-                                        : undefined
+                                        : undefined,
+                                isOnSelectAvailable: () => {
+                                    return this.context.projectTypeTraits
+                                        .hasFlowSupport;
+                                }
                             }
                         )}
                         objects={this.props.objects}
@@ -1058,7 +1072,8 @@ function makeExpressionProperty(
     return [
         {
             name,
-            type: PropertyType.String,
+            type: PropertyType.ObjectReference,
+            referencedObjectCollectionPath: "variables/globalVariables",
             propertyGridColumnComponent: LVGLProperty,
             propertyGridGroup,
             flowProperty: (widget: LVGLLabelWidget | undefined) => {
@@ -1074,7 +1089,15 @@ function makeExpressionProperty(
         {
             name: name + "Type",
             type: PropertyType.Enum,
-            enumItems: types.map(id => ({ id })),
+            enumItems: (object: EezObject) =>
+                types.map(id => ({
+                    id,
+                    label:
+                        !ProjectEditor.getProject(object).projectTypeTraits
+                            .hasFlowSupport && id == "expression"
+                            ? "Variable"
+                            : undefined
+                })),
             enumDisallowUndefined: true,
             propertyGridGroup,
             hideInPropertyGrid: true
@@ -1201,6 +1224,36 @@ export class LVGLLabelWidget extends LVGLWidget {
                 messages.push(propertyNotSetMessage(widget, "text"));
             }
 
+            const projectEditorStore = getProjectEditorStore(widget);
+            if (!projectEditorStore.projectTypeTraits.hasFlowSupport) {
+                // check properties
+                for (const propertyInfo of getClassInfo(widget).properties) {
+                    if (isPropertyHidden(widget, propertyInfo)) {
+                        continue;
+                    }
+
+                    if (
+                        isFlowProperty(widget, propertyInfo, [
+                            "input",
+                            "assignable"
+                        ])
+                    ) {
+                        const value = getProperty(widget, propertyInfo.name);
+                        if (!value) {
+                            messages.push(
+                                propertyNotSetMessage(widget, propertyInfo.name)
+                            );
+                        } else {
+                            ProjectEditor.documentSearch.checkObjectReference(
+                                widget,
+                                propertyInfo.name,
+                                messages
+                            );
+                        }
+                    }
+                }
+            }
+
             return messages;
         },
 
@@ -1300,21 +1353,31 @@ export class LVGLLabelWidget extends LVGLWidget {
             build.line(`{`);
             build.indent();
 
-            const page = getAncestorOfType(
-                this,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
+            if (
+                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
+            ) {
+                const page = getAncestorOfType(
+                    this,
+                    ProjectEditor.PageClass.classInfo
+                ) as Page;
 
-            let flowIndex = build.assets.getFlowIndex(page);
-            let componentIndex = build.assets.getComponentIndex(this);
-            const propertyIndex = build.assets.getComponentPropertyIndex(
-                this,
-                "text"
-            );
+                let flowIndex = build.assets.getFlowIndex(page);
+                let componentIndex = build.assets.getComponentIndex(this);
+                const propertyIndex = build.assets.getComponentPropertyIndex(
+                    this,
+                    "text"
+                );
 
-            build.line(
-                `const char *text_new = evalTextProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Text in Label widget");`
-            );
+                build.line(
+                    `const char *text_new = evalTextProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Text in Label widget");`
+                );
+            } else {
+                build.line(
+                    `const char *text_new = ${build.getVariableGetterFunctionName(
+                        this.text
+                    )}();`
+                );
+            }
 
             build.line(
                 `const char *text_cur = lv_label_get_text(screen->${build.getWidgetStructFieldName(
@@ -1710,9 +1773,9 @@ export class LVGLSliderWidget extends LVGLWidget {
     min: number;
     max: number;
     mode: keyof typeof SLIDER_MODES;
-    value: number;
+    value: number | string;
     valueType: LVGLPropertyType;
-    valueLeft: number;
+    valueLeft: number | string;
     valueLeftType: LVGLPropertyType;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
@@ -1862,8 +1925,8 @@ export class LVGLSliderWidget extends LVGLWidget {
             this.min,
             this.max,
             SLIDER_MODES[this.mode],
-            valueExpr ? 0 : this.value,
-            valueLeftExpr ? 0 : this.valueLeft
+            valueExpr ? 0 : (this.value as number),
+            valueLeftExpr ? 0 : (this.valueLeft as number)
         );
 
         if (valueExpr) {
@@ -1947,21 +2010,31 @@ export class LVGLSliderWidget extends LVGLWidget {
             build.line(`{`);
             build.indent();
 
-            const page = getAncestorOfType(
-                this,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
+            if (
+                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
+            ) {
+                const page = getAncestorOfType(
+                    this,
+                    ProjectEditor.PageClass.classInfo
+                ) as Page;
 
-            let flowIndex = build.assets.getFlowIndex(page);
-            let componentIndex = build.assets.getComponentIndex(this);
-            const propertyIndex = build.assets.getComponentPropertyIndex(
-                this,
-                "value"
-            );
+                let flowIndex = build.assets.getFlowIndex(page);
+                let componentIndex = build.assets.getComponentIndex(this);
+                const propertyIndex = build.assets.getComponentPropertyIndex(
+                    this,
+                    "value"
+                );
 
-            build.line(
-                `int32_t value_new = evalIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Value in Slider widget");`
-            );
+                build.line(
+                    `int32_t value_new = evalIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Value in Slider widget");`
+                );
+            } else {
+                build.line(
+                    `int32_t value_new = ${build.getVariableGetterFunctionName(
+                        this.value as string
+                    )}();`
+                );
+            }
 
             build.line(
                 `int32_t value_cur = lv_slider_get_value(screen->${build.getWidgetStructFieldName(
@@ -1988,16 +2061,26 @@ export class LVGLSliderWidget extends LVGLWidget {
                 ProjectEditor.PageClass.classInfo
             ) as Page;
 
-            let flowIndex = build.assets.getFlowIndex(page);
-            let componentIndex = build.assets.getComponentIndex(this);
-            const propertyIndex = build.assets.getComponentPropertyIndex(
-                this,
-                "valueLeft"
-            );
+            if (
+                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
+            ) {
+                let flowIndex = build.assets.getFlowIndex(page);
+                let componentIndex = build.assets.getComponentIndex(this);
+                const propertyIndex = build.assets.getComponentPropertyIndex(
+                    this,
+                    "valueLeft"
+                );
 
-            build.line(
-                `int32_t value_new = evalIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Value Left in Slider widget");`
-            );
+                build.line(
+                    `int32_t value_new = evalIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Value Left in Slider widget");`
+                );
+            } else {
+                build.line(
+                    `int32_t value_new = ${build.getVariableGetterFunctionName(
+                        this.valueLeft as string
+                    )}();`
+                );
+            }
 
             build.line(
                 `int32_t value_cur = lv_slider_get_left_value(screen->${build.getWidgetStructFieldName(
@@ -2024,20 +2107,30 @@ export class LVGLSliderWidget extends LVGLWidget {
             build.line(`lv_obj_t *ta = lv_event_get_target(e);`);
             build.line(`int32_t value = lv_slider_get_value(ta);`);
 
-            const page = getAncestorOfType(
-                this,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
-            let flowIndex = build.assets.getFlowIndex(page);
-            let componentIndex = build.assets.getComponentIndex(this);
-            const propertyIndex = build.assets.getComponentPropertyIndex(
-                this,
-                "value"
-            );
+            if (
+                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
+            ) {
+                const page = getAncestorOfType(
+                    this,
+                    ProjectEditor.PageClass.classInfo
+                ) as Page;
+                let flowIndex = build.assets.getFlowIndex(page);
+                let componentIndex = build.assets.getComponentIndex(this);
+                const propertyIndex = build.assets.getComponentPropertyIndex(
+                    this,
+                    "value"
+                );
 
-            build.line(
-                `assignIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, value, "Failed to assign Value in Slider widget");`
-            );
+                build.line(
+                    `assignIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, value, "Failed to assign Value in Slider widget");`
+                );
+            } else {
+                build.line(
+                    `${build.getVariableSetterFunctionName(
+                        this.value as string
+                    )}(value);`
+                );
+            }
 
             build.unindent();
             build.line("}");
@@ -2050,20 +2143,30 @@ export class LVGLSliderWidget extends LVGLWidget {
             build.line(`lv_obj_t *ta = lv_event_get_target(e);`);
             build.line(`int32_t value = lv_slider_get_left_value(ta);`);
 
-            const page = getAncestorOfType(
-                this,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
-            let flowIndex = build.assets.getFlowIndex(page);
-            let componentIndex = build.assets.getComponentIndex(this);
-            const propertyIndex = build.assets.getComponentPropertyIndex(
-                this,
-                "valueLeft"
-            );
+            if (
+                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
+            ) {
+                const page = getAncestorOfType(
+                    this,
+                    ProjectEditor.PageClass.classInfo
+                ) as Page;
+                let flowIndex = build.assets.getFlowIndex(page);
+                let componentIndex = build.assets.getComponentIndex(this);
+                const propertyIndex = build.assets.getComponentPropertyIndex(
+                    this,
+                    "valueLeft"
+                );
 
-            build.line(
-                `assignIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, value, "Failed to assign Value Left in Slider widget");`
-            );
+                build.line(
+                    `assignIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, value, "Failed to assign Value Left in Slider widget");`
+                );
+            } else {
+                build.line(
+                    `${build.getVariableSetterFunctionName(
+                        this.valueLeft as string
+                    )}(value);`
+                );
+            }
 
             build.unindent();
             build.line("}");

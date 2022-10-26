@@ -6,6 +6,7 @@ import {
     ProjectType,
     ProjectVersion
 } from "project-editor/project/project";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -94,10 +95,86 @@ function migrateRectangleWidgetToV2(project: Project) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function removeFlowSupport(project: Project) {
+    const projectEditorStore = project._DocumentStore;
+
+    project.actions.forEach(action => {
+        if (action.implementationType != "native") {
+            // remove all components
+            projectEditorStore.deleteObjects(action.components);
+
+            // remove all connection lines
+            projectEditorStore.deleteObjects(action.connectionLines);
+
+            // remove all local variables
+            projectEditorStore.deleteObjects(action.localVariables);
+
+            // set as native
+            projectEditorStore.updateObject(action, {
+                implementationType: "native"
+            });
+        }
+    });
+
+    project.pages.forEach(page => {
+        // remove all action components
+        projectEditorStore.deleteObjects(
+            page.components.filter(
+                component =>
+                    component instanceof ProjectEditor.ActionComponentClass
+            )
+        );
+
+        // remove all connection lines
+        projectEditorStore.deleteObjects(page.connectionLines);
+
+        // remove all local variables
+        projectEditorStore.deleteObjects(page.localVariables);
+
+        if (projectEditorStore.projectTypeTraits.isLVGL) {
+            // set all event handlers for LVGL widgets to "action"
+            page._lvglWidgets.forEach(lvglWidget => {
+                lvglWidget.eventHandlers.forEach(eventHandler => {
+                    if (eventHandler.handlerType == "flow") {
+                        projectEditorStore.updateObject(eventHandler, {
+                            handlerType: "action"
+                        });
+                    }
+                });
+            });
+        }
+    });
+
+    // set all globalVariables as native
+    project.variables.globalVariables.forEach(globalVariable => {
+        if (!globalVariable.native) {
+            projectEditorStore.updateObject(globalVariable, {
+                native: true
+            });
+        }
+    });
+
+    // remove all structures
+    projectEditorStore.deleteObjects(project.variables.structures);
+
+    if (projectEditorStore.projectTypeTraits.isLVGL) {
+        // remove all enums
+        projectEditorStore.deleteObjects(project.variables.enums);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export function migrateProjectType(
     project: Project,
     newProjectType: ProjectType,
     newFlowSupport: boolean
 ) {
     project.enableTabs(newProjectType, newFlowSupport);
+
+    if (newFlowSupport != undefined) {
+        if (project.settings.general.flowSupport && !newFlowSupport) {
+            removeFlowSupport(project);
+        }
+    }
 }

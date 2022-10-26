@@ -343,7 +343,14 @@ export class Variable extends EezObject {
                 name: "defaultValue",
                 type: PropertyType.MultilineText,
                 monospaceFont: true,
-                disableSpellcheck: true
+                disableSpellcheck: true,
+                hideInPropertyGrid: object => {
+                    const project = ProjectEditor.getProject(object);
+                    return (
+                        project.projectTypeTraits.isLVGL &&
+                        !project.projectTypeTraits.hasFlowSupport
+                    );
+                }
             },
             {
                 name: "defaultValueList",
@@ -417,6 +424,8 @@ export class Variable extends EezObject {
             migrateType(objectJS);
         },
         newItem: async (parent: IEezObject) => {
+            const project = ProjectEditor.getProject(parent);
+
             const result = await showGenericDialog({
                 dialogDefinition: {
                     title: ProjectEditor.getFlow(parent)
@@ -440,7 +449,10 @@ export class Variable extends EezObject {
                         {
                             name: "defaultValue",
                             type: "string",
-                            validators: [validators.required]
+                            validators: [validators.required],
+                            visible: () =>
+                                !project.projectTypeTraits.isLVGL ||
+                                project.projectTypeTraits.hasFlowSupport
                         }
                     ]
                 },
@@ -458,8 +470,6 @@ export class Variable extends EezObject {
                 defaultValue: result.values.defaultValue,
                 persistent
             };
-
-            const project = ProjectEditor.getProject(parent);
 
             const variable = createObject<Variable>(
                 project._DocumentStore,

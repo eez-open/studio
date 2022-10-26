@@ -17,7 +17,9 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
     createObject,
     getAncestorOfType,
-    getClassInfo
+    getClassInfo,
+    Message,
+    propertyNotSetMessage
 } from "project-editor/store";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import { ProjectContext } from "project-editor/project/context";
@@ -103,7 +105,10 @@ export class EventHandler extends EezObject {
                     { id: "flow", label: "Flow" },
                     { id: "action", label: "Action" }
                 ],
-                enumDisallowUndefined: true
+                enumDisallowUndefined: true,
+                readOnlyInPropertyGrid: eventHandler =>
+                    !ProjectEditor.getProject(eventHandler).projectTypeTraits
+                        .hasFlowSupport
             },
             {
                 name: "action",
@@ -171,7 +176,9 @@ export class EventHandler extends EezObject {
                             enumItems: [
                                 { id: "flow", label: "Flow" },
                                 { id: "action", label: "Action" }
-                            ]
+                            ],
+                            visible: () =>
+                                project.projectTypeTraits.hasFlowSupport
                         },
                         {
                             name: "action",
@@ -179,10 +186,12 @@ export class EventHandler extends EezObject {
                             enumItems: project.actions
                                 .filter(
                                     action =>
+                                        !project.projectTypeTraits
+                                            .hasFlowSupport ||
                                         action.implementationType == "native"
                                 )
                                 .map(action => ({
-                                    id: `action:${action.name}`,
+                                    id: action.name,
                                     label: action.name
                                 })),
                             visible: (values: any) => {
@@ -192,7 +201,9 @@ export class EventHandler extends EezObject {
                     ]
                 },
                 values: {
-                    handlerType: "action"
+                    handlerType: project.projectTypeTraits.hasFlowSupport
+                        ? "flow"
+                        : "action"
                 },
                 dialogContext: project
             });
@@ -210,6 +221,24 @@ export class EventHandler extends EezObject {
             );
 
             return eventHandler;
+        },
+
+        check: (eventHandler: EventHandler) => {
+            let messages: Message[] = [];
+
+            if (eventHandler.handlerType == "action") {
+                if (!eventHandler.action) {
+                    messages.push(
+                        propertyNotSetMessage(eventHandler, "action")
+                    );
+                }
+                ProjectEditor.documentSearch.checkObjectReference(
+                    eventHandler,
+                    "action",
+                    messages
+                );
+            }
+            return messages;
         }
     };
 

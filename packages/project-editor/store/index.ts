@@ -769,6 +769,10 @@ export class ProjectEditorStore {
     }
 
     deleteObjects(objects: IEezObject[]) {
+        if (objects.length == 0) {
+            return;
+        }
+
         if (objects.length === 1) {
             this.deleteObject(objects[0]);
         } else {
