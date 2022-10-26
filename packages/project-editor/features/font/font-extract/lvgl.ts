@@ -22,7 +22,12 @@ export class ExtractFont implements IFontExtract {
     async start() {
         let source_bin = fs.readFileSync(this.params.absoluteFilePath);
 
-        const range = this.params.encodings![0];
+        const range: number[] = [];
+        this.params.encodings!.map(encodingRange =>
+            range.push(encodingRange.from, encodingRange.to, encodingRange.from)
+        );
+
+        const symbols = this.params.symbols ?? "";
 
         const fonts = [
             {
@@ -30,8 +35,8 @@ export class ExtractFont implements IFontExtract {
                 source_bin,
                 ranges: [
                     {
-                        range: [range.from, range.to, range.from],
-                        symbols: ""
+                        range,
+                        symbols
                     }
                 ]
             }
@@ -83,50 +88,49 @@ export class ExtractFont implements IFontExtract {
             ascent: this.fontData.ascent,
             descent: -this.fontData.descent,
             glyphs: [],
+            lvglGlyphs: {
+                encodings: this.params.encodings!,
+                symbols
+            },
             lvglBinFilePath,
             lvglSourceFilePath
         };
     }
 
-    getGlyph(encoding: number): GlyphProperties | undefined {
-        const glyph = this.fontData.glyphs.find(
-            (glyph: any) => glyph.code == encoding
-        );
-        if (!glyph) {
-            return undefined;
-        }
+    getAllGlyphs = () => {
+        return this.fontData.glyphs.map((glyph: any) => {
+            let glyphProperties: GlyphProperties = {} as any;
 
-        let glyphProperties: GlyphProperties = {} as any;
+            glyphProperties.encoding = glyph.code;
 
-        glyphProperties.encoding = encoding;
+            glyphProperties.dx = glyph.advanceWidth;
 
-        glyphProperties.dx = glyph.advanceWidth;
+            glyphProperties.x = glyph.bbox.x;
+            glyphProperties.y = glyph.bbox.y;
+            glyphProperties.width = glyph.bbox.width;
+            glyphProperties.height = glyph.bbox.height;
 
-        glyphProperties.x = glyph.bbox.x;
-        glyphProperties.y = glyph.bbox.y;
-        glyphProperties.width = glyph.bbox.width;
-        glyphProperties.height = glyph.bbox.height;
+            glyphProperties.source = {
+                filePath: this.params.relativeFilePath,
+                size: this.params.size,
+                threshold: this.params.threshold,
+                encoding: glyph.code
+            } as any;
 
-        glyphProperties.source = {
-            filePath: this.params.relativeFilePath,
-            size: this.params.size,
-            threshold: this.params.threshold,
-            encoding
-        } as any;
+            const pixelArray: number[] = [];
+            for (const row of glyph.pixels) {
+                pixelArray.push(...row);
+            }
 
-        const pixelArray: number[] = [];
-        for (const row of glyph.pixels) {
-            pixelArray.push(...row);
-        }
+            glyphProperties.glyphBitmap = {
+                width: glyph.bbox.width,
+                height: glyph.bbox.height,
+                pixelArray
+            };
 
-        glyphProperties.glyphBitmap = {
-            width: glyph.bbox.width,
-            height: glyph.bbox.height,
-            pixelArray
-        };
-
-        return glyphProperties;
-    }
+            return glyphProperties;
+        });
+    };
 
     freeResources() {}
 }

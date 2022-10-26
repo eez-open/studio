@@ -10,6 +10,10 @@ export interface FontProperties {
     ascent: number;
     descent: number;
     glyphs: GlyphProperties[];
+    lvglGlyphs?: {
+        encodings: EncodingRange[];
+        symbols: string;
+    };
     lvglBinFilePath?: string;
     lvglSourceFilePath?: string;
 }
@@ -58,13 +62,16 @@ export interface Params {
     threshold: number;
     createGlyphs: boolean;
     encodings?: EncodingRange[];
+    symbols?: string;
     createBlankGlyphs?: boolean;
     doNotAddGlyphIfNotFound: boolean;
+    getAllGlyphs?: boolean;
 }
 
 export interface IFontExtract {
     start(): Promise<void>;
-    getGlyph(encoding: number): GlyphProperties | undefined;
+    getAllGlyphs?(): GlyphProperties[];
+    getGlyph?(encoding: number): GlyphProperties | undefined;
     freeResources(): void;
     fontProperties: FontProperties;
     allEncodings: number[];
@@ -100,15 +107,19 @@ export async function extractFont(params: Params) {
                 "project-editor/features/font/utils"
             );
 
-            let encodings = params.encodings
-                ? getEncodingArrayFromEncodingRanges(params.encodings)
-                : extractFont.allEncodings;
+            if (extractFont.getGlyph) {
+                let encodings = params.encodings
+                    ? getEncodingArrayFromEncodingRanges(params.encodings)
+                    : extractFont.allEncodings;
 
-            for (const encoding of encodings) {
-                const glyphProperties = extractFont.getGlyph(encoding);
-                if (glyphProperties) {
-                    extractFont.fontProperties.glyphs.push(glyphProperties);
+                for (const encoding of encodings) {
+                    const glyphProperties = extractFont.getGlyph(encoding);
+                    if (glyphProperties) {
+                        extractFont.fontProperties.glyphs.push(glyphProperties);
+                    }
                 }
+            } else if (extractFont.getAllGlyphs && params.getAllGlyphs) {
+                extractFont.fontProperties.glyphs = extractFont.getAllGlyphs();
             }
         }
 

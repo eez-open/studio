@@ -76,6 +76,10 @@ export const FontEditor = observer(
         }
 
         onBrowseGlyph = (glyph: Glyph) => {
+            if (this.context.projectTypeTraits.isLVGL) {
+                return;
+            }
+
             browseGlyph(glyph)
                 .then(propertyValues => {
                     this.context.updateObject(glyph, propertyValues);
@@ -661,7 +665,10 @@ const GlyphEditor = observer(
             }
         }
 
-        onMouseDown(event: any) {
+        onMouseDown = (event: any) => {
+            if (this.context.projectTypeTraits.isLVGL) {
+                return;
+            }
             if (event.nativeEvent.which === 1) {
                 this.isLeftButtonDown = true;
 
@@ -671,9 +678,12 @@ const GlyphEditor = observer(
                     this.togglePixel();
                 }
             }
-        }
+        };
 
-        onMouseMove(event: any) {
+        onMouseMove = (event: any) => {
+            if (this.context.projectTypeTraits.isLVGL) {
+                return;
+            }
             this.selectPixel(event);
             if (this.isLeftButtonDown) {
                 if (this.hitTestResult) {
@@ -688,13 +698,16 @@ const GlyphEditor = observer(
                     this.lastToggledPixel = undefined;
                 }
             }
-        }
+        };
 
-        onMouseUp(event: any) {
+        onMouseUp = (event: any) => {
+            if (this.context.projectTypeTraits.isLVGL) {
+                return;
+            }
             if (event.nativeEvent.which === 1) {
                 this.isLeftButtonDown = false;
             }
-        }
+        };
 
         render() {
             var glyphImage: JSX.Element | undefined;
@@ -730,9 +743,9 @@ const GlyphEditor = observer(
             return (
                 <div
                     ref={ref => (this.div = ref!)}
-                    onMouseDown={this.onMouseDown.bind(this)}
-                    onMouseMove={this.onMouseMove.bind(this)}
-                    onMouseUp={this.onMouseUp.bind(this)}
+                    onMouseDown={this.onMouseDown}
+                    onMouseMove={this.onMouseMove}
+                    onMouseUp={this.onMouseUp}
                 >
                     {glyphImage}
                     {hitTest}

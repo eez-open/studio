@@ -489,6 +489,7 @@ export class ProjectEditorStore {
     }
 
     async openFile(filePath: string) {
+        this.filePath = filePath;
         const project = await load(this, filePath);
         await this.setProject(project, filePath);
     }

@@ -285,6 +285,10 @@ function loadObjectInternal(
         createNewObjectobjIDs = true;
     }
 
+    if (classInfo.afterLoadHook) {
+        classInfo.afterLoadHook(object, currentDocumentStore!);
+    }
+
     return object;
 }
 

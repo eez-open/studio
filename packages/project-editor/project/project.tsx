@@ -718,7 +718,8 @@ export class General extends EezObject {
                     { id: ProjectType.APPLET },
                     { id: ProjectType.DASHBOARD },
                     { id: ProjectType.LVGL, label: "LVGL" }
-                ]
+                ],
+                hideInPropertyGrid: isLVGLProject
             },
             {
                 name: "assetsFolder",

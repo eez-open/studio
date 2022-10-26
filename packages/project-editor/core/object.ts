@@ -285,6 +285,11 @@ export interface ClassInfo {
         projectEditorStore: ProjectEditorStore
     ) => void;
 
+    afterLoadHook?: (
+        object: IEezObject,
+        projectEditorStore: ProjectEditorStore
+    ) => void;
+
     updateObjectValueHook?: (object: IEezObject, values: any) => void;
 
     extendContextMenu?: (

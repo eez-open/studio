@@ -175,7 +175,7 @@ export const GlyphSelectFieldType = observer(
         onSelectEncoding = (encoding: number) => {
             this.selectedEncoding.set(encoding);
 
-            if (this.fontExtract) {
+            if (this.fontExtract && this.fontExtract.getGlyph) {
                 const glyph = this.fontExtract.getGlyph(encoding);
 
                 this.props.onChange(glyph);

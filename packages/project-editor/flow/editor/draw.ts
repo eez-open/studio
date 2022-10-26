@@ -255,7 +255,7 @@ export function drawGlyph2(encoding: number, fontExtract: IFontExtract) {
     canvas.width = 1;
     canvas.height = 1;
 
-    const glyph = fontExtract.getGlyph(encoding);
+    const glyph = fontExtract.getGlyph && fontExtract.getGlyph(encoding);
     if (glyph) {
         const font = fontExtract.fontProperties;
 

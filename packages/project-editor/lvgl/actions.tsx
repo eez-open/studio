@@ -236,8 +236,8 @@ export class LVGLActionComponent extends ActionComponent {
         flowComponentId: COMPONENT_TYPE_LVGLACTION,
         label: (component: LVGLActionComponent) =>
             `LVGL ${humanize(component.action)}`,
-        componentPaletteGroupName: "LVGL",
-        componentPaletteLabel: "LVGL Action",
+        componentPaletteGroupName: "LVGL Actions",
+        componentPaletteLabel: "LVGL",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
         properties: [
@@ -265,6 +265,7 @@ export class LVGLActionComponent extends ActionComponent {
                 enumItems: Object.keys(FADE_MODES).map(id => ({
                     id
                 })),
+                enumDisallowUndefined: true,
                 propertyGridGroup: specificGroup,
                 hideInPropertyGrid: (lvglAction: LVGLActionComponent) =>
                     lvglAction.action != "CHANGE_SCREEN"

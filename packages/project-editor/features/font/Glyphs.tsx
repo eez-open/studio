@@ -123,10 +123,14 @@ export const Glyphs = observer(
                 ));
 
             let addGlyphButton: JSX.Element | undefined;
-            if (!this.props.dialog && this.props.onAddGlyph) {
+            if (
+                !this.context.projectTypeTraits.isLVGL &&
+                !this.props.dialog &&
+                this.props.onAddGlyph
+            ) {
                 addGlyphButton = (
                     <IconAction
-                        title="Add Glyph"
+                        title="Add Glyphs"
                         icon="material:add"
                         iconSize={16}
                         onClick={this.props.onAddGlyph}
@@ -135,7 +139,11 @@ export const Glyphs = observer(
             }
 
             let deleteGlyphButton: JSX.Element | undefined;
-            if (!this.props.dialog && this.props.onDeleteGlyph) {
+            if (
+                !this.context.projectTypeTraits.isLVGL &&
+                !this.props.dialog &&
+                this.props.onDeleteGlyph
+            ) {
                 const glyph = this.props.selectedGlyph.get();
                 if (glyph) {
                     const font = getAncestorOfType(
@@ -156,7 +164,11 @@ export const Glyphs = observer(
             }
 
             let createShadowButton: JSX.Element | undefined;
-            if (!this.props.dialog && this.props.onCreateShadow) {
+            if (
+                !this.context.projectTypeTraits.isLVGL &&
+                !this.props.dialog &&
+                this.props.onCreateShadow
+            ) {
                 // createShadowButton = (
                 //     <IconAction
                 //         title="Create Shadow"

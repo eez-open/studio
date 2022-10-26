@@ -1,13 +1,17 @@
 import { clipboard, nativeImage } from "@electron/remote";
-import { observable, computed, makeObservable } from "mobx";
+import { observable, computed, makeObservable, runInAction } from "mobx";
+import path from "path";
 
 import { Rect } from "eez-studio-shared/geometry";
 import { _minBy, _maxBy, _range } from "eez-studio-shared/algorithm";
-import { validators } from "eez-studio-shared/validation";
+import {
+    VALIDATION_MESSAGE_REQUIRED,
+    validators
+} from "eez-studio-shared/validation";
 
 import * as notification from "eez-studio-ui/notification";
 
-import { RelativeFileInput } from "project-editor/ui-components/FileInput";
+import { AbsoluteFileInput } from "project-editor/ui-components/FileInput";
 
 import {
     ClassInfo,
@@ -19,13 +23,15 @@ import {
     getParent,
     MessageType,
     PropertyInfo,
-    IOnSelectParams
+    IOnSelectParams,
+    setParent
 } from "project-editor/core/object";
 import {
     getLabel,
     getProjectEditorStore,
     Message,
-    createObject
+    createObject,
+    ProjectEditorStore
 } from "project-editor/store";
 import {
     isLVGLProject,
@@ -35,6 +41,7 @@ import {
 import type { Project } from "project-editor/project/project";
 
 import {
+    EncodingRange,
     extractFont,
     FontRenderingEngine
 } from "project-editor/features/font/font-extract";
@@ -53,6 +60,7 @@ import {
     serializePixelArray
 } from "project-editor/features/font/utils";
 import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
+import { copyFile, makeFolder } from "eez-studio-shared/util-electron";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -139,27 +147,33 @@ export class Glyph extends EezObject {
         properties: [
             {
                 name: "encoding",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                readOnlyInPropertyGrid: isLVGLProject
             },
             {
                 name: "x",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                readOnlyInPropertyGrid: isLVGLProject
             },
             {
                 name: "y",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                readOnlyInPropertyGrid: isLVGLProject
             },
             {
                 name: "width",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                readOnlyInPropertyGrid: isLVGLProject
             },
             {
                 name: "height",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                readOnlyInPropertyGrid: isLVGLProject
             },
             {
                 name: "dx",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                readOnlyInPropertyGrid: isLVGLProject
             },
             {
                 name: "source",
@@ -173,7 +187,8 @@ export class Glyph extends EezObject {
                     params?: IOnSelectParams
                 ) => {
                     return ProjectEditor.browseGlyph(object as Glyph);
-                }
+                },
+                readOnlyInPropertyGrid: isLVGLProject
             },
             {
                 name: "glyphBitmap",
@@ -859,11 +874,13 @@ export class FontSource extends EezObject {
                         extensions: ["ttf", "otf"]
                     },
                     { name: "All Files", extensions: ["*"] }
-                ]
+                ],
+                readOnlyInPropertyGrid: isLVGLProject
             },
             {
                 name: "size",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                readOnlyInPropertyGrid: isLVGLProject
             }
         ]
     };
@@ -896,6 +913,11 @@ export class Font extends EezObject {
     glyphs: Glyph[];
     screenOrientation: string;
     alwaysBuild: boolean;
+
+    lvglGlyphs: {
+        encodings: EncodingRange[];
+        symbols: string;
+    };
     lvglBinFilePath?: string;
     lvglSourceFilePath?: string;
 
@@ -916,9 +938,10 @@ export class Font extends EezObject {
             glyphs: observable,
             screenOrientation: observable,
             alwaysBuild: observable,
+            lvglGlyphs: observable,
             lvglBinFilePath: observable,
             lvglSourceFilePath: observable,
-            glyphsMap: computed,
+            glyphsMap: computed({ keepAlive: true }),
             maxDx: computed
         });
     }
@@ -958,12 +981,14 @@ export class Font extends EezObject {
                         id: "LVGL",
                         label: "LVGL"
                     }
-                ]
+                ],
+                readOnlyInPropertyGrid: isLVGLProject
             },
             {
                 name: "source",
                 type: PropertyType.Object,
-                typeClass: FontSource
+                typeClass: FontSource,
+                readOnlyInPropertyGrid: isLVGLProject
             },
             {
                 name: "bpp",
@@ -975,24 +1000,29 @@ export class Font extends EezObject {
             {
                 name: "threshold",
                 type: PropertyType.Number,
-                defaultValue: 128
+                defaultValue: 128,
+                hideInPropertyGrid: isLVGLProject
             },
             {
                 name: "height",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                readOnlyInPropertyGrid: isLVGLProject
             },
             {
                 name: "ascent",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                readOnlyInPropertyGrid: isLVGLProject
             },
             {
                 name: "descent",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                readOnlyInPropertyGrid: isLVGLProject
             },
             {
                 name: "glyphs",
                 typeClass: Glyph,
                 type: PropertyType.Array,
+                isOptional: true,
                 hideInPropertyGrid: true
             },
             {
@@ -1017,6 +1047,11 @@ export class Font extends EezObject {
                 hideInPropertyGrid: isLVGLProject
             },
             {
+                name: "lvglGlyphs",
+                type: PropertyType.Any,
+                hideInPropertyGrid: true
+            },
+            {
                 name: "lvglBinFilePath",
                 type: PropertyType.String,
                 hideInPropertyGrid: true
@@ -1033,6 +1068,9 @@ export class Font extends EezObject {
             } else if (fontJs.renderingEngine == undefined) {
                 fontJs.renderingEngine = "freetype";
             }
+        },
+        afterLoadHook: (font: Font, projectEditorStore) => {
+            font.loadLvglGlyphs(projectEditorStore);
         },
         check: (font: Font) => {
             let messages: Message[] = [];
@@ -1057,6 +1095,48 @@ export class Font extends EezObject {
                 return getProperty(obj, "createGlyphs");
             }
 
+            function getEncodings(ranges: string): EncodingRange[] | undefined {
+                let encodings: EncodingRange[] = [];
+
+                ranges = ranges.trim();
+                if (ranges != "") {
+                    let rangeArr = ranges.split(",");
+
+                    for (let i = 0; i < rangeArr.length; i++) {
+                        let parts = rangeArr[i].split("-");
+                        if (parts.length < 1 || parts.length > 2) {
+                            return undefined;
+                        }
+
+                        const from = parseInt(parts[0]);
+                        if (isNaN(from) || from < 0) {
+                            return undefined;
+                        }
+
+                        if (parts.length == 2) {
+                            const to = parseInt(parts[1]);
+                            if (isNaN(to) || to < 0 || to < from) {
+                                return undefined;
+                            }
+                            encodings.push({ from, to });
+                        } else {
+                            encodings.push({ from, to: from });
+                        }
+                    }
+                }
+
+                return encodings;
+            }
+
+            function validateRanges(object: any, ruleName: string) {
+                const ranges = object[ruleName];
+                if (ranges == undefined) {
+                    return VALIDATION_MESSAGE_REQUIRED;
+                }
+
+                return getEncodings(ranges) ? null : "Invalid range";
+            }
+
             const projectEditorStore = getProjectEditorStore(parent);
 
             try {
@@ -1077,8 +1157,8 @@ export class Font extends EezObject {
                                 },
                                 {
                                     name: "filePath",
-                                    displayName: "Based on font",
-                                    type: RelativeFileInput,
+                                    displayName: "Font file",
+                                    type: AbsoluteFileInput,
                                     validators: [validators.required],
                                     options: {
                                         filters: [
@@ -1104,20 +1184,21 @@ export class Font extends EezObject {
                                     type: "number"
                                 },
                                 {
-                                    name: "fromGlyph",
-                                    type: "number"
+                                    name: "ranges",
+                                    type: "string",
+                                    validators: [validateRanges]
                                 },
                                 {
-                                    name: "toGlyph",
-                                    type: "number"
+                                    name: "symbols",
+                                    type: "string"
                                 }
                             ]
                         },
                         values: {
                             size: 14,
                             bpp: 8,
-                            fromGlyph: 32,
-                            toGlyph: 255
+                            ranges: "32-127",
+                            symbols: ""
                         }
                     });
 
@@ -1125,6 +1206,9 @@ export class Font extends EezObject {
                     result.values.threshold = 128;
                     result.values.createGlyphs = true;
                     result.values.createBlankGlyphs = false;
+                    result.values.encodings = getEncodings(
+                        result.values.ranges
+                    );
                 } else {
                     result = await showGenericDialog(projectEditorStore, {
                         dialogDefinition: {
@@ -1141,7 +1225,7 @@ export class Font extends EezObject {
                                 {
                                     name: "filePath",
                                     displayName: "Based on font",
-                                    type: RelativeFileInput,
+                                    type: AbsoluteFileInput,
                                     validators: [validators.required],
                                     options: {
                                         filters: [
@@ -1215,25 +1299,65 @@ export class Font extends EezObject {
                 }
 
                 try {
+                    let absoluteFilePath = result.values.filePath;
+                    let relativeFilePath = getProjectEditorStore(
+                        parent
+                    ).getFilePathRelativeToProjectPath(result.values.filePath);
+
+                    if (
+                        projectEditorStore.project.settings.general.assetsFolder
+                    ) {
+                        const fontsRelativeFolder =
+                            projectEditorStore.project.settings.general
+                                .assetsFolder + "/fonts";
+
+                        const fontsFolder =
+                            projectEditorStore.getAbsoluteFilePath(
+                                fontsRelativeFolder
+                            );
+                        await makeFolder(fontsFolder);
+
+                        let relativePath = path
+                            .relative(fontsFolder, absoluteFilePath)
+                            .replace(/\\/g, "/");
+
+                        if (relativePath.startsWith("..")) {
+                            relativePath = path.basename(absoluteFilePath);
+                            await copyFile(
+                                absoluteFilePath,
+                                fontsFolder + "/" + relativePath
+                            );
+                        }
+
+                        relativeFilePath =
+                            fontsRelativeFolder + "/" + relativePath;
+
+                        absoluteFilePath =
+                            getProjectEditorStore(parent).getAbsoluteFilePath(
+                                relativeFilePath
+                            );
+                    }
+
                     const fontProperties = await extractFont({
                         name: result.values.name,
-                        absoluteFilePath: getProjectEditorStore(
-                            parent
-                        ).getAbsoluteFilePath(result.values.filePath),
-                        relativeFilePath: result.values.filePath,
+                        absoluteFilePath,
+                        relativeFilePath,
                         renderingEngine: result.values.renderingEngine,
                         bpp: result.values.bpp,
                         size: result.values.size,
                         threshold: result.values.threshold,
                         createGlyphs: result.values.createGlyphs,
                         encodings: result.values.createGlyphs
-                            ? [
-                                  {
-                                      from: result.values.fromGlyph,
-                                      to: result.values.toGlyph
-                                  }
-                              ]
+                            ? result.values.encodings
+                                ? result.values.encodings
+                                : [
+                                      {
+                                          from: result.values.fromGlyph,
+                                          to: result.values.toGlyph
+                                      }
+                                  ]
                             : [],
+                        symbols: result.values.symbols,
                         createBlankGlyphs: result.values.createBlankGlyphs,
                         doNotAddGlyphIfNotFound: false
                     });
@@ -1302,6 +1426,42 @@ export class Font extends EezObject {
     getMaxEncoding() {
         return Math.max(...this.glyphs.map(glyph => glyph.encoding));
     }
+
+    async loadLvglGlyphs(projectEditorStore: ProjectEditorStore) {
+        if (!this.lvglGlyphs) {
+            return;
+        }
+
+        const fontProperties = await extractFont({
+            name: this.name,
+            absoluteFilePath: projectEditorStore.getAbsoluteFilePath(
+                this.source!.filePath
+            ),
+            relativeFilePath: this.source!.filePath,
+            renderingEngine: this.renderingEngine,
+            bpp: this.bpp,
+            size: this.source!.size!,
+            threshold: this.threshold,
+            createGlyphs: true,
+            encodings: this.lvglGlyphs.encodings,
+            symbols: this.lvglGlyphs.symbols,
+            createBlankGlyphs: false,
+            doNotAddGlyphIfNotFound: false,
+            getAllGlyphs: true
+        });
+
+        runInAction(() => {
+            for (const glyphProperties of fontProperties.glyphs) {
+                const glyph = createObject<Glyph>(
+                    projectEditorStore,
+                    glyphProperties as any,
+                    Glyph
+                );
+                setParent(glyph, this.glyphs);
+                this.glyphs.push(glyph);
+            }
+        });
+    }
 }
 
 registerClass("Font", Font);
@@ -1351,14 +1511,17 @@ export default {
     },
     metrics: metrics,
     toJsHook: (jsObject: Project, project: Project) => {
-        jsObject.fonts?.forEach(font =>
-            font.glyphs.forEach(glyph => {
-                if (glyph.glyphBitmap && glyph.glyphBitmap.pixelArray) {
-                    (glyph.glyphBitmap as any).pixelArray = serializePixelArray(
-                        glyph.glyphBitmap.pixelArray
-                    );
-                }
-            })
-        );
+        jsObject.fonts?.forEach(font => {
+            if (font.lvglGlyphs) {
+                font.glyphs = [];
+            } else {
+                font.glyphs.forEach(glyph => {
+                    if (glyph.glyphBitmap && glyph.glyphBitmap.pixelArray) {
+                        (glyph.glyphBitmap as any).pixelArray =
+                            serializePixelArray(glyph.glyphBitmap.pixelArray);
+                    }
+                });
+            }
+        });
     }
 };
