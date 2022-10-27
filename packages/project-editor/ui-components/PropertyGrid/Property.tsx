@@ -19,7 +19,8 @@ import {
     PropertyInfo,
     IEezObject,
     getObjectPropertyDisplayName,
-    isPropertyOptional
+    isPropertyOptional,
+    EnumItem
 } from "project-editor/core/object";
 import { info } from "project-editor/core/util";
 import { replaceObjectReference } from "project-editor/core/search";
@@ -583,23 +584,33 @@ export const Property = observer(
                 } else {
                     let options: JSX.Element[];
 
+                    let enumItems: EnumItem[];
+
                     if (propertyInfo.enumItems) {
-                        options = getEnumItems(
+                        enumItems = getEnumItems(
                             this.props.objects,
                             propertyInfo
-                        ).map(enumItem => {
-                            const id = enumItem.id.toString();
-                            return (
-                                <option key={id} value={id}>
-                                    {enumItem.label || humanize(id)}
-                                </option>
-                            );
-                        });
+                        );
                     } else {
-                        options = [];
+                        enumItems = [];
                     }
 
-                    if (!propertyInfo.enumDisallowUndefined) {
+                    options = enumItems.map(enumItem => {
+                        const id = enumItem.id.toString();
+                        return (
+                            <option key={id} value={id}>
+                                {enumItem.label || humanize(id)}
+                            </option>
+                        );
+                    });
+
+                    const value = this._value !== undefined ? this._value : "";
+
+                    if (
+                        !propertyInfo.enumDisallowUndefined ||
+                        enumItems.map(enumItem => enumItem.id).indexOf(value) ==
+                            -1
+                    ) {
                         options.unshift(<option key="__empty" value="" />);
                     }
 
@@ -607,7 +618,7 @@ export const Property = observer(
                         <select
                             ref={(ref: any) => (this.select = ref)}
                             className="form-select"
-                            value={this._value !== undefined ? this._value : ""}
+                            value={value}
                             onChange={this.onChange}
                         >
                             {options}

@@ -1175,11 +1175,12 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  973040: ($0, $1) => { freeComponentExecutionState($0, $1); },  
- 973081: ($0) => { startToDebuggerMessage($0); },  
- 973113: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 973188: ($0) => { finishToDebuggerMessage($0); },  
- 973221: ($0, $1) => { onArrayValueFree($0, $1); }
+  973344: ($0, $1) => { freeComponentExecutionState($0, $1); },  
+ 973385: ($0) => { startToDebuggerMessage($0); },  
+ 973417: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 973492: ($0) => { finishToDebuggerMessage($0); },  
+ 973525: ($0, $1) => { onArrayValueFree($0, $1); },  
+ 973555: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
 };
 
 
@@ -4820,6 +4821,12 @@ var _lvglCreateRoller = Module["_lvglCreateRoller"] = createExportWrapper("lvglC
 var _lvglCreateSwitch = Module["_lvglCreateSwitch"] = createExportWrapper("lvglCreateSwitch");
 
 /** @type {function(...*):?} */
+var _lvglCreateBar = Module["_lvglCreateBar"] = createExportWrapper("lvglCreateBar");
+
+/** @type {function(...*):?} */
+var _lvglCreateDropdown = Module["_lvglCreateDropdown"] = createExportWrapper("lvglCreateDropdown");
+
+/** @type {function(...*):?} */
 var _lvglScreenLoad = Module["_lvglScreenLoad"] = createExportWrapper("lvglScreenLoad");
 
 /** @type {function(...*):?} */
@@ -4884,6 +4891,12 @@ var _lvglUpdateSliderValue = Module["_lvglUpdateSliderValue"] = createExportWrap
 
 /** @type {function(...*):?} */
 var _lvglUpdateSliderValueLeft = Module["_lvglUpdateSliderValueLeft"] = createExportWrapper("lvglUpdateSliderValueLeft");
+
+/** @type {function(...*):?} */
+var _lvglUpdateBarValue = Module["_lvglUpdateBarValue"] = createExportWrapper("lvglUpdateBarValue");
+
+/** @type {function(...*):?} */
+var _lvglUpdateBarValueStart = Module["_lvglUpdateBarValueStart"] = createExportWrapper("lvglUpdateBarValueStart");
 
 /** @type {function(...*):?} */
 var ___errno_location = Module["___errno_location"] = createExportWrapper("__errno_location");

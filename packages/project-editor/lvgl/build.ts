@@ -417,6 +417,15 @@ void tick_screen(int screen_index) {
             );
         }
 
+        build.text(`
+typedef struct _ext_img_desc_t {
+    const char *name;
+    const lv_img_dsc_t *img_dsc;
+} ext_img_desc_t;
+
+extern const ext_img_desc_t images[${this.project.bitmaps.length}];
+`);
+
         return this.result;
     }
 
@@ -456,6 +465,17 @@ void tick_screen(int screen_index) {
             build.line(`};`);
             build.line(``);
         }
+
+        build.line(
+            `const ext_img_desc_t images[${this.project.bitmaps.length}] = {`
+        );
+        build.indent();
+        for (const bitmap of this.project.bitmaps) {
+            const varName = this.getImageVariableName(bitmap);
+            build.line(`{ "${bitmap.name}", &${varName} },`);
+        }
+        build.unindent();
+        build.line(`};`);
 
         return this.result;
     }

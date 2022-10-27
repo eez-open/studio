@@ -302,7 +302,7 @@ export interface IWasmFlowRuntime {
     assetsMap: AssetsMap;
     componentMessages: IMessageFromWorker[] | undefined;
 
-    postWorkerToRendererMessage: (workerToRenderMessage: WorkerToRenderMessage) => void
+    postWorkerToRendererMessage: (workerToRenderMessage: WorkerToRenderMessage) => any;
 
     // eez framework API
     _init(wasmModuleId: number, assets: number, assetsSize: number, displayWidth: number, displayHeight: number);
@@ -385,6 +385,8 @@ export interface IWasmFlowRuntime {
     _lvglCreateSlider(parentObj: number, index: number, x: number, y: number, w: number, h: number, min: number, max: number, mode: number, value: number, value_left: number): number;
     _lvglCreateRoller(parentObj: number, index: number, x: number, y: number, w: number, h: number, options: number, mode: number): number;
     _lvglCreateSwitch(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
+    _lvglCreateBar(parentObj: number, index: number, x: number, y: number, w: number, h: number, min: number, max: number, mode: number, value: number, value_left: number): number;
+    _lvglCreateDropdown(parentObj: number, index: number, x: number, y: number, w: number, h: number, options: number): number;
     _lvglScreenLoad(page_index: number, obj: number);
     _lvglDeleteObject(obj: number): void;
     _lvglObjAddFlag(obj: number, f: number): void;
@@ -407,6 +409,8 @@ export interface IWasmFlowRuntime {
     _lvglUpdateLabelText(obj: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateSliderValue(obj: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateSliderValueLeft(obj: number, page_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateBarValue(obj: number, page_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateBarValueStart(obj: number, page_index: number, component_index: number, property_index: number): void;
 }
 
 export interface IDashboardComponentContext {

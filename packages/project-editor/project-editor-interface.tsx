@@ -67,6 +67,7 @@ import type {
 import type { ArrayProperty } from "project-editor/ui-components/PropertyGrid/ArrayElementProperty";
 import type { EmbeddedPropertyGrid } from "project-editor/ui-components/PropertyGrid/EmbeddedPropertyGrid";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
+import type { Property } from "project-editor/ui-components/PropertyGrid/Property";
 
 export interface IProjectEditor {
     homeTabs: Tabs;
@@ -122,6 +123,7 @@ export interface IProjectEditor {
     createEditorState: typeof createEditorState;
     browseGlyph: typeof browseGlyph;
     checkAssetId: typeof checkAssetId;
+    Property: typeof Property;
     ArrayProperty: typeof ArrayProperty;
     EmbeddedPropertyGrid: typeof EmbeddedPropertyGrid;
 }

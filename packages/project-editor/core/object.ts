@@ -112,6 +112,11 @@ export interface PropertyInfo {
     name: string;
     type: PropertyType;
 
+    dynamicType?: (object: IEezObject) => PropertyType;
+    dynamicTypeReferencedObjectCollectionPath?: (
+        object: IEezObject
+    ) => string | undefined;
+
     // optional properties
     displayName?: string | ((object: IEezObject) => string);
     enumItems?: EnumItem[] | ((object: IEezObject) => EnumItem[]);

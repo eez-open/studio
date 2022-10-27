@@ -29,6 +29,10 @@ export interface WorkerToRenderMessage {
     componentMessages?: IMessageFromWorker[];
 
     freeArrayValue?: ObjectOrArrayValueWithType;
+
+    getLvglImageByName?: {
+        name: string;
+    };
 }
 
 // message data sent from renderer to WASM worker

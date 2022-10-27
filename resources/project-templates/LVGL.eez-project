@@ -8,6 +8,7 @@
       "projectType": "lvgl",
       "assetsFolder": "./assets",
       "imports": [],
+      "flowSupport": true,
       "displayWidth": 800,
       "displayHeight": 480
     },
@@ -113,7 +114,10 @@
       "left": 0,
       "top": 0,
       "width": 800,
-      "height": 480
+      "height": 480,
+      "lvglLocalStyles": {
+        "objID": "e85dbd5d-8325-1629-003b-86fd654ae635"
+      }
     }
   ],
   "fonts": [],

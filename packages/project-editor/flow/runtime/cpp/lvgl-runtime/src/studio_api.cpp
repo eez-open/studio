@@ -105,6 +105,33 @@ EM_PORT_API(lv_obj_t *) lvglCreateSwitch(lv_obj_t *parentObj, int32_t index, lv_
     return obj;
 }
 
+EM_PORT_API(lv_obj_t *) lvglCreateBar(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, int32_t min, int32_t max, lv_bar_mode_t mode, int32_t value, int32_t value_left) {
+    lv_obj_t *obj = lv_bar_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_bar_set_range(obj, min, max);
+    lv_bar_set_mode(obj, mode);
+    lv_bar_set_value(obj, value, LV_ANIM_OFF);
+    if (lv_bar_get_mode(obj) == LV_BAR_MODE_RANGE) {
+        lv_bar_set_start_value(obj, value_left, LV_ANIM_OFF);
+    }
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateDropdown(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, char *options) {
+    lv_obj_t *obj = lv_dropdown_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_dropdown_set_options(obj, options);
+    free(options);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+
 EM_PORT_API(void) lvglScreenLoad(unsigned page_index, lv_obj_t *obj) {
     lv_scr_load_anim(obj, (lv_scr_load_anim_t)screenLoad_animType, screenLoad_speed, screenLoad_delay, false);
     screenLoad_animType = 0;
@@ -239,6 +266,8 @@ void trt(lv_event_t *e) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#define LV_EVENT_BAR_VALUE_CHANGED 0x7A
+#define LV_EVENT_BAR_VALUE_START_CHANGED 0x7B
 #define LV_EVENT_SLIDER_VALUE_CHANGED 0x7C
 #define LV_EVENT_SLIDER_VALUE_LEFT_CHANGED 0x7D
 #define LV_EVENT_CHECKED   0x7E
@@ -253,6 +282,28 @@ struct FlowEventCallbackData {
 void flow_event_callback(lv_event_t *e) {
     FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
     flowPropagateValue(data->page_index, data->component_index, data->output_or_property_index);
+}
+
+void flow_event_bar_value_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target(e);
+
+        FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+        int32_t value = lv_bar_get_value(ta);
+        assignIntegerProperty(data->page_index, data->component_index, data->output_or_property_index, value, "Failed to assign Value in Bar widget");
+    }
+}
+
+void flow_event_bar_value_start_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target(e);
+
+        FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+        int32_t value = lv_bar_get_start_value(ta);
+        assignIntegerProperty(data->page_index, data->component_index, data->output_or_property_index, value, "Failed to assign Value Start in Bar widget");
+    }
 }
 
 void flow_event_slider_value_changed_callback(lv_event_t *e) {
@@ -304,7 +355,11 @@ EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filte
     data->component_index = component_index;
     data->output_or_property_index = output_or_property_index;
 
-    if (filter == LV_EVENT_SLIDER_VALUE_CHANGED) {
+    if (filter == LV_EVENT_BAR_VALUE_CHANGED) {
+        lv_obj_add_event_cb(obj, flow_event_bar_value_changed_callback, LV_EVENT_VALUE_CHANGED, data);
+    } else if (filter == LV_EVENT_BAR_VALUE_START_CHANGED) {
+        lv_obj_add_event_cb(obj, flow_event_bar_value_start_changed_callback, LV_EVENT_VALUE_CHANGED, data);
+    } else if (filter == LV_EVENT_SLIDER_VALUE_CHANGED) {
         lv_obj_add_event_cb(obj, flow_event_slider_value_changed_callback, LV_EVENT_VALUE_CHANGED, data);
     } else if (filter == LV_EVENT_SLIDER_VALUE_LEFT_CHANGED) {
         lv_obj_add_event_cb(obj, flow_event_slider_value_left_changed_callback, LV_EVENT_VALUE_CHANGED, data);
@@ -329,6 +384,14 @@ EM_PORT_API(void) lvglUpdateSliderValue(lv_obj_t *obj, unsigned page_index, unsi
 
 EM_PORT_API(void) lvglUpdateSliderValueLeft(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
     addUpdateTask(UPDATE_TASK_TYPE_SLIDER_VALUE_LEFT, obj, page_index, component_index, property_index);
+}
+
+EM_PORT_API(void) lvglUpdateBarValue(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_BAR_VALUE, obj, page_index, component_index, property_index);
+}
+
+EM_PORT_API(void) lvglUpdateBarValueStart(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_BAR_VALUE_START, obj, page_index, component_index, property_index);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

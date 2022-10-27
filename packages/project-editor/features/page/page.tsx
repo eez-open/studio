@@ -960,23 +960,12 @@ export class Page extends Flow {
     get _lvglWidgetIdentifiers() {
         const widgetIdentifiers = new Map<string, number>();
 
-        let index = 0;
+        widgetIdentifiers.set(this.name, 0);
 
-        widgetIdentifiers.set(this.name, index++);
-
-        const v = visitObjects(this.components);
-        while (true) {
-            let visitResult = v.next();
-            if (visitResult.done) {
-                break;
-            }
-            const widget = visitResult.value;
-            if (widget instanceof ProjectEditor.LVGLWidgetClass) {
-                if (widget.identifier) {
-                    widgetIdentifiers.set(widget.identifier, index++);
-                }
-            }
-        }
+        this._lvglWidgets.forEach((widget, index) => {
+            if (widget.identifier)
+                widgetIdentifiers.set(widget.identifier, index + 1);
+        });
 
         return widgetIdentifiers;
     }

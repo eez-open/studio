@@ -233,7 +233,21 @@ export class WasmRuntime extends RemoteRuntime {
 
     ////////////////////////////////////////////////////////////////////////////////
 
-    onWorkerMessage = async (workerToRenderMessage: WorkerToRenderMessage) => {
+    onWorkerMessage = (workerToRenderMessage: WorkerToRenderMessage) => {
+        if (workerToRenderMessage.getLvglImageByName) {
+            return (
+                this.lgvlPageRuntime?.getBitmap(
+                    workerToRenderMessage.getLvglImageByName.name
+                ) ?? 0
+            );
+        }
+        this.onWorkerMessageAsync(workerToRenderMessage);
+        return undefined;
+    };
+
+    onWorkerMessageAsync = async (
+        workerToRenderMessage: WorkerToRenderMessage
+    ) => {
         if (workerToRenderMessage.init) {
             const message: RendererToWorkerMessage = {};
 
@@ -274,6 +288,7 @@ export class WasmRuntime extends RemoteRuntime {
 
             if (this.lgvlPageRuntime) {
                 this.lgvlPageRuntime.mount();
+                await this.lgvlPageRuntime.loadAllBitmaps();
             }
 
             this.debuggerConnection.onConnected();

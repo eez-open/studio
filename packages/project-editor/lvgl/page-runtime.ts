@@ -24,6 +24,7 @@ export abstract class LVGLPageRuntime {
         {
             image: string;
             bitmapPtrPromise: Promise<number>;
+            bitmapPtr: number;
         }
     >();
 
@@ -83,13 +84,15 @@ export abstract class LVGLPageRuntime {
         if (!cashed) {
             cashed = {
                 image: bitmap.image,
-                bitmapPtrPromise: doLoad(bitmap)
+                bitmapPtrPromise: doLoad(bitmap),
+                bitmapPtr: 0
             };
 
             this.bitmapsCache.set(bitmap, cashed);
         }
 
         const bitmapPtr = await cashed.bitmapPtrPromise;
+        cashed.bitmapPtr = bitmapPtr;
 
         if (cashed.image == bitmap.image) {
             return bitmapPtr;
@@ -429,6 +432,29 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         for (const page of project.pages) {
             LVGLPageRuntime.detachRuntimeFromPage(page);
         }
+    }
+
+    async loadAllBitmaps() {
+        await Promise.all(
+            this.runtime.projectEditorStore.project.bitmaps.map(bitmap =>
+                this.loadBitmap(bitmap)
+            )
+        );
+    }
+
+    getBitmap(bitmapName: string) {
+        const bitmap = ProjectEditor.findBitmap(
+            this.runtime.projectEditorStore.project,
+            bitmapName
+        );
+        if (!bitmap) {
+            return 0;
+        }
+        const cashed = this.bitmapsCache.get(bitmap);
+        if (!cashed) {
+            return 0;
+        }
+        return cashed.bitmapPtr;
     }
 
     lvglCreate(page: Page) {

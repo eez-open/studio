@@ -68,7 +68,7 @@
             {
               "type": "tabset",
               "id": "NAVIGATION",
-              "weight": 12.82613793389496,
+              "weight": 19.581767018370176,
               "enableDrop": false,
               "enableDrag": false,
               "enableClose": false,
@@ -87,7 +87,7 @@
             {
               "type": "tabset",
               "id": "EDITORS",
-              "weight": 57.85524020825581,
+              "weight": 51.099611123780605,
               "enableDrop": false,
               "enableDrag": false,
               "enableClose": false,
@@ -110,7 +110,7 @@
                 {
                   "type": "tabset",
                   "id": "#7db06598-fe74-43fb-92a7-d9038ee884a5",
-                  "weight": 78.28282828282828,
+                  "weight": 58.282828282828284,
                   "children": [
                     {
                       "type": "tab",
@@ -131,7 +131,7 @@
                 {
                   "type": "tabset",
                   "id": "#bf675ab8-0605-4052-9a47-baea4a65ad25",
-                  "weight": 21.717171717171716,
+                  "weight": 41.717171717171716,
                   "children": [
                     {
                       "type": "tab",
@@ -340,36 +340,58 @@
           "id": "#2b223ed1-c15a-412c-b3d0-691c7d7521ac",
           "children": [
             {
-              "type": "tabset",
-              "id": "#a16d8f22-1b18-4149-9729-b4de2821f49c",
+              "type": "row",
+              "id": "#4f093829-f48d-4041-805e-94b927b1f6f6",
               "children": [
                 {
-                  "type": "tab",
-                  "id": "GLOBAL_VARS",
-                  "name": "Global Vars",
-                  "component": "globals",
-                  "enableClose": false
+                  "type": "tabset",
+                  "id": "#a16d8f22-1b18-4149-9729-b4de2821f49c",
+                  "weight": 43.4600110314396,
+                  "children": [
+                    {
+                      "type": "tab",
+                      "id": "GLOBAL_VARS",
+                      "name": "Global Vars",
+                      "component": "globals",
+                      "enableClose": false
+                    }
+                  ]
                 },
                 {
-                  "type": "tab",
-                  "id": "LOCAL_VARS",
-                  "name": "Local Vars",
-                  "component": "locals",
-                  "enableClose": false
+                  "type": "tabset",
+                  "id": "#76970b65-9c03-409e-b84c-e8414f595770",
+                  "weight": 30.999448428019853,
+                  "children": [
+                    {
+                      "type": "tab",
+                      "id": "LOCAL_VARS",
+                      "name": "Local Vars",
+                      "component": "locals",
+                      "enableClose": false
+                    }
+                  ],
+                  "active": true
                 },
                 {
-                  "type": "tab",
-                  "id": "STRUCTS",
-                  "name": "Structs",
-                  "component": "structs",
-                  "enableClose": false
-                },
-                {
-                  "type": "tab",
-                  "id": "ENUMS",
-                  "name": "Enums",
-                  "component": "enums",
-                  "enableClose": false
+                  "type": "tabset",
+                  "id": "#4a2ad747-ee12-4066-88ea-16b6c9019777",
+                  "weight": 25.54054054054054,
+                  "children": [
+                    {
+                      "type": "tab",
+                      "id": "STRUCTS",
+                      "name": "Structs",
+                      "component": "structs",
+                      "enableClose": false
+                    },
+                    {
+                      "type": "tab",
+                      "id": "ENUMS",
+                      "name": "Enums",
+                      "component": "enums",
+                      "enableClose": false
+                    }
+                  ]
                 }
               ]
             }
@@ -482,7 +504,7 @@
       }
     },
     "pagesEditor": {
-      "version": 3,
+      "version": 5,
       "json": {
         "global": {
           "splitterSize": 4,
@@ -493,20 +515,20 @@
         "borders": [],
         "layout": {
           "type": "row",
-          "id": "#f930f704-d7e7-47ca-899a-308f7eb4bd4a",
+          "id": "#61035a9f-41a4-43b1-91ee-084f817a4f6f",
           "children": [
             {
               "type": "row",
-              "id": "#aa050cf4-1ab0-40ea-89b7-f0b3e8e9abcb",
+              "id": "#57eb82ec-8f5e-4f0b-80e4-d779aa561774",
               "children": [
                 {
                   "type": "tabset",
-                  "id": "#dfd28d6a-e34a-4b49-b810-1b9b86003b36",
-                  "weight": 52.92620865139949,
+                  "id": "#03aa2206-e139-42d2-96da-fbbe7f533c83",
+                  "weight": 50.067567567567565,
                   "children": [
                     {
                       "type": "tab",
-                      "id": "#67a7eadd-3b45-4bd7-9c25-35902abe9d13",
+                      "id": "#fce1ddb3-ff33-4911-aded-c279c6cfce0e",
                       "name": "Pages",
                       "component": "pages",
                       "enableClose": false
@@ -516,21 +538,28 @@
                 },
                 {
                   "type": "tabset",
-                  "id": "#9dfc7cab-53b4-491e-9121-070f1c9da9f2",
-                  "weight": 147.0737913486005,
+                  "id": "#82710f0c-3aae-4bf1-827d-18871a5d53f1",
+                  "weight": 116.90677501826151,
                   "children": [
                     {
                       "type": "tab",
-                      "id": "#753f59b9-deff-4f9f-903a-757e02e7a9e8",
+                      "id": "page-structure",
                       "name": "Page Structure",
                       "component": "page-structure",
                       "enableClose": false
-                    },
+                    }
+                  ]
+                },
+                {
+                  "type": "tabset",
+                  "id": "#b681182c-a3e0-41ef-ba04-b7e2c02a18fa",
+                  "weight": 33.02565741417093,
+                  "children": [
                     {
                       "type": "tab",
-                      "id": "#8cb32520-e7c2-4501-9e27-f9f4b7f43d68",
+                      "id": "LOCAL_VARS",
                       "name": "Local Vars",
-                      "component": "local-vars",
+                      "component": "locals",
                       "enableClose": false
                     }
                   ]
@@ -574,7 +603,7 @@
       }
     },
     "actionsEditor": {
-      "version": 3,
+      "version": 6,
       "json": {
         "global": {
           "splitterSize": 4,
@@ -585,38 +614,40 @@
         "borders": [],
         "layout": {
           "type": "row",
-          "id": "#efff09cc-14ce-4eac-bf18-d3e78dafda20",
+          "id": "#3bb6ea80-ceda-4787-a372-88181825da65",
           "children": [
             {
               "type": "row",
-              "id": "#78978bfc-9676-4b8c-bffc-486b2a2fb2fe",
+              "id": "#25a87e93-d1bb-4893-b1e9-1a8b90154f98",
               "children": [
                 {
                   "type": "tabset",
-                  "id": "#6ff8fca8-4e3d-4ccf-862c-5efffb37cc31",
+                  "id": "#d4adb06a-2e22-43e4-ac59-a385c8e67846",
+                  "weight": 50,
                   "children": [
                     {
                       "type": "tab",
-                      "id": "#eab7783c-58bc-4faa-8be6-ad6b15a87956",
+                      "id": "actions",
                       "name": "Actions",
                       "component": "actions",
                       "enableClose": false
                     }
-                  ],
-                  "active": true
+                  ]
                 },
                 {
                   "type": "tabset",
-                  "id": "#039a6c52-edda-42fe-8042-966ac80ccf2d",
+                  "id": "#c296923a-5e5a-47d9-a892-4c119b08ce51",
+                  "weight": 50,
                   "children": [
                     {
                       "type": "tab",
-                      "id": "#49f94643-a164-4e06-a570-48855e343291",
+                      "id": "LOCAL_VARS",
                       "name": "Local Vars",
-                      "component": "local-vars",
+                      "component": "locals",
                       "enableClose": false
                     }
-                  ]
+                  ],
+                  "active": true
                 }
               ]
             }

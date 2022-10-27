@@ -28,6 +28,8 @@ import { humanize } from "eez-studio-shared/string";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const LV_EVENT_BAR_VALUE_CHANGED = 0x7a;
+export const LV_EVENT_BAR_VALUE_START_CHANGED = 0x7b;
 export const LV_EVENT_SLIDER_VALUE_CHANGED = 0x7c;
 export const LV_EVENT_SLIDER_VALUE_LEFT_CHANGED = 0x7d;
 const LV_EVENT_CHECKED = 0x7e;

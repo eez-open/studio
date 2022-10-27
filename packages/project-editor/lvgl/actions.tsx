@@ -6,7 +6,8 @@ import {
     makeDerivedClassInfo,
     PropertyType,
     EezObject,
-    ClassInfo
+    ClassInfo,
+    MessageType
 } from "project-editor/core/object";
 
 import { ActionComponent } from "project-editor/flow/component";
@@ -19,6 +20,7 @@ import { humanize } from "eez-studio-shared/string";
 import {
     createObject,
     getAncestorOfType,
+    getChildOfObject,
     Message,
     propertyNotFoundMessage,
     propertyNotSetMessage
@@ -28,10 +30,26 @@ import { findPage, Page } from "project-editor/features/page/page";
 import { Assets, DataBuffer } from "project-editor/build/assets";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
+import {
+    LVGLBarWidget,
+    LVGLDropdownWidget,
+    LVGLImageWidget,
+    LVGLLabelWidget,
+    LVGLRollerWidget,
+    LVGLSliderWidget,
+    LVGLWidget
+} from "project-editor/lvgl/widgets";
+import { LeftArrow } from "project-editor/ui-components/icons";
+import { escapeCString } from "project-editor/build/helper";
+import {
+    LVGLPropertyType,
+    makeExpressionProperty
+} from "project-editor/lvgl/expression-property";
+import { buildExpression } from "project-editor/flow/expression";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const LVGL_ACTIONS = { CHANGE_SCREEN: 0, PLAY_ANIMATION: 1 };
+const LVGL_ACTIONS = { CHANGE_SCREEN: 0, PLAY_ANIMATION: 1, SET_PROPERTY: 2 };
 
 const FADE_MODES = {
     NONE: 0,
@@ -69,6 +87,139 @@ const ANIM_PATHS = {
     OVERSHOOT: 4,
     BOUNCE: 5
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+const enum PropertyCode {
+    NONE,
+
+    BAR_VALUE,
+
+    BASIC_X,
+    BASIC_Y,
+    BASIC_WIDTH,
+    BASIC_HEIGHT,
+
+    DROPDOWN_SELECTED,
+
+    IMAGE_IMAGE,
+    IMAGE_ANGLE,
+    IMAGE_ZOOM,
+
+    LABEL_TEXT,
+
+    ROLLER_SELECTED,
+
+    SLIDER_VALUE
+}
+
+type PropertiesType = {
+    [targetType: string]: {
+        [propName: string]: {
+            code: PropertyCode;
+            type: "number" | "string" | "image";
+            anim: boolean;
+        };
+    };
+};
+
+const PROPERTIES = {
+    bar: {
+        value: {
+            code: PropertyCode.BAR_VALUE,
+            type: "number" as const,
+            anim: true
+        }
+    },
+    basic: {
+        x: { code: PropertyCode.BASIC_X, type: "number" as const, anim: false },
+        y: { code: PropertyCode.BASIC_Y, type: "number" as const, anim: false },
+        width: {
+            code: PropertyCode.BASIC_WIDTH,
+            type: "number" as const,
+            anim: false
+        },
+        height: {
+            code: PropertyCode.BASIC_HEIGHT,
+            type: "number" as const,
+            anim: false
+        }
+    },
+    dropdown: {
+        selected: {
+            code: PropertyCode.DROPDOWN_SELECTED,
+            type: "number" as const,
+            anim: false
+        }
+    },
+    image: {
+        image: {
+            code: PropertyCode.IMAGE_IMAGE,
+            type: "image" as const,
+            anim: false
+        },
+        angle: {
+            code: PropertyCode.IMAGE_ANGLE,
+            type: "number" as const,
+            anim: false
+        },
+        zoom: {
+            code: PropertyCode.IMAGE_ZOOM,
+            type: "number" as const,
+            anim: false
+        }
+    },
+    label: {
+        text: {
+            code: PropertyCode.LABEL_TEXT,
+            type: "string" as const,
+            anim: false
+        }
+    },
+    roller: {
+        selected: {
+            code: PropertyCode.ROLLER_SELECTED,
+            type: "number" as const,
+            anim: true
+        }
+    },
+    slider: {
+        value: {
+            code: PropertyCode.SLIDER_VALUE,
+            type: "number" as const,
+            anim: true
+        }
+    }
+};
+
+function setPropertyFilterTarget(
+    component: LVGLActionComponent,
+    lvglWidget: LVGLWidget
+) {
+    if (!lvglWidget.identifier) {
+        return false;
+    }
+
+    if (component.setPropTargetType == "bar") {
+        return lvglWidget instanceof LVGLBarWidget;
+    } else if (component.setPropTargetType == "basic") {
+        return true;
+    } else if (component.setPropTargetType == "dropdown") {
+        return lvglWidget instanceof LVGLDropdownWidget;
+    } else if (component.setPropTargetType == "image") {
+        return lvglWidget instanceof LVGLImageWidget;
+    } else if (component.setPropTargetType == "label") {
+        return lvglWidget instanceof LVGLLabelWidget;
+    } else if (component.setPropTargetType == "roller") {
+        return lvglWidget instanceof LVGLRollerWidget;
+    } else if (component.setPropTargetType == "slider") {
+        return lvglWidget instanceof LVGLSliderWidget;
+    } else {
+        return false;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 export class AnimationItem extends EezObject {
     property: keyof typeof ANIM_PROPERTIES;
@@ -234,8 +385,14 @@ export class AnimationItem extends EezObject {
 export class LVGLActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_LVGLACTION,
-        label: (component: LVGLActionComponent) =>
-            `LVGL ${humanize(component.action)}`,
+        label: (component: LVGLActionComponent) => {
+            if (component.action == "SET_PROPERTY") {
+                return `LVGL Set ${humanize(
+                    component.setPropTargetType
+                )} Property`;
+            }
+            return `LVGL ${humanize(component.action)}`;
+        },
         componentPaletteGroupName: "LVGL Actions",
         componentPaletteLabel: "LVGL",
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -252,34 +409,36 @@ export class LVGLActionComponent extends ActionComponent {
             },
             // CHANGE_SCREEN
             {
-                name: "screen",
+                name: "changeScreenTarget",
+                displayName: "screen",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "pages",
                 propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (lvglAction: LVGLActionComponent) =>
-                    lvglAction.action != "CHANGE_SCREEN"
+                hideInPropertyGrid: (component: LVGLActionComponent) =>
+                    component.action != "CHANGE_SCREEN"
             },
             {
-                name: "fadeMode",
+                name: "changeScreenFadeMode",
+                displayName: "Fade mode",
                 type: PropertyType.Enum,
                 enumItems: Object.keys(FADE_MODES).map(id => ({
                     id
                 })),
                 enumDisallowUndefined: true,
                 propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (lvglAction: LVGLActionComponent) =>
-                    lvglAction.action != "CHANGE_SCREEN"
+                hideInPropertyGrid: (component: LVGLActionComponent) =>
+                    component.action != "CHANGE_SCREEN"
             },
             {
-                name: "speed",
+                name: "changeScreenSpeed",
                 displayName: "Speed (ms):",
                 type: PropertyType.Number,
                 propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (lvglAction: LVGLActionComponent) =>
-                    lvglAction.action != "CHANGE_SCREEN"
+                hideInPropertyGrid: (component: LVGLActionComponent) =>
+                    component.action != "CHANGE_SCREEN"
             },
             {
-                name: "delay",
+                name: "changeScreenDelay",
                 displayName: "Delay (ms):",
                 type: PropertyType.Number,
                 propertyGridGroup: specificGroup,
@@ -302,16 +461,16 @@ export class LVGLActionComponent extends ActionComponent {
                     }));
                 },
                 propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (lvglAction: LVGLActionComponent) =>
-                    lvglAction.action != "PLAY_ANIMATION"
+                hideInPropertyGrid: (component: LVGLActionComponent) =>
+                    component.action != "PLAY_ANIMATION"
             },
             {
                 name: "animDelay",
                 displayName: "Delay (ms):",
                 type: PropertyType.Number,
                 propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (lvglAction: LVGLActionComponent) =>
-                    lvglAction.action != "PLAY_ANIMATION"
+                hideInPropertyGrid: (component: LVGLActionComponent) =>
+                    component.action != "PLAY_ANIMATION"
             },
             {
                 name: "animItems",
@@ -323,18 +482,135 @@ export class LVGLActionComponent extends ActionComponent {
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: [],
-                hideInPropertyGrid: (lvglAction: LVGLActionComponent) =>
-                    lvglAction.action != "PLAY_ANIMATION"
+                hideInPropertyGrid: (component: LVGLActionComponent) =>
+                    component.action != "PLAY_ANIMATION"
+            },
+            // SET_PROPERTY
+            {
+                name: "setPropTargetType",
+                displayName: "Target type",
+                type: PropertyType.Enum,
+                enumItems: Object.keys(PROPERTIES).map(id => ({
+                    id
+                })),
+                enumDisallowUndefined: true,
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: (component: LVGLActionComponent) =>
+                    component.action != "SET_PROPERTY"
+            },
+            {
+                name: "setPropTarget",
+                displayName: "Target",
+                type: PropertyType.Enum,
+                enumItems: (component: LVGLActionComponent) => {
+                    const page = getAncestorOfType(
+                        component,
+                        ProjectEditor.PageClass.classInfo
+                    ) as Page;
+                    return page._lvglWidgets
+                        .filter(lvglWidget =>
+                            setPropertyFilterTarget(component, lvglWidget)
+                        )
+                        .map(lvglWidget => ({
+                            id: lvglWidget.identifier,
+                            label: lvglWidget.identifier
+                        }));
+                },
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: (component: LVGLActionComponent) =>
+                    component.action != "SET_PROPERTY"
+            },
+            {
+                name: "setPropProperty",
+                displayName: "Property",
+                type: PropertyType.Enum,
+                enumItems: (component: LVGLActionComponent) => {
+                    return Object.keys(
+                        PROPERTIES[component.setPropTargetType]
+                    ).map(id => ({
+                        id
+                    }));
+                },
+                enumDisallowUndefined: true,
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: (component: LVGLActionComponent) =>
+                    component.action != "SET_PROPERTY"
+            },
+            ...makeExpressionProperty(
+                "setPropValue",
+                "input",
+                ["literal", "expression"],
+                {
+                    dynamicType: (component: LVGLActionComponent) => {
+                        const type = component.setPropPropertyInfo.type;
+                        return type == "image"
+                            ? PropertyType.ObjectReference
+                            : type == "number"
+                            ? PropertyType.Number
+                            : PropertyType.MultilineText;
+                    },
+                    dynamicTypeReferencedObjectCollectionPath: (
+                        component: LVGLActionComponent
+                    ) => {
+                        const type = component.setPropPropertyInfo.type;
+                        return type == "image" ? "bitmaps" : undefined;
+                    },
+                    displayName: (component: LVGLActionComponent) => {
+                        if (component.setPropPropertyInfo.type == "image") {
+                            return "Image";
+                        }
+                        return "Value";
+                    },
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (component: LVGLActionComponent) =>
+                        component.action != "SET_PROPERTY"
+                }
+            ),
+            {
+                name: "setPropAnim",
+                displayName: "Animated",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: (component: LVGLActionComponent) =>
+                    component.action != "SET_PROPERTY" ||
+                    !component.setPropPropertyInfo.anim
             }
         ],
+        beforeLoadHook: (
+            object: LVGLActionComponent,
+            objectJs: Partial<LVGLActionComponent>
+        ) => {
+            if (objectJs.action == "CHANGE_SCREEN") {
+                if ((objectJs as any).screen != undefined) {
+                    objectJs.changeScreenTarget = (objectJs as any).screen;
+                    delete (objectJs as any).screen;
+                }
+                if ((objectJs as any).fadeMode != undefined) {
+                    objectJs.changeScreenFadeMode = (objectJs as any).fadeMode;
+                    delete (objectJs as any).fadeMode;
+                }
+                if ((objectJs as any).speed != undefined) {
+                    objectJs.changeScreenSpeed = (objectJs as any).speed;
+                    delete (objectJs as any).speed;
+                }
+                if ((objectJs as any).delay != undefined) {
+                    objectJs.changeScreenDelay = (objectJs as any).delay;
+                    delete (objectJs as any).delay;
+                }
+            }
+        },
         check: (object: LVGLActionComponent) => {
             let messages: Message[] = [];
 
             if (object.action == "CHANGE_SCREEN") {
-                if (!object.screen) {
+                if (!object.changeScreenTarget) {
                     messages.push(propertyNotSetMessage(object, "screen"));
                 } else {
-                    let page = findPage(getProject(object), object.screen);
+                    let page = findPage(
+                        getProject(object),
+                        object.changeScreenTarget
+                    );
                     if (!page) {
                         messages.push(
                             propertyNotFoundMessage(object, "screen")
@@ -358,6 +634,67 @@ export class LVGLActionComponent extends ActionComponent {
                         );
                     }
                 }
+            } else if (object.action == "SET_PROPERTY") {
+                if (!object.setPropTarget) {
+                    messages.push(
+                        propertyNotSetMessage(object, "setPropTarget")
+                    );
+                } else {
+                    const page = getAncestorOfType(
+                        object,
+                        ProjectEditor.PageClass.classInfo
+                    ) as Page;
+                    const lvglWidgetIndex = page._lvglWidgetIdentifiers.get(
+                        object.setPropTarget
+                    );
+                    if (lvglWidgetIndex == undefined) {
+                        messages.push(
+                            propertyNotFoundMessage(object, "setPropTarget")
+                        );
+                    } else {
+                        const lvglWidget =
+                            page._lvglWidgets[lvglWidgetIndex - 1];
+                        if (!setPropertyFilterTarget(object, lvglWidget)) {
+                            messages.push(
+                                new Message(
+                                    MessageType.ERROR,
+                                    `Invalid target type`,
+                                    getChildOfObject(object, "setPropTarget")
+                                )
+                            );
+                        }
+                    }
+                }
+
+                if (object.setPropPropertyInfo.code == PropertyCode.NONE) {
+                    messages.push(
+                        propertyNotSetMessage(object, "setPropProperty")
+                    );
+                }
+
+                if (object.setPropValueType == "literal") {
+                    if (object.setPropPropertyInfo.type == "image") {
+                        if (object.setPropValue) {
+                            const bitmap = ProjectEditor.findBitmap(
+                                ProjectEditor.getProject(object),
+                                object.setPropValue
+                            );
+
+                            if (!bitmap) {
+                                messages.push(
+                                    propertyNotFoundMessage(
+                                        object,
+                                        "setPropValue"
+                                    )
+                                );
+                            }
+                        } else {
+                            messages.push(
+                                propertyNotSetMessage(object, "setPropValue")
+                            );
+                        }
+                    }
+                }
             }
 
             return messages;
@@ -368,38 +705,77 @@ export class LVGLActionComponent extends ActionComponent {
         componentHeaderColor: "#FBDEDE",
         defaultValue: {
             action: "CHANGE_SCREEN",
-            fadeMode: "FADE_ON",
-            speed: 200,
-            delay: 0,
-            animDelay: 0
+            changeScreenFadeMode: "FADE_ON",
+            changeScreenSpeed: 200,
+            changeScreenDelay: 0,
+            animDelay: 0,
+            setPropTargetType: "bar",
+            setPropProperty: "value",
+            setPropAnim: false,
+            setPropValueType: "literal"
         }
     });
 
     action: keyof typeof LVGL_ACTIONS;
 
     // CHANGE_SCREEN
-    screen: string;
-    fadeMode: keyof typeof FADE_MODES;
-    speed: number;
-    delay: number;
+    changeScreenTarget: string;
+    changeScreenFadeMode: keyof typeof FADE_MODES;
+    changeScreenSpeed: number;
+    changeScreenDelay: number;
 
     // PLAY_ANIMATION
     animTarget: string;
     animDelay: number;
     animItems: AnimationItem[];
 
+    // SET_PROPERTY
+    setPropTargetType: keyof typeof PROPERTIES;
+    setPropTarget: string;
+    setPropProperty: string;
+    setPropAnim: boolean;
+    setPropValue: number | string;
+    setPropValueType: LVGLPropertyType;
+
+    get setPropPropertyInfo() {
+        return (
+            (PROPERTIES as PropertiesType)[this.setPropTargetType][
+                this.setPropProperty
+            ] ?? {
+                code: PropertyCode.NONE,
+                type: "integer",
+                anim: false
+            }
+        );
+    }
+    get setPropValueExpr() {
+        if (this.setPropValueType == "expression") {
+            return this.setPropValue as string;
+        }
+        if (typeof this.setPropValue == "number") {
+            return this.setPropValue.toString();
+        }
+        return escapeCString(this.setPropValue);
+    }
+
     constructor() {
         super();
 
         makeObservable(this, {
             action: observable,
-            screen: observable,
-            fadeMode: observable,
-            speed: observable,
-            delay: observable,
+            changeScreenTarget: observable,
+            changeScreenFadeMode: observable,
+            changeScreenSpeed: observable,
+            changeScreenDelay: observable,
             animTarget: observable,
             animDelay: observable,
-            animItems: observable
+            animItems: observable,
+            setPropTargetType: observable,
+            setPropTarget: observable,
+            setPropProperty: observable,
+            setPropAnim: observable,
+            setPropValue: observable,
+            setPropValueType: observable
         });
     }
 
@@ -429,9 +805,11 @@ export class LVGLActionComponent extends ActionComponent {
 
     get actionDescription() {
         if (this.action == "CHANGE_SCREEN") {
-            return `${this.screen}, ${humanize(this.fadeMode)}, Speed=${
-                this.speed
-            } Delay=${this.delay}`;
+            return `${this.changeScreenTarget}, ${humanize(
+                this.changeScreenFadeMode
+            )}, Speed=${this.changeScreenSpeed} Delay=${
+                this.changeScreenDelay
+            }`;
         } else if (this.action == "PLAY_ANIMATION") {
             return (
                 `${this.animTarget}, Delay=${this.animDelay}\n` +
@@ -447,6 +825,21 @@ export class LVGLActionComponent extends ActionComponent {
                             }`
                     )
                     .join("\n")
+            );
+        } else if (this.action == "SET_PROPERTY") {
+            return (
+                <>
+                    {`${this.setPropTarget}.${
+                        this.setPropPropertyInfo.code != PropertyCode.NONE
+                            ? humanize(this.setPropProperty)
+                            : "<not set>"
+                    }`}
+                    <LeftArrow />
+                    {this.setPropValue}
+                    {this.setPropPropertyInfo.anim
+                        ? ` Animated=${this.setPropAnim ? "On" : "Off"}`
+                        : ""}
+                </>
             );
         }
         return ``;
@@ -467,19 +860,19 @@ export class LVGLActionComponent extends ActionComponent {
         if (this.action == "CHANGE_SCREEN") {
             // screen
             let screen: number = 0;
-            if (this.screen) {
-                screen = assets.getPageIndex(this, "screen");
+            if (this.changeScreenTarget) {
+                screen = assets.getPageIndex(this, "changeScreenTarget");
             }
             dataBuffer.writeInt32(screen);
 
             // fadeMode
-            dataBuffer.writeUint32(FADE_MODES[this.fadeMode]);
+            dataBuffer.writeUint32(FADE_MODES[this.changeScreenFadeMode]);
 
             // speed
-            dataBuffer.writeUint32(this.speed);
+            dataBuffer.writeUint32(this.changeScreenSpeed);
 
             // delay
-            dataBuffer.writeUint32(this.delay);
+            dataBuffer.writeUint32(this.changeScreenDelay);
         } else if (this.action == "PLAY_ANIMATION") {
             // target
             const page = getAncestorOfType(
@@ -520,6 +913,26 @@ export class LVGLActionComponent extends ActionComponent {
                 // delay
                 dataBuffer.writeUint32(ANIM_PATHS[item.path]);
             });
+        } else if (this.action == "SET_PROPERTY") {
+            // target
+            const page = getAncestorOfType(
+                this,
+                ProjectEditor.PageClass.classInfo
+            ) as Page;
+            dataBuffer.writeInt32(
+                page._lvglWidgetIdentifiers.get(this.setPropTarget) ?? -1
+            );
+
+            // property
+            dataBuffer.writeUint32(this.setPropPropertyInfo.code);
+
+            // value
+            dataBuffer.writeObjectOffset(() =>
+                buildExpression(assets, dataBuffer, this, this.setPropValueExpr)
+            );
+
+            // animated
+            dataBuffer.writeUint32(this.setPropAnim ? 1 : 0);
         }
     }
 }

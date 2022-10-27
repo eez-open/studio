@@ -21,7 +21,6 @@ import {
 } from "project-editor/lvgl/style";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import { ProjectContext } from "project-editor/project/context";
-import { Property } from "project-editor/ui-components/PropertyGrid/Property";
 import { Icon } from "eez-studio-ui/icon";
 import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
@@ -481,7 +480,7 @@ export const LVGLStylesDefinitionProperty = observer(
                                                                 </label>
                                                             </div>
                                                             <div className="EezStudio_LVGLStylesDefinition_Value">
-                                                                <Property
+                                                                <ProjectEditor.Property
                                                                     propertyInfo={
                                                                         propertyInfo
                                                                     }

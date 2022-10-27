@@ -110,6 +110,14 @@ void doUpdateTasks() {
             int32_t value_new = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value Left in Slider widget");
             int32_t value_cur = lv_slider_get_left_value(updateTask.obj);
             if (value_new != value_cur) lv_slider_set_left_value(updateTask.obj, value_new, LV_ANIM_OFF);
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_BAR_VALUE) {
+            int32_t value_new = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Bar widget");
+            int32_t value_cur = lv_bar_get_value(updateTask.obj);
+            if (value_new != value_cur) lv_bar_set_value(updateTask.obj, value_new, LV_ANIM_OFF);
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_BAR_VALUE_START) {
+            int32_t value_new = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value Start in Bar widget");
+            int32_t value_cur = lv_bar_get_start_value(updateTask.obj);
+            if (value_new != value_cur) lv_bar_set_start_value(updateTask.obj, value_new, LV_ANIM_OFF);
         }
     }
 
@@ -187,6 +195,14 @@ static lv_obj_t *getLvglObjectFromIndex(int32_t index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static const void *getLvglImageByName(const char *name) {
+    return (const void *)EM_ASM_INT({
+        return getLvglImageByName($0, UTF8ToString($1));
+    }, eez::flow::g_wasmModuleId, name);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 extern "C" void flowInit(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSize) {
     //DISPLAY_WIDTH = eez::g_mainAssets->settings->displayWidth;
     //DISPLAY_HEIGHT = eez::g_mainAssets->settings->displayHeight;
@@ -205,6 +221,7 @@ extern "C" void flowInit(uint32_t wasmModuleId, uint8_t *assets, uint32_t assets
     eez::flow::replacePageHook = replacePageHook;
     eez::flow::stopScriptHook = stopScript;
     eez::flow::getLvglObjectFromIndexHook = getLvglObjectFromIndex;
+    eez::flow::getLvglImageByNameHook = getLvglImageByName;
 
     eez::flow::start(eez::g_mainAssets);
 
