@@ -2299,7 +2299,7 @@ export class LVGLBarWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
-        componentPaletteGroupName: "!2Visualiser Widgets",
+        componentPaletteGroupName: "!1Visualiser Widgets",
 
         properties: [
             {
