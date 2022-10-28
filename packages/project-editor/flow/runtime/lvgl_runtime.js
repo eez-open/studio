@@ -1175,12 +1175,12 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  973616: ($0, $1) => { freeComponentExecutionState($0, $1); },  
- 973657: ($0) => { startToDebuggerMessage($0); },  
- 973689: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 973764: ($0) => { finishToDebuggerMessage($0); },  
- 973797: ($0, $1) => { onArrayValueFree($0, $1); },  
- 973827: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
+  973792: ($0, $1) => { freeComponentExecutionState($0, $1); },  
+ 973833: ($0) => { startToDebuggerMessage($0); },  
+ 973865: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 973940: ($0) => { finishToDebuggerMessage($0); },  
+ 973973: ($0, $1) => { onArrayValueFree($0, $1); },  
+ 974003: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
 };
 
 
@@ -4836,6 +4836,24 @@ var _lvglCreateSpinner = Module["_lvglCreateSpinner"] = createExportWrapper("lvg
 var _lvglCreateCheckbox = Module["_lvglCreateCheckbox"] = createExportWrapper("lvglCreateCheckbox");
 
 /** @type {function(...*):?} */
+var _lvglCreateTextarea = Module["_lvglCreateTextarea"] = createExportWrapper("lvglCreateTextarea");
+
+/** @type {function(...*):?} */
+var _lvglCreateCalendar = Module["_lvglCreateCalendar"] = createExportWrapper("lvglCreateCalendar");
+
+/** @type {function(...*):?} */
+var _lvglCreateColorwheel = Module["_lvglCreateColorwheel"] = createExportWrapper("lvglCreateColorwheel");
+
+/** @type {function(...*):?} */
+var _lvglCreateImgbutton = Module["_lvglCreateImgbutton"] = createExportWrapper("lvglCreateImgbutton");
+
+/** @type {function(...*):?} */
+var _lvglCreateKeyboard = Module["_lvglCreateKeyboard"] = createExportWrapper("lvglCreateKeyboard");
+
+/** @type {function(...*):?} */
+var _lvglCreateChart = Module["_lvglCreateChart"] = createExportWrapper("lvglCreateChart");
+
+/** @type {function(...*):?} */
 var _lvglScreenLoad = Module["_lvglScreenLoad"] = createExportWrapper("lvglScreenLoad");
 
 /** @type {function(...*):?} */
@@ -4909,6 +4927,9 @@ var _lvglUpdateBarValueStart = Module["_lvglUpdateBarValueStart"] = createExport
 
 /** @type {function(...*):?} */
 var _lvglUpdateArcValue = Module["_lvglUpdateArcValue"] = createExportWrapper("lvglUpdateArcValue");
+
+/** @type {function(...*):?} */
+var _lvglUpdateTextareaText = Module["_lvglUpdateTextareaText"] = createExportWrapper("lvglUpdateTextareaText");
 
 /** @type {function(...*):?} */
 var _lvglUpdateCheckedState = Module["_lvglUpdateCheckedState"] = createExportWrapper("lvglUpdateCheckedState");

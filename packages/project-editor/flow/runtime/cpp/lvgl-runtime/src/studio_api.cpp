@@ -21,10 +21,12 @@ EM_PORT_API(lv_obj_t *) lvglCreateLabel(lv_obj_t *parentObj, int32_t index, lv_c
     lv_obj_t *obj = lv_label_create(parentObj);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
+    if (text != 0) {
+        lv_label_set_text(obj, text);
+        free(text);
+    }
     lv_label_set_long_mode(obj, long_mode);
-    lv_label_set_text(obj, text);
     lv_label_set_recolor(obj, recolor);
-    free(text);
     lv_obj_update_layout(obj);
     setObjectIndex(obj, index);
     return obj;
@@ -160,6 +162,75 @@ EM_PORT_API(lv_obj_t *) lvglCreateCheckbox(lv_obj_t *parentObj, int32_t index, l
     lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
     lv_checkbox_set_text(obj, text);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateTextarea(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, char *text, char *placeholder, bool one_line_mode, bool password_mode, char *accepted_characters, uint32_t max_text_length) {
+    lv_obj_t *obj = lv_textarea_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    if (accepted_characters) {
+        lv_textarea_set_accepted_chars(obj, accepted_characters);
+        free(accepted_characters);
+    }
+    lv_textarea_set_max_length(obj, max_text_length);
+    if (text != 0) {
+        lv_textarea_set_text(obj, text);
+        free(text);
+    }
+    if (placeholder) {
+        lv_textarea_set_placeholder_text(obj, placeholder);
+        free(placeholder);
+    }
+    lv_textarea_set_one_line(obj, one_line_mode);
+    lv_textarea_set_password_mode(obj, password_mode);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateCalendar(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+    lv_obj_t *obj = lv_calendar_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateColorwheel(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+    lv_obj_t *obj = lv_colorwheel_create(parentObj, false);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateImgbutton(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+    lv_obj_t *obj = lv_imgbtn_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateKeyboard(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+    lv_obj_t *obj = lv_keyboard_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateChart(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+    lv_obj_t *obj = lv_chart_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
     setObjectIndex(obj, index);
     return obj;
 }
@@ -450,6 +521,10 @@ EM_PORT_API(void) lvglUpdateBarValueStart(lv_obj_t *obj, unsigned page_index, un
 
 EM_PORT_API(void) lvglUpdateArcValue(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
     addUpdateTask(UPDATE_TASK_TYPE_ARC_VALUE, obj, page_index, component_index, property_index);
+}
+
+EM_PORT_API(void) lvglUpdateTextareaText(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_TEXTAREA_TEXT, obj, page_index, component_index, property_index);
 }
 
 EM_PORT_API(void) lvglUpdateCheckedState(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {

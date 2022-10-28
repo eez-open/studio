@@ -390,6 +390,12 @@ export interface IWasmFlowRuntime {
     _lvglCreateArc(parentObj: number, index: number, x: number, y: number, w: number, h: number, range_min: number, range_max: number, value: number, bg_start_angle: number, bg_end_angle: number, mode: number, rotation: number): number;
     _lvglCreateSpinner(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateCheckbox(parentObj: number, index: number, x: number, y: number, w: number, h: number, text: number): number;
+    _lvglCreateTextarea(parentObj: number, index: number, x: number, y: number, w: number, h: number, text: number, placeholder: number, one_line_mode: boolean, password_mode: boolean, accepted_characters: number, max_text_length: number): number;
+    _lvglCreateCalendar(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
+    _lvglCreateColorwheel(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
+    _lvglCreateImgbutton(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
+    _lvglCreateKeyboard(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
+    _lvglCreateChart(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglScreenLoad(page_index: number, obj: number);
     _lvglDeleteObject(obj: number): void;
     _lvglObjAddFlag(obj: number, f: number): void;
@@ -415,6 +421,7 @@ export interface IWasmFlowRuntime {
     _lvglUpdateBarValue(obj: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateBarValueStart(obj: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateArcValue(obj: number, page_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateTextareaText(obj: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateCheckedState(obj: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateDisabledState(obj: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateHiddenFlag(obj: number, page_index: number, component_index: number, property_index: number): void;

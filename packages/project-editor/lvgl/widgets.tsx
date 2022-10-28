@@ -16,7 +16,6 @@ import {
     IEezObject,
     PropertyInfo,
     getProperty,
-    isPropertyHidden,
     LVGL_REACTIVE_STATES,
     LVGL_REACTIVE_FLAGS
 } from "project-editor/core/object";
@@ -24,7 +23,6 @@ import {
     getAncestorOfType,
     getClassInfo,
     getObjectPathAsString,
-    getProjectEditorStore,
     Message,
     propertyNotFoundMessage,
     propertyNotSetMessage
@@ -38,7 +36,6 @@ import {
     AutoSize,
     Component,
     ComponentOutput,
-    isFlowProperty,
     isTimelineEditorActive,
     isTimelineEditorActiveOrActionComponent,
     Widget
@@ -1650,41 +1647,11 @@ export class LVGLLabelWidget extends LVGLWidget {
                 messages.push(propertyNotSetMessage(widget, "text"));
             }
 
-            const projectEditorStore = getProjectEditorStore(widget);
-            if (!projectEditorStore.projectTypeTraits.hasFlowSupport) {
-                // check properties
-                for (const propertyInfo of getClassInfo(widget).properties) {
-                    if (isPropertyHidden(widget, propertyInfo)) {
-                        continue;
-                    }
-
-                    if (
-                        isFlowProperty(widget, propertyInfo, [
-                            "input",
-                            "assignable"
-                        ])
-                    ) {
-                        const value = getProperty(widget, propertyInfo.name);
-                        if (!value) {
-                            messages.push(
-                                propertyNotSetMessage(widget, propertyInfo.name)
-                            );
-                        } else {
-                            ProjectEditor.documentSearch.checkObjectReference(
-                                widget,
-                                propertyInfo.name,
-                                messages
-                            );
-                        }
-                    }
-                }
-            }
-
             return messages;
         },
 
         lvgl: {
-            parts: ["MAIN", "SCROLLBAR", "SELECTED"],
+            parts: ["MAIN"],
             flags: [
                 "HIDDEN",
                 "CLICKABLE",
@@ -3453,15 +3420,751 @@ export class LVGLCheckboxWidget extends LVGLWidget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const textareaGroup: IPropertyGridGroupDefinition = {
+    id: "lvgl-textarea",
+    title: "Textarea",
+    position: SPECIFIC_GROUP_POSITION
+};
+
+export class LVGLTextareaWidget extends LVGLWidget {
+    text: string;
+    textType: LVGLPropertyType;
+    placeholder: string;
+    oneLineMode: boolean;
+    passwordMode: boolean;
+    acceptedCharacters: string;
+    maxTextLength: number;
+
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        componentPaletteGroupName: "!1Basic Widgets",
+
+        properties: [
+            ...makeExpressionProperty(
+                "text",
+                "string",
+                "input",
+                ["literal", "expression"],
+                {
+                    propertyGridGroup: textareaGroup
+                }
+            ),
+            {
+                name: "placeholder",
+                type: PropertyType.String,
+                propertyGridGroup: textareaGroup
+            },
+            {
+                name: "oneLineMode",
+                type: PropertyType.Boolean,
+                propertyGridGroup: textareaGroup
+            },
+            {
+                name: "passwordMode",
+                type: PropertyType.Boolean,
+                propertyGridGroup: textareaGroup
+            },
+            {
+                name: "acceptedCharacters",
+                type: PropertyType.String,
+                propertyGridGroup: textareaGroup
+            },
+            {
+                name: "maxTextLength",
+                type: PropertyType.Number,
+                propertyGridGroup: textareaGroup
+            }
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 150,
+            height: 70,
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            clickableFlag: true,
+            text: "",
+            textType: "literal",
+            placeholder: "",
+            oneLineMode: false,
+            passwordMode: false,
+            acceptedCharacters: "",
+            maxTextLength: 128
+        },
+
+        icon: (
+            <svg viewBox="0 0 509.337 509.338">
+                <path d="M396.283 310.907c-3.809-1.52-7.143-.853-9.996 1.998l-18.274 18.274c-1.711 1.708-2.573 3.806-2.573 6.276v35.978c0 12.565-4.463 23.314-13.408 32.264-8.952 8.945-19.701 13.418-32.264 13.418H82.224c-12.562 0-23.317-4.473-32.264-13.418-8.947-8.949-13.418-19.698-13.418-32.264V135.895c0-12.563 4.471-23.317 13.418-32.265 8.947-8.945 19.702-13.418 32.264-13.418H319.77c4.186 0 8.47.571 12.847 1.714 3.433 1.141 6.472.381 9.134-2.284l13.986-13.99c2.286-2.281 3.138-5.043 2.57-8.278-.571-3.044-2.286-5.234-5.141-6.565-10.28-4.752-21.412-7.139-33.403-7.139H82.224c-22.648 0-42.017 8.042-58.102 24.126C8.042 93.882 0 113.246 0 135.897V373.44c0 22.647 8.042 42.014 24.123 58.098 16.084 16.088 35.454 24.13 58.102 24.13h237.539c22.647 0 42.014-8.042 58.098-24.13 16.088-16.084 24.13-35.45 24.13-58.098v-54.245c-.001-4.004-1.908-6.761-5.709-8.288z" />
+                <path d="M182.721 300.354v82.221h82.229l191.86-191.859-82.228-82.225-191.861 191.863zm70.803 54.815-15.99-.007v-27.401h-27.406v-15.984l33.12-33.12 43.396 43.4-33.12 33.112zm125.337-196.146-99.931 99.928c-3.234 3.241-6.376 3.334-9.421.288-3.043-3.046-2.95-6.186.287-9.419l99.931-99.929c3.233-3.239 6.368-3.333 9.421-.287s2.943 6.185-.287 9.419zm122.485-51.675L457.95 63.952c-5.328-5.33-11.796-7.995-19.413-7.995-7.615 0-14.086 2.665-19.411 7.995l-26.269 26.263 82.228 82.229 26.262-26.268c5.328-5.327 7.991-11.8 7.991-19.414s-2.664-14.084-7.992-19.414z" />
+            </svg>
+        ),
+
+        check: (widget: LVGLLabelWidget) => {
+            let messages: Message[] = [];
+
+            return messages;
+        },
+
+        lvgl: {
+            parts: ["MAIN", "SELECTED", "CURSOR"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "CHECKABLE",
+                "PRESS_LOCK",
+                "CLICK_FOCUSABLE",
+                "ADV_HITTEST",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE",
+                "SCROLLABLE",
+                "SCROLL_ELASTIC",
+                "SCROLL_MOMENTUM",
+                "SCROLL_ON_FOCUS",
+                "SCROLL_CHAIN",
+                "SCROLL_ONE"
+            ],
+            defaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        }
+    });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            text: observable,
+            textType: observable,
+            placeholder: observable,
+            oneLineMode: observable,
+            passwordMode: observable,
+            acceptedCharacters: observable,
+            maxTextLength: observable
+        });
+    }
+
+    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+        const textExpr = this.getExpressionPropertyData(runtime, "text");
+
+        const obj = runtime.wasm._lvglCreateTextarea(
+            parentObj,
+            this.widgetIndex,
+            this.lvglCreateLeft,
+            this.lvglCreateTop,
+            this.lvglCreateWidth,
+            this.lvglCreateHeight,
+            textExpr || !this.text
+                ? 0
+                : runtime.wasm.allocateUTF8(
+                      this.textType == "expression"
+                          ? `{${this.text}}`
+                          : this.text
+                  ),
+            !this.placeholder ? 0 : runtime.wasm.allocateUTF8(this.placeholder),
+            this.oneLineMode,
+            this.passwordMode,
+            !this.acceptedCharacters
+                ? 0
+                : runtime.wasm.allocateUTF8(this.acceptedCharacters),
+            this.maxTextLength
+        );
+
+        if (textExpr) {
+            runtime.wasm._lvglUpdateTextareaText(
+                obj,
+                textExpr.flowIndex,
+                textExpr.componentIndex,
+                textExpr.propertyIndex
+            );
+        }
+
+        return obj;
+    }
+
+    override lvglBuildObj(build: LVGLBuild) {
+        build.line(`lv_obj_t *obj = lv_textarea_create(parent_obj);`);
+    }
+
+    override lvglBuildSpecific(build: LVGLBuild) {
+        if (this.acceptedCharacters) {
+            build.line(
+                `lv_textarea_set_accepted_chars(obj, ${escapeCString(
+                    this.acceptedCharacters
+                )});`
+            );
+        }
+
+        build.line(`lv_textarea_set_max_length(obj, ${this.maxTextLength});`);
+
+        if (this.textType == "literal" && this.text) {
+            build.line(
+                `lv_textarea_set_text(obj, ${escapeCString(this.text)});`
+            );
+        }
+
+        if (this.placeholder) {
+            build.line(
+                `lv_textarea_set_placeholder_text(obj, ${escapeCString(
+                    this.placeholder
+                )});`
+            );
+        }
+
+        build.line(
+            `lv_textarea_set_one_line(obj, ${
+                this.oneLineMode ? "true" : "false"
+            });`
+        );
+
+        build.line(
+            `lv_textarea_set_password_mode(obj, ${
+                this.passwordMode ? "true" : "false"
+            });`
+        );
+    }
+
+    override lvglBuildTickSpecific(build: LVGLBuild) {
+        expressionPropertyBuildTickSpecific<LVGLTextareaWidget>(
+            build,
+            this,
+            "text" as const,
+            "lv_textarea_get_text",
+            "lv_textarea_set_text"
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// const calendarGroup: IPropertyGridGroupDefinition = {
+//     id: "lvgl-calendar",
+//     title: "Calendar",
+//     position: SPECIFIC_GROUP_POSITION
+// };
+
+export class LVGLCalendarWidget extends LVGLWidget {
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        componentPaletteGroupName: "!1Input Widgets",
+
+        properties: [],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 230,
+            height: 240,
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            clickableFlag: true
+        },
+
+        icon: (
+            <svg
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <rect x="4" y="5" width="16" height="16" rx="2" />
+                <path d="M16 3v4M8 3v4m-4 4h16m-9 4h1m0 0v3" />
+            </svg>
+        ),
+
+        check: (widget: LVGLLabelWidget) => {
+            let messages: Message[] = [];
+            return messages;
+        },
+
+        lvgl: {
+            parts: ["MAIN", "ITEMS"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "CHECKABLE",
+                "PRESS_LOCK",
+                "CLICK_FOCUSABLE",
+                "ADV_HITTEST",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE",
+                "SCROLLABLE",
+                "SCROLL_ELASTIC",
+                "SCROLL_MOMENTUM",
+                "SCROLL_ON_FOCUS",
+                "SCROLL_CHAIN",
+                "SCROLL_ONE"
+            ],
+            defaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        }
+    });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {});
+    }
+
+    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+        const obj = runtime.wasm._lvglCreateCalendar(
+            parentObj,
+            this.widgetIndex,
+            this.lvglCreateLeft,
+            this.lvglCreateTop,
+            this.lvglCreateWidth,
+            this.lvglCreateHeight
+        );
+
+        return obj;
+    }
+
+    override lvglBuildObj(build: LVGLBuild) {
+        build.line(`lv_obj_t *obj = lv_calendar_create(parent_obj);`);
+    }
+
+    override lvglBuildSpecific(build: LVGLBuild) {}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// const colorwheelGroup: IPropertyGridGroupDefinition = {
+//     id: "lvgl-colorwheel",
+//     title: "Colorwheel",
+//     position: SPECIFIC_GROUP_POSITION
+// };
+
+export class LVGLColorwheelWidget extends LVGLWidget {
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        componentPaletteGroupName: "!1Input Widgets",
+
+        properties: [],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 150,
+            height: 150,
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            clickableFlag: true
+        },
+
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <path d="M12 21a9 9 0 1 1 0-18 9 8 0 0 1 9 8 4.5 4 0 0 1-4.5 4H14a2 2 0 0 0-1 3.75A1.3 1.3 0 0 1 12 21" />
+                <circle cx="7.5" cy="10.5" r=".5" fill="currentColor" />
+                <circle cx="12" cy="7.5" r=".5" fill="currentColor" />
+                <circle cx="16.5" cy="10.5" r=".5" fill="currentColor" />
+            </svg>
+        ),
+
+        check: (widget: LVGLLabelWidget) => {
+            let messages: Message[] = [];
+            return messages;
+        },
+
+        lvgl: {
+            parts: ["MAIN", "KNOB"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "CHECKABLE",
+                "PRESS_LOCK",
+                "CLICK_FOCUSABLE",
+                "ADV_HITTEST",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE",
+                "SCROLLABLE",
+                "SCROLL_ELASTIC",
+                "SCROLL_MOMENTUM",
+                "SCROLL_ON_FOCUS",
+                "SCROLL_CHAIN",
+                "SCROLL_ONE"
+            ],
+            defaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        }
+    });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {});
+    }
+
+    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+        const obj = runtime.wasm._lvglCreateColorwheel(
+            parentObj,
+            this.widgetIndex,
+            this.lvglCreateLeft,
+            this.lvglCreateTop,
+            this.lvglCreateWidth,
+            this.lvglCreateHeight
+        );
+
+        return obj;
+    }
+
+    override lvglBuildObj(build: LVGLBuild) {
+        build.line(`lv_obj_t *obj = lv_colorwheel_create(parent_obj, false);`);
+    }
+
+    override lvglBuildSpecific(build: LVGLBuild) {}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// const imgbuttonGroup: IPropertyGridGroupDefinition = {
+//     id: "lvgl-imgbutton",
+//     title: "Imgbutton",
+//     position: SPECIFIC_GROUP_POSITION
+// };
+
+export class LVGLImgbuttonWidget extends LVGLWidget {
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        componentPaletteGroupName: "!1Input Widgets",
+
+        properties: [],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 64,
+            widthUnit: "content",
+            height: 64,
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            clickableFlag: true
+        },
+
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <path d="M15 8h.01M12 20H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v5" />
+                <path d="m4 15 4-4c.928-.893 2.072-.893 3 0l4 4" />
+                <path d="m14 14 1-1c.617-.593 1.328-.793 2.009-.598M16 19h6m-3-3v6" />
+            </svg>
+        ),
+
+        check: (widget: LVGLLabelWidget) => {
+            let messages: Message[] = [];
+            return messages;
+        },
+
+        lvgl: {
+            parts: ["MAIN"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "CHECKABLE",
+                "PRESS_LOCK",
+                "CLICK_FOCUSABLE",
+                "ADV_HITTEST",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE",
+                "SCROLLABLE",
+                "SCROLL_ELASTIC",
+                "SCROLL_MOMENTUM",
+                "SCROLL_ON_FOCUS",
+                "SCROLL_CHAIN",
+                "SCROLL_ONE"
+            ],
+            defaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        }
+    });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {});
+    }
+
+    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+        const obj = runtime.wasm._lvglCreateImgbutton(
+            parentObj,
+            this.widgetIndex,
+            this.lvglCreateLeft,
+            this.lvglCreateTop,
+            this.lvglCreateWidth,
+            this.lvglCreateHeight
+        );
+
+        return obj;
+    }
+
+    override lvglBuildObj(build: LVGLBuild) {
+        build.line(`lv_obj_t *obj = lv_imgbtn_create(parent_obj);`);
+    }
+
+    override lvglBuildSpecific(build: LVGLBuild) {}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// const keyboardGroup: IPropertyGridGroupDefinition = {
+//     id: "lvgl-keyboard",
+//     title: "Keyboard",
+//     position: SPECIFIC_GROUP_POSITION
+// };
+
+export class LVGLKeyboardWidget extends LVGLWidget {
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        componentPaletteGroupName: "!1Input Widgets",
+
+        properties: [],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 300,
+            height: 120,
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            clickableFlag: true
+        },
+
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+                <line x1="6" y1="10" x2="6" y2="10"></line>
+                <line x1="10" y1="10" x2="10" y2="10"></line>
+                <line x1="14" y1="10" x2="14" y2="10"></line>
+                <line x1="18" y1="10" x2="18" y2="10"></line>
+                <line x1="6" y1="14" x2="6" y2="14.01"></line>
+                <line x1="18" y1="14" x2="18" y2="14.01"></line>
+                <line x1="10" y1="14" x2="14" y2="14"></line>
+            </svg>
+        ),
+
+        check: (widget: LVGLLabelWidget) => {
+            let messages: Message[] = [];
+            return messages;
+        },
+
+        lvgl: {
+            parts: ["MAIN", "ITEMS"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "CHECKABLE",
+                "PRESS_LOCK",
+                "CLICK_FOCUSABLE",
+                "ADV_HITTEST",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE",
+                "SCROLLABLE",
+                "SCROLL_ELASTIC",
+                "SCROLL_MOMENTUM",
+                "SCROLL_ON_FOCUS",
+                "SCROLL_CHAIN",
+                "SCROLL_ONE"
+            ],
+            defaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        }
+    });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {});
+    }
+
+    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+        const obj = runtime.wasm._lvglCreateKeyboard(
+            parentObj,
+            this.widgetIndex,
+            this.lvglCreateLeft,
+            this.lvglCreateTop,
+            this.lvglCreateWidth,
+            this.lvglCreateHeight
+        );
+
+        return obj;
+    }
+
+    override lvglBuildObj(build: LVGLBuild) {
+        build.line(`lv_obj_t *obj = lv_keyboard_create(parent_obj);`);
+    }
+
+    override lvglBuildSpecific(build: LVGLBuild) {}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// const chartGroup: IPropertyGridGroupDefinition = {
+//     id: "lvgl-chart",
+//     title: "Chart",
+//     position: SPECIFIC_GROUP_POSITION
+// };
+
+export class LVGLChartWidget extends LVGLWidget {
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        componentPaletteGroupName: "!1Visualiser Widgets",
+
+        properties: [],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 180,
+            height: 100,
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            clickableFlag: true
+        },
+
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <line x1="4" y1="19" x2="20" y2="19"></line>
+                <polyline points="4 15 8 9 12 11 16 6 20 10"></polyline>
+            </svg>
+        ),
+
+        check: (widget: LVGLLabelWidget) => {
+            let messages: Message[] = [];
+            return messages;
+        },
+
+        lvgl: {
+            parts: ["MAIN", "ITEMS", "INDICATOR"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "CHECKABLE",
+                "PRESS_LOCK",
+                "CLICK_FOCUSABLE",
+                "ADV_HITTEST",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE",
+                "SCROLLABLE",
+                "SCROLL_ELASTIC",
+                "SCROLL_MOMENTUM",
+                "SCROLL_ON_FOCUS",
+                "SCROLL_CHAIN",
+                "SCROLL_ONE"
+            ],
+            defaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        }
+    });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {});
+    }
+
+    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+        const obj = runtime.wasm._lvglCreateChart(
+            parentObj,
+            this.widgetIndex,
+            this.lvglCreateLeft,
+            this.lvglCreateTop,
+            this.lvglCreateWidth,
+            this.lvglCreateHeight
+        );
+
+        return obj;
+    }
+
+    override lvglBuildObj(build: LVGLBuild) {
+        build.line(`lv_obj_t *obj = lv_chart_create(parent_obj);`);
+    }
+
+    override lvglBuildSpecific(build: LVGLBuild) {}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 registerClass("LVGLArcWidget", LVGLArcWidget);
 registerClass("LVGLBarWidget", LVGLBarWidget);
 registerClass("LVGLButtonWidget", LVGLButtonWidget);
+registerClass("LVGLCalendarWidget", LVGLCalendarWidget);
+registerClass("LVGLChartWidget", LVGLChartWidget);
 registerClass("LVGLCheckboxWidget", LVGLCheckboxWidget);
+registerClass("LVGLColorwheelWidget", LVGLColorwheelWidget);
 registerClass("LVGLDropdownWidget", LVGLDropdownWidget);
 registerClass("LVGLImageWidget", LVGLImageWidget);
+registerClass("LVGLImgbuttonWidget", LVGLImgbuttonWidget);
 registerClass("LVGLLabelWidget", LVGLLabelWidget);
+registerClass("LVGLKeyboardWidget", LVGLKeyboardWidget);
 registerClass("LVGLPanelWidget", LVGLPanelWidget);
 registerClass("LVGLRollerWidget", LVGLRollerWidget);
 registerClass("LVGLSliderWidget", LVGLSliderWidget);
 registerClass("LVGLSpinnerWidget", LVGLSpinnerWidget);
 registerClass("LVGLSwitchWidget", LVGLSwitchWidget);
+registerClass("LVGLTextareaWidget", LVGLTextareaWidget);
