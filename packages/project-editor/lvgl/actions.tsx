@@ -467,6 +467,8 @@ const enum PropertyCode {
     BASIC_WIDTH,
     BASIC_HEIGHT,
     BASIC_OPACITY,
+    BASIC_CHECKED,
+    BASIC_DISABLED,
 
     DROPDOWN_SELECTED,
 
@@ -485,7 +487,7 @@ type PropertiesType = {
     [targetType: string]: {
         [propName: string]: {
             code: PropertyCode;
-            type: "number" | "string" | "image";
+            type: "number" | "string" | "boolean" | "image";
             animated: boolean;
         };
     };
@@ -530,6 +532,16 @@ const PROPERTIES = {
         opacity: {
             code: PropertyCode.BASIC_OPACITY,
             type: "number" as const,
+            animated: false
+        },
+        checked: {
+            code: PropertyCode.BASIC_CHECKED,
+            type: "boolean" as const,
+            animated: false
+        },
+        disabled: {
+            code: PropertyCode.BASIC_DISABLED,
+            type: "boolean" as const,
             animated: false
         }
     },
@@ -614,7 +626,7 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
     target: string;
     property: string;
     animated: boolean;
-    value: number | string;
+    value: number | string | boolean;
     valueType: LVGLPropertyType;
 
     constructor() {
@@ -682,8 +694,11 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
                             ? PropertyType.ObjectReference
                             : type == "number"
                             ? PropertyType.Number
+                            : type == "boolean"
+                            ? PropertyType.Boolean
                             : PropertyType.MultilineText;
                     },
+                    checkboxStyleSwitch: true,
                     dynamicTypeReferencedObjectCollectionPath: (
                         actionType: LVGLSetPropertyActionType
                     ) => {
@@ -778,12 +793,24 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
         );
     }
     get valueExpr() {
-        if (this.valueType == "expression") {
-            return this.value as string;
-        }
         if (typeof this.value == "number") {
             return this.value.toString();
         }
+
+        if (typeof this.value == "boolean") {
+            return this.value ? "true" : "false";
+        }
+
+        if (this.valueType == "literal") {
+            if (this.propertyInfo.type == "boolean") {
+                return this.value ? "true" : "false";
+            }
+        }
+
+        if (this.valueType == "expression") {
+            return this.value as string;
+        }
+
         return escapeCString(this.value);
     }
 
@@ -796,7 +823,7 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
                         : "<not set>"
                 }`}
                 <LeftArrow />
-                {this.value}
+                {this.valueExpr}
                 {this.propertyInfo.animated
                     ? `, Animated=${this.animated ? "On" : "Off"}`
                     : ""}
