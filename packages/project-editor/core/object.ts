@@ -192,12 +192,11 @@ export interface PropertyInfo {
 
     monospaceFont?: boolean;
     disableSpellcheck?: boolean;
-
     cssAttributeName?: string;
-
     checkboxStyleSwitch?: boolean;
-
+    checkboxHideLabel?: boolean;
     arrayItemOrientation?: "vertical" | "horizontal";
+    disableBitmapPreview?: boolean;
 }
 
 export type InheritedValue =

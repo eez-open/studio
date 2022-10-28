@@ -387,6 +387,9 @@ export interface IWasmFlowRuntime {
     _lvglCreateSwitch(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateBar(parentObj: number, index: number, x: number, y: number, w: number, h: number, min: number, max: number, mode: number, value: number, value_left: number): number;
     _lvglCreateDropdown(parentObj: number, index: number, x: number, y: number, w: number, h: number, options: number): number;
+    _lvglCreateArc(parentObj: number, index: number, x: number, y: number, w: number, h: number, range_min: number, range_max: number, value: number, bg_start_angle: number, bg_end_angle: number, mode: number, rotation: number): number;
+    _lvglCreateSpinner(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
+    _lvglCreateCheckbox(parentObj: number, index: number, x: number, y: number, w: number, h: number, text: number): number;
     _lvglScreenLoad(page_index: number, obj: number);
     _lvglDeleteObject(obj: number): void;
     _lvglObjAddFlag(obj: number, f: number): void;
@@ -411,6 +414,9 @@ export interface IWasmFlowRuntime {
     _lvglUpdateSliderValueLeft(obj: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateBarValue(obj: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateBarValueStart(obj: number, page_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateArcValue(obj: number, page_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateCheckedState(obj: number, page_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateDisabledState(obj: number, page_index: number, component_index: number, property_index: number): void;
 }
 
 export interface IDashboardComponentContext {

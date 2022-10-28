@@ -8,8 +8,11 @@ enum UpdateTaskType {
     UPDATE_TASK_TYPE_LABEL_TEXT,
     UPDATE_TASK_TYPE_SLIDER_VALUE,
     UPDATE_TASK_TYPE_SLIDER_VALUE_LEFT,
+    UPDATE_TASK_TYPE_ARC_VALUE,
     UPDATE_TASK_TYPE_BAR_VALUE,
-    UPDATE_TASK_TYPE_BAR_VALUE_START
+    UPDATE_TASK_TYPE_BAR_VALUE_START,
+    UPDATE_TASK_TYPE_CHECKED_STATE,
+    UPDATE_TASK_TYPE_DISABLED_STATE
 };
 
 #ifdef __cplusplus
@@ -27,6 +30,7 @@ void flowPropagateValue(unsigned pageIndex, unsigned componentIndex, unsigned ou
 
 void addUpdateTask(enum UpdateTaskType updateTaskType, lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index);
 void assignIntegerProperty(unsigned pageIndex, unsigned componentIndex, unsigned propertyIndex, int32_t value, const char *errorMessage);
+void assignBooleanProperty(unsigned pageIndex, unsigned componentIndex, unsigned propertyIndex, bool value, const char *errorMessage);
 
 void setObjectIndex(lv_obj_t *obj, int32_t index);
 

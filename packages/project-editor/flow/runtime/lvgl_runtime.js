@@ -1175,12 +1175,12 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  973344: ($0, $1) => { freeComponentExecutionState($0, $1); },  
- 973385: ($0) => { startToDebuggerMessage($0); },  
- 973417: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 973492: ($0) => { finishToDebuggerMessage($0); },  
- 973525: ($0, $1) => { onArrayValueFree($0, $1); },  
- 973555: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
+  973520: ($0, $1) => { freeComponentExecutionState($0, $1); },  
+ 973561: ($0) => { startToDebuggerMessage($0); },  
+ 973593: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 973668: ($0) => { finishToDebuggerMessage($0); },  
+ 973701: ($0, $1) => { onArrayValueFree($0, $1); },  
+ 973731: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
 };
 
 
@@ -4827,6 +4827,15 @@ var _lvglCreateBar = Module["_lvglCreateBar"] = createExportWrapper("lvglCreateB
 var _lvglCreateDropdown = Module["_lvglCreateDropdown"] = createExportWrapper("lvglCreateDropdown");
 
 /** @type {function(...*):?} */
+var _lvglCreateArc = Module["_lvglCreateArc"] = createExportWrapper("lvglCreateArc");
+
+/** @type {function(...*):?} */
+var _lvglCreateSpinner = Module["_lvglCreateSpinner"] = createExportWrapper("lvglCreateSpinner");
+
+/** @type {function(...*):?} */
+var _lvglCreateCheckbox = Module["_lvglCreateCheckbox"] = createExportWrapper("lvglCreateCheckbox");
+
+/** @type {function(...*):?} */
 var _lvglScreenLoad = Module["_lvglScreenLoad"] = createExportWrapper("lvglScreenLoad");
 
 /** @type {function(...*):?} */
@@ -4897,6 +4906,15 @@ var _lvglUpdateBarValue = Module["_lvglUpdateBarValue"] = createExportWrapper("l
 
 /** @type {function(...*):?} */
 var _lvglUpdateBarValueStart = Module["_lvglUpdateBarValueStart"] = createExportWrapper("lvglUpdateBarValueStart");
+
+/** @type {function(...*):?} */
+var _lvglUpdateArcValue = Module["_lvglUpdateArcValue"] = createExportWrapper("lvglUpdateArcValue");
+
+/** @type {function(...*):?} */
+var _lvglUpdateCheckedState = Module["_lvglUpdateCheckedState"] = createExportWrapper("lvglUpdateCheckedState");
+
+/** @type {function(...*):?} */
+var _lvglUpdateDisabledState = Module["_lvglUpdateDisabledState"] = createExportWrapper("lvglUpdateDisabledState");
 
 /** @type {function(...*):?} */
 var ___errno_location = Module["___errno_location"] = createExportWrapper("__errno_location");

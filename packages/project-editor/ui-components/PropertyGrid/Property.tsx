@@ -34,11 +34,16 @@ import {
     EXPR_MARK_START
 } from "project-editor/flow/expression/ExpressionBuilder";
 
-import { getPropertyValue, getPropertyValueAsString } from "./utils";
+import {
+    getObjectPropertyValue,
+    getPropertyValue,
+    getPropertyValueAsString
+} from "./utils";
 import { CodeEditorProperty } from "./CodeEditorProperty";
 import { ThemedColorInput } from "./ThemedColorInput";
 import { ObjectReferenceInput } from "./ObjectReferenceInput";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { Checkbox } from "./Checkbox";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -106,7 +111,10 @@ export const Property = observer(
         componentDidMount() {
             this.updateChangeDocumentObserver();
 
-            let el = this.input || this.textarea || this.select;
+            let el =
+                this.props.propertyInfo.type != PropertyType.Boolean
+                    ? this.input || this.textarea || this.select
+                    : undefined;
             if (el) {
                 $(el).on("focus", () => {
                     this.context.undoManager.setCombineCommands(true);
@@ -167,10 +175,6 @@ export const Property = observer(
                 return;
             }
 
-            runInAction(() => {
-                this._value = newValue;
-            });
-
             if (this.props.propertyInfo.type === PropertyType.Number) {
                 if (
                     newValue.trim() === "" &&
@@ -190,6 +194,10 @@ export const Property = observer(
 
             this.props.updateObject({
                 [this.props.propertyInfo.name]: newValue
+            });
+
+            runInAction(() => {
+                this._value = newValue;
             });
         }
 
@@ -692,41 +700,44 @@ export const Property = observer(
                     }
                 }
             } else if (propertyInfo.type === PropertyType.Boolean) {
-                if (propertyInfo.checkboxStyleSwitch) {
-                    return (
-                        <div className="form-check form-switch">
-                            <input
-                                ref={(ref: any) => (this.input = ref)}
-                                className="form-check-input"
-                                type="checkbox"
-                                role="switch"
-                                checked={this._value || false}
-                                onChange={this.onChange}
-                                readOnly={readOnly}
-                                disabled={readOnly}
-                            />
-                        </div>
-                    );
-                } else {
-                    return (
-                        <label className="EezStudio_PropertyGrid_Checkbox">
-                            <input
-                                ref={(ref: any) => (this.input = ref)}
-                                type="checkbox"
-                                checked={this._value || false}
-                                onChange={this.onChange}
-                                readOnly={readOnly}
-                            />
-                            <span>
-                                {" " +
-                                    getObjectPropertyDisplayName(
-                                        this.props.objects[0],
-                                        propertyInfo
-                                    )}
-                            </span>
-                        </label>
-                    );
-                }
+                let values = this.props.objects.map(object =>
+                    getObjectPropertyValue(object, this.props.propertyInfo)
+                );
+
+                let numEnabled = 0;
+                let numDisabled = 0;
+                values.forEach(value => {
+                    if (value) {
+                        numEnabled++;
+                    } else {
+                        numDisabled++;
+                    }
+                });
+
+                let checkboxState =
+                    numEnabled == 0
+                        ? false
+                        : numDisabled == 0
+                        ? true
+                        : undefined;
+
+                return (
+                    <Checkbox
+                        state={checkboxState}
+                        onChange={value => this.changeValue(value)}
+                        readOnly={readOnly}
+                        switchStyle={propertyInfo.checkboxStyleSwitch}
+                        label={
+                            !propertyInfo.checkboxStyleSwitch &&
+                            !propertyInfo.checkboxHideLabel
+                                ? getObjectPropertyDisplayName(
+                                      this.props.objects[0],
+                                      propertyInfo
+                                  )
+                                : undefined
+                        }
+                    />
+                );
             } else if (propertyInfo.type === PropertyType.GUID) {
                 return (
                     <div className="input-group">

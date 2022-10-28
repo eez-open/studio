@@ -201,8 +201,9 @@ export const ObjectReferenceInput = observer(
 
             let bitmap;
             if (
+                !this.props.propertyInfo.disableBitmapPreview &&
                 this.props.propertyInfo.referencedObjectCollectionPath ===
-                "bitmaps"
+                    "bitmaps"
             ) {
                 bitmap = ProjectEditor.findBitmap(
                     this.context.project,

@@ -59,9 +59,10 @@ import {
     EventHandler,
     eventHandlersProperty,
     LVGLWidgetFlagsProperty,
-    LVGLWidgetStatesProperty,
+    LV_EVENT_ARC_VALUE_CHANGED,
     LV_EVENT_BAR_VALUE_CHANGED,
     LV_EVENT_BAR_VALUE_START_CHANGED,
+    LV_EVENT_CHECKED_STATE_CHANGED,
     LV_EVENT_SLIDER_VALUE_CHANGED,
     LV_EVENT_SLIDER_VALUE_LEFT_CHANGED
 } from "project-editor/lvgl/widget-common";
@@ -188,6 +189,16 @@ export const GeometryProperty = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function stateEnabledInWidget(
+    widget: LVGLWidget,
+    state: keyof typeof LVGL_STATE_CODES
+) {
+    const classInfo = getClassInfo(widget);
+    return classInfo.lvgl!.states.indexOf(state) != -1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class LVGLWidget extends Widget {
     identifier: string;
 
@@ -197,10 +208,18 @@ export class LVGLWidget extends Widget {
     heightUnit: "px" | "%" | "content";
 
     children: LVGLWidget[];
+
     flags: string;
     scrollbarMode: string;
     scrollDirection: string;
-    states: string;
+
+    checkedState: string | boolean;
+    checkedStateType: LVGLPropertyType;
+    disabledState: string | boolean;
+    disabledStateType: LVGLPropertyType;
+    focusedState: boolean;
+    pressedState: boolean;
+
     localStyles: LVGLStylesDefinition;
 
     eventHandlers: EventHandler[];
@@ -357,6 +376,48 @@ export class LVGLWidget extends Widget {
                 propertyGridRowComponent: LVGLWidgetFlagsProperty,
                 enumerable: false
             },
+            ...makeExpressionProperty(
+                "checkedState",
+                "boolean",
+                "input",
+                ["literal", "expression"],
+                {
+                    displayName: "Checked",
+                    propertyGridGroup: statesGroup,
+                    hideInPropertyGrid: (widget: LVGLWidget) =>
+                        !stateEnabledInWidget(widget, "CHECKED")
+                }
+            ),
+            ...makeExpressionProperty(
+                "disabledState",
+                "boolean",
+                "input",
+                ["literal", "expression"],
+                {
+                    displayName: "Disabled",
+                    propertyGridGroup: statesGroup,
+                    hideInPropertyGrid: (widget: LVGLWidget) =>
+                        !stateEnabledInWidget(widget, "DISABLED")
+                }
+            ),
+            {
+                name: "focusedState",
+                displayName: "Focused",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                propertyGridGroup: statesGroup,
+                hideInPropertyGrid: (widget: LVGLWidget) =>
+                    !stateEnabledInWidget(widget, "FOCUSED")
+            },
+            {
+                name: "pressedState",
+                displayName: "Pressed",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                propertyGridGroup: statesGroup,
+                hideInPropertyGrid: (widget: LVGLWidget) =>
+                    !stateEnabledInWidget(widget, "PRESSED")
+            },
             {
                 name: "scrollbarMode",
                 type: PropertyType.Enum,
@@ -418,13 +479,6 @@ export class LVGLWidget extends Widget {
                 propertyGridGroup: flagsGroup
             },
             {
-                name: "states",
-                type: PropertyType.String,
-                propertyGridGroup: statesGroup,
-                propertyGridRowComponent: LVGLWidgetStatesProperty,
-                enumerable: false
-            },
-            {
                 name: "localStyles",
                 type: PropertyType.Object,
                 typeClass: LVGLStylesDefinition,
@@ -449,6 +503,33 @@ export class LVGLWidget extends Widget {
             if (jsWidget.heightUnit == undefined) {
                 jsWidget.heightUnit = "px";
             }
+
+            if (jsWidget.states != undefined) {
+                const states = jsWidget.states.split("|");
+                delete (jsWidget as any).states;
+                if ("CHECKED" in states) {
+                    jsWidget.checkedState = true;
+                    jsWidget.checkedStateType = "literal";
+                }
+                if ("DISABLED" in states) {
+                    jsWidget.disabledState = true;
+                    jsWidget.disabledStateType = "literal";
+                }
+                if ("FOCUSED" in states) {
+                    jsWidget.focusedState = true;
+                }
+                if ("PRESSED" in states) {
+                    jsWidget.pressedState = true;
+                }
+            }
+
+            if (jsWidget.checkedStateType == undefined) {
+                jsWidget.checkedStateType = "literal";
+            }
+
+            if (jsWidget.disabledStateType == undefined) {
+                jsWidget.disabledStateType = "literal";
+            }
         },
 
         defaultValue: {
@@ -461,7 +542,9 @@ export class LVGLWidget extends Widget {
             widthUnit: "px",
             heightUnit: "px",
             scrollbarMode: "auto",
-            scrollDirection: "all"
+            scrollDirection: "all",
+            checkedStateType: "literal",
+            disabledStateType: "literal"
         },
 
         check: (widget: LVGLWidget) => {
@@ -486,7 +569,12 @@ export class LVGLWidget extends Widget {
             flags: observable,
             scrollbarMode: observable,
             scrollDirection: observable,
-            states: observable,
+            checkedState: observable,
+            checkedStateType: observable,
+            disabledState: observable,
+            disabledStateType: observable,
+            focusedState: observable,
+            pressedState: observable,
             localStyles: observable,
             eventHandlers: observable,
             state: computed,
@@ -536,8 +624,10 @@ export class LVGLWidget extends Widget {
             ) as Page;
             if (page._lvglRuntime) {
                 return {
-                    left: left - this.relativePosition.left + this.left,
-                    top: top - this.relativePosition.top + this.top
+                    left: Math.round(
+                        left - this.relativePosition.left + this.left
+                    ),
+                    top: Math.round(top - this.relativePosition.top + this.top)
                 };
             }
         }
@@ -632,6 +722,44 @@ export class LVGLWidget extends Widget {
         return { flowIndex, componentIndex, propertyIndex };
     }
 
+    get states() {
+        const states: (keyof typeof LVGL_STATE_CODES)[] = [];
+
+        if (this.checkedStateType == "literal") {
+            if (this.checkedState as boolean) {
+                states.push("CHECKED");
+            }
+        } else {
+            const classInfo = getClassInfo(this);
+            if ("CHECKED" in (classInfo.lvgl!.defaultStates ?? "").split("|")) {
+                states.push("CHECKED");
+            }
+        }
+
+        if (this.disabledStateType == "literal") {
+            if (this.disabledState as boolean) {
+                states.push("DISABLED");
+            }
+        } else {
+            const classInfo = getClassInfo(this);
+            if (
+                "DISABLED" in (classInfo.lvgl!.defaultStates ?? "").split("|")
+            ) {
+                states.push("DISABLED");
+            }
+        }
+
+        if (this.focusedState as boolean) {
+            states.push("FOCUSED");
+        }
+
+        if (this.pressedState as boolean) {
+            states.push("PRESSED");
+        }
+
+        return states.join("|");
+    }
+
     override lvglCreate(
         runtime: LVGLPageRuntime,
         parentObj: number
@@ -669,7 +797,7 @@ export class LVGLWidget extends Widget {
                 }
 
                 if (this.hasEventHandler) {
-                    this.createEventHandlerSpecific(runtime, obj);
+                    this.createEventHandler(runtime, obj);
                 }
             }
         }
@@ -727,6 +855,32 @@ export class LVGLWidget extends Widget {
                     getCode(cleared, LVGL_STATE_CODES)
                 );
             }
+
+            const checkedStateExpr = this.getExpressionPropertyData(
+                runtime,
+                "checkedState"
+            );
+            if (checkedStateExpr) {
+                runtime.wasm._lvglUpdateCheckedState(
+                    obj,
+                    checkedStateExpr.flowIndex,
+                    checkedStateExpr.componentIndex,
+                    checkedStateExpr.propertyIndex
+                );
+            }
+
+            const disabledStateExpr = this.getExpressionPropertyData(
+                runtime,
+                "disabledState"
+            );
+            if (disabledStateExpr) {
+                runtime.wasm._lvglUpdateDisabledState(
+                    obj,
+                    disabledStateExpr.flowIndex,
+                    disabledStateExpr.componentIndex,
+                    disabledStateExpr.propertyIndex
+                );
+            }
         }
 
         let children: LVGLCreateResultType[];
@@ -750,6 +904,24 @@ export class LVGLWidget extends Widget {
     lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number): number {
         console.error("UNEXPECTED!");
         return 0;
+    }
+
+    createEventHandler(runtime: LVGLPageRuntime, obj: number) {
+        const checkedStateExpr = this.getExpressionPropertyData(
+            runtime,
+            "checkedState"
+        );
+        if (checkedStateExpr) {
+            runtime.wasm._lvglAddObjectFlowCallback(
+                obj,
+                LV_EVENT_CHECKED_STATE_CHANGED,
+                checkedStateExpr.flowIndex,
+                checkedStateExpr.componentIndex,
+                checkedStateExpr.propertyIndex
+            );
+        }
+
+        this.createEventHandlerSpecific(runtime, obj);
     }
 
     createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {}
@@ -853,6 +1025,116 @@ export class LVGLWidget extends Widget {
     }
 
     lvglBuildTick(build: LVGLBuild): void {
+        if (this.checkedStateType == "expression") {
+            build.line(`{`);
+            build.indent();
+
+            if (
+                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
+            ) {
+                const page = getAncestorOfType(
+                    this,
+                    ProjectEditor.PageClass.classInfo
+                ) as Page;
+
+                let flowIndex = build.assets.getFlowIndex(page);
+                let componentIndex = build.assets.getComponentIndex(this);
+                const propertyIndex = build.assets.getComponentPropertyIndex(
+                    this,
+                    "checkedState"
+                );
+
+                build.line(
+                    `bool state_new = evalBooleanProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Checked state");`
+                );
+            } else {
+                build.line(
+                    `bool state_new = ${build.getVariableGetterFunctionName(
+                        this.checkedState as string
+                    )}();`
+                );
+            }
+
+            build.line(
+                `bool state_cur = lv_obj_has_state(screen->${build.getWidgetStructFieldName(
+                    this
+                )}, LV_STATE_CHECKED);`
+            );
+
+            build.line(`if (state_new != state_cur) {`);
+            build.indent();
+            build.line(
+                `if (state_new) lv_obj_add_state(screen->${build.getWidgetStructFieldName(
+                    this
+                )}, LV_STATE_CHECKED);`
+            );
+            build.line(
+                `else lv_obj_clear_state(screen->${build.getWidgetStructFieldName(
+                    this
+                )}, LV_STATE_CHECKED);`
+            );
+            build.unindent();
+            build.line(`}`);
+
+            build.unindent();
+            build.line(`}`);
+        }
+
+        if (this.disabledStateType == "expression") {
+            build.line(`{`);
+            build.indent();
+
+            if (
+                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
+            ) {
+                const page = getAncestorOfType(
+                    this,
+                    ProjectEditor.PageClass.classInfo
+                ) as Page;
+
+                let flowIndex = build.assets.getFlowIndex(page);
+                let componentIndex = build.assets.getComponentIndex(this);
+                const propertyIndex = build.assets.getComponentPropertyIndex(
+                    this,
+                    "disabledState"
+                );
+
+                build.line(
+                    `bool state_new = evalBooleanProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Disabled state");`
+                );
+            } else {
+                build.line(
+                    `bool state_new = ${build.getVariableGetterFunctionName(
+                        this.disabledState as string
+                    )}();`
+                );
+            }
+
+            build.line(
+                `bool state_cur = lv_obj_has_state(screen->${build.getWidgetStructFieldName(
+                    this
+                )}, LV_STATE_DISABLED);`
+            );
+
+            build.line(`if (state_new != state_cur) {`);
+            build.indent();
+            build.line(
+                `if (state_new) lv_obj_add_state(screen->${build.getWidgetStructFieldName(
+                    this
+                )}, LV_STATE_DISABLED);`
+            );
+            build.line(
+                `else lv_obj_clear_state(screen->${build.getWidgetStructFieldName(
+                    this
+                )}, LV_STATE_DISABLED);`
+            );
+            build.unindent();
+            build.line(`}`);
+
+            build.unindent();
+            build.line(`}`);
+        }
+
         this.lvglBuildTickSpecific(build);
         for (const widget of this.children) {
             widget.lvglBuildTick(build);
@@ -962,10 +1244,60 @@ export class LVGLWidget extends Widget {
     }
 
     get hasEventHandler() {
-        return false;
+        return (
+            this.checkedStateType == "expression" ||
+            this.disabledStateType == "expression"
+        );
     }
 
-    buildEventHandlerSpecific(build: LVGLBuild) {}
+    buildEventHandler(build: LVGLBuild) {
+        this.buildEventHandlerSpecific(build);
+    }
+
+    buildEventHandlerSpecific(build: LVGLBuild) {
+        // bool state_new = evalBooleanProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Checked state");
+        // bool state_cur = lv_obj_has_state(updateTask.obj, LV_STATE_CHECKED);
+        // if (state_new != state_cur) {
+        //     if (state_new) lv_obj_add_state(updateTask.obj, LV_STATE_CHECKED);
+        //     else lv_obj_clear_state(updateTask.obj, LV_STATE_CHECKED);
+        // }
+
+        if (this.checkedStateType == "expression") {
+            build.line("if (event == LV_EVENT_VALUE_CHANGED) {");
+            build.indent();
+
+            build.line(`lv_obj_t *ta = lv_event_get_target(e);`);
+            build.line(`bool value = lv_obj_has_state(ta, LV_STATE_CHECKED);`);
+
+            if (
+                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
+            ) {
+                const page = getAncestorOfType(
+                    this,
+                    ProjectEditor.PageClass.classInfo
+                ) as Page;
+                let flowIndex = build.assets.getFlowIndex(page);
+                let componentIndex = build.assets.getComponentIndex(this);
+                const propertyIndex = build.assets.getComponentPropertyIndex(
+                    this,
+                    "checkedState"
+                );
+
+                build.line(
+                    `assignBooleanProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, value, "Failed to assign Checked state");`
+                );
+            } else {
+                build.line(
+                    `${build.getVariableSetterFunctionName(
+                        this.checkedState as string
+                    )}(value);`
+                );
+            }
+
+            build.unindent();
+            build.line("}");
+        }
+    }
 
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
@@ -1028,6 +1360,7 @@ export class LVGLLabelWidget extends LVGLWidget {
         properties: [
             ...makeExpressionProperty(
                 "text",
+                "string",
                 "input",
                 ["literal", "expression"],
                 {
@@ -1699,6 +2032,7 @@ export class LVGLSliderWidget extends LVGLWidget {
             },
             ...makeExpressionProperty(
                 "value",
+                "integer",
                 "assignable",
                 ["literal", "expression"],
                 {
@@ -1707,6 +2041,7 @@ export class LVGLSliderWidget extends LVGLWidget {
             ),
             ...makeExpressionProperty(
                 "valueLeft",
+                "integer",
                 "assignable",
                 ["literal", "expression"],
                 {
@@ -1792,6 +2127,7 @@ export class LVGLSliderWidget extends LVGLWidget {
 
     override get hasEventHandler() {
         return (
+            super.hasEventHandler ||
             this.valueType == "expression" ||
             (this.mode == "RANGE" && this.valueLeftType == "expression")
         );
@@ -2334,6 +2670,7 @@ export class LVGLBarWidget extends LVGLWidget {
             },
             ...makeExpressionProperty(
                 "value",
+                "integer",
                 "assignable",
                 ["literal", "expression"],
                 {
@@ -2342,6 +2679,7 @@ export class LVGLBarWidget extends LVGLWidget {
             ),
             ...makeExpressionProperty(
                 "valueStart",
+                "integer",
                 "assignable",
                 ["literal", "expression"],
                 {
@@ -2412,6 +2750,7 @@ export class LVGLBarWidget extends LVGLWidget {
 
     override get hasEventHandler() {
         return (
+            super.hasEventHandler ||
             this.valueType == "expression" ||
             (this.mode == "RANGE" && this.valueStartType == "expression")
         );
@@ -2779,12 +3118,510 @@ export class LVGLDropdownWidget extends LVGLWidget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const ARC_MODES = {
+    NORMAL: 0,
+    REVERSE: 1,
+    SYMMETRICAL: 2
+};
+
+export const arcGroup: IPropertyGridGroupDefinition = {
+    id: "lvgl-arc",
+    title: "Arc",
+    position: SPECIFIC_GROUP_POSITION
+};
+
+export class LVGLArcWidget extends LVGLWidget {
+    rangeMin: number;
+    rangeMax: number;
+    value: number | string;
+    valueType: LVGLPropertyType;
+    bgStartAngle: number;
+    bgEndAngle: number;
+    mode: keyof typeof ARC_MODES;
+    rotation: number;
+
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        componentPaletteGroupName: "!1Basic Widgets",
+
+        properties: [
+            {
+                name: "rangeMin",
+                type: PropertyType.Number,
+                propertyGridGroup: arcGroup
+            },
+            {
+                name: "rangeMax",
+                type: PropertyType.Number,
+                propertyGridGroup: arcGroup
+            },
+            ...makeExpressionProperty(
+                "value",
+                "integer",
+                "assignable",
+                ["literal", "expression"],
+                {
+                    propertyGridGroup: arcGroup
+                }
+            ),
+            {
+                name: "bgStartAngle",
+                type: PropertyType.Number,
+                propertyGridGroup: arcGroup
+            },
+            {
+                name: "bgEndAngle",
+                type: PropertyType.Number,
+                propertyGridGroup: arcGroup
+            },
+            {
+                name: "mode",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "NORMAL",
+                        label: "NORMAL"
+                    },
+                    {
+                        id: "REVERSE",
+                        label: "REVERSE"
+                    },
+                    {
+                        id: "SYMMETRICAL",
+                        label: "SYMMETRICAL"
+                    }
+                ],
+                enumDisallowUndefined: true,
+                propertyGridGroup: arcGroup
+            },
+            {
+                name: "rotation",
+                type: PropertyType.Number,
+                propertyGridGroup: arcGroup
+            }
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 150,
+            height: 150,
+            flags: "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            rangeMin: 0,
+            rangeMax: 100,
+            value: 25,
+            valueType: "literal",
+            bgStartAngle: 120,
+            bgEndAngle: 60,
+            mode: "NORMAL",
+            rotation: 0
+        },
+
+        icon: (
+            <svg
+                viewBox="0 0 100 100"
+                stroke="currentColor"
+                fill="currentColor"
+            >
+                <path
+                    transform="matrix(0.284019, 0.365203, -0.365202, 0.284019, 52.485165, -170.485977)"
+                    d="M 428.885 388.909 A 98.905 98.905 0 1 1 449.648 246.739 L 429.979 262.257 A 73.851 73.851 0 1 0 414.475 368.413 Z"
+                ></path>
+                <path
+                    d="M 65.922 86.406 C 58.202 78.686 58.202 66.17 65.922 58.449 C 73.642 50.73 86.158 50.73 93.878 58.449 C 101.598 66.17 101.598 78.686 93.878 86.406 C 86.158 94.125 73.642 94.125 65.922 86.406 Z M 86.957 79.485 C 90.855 75.585 90.855 69.268 86.957 65.37 C 83.06 61.471 76.74 61.471 72.843 65.37 C 68.945 69.268 68.945 75.585 72.843 79.485 C 76.74 83.382 83.06 83.382 86.957 79.485 Z"
+                    style={{ strokeWidth: 1.98 }}
+                    transform="matrix(0.613904, 0.789381, -0.789381, 0.613904, 88.021956, -35.107547)"
+                ></path>
+            </svg>
+        ),
+
+        lvgl: {
+            parts: ["MAIN", "INDICATOR", "KNOB"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "CHECKABLE",
+                "PRESS_LOCK",
+                "CLICK_FOCUSABLE",
+                "ADV_HITTEST",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE",
+                "SCROLLABLE",
+                "SCROLL_ON_FOCUS",
+                "SCROLL_ELASTIC",
+                "SCROLL_MOMENTUM",
+                "SCROLL_ON_FOCUS",
+                "SCROLL_CHAIN",
+                "SCROLL_ONE"
+            ],
+            defaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        }
+    });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            rangeMin: observable,
+            rangeMax: observable,
+            value: observable,
+            valueType: observable,
+            bgStartAngle: observable,
+            bgEndAngle: observable,
+            mode: observable,
+            rotation: observable
+        });
+    }
+
+    override get hasEventHandler() {
+        return super.hasEventHandler || this.valueType == "expression";
+    }
+
+    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+        const valueExpr = this.getExpressionPropertyData(runtime, "value");
+
+        const obj = runtime.wasm._lvglCreateArc(
+            parentObj,
+            this.widgetIndex,
+            this.lvglCreateLeft,
+            this.lvglCreateTop,
+            this.lvglCreateWidth,
+            this.lvglCreateHeight,
+            this.rangeMin,
+            this.rangeMax,
+            valueExpr ? 0 : (this.value as number),
+            this.bgStartAngle,
+            this.bgEndAngle,
+            ARC_MODES[this.mode],
+            this.rotation
+        );
+
+        if (valueExpr) {
+            runtime.wasm._lvglUpdateArcValue(
+                obj,
+                valueExpr.flowIndex,
+                valueExpr.componentIndex,
+                valueExpr.propertyIndex
+            );
+        }
+
+        return obj;
+    }
+
+    override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
+        const valueExpr = this.getExpressionPropertyData(runtime, "value");
+        if (valueExpr) {
+            runtime.wasm._lvglAddObjectFlowCallback(
+                obj,
+                LV_EVENT_ARC_VALUE_CHANGED,
+                valueExpr.flowIndex,
+                valueExpr.componentIndex,
+                valueExpr.propertyIndex
+            );
+        }
+    }
+
+    override lvglBuildObj(build: LVGLBuild) {
+        build.line(`lv_obj_t *obj = lv_arc_create(parent_obj);`);
+    }
+
+    override lvglBuildSpecific(build: LVGLBuild) {
+        if (this.rangeMin != 0 || this.rangeMax != 100) {
+            build.line(
+                `lv_arc_set_range(obj, ${this.rangeMin}, ${this.rangeMax});`
+            );
+        }
+
+        if (this.valueType == "literal") {
+            if (this.value != 0) {
+                build.line(`lv_arc_set_value(obj, ${this.value});`);
+            }
+        }
+
+        if (this.bgStartAngle != 120) {
+            build.line(`lv_arc_set_bg_start_angle(obj, ${this.bgStartAngle});`);
+        }
+
+        if (this.bgEndAngle != 0) {
+            build.line(`lv_arc_set_bg_end_angle(obj, ${this.bgEndAngle});`);
+        }
+
+        if (this.mode != "NORMAL") {
+            build.line(`lv_arc_set_mode(obj, LV_ARC_MODE_${this.mode});`);
+        }
+
+        if (this.rotation != 0) {
+            build.line(`lv_arc_set_rotation(obj, ${this.rotation});`);
+        }
+    }
+
+    override lvglBuildTickSpecific(build: LVGLBuild) {
+        if (this.valueType == "expression") {
+            build.line(`{`);
+            build.indent();
+
+            if (
+                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
+            ) {
+                const page = getAncestorOfType(
+                    this,
+                    ProjectEditor.PageClass.classInfo
+                ) as Page;
+
+                let flowIndex = build.assets.getFlowIndex(page);
+                let componentIndex = build.assets.getComponentIndex(this);
+                const propertyIndex = build.assets.getComponentPropertyIndex(
+                    this,
+                    "value"
+                );
+
+                build.line(
+                    `int32_t value_new = evalIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Value in Arc widget");`
+                );
+            } else {
+                build.line(
+                    `int32_t value_new = ${build.getVariableGetterFunctionName(
+                        this.value as string
+                    )}();`
+                );
+            }
+
+            build.line(
+                `int32_t value_cur = lv_arc_get_value(screen->${build.getWidgetStructFieldName(
+                    this
+                )});`
+            );
+
+            build.line(
+                `if (value_new != value_cur) lv_arc_set_value(screen->${build.getWidgetStructFieldName(
+                    this
+                )}, value_new);`
+            );
+
+            build.unindent();
+            build.line(`}`);
+        }
+    }
+
+    override buildEventHandlerSpecific(build: LVGLBuild) {
+        if (this.valueType == "expression") {
+            build.line("if (event == LV_EVENT_VALUE_CHANGED) {");
+            build.indent();
+
+            build.line(`lv_obj_t *ta = lv_event_get_target(e);`);
+            build.line(`int32_t value = lv_arc_get_value(ta);`);
+
+            if (
+                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
+            ) {
+                const page = getAncestorOfType(
+                    this,
+                    ProjectEditor.PageClass.classInfo
+                ) as Page;
+                let flowIndex = build.assets.getFlowIndex(page);
+                let componentIndex = build.assets.getComponentIndex(this);
+                const propertyIndex = build.assets.getComponentPropertyIndex(
+                    this,
+                    "value"
+                );
+
+                build.line(
+                    `assignIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, value, "Failed to assign Value in Arc widget");`
+                );
+            } else {
+                build.line(
+                    `${build.getVariableSetterFunctionName(
+                        this.value as string
+                    )}(value);`
+                );
+            }
+
+            build.unindent();
+            build.line("}");
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLSpinnerWidget extends LVGLWidget {
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        componentPaletteGroupName: "!1Visualiser Widgets",
+
+        properties: [],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 80,
+            height: 80,
+            flags: "GESTURE_BUBBLE|SNAPPABLE|SCROLL_CHAIN"
+        },
+
+        icon: (
+            <svg
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <path d="M12 3a9 9 0 1 0 9 9" />
+            </svg>
+        ),
+
+        lvgl: {
+            parts: ["MAIN", "INDICATOR"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE",
+                "SCROLL_CHAIN"
+            ],
+            defaultFlags: "GESTURE_BUBBLE|SNAPPABLE|SCROLL_CHAIN",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        }
+    });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {});
+    }
+
+    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+        return runtime.wasm._lvglCreateSpinner(
+            parentObj,
+            this.widgetIndex,
+            this.lvglCreateLeft,
+            this.lvglCreateTop,
+            this.lvglCreateWidth,
+            this.lvglCreateHeight
+        );
+    }
+
+    override lvglBuildObj(build: LVGLBuild) {
+        build.line(`lv_obj_t *obj = lv_spinner_create(parent_obj);`);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const checkboxGroup: IPropertyGridGroupDefinition = {
+    id: "lvgl-checkbox",
+    title: "Checkbox",
+    position: SPECIFIC_GROUP_POSITION
+};
+
+export class LVGLCheckboxWidget extends LVGLWidget {
+    text: string;
+
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        componentPaletteGroupName: "!1Input Widgets",
+
+        properties: [
+            {
+                name: "text",
+                type: PropertyType.String,
+                propertyGridGroup: checkboxGroup
+            }
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 105,
+            widthUnit: "content",
+            height: 20,
+            heightUnit: "content",
+            flags: "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ON_FOCUS",
+            text: "Checkbox"
+        },
+
+        icon: (
+            <svg viewBox="0 0 1280 1279">
+                <path d="M1052 225.7c-13 8-54 35.2-66.2 43.9l-11.8 8.5-11.8-7.8c-28.8-19.1-64.8-34-98.6-40.8-31.8-6.4-10.6-6-307.1-6-280.2 0-275.2-.1-300 4.1-45.9 7.7-92.8 28.7-129.5 58-10.9 8.7-29.7 27.5-38.4 38.4-28.3 35.6-44.7 72.7-52.4 119.4-1.5 9.2-1.7 34.4-2 291.6-.2 183.6.1 286 .7 294.5 2.5 32.4 10.1 60 24.2 88.5 14.2 28.7 31 51.2 54.9 73.5 34.1 32 79.1 55.4 127 66.3 31.7 7.2 6.3 6.7 314.5 6.7h277l14-2.2c92.9-14.9 166.7-67 205-144.8 11-22.4 17.7-43.4 22.2-70.2 1.7-10.3 1.8-24.8 1.8-302.3 0-309.6.2-295.9-4.6-318.5-7.7-36.4-25-72.3-49.7-103.2-7.9-10-9-11.6-7.4-11.1.8.3 35.3-35.7 44.9-46.9 9.4-10.9 11.5-16.3 6.3-16.3-4.1 0-33.1 16.4-40.5 22.9-9.6 8.5-5.3 3.7 17.1-18.7l25.1-25.1-2.9-3.6c-1.6-1.9-3.3-3.5-3.6-3.4-.4 0-4.1 2.1-8.2 4.6zM836.5 334.8c6.1 1.2 14.9 3.3 19.6 4.6 9.6 2.9 25.9 9.4 25.9 10.5 0 .4-8.2 7.8-18.2 16.6-131.9 115.4-266.2 268.4-386.9 441-9.7 13.7-20.7 29.6-24.5 35.3-3.8 5.6-7.4 10-8 9.8-.9-.3-137.4-81.8-218.1-130.2l-7.2-4.3-3 3.8-3.1 3.8 11.2 13.9c49.6 61.6 263.1 323.4 263.7 323.4.4 0 1.3-1 2-2.2.6-1.3.9-1.5.7-.6-.5 1.9 5 7.3 9.1 8.9 3.9 1.5 8.5-1.1 12-6.7 1.6-2.7 7.4-14.4 12.8-25.9 27.4-58.3 76.5-153.1 111-214 84.9-150.1 186.4-294.2 291.8-414.3 6.4-7.4 10.5-12.8 10.1-13.5-.4-.7.3-.3 1.5.8 5.9 5.2 17.2 25.8 22.1 40.3 6.5 19.5 6.1-1.4 5.8 312.7l-.3 285-2.7 10c-1.6 5.5-3.8 12.5-5 15.5-14.9 37.8-46.5 68.6-86.6 84.5-19.1 7.5-34.9 11-56.7 12.5-19 1.3-502.3 1.3-521.3 0-24.3-1.7-44.3-6.7-64.9-16.5-44.7-21.2-74.4-57.1-84-101.8-1.7-7.7-1.8-24.4-1.8-293.2 0-270.2.1-285.4 1.8-293.5 3.8-18 10-32.8 20.3-48.2 25.4-38.2 70.8-64.4 120.9-69.7 4.4-.5 127.5-.8 273.5-.7l265.5.2 11 2.2z" />
+            </svg>
+        ),
+
+        lvgl: {
+            parts: ["MAIN"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "PRESS_LOCK",
+                "CLICK_FOCUSABLE",
+                "ADV_HITTEST",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE",
+                "SCROLL_ON_FOCUS"
+            ],
+            defaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ON_FOCUS",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        }
+    });
+
+    constructor() {
+        super();
+
+        makeObservable(this, { text: observable });
+    }
+
+    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+        return runtime.wasm._lvglCreateCheckbox(
+            parentObj,
+            this.widgetIndex,
+            this.lvglCreateLeft,
+            this.lvglCreateTop,
+            this.lvglCreateWidth,
+            this.lvglCreateHeight,
+            runtime.wasm.allocateUTF8(this.text)
+        );
+    }
+
+    override lvglBuildObj(build: LVGLBuild) {
+        build.line(`lv_obj_t *obj = lv_checkbox_create(parent_obj);`);
+    }
+
+    override lvglBuildSpecific(build: LVGLBuild) {
+        build.line(`lv_checkbox_set_text(obj, ${escapeCString(this.text)});`);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+registerClass("LVGLArcWidget", LVGLArcWidget);
 registerClass("LVGLBarWidget", LVGLBarWidget);
 registerClass("LVGLButtonWidget", LVGLButtonWidget);
+registerClass("LVGLCheckboxWidget", LVGLCheckboxWidget);
 registerClass("LVGLDropdownWidget", LVGLDropdownWidget);
 registerClass("LVGLImageWidget", LVGLImageWidget);
 registerClass("LVGLLabelWidget", LVGLLabelWidget);
 registerClass("LVGLPanelWidget", LVGLPanelWidget);
 registerClass("LVGLRollerWidget", LVGLRollerWidget);
 registerClass("LVGLSliderWidget", LVGLSliderWidget);
+registerClass("LVGLSpinnerWidget", LVGLSpinnerWidget);
 registerClass("LVGLSwitchWidget", LVGLSwitchWidget);

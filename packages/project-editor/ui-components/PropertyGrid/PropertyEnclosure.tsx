@@ -17,6 +17,7 @@ export const PropertyEnclosure = observer(
         propertyMenuEnabled?: boolean;
         readOnly: boolean;
         updateObject: (propertyValues: Object) => void;
+        style?: React.CSSProperties;
     }> {
         render() {
             const {
@@ -40,7 +41,7 @@ export const PropertyEnclosure = observer(
             });
 
             return (
-                <tr className={className}>
+                <tr className={className} style={this.props.style}>
                     {property}
                     {isPropertyMenuSupported &&
                         !propertyInfo.propertyGridCollapsable && (

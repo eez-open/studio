@@ -235,6 +235,8 @@ export const PropertyGrid = observer(
                     );
                 }
 
+                const propertyGroup = propertyInfo.propertyGridGroup;
+
                 const propertyComponent = (
                     <PropertyEnclosure
                         key={propertyInfo.name}
@@ -246,10 +248,16 @@ export const PropertyGrid = observer(
                         propertyMenuEnabled={propertyMenuEnabled}
                         readOnly={propertyProps.readOnly}
                         updateObject={this.updateObject}
+                        style={{
+                            visibility:
+                                propertyGroup &&
+                                groupCollapsedStore.isCollapsed(propertyGroup)
+                                    ? "collapse"
+                                    : "visible"
+                        }}
                     />
                 );
 
-                const propertyGroup = propertyInfo.propertyGridGroup;
                 if (propertyGroup) {
                     let groupProperties = groupPropertiesArray.find(
                         groupProperties =>
@@ -328,9 +336,7 @@ export const PropertyGrid = observer(
                                 group={groupProperties.group}
                                 object={objects[0]}
                             />
-                            {!groupCollapsedStore.isCollapsed(
-                                groupProperties.group
-                            ) && groupProperties.properties}
+                            {groupProperties.properties}
                         </React.Fragment>
                     );
                 } else {

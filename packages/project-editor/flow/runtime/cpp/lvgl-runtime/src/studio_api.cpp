@@ -131,6 +131,38 @@ EM_PORT_API(lv_obj_t *) lvglCreateDropdown(lv_obj_t *parentObj, int32_t index, l
     return obj;
 }
 
+EM_PORT_API(lv_obj_t *) lvglCreateArc(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, int32_t range_min, int32_t range_max, int32_t value, int32_t bg_start_angle, int32_t bg_end_angle, lv_bar_mode_t mode, int32_t rotation) {
+    lv_obj_t *obj = lv_arc_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_arc_set_range(obj, range_min, range_max);
+    lv_arc_set_value(obj, value);
+    lv_arc_set_bg_angles(obj, bg_start_angle, bg_end_angle);
+    lv_arc_set_mode(obj, mode);
+    lv_arc_set_rotation(obj, rotation);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateSpinner(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+    lv_obj_t *obj = lv_spinner_create(parentObj, 1000, 60);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateCheckbox(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, const char *text) {
+    lv_obj_t *obj = lv_checkbox_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    lv_checkbox_set_text(obj, text);
+    setObjectIndex(obj, index);
+    return obj;
+}
 
 EM_PORT_API(void) lvglScreenLoad(unsigned page_index, lv_obj_t *obj) {
     lv_scr_load_anim(obj, (lv_scr_load_anim_t)screenLoad_animType, screenLoad_speed, screenLoad_delay, false);
@@ -266,6 +298,8 @@ void trt(lv_event_t *e) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#define LV_EVENT_CHECKED_STATE_CHANGED 0x78
+#define LV_EVENT_ARC_VALUE_CHANGED 0x79
 #define LV_EVENT_BAR_VALUE_CHANGED 0x7A
 #define LV_EVENT_BAR_VALUE_START_CHANGED 0x7B
 #define LV_EVENT_SLIDER_VALUE_CHANGED 0x7C
@@ -282,6 +316,28 @@ struct FlowEventCallbackData {
 void flow_event_callback(lv_event_t *e) {
     FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
     flowPropagateValue(data->page_index, data->component_index, data->output_or_property_index);
+}
+
+void flow_event_checked_state_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target(e);
+
+        FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+        bool value = lv_obj_has_state(ta, LV_STATE_CHECKED);
+        assignBooleanProperty(data->page_index, data->component_index, data->output_or_property_index, value, "Failed to assign Checked state");
+    }
+}
+
+void flow_event_arc_value_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target(e);
+
+        FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+        int32_t value = lv_arc_get_value(ta);
+        assignIntegerProperty(data->page_index, data->component_index, data->output_or_property_index, value, "Failed to assign Value in Arc widget");
+    }
 }
 
 void flow_event_bar_value_changed_callback(lv_event_t *e) {
@@ -355,9 +411,13 @@ EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filte
     data->component_index = component_index;
     data->output_or_property_index = output_or_property_index;
 
-    if (filter == LV_EVENT_BAR_VALUE_CHANGED) {
+    if (filter == LV_EVENT_CHECKED_STATE_CHANGED) {
+        lv_obj_add_event_cb(obj, flow_event_checked_state_changed_callback, LV_EVENT_VALUE_CHANGED, data);
+    } else if (filter == LV_EVENT_ARC_VALUE_CHANGED) {
+        lv_obj_add_event_cb(obj, flow_event_arc_value_changed_callback, LV_EVENT_VALUE_CHANGED, data);
+    } else if (filter == LV_EVENT_BAR_VALUE_CHANGED) {
         lv_obj_add_event_cb(obj, flow_event_bar_value_changed_callback, LV_EVENT_VALUE_CHANGED, data);
-    } else if (filter == LV_EVENT_BAR_VALUE_START_CHANGED) {
+    }else if (filter == LV_EVENT_BAR_VALUE_START_CHANGED) {
         lv_obj_add_event_cb(obj, flow_event_bar_value_start_changed_callback, LV_EVENT_VALUE_CHANGED, data);
     } else if (filter == LV_EVENT_SLIDER_VALUE_CHANGED) {
         lv_obj_add_event_cb(obj, flow_event_slider_value_changed_callback, LV_EVENT_VALUE_CHANGED, data);
@@ -392,6 +452,18 @@ EM_PORT_API(void) lvglUpdateBarValue(lv_obj_t *obj, unsigned page_index, unsigne
 
 EM_PORT_API(void) lvglUpdateBarValueStart(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
     addUpdateTask(UPDATE_TASK_TYPE_BAR_VALUE_START, obj, page_index, component_index, property_index);
+}
+
+EM_PORT_API(void) lvglUpdateArcValue(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_ARC_VALUE, obj, page_index, component_index, property_index);
+}
+
+EM_PORT_API(void) lvglUpdateCheckedState(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_CHECKED_STATE, obj, page_index, component_index, property_index);
+}
+
+EM_PORT_API(void) lvglUpdateDisabledState(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_DISABLED_STATE, obj, page_index, component_index, property_index);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

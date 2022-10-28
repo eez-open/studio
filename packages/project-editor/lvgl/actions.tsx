@@ -7,7 +7,9 @@ import {
     PropertyType,
     EezObject,
     ClassInfo,
-    MessageType
+    MessageType,
+    getId,
+    getParent
 } from "project-editor/core/object";
 
 import { ActionComponent } from "project-editor/flow/component";
@@ -31,6 +33,7 @@ import { Assets, DataBuffer } from "project-editor/build/assets";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import {
+    LVGLArcWidget,
     LVGLBarWidget,
     LVGLDropdownWidget,
     LVGLImageWidget,
@@ -49,7 +52,121 @@ import { buildExpression } from "project-editor/flow/expression";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const LVGL_ACTIONS = { CHANGE_SCREEN: 0, PLAY_ANIMATION: 1, SET_PROPERTY: 2 };
+const LVGL_ACTIONS = {
+    CHANGE_SCREEN: 0,
+    PLAY_ANIMATION: 1,
+    SET_PROPERTY: 2
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLActionType extends EezObject {
+    action: keyof typeof LVGL_ACTIONS;
+
+    static classInfo: ClassInfo = {
+        getClass: function (jsObject: any) {
+            if (jsObject.action == "CHANGE_SCREEN")
+                return LVGLChangeScreenActionType;
+            else if (jsObject.action == "PLAY_ANIMATION")
+                return LVGLPlayAnimationActionType;
+            return LVGLSetPropertyActionType;
+        },
+
+        properties: [
+            {
+                name: "action",
+                displayName: (object: LVGLActionType) => {
+                    const actions = getParent(object) as LVGLActionType[];
+                    if (actions.length < 2) {
+                        return "Action";
+                    }
+                    return `Action #${actions.indexOf(object) + 1}`;
+                },
+                type: PropertyType.Enum,
+                enumItems: Object.keys(LVGL_ACTIONS).map(id => ({
+                    id
+                })),
+                enumDisallowUndefined: true
+            }
+        ],
+
+        newItem: async (object: LVGLActionType[]) => {
+            const project = ProjectEditor.getProject(object);
+
+            const result = await showGenericDialog({
+                dialogDefinition: {
+                    title: "New LVGL Action",
+                    fields: [
+                        {
+                            name: "action",
+                            displayName: "Action type",
+                            type: "enum",
+                            enumItems: Object.keys(LVGL_ACTIONS).map(id => ({
+                                id,
+                                label: humanize(id)
+                            }))
+                        }
+                    ]
+                },
+                values: {
+                    action: "CHANGE_SCREEN"
+                },
+                dialogContext: project
+            });
+
+            const actionTypeProperties = {
+                action: result.values.action
+            };
+
+            let actionTypeObject;
+
+            if (result.values.action == "CHANGE_SCREEN") {
+                console.log(LVGLChangeScreenActionType.classInfo.defaultValue);
+                actionTypeObject = createObject<LVGLChangeScreenActionType>(
+                    project._DocumentStore,
+                    Object.assign(
+                        actionTypeProperties,
+                        LVGLChangeScreenActionType.classInfo.defaultValue
+                    ),
+                    LVGLChangeScreenActionType
+                );
+            } else if (result.values.action == "PLAY_ANIMATION") {
+                actionTypeObject = createObject<LVGLPlayAnimationActionType>(
+                    project._DocumentStore,
+                    Object.assign(
+                        actionTypeProperties,
+                        LVGLPlayAnimationActionType.classInfo.defaultValue
+                    ),
+                    LVGLPlayAnimationActionType
+                );
+            } else {
+                actionTypeObject = createObject<LVGLSetPropertyActionType>(
+                    project._DocumentStore,
+                    Object.assign(
+                        actionTypeProperties,
+                        LVGLSetPropertyActionType.classInfo.defaultValue
+                    ),
+                    LVGLSetPropertyActionType
+                );
+            }
+
+            return actionTypeObject;
+        }
+    };
+
+    constructor() {
+        super();
+        makeObservable(this, {});
+    }
+
+    build(assets: Assets, dataBuffer: DataBuffer) {}
+
+    get actionDescription(): React.ReactNode {
+        return "";
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 const FADE_MODES = {
     NONE: 0,
@@ -68,6 +185,98 @@ const FADE_MODES = {
     OUT_TOP: 13,
     OUT_BOTTOM: 14
 };
+
+export class LVGLChangeScreenActionType extends LVGLActionType {
+    screen: string;
+    fadeMode: keyof typeof FADE_MODES;
+    speed: number;
+    delay: number;
+
+    constructor() {
+        super();
+        makeObservable(this, {
+            screen: observable,
+            fadeMode: observable,
+            speed: observable,
+            delay: observable
+        });
+    }
+
+    static classInfo = makeDerivedClassInfo(LVGLActionType.classInfo, {
+        properties: [
+            {
+                name: "screen",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "pages"
+            },
+            {
+                name: "fadeMode",
+                type: PropertyType.Enum,
+                enumItems: Object.keys(FADE_MODES).map(id => ({
+                    id
+                })),
+                enumDisallowUndefined: true
+            },
+            {
+                name: "speed",
+                displayName: "Speed (ms):",
+                type: PropertyType.Number
+            },
+            {
+                name: "delay",
+                displayName: "Delay (ms):",
+                type: PropertyType.Number
+            }
+        ],
+        defaultValue: {
+            fadeMode: "FADE_ON",
+            speed: 200,
+            delay: 0
+        },
+        check: (object: LVGLChangeScreenActionType) => {
+            let messages: Message[] = [];
+
+            if (!object.screen) {
+                messages.push(propertyNotSetMessage(object, "screen"));
+            } else {
+                let page = findPage(getProject(object), object.screen);
+                if (!page) {
+                    messages.push(propertyNotFoundMessage(object, "screen"));
+                }
+            }
+
+            return messages;
+        }
+    });
+
+    override get actionDescription() {
+        return `Change screen: Screen=${humanize(this.screen)}, Speed=${
+            this.speed
+        }, Delay=${this.delay}`;
+    }
+
+    override build(assets: Assets, dataBuffer: DataBuffer) {
+        // screen
+        let screen: number = 0;
+        if (this.screen) {
+            screen = assets.getPageIndex(this, "screen");
+        }
+        dataBuffer.writeInt32(screen);
+
+        // fadeMode
+        dataBuffer.writeUint32(FADE_MODES[this.fadeMode]);
+
+        // speed
+        dataBuffer.writeUint32(this.speed);
+
+        // delay
+        dataBuffer.writeUint32(this.delay);
+    }
+}
+
+registerClass("LVGLChangeScreenActionType", LVGLChangeScreenActionType);
+
+////////////////////////////////////////////////////////////////////////////////
 
 const ANIM_PROPERTIES = {
     POSITION_X: 0,
@@ -88,140 +297,8 @@ const ANIM_PATHS = {
     BOUNCE: 5
 };
 
-////////////////////////////////////////////////////////////////////////////////
-
-const enum PropertyCode {
-    NONE,
-
-    BAR_VALUE,
-
-    BASIC_X,
-    BASIC_Y,
-    BASIC_WIDTH,
-    BASIC_HEIGHT,
-
-    DROPDOWN_SELECTED,
-
-    IMAGE_IMAGE,
-    IMAGE_ANGLE,
-    IMAGE_ZOOM,
-
-    LABEL_TEXT,
-
-    ROLLER_SELECTED,
-
-    SLIDER_VALUE
-}
-
-type PropertiesType = {
-    [targetType: string]: {
-        [propName: string]: {
-            code: PropertyCode;
-            type: "number" | "string" | "image";
-            anim: boolean;
-        };
-    };
-};
-
-const PROPERTIES = {
-    bar: {
-        value: {
-            code: PropertyCode.BAR_VALUE,
-            type: "number" as const,
-            anim: true
-        }
-    },
-    basic: {
-        x: { code: PropertyCode.BASIC_X, type: "number" as const, anim: false },
-        y: { code: PropertyCode.BASIC_Y, type: "number" as const, anim: false },
-        width: {
-            code: PropertyCode.BASIC_WIDTH,
-            type: "number" as const,
-            anim: false
-        },
-        height: {
-            code: PropertyCode.BASIC_HEIGHT,
-            type: "number" as const,
-            anim: false
-        }
-    },
-    dropdown: {
-        selected: {
-            code: PropertyCode.DROPDOWN_SELECTED,
-            type: "number" as const,
-            anim: false
-        }
-    },
-    image: {
-        image: {
-            code: PropertyCode.IMAGE_IMAGE,
-            type: "image" as const,
-            anim: false
-        },
-        angle: {
-            code: PropertyCode.IMAGE_ANGLE,
-            type: "number" as const,
-            anim: false
-        },
-        zoom: {
-            code: PropertyCode.IMAGE_ZOOM,
-            type: "number" as const,
-            anim: false
-        }
-    },
-    label: {
-        text: {
-            code: PropertyCode.LABEL_TEXT,
-            type: "string" as const,
-            anim: false
-        }
-    },
-    roller: {
-        selected: {
-            code: PropertyCode.ROLLER_SELECTED,
-            type: "number" as const,
-            anim: true
-        }
-    },
-    slider: {
-        value: {
-            code: PropertyCode.SLIDER_VALUE,
-            type: "number" as const,
-            anim: true
-        }
-    }
-};
-
-function setPropertyFilterTarget(
-    component: LVGLActionComponent,
-    lvglWidget: LVGLWidget
-) {
-    if (!lvglWidget.identifier) {
-        return false;
-    }
-
-    if (component.setPropTargetType == "bar") {
-        return lvglWidget instanceof LVGLBarWidget;
-    } else if (component.setPropTargetType == "basic") {
-        return true;
-    } else if (component.setPropTargetType == "dropdown") {
-        return lvglWidget instanceof LVGLDropdownWidget;
-    } else if (component.setPropTargetType == "image") {
-        return lvglWidget instanceof LVGLImageWidget;
-    } else if (component.setPropTargetType == "label") {
-        return lvglWidget instanceof LVGLLabelWidget;
-    } else if (component.setPropTargetType == "roller") {
-        return lvglWidget instanceof LVGLRollerWidget;
-    } else if (component.setPropTargetType == "slider") {
-        return lvglWidget instanceof LVGLSliderWidget;
-    } else {
-        return false;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export class AnimationItem extends EezObject {
+export class LVGLPlayAnimationActionType extends LVGLActionType {
+    target: string;
     property: keyof typeof ANIM_PROPERTIES;
     start: number;
     end: number;
@@ -233,21 +310,28 @@ export class AnimationItem extends EezObject {
 
     constructor() {
         super();
-
         makeObservable(this, {
-            property: observable,
-            start: observable,
-            end: observable,
-            delay: observable,
-            time: observable,
-            relative: observable,
-            instant: observable,
-            path: observable
+            target: observable,
+            delay: observable
         });
     }
 
-    static classInfo: ClassInfo = {
+    static classInfo = makeDerivedClassInfo(LVGLActionType.classInfo, {
         properties: [
+            {
+                name: "target",
+                type: PropertyType.Enum,
+                enumItems: (component: LVGLActionComponent) => {
+                    const page = getAncestorOfType(
+                        component,
+                        ProjectEditor.PageClass.classInfo
+                    ) as Page;
+                    return [...page._lvglWidgetIdentifiers.keys()].map(id => ({
+                        id,
+                        label: id
+                    }));
+                }
+            },
             {
                 name: "property",
                 type: PropertyType.Enum,
@@ -264,6 +348,7 @@ export class AnimationItem extends EezObject {
             },
             {
                 name: "delay",
+                displayName: "Delay (ms):",
                 type: PropertyType.Number
             },
             {
@@ -287,7 +372,6 @@ export class AnimationItem extends EezObject {
                 enumDisallowUndefined: true
             }
         ],
-
         defaultValue: {
             property: "POSITION_X",
             start: 0,
@@ -298,251 +382,302 @@ export class AnimationItem extends EezObject {
             instant: false,
             path: ""
         },
+        check: (object: LVGLPlayAnimationActionType) => {
+            let messages: Message[] = [];
 
-        newItem: async (eventHandlers: AnimationItem[]) => {
-            const project = ProjectEditor.getProject(eventHandlers);
+            if (!object.target) {
+                messages.push(propertyNotSetMessage(object, "target"));
+            } else {
+                const page = getAncestorOfType(
+                    object,
+                    ProjectEditor.PageClass.classInfo
+                ) as Page;
+                if (
+                    page._lvglWidgetIdentifiers.get(object.target) == undefined
+                ) {
+                    messages.push(propertyNotFoundMessage(object, "target"));
+                }
+            }
 
-            const result = await showGenericDialog({
-                dialogDefinition: {
-                    title: "New Event Handler",
-                    fields: [
-                        {
-                            name: "property",
-                            type: "enum",
-                            enumItems: Object.keys(ANIM_PROPERTIES).map(id => ({
-                                id,
-                                label: humanize(id)
-                            }))
-                        },
-                        {
-                            name: "start",
-                            type: "integer"
-                        },
-                        {
-                            name: "end",
-                            type: "integer"
-                        },
-                        {
-                            name: "delay",
-                            type: "integer"
-                        },
-                        {
-                            name: "time",
-                            type: "integer"
-                        },
-                        {
-                            name: "relative",
-                            type: "boolean"
-                        },
-                        {
-                            name: "instant",
-                            type: "boolean"
-                        },
-                        {
-                            name: "path",
-                            type: "enum",
-                            enumItems: Object.keys(ANIM_PATHS).map(id => ({
-                                id,
-                                label: humanize(id)
-                            }))
-                        }
-                    ]
-                },
-                values: {
-                    start: 0,
-                    end: 100,
-                    delay: 0,
-                    time: 1000,
-                    relative: true,
-                    instant: false,
-                    path: ""
-                },
-                dialogContext: project
-            });
-
-            const properties: Partial<AnimationItem> = {
-                property: result.values.property,
-                start: result.values.start,
-                end: result.values.end,
-                delay: result.values.delay,
-                time: result.values.time,
-                relative: result.values.relative,
-                instant: result.values.instant,
-                path: result.values.path
-            };
-
-            const playAnimationItem = createObject<AnimationItem>(
-                project._DocumentStore,
-                properties,
-                AnimationItem
-            );
-
-            return playAnimationItem;
+            return messages;
         }
-    };
+    });
+
+    override get actionDescription() {
+        return `Play animation: Target=${this.target}, Property=${
+            this.property
+        }, Start=${this.start}, End=${this.end}, Delay=${this.delay}, Time=${
+            this.time
+        }, Relative=${this.relative ? "On" : "Off"}, Instant=${
+            this.instant ? "On" : "Off"
+        } ${this.path}`;
+    }
+
+    override build(assets: Assets, dataBuffer: DataBuffer) {
+        // target
+        const page = getAncestorOfType(
+            this,
+            ProjectEditor.PageClass.classInfo
+        ) as Page;
+        dataBuffer.writeInt32(
+            page._lvglWidgetIdentifiers.get(this.target) ?? -1
+        );
+
+        // property
+        dataBuffer.writeUint32(ANIM_PROPERTIES[this.property]);
+
+        // start
+        dataBuffer.writeInt32(this.start);
+
+        // end
+        dataBuffer.writeInt32(this.end);
+
+        // delay
+        dataBuffer.writeUint32(this.delay);
+
+        // time
+        dataBuffer.writeUint32(this.time);
+
+        // flags
+        const ANIMATION_ITEM_FLAG_RELATIVE = 1 << 0;
+        const ANIMATION_ITEM_FLAG_INSTANT = 1 << 1;
+        dataBuffer.writeUint32(
+            (this.relative ? ANIMATION_ITEM_FLAG_RELATIVE : 0) |
+                (this.instant ? ANIMATION_ITEM_FLAG_INSTANT : 0)
+        );
+
+        // path
+        dataBuffer.writeUint32(ANIM_PATHS[this.path]);
+    }
 }
 
-export class LVGLActionComponent extends ActionComponent {
-    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: COMPONENT_TYPE_LVGLACTION,
-        label: (component: LVGLActionComponent) => {
-            if (component.action == "SET_PROPERTY") {
-                return `LVGL Set ${humanize(
-                    component.setPropTargetType
-                )} Property`;
-            }
-            return `LVGL ${humanize(component.action)}`;
+registerClass("LVGLPlayAnimationActionType", LVGLPlayAnimationActionType);
+
+////////////////////////////////////////////////////////////////////////////////
+
+const enum PropertyCode {
+    NONE,
+
+    ARC_VALUE,
+
+    BAR_VALUE,
+
+    BASIC_X,
+    BASIC_Y,
+    BASIC_WIDTH,
+    BASIC_HEIGHT,
+    BASIC_OPACITY,
+
+    DROPDOWN_SELECTED,
+
+    IMAGE_IMAGE,
+    IMAGE_ANGLE,
+    IMAGE_ZOOM,
+
+    LABEL_TEXT,
+
+    ROLLER_SELECTED,
+
+    SLIDER_VALUE
+}
+
+type PropertiesType = {
+    [targetType: string]: {
+        [propName: string]: {
+            code: PropertyCode;
+            type: "number" | "string" | "image";
+            animated: boolean;
+        };
+    };
+};
+
+const PROPERTIES = {
+    arc: {
+        value: {
+            code: PropertyCode.ARC_VALUE,
+            type: "number" as const,
+            animated: false
+        }
+    },
+    bar: {
+        value: {
+            code: PropertyCode.BAR_VALUE,
+            type: "number" as const,
+            animated: true
+        }
+    },
+    basic: {
+        x: {
+            code: PropertyCode.BASIC_X,
+            type: "number" as const,
+            animated: false
         },
-        componentPaletteGroupName: "LVGL Actions",
-        componentPaletteLabel: "LVGL",
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType === ProjectType.LVGL,
+        y: {
+            code: PropertyCode.BASIC_Y,
+            type: "number" as const,
+            animated: false
+        },
+        width: {
+            code: PropertyCode.BASIC_WIDTH,
+            type: "number" as const,
+            animated: false
+        },
+        height: {
+            code: PropertyCode.BASIC_HEIGHT,
+            type: "number" as const,
+            animated: false
+        },
+        opacity: {
+            code: PropertyCode.BASIC_OPACITY,
+            type: "number" as const,
+            animated: false
+        }
+    },
+    dropdown: {
+        selected: {
+            code: PropertyCode.DROPDOWN_SELECTED,
+            type: "number" as const,
+            animated: false
+        }
+    },
+    image: {
+        image: {
+            code: PropertyCode.IMAGE_IMAGE,
+            type: "image" as const,
+            animated: false
+        },
+        angle: {
+            code: PropertyCode.IMAGE_ANGLE,
+            type: "number" as const,
+            animated: false
+        },
+        zoom: {
+            code: PropertyCode.IMAGE_ZOOM,
+            type: "number" as const,
+            animated: false
+        }
+    },
+    label: {
+        text: {
+            code: PropertyCode.LABEL_TEXT,
+            type: "string" as const,
+            animated: false
+        }
+    },
+    roller: {
+        selected: {
+            code: PropertyCode.ROLLER_SELECTED,
+            type: "number" as const,
+            animated: true
+        }
+    },
+    slider: {
+        value: {
+            code: PropertyCode.SLIDER_VALUE,
+            type: "number" as const,
+            animated: true
+        }
+    }
+};
+
+function setPropertyFilterTarget(
+    actionType: LVGLSetPropertyActionType,
+    lvglWidget: LVGLWidget
+) {
+    if (!lvglWidget.identifier) {
+        return false;
+    }
+
+    if (actionType.targetType == "arc") {
+        return lvglWidget instanceof LVGLArcWidget;
+    } else if (actionType.targetType == "bar") {
+        return lvglWidget instanceof LVGLBarWidget;
+    } else if (actionType.targetType == "basic") {
+        return true;
+    } else if (actionType.targetType == "dropdown") {
+        return lvglWidget instanceof LVGLDropdownWidget;
+    } else if (actionType.targetType == "image") {
+        return lvglWidget instanceof LVGLImageWidget;
+    } else if (actionType.targetType == "label") {
+        return lvglWidget instanceof LVGLLabelWidget;
+    } else if (actionType.targetType == "roller") {
+        return lvglWidget instanceof LVGLRollerWidget;
+    } else if (actionType.targetType == "slider") {
+        return lvglWidget instanceof LVGLSliderWidget;
+    } else {
+        return false;
+    }
+}
+
+export class LVGLSetPropertyActionType extends LVGLActionType {
+    targetType: keyof typeof PROPERTIES;
+    target: string;
+    property: string;
+    animated: boolean;
+    value: number | string;
+    valueType: LVGLPropertyType;
+
+    constructor() {
+        super();
+        makeObservable(this, {
+            targetType: observable,
+            target: observable,
+            property: observable,
+            animated: observable,
+            value: observable,
+            valueType: observable
+        });
+    }
+
+    static classInfo = makeDerivedClassInfo(LVGLActionType.classInfo, {
         properties: [
             {
-                name: "action",
-                type: PropertyType.Enum,
-                enumItems: Object.keys(LVGL_ACTIONS).map(id => ({
-                    id
-                })),
-                enumDisallowUndefined: true,
-                propertyGridGroup: specificGroup
-            },
-            // CHANGE_SCREEN
-            {
-                name: "changeScreenTarget",
-                displayName: "screen",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "pages",
-                propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (component: LVGLActionComponent) =>
-                    component.action != "CHANGE_SCREEN"
-            },
-            {
-                name: "changeScreenFadeMode",
-                displayName: "Fade mode",
-                type: PropertyType.Enum,
-                enumItems: Object.keys(FADE_MODES).map(id => ({
-                    id
-                })),
-                enumDisallowUndefined: true,
-                propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (component: LVGLActionComponent) =>
-                    component.action != "CHANGE_SCREEN"
-            },
-            {
-                name: "changeScreenSpeed",
-                displayName: "Speed (ms):",
-                type: PropertyType.Number,
-                propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (component: LVGLActionComponent) =>
-                    component.action != "CHANGE_SCREEN"
-            },
-            {
-                name: "changeScreenDelay",
-                displayName: "Delay (ms):",
-                type: PropertyType.Number,
-                propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (lvglAction: LVGLActionComponent) =>
-                    lvglAction.action != "CHANGE_SCREEN"
-            },
-            // PLAY_ANIMATION
-            {
-                name: "animTarget",
-                displayName: "Target",
-                type: PropertyType.Enum,
-                enumItems: (component: LVGLActionComponent) => {
-                    const page = getAncestorOfType(
-                        component,
-                        ProjectEditor.PageClass.classInfo
-                    ) as Page;
-                    return [...page._lvglWidgetIdentifiers.keys()].map(id => ({
-                        id,
-                        label: id
-                    }));
-                },
-                propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (component: LVGLActionComponent) =>
-                    component.action != "PLAY_ANIMATION"
-            },
-            {
-                name: "animDelay",
-                displayName: "Delay (ms):",
-                type: PropertyType.Number,
-                propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (component: LVGLActionComponent) =>
-                    component.action != "PLAY_ANIMATION"
-            },
-            {
-                name: "animItems",
-                displayName: "Property animation definitions",
-                type: PropertyType.Array,
-                typeClass: AnimationItem,
-                arrayItemOrientation: "vertical",
-                propertyGridGroup: specificGroup,
-                partOfNavigation: false,
-                enumerable: false,
-                defaultValue: [],
-                hideInPropertyGrid: (component: LVGLActionComponent) =>
-                    component.action != "PLAY_ANIMATION"
-            },
-            // SET_PROPERTY
-            {
-                name: "setPropTargetType",
-                displayName: "Target type",
+                name: "targetType",
                 type: PropertyType.Enum,
                 enumItems: Object.keys(PROPERTIES).map(id => ({
                     id
                 })),
-                enumDisallowUndefined: true,
-                propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (component: LVGLActionComponent) =>
-                    component.action != "SET_PROPERTY"
+                enumDisallowUndefined: true
             },
             {
-                name: "setPropTarget",
+                name: "target",
                 displayName: "Target",
                 type: PropertyType.Enum,
-                enumItems: (component: LVGLActionComponent) => {
+                enumItems: (actionType: LVGLSetPropertyActionType) => {
                     const page = getAncestorOfType(
-                        component,
+                        actionType,
                         ProjectEditor.PageClass.classInfo
                     ) as Page;
                     return page._lvglWidgets
                         .filter(lvglWidget =>
-                            setPropertyFilterTarget(component, lvglWidget)
+                            setPropertyFilterTarget(actionType, lvglWidget)
                         )
                         .map(lvglWidget => ({
                             id: lvglWidget.identifier,
                             label: lvglWidget.identifier
                         }));
-                },
-                propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (component: LVGLActionComponent) =>
-                    component.action != "SET_PROPERTY"
+                }
             },
             {
-                name: "setPropProperty",
-                displayName: "Property",
+                name: "property",
                 type: PropertyType.Enum,
-                enumItems: (component: LVGLActionComponent) => {
-                    return Object.keys(
-                        PROPERTIES[component.setPropTargetType]
-                    ).map(id => ({
-                        id
-                    }));
+                enumItems: (actionType: LVGLSetPropertyActionType) => {
+                    return Object.keys(PROPERTIES[actionType.targetType]).map(
+                        id => ({
+                            id
+                        })
+                    );
                 },
-                enumDisallowUndefined: true,
-                propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (component: LVGLActionComponent) =>
-                    component.action != "SET_PROPERTY"
+                enumDisallowUndefined: true
             },
             ...makeExpressionProperty(
-                "setPropValue",
+                "value",
+                "any",
                 "input",
                 ["literal", "expression"],
                 {
-                    dynamicType: (component: LVGLActionComponent) => {
-                        const type = component.setPropPropertyInfo.type;
+                    dynamicType: (actionType: LVGLSetPropertyActionType) => {
+                        const type = actionType.propertyInfo.type;
                         return type == "image"
                             ? PropertyType.ObjectReference
                             : type == "number"
@@ -550,232 +685,264 @@ export class LVGLActionComponent extends ActionComponent {
                             : PropertyType.MultilineText;
                     },
                     dynamicTypeReferencedObjectCollectionPath: (
-                        component: LVGLActionComponent
+                        actionType: LVGLSetPropertyActionType
                     ) => {
-                        const type = component.setPropPropertyInfo.type;
+                        const type = actionType.propertyInfo.type;
                         return type == "image" ? "bitmaps" : undefined;
                     },
-                    displayName: (component: LVGLActionComponent) => {
-                        if (component.setPropPropertyInfo.type == "image") {
+                    displayName: (actionType: LVGLSetPropertyActionType) => {
+                        if (actionType.propertyInfo.type == "image") {
                             return "Image";
                         }
                         return "Value";
-                    },
-                    propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (component: LVGLActionComponent) =>
-                        component.action != "SET_PROPERTY"
+                    }
                 }
             ),
             {
-                name: "setPropAnim",
-                displayName: "Animated",
+                name: "animated",
                 type: PropertyType.Boolean,
                 checkboxStyleSwitch: true,
-                propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (component: LVGLActionComponent) =>
-                    component.action != "SET_PROPERTY" ||
-                    !component.setPropPropertyInfo.anim
+                hideInPropertyGrid: (actionType: LVGLSetPropertyActionType) =>
+                    !actionType.propertyInfo.animated
             }
         ],
-        beforeLoadHook: (
-            object: LVGLActionComponent,
-            objectJs: Partial<LVGLActionComponent>
-        ) => {
-            if (objectJs.action == "CHANGE_SCREEN") {
-                if ((objectJs as any).screen != undefined) {
-                    objectJs.changeScreenTarget = (objectJs as any).screen;
-                    delete (objectJs as any).screen;
-                }
-                if ((objectJs as any).fadeMode != undefined) {
-                    objectJs.changeScreenFadeMode = (objectJs as any).fadeMode;
-                    delete (objectJs as any).fadeMode;
-                }
-                if ((objectJs as any).speed != undefined) {
-                    objectJs.changeScreenSpeed = (objectJs as any).speed;
-                    delete (objectJs as any).speed;
-                }
-                if ((objectJs as any).delay != undefined) {
-                    objectJs.changeScreenDelay = (objectJs as any).delay;
-                    delete (objectJs as any).delay;
-                }
-            }
+        defaultValue: {
+            targetType: "bar",
+            property: "value",
+            animated: false,
+            valueType: "literal"
         },
-        check: (object: LVGLActionComponent) => {
+        check: (object: LVGLSetPropertyActionType) => {
             let messages: Message[] = [];
 
-            if (object.action == "CHANGE_SCREEN") {
-                if (!object.changeScreenTarget) {
-                    messages.push(propertyNotSetMessage(object, "screen"));
+            if (!object.target) {
+                messages.push(propertyNotSetMessage(object, "target"));
+            } else {
+                const page = getAncestorOfType(
+                    object,
+                    ProjectEditor.PageClass.classInfo
+                ) as Page;
+                const lvglWidgetIndex = page._lvglWidgetIdentifiers.get(
+                    object.target
+                );
+                if (lvglWidgetIndex == undefined) {
+                    messages.push(propertyNotFoundMessage(object, "target"));
                 } else {
-                    let page = findPage(
-                        getProject(object),
-                        object.changeScreenTarget
-                    );
-                    if (!page) {
+                    const lvglWidget = page._lvglWidgets[lvglWidgetIndex - 1];
+                    if (!setPropertyFilterTarget(object, lvglWidget)) {
                         messages.push(
-                            propertyNotFoundMessage(object, "screen")
+                            new Message(
+                                MessageType.ERROR,
+                                `Invalid target type`,
+                                getChildOfObject(object, "target")
+                            )
                         );
                     }
                 }
-            } else if (object.action == "PLAY_ANIMATION") {
-                if (!object.animTarget) {
-                    messages.push(propertyNotSetMessage(object, "animTarget"));
-                } else {
-                    const page = getAncestorOfType(
-                        object,
-                        ProjectEditor.PageClass.classInfo
-                    ) as Page;
-                    if (
-                        page._lvglWidgetIdentifiers.get(object.animTarget) ==
-                        undefined
-                    ) {
-                        messages.push(
-                            propertyNotFoundMessage(object, "animTarget")
+            }
+
+            if (object.propertyInfo.code == PropertyCode.NONE) {
+                messages.push(propertyNotSetMessage(object, "property"));
+            }
+
+            if (object.valueType == "literal") {
+                if (object.propertyInfo.type == "image") {
+                    if (object.value) {
+                        const bitmap = ProjectEditor.findBitmap(
+                            ProjectEditor.getProject(object),
+                            object.value
                         );
-                    }
-                }
-            } else if (object.action == "SET_PROPERTY") {
-                if (!object.setPropTarget) {
-                    messages.push(
-                        propertyNotSetMessage(object, "setPropTarget")
-                    );
-                } else {
-                    const page = getAncestorOfType(
-                        object,
-                        ProjectEditor.PageClass.classInfo
-                    ) as Page;
-                    const lvglWidgetIndex = page._lvglWidgetIdentifiers.get(
-                        object.setPropTarget
-                    );
-                    if (lvglWidgetIndex == undefined) {
-                        messages.push(
-                            propertyNotFoundMessage(object, "setPropTarget")
-                        );
+
+                        if (!bitmap) {
+                            messages.push(
+                                propertyNotFoundMessage(object, "value")
+                            );
+                        }
                     } else {
-                        const lvglWidget =
-                            page._lvglWidgets[lvglWidgetIndex - 1];
-                        if (!setPropertyFilterTarget(object, lvglWidget)) {
-                            messages.push(
-                                new Message(
-                                    MessageType.ERROR,
-                                    `Invalid target type`,
-                                    getChildOfObject(object, "setPropTarget")
-                                )
-                            );
-                        }
-                    }
-                }
-
-                if (object.setPropPropertyInfo.code == PropertyCode.NONE) {
-                    messages.push(
-                        propertyNotSetMessage(object, "setPropProperty")
-                    );
-                }
-
-                if (object.setPropValueType == "literal") {
-                    if (object.setPropPropertyInfo.type == "image") {
-                        if (object.setPropValue) {
-                            const bitmap = ProjectEditor.findBitmap(
-                                ProjectEditor.getProject(object),
-                                object.setPropValue
-                            );
-
-                            if (!bitmap) {
-                                messages.push(
-                                    propertyNotFoundMessage(
-                                        object,
-                                        "setPropValue"
-                                    )
-                                );
-                            }
-                        } else {
-                            messages.push(
-                                propertyNotSetMessage(object, "setPropValue")
-                            );
-                        }
+                        messages.push(propertyNotSetMessage(object, "value"));
                     }
                 }
             }
 
             return messages;
+        }
+    });
+
+    get propertyInfo() {
+        return (
+            (PROPERTIES as PropertiesType)[this.targetType][this.property] ?? {
+                code: PropertyCode.NONE,
+                type: "integer",
+                animated: false
+            }
+        );
+    }
+    get valueExpr() {
+        if (this.valueType == "expression") {
+            return this.value as string;
+        }
+        if (typeof this.value == "number") {
+            return this.value.toString();
+        }
+        return escapeCString(this.value);
+    }
+
+    override get actionDescription() {
+        return (
+            <>
+                {`Set property: ${this.target}.${
+                    this.propertyInfo.code != PropertyCode.NONE
+                        ? humanize(this.property)
+                        : "<not set>"
+                }`}
+                <LeftArrow />
+                {this.value}
+                {this.propertyInfo.animated
+                    ? `, Animated=${this.animated ? "On" : "Off"}`
+                    : ""}
+            </>
+        );
+    }
+
+    override build(assets: Assets, dataBuffer: DataBuffer) {
+        // target
+        const page = getAncestorOfType(
+            this,
+            ProjectEditor.PageClass.classInfo
+        ) as Page;
+        dataBuffer.writeInt32(
+            page._lvglWidgetIdentifiers.get(this.target) ?? -1
+        );
+
+        // property
+        dataBuffer.writeUint32(this.propertyInfo.code);
+
+        // value
+        dataBuffer.writeObjectOffset(() =>
+            buildExpression(
+                assets,
+                dataBuffer,
+                getAncestorOfType(
+                    this,
+                    LVGLActionComponent.classInfo
+                ) as LVGLActionComponent,
+                this.valueExpr
+            )
+        );
+
+        // animated
+        dataBuffer.writeUint32(this.animated ? 1 : 0);
+    }
+}
+
+registerClass("LVGLSetPropertyActionType", LVGLSetPropertyActionType);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLActionComponent extends ActionComponent {
+    actions: LVGLActionType[];
+
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: COMPONENT_TYPE_LVGLACTION,
+        componentPaletteGroupName: "LVGL Actions",
+        componentPaletteLabel: "LVGL",
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+        properties: [
+            {
+                name: "actions",
+                type: PropertyType.Array,
+                typeClass: LVGLActionType,
+                propertyGridGroup: specificGroup,
+                arrayItemOrientation: "vertical",
+                partOfNavigation: false,
+                enumerable: false,
+                defaultValue: []
+            }
+        ],
+        beforeLoadHook: (object: LVGLActionComponent, objectJs: any) => {
+            if (objectJs.action != undefined) {
+                if (objectJs.action == "CHANGE_SCREEN") {
+                    let action: Partial<LVGLChangeScreenActionType> = {
+                        action: objectJs.action
+                    };
+
+                    action.screen =
+                        objectJs.changeScreenTarget ?? objectJs.screen;
+                    action.fadeMode =
+                        objectJs.changeScreenFadeMode ?? objectJs.fadeMode;
+                    action.speed = objectJs.changeScreenSpeed ?? objectJs.speed;
+                    action.delay = objectJs.changeScreenDelay ?? objectJs.delay;
+
+                    objectJs.actions = [action];
+                } else if (objectJs.action == "PLAY_ANIMATION") {
+                    objectJs.actions = objectJs.animItems.map((item: any) => {
+                        let action: Partial<LVGLPlayAnimationActionType> = {
+                            action: objectJs.action
+                        };
+
+                        action.target = objectJs.animTarget;
+                        action.property = item.property;
+                        action.start = item.start;
+                        action.end = item.end;
+                        action.delay = objectJs.animDelay + item.delay;
+                        action.time = item.time;
+                        action.relative = item.relative;
+                        action.instant = item.instant;
+                        action.path = item.path;
+
+                        return action;
+                    });
+                } else if (objectJs.action == "SET_PROPERTY") {
+                    let action: Partial<LVGLSetPropertyActionType> = {
+                        action: objectJs.action
+                    };
+
+                    action.targetType = objectJs.setPropTargetType;
+                    action.target = objectJs.setPropTarget;
+                    action.property = objectJs.setPropProperty;
+                    action.value = objectJs.setPropValue;
+                    action.valueType = objectJs.setPropValueType;
+                    action.animated = objectJs.setPropAnim;
+
+                    objectJs.actions = [action];
+                }
+
+                delete objectJs.screen;
+                delete objectJs.changeScreenTarget;
+                delete objectJs.fadeMode;
+                delete objectJs.changeScreenFadeMode;
+                delete objectJs.speed;
+                delete objectJs.changeScreenSpeed;
+                delete objectJs.delay;
+                delete objectJs.changeScreenDelay;
+
+                delete objectJs.animTarget;
+                delete objectJs.animDelay;
+                delete objectJs.animItems;
+
+                delete objectJs.setPropTargetType;
+                delete objectJs.setPropTarget;
+                delete objectJs.setPropProperty;
+                delete objectJs.setPropAnim;
+                delete objectJs.setPropValue;
+                delete objectJs.setPropValueType;
+            }
         },
         icon: (
             <img src="data:image/png;base64,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" />
         ),
         componentHeaderColor: "#FBDEDE",
         defaultValue: {
-            action: "CHANGE_SCREEN",
-            changeScreenFadeMode: "FADE_ON",
-            changeScreenSpeed: 200,
-            changeScreenDelay: 0,
-            animDelay: 0,
-            setPropTargetType: "bar",
-            setPropProperty: "value",
-            setPropAnim: false,
-            setPropValueType: "literal"
+            actions: []
         }
     });
-
-    action: keyof typeof LVGL_ACTIONS;
-
-    // CHANGE_SCREEN
-    changeScreenTarget: string;
-    changeScreenFadeMode: keyof typeof FADE_MODES;
-    changeScreenSpeed: number;
-    changeScreenDelay: number;
-
-    // PLAY_ANIMATION
-    animTarget: string;
-    animDelay: number;
-    animItems: AnimationItem[];
-
-    // SET_PROPERTY
-    setPropTargetType: keyof typeof PROPERTIES;
-    setPropTarget: string;
-    setPropProperty: string;
-    setPropAnim: boolean;
-    setPropValue: number | string;
-    setPropValueType: LVGLPropertyType;
-
-    get setPropPropertyInfo() {
-        return (
-            (PROPERTIES as PropertiesType)[this.setPropTargetType][
-                this.setPropProperty
-            ] ?? {
-                code: PropertyCode.NONE,
-                type: "integer",
-                anim: false
-            }
-        );
-    }
-    get setPropValueExpr() {
-        if (this.setPropValueType == "expression") {
-            return this.setPropValue as string;
-        }
-        if (typeof this.setPropValue == "number") {
-            return this.setPropValue.toString();
-        }
-        return escapeCString(this.setPropValue);
-    }
 
     constructor() {
         super();
 
         makeObservable(this, {
-            action: observable,
-            changeScreenTarget: observable,
-            changeScreenFadeMode: observable,
-            changeScreenSpeed: observable,
-            changeScreenDelay: observable,
-            animTarget: observable,
-            animDelay: observable,
-            animItems: observable,
-            setPropTargetType: observable,
-            setPropTarget: observable,
-            setPropProperty: observable,
-            setPropAnim: observable,
-            setPropValue: observable,
-            setPropValueType: observable
+            actions: observable
         });
     }
 
@@ -803,137 +970,27 @@ export class LVGLActionComponent extends ActionComponent {
         ];
     }
 
-    get actionDescription() {
-        if (this.action == "CHANGE_SCREEN") {
-            return `${this.changeScreenTarget}, ${humanize(
-                this.changeScreenFadeMode
-            )}, Speed=${this.changeScreenSpeed} Delay=${
-                this.changeScreenDelay
-            }`;
-        } else if (this.action == "PLAY_ANIMATION") {
-            return (
-                `${this.animTarget}, Delay=${this.animDelay}\n` +
-                this.animItems
-                    .map(
-                        item =>
-                            `${item.property} Start=${item.start} End=${
-                                item.end
-                            } Delay=${item.delay} Time=${item.time} Relative=${
-                                item.relative ? "On" : "Off"
-                            } Instant=${item.instant ? "On" : "Off"} ${
-                                item.path
-                            }`
-                    )
-                    .join("\n")
-            );
-        } else if (this.action == "SET_PROPERTY") {
-            return (
-                <>
-                    {`${this.setPropTarget}.${
-                        this.setPropPropertyInfo.code != PropertyCode.NONE
-                            ? humanize(this.setPropProperty)
-                            : "<not set>"
-                    }`}
-                    <LeftArrow />
-                    {this.setPropValue}
-                    {this.setPropPropertyInfo.anim
-                        ? ` Animated=${this.setPropAnim ? "On" : "Off"}`
-                        : ""}
-                </>
-            );
-        }
-        return ``;
-    }
-
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
             <div className="body">
-                <pre>{this.actionDescription}</pre>
+                {this.actions.map((action, i) => (
+                    <pre key={getId(action)}>
+                        {this.actions.length > 1 ? `#${i + 1} ` : ""}
+                        {action.actionDescription}
+                    </pre>
+                ))}
             </div>
         );
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        // action
-        dataBuffer.writeUint32(LVGL_ACTIONS[this.action]);
+        dataBuffer.writeArray(this.actions, action => {
+            // action
+            dataBuffer.writeUint32(LVGL_ACTIONS[action.action]);
 
-        if (this.action == "CHANGE_SCREEN") {
-            // screen
-            let screen: number = 0;
-            if (this.changeScreenTarget) {
-                screen = assets.getPageIndex(this, "changeScreenTarget");
-            }
-            dataBuffer.writeInt32(screen);
-
-            // fadeMode
-            dataBuffer.writeUint32(FADE_MODES[this.changeScreenFadeMode]);
-
-            // speed
-            dataBuffer.writeUint32(this.changeScreenSpeed);
-
-            // delay
-            dataBuffer.writeUint32(this.changeScreenDelay);
-        } else if (this.action == "PLAY_ANIMATION") {
-            // target
-            const page = getAncestorOfType(
-                this,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
-            dataBuffer.writeInt32(
-                page._lvglWidgetIdentifiers.get(this.animTarget) ?? -1
-            );
-
-            // delay
-            dataBuffer.writeUint32(this.animDelay);
-
-            dataBuffer.writeArray(this.animItems, item => {
-                // property
-                dataBuffer.writeUint32(ANIM_PROPERTIES[item.property]);
-
-                // start
-                dataBuffer.writeInt32(item.start);
-
-                // end
-                dataBuffer.writeInt32(item.end);
-
-                // delay
-                dataBuffer.writeUint32(item.delay);
-
-                // time
-                dataBuffer.writeUint32(item.time);
-
-                // flags
-                const ANIMATION_ITEM_FLAG_RELATIVE = 1 << 0;
-                const ANIMATION_ITEM_FLAG_INSTANT = 1 << 1;
-                dataBuffer.writeUint32(
-                    (item.relative ? ANIMATION_ITEM_FLAG_RELATIVE : 0) |
-                        (item.instant ? ANIMATION_ITEM_FLAG_INSTANT : 0)
-                );
-
-                // delay
-                dataBuffer.writeUint32(ANIM_PATHS[item.path]);
-            });
-        } else if (this.action == "SET_PROPERTY") {
-            // target
-            const page = getAncestorOfType(
-                this,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
-            dataBuffer.writeInt32(
-                page._lvglWidgetIdentifiers.get(this.setPropTarget) ?? -1
-            );
-
-            // property
-            dataBuffer.writeUint32(this.setPropPropertyInfo.code);
-
-            // value
-            dataBuffer.writeObjectOffset(() =>
-                buildExpression(assets, dataBuffer, this, this.setPropValueExpr)
-            );
-
-            // animated
-            dataBuffer.writeUint32(this.setPropAnim ? 1 : 0);
-        }
+            // ...specific
+            action.build(assets, dataBuffer);
+        });
     }
 }
 

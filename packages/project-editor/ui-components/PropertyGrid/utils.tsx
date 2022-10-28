@@ -17,6 +17,26 @@ import {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export function getObjectPropertyValue(
+    object: IEezObject,
+    propertyInfo: PropertyInfo
+) {
+    let value = (object as any)[propertyInfo.name];
+
+    if (value === undefined && propertyInfo.inheritable) {
+        let inheritedValue = getInheritedValue(object, propertyInfo.name);
+        if (inheritedValue) {
+            value = inheritedValue.value;
+        }
+    }
+
+    if (value === undefined) {
+        value = propertyInfo.defaultValue;
+    }
+
+    return value;
+}
+
 export function getPropertyValue(
     objects: IEezObject[],
     propertyInfo: PropertyInfo
@@ -26,29 +46,12 @@ export function getPropertyValue(
         return undefined;
     }
 
-    function getObjectPropertyValue(object: IEezObject) {
-        let value = (object as any)[propertyInfo.name];
-
-        if (value === undefined && propertyInfo.inheritable) {
-            let inheritedValue = getInheritedValue(object, propertyInfo.name);
-            if (inheritedValue) {
-                value = inheritedValue.value;
-            }
-        }
-
-        if (value === undefined) {
-            value = propertyInfo.defaultValue;
-        }
-
-        return value;
-    }
-
     const result = {
-        value: getObjectPropertyValue(objects[0])
+        value: getObjectPropertyValue(objects[0], propertyInfo)
     };
 
     for (let i = 1; i < objects.length; i++) {
-        const value = getObjectPropertyValue(objects[i]);
+        const value = getObjectPropertyValue(objects[i], propertyInfo);
         if (value !== result.value) {
             return undefined;
         }

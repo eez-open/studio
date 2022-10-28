@@ -80,6 +80,21 @@ extern "C" int32_t evalIntegerProperty(unsigned pageIndex, unsigned componentInd
     return intValue;
 }
 
+extern "C" bool evalBooleanProperty(unsigned pageIndex, unsigned componentIndex, unsigned propertyIndex, const char *errorMessage) {
+    eez::flow::FlowState *flowState = eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
+    eez::Value value;
+    if (!eez::flow::evalProperty(flowState, componentIndex, propertyIndex, value, errorMessage)) {
+        return 0;
+    }
+    int err;
+    bool booleanValue = value.toBool(&err);
+    if (err) {
+        eez::flow::throwError(flowState, componentIndex, errorMessage);
+        return 0;
+    }
+    return booleanValue;
+}
+
 extern "C" void assignIntegerProperty(unsigned pageIndex, unsigned componentIndex, unsigned propertyIndex, int32_t value, const char *errorMessage) {
     eez::flow::FlowState *flowState = eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
 
@@ -91,6 +106,21 @@ extern "C" void assignIntegerProperty(unsigned pageIndex, unsigned componentInde
     }
 
     eez::Value srcValue(value, eez::VALUE_TYPE_INT32);
+
+    eez::flow::assignValue(flowState, componentIndex, dstValue, srcValue);
+}
+
+extern "C" void assignBooleanProperty(unsigned pageIndex, unsigned componentIndex, unsigned propertyIndex, bool value, const char *errorMessage) {
+    eez::flow::FlowState *flowState = eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
+
+    auto component = flowState->flow->components[componentIndex];
+
+    eez::Value dstValue;
+    if (!eez::flow::evalAssignableExpression(flowState, componentIndex, component->properties[propertyIndex]->evalInstructions, dstValue, errorMessage)) {
+        return;
+    }
+
+    eez::Value srcValue(value, eez::VALUE_TYPE_BOOLEAN);
 
     eez::flow::assignValue(flowState, componentIndex, dstValue, srcValue);
 }
@@ -110,6 +140,10 @@ void doUpdateTasks() {
             int32_t value_new = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value Left in Slider widget");
             int32_t value_cur = lv_slider_get_left_value(updateTask.obj);
             if (value_new != value_cur) lv_slider_set_left_value(updateTask.obj, value_new, LV_ANIM_OFF);
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_ARC_VALUE) {
+            int32_t value_new = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Arc widget");
+            int32_t value_cur = lv_bar_get_value(updateTask.obj);
+            if (value_new != value_cur) lv_arc_set_value(updateTask.obj, value_new);
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_BAR_VALUE) {
             int32_t value_new = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Bar widget");
             int32_t value_cur = lv_bar_get_value(updateTask.obj);
@@ -118,6 +152,20 @@ void doUpdateTasks() {
             int32_t value_new = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value Start in Bar widget");
             int32_t value_cur = lv_bar_get_start_value(updateTask.obj);
             if (value_new != value_cur) lv_bar_set_start_value(updateTask.obj, value_new, LV_ANIM_OFF);
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_CHECKED_STATE) {
+            bool state_new = evalBooleanProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Checked state");
+            bool state_cur = lv_obj_has_state(updateTask.obj, LV_STATE_CHECKED);
+            if (state_new != state_cur) {
+                if (state_new) lv_obj_add_state(updateTask.obj, LV_STATE_CHECKED);
+                else lv_obj_clear_state(updateTask.obj, LV_STATE_CHECKED);
+            }
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_DISABLED_STATE) {
+            bool state_new = evalBooleanProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Disabled state");
+            bool state_cur = lv_obj_has_state(updateTask.obj, LV_STATE_DISABLED);
+            if (state_new != state_cur) {
+                if (state_new) lv_obj_add_state(updateTask.obj, LV_STATE_DISABLED);
+                else lv_obj_clear_state(updateTask.obj, LV_STATE_DISABLED);
+            }
         }
     }
 

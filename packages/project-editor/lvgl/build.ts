@@ -270,7 +270,7 @@ export class LVGLBuild {
                     }
 
                     if (widget.hasEventHandler) {
-                        widget.buildEventHandlerSpecific(build);
+                        widget.buildEventHandler(build);
                     }
 
                     build.unindent();

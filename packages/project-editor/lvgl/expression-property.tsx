@@ -17,6 +17,8 @@ import { Property } from "project-editor/ui-components/PropertyGrid/Property";
 import { expressionBuilder } from "project-editor/flow/expression/ExpressionBuilder";
 import type { LVGLLabelWidget } from "project-editor/lvgl/widgets";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { getPropertyValue } from "project-editor/ui-components/PropertyGrid/utils";
+import { ValueType } from "eez-studio-types";
 
 export type LVGLPropertyType =
     | "literal"
@@ -30,38 +32,44 @@ const LVGLProperty = observer(
         declare context: React.ContextType<typeof ProjectContext>;
 
         render() {
+            const { propertyInfo, objects, updateObject, readOnly } =
+                this.props;
+
             const classInfo = getClassInfo(this.props.objects[0]);
 
             const typePropertyInfo = findPropertyByNameInClassInfo(
                 classInfo,
-                this.props.propertyInfo.name + "Type"
+                propertyInfo.name + "Type"
             )!;
 
-            const type: LVGLPropertyType = (this.props.objects[0] as any)[
+            const type: LVGLPropertyType = (objects[0] as any)[
                 typePropertyInfo.name
             ];
 
-            let propertyInfoType = this.props.propertyInfo.type;
-            let referencedObjectCollectionPath =
-                this.props.propertyInfo.referencedObjectCollectionPath;
-            if (this.props.propertyInfo.dynamicType) {
-                propertyInfoType = this.props.propertyInfo.dynamicType(
-                    this.props.objects[0]
-                );
+            let propertyInfoType;
+            if (propertyInfo.dynamicType) {
+                propertyInfoType = propertyInfo.dynamicType(objects[0]);
+            } else {
+                propertyInfoType =
+                    propertyInfo.expressionType == "integer"
+                        ? PropertyType.Number
+                        : propertyInfo.expressionType == "string"
+                        ? PropertyType.MultilineText
+                        : propertyInfo.expressionType == "boolean"
+                        ? PropertyType.Boolean
+                        : propertyInfo.type;
             }
-            if (
-                this.props.propertyInfo
-                    .dynamicTypeReferencedObjectCollectionPath
-            ) {
+
+            let referencedObjectCollectionPath =
+                propertyInfo.referencedObjectCollectionPath;
+            if (propertyInfo.dynamicTypeReferencedObjectCollectionPath) {
                 referencedObjectCollectionPath =
-                    this.props.propertyInfo.dynamicTypeReferencedObjectCollectionPath(
-                        this.props.objects[0]
+                    propertyInfo.dynamicTypeReferencedObjectCollectionPath(
+                        objects[0]
                     );
             }
 
-            console.log(propertyInfoType, referencedObjectCollectionPath);
-
-            const propertyInfo = Object.assign({}, this.props.propertyInfo, {
+            const valuePropertyInfo = Object.assign({}, propertyInfo, {
                 type:
                     type == "expression"
                         ? this.context.projectTypeTraits.hasFlowSupport
@@ -69,12 +77,16 @@ const LVGLProperty = observer(
                             : PropertyType.ObjectReference
                         : propertyInfoType,
 
+                checkboxStyleSwitch: true,
+
                 referencedObjectCollectionPath:
                     type == "expression"
                         ? "variables/globalVariables"
                         : referencedObjectCollectionPath,
 
                 propertyGridColumnComponent: undefined,
+
+                disableBitmapPreview: true,
 
                 onSelect:
                     type == "expression"
@@ -96,24 +108,46 @@ const LVGLProperty = observer(
                 isOnSelectAvailable: () => {
                     return this.context.projectTypeTraits.hasFlowSupport;
                 }
-            });
+            } as Partial<PropertyInfo>);
+
+            let bitmap;
+            if (referencedObjectCollectionPath === "bitmaps") {
+                const getPropertyValueResult = getPropertyValue(
+                    objects,
+                    propertyInfo
+                );
+                if (getPropertyValueResult) {
+                    bitmap = ProjectEditor.findBitmap(
+                        this.context.project,
+                        getPropertyValueResult.value
+                    );
+                }
+            }
 
             return (
-                <div className="EezStudio_LVGProperty">
-                    <Property
-                        propertyInfo={propertyInfo}
-                        objects={this.props.objects}
-                        readOnly={this.props.readOnly}
-                        updateObject={this.props.updateObject}
-                    />
+                <>
+                    <div className="EezStudio_LVGProperty">
+                        <Property
+                            propertyInfo={valuePropertyInfo}
+                            objects={objects}
+                            readOnly={readOnly}
+                            updateObject={updateObject}
+                        />
 
-                    <Property
-                        propertyInfo={typePropertyInfo}
-                        objects={this.props.objects}
-                        readOnly={this.props.readOnly}
-                        updateObject={this.props.updateObject}
-                    />
-                </div>
+                        <Property
+                            propertyInfo={typePropertyInfo}
+                            objects={objects}
+                            readOnly={readOnly}
+                            updateObject={updateObject}
+                        />
+                    </div>
+                    {bitmap && bitmap.imageSrc && (
+                        <img
+                            className="EezStudio_Property_BitmapPreview"
+                            src={bitmap.imageSrc}
+                        />
+                    )}
+                </>
             );
         }
     }
@@ -121,6 +155,7 @@ const LVGLProperty = observer(
 
 export function makeExpressionProperty(
     name: string,
+    expressionType: ValueType,
     flowProperty: FlowPropertyType,
     types: LVGLPropertyType[],
     props: Partial<PropertyInfo>
@@ -139,8 +174,9 @@ export function makeExpressionProperty(
                     return (widget as any)[name + "Type"] == "expression"
                         ? flowProperty
                         : undefined;
-                }
-            },
+                },
+                expressionType
+            } as PropertyInfo,
             props
         ),
         {
@@ -158,6 +194,6 @@ export function makeExpressionProperty(
             enumDisallowUndefined: true,
             propertyGridGroup: props.propertyGridGroup,
             hideInPropertyGrid: true
-        }
+        } as PropertyInfo
     ];
 }

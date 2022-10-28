@@ -324,7 +324,8 @@ export class ScpiParameter extends EezObject {
             {
                 name: "isOptional",
                 displayName: "Is optional?",
-                type: PropertyType.Boolean
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
             },
             {
                 name: "description",
