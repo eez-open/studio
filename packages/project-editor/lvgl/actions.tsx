@@ -229,7 +229,7 @@ export class LVGLChangeScreenActionType extends LVGLActionType {
             }
         ],
         defaultValue: {
-            fadeMode: "FADE_ON",
+            fadeMode: "FADE_IN",
             speed: 200,
             delay: 0
         },
