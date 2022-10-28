@@ -417,6 +417,8 @@ export interface IWasmFlowRuntime {
     _lvglUpdateArcValue(obj: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateCheckedState(obj: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateDisabledState(obj: number, page_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateHiddenFlag(obj: number, page_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateClickableFlag(obj: number, page_index: number, component_index: number, property_index: number): void;
 }
 
 export interface IDashboardComponentContext {

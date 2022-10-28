@@ -298,10 +298,8 @@ void trt(lv_event_t *e) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define LV_EVENT_CHECKED_STATE_CHANGED 0x78
-#define LV_EVENT_ARC_VALUE_CHANGED 0x79
-#define LV_EVENT_BAR_VALUE_CHANGED 0x7A
-#define LV_EVENT_BAR_VALUE_START_CHANGED 0x7B
+#define LV_EVENT_CHECKED_STATE_CHANGED 0x7A
+#define LV_EVENT_ARC_VALUE_CHANGED 0x7B
 #define LV_EVENT_SLIDER_VALUE_CHANGED 0x7C
 #define LV_EVENT_SLIDER_VALUE_LEFT_CHANGED 0x7D
 #define LV_EVENT_CHECKED   0x7E
@@ -415,10 +413,6 @@ EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filte
         lv_obj_add_event_cb(obj, flow_event_checked_state_changed_callback, LV_EVENT_VALUE_CHANGED, data);
     } else if (filter == LV_EVENT_ARC_VALUE_CHANGED) {
         lv_obj_add_event_cb(obj, flow_event_arc_value_changed_callback, LV_EVENT_VALUE_CHANGED, data);
-    } else if (filter == LV_EVENT_BAR_VALUE_CHANGED) {
-        lv_obj_add_event_cb(obj, flow_event_bar_value_changed_callback, LV_EVENT_VALUE_CHANGED, data);
-    }else if (filter == LV_EVENT_BAR_VALUE_START_CHANGED) {
-        lv_obj_add_event_cb(obj, flow_event_bar_value_start_changed_callback, LV_EVENT_VALUE_CHANGED, data);
     } else if (filter == LV_EVENT_SLIDER_VALUE_CHANGED) {
         lv_obj_add_event_cb(obj, flow_event_slider_value_changed_callback, LV_EVENT_VALUE_CHANGED, data);
     } else if (filter == LV_EVENT_SLIDER_VALUE_LEFT_CHANGED) {
@@ -464,6 +458,14 @@ EM_PORT_API(void) lvglUpdateCheckedState(lv_obj_t *obj, unsigned page_index, uns
 
 EM_PORT_API(void) lvglUpdateDisabledState(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
     addUpdateTask(UPDATE_TASK_TYPE_DISABLED_STATE, obj, page_index, component_index, property_index);
+}
+
+EM_PORT_API(void) lvglUpdateHiddenFlag(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_HIDDEN_FLAG, obj, page_index, component_index, property_index);
+}
+
+EM_PORT_API(void) lvglUpdateClickableFlag(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_CLICKABLE_FLAG, obj, page_index, component_index, property_index);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

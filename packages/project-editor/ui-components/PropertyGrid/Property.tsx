@@ -175,6 +175,10 @@ export const Property = observer(
                 return;
             }
 
+            runInAction(() => {
+                this._value = newValue;
+            });
+
             if (this.props.propertyInfo.type === PropertyType.Number) {
                 if (
                     newValue.trim() === "" &&
@@ -194,10 +198,6 @@ export const Property = observer(
 
             this.props.updateObject({
                 [this.props.propertyInfo.name]: newValue
-            });
-
-            runInAction(() => {
-                this._value = newValue;
             });
         }
 

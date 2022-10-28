@@ -250,9 +250,10 @@ export class LVGLChangeScreenActionType extends LVGLActionType {
     });
 
     override get actionDescription() {
-        return `Change screen: Screen=${humanize(this.screen)}, Speed=${
-            this.speed
-        }, Delay=${this.delay}`;
+        let singleItem = (getParent(this) as LVGLActionType[]).length == 1;
+        return `${singleItem ? "" : "Change screen: "}Screen=${humanize(
+            this.screen
+        )}, Speed=${this.speed}, Delay=${this.delay}`;
     }
 
     override build(assets: Assets, dataBuffer: DataBuffer) {
@@ -404,13 +405,14 @@ export class LVGLPlayAnimationActionType extends LVGLActionType {
     });
 
     override get actionDescription() {
-        return `Play animation: Target=${this.target}, Property=${
-            this.property
-        }, Start=${this.start}, End=${this.end}, Delay=${this.delay}, Time=${
-            this.time
-        }, Relative=${this.relative ? "On" : "Off"}, Instant=${
-            this.instant ? "On" : "Off"
-        } ${this.path}`;
+        let singleItem = (getParent(this) as LVGLActionType[]).length == 1;
+        return `${singleItem ? "" : "Play animation: "}Target=${
+            this.target
+        }, Property=${this.property}, Start=${this.start}, End=${
+            this.end
+        }, Delay=${this.delay}, Time=${this.time}, Relative=${
+            this.relative ? "On" : "Off"
+        }, Instant=${this.instant ? "On" : "Off"} ${this.path}`;
     }
 
     override build(assets: Assets, dataBuffer: DataBuffer) {
@@ -467,6 +469,7 @@ const enum PropertyCode {
     BASIC_WIDTH,
     BASIC_HEIGHT,
     BASIC_OPACITY,
+    BASIC_HIDDEN,
     BASIC_CHECKED,
     BASIC_DISABLED,
 
@@ -532,6 +535,11 @@ const PROPERTIES = {
         opacity: {
             code: PropertyCode.BASIC_OPACITY,
             type: "number" as const,
+            animated: false
+        },
+        hidden: {
+            code: PropertyCode.BASIC_HIDDEN,
+            type: "boolean" as const,
             animated: false
         },
         checked: {
@@ -811,13 +819,14 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
             return this.value as string;
         }
 
-        return escapeCString(this.value);
+        return escapeCString(this.value ?? "");
     }
 
     override get actionDescription() {
+        let singleItem = (getParent(this) as LVGLActionType[]).length == 1;
         return (
             <>
-                {`Set property: ${this.target}.${
+                {`${singleItem ? "" : "Set property: "}${this.target}.${
                     this.propertyInfo.code != PropertyCode.NONE
                         ? humanize(this.property)
                         : "<not set>"
@@ -875,6 +884,12 @@ export class LVGLActionComponent extends ActionComponent {
         componentPaletteLabel: "LVGL",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
+        label: (component: LVGLActionComponent) => {
+            if (component.actions.length == 1) {
+                return `LVGL ${humanize(component.actions[0].action)}`;
+            }
+            return "LVGL";
+        },
         properties: [
             {
                 name: "actions",

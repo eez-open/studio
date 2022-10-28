@@ -211,7 +211,8 @@ export const PropertyGrid = observer(
                                 propertyInfo.propertyGridCollapsable ? 3 : 2
                             }
                             style={
-                                propertyInfo.type === PropertyType.Array
+                                propertyInfo.type === PropertyType.Array ||
+                                propertyInfo.type === PropertyType.Any
                                     ? {
                                           width: "100%"
                                       }

@@ -16,7 +16,9 @@ import {
     IEezObject,
     PropertyInfo,
     getProperty,
-    isPropertyHidden
+    isPropertyHidden,
+    LVGL_REACTIVE_STATES,
+    LVGL_REACTIVE_FLAGS
 } from "project-editor/core/object";
 import {
     getAncestorOfType,
@@ -34,6 +36,7 @@ import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
 import {
     AutoSize,
+    Component,
     ComponentOutput,
     isFlowProperty,
     isTimelineEditorActive,
@@ -59,14 +62,15 @@ import {
     EventHandler,
     eventHandlersProperty,
     LVGLWidgetFlagsProperty,
+    LVGLWidgetStatesProperty,
     LV_EVENT_ARC_VALUE_CHANGED,
-    LV_EVENT_BAR_VALUE_CHANGED,
-    LV_EVENT_BAR_VALUE_START_CHANGED,
     LV_EVENT_CHECKED_STATE_CHANGED,
     LV_EVENT_SLIDER_VALUE_CHANGED,
     LV_EVENT_SLIDER_VALUE_LEFT_CHANGED
 } from "project-editor/lvgl/widget-common";
 import {
+    expressionPropertyBuildEventHandlerSpecific,
+    expressionPropertyBuildTickSpecific,
     LVGLPropertyType,
     makeExpressionProperty
 } from "project-editor/lvgl/expression-property";
@@ -189,12 +193,26 @@ export const GeometryProperty = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function flagEnabledInWidget(
+    component: Component,
+    flag: keyof typeof LVGL_FLAG_CODES
+) {
+    const classInfo = getClassInfo(component);
+    return (
+        component instanceof LVGLWidget &&
+        classInfo.lvgl!.flags.indexOf(flag) != -1
+    );
+}
+
 function stateEnabledInWidget(
-    widget: LVGLWidget,
+    component: Component,
     state: keyof typeof LVGL_STATE_CODES
 ) {
-    const classInfo = getClassInfo(widget);
-    return classInfo.lvgl!.states.indexOf(state) != -1;
+    const classInfo = getClassInfo(component);
+    return (
+        component instanceof LVGLWidget &&
+        classInfo.lvgl!.states.indexOf(state) != -1
+    );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -209,6 +227,10 @@ export class LVGLWidget extends Widget {
 
     children: LVGLWidget[];
 
+    hiddenFlag: string | boolean;
+    hiddenFlagType: LVGLPropertyType;
+    clickableFlag: string | boolean;
+    clickableFlagType: LVGLPropertyType;
     flags: string;
     scrollbarMode: string;
     scrollDirection: string;
@@ -217,8 +239,7 @@ export class LVGLWidget extends Widget {
     checkedStateType: LVGLPropertyType;
     disabledState: string | boolean;
     disabledStateType: LVGLPropertyType;
-    focusedState: boolean;
-    pressedState: boolean;
+    states: string;
 
     localStyles: LVGLStylesDefinition;
 
@@ -369,54 +390,36 @@ export class LVGLWidget extends Widget {
                 typeClass: LVGLWidget,
                 hideInPropertyGrid: true
             },
+            ...makeExpressionProperty(
+                "hiddenFlag",
+                "boolean",
+                "input",
+                ["literal", "expression"],
+                {
+                    displayName: "Hidden",
+                    propertyGridGroup: flagsGroup,
+                    hideInPropertyGrid: (widget: LVGLWidget) =>
+                        !flagEnabledInWidget(widget, "HIDDEN")
+                }
+            ),
+            ...makeExpressionProperty(
+                "clickableFlag",
+                "boolean",
+                "input",
+                ["literal", "expression"],
+                {
+                    displayName: "Clickable",
+                    propertyGridGroup: flagsGroup,
+                    hideInPropertyGrid: (widget: LVGLWidget) =>
+                        !flagEnabledInWidget(widget, "CLICKABLE")
+                }
+            ),
             {
                 name: "flags",
                 type: PropertyType.String,
                 propertyGridGroup: flagsGroup,
                 propertyGridRowComponent: LVGLWidgetFlagsProperty,
                 enumerable: false
-            },
-            ...makeExpressionProperty(
-                "checkedState",
-                "boolean",
-                "input",
-                ["literal", "expression"],
-                {
-                    displayName: "Checked",
-                    propertyGridGroup: statesGroup,
-                    hideInPropertyGrid: (widget: LVGLWidget) =>
-                        !stateEnabledInWidget(widget, "CHECKED")
-                }
-            ),
-            ...makeExpressionProperty(
-                "disabledState",
-                "boolean",
-                "input",
-                ["literal", "expression"],
-                {
-                    displayName: "Disabled",
-                    propertyGridGroup: statesGroup,
-                    hideInPropertyGrid: (widget: LVGLWidget) =>
-                        !stateEnabledInWidget(widget, "DISABLED")
-                }
-            ),
-            {
-                name: "focusedState",
-                displayName: "Focused",
-                type: PropertyType.Boolean,
-                checkboxStyleSwitch: true,
-                propertyGridGroup: statesGroup,
-                hideInPropertyGrid: (widget: LVGLWidget) =>
-                    !stateEnabledInWidget(widget, "FOCUSED")
-            },
-            {
-                name: "pressedState",
-                displayName: "Pressed",
-                type: PropertyType.Boolean,
-                checkboxStyleSwitch: true,
-                propertyGridGroup: statesGroup,
-                hideInPropertyGrid: (widget: LVGLWidget) =>
-                    !stateEnabledInWidget(widget, "PRESSED")
             },
             {
                 name: "scrollbarMode",
@@ -478,6 +481,37 @@ export class LVGLWidget extends Widget {
                 enumDisallowUndefined: true,
                 propertyGridGroup: flagsGroup
             },
+            ...makeExpressionProperty(
+                "checkedState",
+                "boolean",
+                "assignable",
+                ["literal", "expression"],
+                {
+                    displayName: "Checked",
+                    propertyGridGroup: statesGroup,
+                    hideInPropertyGrid: (widget: LVGLWidget) =>
+                        !stateEnabledInWidget(widget, "CHECKED")
+                }
+            ),
+            ...makeExpressionProperty(
+                "disabledState",
+                "boolean",
+                "input",
+                ["literal", "expression"],
+                {
+                    displayName: "Disabled",
+                    propertyGridGroup: statesGroup,
+                    hideInPropertyGrid: (widget: LVGLWidget) =>
+                        !stateEnabledInWidget(widget, "DISABLED")
+                }
+            ),
+            {
+                name: "states",
+                type: PropertyType.String,
+                propertyGridGroup: statesGroup,
+                propertyGridRowComponent: LVGLWidgetStatesProperty,
+                enumerable: false
+            },
             {
                 name: "localStyles",
                 type: PropertyType.Object,
@@ -504,32 +538,61 @@ export class LVGLWidget extends Widget {
                 jsWidget.heightUnit = "px";
             }
 
-            if (jsWidget.states != undefined) {
-                const states = jsWidget.states.split("|");
-                delete (jsWidget as any).states;
-                if ("CHECKED" in states) {
-                    jsWidget.checkedState = true;
-                    jsWidget.checkedStateType = "literal";
-                }
-                if ("DISABLED" in states) {
-                    jsWidget.disabledState = true;
-                    jsWidget.disabledStateType = "literal";
-                }
-                if ("FOCUSED" in states) {
-                    jsWidget.focusedState = true;
-                }
-                if ("PRESSED" in states) {
-                    jsWidget.pressedState = true;
-                }
+            // migrate states
+            if ((jsWidget as any).states != undefined) {
+                const states = (jsWidget as any).states.split(
+                    "|"
+                ) as (keyof typeof LVGL_STATE_CODES)[];
+
+                states.forEach(state => {
+                    if (LVGL_REACTIVE_STATES.indexOf(state) != -1) {
+                        const propName = state.toLowerCase() + "State";
+                        (jsWidget as any)[propName] = true;
+                        (jsWidget as any)[propName + "Type"] = "literal";
+                    }
+                });
+
+                (jsWidget as any).states = states
+                    .filter(state => LVGL_REACTIVE_STATES.indexOf(state) == -1)
+                    .join("|");
+            } else {
+                (jsWidget as any).states = "";
             }
 
-            if (jsWidget.checkedStateType == undefined) {
-                jsWidget.checkedStateType = "literal";
+            LVGL_REACTIVE_STATES.forEach(state => {
+                const propName = state.toLowerCase() + "State";
+                if ((jsWidget as any)[propName + "Type"] == undefined) {
+                    (jsWidget as any)[propName + "Type"] = "literal";
+                }
+            });
+
+            // migrate flags
+            if ((jsWidget as any).flags != undefined) {
+                const flags = (jsWidget as any).flags.split(
+                    "|"
+                ) as (keyof typeof LVGL_FLAG_CODES)[];
+
+                flags.forEach(flag => {
+                    if (LVGL_REACTIVE_FLAGS.indexOf(flag) != -1) {
+                        const propName = flag.toLowerCase() + "Flag";
+                        (jsWidget as any)[propName] = true;
+                        (jsWidget as any)[propName + "Type"] = "literal";
+                    }
+                });
+
+                (jsWidget as any).flags = flags
+                    .filter(flag => LVGL_REACTIVE_FLAGS.indexOf(flag) == -1)
+                    .join("|");
+            } else {
+                (jsWidget as any).flags = "";
             }
 
-            if (jsWidget.disabledStateType == undefined) {
-                jsWidget.disabledStateType = "literal";
-            }
+            LVGL_REACTIVE_FLAGS.forEach(flag => {
+                const propName = flag.toLowerCase() + "Flag";
+                if ((jsWidget as any)[propName + "Type"] == undefined) {
+                    (jsWidget as any)[propName + "Type"] = "literal";
+                }
+            });
         },
 
         defaultValue: {
@@ -543,6 +606,8 @@ export class LVGLWidget extends Widget {
             heightUnit: "px",
             scrollbarMode: "auto",
             scrollDirection: "all",
+            hiddenFlagType: "literal",
+            clickableFlagType: "literal",
             checkedStateType: "literal",
             disabledStateType: "literal"
         },
@@ -567,14 +632,18 @@ export class LVGLWidget extends Widget {
             heightUnit: observable,
             children: observable,
             flags: observable,
+            hiddenFlag: observable,
+            hiddenFlagType: observable,
+            clickableFlag: observable,
+            clickableFlagType: observable,
             scrollbarMode: observable,
             scrollDirection: observable,
             checkedState: observable,
             checkedStateType: observable,
             disabledState: observable,
             disabledStateType: observable,
-            focusedState: observable,
-            pressedState: observable,
+            states: observable,
+            allStates: computed,
             localStyles: observable,
             eventHandlers: observable,
             state: computed,
@@ -722,42 +791,56 @@ export class LVGLWidget extends Widget {
         return { flowIndex, componentIndex, propertyIndex };
     }
 
-    get states() {
-        const states: (keyof typeof LVGL_STATE_CODES)[] = [];
+    get allStates() {
+        const states = this.states.split(
+            "|"
+        ) as (keyof typeof LVGL_STATE_CODES)[];
 
-        if (this.checkedStateType == "literal") {
-            if (this.checkedState as boolean) {
-                states.push("CHECKED");
-            }
-        } else {
-            const classInfo = getClassInfo(this);
-            if ("CHECKED" in (classInfo.lvgl!.defaultStates ?? "").split("|")) {
-                states.push("CHECKED");
-            }
-        }
+        LVGL_REACTIVE_STATES.forEach(state => {
+            const propName = state.toLowerCase() + "State";
 
-        if (this.disabledStateType == "literal") {
-            if (this.disabledState as boolean) {
-                states.push("DISABLED");
+            if ((this as any)[propName + "Type"] == "literal") {
+                if ((this as any)[propName]) {
+                    if (states.indexOf(state) == -1) {
+                        states.push(state);
+                    }
+                }
+            } else {
+                const classInfo = getClassInfo(this);
+                if (state in (classInfo.lvgl!.defaultStates ?? "").split("|")) {
+                    if (states.indexOf(state) == -1) {
+                        states.push(state);
+                    }
+                }
             }
-        } else {
-            const classInfo = getClassInfo(this);
-            if (
-                "DISABLED" in (classInfo.lvgl!.defaultStates ?? "").split("|")
-            ) {
-                states.push("DISABLED");
-            }
-        }
-
-        if (this.focusedState as boolean) {
-            states.push("FOCUSED");
-        }
-
-        if (this.pressedState as boolean) {
-            states.push("PRESSED");
-        }
+        });
 
         return states.join("|");
+    }
+
+    get allFlags() {
+        const flags = this.flags.split("|") as (keyof typeof LVGL_FLAG_CODES)[];
+
+        LVGL_REACTIVE_FLAGS.forEach(flag => {
+            const propName = flag.toLowerCase() + "Flag";
+
+            if ((this as any)[propName + "Type"] == "literal") {
+                if ((this as any)[propName]) {
+                    if (flags.indexOf(flag) == -1) {
+                        flags.push(flag);
+                    }
+                }
+            } else {
+                const classInfo = getClassInfo(this);
+                if (flag in (classInfo.lvgl!.defaultFlags ?? "").split("|")) {
+                    if (flags.indexOf(flag) == -1) {
+                        flags.push(flag);
+                    }
+                }
+            }
+        });
+
+        return flags.join("|");
     }
 
     override lvglCreate(
@@ -808,9 +891,7 @@ export class LVGLWidget extends Widget {
         {
             const { added, cleared } = changes(
                 (classInfo.lvgl!.defaultFlags ?? "").split("|"),
-                (this.flags || "").split(
-                    "|"
-                ) as (keyof typeof LVGL_FLAG_CODES)[]
+                this.allFlags.split("|") as (keyof typeof LVGL_FLAG_CODES)[]
             );
 
             if (added.length > 0) {
@@ -826,6 +907,32 @@ export class LVGLWidget extends Widget {
                 );
             }
 
+            const hiddenFlagExpr = this.getExpressionPropertyData(
+                runtime,
+                "hiddenFlag"
+            );
+            if (hiddenFlagExpr) {
+                runtime.wasm._lvglUpdateHiddenFlag(
+                    obj,
+                    hiddenFlagExpr.flowIndex,
+                    hiddenFlagExpr.componentIndex,
+                    hiddenFlagExpr.propertyIndex
+                );
+            }
+
+            const clickableFlagExpr = this.getExpressionPropertyData(
+                runtime,
+                "clickableFlag"
+            );
+            if (clickableFlagExpr) {
+                runtime.wasm._lvglUpdateClickableFlag(
+                    obj,
+                    clickableFlagExpr.flowIndex,
+                    clickableFlagExpr.componentIndex,
+                    clickableFlagExpr.propertyIndex
+                );
+            }
+
             if (this.hiddenInEditor) {
                 runtime.wasm._lvglObjAddFlag(
                     obj,
@@ -838,9 +945,7 @@ export class LVGLWidget extends Widget {
         {
             const { added, cleared } = changes(
                 (classInfo.lvgl!.defaultStates ?? "").split("|"),
-                (this.states || "").split(
-                    "|"
-                ) as (keyof typeof LVGL_STATE_CODES)[]
+                this.allStates.split("|") as (keyof typeof LVGL_STATE_CODES)[]
             );
 
             if (added.length > 0) {
@@ -956,9 +1061,7 @@ export class LVGLWidget extends Widget {
         {
             const { added, cleared } = changes(
                 (classInfo.lvgl!.defaultFlags ?? "").split("|"),
-                (this.flags || "").split(
-                    "|"
-                ) as (keyof typeof LVGL_FLAG_CODES)[]
+                this.allFlags.split("|") as (keyof typeof LVGL_FLAG_CODES)[]
             );
 
             if (added.length > 0) {
@@ -982,9 +1085,7 @@ export class LVGLWidget extends Widget {
         {
             const { added, cleared } = changes(
                 (classInfo.lvgl!.defaultStates ?? "").split("|"),
-                (this.states || "").split(
-                    "|"
-                ) as (keyof typeof LVGL_STATE_CODES)[]
+                this.allStates.split("|") as (keyof typeof LVGL_STATE_CODES)[]
             );
 
             if (added.length > 0) {
@@ -1045,26 +1146,26 @@ export class LVGLWidget extends Widget {
                 );
 
                 build.line(
-                    `bool state_new = evalBooleanProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Checked state");`
+                    `bool new_val = evalBooleanProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Checked state");`
                 );
             } else {
                 build.line(
-                    `bool state_new = ${build.getVariableGetterFunctionName(
+                    `bool new_val = ${build.getVariableGetterFunctionName(
                         this.checkedState as string
                     )}();`
                 );
             }
 
             build.line(
-                `bool state_cur = lv_obj_has_state(screen->${build.getWidgetStructFieldName(
+                `bool cur_val = lv_obj_has_state(screen->${build.getWidgetStructFieldName(
                     this
                 )}, LV_STATE_CHECKED);`
             );
 
-            build.line(`if (state_new != state_cur) {`);
+            build.line(`if (new_val != cur_val) {`);
             build.indent();
             build.line(
-                `if (state_new) lv_obj_add_state(screen->${build.getWidgetStructFieldName(
+                `if (new_val) lv_obj_add_state(screen->${build.getWidgetStructFieldName(
                     this
                 )}, LV_STATE_CHECKED);`
             );
@@ -1100,26 +1201,26 @@ export class LVGLWidget extends Widget {
                 );
 
                 build.line(
-                    `bool state_new = evalBooleanProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Disabled state");`
+                    `bool new_val = evalBooleanProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Disabled state");`
                 );
             } else {
                 build.line(
-                    `bool state_new = ${build.getVariableGetterFunctionName(
+                    `bool new_val = ${build.getVariableGetterFunctionName(
                         this.disabledState as string
                     )}();`
                 );
             }
 
             build.line(
-                `bool state_cur = lv_obj_has_state(screen->${build.getWidgetStructFieldName(
+                `bool cur_val = lv_obj_has_state(screen->${build.getWidgetStructFieldName(
                     this
                 )}, LV_STATE_DISABLED);`
             );
 
-            build.line(`if (state_new != state_cur) {`);
+            build.line(`if (new_val != cur_val) {`);
             build.indent();
             build.line(
-                `if (state_new) lv_obj_add_state(screen->${build.getWidgetStructFieldName(
+                `if (new_val) lv_obj_add_state(screen->${build.getWidgetStructFieldName(
                     this
                 )}, LV_STATE_DISABLED);`
             );
@@ -1127,6 +1228,116 @@ export class LVGLWidget extends Widget {
                 `else lv_obj_clear_state(screen->${build.getWidgetStructFieldName(
                     this
                 )}, LV_STATE_DISABLED);`
+            );
+            build.unindent();
+            build.line(`}`);
+
+            build.unindent();
+            build.line(`}`);
+        }
+
+        if (this.hiddenFlagType == "expression") {
+            build.line(`{`);
+            build.indent();
+
+            if (
+                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
+            ) {
+                const page = getAncestorOfType(
+                    this,
+                    ProjectEditor.PageClass.classInfo
+                ) as Page;
+
+                let flowIndex = build.assets.getFlowIndex(page);
+                let componentIndex = build.assets.getComponentIndex(this);
+                const propertyIndex = build.assets.getComponentPropertyIndex(
+                    this,
+                    "hiddenFlag"
+                );
+
+                build.line(
+                    `bool new_val = evalBooleanProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Hidden flag");`
+                );
+            } else {
+                build.line(
+                    `bool cur_val = ${build.getVariableGetterFunctionName(
+                        this.hiddenFlag as string
+                    )}();`
+                );
+            }
+
+            build.line(
+                `bool cur_val = lv_obj_has_flag(screen->${build.getWidgetStructFieldName(
+                    this
+                )}, LV_OBJ_FLAG_HIDDEN);`
+            );
+
+            build.line(`if (new_val != cur_val) {`);
+            build.indent();
+            build.line(
+                `if (new_val) lv_obj_add_flag(screen->${build.getWidgetStructFieldName(
+                    this
+                )}, LV_OBJ_FLAG_HIDDEN);`
+            );
+            build.line(
+                `else lv_obj_clear_flag(screen->${build.getWidgetStructFieldName(
+                    this
+                )}, LV_OBJ_FLAG_HIDDEN);`
+            );
+            build.unindent();
+            build.line(`}`);
+
+            build.unindent();
+            build.line(`}`);
+        }
+
+        if (this.clickableFlagType == "expression") {
+            build.line(`{`);
+            build.indent();
+
+            if (
+                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
+            ) {
+                const page = getAncestorOfType(
+                    this,
+                    ProjectEditor.PageClass.classInfo
+                ) as Page;
+
+                let flowIndex = build.assets.getFlowIndex(page);
+                let componentIndex = build.assets.getComponentIndex(this);
+                const propertyIndex = build.assets.getComponentPropertyIndex(
+                    this,
+                    "clickableFlag"
+                );
+
+                build.line(
+                    `bool new_val = evalBooleanProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Hidden flag");`
+                );
+            } else {
+                build.line(
+                    `bool cur_val = ${build.getVariableGetterFunctionName(
+                        this.clickableFlag as string
+                    )}();`
+                );
+            }
+
+            build.line(
+                `bool cur_val = lv_obj_has_flag(screen->${build.getWidgetStructFieldName(
+                    this
+                )}, LV_OBJ_FLAG_CLICKABLE);`
+            );
+
+            build.line(`if (new_val != cur_val) {`);
+            build.indent();
+            build.line(
+                `if (new_val) lv_obj_add_flag(screen->${build.getWidgetStructFieldName(
+                    this
+                )}, LV_OBJ_FLAG_CLICKABLE);`
+            );
+            build.line(
+                `else lv_obj_clear_flag(screen->${build.getWidgetStructFieldName(
+                    this
+                )}, LV_OBJ_FLAG_CLICKABLE);`
             );
             build.unindent();
             build.line(`}`);
@@ -1559,56 +1770,20 @@ export class LVGLLabelWidget extends LVGLWidget {
         }
 
         if (this.textType == "literal") {
-            build.line(`lv_label_set_text(obj, ${escapeCString(this.text)});`);
+            build.line(
+                `lv_label_set_text(obj, ${escapeCString(this.text ?? "")});`
+            );
         }
     }
 
     override lvglBuildTickSpecific(build: LVGLBuild) {
-        if (this.textType == "expression") {
-            build.line(`{`);
-            build.indent();
-
-            if (
-                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
-            ) {
-                const page = getAncestorOfType(
-                    this,
-                    ProjectEditor.PageClass.classInfo
-                ) as Page;
-
-                let flowIndex = build.assets.getFlowIndex(page);
-                let componentIndex = build.assets.getComponentIndex(this);
-                const propertyIndex = build.assets.getComponentPropertyIndex(
-                    this,
-                    "text"
-                );
-
-                build.line(
-                    `const char *text_new = evalTextProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Text in Label widget");`
-                );
-            } else {
-                build.line(
-                    `const char *text_new = ${build.getVariableGetterFunctionName(
-                        this.text
-                    )}();`
-                );
-            }
-
-            build.line(
-                `const char *text_cur = lv_label_get_text(screen->${build.getWidgetStructFieldName(
-                    this
-                )});`
-            );
-
-            build.line(
-                `if (strcmp(text_new, text_cur) != 0) lv_label_set_text(screen->${build.getWidgetStructFieldName(
-                    this
-                )}, text_new);`
-            );
-
-            build.unindent();
-            build.line(`}`);
-        }
+        expressionPropertyBuildTickSpecific<LVGLLabelWidget>(
+            build,
+            this,
+            "text" as const,
+            "lv_label_get_text",
+            "lv_label_set_text"
+        );
     }
 }
 
@@ -1628,7 +1803,8 @@ export class LVGLButtonWidget extends LVGLWidget {
             top: 0,
             width: 100,
             height: 50,
-            flags: "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_ON_FOCUS|SCROLL_MOMENTUM|SCROLL_CHAIN"
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_ON_FOCUS|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            clickableFlag: true
         },
 
         icon: (
@@ -1705,7 +1881,8 @@ export class LVGLPanelWidget extends LVGLWidget {
             top: 0,
             width: 100,
             height: 50,
-            flags: "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            clickableFlag: true
         },
 
         icon: (
@@ -2057,7 +2234,8 @@ export class LVGLSliderWidget extends LVGLWidget {
             top: 0,
             width: 150,
             height: 10,
-            flags: "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            clickableFlag: true,
             min: 0,
             max: 100,
             mode: "NORMAL",
@@ -2150,7 +2328,11 @@ export class LVGLSliderWidget extends LVGLWidget {
             this.min,
             this.max,
             SLIDER_MODES[this.mode],
-            valueExpr ? 0 : (this.value as number),
+            valueExpr
+                ? !valueLeftExpr
+                    ? (this.valueLeft as number)
+                    : 0
+                : (this.value as number),
             valueLeftExpr ? 0 : (this.valueLeft as number)
         );
 
@@ -2223,7 +2405,13 @@ export class LVGLSliderWidget extends LVGLWidget {
             }
         }
 
-        if (this.mode == "RANGE" && this.valueType == "literal") {
+        if (this.mode == "RANGE" && this.valueLeftType == "literal") {
+            if (this.valueType == "expression") {
+                build.line(
+                    `lv_slider_set_value(obj, ${this.valueLeft}, LV_ANIM_OFF);`
+                );
+            }
+
             build.line(
                 `lv_slider_set_left_value(obj, ${this.valueLeft}, LV_ANIM_OFF);`
             );
@@ -2231,170 +2419,42 @@ export class LVGLSliderWidget extends LVGLWidget {
     }
 
     override lvglBuildTickSpecific(build: LVGLBuild) {
-        if (this.valueType == "expression") {
-            build.line(`{`);
-            build.indent();
+        expressionPropertyBuildTickSpecific<LVGLSliderWidget>(
+            build,
+            this,
+            "value" as const,
+            "lv_slider_get_value",
+            "lv_slider_set_value",
+            ", LV_ANIM_OFF"
+        );
 
-            if (
-                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
-            ) {
-                const page = getAncestorOfType(
-                    this,
-                    ProjectEditor.PageClass.classInfo
-                ) as Page;
-
-                let flowIndex = build.assets.getFlowIndex(page);
-                let componentIndex = build.assets.getComponentIndex(this);
-                const propertyIndex = build.assets.getComponentPropertyIndex(
-                    this,
-                    "value"
-                );
-
-                build.line(
-                    `int32_t value_new = evalIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Value in Slider widget");`
-                );
-            } else {
-                build.line(
-                    `int32_t value_new = ${build.getVariableGetterFunctionName(
-                        this.value as string
-                    )}();`
-                );
-            }
-
-            build.line(
-                `int32_t value_cur = lv_slider_get_value(screen->${build.getWidgetStructFieldName(
-                    this
-                )});`
-            );
-
-            build.line(
-                `if (value_new != value_cur) lv_slider_set_value(screen->${build.getWidgetStructFieldName(
-                    this
-                )}, value_new, LV_ANIM_OFF);`
-            );
-
-            build.unindent();
-            build.line(`}`);
-        }
-
-        if (this.mode == "RANGE" && this.valueLeftType == "expression") {
-            build.line(`{`);
-            build.indent();
-
-            const page = getAncestorOfType(
+        if (this.mode == "RANGE") {
+            expressionPropertyBuildTickSpecific<LVGLSliderWidget>(
+                build,
                 this,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
-
-            if (
-                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
-            ) {
-                let flowIndex = build.assets.getFlowIndex(page);
-                let componentIndex = build.assets.getComponentIndex(this);
-                const propertyIndex = build.assets.getComponentPropertyIndex(
-                    this,
-                    "valueLeft"
-                );
-
-                build.line(
-                    `int32_t value_new = evalIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Value Left in Slider widget");`
-                );
-            } else {
-                build.line(
-                    `int32_t value_new = ${build.getVariableGetterFunctionName(
-                        this.valueLeft as string
-                    )}();`
-                );
-            }
-
-            build.line(
-                `int32_t value_cur = lv_slider_get_left_value(screen->${build.getWidgetStructFieldName(
-                    this
-                )});`
+                "valueLeft" as const,
+                "lv_slider_get_left_value",
+                "lv_slider_set_left_value",
+                ", LV_ANIM_OFF"
             );
-
-            build.line(
-                `if (value_new != value_cur) lv_slider_set_left_value(screen->${build.getWidgetStructFieldName(
-                    this
-                )}, value_new, LV_ANIM_OFF);`
-            );
-
-            build.unindent();
-            build.line(`}`);
         }
     }
 
     override buildEventHandlerSpecific(build: LVGLBuild) {
-        if (this.valueType == "expression") {
-            build.line("if (event == LV_EVENT_VALUE_CHANGED) {");
-            build.indent();
+        expressionPropertyBuildEventHandlerSpecific<LVGLSliderWidget>(
+            build,
+            this,
+            "value" as const,
+            "lv_slider_get_value"
+        );
 
-            build.line(`lv_obj_t *ta = lv_event_get_target(e);`);
-            build.line(`int32_t value = lv_slider_get_value(ta);`);
-
-            if (
-                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
-            ) {
-                const page = getAncestorOfType(
-                    this,
-                    ProjectEditor.PageClass.classInfo
-                ) as Page;
-                let flowIndex = build.assets.getFlowIndex(page);
-                let componentIndex = build.assets.getComponentIndex(this);
-                const propertyIndex = build.assets.getComponentPropertyIndex(
-                    this,
-                    "value"
-                );
-
-                build.line(
-                    `assignIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, value, "Failed to assign Value in Slider widget");`
-                );
-            } else {
-                build.line(
-                    `${build.getVariableSetterFunctionName(
-                        this.value as string
-                    )}(value);`
-                );
-            }
-
-            build.unindent();
-            build.line("}");
-        }
-
-        if (this.mode == "RANGE" && this.valueLeftType == "expression") {
-            build.line("if (event == LV_EVENT_VALUE_CHANGED) {");
-            build.indent();
-
-            build.line(`lv_obj_t *ta = lv_event_get_target(e);`);
-            build.line(`int32_t value = lv_slider_get_left_value(ta);`);
-
-            if (
-                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
-            ) {
-                const page = getAncestorOfType(
-                    this,
-                    ProjectEditor.PageClass.classInfo
-                ) as Page;
-                let flowIndex = build.assets.getFlowIndex(page);
-                let componentIndex = build.assets.getComponentIndex(this);
-                const propertyIndex = build.assets.getComponentPropertyIndex(
-                    this,
-                    "valueLeft"
-                );
-
-                build.line(
-                    `assignIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, value, "Failed to assign Value Left in Slider widget");`
-                );
-            } else {
-                build.line(
-                    `${build.getVariableSetterFunctionName(
-                        this.valueLeft as string
-                    )}(value);`
-                );
-            }
-
-            build.unindent();
-            build.line("}");
+        if (this.mode == "RANGE") {
+            expressionPropertyBuildEventHandlerSpecific<LVGLSliderWidget>(
+                build,
+                this,
+                "valueLeft" as const,
+                "lv_slider_get_left_value"
+            );
         }
     }
 }
@@ -2451,7 +2511,8 @@ export class LVGLRollerWidget extends LVGLWidget {
             top: 0,
             width: 80,
             height: 100,
-            flags: "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            clickableFlag: true,
             options: "Option 1\nOption 2\nOption 3",
             mode: "NORMAL"
         },
@@ -2524,7 +2585,7 @@ export class LVGLRollerWidget extends LVGLWidget {
     override lvglBuildSpecific(build: LVGLBuild) {
         build.line(
             `lv_roller_set_options(obj, ${escapeCString(
-                this.options
+                this.options ?? ""
             )}, LV_ROLLER_MODE_${this.mode});`
         );
     }
@@ -2546,7 +2607,8 @@ export class LVGLSwitchWidget extends LVGLWidget {
             top: 0,
             width: 50,
             height: 25,
-            flags: "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE"
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            clickableFlag: true
         },
 
         icon: (
@@ -2671,7 +2733,7 @@ export class LVGLBarWidget extends LVGLWidget {
             ...makeExpressionProperty(
                 "value",
                 "integer",
-                "assignable",
+                "input",
                 ["literal", "expression"],
                 {
                     propertyGridGroup: barGroup
@@ -2680,7 +2742,7 @@ export class LVGLBarWidget extends LVGLWidget {
             ...makeExpressionProperty(
                 "valueStart",
                 "integer",
-                "assignable",
+                "input",
                 ["literal", "expression"],
                 {
                     propertyGridGroup: barGroup,
@@ -2695,7 +2757,8 @@ export class LVGLBarWidget extends LVGLWidget {
             top: 0,
             width: 150,
             height: 10,
-            flags: "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            clickableFlag: true,
             min: 0,
             max: 100,
             mode: "NORMAL",
@@ -2773,7 +2836,11 @@ export class LVGLBarWidget extends LVGLWidget {
             this.min,
             this.max,
             BAR_MODES[this.mode],
-            valueExpr ? 0 : (this.value as number),
+            valueExpr
+                ? !valueStartExpr
+                    ? (this.valueStart as number)
+                    : 0
+                : (this.value as number),
             valueStartExpr ? 0 : (this.valueStart as number)
         );
 
@@ -2798,33 +2865,6 @@ export class LVGLBarWidget extends LVGLWidget {
         return obj;
     }
 
-    override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
-        const valueExpr = this.getExpressionPropertyData(runtime, "value");
-        if (valueExpr) {
-            runtime.wasm._lvglAddObjectFlowCallback(
-                obj,
-                LV_EVENT_BAR_VALUE_CHANGED,
-                valueExpr.flowIndex,
-                valueExpr.componentIndex,
-                valueExpr.propertyIndex
-            );
-        }
-
-        const valueStartExpr =
-            this.mode == "RANGE"
-                ? this.getExpressionPropertyData(runtime, "valueStart")
-                : undefined;
-        if (valueStartExpr) {
-            runtime.wasm._lvglAddObjectFlowCallback(
-                obj,
-                LV_EVENT_BAR_VALUE_START_CHANGED,
-                valueStartExpr.flowIndex,
-                valueStartExpr.componentIndex,
-                valueStartExpr.propertyIndex
-            );
-        }
-    }
-
     override lvglBuildObj(build: LVGLBuild) {
         build.line(`lv_obj_t *obj = lv_bar_create(parent_obj);`);
     }
@@ -2846,7 +2886,13 @@ export class LVGLBarWidget extends LVGLWidget {
             }
         }
 
-        if (this.mode == "RANGE" && this.valueType == "literal") {
+        if (this.mode == "RANGE" && this.valueStartType == "literal") {
+            if (this.valueType == "expression") {
+                build.line(
+                    `lv_bar_set_value(obj, ${this.valueStart}, LV_ANIM_OFF);`
+                );
+            }
+
             build.line(
                 `lv_bar_set_start_value(obj, ${this.valueStart}, LV_ANIM_OFF);`
             );
@@ -2854,170 +2900,24 @@ export class LVGLBarWidget extends LVGLWidget {
     }
 
     override lvglBuildTickSpecific(build: LVGLBuild) {
-        if (this.valueType == "expression") {
-            build.line(`{`);
-            build.indent();
+        expressionPropertyBuildTickSpecific<LVGLBarWidget>(
+            build,
+            this,
+            "value" as const,
+            "lv_bar_get_value",
+            "lv_bar_set_value",
+            ", LV_ANIM_OFF"
+        );
 
-            if (
-                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
-            ) {
-                const page = getAncestorOfType(
-                    this,
-                    ProjectEditor.PageClass.classInfo
-                ) as Page;
-
-                let flowIndex = build.assets.getFlowIndex(page);
-                let componentIndex = build.assets.getComponentIndex(this);
-                const propertyIndex = build.assets.getComponentPropertyIndex(
-                    this,
-                    "value"
-                );
-
-                build.line(
-                    `int32_t value_new = evalIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Value in Bar widget");`
-                );
-            } else {
-                build.line(
-                    `int32_t value_new = ${build.getVariableGetterFunctionName(
-                        this.value as string
-                    )}();`
-                );
-            }
-
-            build.line(
-                `int32_t value_cur = lv_bar_get_value(screen->${build.getWidgetStructFieldName(
-                    this
-                )});`
-            );
-
-            build.line(
-                `if (value_new != value_cur) lv_bar_set_value(screen->${build.getWidgetStructFieldName(
-                    this
-                )}, value_new, LV_ANIM_OFF);`
-            );
-
-            build.unindent();
-            build.line(`}`);
-        }
-
-        if (this.mode == "RANGE" && this.valueStartType == "expression") {
-            build.line(`{`);
-            build.indent();
-
-            const page = getAncestorOfType(
+        if (this.mode == "RANGE") {
+            expressionPropertyBuildTickSpecific<LVGLBarWidget>(
+                build,
                 this,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
-
-            if (
-                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
-            ) {
-                let flowIndex = build.assets.getFlowIndex(page);
-                let componentIndex = build.assets.getComponentIndex(this);
-                const propertyIndex = build.assets.getComponentPropertyIndex(
-                    this,
-                    "valueStart"
-                );
-
-                build.line(
-                    `int32_t value_new = evalIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Value Start in Bar widget");`
-                );
-            } else {
-                build.line(
-                    `int32_t value_new = ${build.getVariableGetterFunctionName(
-                        this.valueStart as string
-                    )}();`
-                );
-            }
-
-            build.line(
-                `int32_t value_cur = lv_bar_get_start_value(screen->${build.getWidgetStructFieldName(
-                    this
-                )});`
+                "valueStart" as const,
+                "lv_bar_get_start_value",
+                "lv_bar_set_start_value",
+                ", LV_ANIM_OFF"
             );
-
-            build.line(
-                `if (value_new != value_cur) lv_bar_set_start_value(screen->${build.getWidgetStructFieldName(
-                    this
-                )}, value_new, LV_ANIM_OFF);`
-            );
-
-            build.unindent();
-            build.line(`}`);
-        }
-    }
-
-    override buildEventHandlerSpecific(build: LVGLBuild) {
-        if (this.valueType == "expression") {
-            build.line("if (event == LV_EVENT_VALUE_CHANGED) {");
-            build.indent();
-
-            build.line(`lv_obj_t *ta = lv_event_get_target(e);`);
-            build.line(`int32_t value = lv_bar_get_value(ta);`);
-
-            if (
-                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
-            ) {
-                const page = getAncestorOfType(
-                    this,
-                    ProjectEditor.PageClass.classInfo
-                ) as Page;
-                let flowIndex = build.assets.getFlowIndex(page);
-                let componentIndex = build.assets.getComponentIndex(this);
-                const propertyIndex = build.assets.getComponentPropertyIndex(
-                    this,
-                    "value"
-                );
-
-                build.line(
-                    `assignIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, value, "Failed to assign Value in Bar widget");`
-                );
-            } else {
-                build.line(
-                    `${build.getVariableSetterFunctionName(
-                        this.value as string
-                    )}(value);`
-                );
-            }
-
-            build.unindent();
-            build.line("}");
-        }
-
-        if (this.mode == "RANGE" && this.valueStartType == "expression") {
-            build.line("if (event == LV_EVENT_VALUE_CHANGED) {");
-            build.indent();
-
-            build.line(`lv_obj_t *ta = lv_event_get_target(e);`);
-            build.line(`int32_t value = lv_bar_get_start_value(ta);`);
-
-            if (
-                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
-            ) {
-                const page = getAncestorOfType(
-                    this,
-                    ProjectEditor.PageClass.classInfo
-                ) as Page;
-                let flowIndex = build.assets.getFlowIndex(page);
-                let componentIndex = build.assets.getComponentIndex(this);
-                const propertyIndex = build.assets.getComponentPropertyIndex(
-                    this,
-                    "valueStart"
-                );
-
-                build.line(
-                    `assignIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, value, "Failed to assign Value Start in Bar widget");`
-                );
-            } else {
-                build.line(
-                    `${build.getVariableSetterFunctionName(
-                        this.valueStart as string
-                    )}(value);`
-                );
-            }
-
-            build.unindent();
-            build.line("}");
         }
     }
 }
@@ -3053,7 +2953,8 @@ export class LVGLDropdownWidget extends LVGLWidget {
             width: 150,
             height: 32,
             heightUnit: "content",
-            flags: "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            clickableFlag: true,
             options: "Option 1\nOption 2\nOption 3",
             mode: "NORMAL"
         },
@@ -3111,7 +3012,9 @@ export class LVGLDropdownWidget extends LVGLWidget {
 
     override lvglBuildSpecific(build: LVGLBuild) {
         build.line(
-            `lv_dropdown_set_options(obj, ${escapeCString(this.options)});`
+            `lv_dropdown_set_options(obj, ${escapeCString(
+                this.options ?? ""
+            )});`
         );
     }
 }
@@ -3208,7 +3111,8 @@ export class LVGLArcWidget extends LVGLWidget {
             top: 0,
             width: 150,
             height: 150,
-            flags: "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            clickableFlag: true,
             rangeMin: 0,
             rangeMax: 100,
             value: 25,
@@ -3363,89 +3267,22 @@ export class LVGLArcWidget extends LVGLWidget {
     }
 
     override lvglBuildTickSpecific(build: LVGLBuild) {
-        if (this.valueType == "expression") {
-            build.line(`{`);
-            build.indent();
-
-            if (
-                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
-            ) {
-                const page = getAncestorOfType(
-                    this,
-                    ProjectEditor.PageClass.classInfo
-                ) as Page;
-
-                let flowIndex = build.assets.getFlowIndex(page);
-                let componentIndex = build.assets.getComponentIndex(this);
-                const propertyIndex = build.assets.getComponentPropertyIndex(
-                    this,
-                    "value"
-                );
-
-                build.line(
-                    `int32_t value_new = evalIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Value in Arc widget");`
-                );
-            } else {
-                build.line(
-                    `int32_t value_new = ${build.getVariableGetterFunctionName(
-                        this.value as string
-                    )}();`
-                );
-            }
-
-            build.line(
-                `int32_t value_cur = lv_arc_get_value(screen->${build.getWidgetStructFieldName(
-                    this
-                )});`
-            );
-
-            build.line(
-                `if (value_new != value_cur) lv_arc_set_value(screen->${build.getWidgetStructFieldName(
-                    this
-                )}, value_new);`
-            );
-
-            build.unindent();
-            build.line(`}`);
-        }
+        expressionPropertyBuildTickSpecific<LVGLArcWidget>(
+            build,
+            this,
+            "value" as const,
+            "lv_arc_get_value",
+            "lv_arc_set_value"
+        );
     }
 
     override buildEventHandlerSpecific(build: LVGLBuild) {
-        if (this.valueType == "expression") {
-            build.line("if (event == LV_EVENT_VALUE_CHANGED) {");
-            build.indent();
-
-            build.line(`lv_obj_t *ta = lv_event_get_target(e);`);
-            build.line(`int32_t value = lv_arc_get_value(ta);`);
-
-            if (
-                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
-            ) {
-                const page = getAncestorOfType(
-                    this,
-                    ProjectEditor.PageClass.classInfo
-                ) as Page;
-                let flowIndex = build.assets.getFlowIndex(page);
-                let componentIndex = build.assets.getComponentIndex(this);
-                const propertyIndex = build.assets.getComponentPropertyIndex(
-                    this,
-                    "value"
-                );
-
-                build.line(
-                    `assignIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, value, "Failed to assign Value in Arc widget");`
-                );
-            } else {
-                build.line(
-                    `${build.getVariableSetterFunctionName(
-                        this.value as string
-                    )}(value);`
-                );
-            }
-
-            build.unindent();
-            build.line("}");
-        }
+        expressionPropertyBuildEventHandlerSpecific<LVGLArcWidget>(
+            build,
+            this,
+            "value" as const,
+            "lv_arc_get_value"
+        );
     }
 }
 
@@ -3553,7 +3390,8 @@ export class LVGLCheckboxWidget extends LVGLWidget {
             widthUnit: "content",
             height: 20,
             heightUnit: "content",
-            flags: "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ON_FOCUS",
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ON_FOCUS",
+            clickableFlag: true,
             text: "Checkbox"
         },
 
@@ -3607,7 +3445,9 @@ export class LVGLCheckboxWidget extends LVGLWidget {
     }
 
     override lvglBuildSpecific(build: LVGLBuild) {
-        build.line(`lv_checkbox_set_text(obj, ${escapeCString(this.text)});`);
+        build.line(
+            `lv_checkbox_set_text(obj, ${escapeCString(this.text ?? "")});`
+        );
     }
 }
 

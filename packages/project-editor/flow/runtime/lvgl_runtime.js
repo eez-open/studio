@@ -4917,6 +4917,12 @@ var _lvglUpdateCheckedState = Module["_lvglUpdateCheckedState"] = createExportWr
 var _lvglUpdateDisabledState = Module["_lvglUpdateDisabledState"] = createExportWrapper("lvglUpdateDisabledState");
 
 /** @type {function(...*):?} */
+var _lvglUpdateHiddenFlag = Module["_lvglUpdateHiddenFlag"] = createExportWrapper("lvglUpdateHiddenFlag");
+
+/** @type {function(...*):?} */
+var _lvglUpdateClickableFlag = Module["_lvglUpdateClickableFlag"] = createExportWrapper("lvglUpdateClickableFlag");
+
+/** @type {function(...*):?} */
 var ___errno_location = Module["___errno_location"] = createExportWrapper("__errno_location");
 
 /** @type {function(...*):?} */

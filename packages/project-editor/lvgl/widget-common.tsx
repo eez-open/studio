@@ -9,6 +9,9 @@ import {
     getParent,
     IPropertyGridGroupDefinition,
     LVGL_FLAG_CODES,
+    LVGL_REACTIVE_FLAGS,
+    LVGL_REACTIVE_STATES,
+    LVGL_STATE_CODES,
     PropertyProps,
     PropertyType
 } from "project-editor/core/object";
@@ -27,10 +30,8 @@ import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const LV_EVENT_CHECKED_STATE_CHANGED = 0x78;
-export const LV_EVENT_ARC_VALUE_CHANGED = 0x79;
-export const LV_EVENT_BAR_VALUE_CHANGED = 0x7a;
-export const LV_EVENT_BAR_VALUE_START_CHANGED = 0x7b;
+export const LV_EVENT_CHECKED_STATE_CHANGED = 0x7a;
+export const LV_EVENT_ARC_VALUE_CHANGED = 0x7b;
 export const LV_EVENT_SLIDER_VALUE_CHANGED = 0x7c;
 export const LV_EVENT_SLIDER_VALUE_LEFT_CHANGED = 0x7d;
 export const LV_EVENT_CHECKED = 0x7e;
@@ -279,7 +280,10 @@ export const LVGLWidgetFlagsProperty = observer(
             this.props.objects.map((widget: LVGLWidget) => {
                 const classInfo = getClassInfo(widget);
                 for (const flagName of classInfo.lvgl!.flags) {
-                    if (flagNames.indexOf(flagName) == -1) {
+                    if (
+                        flagNames.indexOf(flagName) == -1 &&
+                        LVGL_REACTIVE_FLAGS.indexOf(flagName) == -1
+                    ) {
                         flagNames.push(flagName);
                     }
                 }
@@ -379,6 +383,147 @@ export const LVGLWidgetFlagsProperty = observer(
                                                         widget,
                                                         {
                                                             flags: flagsArr.join(
+                                                                "|"
+                                                            )
+                                                        }
+                                                    );
+                                                }
+                                            }
+                                        );
+                                    }
+
+                                    this.context.undoManager.setCombineCommands(
+                                        false
+                                    );
+                                }}
+                                readOnly={this.props.readOnly}
+                            />
+                        );
+                    })}
+                </div>
+            );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const LVGLWidgetStatesProperty = observer(
+    class LVGLWidgetStatesProperty extends React.Component<PropertyProps> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        render() {
+            const stateNames: (keyof typeof LVGL_STATE_CODES)[] = [];
+
+            this.props.objects.map((widget: LVGLWidget) => {
+                const classInfo = getClassInfo(widget);
+                for (const stateName of classInfo.lvgl!.states) {
+                    if (
+                        stateNames.indexOf(stateName) == -1 &&
+                        LVGL_REACTIVE_STATES.indexOf(stateName) == -1
+                    ) {
+                        stateNames.push(stateName);
+                    }
+                }
+            });
+
+            return (
+                <div>
+                    {stateNames.map(stateName => {
+                        let values = this.props.objects.map(
+                            (widget: LVGLWidget) =>
+                                (widget.states || "")
+                                    .split("|")
+                                    .indexOf(stateName) != -1
+                        );
+
+                        let numEnabled = 0;
+                        let numDisabled = 0;
+                        values.forEach(value => {
+                            if (value) {
+                                numEnabled++;
+                            } else {
+                                numDisabled++;
+                            }
+                        });
+
+                        let state =
+                            numEnabled == 0
+                                ? false
+                                : numDisabled == 0
+                                ? true
+                                : undefined;
+
+                        return (
+                            <Checkbox
+                                key={stateName}
+                                state={state}
+                                label={humanize(stateName)}
+                                onChange={(value: boolean) => {
+                                    this.context.undoManager.setCombineCommands(
+                                        true
+                                    );
+
+                                    if (value) {
+                                        this.props.objects.forEach(
+                                            (widget: LVGLWidget) => {
+                                                const classInfo =
+                                                    getClassInfo(widget);
+                                                if (
+                                                    classInfo.lvgl!.states.indexOf(
+                                                        stateName
+                                                    ) == -1
+                                                ) {
+                                                    return;
+                                                }
+
+                                                const statesArr = (
+                                                    widget.states || ""
+                                                ).split("|");
+                                                if (
+                                                    statesArr.indexOf(
+                                                        stateName
+                                                    ) == -1
+                                                ) {
+                                                    statesArr.push(stateName);
+                                                    this.context.updateObject(
+                                                        widget,
+                                                        {
+                                                            states: statesArr.join(
+                                                                "|"
+                                                            )
+                                                        }
+                                                    );
+                                                }
+                                            }
+                                        );
+                                    } else {
+                                        this.props.objects.forEach(
+                                            (widget: LVGLWidget) => {
+                                                const classInfo =
+                                                    getClassInfo(widget);
+                                                if (
+                                                    classInfo.lvgl!.states.indexOf(
+                                                        stateName
+                                                    ) == -1
+                                                ) {
+                                                    return;
+                                                }
+
+                                                const statesArr = (
+                                                    widget.states || ""
+                                                ).split("|");
+                                                const i =
+                                                    statesArr.indexOf(
+                                                        stateName
+                                                    );
+                                                if (i != -1) {
+                                                    statesArr.splice(i, 1);
+                                                    this.context.updateObject(
+                                                        widget,
+                                                        {
+                                                            states: statesArr.join(
                                                                 "|"
                                                             )
                                                         }

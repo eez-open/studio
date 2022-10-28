@@ -237,12 +237,22 @@ export const LVGL_FLAG_CODES = {
     OVERFLOW_VISIBLE: 1 << 19 // Do not clip the children's content to the parent's boundary*/
 };
 
+export const LVGL_REACTIVE_FLAGS: (keyof typeof LVGL_FLAG_CODES)[] = [
+    "HIDDEN",
+    "CLICKABLE"
+];
+
 export const LVGL_STATE_CODES = {
     CHECKED: 0x0001,
     DISABLED: 0x0080,
     FOCUSED: 0x0002,
     PRESSED: 0x0020
 };
+
+export const LVGL_REACTIVE_STATES: (keyof typeof LVGL_STATE_CODES)[] = [
+    "CHECKED",
+    "DISABLED"
+];
 
 export interface ClassInfo {
     properties: PropertyInfo[];

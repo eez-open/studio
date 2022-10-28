@@ -129,42 +129,56 @@ void doUpdateTasks() {
     for (auto it = updateTasks.begin(); it != updateTasks.end(); it++) {
         UpdateTask &updateTask = *it;
         if (updateTask.updateTaskType == UPDATE_TASK_TYPE_LABEL_TEXT) {
-            const char *text_new = evalTextProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Text in Label widget");
-            const char *text_cur = lv_label_get_text(updateTask.obj);
-            if (strcmp(text_new, text_cur) != 0) lv_label_set_text(updateTask.obj, text_new);
+            const char *new_val = evalTextProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Text in Label widget");
+            const char *cur_val = lv_label_get_text(updateTask.obj);
+            if (strcmp(new_val, cur_val) != 0) lv_label_set_text(updateTask.obj, new_val);
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_SLIDER_VALUE) {
-            int32_t value_new = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Slider widget");
-            int32_t value_cur = lv_slider_get_value(updateTask.obj);
-            if (value_new != value_cur) lv_slider_set_value(updateTask.obj, value_new, LV_ANIM_OFF);
+            int32_t new_val = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Slider widget");
+            int32_t cur_val = lv_slider_get_value(updateTask.obj);
+            if (new_val != cur_val) lv_slider_set_value(updateTask.obj, new_val, LV_ANIM_OFF);
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_SLIDER_VALUE_LEFT) {
-            int32_t value_new = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value Left in Slider widget");
-            int32_t value_cur = lv_slider_get_left_value(updateTask.obj);
-            if (value_new != value_cur) lv_slider_set_left_value(updateTask.obj, value_new, LV_ANIM_OFF);
+            int32_t new_val = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value Left in Slider widget");
+            int32_t cur_val = lv_slider_get_left_value(updateTask.obj);
+            if (new_val != cur_val) lv_slider_set_left_value(updateTask.obj, new_val, LV_ANIM_OFF);
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_ARC_VALUE) {
-            int32_t value_new = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Arc widget");
-            int32_t value_cur = lv_bar_get_value(updateTask.obj);
-            if (value_new != value_cur) lv_arc_set_value(updateTask.obj, value_new);
+            int32_t new_val = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Arc widget");
+            int32_t cur_val = lv_bar_get_value(updateTask.obj);
+            if (new_val != cur_val) lv_arc_set_value(updateTask.obj, new_val);
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_BAR_VALUE) {
-            int32_t value_new = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Bar widget");
-            int32_t value_cur = lv_bar_get_value(updateTask.obj);
-            if (value_new != value_cur) lv_bar_set_value(updateTask.obj, value_new, LV_ANIM_OFF);
+            int32_t new_val = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Bar widget");
+            int32_t cur_val = lv_bar_get_value(updateTask.obj);
+            if (new_val != cur_val) lv_bar_set_value(updateTask.obj, new_val, LV_ANIM_OFF);
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_BAR_VALUE_START) {
-            int32_t value_new = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value Start in Bar widget");
-            int32_t value_cur = lv_bar_get_start_value(updateTask.obj);
-            if (value_new != value_cur) lv_bar_set_start_value(updateTask.obj, value_new, LV_ANIM_OFF);
+            int32_t new_val = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value Start in Bar widget");
+            int32_t cur_val = lv_bar_get_start_value(updateTask.obj);
+            if (new_val != cur_val) lv_bar_set_start_value(updateTask.obj, new_val, LV_ANIM_OFF);
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_CHECKED_STATE) {
-            bool state_new = evalBooleanProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Checked state");
-            bool state_cur = lv_obj_has_state(updateTask.obj, LV_STATE_CHECKED);
-            if (state_new != state_cur) {
-                if (state_new) lv_obj_add_state(updateTask.obj, LV_STATE_CHECKED);
+            bool new_val = evalBooleanProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Checked state");
+            bool cur_val = lv_obj_has_state(updateTask.obj, LV_STATE_CHECKED);
+            if (new_val != cur_val) {
+                if (new_val) lv_obj_add_state(updateTask.obj, LV_STATE_CHECKED);
                 else lv_obj_clear_state(updateTask.obj, LV_STATE_CHECKED);
             }
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_DISABLED_STATE) {
-            bool state_new = evalBooleanProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Disabled state");
-            bool state_cur = lv_obj_has_state(updateTask.obj, LV_STATE_DISABLED);
-            if (state_new != state_cur) {
-                if (state_new) lv_obj_add_state(updateTask.obj, LV_STATE_DISABLED);
+            bool new_val = evalBooleanProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Disabled state");
+            bool cur_val = lv_obj_has_state(updateTask.obj, LV_STATE_DISABLED);
+            if (new_val != cur_val) {
+                if (new_val) lv_obj_add_state(updateTask.obj, LV_STATE_DISABLED);
                 else lv_obj_clear_state(updateTask.obj, LV_STATE_DISABLED);
+            }
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_HIDDEN_FLAG) {
+            bool new_val = evalBooleanProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Hidden flag");
+            bool cur_val = lv_obj_has_flag(updateTask.obj, LV_OBJ_FLAG_HIDDEN);
+            if (new_val != cur_val) {
+                if (new_val) lv_obj_add_flag(updateTask.obj, LV_OBJ_FLAG_HIDDEN);
+                else lv_obj_clear_flag(updateTask.obj, LV_OBJ_FLAG_HIDDEN);
+            }
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_CLICKABLE_FLAG) {
+            bool new_val = evalBooleanProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Clickable flag");
+            bool cur_val = lv_obj_has_flag(updateTask.obj, LV_OBJ_FLAG_CLICKABLE);
+            if (new_val != cur_val) {
+                if (new_val) lv_obj_add_flag(updateTask.obj, LV_OBJ_FLAG_CLICKABLE);
+                else lv_obj_clear_flag(updateTask.obj, LV_OBJ_FLAG_CLICKABLE);
             }
         }
     }
