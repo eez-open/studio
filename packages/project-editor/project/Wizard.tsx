@@ -72,7 +72,7 @@ class DirectoryBrowserInput extends React.Component<{
                         type="button"
                         onClick={this.onSelect}
                     >
-                        Browse...
+                        Browse ...
                     </button>
                 </>
             </div>
@@ -114,7 +114,7 @@ class FileBrowserInput extends React.Component<{
                         type="button"
                         onClick={this.onSelect}
                     >
-                        Browse...
+                        Browse ...
                     </button>
                 </>
             </div>
@@ -162,7 +162,9 @@ const NewProjectWizard = observer(
 
         projectCreationError: React.ReactNode | undefined;
 
-        gitInit: boolean = false;
+        gitInit: boolean = true;
+
+        progress: string = "";
 
         constructor(props: any) {
             super(props);
@@ -188,7 +190,8 @@ const NewProjectWizard = observer(
                 selectedTemplateProject: computed,
                 validateName: action,
                 validateLocation: action,
-                validateBB3ProjectFile: action
+                validateBB3ProjectFile: action,
+                progress: observable
             });
 
             const optionsJSON = window.localStorage.getItem("project-wizard");
@@ -602,7 +605,7 @@ const NewProjectWizard = observer(
                     }
                 }
 
-                let projectFilePath;
+                let projectFilePath: string;
 
                 if (this.selectedTemplateProject) {
                     const commandExists = require("command-exists").sync;
@@ -631,6 +634,10 @@ const NewProjectWizard = observer(
 
                     // do git stuff
                     const { simpleGit } = await import("simple-git");
+
+                    runInAction(
+                        () => (this.progress = "Cloning repository ...")
+                    );
 
                     await simpleGit().clone(
                         this.selectedTemplateProject.html_url,
@@ -698,24 +705,75 @@ const NewProjectWizard = observer(
                     );
 
                     if (this.gitInit) {
-                        await fs.promises.rm(
-                            projectDirPath +
-                                "/" +
-                                manifestJson["eez-framework-location"],
-                            {
-                                recursive: true,
-                                force: true
-                            }
-                        );
+                        runInAction(() => (this.progress = "Git init ..."));
+                        if (manifestJson["submodules"] != undefined) {
+                            const submodules: {
+                                name: string;
+                                repository: string;
+                                path: string;
+                                branch?: string;
+                            }[] = manifestJson["submodules"];
 
-                        await simpleGit(projectDirPath)
-                            .init()
-                            .submoduleAdd(
-                                "https://github.com/eez-open/eez-framework",
-                                manifestJson["eez-framework-location"]
-                            )
-                            .add(".")
-                            .commit("Inital commit");
+                            const git = simpleGit(projectDirPath);
+
+                            await git.init();
+
+                            for (const submodule of submodules) {
+                                runInAction(
+                                    () =>
+                                        (this.progress = `Adding submodule ${submodule.name} ...`)
+                                );
+
+                                await fs.promises.rm(
+                                    projectDirPath + "/" + submodule.path,
+                                    {
+                                        recursive: true,
+                                        force: true
+                                    }
+                                );
+
+                                if (submodule.branch) {
+                                    await git.subModule([
+                                        "add",
+                                        "-b",
+                                        submodule.branch,
+                                        submodule.repository,
+                                        submodule.path
+                                    ]);
+                                } else {
+                                    await git.submoduleAdd(
+                                        submodule.repository,
+                                        submodule.path
+                                    );
+                                }
+                            }
+
+                            await git.add(".").commit("Inital commit");
+                        } else {
+                            runInAction(
+                                () =>
+                                    (this.progress = `Adding submodule eez-framework ...`)
+                            );
+
+                            await fs.promises.rm(
+                                projectDirPath +
+                                    "/" +
+                                    manifestJson["eez-framework-location"],
+                                {
+                                    recursive: true,
+                                    force: true
+                                }
+                            );
+
+                            await simpleGit(projectDirPath)
+                                .init()
+                                .submoduleAdd(
+                                    "https://github.com/eez-open/eez-framework",
+                                    manifestJson["eez-framework-location"]
+                                )
+                                .add(".")
+                                .commit("Inital commit");
+                        }
                     }
 
                     // get projectFilePath from manifest.json
@@ -856,14 +914,21 @@ const NewProjectWizard = observer(
 
                 runInAction(() => (this.open = false));
 
-                ipcRenderer.send("open-file", projectFilePath);
-
                 this.saveOptions();
+
+                setTimeout(() => {
+                    ipcRenderer.send("open-file", projectFilePath);
+                }, 20);
             } catch (err) {
                 console.error(err);
-                this.projectCreationError = "Failed to create a new project!";
+                this.projectCreationError = `Failed to create a new project${
+                    this.progress ? ' at: "' + this.progress : '"'
+                }!`;
             } finally {
-                runInAction(() => (this.disableButtons = false));
+                runInAction(() => {
+                    this.progress = "";
+                    this.disableButtons = false;
+                });
             }
         };
 
@@ -919,7 +984,18 @@ const NewProjectWizard = observer(
                     ]}
                     additionalFooterControl={
                         this.disableButtons ? (
-                            <Loader />
+                            <div
+                                style={{
+                                    flex: 1,
+                                    display: "flex",
+                                    alignItems: "center"
+                                }}
+                            >
+                                <Loader />
+                                <div style={{ paddingLeft: 10, flex: 1 }}>
+                                    {this.progress}
+                                </div>
+                            </div>
                         ) : this.projectCreationError ? (
                             <div
                                 className="alert alert-danger"
