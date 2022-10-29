@@ -28,13 +28,14 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 ////////////////////////////////////////////////////////////////////////////////
 
 // Groups sort order:
-//  !1 -> "Common Widgets"
-//  !2 -> "Common Actions"
-//  !3 -> Built-in groups
-//  !4 -> "Other components"
-//  !5 -> Extensions
-//  !6 -> "User Widgets"
-//  !7 -> "User Actions"
+//  !1 -> "Common Widgets" and odther LVGL widget groups
+//  !2 -> "LVGL Actions"
+//  !3 -> "Common Actions"
+//  !4 -> Built-in groups
+//  !5 -> "Other components"
+//  !6 -> Extensions
+//  !7 -> "User Widgets"
+//  !8 -> "User Actions"
 
 export const ComponentsPalette = observer(
     class ComponentsPalette extends React.Component {
@@ -103,7 +104,7 @@ export const ComponentsPalette = observer(
                             name: "LayoutViewWidget",
                             objectClass: ProjectEditor.LayoutViewWidgetClass,
                             displayName: page.name,
-                            componentPaletteGroupName: "!6User Widgets",
+                            componentPaletteGroupName: "!7User Widgets",
                             props: {
                                 layout: page.name,
                                 width: page.width,
@@ -123,7 +124,7 @@ export const ComponentsPalette = observer(
                         objectClass:
                             ProjectEditor.CallActionActionComponentClass,
                         displayName: action.name,
-                        componentPaletteGroupName: "!7User Actions",
+                        componentPaletteGroupName: "!8User Actions",
                         props: {
                             action: action.name
                         }
@@ -168,7 +169,7 @@ export const ComponentsPalette = observer(
                                   .componentPaletteGroupName;
                     if (groupName) {
                         if (!groupName.startsWith("!")) {
-                            groupName = "!3" + groupName;
+                            groupName = "!4" + groupName;
                         }
                     } else {
                         if (componentClass.name.endsWith("Widget")) {
@@ -176,13 +177,13 @@ export const ComponentsPalette = observer(
                         } else if (
                             componentClass.name.endsWith("ActionComponent")
                         ) {
-                            groupName = "!2Common Actions";
+                            groupName = "!3Common Actions";
                         } else {
-                            groupName = "!4Other components";
+                            groupName = "!5Other components";
                         }
                     }
                 } else if (parts.length == 2) {
-                    groupName = "!5" + parts[0];
+                    groupName = "!6" + parts[0];
                 }
 
                 if (groupName) {
