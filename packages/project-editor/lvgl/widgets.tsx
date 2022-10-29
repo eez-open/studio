@@ -17,10 +17,12 @@ import {
     PropertyInfo,
     getProperty,
     LVGL_REACTIVE_STATES,
-    LVGL_REACTIVE_FLAGS
+    LVGL_REACTIVE_FLAGS,
+    MessageType
 } from "project-editor/core/object";
 import {
     getAncestorOfType,
+    getChildOfObject,
     getClassInfo,
     getObjectPathAsString,
     Message,
@@ -1122,6 +1124,8 @@ export class LVGLWidget extends Widget {
         }
     }
 
+    lvglPostBuild(build: LVGLBuild): void {}
+
     lvglBuildTick(build: LVGLBuild): void {
         if (this.checkedStateType == "expression") {
             build.line(`{`);
@@ -1578,28 +1582,10 @@ export class LVGLLabelWidget extends LVGLWidget {
             {
                 name: "longMode",
                 type: PropertyType.Enum,
-                enumItems: [
-                    {
-                        id: "WRAP",
-                        label: "WRAP"
-                    },
-                    {
-                        id: "DOT",
-                        label: "DOT"
-                    },
-                    {
-                        id: "SCROLL",
-                        label: "SCROLL"
-                    },
-                    {
-                        id: "SCROLL_CIRCULAR",
-                        label: "SCROLL CIRCULAR"
-                    },
-                    {
-                        id: "CLIP",
-                        label: "CLIP"
-                    }
-                ],
+                enumItems: Object.keys(LONG_MODE_CODES).map(id => ({
+                    id,
+                    label: id
+                })),
                 enumDisallowUndefined: true,
                 propertyGridGroup: labelGroup
             },
@@ -2157,20 +2143,10 @@ export class LVGLSliderWidget extends LVGLWidget {
             {
                 name: "mode",
                 type: PropertyType.Enum,
-                enumItems: [
-                    {
-                        id: "NORMAL",
-                        label: "NORMAL"
-                    },
-                    {
-                        id: "SYMMETRICAL",
-                        label: "SYMMETRICAL"
-                    },
-                    {
-                        id: "RANGE",
-                        label: "RANGE"
-                    }
-                ],
+                enumItems: Object.keys(SLIDER_MODES).map(id => ({
+                    id,
+                    label: id
+                })),
                 enumDisallowUndefined: true,
                 propertyGridGroup: sliderGroup
             },
@@ -2458,16 +2434,10 @@ export class LVGLRollerWidget extends LVGLWidget {
             {
                 name: "mode",
                 type: PropertyType.Enum,
-                enumItems: [
-                    {
-                        id: "NORMAL",
-                        label: "NORMAL"
-                    },
-                    {
-                        id: "INFINITE",
-                        label: "INFINITE"
-                    }
-                ],
+                enumItems: Object.keys(ROLLER_MODES).map(id => ({
+                    id,
+                    label: id
+                })),
                 enumDisallowUndefined: true,
                 propertyGridGroup: rollerGroup
             }
@@ -2680,20 +2650,10 @@ export class LVGLBarWidget extends LVGLWidget {
             {
                 name: "mode",
                 type: PropertyType.Enum,
-                enumItems: [
-                    {
-                        id: "NORMAL",
-                        label: "NORMAL"
-                    },
-                    {
-                        id: "SYMMETRICAL",
-                        label: "SYMMETRICAL"
-                    },
-                    {
-                        id: "RANGE",
-                        label: "RANGE"
-                    }
-                ],
+                enumItems: Object.keys(BAR_MODES).map(id => ({
+                    id,
+                    label: id
+                })),
                 enumDisallowUndefined: true,
                 propertyGridGroup: barGroup
             },
@@ -3049,20 +3009,10 @@ export class LVGLArcWidget extends LVGLWidget {
             {
                 name: "mode",
                 type: PropertyType.Enum,
-                enumItems: [
-                    {
-                        id: "NORMAL",
-                        label: "NORMAL"
-                    },
-                    {
-                        id: "REVERSE",
-                        label: "REVERSE"
-                    },
-                    {
-                        id: "SYMMETRICAL",
-                        label: "SYMMETRICAL"
-                    }
-                ],
+                enumItems: Object.keys(ARC_MODES).map(id => ({
+                    id,
+                    label: id
+                })),
                 enumDisallowUndefined: true,
                 propertyGridGroup: arcGroup
             },
@@ -3599,7 +3549,9 @@ export class LVGLTextareaWidget extends LVGLWidget {
             );
         }
 
-        build.line(`lv_textarea_set_max_length(obj, ${this.maxTextLength});`);
+        build.line(
+            `lv_textarea_set_max_length(obj, ${this.maxTextLength ?? 128});`
+        );
 
         if (this.textType == "literal" && this.text) {
             build.line(
@@ -3641,20 +3593,43 @@ export class LVGLTextareaWidget extends LVGLWidget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// const calendarGroup: IPropertyGridGroupDefinition = {
-//     id: "lvgl-calendar",
-//     title: "Calendar",
-//     position: SPECIFIC_GROUP_POSITION
-// };
+const calendarGroup: IPropertyGridGroupDefinition = {
+    id: "lvgl-calendar",
+    title: "Calendar",
+    position: SPECIFIC_GROUP_POSITION
+};
 
 export class LVGLCalendarWidget extends LVGLWidget {
+    todayYear: number;
+    todayMonth: number;
+    todayDay: number;
+
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
         componentPaletteGroupName: "!1Input Widgets",
 
-        properties: [],
+        properties: [
+            {
+                name: "todayYear",
+                displayName: "Year",
+                type: PropertyType.Number,
+                propertyGridGroup: calendarGroup
+            },
+            {
+                name: "todayMonth",
+                displayName: "Month",
+                type: PropertyType.Number,
+                propertyGridGroup: calendarGroup
+            },
+            {
+                name: "todayDay",
+                displayName: "Day",
+                type: PropertyType.Number,
+                propertyGridGroup: calendarGroup
+            }
+        ],
 
         defaultValue: {
             left: 0,
@@ -3662,7 +3637,10 @@ export class LVGLCalendarWidget extends LVGLWidget {
             width: 230,
             height: 240,
             flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
-            clickableFlag: true
+            clickableFlag: true,
+            todayYear: 2022,
+            todayMonth: 11,
+            todayDay: 1
         },
 
         icon: (
@@ -3680,8 +3658,53 @@ export class LVGLCalendarWidget extends LVGLWidget {
             </svg>
         ),
 
-        check: (widget: LVGLLabelWidget) => {
+        check: (widget: LVGLCalendarWidget) => {
             let messages: Message[] = [];
+
+            function dateIsValid(date: any) {
+                return date instanceof Date && !isNaN(date as any);
+            }
+
+            if (!dateIsValid(new Date(`${widget.todayYear}-1-1`))) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Invalid year`,
+                        getChildOfObject(widget, "todayYear")
+                    )
+                );
+            } else {
+                if (
+                    !dateIsValid(
+                        new Date(`${widget.todayYear}-${widget.todayMonth}-1`)
+                    )
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid month`,
+                            getChildOfObject(widget, "todayMonth")
+                        )
+                    );
+                } else {
+                    if (
+                        !dateIsValid(
+                            new Date(
+                                `${widget.todayYear}-${widget.todayMonth}-${widget.todayDay}`
+                            )
+                        )
+                    ) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `Invalid day`,
+                                getChildOfObject(widget, "todayDay")
+                            )
+                        );
+                    }
+                }
+            }
+
             return messages;
         },
 
@@ -3715,7 +3738,11 @@ export class LVGLCalendarWidget extends LVGLWidget {
     constructor() {
         super();
 
-        makeObservable(this, {});
+        makeObservable(this, {
+            todayYear: observable,
+            todayMonth: observable,
+            todayDay: observable
+        });
     }
 
     override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
@@ -3725,7 +3752,12 @@ export class LVGLCalendarWidget extends LVGLWidget {
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
-            this.lvglCreateHeight
+            this.lvglCreateHeight,
+            this.todayYear,
+            this.todayMonth,
+            this.todayDay,
+            this.todayYear,
+            this.todayMonth
         );
 
         return obj;
@@ -3735,25 +3767,59 @@ export class LVGLCalendarWidget extends LVGLWidget {
         build.line(`lv_obj_t *obj = lv_calendar_create(parent_obj);`);
     }
 
-    override lvglBuildSpecific(build: LVGLBuild) {}
+    override lvglBuildSpecific(build: LVGLBuild) {
+        build.line("lv_calendar_header_arrow_create(obj);");
+        build.line(
+            `lv_calendar_set_today_date(obj, ${this.todayYear}, ${this.todayMonth}, ${this.todayDay});`
+        );
+        build.line(
+            `lv_calendar_set_showed_date(obj, ${this.todayYear}, ${this.todayMonth});`
+        );
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// const colorwheelGroup: IPropertyGridGroupDefinition = {
-//     id: "lvgl-colorwheel",
-//     title: "Colorwheel",
-//     position: SPECIFIC_GROUP_POSITION
-// };
+const COLORWHEEL_MODES = {
+    HUE: 0,
+    SATURATION: 1,
+    VALUE: 2
+};
+
+const colorwheelGroup: IPropertyGridGroupDefinition = {
+    id: "lvgl-colorwheel",
+    title: "Colorwheel",
+    position: SPECIFIC_GROUP_POSITION
+};
 
 export class LVGLColorwheelWidget extends LVGLWidget {
+    mode: keyof typeof COLORWHEEL_MODES;
+    fixedMode: boolean;
+
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
         componentPaletteGroupName: "!1Input Widgets",
 
-        properties: [],
+        properties: [
+            {
+                name: "mode",
+                type: PropertyType.Enum,
+                enumItems: Object.keys(COLORWHEEL_MODES).map(id => ({
+                    id,
+                    label: id
+                })),
+                enumDisallowUndefined: true,
+                propertyGridGroup: colorwheelGroup
+            },
+            {
+                name: "fixedMode",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                propertyGridGroup: colorwheelGroup
+            }
+        ],
 
         defaultValue: {
             left: 0,
@@ -3761,7 +3827,9 @@ export class LVGLColorwheelWidget extends LVGLWidget {
             width: 150,
             height: 150,
             flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
-            clickableFlag: true
+            clickableFlag: true,
+            mode: "HUE",
+            fixedMode: false
         },
 
         icon: (
@@ -3817,7 +3885,10 @@ export class LVGLColorwheelWidget extends LVGLWidget {
     constructor() {
         super();
 
-        makeObservable(this, {});
+        makeObservable(this, {
+            mode: observable,
+            fixedMode: observable
+        });
     }
 
     override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
@@ -3827,7 +3898,9 @@ export class LVGLColorwheelWidget extends LVGLWidget {
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
-            this.lvglCreateHeight
+            this.lvglCreateHeight,
+            COLORWHEEL_MODES[this.mode],
+            this.fixedMode
         );
 
         return obj;
@@ -3837,25 +3910,95 @@ export class LVGLColorwheelWidget extends LVGLWidget {
         build.line(`lv_obj_t *obj = lv_colorwheel_create(parent_obj, false);`);
     }
 
-    override lvglBuildSpecific(build: LVGLBuild) {}
+    override lvglBuildSpecific(build: LVGLBuild) {
+        if (this.mode != "HUE") {
+            build.line(
+                `lv_colorwheel_set_mode(obj, LV_COLORWHEEL_MODE_${this.mode});`
+            );
+        }
+        if (this.fixedMode) {
+            build.line(
+                `lv_colorwheel_set_mode_fixed(ui_Screen1_Colorwheel2, true);`
+            );
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// const imgbuttonGroup: IPropertyGridGroupDefinition = {
-//     id: "lvgl-imgbutton",
-//     title: "Imgbutton",
-//     position: SPECIFIC_GROUP_POSITION
-// };
+const enum ImgbuttonStates {
+    LV_IMGBTN_STATE_RELEASED,
+    LV_IMGBTN_STATE_PRESSED,
+    LV_IMGBTN_STATE_DISABLED,
+    LV_IMGBTN_STATE_CHECKED_RELEASED,
+    LV_IMGBTN_STATE_CHECKED_PRESSED,
+    LV_IMGBTN_STATE_CHECKED_DISABLED
+}
+
+const imgbuttonGroup: IPropertyGridGroupDefinition = {
+    id: "lvgl-imgbutton",
+    title: "Imgbutton",
+    position: SPECIFIC_GROUP_POSITION
+};
 
 export class LVGLImgbuttonWidget extends LVGLWidget {
+    imageReleased: string;
+    imagePressed: string;
+    imageDisabled: string;
+    imageCheckedReleased: string;
+    imageCheckedPressed: string;
+    imageCheckedDisabled: string;
+
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
         componentPaletteGroupName: "!1Input Widgets",
 
-        properties: [],
+        properties: [
+            {
+                name: "imageReleased",
+                displayName: "Released",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "bitmaps",
+                propertyGridGroup: imgbuttonGroup
+            },
+            {
+                name: "imagePressed",
+                displayName: "Pressed",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "bitmaps",
+                propertyGridGroup: imgbuttonGroup
+            },
+            {
+                name: "imageDisabled",
+                displayName: "Disabled",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "bitmaps",
+                propertyGridGroup: imgbuttonGroup
+            },
+            {
+                name: "imageCheckedReleased",
+                displayName: "Checked released",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "bitmaps",
+                propertyGridGroup: imgbuttonGroup
+            },
+            {
+                name: "imageCheckedPressed",
+                displayName: "Checked pressed",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "bitmaps",
+                propertyGridGroup: imgbuttonGroup
+            },
+            {
+                name: "imageCheckedDisabled",
+                displayName: "Checked disabled",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "bitmaps",
+                propertyGridGroup: imgbuttonGroup
+            }
+        ],
 
         defaultValue: {
             left: 0,
@@ -3884,8 +4027,86 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
             </svg>
         ),
 
-        check: (widget: LVGLLabelWidget) => {
+        check: (widget: LVGLImgbuttonWidget) => {
             let messages: Message[] = [];
+
+            if (widget.imageReleased) {
+                const bitmap = ProjectEditor.findBitmap(
+                    ProjectEditor.getProject(widget),
+                    widget.imageReleased
+                );
+
+                if (!bitmap) {
+                    messages.push(
+                        propertyNotFoundMessage(widget, "imageReleased")
+                    );
+                }
+            }
+
+            if (widget.imagePressed) {
+                const bitmap = ProjectEditor.findBitmap(
+                    ProjectEditor.getProject(widget),
+                    widget.imagePressed
+                );
+
+                if (!bitmap) {
+                    messages.push(
+                        propertyNotFoundMessage(widget, "imagePressed")
+                    );
+                }
+            }
+
+            if (widget.imageDisabled) {
+                const bitmap = ProjectEditor.findBitmap(
+                    ProjectEditor.getProject(widget),
+                    widget.imageDisabled
+                );
+
+                if (!bitmap) {
+                    messages.push(
+                        propertyNotFoundMessage(widget, "imageDisabled")
+                    );
+                }
+            }
+
+            if (widget.imageCheckedReleased) {
+                const bitmap = ProjectEditor.findBitmap(
+                    ProjectEditor.getProject(widget),
+                    widget.imageCheckedReleased
+                );
+
+                if (!bitmap) {
+                    messages.push(
+                        propertyNotFoundMessage(widget, "imageCheckedReleased")
+                    );
+                }
+            }
+
+            if (widget.imageCheckedPressed) {
+                const bitmap = ProjectEditor.findBitmap(
+                    ProjectEditor.getProject(widget),
+                    widget.imageCheckedPressed
+                );
+
+                if (!bitmap) {
+                    messages.push(
+                        propertyNotFoundMessage(widget, "imageCheckedPressed")
+                    );
+                }
+            }
+
+            if (widget.imageCheckedDisabled) {
+                const bitmap = ProjectEditor.findBitmap(
+                    ProjectEditor.getProject(widget),
+                    widget.imageCheckedDisabled
+                );
+
+                if (!bitmap) {
+                    messages.push(
+                        propertyNotFoundMessage(widget, "imageCheckedDisabled")
+                    );
+                }
+            }
             return messages;
         },
 
@@ -3919,7 +4140,14 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
     constructor() {
         super();
 
-        makeObservable(this, {});
+        makeObservable(this, {
+            imageReleased: observable,
+            imagePressed: observable,
+            imageDisabled: observable,
+            imageCheckedReleased: observable,
+            imageCheckedPressed: observable,
+            imageCheckedDisabled: observable
+        });
     }
 
     override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
@@ -3932,6 +4160,132 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
             this.lvglCreateHeight
         );
 
+        if (this.imageReleased) {
+            const bitmap = ProjectEditor.findBitmap(
+                ProjectEditor.getProject(this),
+                this.imageReleased
+            );
+
+            if (bitmap && bitmap.image) {
+                (async () => {
+                    const image = await runtime.loadBitmap(bitmap);
+                    if (!runtime.isEditor || obj == this._lvglObj) {
+                        runtime.wasm._lvglSetImgbuttonImageSrc(
+                            obj,
+                            ImgbuttonStates.LV_IMGBTN_STATE_RELEASED,
+                            image
+                        );
+                        runInAction(() => this._refreshCounter++);
+                    }
+                })();
+            }
+        }
+
+        if (this.imagePressed) {
+            const bitmap = ProjectEditor.findBitmap(
+                ProjectEditor.getProject(this),
+                this.imagePressed
+            );
+
+            if (bitmap && bitmap.image) {
+                (async () => {
+                    const image = await runtime.loadBitmap(bitmap);
+                    if (!runtime.isEditor || obj == this._lvglObj) {
+                        runtime.wasm._lvglSetImgbuttonImageSrc(
+                            obj,
+                            ImgbuttonStates.LV_IMGBTN_STATE_PRESSED,
+                            image
+                        );
+                        runInAction(() => this._refreshCounter++);
+                    }
+                })();
+            }
+        }
+
+        if (this.imageDisabled) {
+            const bitmap = ProjectEditor.findBitmap(
+                ProjectEditor.getProject(this),
+                this.imageDisabled
+            );
+
+            if (bitmap && bitmap.image) {
+                (async () => {
+                    const image = await runtime.loadBitmap(bitmap);
+                    if (!runtime.isEditor || obj == this._lvglObj) {
+                        runtime.wasm._lvglSetImgbuttonImageSrc(
+                            obj,
+                            ImgbuttonStates.LV_IMGBTN_STATE_DISABLED,
+                            image
+                        );
+                        runInAction(() => this._refreshCounter++);
+                    }
+                })();
+            }
+        }
+
+        if (this.imageCheckedReleased) {
+            const bitmap = ProjectEditor.findBitmap(
+                ProjectEditor.getProject(this),
+                this.imageCheckedReleased
+            );
+
+            if (bitmap && bitmap.image) {
+                (async () => {
+                    const image = await runtime.loadBitmap(bitmap);
+                    if (!runtime.isEditor || obj == this._lvglObj) {
+                        runtime.wasm._lvglSetImgbuttonImageSrc(
+                            obj,
+                            ImgbuttonStates.LV_IMGBTN_STATE_CHECKED_RELEASED,
+                            image
+                        );
+                        runInAction(() => this._refreshCounter++);
+                    }
+                })();
+            }
+        }
+
+        if (this.imageCheckedPressed) {
+            const bitmap = ProjectEditor.findBitmap(
+                ProjectEditor.getProject(this),
+                this.imageCheckedPressed
+            );
+
+            if (bitmap && bitmap.image) {
+                (async () => {
+                    const image = await runtime.loadBitmap(bitmap);
+                    if (!runtime.isEditor || obj == this._lvglObj) {
+                        runtime.wasm._lvglSetImgbuttonImageSrc(
+                            obj,
+                            ImgbuttonStates.LV_IMGBTN_STATE_CHECKED_PRESSED,
+                            image
+                        );
+                        runInAction(() => this._refreshCounter++);
+                    }
+                })();
+            }
+        }
+
+        if (this.imageCheckedDisabled) {
+            const bitmap = ProjectEditor.findBitmap(
+                ProjectEditor.getProject(this),
+                this.imageCheckedDisabled
+            );
+
+            if (bitmap && bitmap.image) {
+                (async () => {
+                    const image = await runtime.loadBitmap(bitmap);
+                    if (!runtime.isEditor || obj == this._lvglObj) {
+                        runtime.wasm._lvglSetImgbuttonImageSrc(
+                            obj,
+                            ImgbuttonStates.LV_IMGBTN_STATE_CHECKED_DISABLED,
+                            image
+                        );
+                        runInAction(() => this._refreshCounter++);
+                    }
+                })();
+            }
+        }
+
         return obj;
     }
 
@@ -3939,25 +4293,101 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
         build.line(`lv_obj_t *obj = lv_imgbtn_create(parent_obj);`);
     }
 
-    override lvglBuildSpecific(build: LVGLBuild) {}
+    override lvglBuildSpecific(build: LVGLBuild) {
+        if (this.imageReleased) {
+            build.line(
+                `lv_imgbtn_set_src(obj, LV_IMGBTN_STATE_RELEASED, NULL, &img_${this.imageReleased}, NULL);`
+            );
+        }
+        if (this.imagePressed) {
+            build.line(
+                `lv_imgbtn_set_src(obj, LV_IMGBTN_STATE_PRESSED, NULL, &img_${this.imagePressed}, NULL);`
+            );
+        }
+        if (this.imageDisabled) {
+            build.line(
+                `lv_imgbtn_set_src(obj, LV_IMGBTN_STATE_DISABLED, NULL, &img_${this.imageDisabled}, NULL);`
+            );
+        }
+        if (this.imageCheckedReleased) {
+            build.line(
+                `lv_imgbtn_set_src(obj, LV_IMGBTN_STATE_CHECKED_PRESSED, NULL, &img_${this.imageCheckedReleased}, NULL);`
+            );
+        }
+        if (this.imageCheckedPressed) {
+            build.line(
+                `lv_imgbtn_set_src(obj, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &img_${this.imageCheckedPressed}, NULL);`
+            );
+        }
+        if (this.imageCheckedDisabled) {
+            build.line(
+                `lv_imgbtn_set_src(obj, LV_IMGBTN_STATE_CHECKED_DISABLED, NULL, &img_${this.imageCheckedDisabled}, NULL);`
+            );
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// const keyboardGroup: IPropertyGridGroupDefinition = {
-//     id: "lvgl-keyboard",
-//     title: "Keyboard",
-//     position: SPECIFIC_GROUP_POSITION
-// };
+const KEYBOARD_MODES = {
+    TEXT_LOWER: 0,
+    TEXT_UPPER: 1,
+    TEXT_SPECIAL: 2,
+    TEXT_NUMBER: 3,
+    TEXT_USER1: 4,
+    TEXT_USER2: 5,
+    TEXT_USER3: 6,
+    TEXT_USER4: 7
+};
+
+const keyboardGroup: IPropertyGridGroupDefinition = {
+    id: "lvgl-keyboard",
+    title: "Keyboard",
+    position: SPECIFIC_GROUP_POSITION
+};
 
 export class LVGLKeyboardWidget extends LVGLWidget {
+    textarea: string;
+    mode: keyof typeof KEYBOARD_MODES;
+
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
         componentPaletteGroupName: "!1Input Widgets",
 
-        properties: [],
+        properties: [
+            {
+                name: "textarea",
+                type: PropertyType.Enum,
+                enumItems: (actionType: LVGLKeyboardWidget) => {
+                    const page = getAncestorOfType(
+                        actionType,
+                        ProjectEditor.PageClass.classInfo
+                    ) as Page;
+                    return page._lvglWidgets
+                        .filter(
+                            lvglWidget =>
+                                lvglWidget instanceof LVGLTextareaWidget
+                        )
+                        .map(lvglWidget => ({
+                            id: lvglWidget.identifier,
+                            label: lvglWidget.identifier
+                        }));
+                },
+                propertyGridGroup: keyboardGroup
+            },
+            {
+                name: "mode",
+                type: PropertyType.Enum,
+                enumItems: Object.keys(KEYBOARD_MODES).map(id => ({
+                    id,
+                    label: id
+                })),
+                enumDisallowUndefined: true,
+                propertyGridGroup: keyboardGroup
+            }
+        ],
 
         defaultValue: {
             left: 0,
@@ -3985,7 +4415,8 @@ export class LVGLKeyboardWidget extends LVGLWidget {
                     }
                 }
             },
-            clickableFlag: true
+            clickableFlag: true,
+            mode: KEYBOARD_MODES.TEXT_LOWER
         },
 
         icon: (
@@ -4010,8 +4441,22 @@ export class LVGLKeyboardWidget extends LVGLWidget {
             </svg>
         ),
 
-        check: (widget: LVGLLabelWidget) => {
+        check: (widget: LVGLKeyboardWidget) => {
             let messages: Message[] = [];
+
+            if (widget.textarea) {
+                const page = getAncestorOfType(
+                    widget,
+                    ProjectEditor.PageClass.classInfo
+                ) as Page;
+                const lvglWidgetIndex = page._lvglWidgetIdentifiers.get(
+                    widget.textarea
+                );
+                if (lvglWidgetIndex == undefined) {
+                    messages.push(propertyNotFoundMessage(widget, "textarea"));
+                }
+            }
+
             return messages;
         },
 
@@ -4045,7 +4490,10 @@ export class LVGLKeyboardWidget extends LVGLWidget {
     constructor() {
         super();
 
-        makeObservable(this, {});
+        makeObservable(this, {
+            textarea: observable,
+            mode: observable
+        });
     }
 
     override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
@@ -4055,17 +4503,76 @@ export class LVGLKeyboardWidget extends LVGLWidget {
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
-            this.lvglCreateHeight
+            this.lvglCreateHeight,
+            KEYBOARD_MODES[this.mode]
         );
 
         return obj;
+    }
+
+    override lvglPostCreate(runtime: LVGLPageRuntime) {
+        if (this.textarea) {
+            const page = getAncestorOfType(
+                this,
+                ProjectEditor.PageClass.classInfo
+            ) as Page;
+            const lvglWidgetIndex = page._lvglWidgetIdentifiers.get(
+                this.textarea
+            );
+            if (lvglWidgetIndex != undefined) {
+                const textareaWidget = page._lvglWidgets[lvglWidgetIndex - 1];
+                if (textareaWidget) {
+                    setTimeout(() => {
+                        if (this._lvglObj && textareaWidget._lvglObj) {
+                            runtime.wasm._lvglSetKeyboardTextarea(
+                                this._lvglObj,
+                                textareaWidget._lvglObj
+                            );
+                        }
+                    });
+                }
+            }
+        }
     }
 
     override lvglBuildObj(build: LVGLBuild) {
         build.line(`lv_obj_t *obj = lv_keyboard_create(parent_obj);`);
     }
 
-    override lvglBuildSpecific(build: LVGLBuild) {}
+    override lvglBuildSpecific(build: LVGLBuild): void {
+        if (this.mode != "TEXT_LOWER") {
+            build.line(
+                `lv_keyboard_set_mode(obj, LV_KEYBOARD_MODE_${this.mode});`
+            );
+        }
+    }
+
+    override lvglPostBuild(build: LVGLBuild) {
+        if (this.textarea) {
+            if (this.textarea) {
+                const page = getAncestorOfType(
+                    this,
+                    ProjectEditor.PageClass.classInfo
+                ) as Page;
+                const lvglWidgetIndex = page._lvglWidgetIdentifiers.get(
+                    this.textarea
+                );
+                if (lvglWidgetIndex != undefined) {
+                    const textareaWidget =
+                        page._lvglWidgets[lvglWidgetIndex - 1];
+                    if (textareaWidget && textareaWidget._lvglObj) {
+                        build.line(
+                            `lv_keyboard_set_textarea(screen->${build.getWidgetStructFieldName(
+                                this
+                            )}, screen->${build.getWidgetStructFieldName(
+                                textareaWidget
+                            )});`
+                        );
+                    }
+                }
+            }
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

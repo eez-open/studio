@@ -4526,6 +4526,8 @@ export class Widget extends Component {
             children: []
         };
     }
+
+    lvglPostCreate(runtime: LVGLPageRuntime) {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1151,6 +1151,11 @@ export class Assets {
             return 1;
         }
 
+        if (this.projectEditorStore.projectTypeTraits.isLVGL) {
+            return this.projectEditorStore.project.settings.general
+                .displayWidth;
+        }
+
         const maxPageWidth = Math.max(
             ...this.projectEditorStore.project.pages.map(page => page.width)
         );
@@ -1168,6 +1173,11 @@ export class Assets {
     get displayHeight() {
         if (this.projectEditorStore.projectTypeTraits.isDashboard) {
             return 1;
+        }
+
+        if (this.projectEditorStore.projectTypeTraits.isLVGL) {
+            return this.projectEditorStore.project.settings.general
+                .displayHeight;
         }
 
         const maxPageHeight = Math.max(

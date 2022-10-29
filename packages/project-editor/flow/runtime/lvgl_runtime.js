@@ -4809,9 +4809,6 @@ var _lvglCreatePanel = Module["_lvglCreatePanel"] = createExportWrapper("lvglCre
 var _lvglCreateImage = Module["_lvglCreateImage"] = createExportWrapper("lvglCreateImage");
 
 /** @type {function(...*):?} */
-var _lvglSetImageSrc = Module["_lvglSetImageSrc"] = createExportWrapper("lvglSetImageSrc");
-
-/** @type {function(...*):?} */
 var _lvglCreateSlider = Module["_lvglCreateSlider"] = createExportWrapper("lvglCreateSlider");
 
 /** @type {function(...*):?} */
@@ -4912,6 +4909,15 @@ var _lvglAddObjectFlowCallback = Module["_lvglAddObjectFlowCallback"] = createEx
 
 /** @type {function(...*):?} */
 var _lvglUpdateLabelText = Module["_lvglUpdateLabelText"] = createExportWrapper("lvglUpdateLabelText");
+
+/** @type {function(...*):?} */
+var _lvglSetImageSrc = Module["_lvglSetImageSrc"] = createExportWrapper("lvglSetImageSrc");
+
+/** @type {function(...*):?} */
+var _lvglSetImgbuttonImageSrc = Module["_lvglSetImgbuttonImageSrc"] = createExportWrapper("lvglSetImgbuttonImageSrc");
+
+/** @type {function(...*):?} */
+var _lvglSetKeyboardTextarea = Module["_lvglSetKeyboardTextarea"] = createExportWrapper("lvglSetKeyboardTextarea");
 
 /** @type {function(...*):?} */
 var _lvglUpdateSliderValue = Module["_lvglUpdateSliderValue"] = createExportWrapper("lvglUpdateSliderValue");

@@ -33,8 +33,6 @@ export const LVGLPage = observer(
             } else {
                 this.runtime = new LVGLPageEditorRuntime(
                     this.props.page,
-                    this.context.project.settings.general.displayWidth,
-                    this.context.project.settings.general.displayHeight,
                     this.canvasRef.current!.getContext("2d")!
                 );
             }

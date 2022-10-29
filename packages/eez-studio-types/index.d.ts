@@ -381,7 +381,6 @@ export interface IWasmFlowRuntime {
     _lvglCreateButton(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreatePanel(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateImage(parentObj: number, index: number, x: number, y: number, w: number, h: number, img_src: number, pivotX: number, pivotY: number, zoom: number, angle: number): number;
-    _lvglSetImageSrc(parentObj: number, img_src: number): void;
     _lvglCreateSlider(parentObj: number, index: number, x: number, y: number, w: number, h: number, min: number, max: number, mode: number, value: number, value_left: number): number;
     _lvglCreateRoller(parentObj: number, index: number, x: number, y: number, w: number, h: number, options: number, mode: number): number;
     _lvglCreateSwitch(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
@@ -391,10 +390,10 @@ export interface IWasmFlowRuntime {
     _lvglCreateSpinner(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateCheckbox(parentObj: number, index: number, x: number, y: number, w: number, h: number, text: number): number;
     _lvglCreateTextarea(parentObj: number, index: number, x: number, y: number, w: number, h: number, text: number, placeholder: number, one_line_mode: boolean, password_mode: boolean, accepted_characters: number, max_text_length: number): number;
-    _lvglCreateCalendar(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
-    _lvglCreateColorwheel(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
+    _lvglCreateCalendar(parentObj: number, index: number, x: number, y: number, w: number, h: number, today_year: number, today_month: number, today_day: number, showed_year: number, showed_month: number): number;
+    _lvglCreateColorwheel(parentObj: number, index: number, x: number, y: number, w: number, h: number, mode: number, fixed_mode: boolean): number;
     _lvglCreateImgbutton(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
-    _lvglCreateKeyboard(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
+    _lvglCreateKeyboard(parentObj: number, index: number, x: number, y: number, w: number, h: number, mode: number): number;
     _lvglCreateChart(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglScreenLoad(page_index: number, obj: number);
     _lvglDeleteObject(obj: number): void;
@@ -415,6 +414,9 @@ export interface IWasmFlowRuntime {
     _lvglLoadFont(font_file_path: number): number;
     _lvglFreeFont(font_ptr: number): void;
     _lvglAddObjectFlowCallback(obj: number, filter: number, page_index: number, component_index: number, output_or_property_index: number): void;
+    _lvglSetImageSrc(parentObj: number, img_src: number): void;
+    _lvglSetImgbuttonImageSrc(obj: number, statE: number, img_src: number): void;
+    _lvglSetKeyboardTextarea(obj: number, textarea: number): void;
     _lvglUpdateLabelText(obj: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateSliderValue(obj: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateSliderValueLeft(obj: number, page_index: number, component_index: number, property_index: number): void;

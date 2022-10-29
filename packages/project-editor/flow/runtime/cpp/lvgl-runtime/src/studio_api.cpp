@@ -65,13 +65,6 @@ EM_PORT_API(lv_obj_t *) lvglCreateImage(lv_obj_t *parentObj, int32_t index, lv_c
     return obj;
 }
 
-EM_PORT_API(void) lvglSetImageSrc(lv_obj_t *obj, const void *img_src) {
-    if (img_src != 0) {
-        lv_img_set_src(obj, img_src);
-    }
-    lv_obj_update_layout(obj);
-}
-
 EM_PORT_API(lv_obj_t *) lvglCreateSlider(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, int32_t min, int32_t max, lv_slider_mode_t mode, int32_t value, int32_t value_left) {
     lv_obj_t *obj = lv_slider_create(parentObj);
     lv_obj_set_pos(obj, x, y);
@@ -190,19 +183,24 @@ EM_PORT_API(lv_obj_t *) lvglCreateTextarea(lv_obj_t *parentObj, int32_t index, l
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateCalendar(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+EM_PORT_API(lv_obj_t *) lvglCreateCalendar(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, uint32_t today_year, uint32_t today_month, uint32_t today_day, uint32_t showed_year, uint32_t showed_month) {
     lv_obj_t *obj = lv_calendar_create(parentObj);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
+    lv_calendar_header_arrow_create(obj);
+    lv_calendar_set_today_date(obj, today_year, today_month, today_day);
+    lv_calendar_set_showed_date(obj, showed_year, showed_month);
     setObjectIndex(obj, index);
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateColorwheel(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+EM_PORT_API(lv_obj_t *) lvglCreateColorwheel(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_colorwheel_mode_t mode, bool fixed_mode) {
     lv_obj_t *obj = lv_colorwheel_create(parentObj, false);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
+    lv_colorwheel_set_mode(obj, mode);
+    lv_colorwheel_set_mode_fixed(obj, fixed_mode);
     lv_obj_update_layout(obj);
     setObjectIndex(obj, index);
     return obj;
@@ -217,10 +215,11 @@ EM_PORT_API(lv_obj_t *) lvglCreateImgbutton(lv_obj_t *parentObj, int32_t index, 
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateKeyboard(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+EM_PORT_API(lv_obj_t *) lvglCreateKeyboard(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_keyboard_mode_t mode) {
     lv_obj_t *obj = lv_keyboard_create(parentObj);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
+    lv_keyboard_set_mode(obj, mode);
     lv_obj_update_layout(obj);
     setObjectIndex(obj, index);
     return obj;
@@ -501,6 +500,23 @@ EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filte
 
 EM_PORT_API(void) lvglUpdateLabelText(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
     addUpdateTask(UPDATE_TASK_TYPE_LABEL_TEXT, obj, page_index, component_index, property_index);
+}
+
+EM_PORT_API(void) lvglSetImageSrc(lv_obj_t *obj, const void *img_src) {
+    if (img_src != 0) {
+        lv_img_set_src(obj, img_src);
+    }
+    lv_obj_update_layout(obj);
+}
+
+EM_PORT_API(void) lvglSetImgbuttonImageSrc(lv_obj_t *obj, lv_imgbtn_state_t state, const void *img_src) {
+    lv_imgbtn_set_src(obj, state, NULL, img_src, NULL);
+    lv_obj_update_layout(obj);
+}
+
+EM_PORT_API(void) lvglSetKeyboardTextarea(lv_obj_t *obj, lv_obj_t *textarea) {
+    lv_keyboard_set_textarea(obj, textarea);
+    lv_obj_update_layout(obj);
 }
 
 EM_PORT_API(void) lvglUpdateSliderValue(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {

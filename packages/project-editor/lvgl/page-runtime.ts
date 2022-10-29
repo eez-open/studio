@@ -1,5 +1,11 @@
 import fs from "fs";
-import { IReactionDisposer, autorun, runInAction } from "mobx";
+import {
+    IReactionDisposer,
+    autorun,
+    runInAction,
+    makeObservable,
+    computed
+} from "mobx";
 
 import type { Page } from "project-editor/features/page/page";
 import type { IWasmFlowRuntime } from "eez-studio-types";
@@ -189,50 +195,77 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
     autorRunDispose: IReactionDisposer | undefined;
     requestAnimationFrameId: number | undefined;
 
-    constructor(
-        page: Page,
-        public displayWidth: number,
-        public displayHeight: number,
-        public ctx: CanvasRenderingContext2D
-    ) {
+    mounted: boolean = false;
+
+    constructor(page: Page, public ctx: CanvasRenderingContext2D) {
         super(page);
+        makeObservable(this, {
+            displayWidth: computed,
+            displayHeight: computed
+        });
     }
 
     get isEditor() {
         return true;
     }
 
+    get displayWidth() {
+        return ProjectEditor.getProject(this.page).settings.general
+            .displayWidth;
+    }
+
+    get displayHeight() {
+        return ProjectEditor.getProject(this.page).settings.general
+            .displayHeight;
+    }
+
     mount() {
-        this.wasm = lvgl_flow_runtime_constructor(() => {
-            runInAction(() => {
-                this.page._lvglRuntime = this;
-                this.page._lvglObj = undefined;
-            });
+        autorun(() => {
+            this.displayWidth;
+            this.displayHeight;
 
-            this.wasm._init(0, 0, 0, this.page.width, this.page.height);
+            if (this.mounted) {
+                this.unmount();
+            }
 
-            this.requestAnimationFrameId = window.requestAnimationFrame(
-                this.tick
-            );
-
-            this.autorRunDispose = autorun(() => {
-                // set all _lvglObj to undefined
-                runInAction(() => {
-                    this.page._lvglWidgets.forEach(
-                        widget => (widget._lvglObj = undefined)
-                    );
-                });
-
-                const pageObj = this.page.lvglCreate(this, 0).obj;
-                this.wasm._lvglScreenLoad(-1, pageObj);
+            const wasm = lvgl_flow_runtime_constructor(() => {
+                if (this.wasm != wasm) {
+                    return;
+                }
 
                 runInAction(() => {
-                    if (this.page._lvglObj != undefined) {
-                        this.wasm._lvglDeleteObject(this.page._lvglObj);
-                    }
-                    this.page._lvglObj = pageObj;
+                    this.page._lvglRuntime = this;
+                    this.page._lvglObj = undefined;
+                });
+
+                this.wasm._init(0, 0, 0, this.displayWidth, this.displayHeight);
+
+                this.requestAnimationFrameId = window.requestAnimationFrame(
+                    this.tick
+                );
+
+                this.autorRunDispose = autorun(() => {
+                    // set all _lvglObj to undefined
+                    runInAction(() => {
+                        this.page._lvglWidgets.forEach(
+                            widget => (widget._lvglObj = undefined)
+                        );
+                    });
+
+                    const pageObj = this.page.lvglCreate(this, 0).obj;
+                    this.wasm._lvglScreenLoad(-1, pageObj);
+
+                    runInAction(() => {
+                        if (this.page._lvglObj != undefined) {
+                            this.wasm._lvglDeleteObject(this.page._lvglObj);
+                        }
+                        this.page._lvglObj = pageObj;
+                    });
                 });
             });
+
+            this.wasm = wasm;
+            this.mounted = true;
         });
     }
 
@@ -278,6 +311,8 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
         }
 
         LVGLPageRuntime.detachRuntimeFromPage(this.page);
+
+        this.mounted = false;
     }
 }
 

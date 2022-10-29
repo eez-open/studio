@@ -787,24 +787,16 @@ export class General extends EezObject {
             {
                 name: "displayWidth",
                 type: PropertyType.Number,
-                hideInPropertyGrid: (general: General) => {
-                    return (
-                        general.projectType != ProjectType.FIRMWARE &&
-                        general.projectType != ProjectType.FIRMWARE_MODULE &&
-                        general.projectType != ProjectType.LVGL
-                    );
-                }
+                hideInPropertyGrid: (general: General) =>
+                    !ProjectEditor.getProject(general).projectTypeTraits
+                        .hasDisplaySizeProperty
             },
             {
                 name: "displayHeight",
                 type: PropertyType.Number,
-                hideInPropertyGrid: (general: General) => {
-                    return (
-                        general.projectType != ProjectType.FIRMWARE &&
-                        general.projectType != ProjectType.FIRMWARE_MODULE &&
-                        general.projectType != ProjectType.LVGL
-                    );
-                }
+                hideInPropertyGrid: (general: General) =>
+                    !ProjectEditor.getProject(general).projectTypeTraits
+                        .hasDisplaySizeProperty
             }
         ],
         check: (general: General) => {

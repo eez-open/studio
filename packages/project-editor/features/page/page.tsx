@@ -477,10 +477,7 @@ export class Page extends Flow {
                 messages.push(propertyNotFoundMessage(page, "style"));
             }
 
-            if (
-                projectEditorStore.projectTypeTraits.isFirmware &&
-                projectEditorStore.projectTypeTraits.hasFlowSupport
-            ) {
+            if (projectEditorStore.projectTypeTraits.hasDisplaySizeProperty) {
                 const isSimulatorPage =
                     page.usedIn &&
                     page.usedIn.length == 1 &&
@@ -889,6 +886,10 @@ export class Page extends Flow {
             .filter(component => component instanceof Widget)
             .map((widget: Widget) => widget.lvglCreate(runtime, obj));
 
+        this._lvglWidgets.forEach(lvglWidget =>
+            lvglWidget.lvglPostCreate(runtime)
+        );
+
         return {
             obj,
             children
@@ -927,6 +928,10 @@ export class Page extends Flow {
 
         build.unindent();
         build.line(`}`);
+
+        this._lvglWidgets.forEach(lvglWidget =>
+            lvglWidget.lvglPostBuild(build)
+        );
 
         build.line(`return screen;`);
     }

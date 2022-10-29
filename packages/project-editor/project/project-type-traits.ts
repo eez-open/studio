@@ -55,6 +55,10 @@ class ProjectTypeTraits {
     get bitmapColorFormat() {
         return BitmapColorFormat.RGB;
     }
+
+    get hasDisplaySizeProperty() {
+        return false;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -81,6 +85,10 @@ class FirmwareProjectTypeTraits extends ProjectTypeTraits {
     override get runtimeType(): RuntimeType {
         return this.hasFlowSupport ? RuntimeType.WASM : RuntimeType.NONE;
     }
+
+    override get hasDisplaySizeProperty() {
+        return true;
+    }
 }
 
 class FirmwareModuleProjectTypeTraits extends FirmwareProjectTypeTraits {
@@ -105,6 +113,10 @@ class ResourceProjectTypeTraits extends FirmwareProjectTypeTraits {
     override get runtimeType() {
         return RuntimeType.NONE;
     }
+
+    override get hasDisplaySizeProperty() {
+        return false;
+    }
 }
 
 class AppletProjectTypeTraits extends FirmwareProjectTypeTraits {
@@ -122,6 +134,10 @@ class AppletProjectTypeTraits extends FirmwareProjectTypeTraits {
 
     override get runtimeType() {
         return RuntimeType.REMOTE;
+    }
+
+    override get hasDisplaySizeProperty() {
+        return false;
     }
 }
 
@@ -142,6 +158,10 @@ class DashboardProjectTypeTraits extends ProjectTypeTraits {
 
     override get runtimeType() {
         return RuntimeType.WASM;
+    }
+
+    override get hasDisplaySizeProperty() {
+        return false;
     }
 }
 
@@ -166,6 +186,10 @@ class LVGLProjectTypeTraits extends ProjectTypeTraits {
 
     override get bitmapColorFormat() {
         return BitmapColorFormat.BGR;
+    }
+
+    override get hasDisplaySizeProperty() {
+        return true;
     }
 }
 
