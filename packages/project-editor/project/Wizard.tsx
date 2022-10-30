@@ -1,4 +1,3 @@
-import { ipcRenderer } from "electron";
 import { dialog } from "@electron/remote";
 import fs from "fs";
 import path, { resolve } from "path";
@@ -24,6 +23,8 @@ import { sourceRootDir } from "eez-studio-shared/util";
 import { BootstrapDialog, showDialog } from "eez-studio-ui/dialog";
 import { Loader } from "eez-studio-ui/loader";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
+import { SimpleGitProgressEvent } from "simple-git";
+import { openProject } from "home/open-project";
 
 class NameInput extends React.Component<{
     value: string | undefined;
@@ -639,7 +640,18 @@ const NewProjectWizard = observer(
                         () => (this.progress = "Cloning repository ...")
                     );
 
-                    await simpleGit().clone(
+                    const onGitProgress = ({
+                        method,
+                        stage,
+                        progress
+                    }: SimpleGitProgressEvent) => {
+                        runInAction(
+                            () =>
+                                (this.progress = `git.${method} ${stage} stage ${progress}% complete`)
+                        );
+                    };
+
+                    await simpleGit({ progress: onGitProgress }).clone(
                         this.selectedTemplateProject.html_url,
                         projectDirPath,
                         this.gitInit
@@ -714,7 +726,10 @@ const NewProjectWizard = observer(
                                 branch?: string;
                             }[] = manifestJson["submodules"];
 
-                            const git = simpleGit(projectDirPath);
+                            const git = simpleGit({
+                                baseDir: projectDirPath,
+                                progress: onGitProgress
+                            });
 
                             await git.init();
 
@@ -765,7 +780,10 @@ const NewProjectWizard = observer(
                                 }
                             );
 
-                            await simpleGit(projectDirPath)
+                            await simpleGit({
+                                baseDir: projectDirPath,
+                                progress: onGitProgress
+                            })
                                 .init()
                                 .submoduleAdd(
                                     "https://github.com/eez-open/eez-framework",
@@ -916,9 +934,7 @@ const NewProjectWizard = observer(
 
                 this.saveOptions();
 
-                setTimeout(() => {
-                    ipcRenderer.send("open-file", projectFilePath);
-                }, 20);
+                openProject(projectFilePath);
             } catch (err) {
                 console.error(err);
                 this.projectCreationError = `Failed to create a new project${

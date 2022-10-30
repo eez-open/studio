@@ -105,7 +105,7 @@ extern "C" void assignIntegerProperty(unsigned pageIndex, unsigned componentInde
         return;
     }
 
-    eez::Value srcValue(value, eez::VALUE_TYPE_INT32);
+    eez::Value srcValue((int)value, eez::VALUE_TYPE_INT32);
 
     eez::flow::assignValue(flowState, componentIndex, dstValue, srcValue);
 }

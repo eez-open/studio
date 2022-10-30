@@ -23,6 +23,7 @@ import { handleDragAndDrop } from "home/drag-and-drop";
 import { loadTabs, ProjectEditorTab, tabs } from "home/tabs-store";
 import { settingsController } from "home/settings";
 import { App } from "home/app";
+import { openProject } from "home/open-project";
 
 import "home/settings";
 
@@ -85,17 +86,7 @@ ipcRenderer.on("show-about-box", async () => {
 });
 
 ipcRenderer.on("open-project", async (sender: any, filePath: any) => {
-    try {
-        let tab = tabs.findProjectEditorTab(filePath);
-        if (!tab) {
-            tab = tabs.addProjectTab(filePath);
-        }
-        if (tab) {
-            tab.makeActive();
-        }
-    } catch (err) {
-        console.error(err);
-    }
+    openProject(filePath);
 });
 
 ipcRenderer.on("load-debug-info", async (sender: any, filePath: any) => {
