@@ -234,7 +234,10 @@ export class Bitmap extends EezObject {
             return null;
         }
 
-        if (!this._imageElement || this.image !== this._imageElementImage) {
+        if (
+            this._imageElement === undefined ||
+            this.image !== this._imageElementImage
+        ) {
             let imageElement = new Image();
             imageElement.src = this.imageSrc;
 
@@ -359,8 +362,6 @@ export async function createBitmap(
             bpp = 32;
         }
     }
-
-    console.log("createBitmap", filePath, fileType, bpp);
 
     try {
         if (projectEditorStore.project.settings.general.assetsFolder) {

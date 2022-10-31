@@ -219,8 +219,7 @@ export class Page extends Flow {
             lvglLocalStyles: observable,
             _lvglRuntime: observable,
             _lvglObj: observable,
-            _lvglWidgets: computed,
-            _lvglWidgetIdentifiers: computed
+            _lvglWidgets: computed({ keepAlive: true })
         });
     }
 
@@ -242,7 +241,6 @@ export class Page extends Flow {
                     parent: IEezObject,
                     propertyInfo?: PropertyInfo
                 ) => {
-                    const page = object as Page;
                     const oldIdentifier = propertyInfo
                         ? getProperty(object, propertyInfo.name)
                         : undefined;
@@ -257,8 +255,9 @@ export class Page extends Flow {
                         }
 
                         if (
-                            page._lvglWidgetIdentifiers.get(newIdentifer) ==
-                            undefined
+                            ProjectEditor.getProject(
+                                parent
+                            )._lvglIdentifiers.get(newIdentifer) == undefined
                         ) {
                             return null;
                         }
@@ -873,7 +872,7 @@ export class Page extends Flow {
     ): LVGLCreateResultType {
         const obj = runtime.wasm._lvglCreateContainer(
             parentObj,
-            0,
+            runtime.getWidgetIndex(this),
             this.left,
             this.top,
             this.width,
@@ -897,12 +896,8 @@ export class Page extends Flow {
     }
 
     lvglBuild(build: LVGLBuild) {
-        const screenStructName = build.getScreenStructName(this);
-        build.line(
-            `${screenStructName} *screen = (${screenStructName} *)lv_mem_alloc(sizeof(${screenStructName}));`
-        );
         build.line(`lv_obj_t *obj = lv_obj_create(0);`);
-        build.line(`screen->${build.screenObjFieldName} = obj;`);
+        build.line(`${build.getLvglObjectAccessor(this)} = obj;`);
 
         build.line(`lv_obj_set_pos(obj, ${this.left}, ${this.top});`);
         build.line(`lv_obj_set_size(obj, ${this.width}, ${this.height});`);
@@ -932,8 +927,6 @@ export class Page extends Flow {
         this._lvglWidgets.forEach(lvglWidget =>
             lvglWidget.lvglPostBuild(build)
         );
-
-        build.line(`return screen;`);
     }
 
     lvglBuildTick(build: LVGLBuild) {
@@ -960,19 +953,6 @@ export class Page extends Flow {
         }
 
         return widgets;
-    }
-
-    get _lvglWidgetIdentifiers() {
-        const widgetIdentifiers = new Map<string, number>();
-
-        widgetIdentifiers.set(this.name, 0);
-
-        this._lvglWidgets.forEach((widget, index) => {
-            if (widget.identifier)
-                widgetIdentifiers.set(widget.identifier, index + 1);
-        });
-
-        return widgetIdentifiers;
     }
 }
 

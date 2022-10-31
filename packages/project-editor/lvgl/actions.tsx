@@ -323,11 +323,11 @@ export class LVGLPlayAnimationActionType extends LVGLActionType {
                 name: "target",
                 type: PropertyType.Enum,
                 enumItems: (component: LVGLActionComponent) => {
-                    const page = getAncestorOfType(
-                        component,
-                        ProjectEditor.PageClass.classInfo
-                    ) as Page;
-                    return [...page._lvglWidgetIdentifiers.keys()].map(id => ({
+                    return [
+                        ...ProjectEditor.getProject(
+                            component
+                        )._lvglIdentifiers.keys()
+                    ].map(id => ({
                         id,
                         label: id
                     }));
@@ -389,12 +389,10 @@ export class LVGLPlayAnimationActionType extends LVGLActionType {
             if (!object.target) {
                 messages.push(propertyNotSetMessage(object, "target"));
             } else {
-                const page = getAncestorOfType(
-                    object,
-                    ProjectEditor.PageClass.classInfo
-                ) as Page;
                 if (
-                    page._lvglWidgetIdentifiers.get(object.target) == undefined
+                    ProjectEditor.getProject(object)._lvglIdentifiers.get(
+                        object.target
+                    ) == undefined
                 ) {
                     messages.push(propertyNotFoundMessage(object, "target"));
                 }
@@ -417,12 +415,9 @@ export class LVGLPlayAnimationActionType extends LVGLActionType {
 
     override build(assets: Assets, dataBuffer: DataBuffer) {
         // target
-        const page = getAncestorOfType(
-            this,
-            ProjectEditor.PageClass.classInfo
-        ) as Page;
         dataBuffer.writeInt32(
-            page._lvglWidgetIdentifiers.get(this.target) ?? -1
+            ProjectEditor.getProject(this)._lvglIdentifiers.get(this.target)
+                ?.index ?? -1
         );
 
         // property
@@ -600,30 +595,26 @@ const PROPERTIES = {
     }
 };
 
-function setPropertyFilterTarget(
+function filterSetPropertyTarget(
     actionType: LVGLSetPropertyActionType,
-    lvglWidget: LVGLWidget
+    object: Page | LVGLWidget
 ) {
-    if (!lvglWidget.identifier) {
-        return false;
-    }
-
     if (actionType.targetType == "arc") {
-        return lvglWidget instanceof LVGLArcWidget;
+        return object instanceof LVGLArcWidget;
     } else if (actionType.targetType == "bar") {
-        return lvglWidget instanceof LVGLBarWidget;
+        return object instanceof LVGLBarWidget;
     } else if (actionType.targetType == "basic") {
         return true;
     } else if (actionType.targetType == "dropdown") {
-        return lvglWidget instanceof LVGLDropdownWidget;
+        return object instanceof LVGLDropdownWidget;
     } else if (actionType.targetType == "image") {
-        return lvglWidget instanceof LVGLImageWidget;
+        return object instanceof LVGLImageWidget;
     } else if (actionType.targetType == "label") {
-        return lvglWidget instanceof LVGLLabelWidget;
+        return object instanceof LVGLLabelWidget;
     } else if (actionType.targetType == "roller") {
-        return lvglWidget instanceof LVGLRollerWidget;
+        return object instanceof LVGLRollerWidget;
     } else if (actionType.targetType == "slider") {
-        return lvglWidget instanceof LVGLSliderWidget;
+        return object instanceof LVGLSliderWidget;
     } else {
         return false;
     }
@@ -664,17 +655,20 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
                 displayName: "Target",
                 type: PropertyType.Enum,
                 enumItems: (actionType: LVGLSetPropertyActionType) => {
-                    const page = getAncestorOfType(
-                        actionType,
-                        ProjectEditor.PageClass.classInfo
-                    ) as Page;
-                    return page._lvglWidgets
-                        .filter(lvglWidget =>
-                            setPropertyFilterTarget(actionType, lvglWidget)
+                    return [
+                        ...ProjectEditor.getProject(
+                            actionType
+                        )._lvglIdentifiers.values()
+                    ]
+                        .filter(lvglIdentifier =>
+                            filterSetPropertyTarget(
+                                actionType,
+                                lvglIdentifier.object
+                            )
                         )
-                        .map(lvglWidget => ({
-                            id: lvglWidget.identifier,
-                            label: lvglWidget.identifier
+                        .map(lvglIdentifier => ({
+                            id: lvglIdentifier.identifier,
+                            label: lvglIdentifier.identifier
                         }));
                 }
             },
@@ -741,18 +735,15 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
             if (!object.target) {
                 messages.push(propertyNotSetMessage(object, "target"));
             } else {
-                const page = getAncestorOfType(
-                    object,
-                    ProjectEditor.PageClass.classInfo
-                ) as Page;
-                const lvglWidgetIndex = page._lvglWidgetIdentifiers.get(
-                    object.target
-                );
-                if (lvglWidgetIndex == undefined) {
+                const lvglIdentifier = ProjectEditor.getProject(
+                    object
+                )._lvglIdentifiers.get(object.target);
+                if (lvglIdentifier == undefined) {
                     messages.push(propertyNotFoundMessage(object, "target"));
                 } else {
-                    const lvglWidget = page._lvglWidgets[lvglWidgetIndex - 1];
-                    if (!setPropertyFilterTarget(object, lvglWidget)) {
+                    if (
+                        !filterSetPropertyTarget(object, lvglIdentifier.object)
+                    ) {
                         messages.push(
                             new Message(
                                 MessageType.ERROR,
@@ -842,12 +833,9 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
 
     override build(assets: Assets, dataBuffer: DataBuffer) {
         // target
-        const page = getAncestorOfType(
-            this,
-            ProjectEditor.PageClass.classInfo
-        ) as Page;
         dataBuffer.writeInt32(
-            page._lvglWidgetIdentifiers.get(this.target) ?? -1
+            ProjectEditor.getProject(this)._lvglIdentifiers.get(this.target)
+                ?.index ?? -1
         );
 
         // property

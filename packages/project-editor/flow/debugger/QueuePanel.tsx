@@ -15,17 +15,16 @@ export const QueuePanel = observer(
         runtime: RuntimeBase;
     }> {
         render() {
+            const memTotal = this.props.runtime.totalMemory;
+            const memAlloc = memTotal - this.props.runtime.freeMemory;
             return (
                 <div className="EezStudio_DebuggerPanel">
                     <Panel
                         id="project-editor/debugger/queue"
                         title={
                             this.props.runtime.totalMemory != 0
-                                ? `Free memory: ${
-                                      this.props.runtime.freeMemory
-                                  } (${Math.round(
-                                      (this.props.runtime.freeMemory * 100) /
-                                          this.props.runtime.totalMemory
+                                ? `Memory usage: ${memAlloc} of ${memTotal} (${Math.round(
+                                      (memAlloc * 100) / memTotal
                                   )}%)`
                                 : ""
                         }

@@ -233,30 +233,15 @@ EM_PORT_API(void) onMessageFromDebugger(char *messageData, uint32_t messageDataS
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static std::map<int, std::map<int, lv_obj_t *>*> pageIndexes;
-static auto indexToObject = new std::map<int, lv_obj_t *>;
+static std::map<int, lv_obj_t *> indexToObject;
 
 void setObjectIndex(lv_obj_t *obj, int32_t index) {
-    indexToObject->insert(std::make_pair(index, obj));
-}
-
-void closeIndexesForPage(int pageIndex) {
-    pageIndexes.insert(std::make_pair(pageIndex, indexToObject));
-    indexToObject = new std::map<int, lv_obj_t *>;
+    indexToObject.insert(std::make_pair(index, obj));
 }
 
 static lv_obj_t *getLvglObjectFromIndex(int32_t index) {
-    auto it1 = pageIndexes.find(currentPageId - 1);
-    if (it1 == pageIndexes.end()) {
-        return 0;
-    }
-
-    auto it2 = it1->second->find(index);
-    if (it2 == it1->second->end()) {
-        return 0;
-    }
-
-    return it2->second;
+    auto it = indexToObject.find(index);
+    return it->second;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -315,7 +300,6 @@ extern "C" void flowOnPageLoaded(unsigned pageIndex) {
     if (currentPageId == -1) {
         currentPageId = pageIndex + 1;
     }
-    closeIndexesForPage(pageIndex);
     eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
 }
 

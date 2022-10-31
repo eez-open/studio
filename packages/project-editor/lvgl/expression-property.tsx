@@ -269,25 +269,25 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
 
         if (propertyInfo.expressionType == "string") {
             build.line(
-                `const char *cur_val = ${getFunc}(screen->${build.getWidgetStructFieldName(
+                `const char *cur_val = ${getFunc}(${build.getLvglObjectAccessor(
                     widget
                 )});`
             );
 
             build.line(
-                `if (strcmp(new_val, cur_val) != 0) ${setFunc}(screen->${build.getWidgetStructFieldName(
+                `if (strcmp(new_val, cur_val) != 0) ${setFunc}(${build.getLvglObjectAccessor(
                     widget
                 )}, new_val${setFuncOptArgs ?? ""});`
             );
         } else if (propertyInfo.expressionType == "integer") {
             build.line(
-                `int32_t cur_val = ${getFunc}(screen->${build.getWidgetStructFieldName(
+                `int32_t cur_val = ${getFunc}(${build.getLvglObjectAccessor(
                     widget
                 )});`
             );
 
             build.line(
-                `if (new_val != cur_val) ${setFunc}(screen->${build.getWidgetStructFieldName(
+                `if (new_val != cur_val) ${setFunc}(${build.getLvglObjectAccessor(
                     widget
                 )}, new_val${setFuncOptArgs ?? ""});`
             );

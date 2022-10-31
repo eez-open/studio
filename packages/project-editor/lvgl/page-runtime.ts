@@ -17,6 +17,7 @@ import {
     ProjectEditorStore
 } from "project-editor/store";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
+import type { LVGLWidget } from "project-editor/lvgl/widgets";
 
 const lvgl_flow_runtime_constructor = require("project-editor/flow/runtime/lvgl_runtime.js");
 
@@ -48,6 +49,8 @@ export abstract class LVGLPageRuntime {
 
     abstract mount(): void;
     abstract unmount(): void;
+
+    abstract getWidgetIndex(object: LVGLWidget | Page): number;
 
     async loadBitmap(bitmap: Bitmap): Promise<number> {
         const doLoad = async (bitmap: Bitmap) => {
@@ -314,6 +317,10 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
 
         this.mounted = false;
     }
+
+    override getWidgetIndex(object: LVGLWidget | Page) {
+        return 0;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -407,6 +414,10 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
             );
         }
     }
+
+    override getWidgetIndex(object: LVGLWidget | Page) {
+        return 0;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -426,9 +437,14 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         }
     >();
 
+    widgetIndex: number;
+
     constructor(private runtime: WasmRuntime) {
         super(runtime.selectedPage);
         this.wasm = runtime.worker.wasm;
+
+        this.widgetIndex =
+            runtime.projectEditorStore.project._lvglIdentifiers.size;
 
         runtime.projectEditorStore.project.pages.forEach(page =>
             this.pageStates.set(page, {
@@ -530,6 +546,20 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         if (pageState.activeObjects) {
             setObjects(pageState.page, this, pageState.activeObjects);
         }
+    }
+
+    override getWidgetIndex(object: LVGLWidget | Page) {
+        if (object instanceof ProjectEditor.PageClass) {
+            return this.runtime.projectEditorStore.project._lvglIdentifiers.get(
+                object.name
+            )!.index;
+        }
+        if (object.identifier) {
+            return this.runtime.projectEditorStore.project._lvglIdentifiers.get(
+                object.identifier
+            )!.index;
+        }
+        return this.widgetIndex++;
     }
 }
 

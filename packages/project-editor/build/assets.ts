@@ -1430,6 +1430,10 @@ export async function buildAssets(
     if (assets.projectEditorStore.projectTypeTraits.isLVGL) {
         const lvglBuild = new LVGLBuild(assets);
 
+        // PASS 1 (find out which LVGL objects are accessible through global objects structure)
+        await lvglBuild.buildScreensDef();
+
+        // PASS 2
         if (!sectionNames || sectionNames.indexOf("LVGL_SCREENS_DECL") !== -1) {
             result.LVGL_SCREENS_DECL = await lvglBuild.buildScreensDecl();
         }

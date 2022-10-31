@@ -20,13 +20,12 @@ export class LVGLBuild {
     result: string;
     indentation: string;
 
-    pageIdentifiers = new Map<
-        Page,
-        {
-            widgetToIdentifier: Map<LVGLWidget, string>;
-            widgetIdentifiers: Set<string>;
-        }
+    // auto-generated widget identifiers
+    widgetToIdentifier = new Map<
+        LVGLWidget,
+        { identifier: string; addToStruct: boolean }
     >();
+    widgetIdentifiers = new Set<string>();
 
     indent() {
         this.indentation += TAB;
@@ -49,10 +48,6 @@ export class LVGLBuild {
 
     getScreenIdentifier(page: Page) {
         return getName("", page, NamingConvention.UnderscoreLowerCase);
-    }
-
-    getScreenStructName(page: Page) {
-        return this.getScreenIdentifier(page) + "_t";
     }
 
     getScreenCreateFunctionName(page: Page) {
@@ -91,54 +86,57 @@ export class LVGLBuild {
         );
     }
 
-    getWidgetIdentifier(widget: LVGLWidget) {
-        let widgetToIdentifier;
-        let widgetIdentifiers;
+    getLvglObjectIdentifierInSourceCode(
+        lvglObject: Page | LVGLWidget,
+        addToStruct: boolean
+    ) {
+        let identifier;
 
-        const page = getAncestorOfType(
-            widget,
-            ProjectEditor.PageClass.classInfo
-        ) as Page;
-
-        const pageIdentifier = this.pageIdentifiers.get(page);
-        if (pageIdentifier) {
-            widgetToIdentifier = pageIdentifier.widgetToIdentifier;
-            widgetIdentifiers = pageIdentifier.widgetIdentifiers;
+        if (lvglObject instanceof ProjectEditor.PageClass) {
+            identifier = lvglObject.name;
         } else {
-            widgetToIdentifier = new Map<LVGLWidget, string>();
-            widgetIdentifiers = new Set<string>();
-            this.pageIdentifiers.set(page, {
-                widgetToIdentifier,
-                widgetIdentifiers
-            });
-        }
-
-        let identifier = widgetToIdentifier.get(widget);
-        if (identifier == undefined) {
-            if (widget.identifier) {
-                identifier = widget.identifier;
-                let index = 0;
-                while (widgetIdentifiers.has(identifier)) {
-                    index++;
-                    identifier = widget.identifier + "_" + index;
-                }
+            if (lvglObject.identifier) {
+                identifier = lvglObject.identifier;
             } else {
-                let index = 0;
-                let prefix = getComponentName(widget.type) + "_";
-                do {
-                    index++;
-                    identifier = prefix + index;
-                } while (widgetIdentifiers.has(identifier));
+                let result = this.widgetToIdentifier.get(lvglObject);
+                if (!result) {
+                    let index = 0;
+                    let prefix = getComponentName(lvglObject.type) + "_";
+                    do {
+                        index++;
+                        identifier = prefix + index;
+                    } while (this.widgetIdentifiers.has(identifier));
+
+                    this.widgetIdentifiers.add(identifier);
+                    result = {
+                        identifier,
+                        addToStruct
+                    };
+                    this.widgetToIdentifier.set(lvglObject, result);
+                } else {
+                    if (addToStruct) {
+                        result.addToStruct = addToStruct;
+                    }
+                }
+                identifier = result.identifier;
             }
-            widgetIdentifiers.add(identifier);
-            widgetToIdentifier.set(widget, identifier);
         }
 
         return getName("", identifier, NamingConvention.UnderscoreLowerCase);
     }
 
-    getWidgetStructFieldName(widget: LVGLWidget) {
-        return `obj_${this.getWidgetIdentifier(widget)}`;
+    isLvglObjectAccessible(lvglWidget: LVGLWidget) {
+        if (this.project._lvglIdentifiers.get(lvglWidget.identifier)) {
+            return true;
+        }
+        return this.widgetToIdentifier.get(lvglWidget)?.addToStruct ?? false;
+    }
+
+    getLvglObjectAccessor(lvglObject: Page | LVGLWidget) {
+        return `objects.${this.getLvglObjectIdentifierInSourceCode(
+            lvglObject,
+            true
+        )}`;
     }
 
     getEventHandlerCallbackName(widget: LVGLWidget) {
@@ -148,7 +146,7 @@ export class LVGLBuild {
         ) as Page;
         return `event_handler_cb_${this.getScreenIdentifier(
             page
-        )}_${this.getWidgetIdentifier(widget)}`;
+        )}_${this.getLvglObjectIdentifierInSourceCode(widget, false)}`;
     }
 
     getFontVariableName(fontName: string) {
@@ -159,42 +157,46 @@ export class LVGLBuild {
         );
     }
 
-    get screenObjFieldName() {
-        return "screen_obj";
-    }
-
     async buildScreensDecl() {
         this.result = "";
         this.indentation = "";
         const build = this;
 
-        for (const page of this.project.pages) {
-            const screenStructName = build.getScreenStructName(page);
-            build.line(`typedef struct _${screenStructName} {`);
-            build.indent();
-            build.line(`lv_obj_t *${this.screenObjFieldName};`);
-            build.line("");
+        build.line(`typedef struct _objects_t {`);
+        build.indent();
 
-            page._lvglWidgets.forEach(widget =>
+        const lvglIdentifiers = [...this.project._lvglIdentifiers.values()];
+        lvglIdentifiers.sort((a, b) => a.index - b.index);
+
+        lvglIdentifiers.forEach(lvglIdentifier =>
+            build.line(
+                `lv_obj_t *${this.getLvglObjectIdentifierInSourceCode(
+                    lvglIdentifier.object,
+                    false
+                )};`
+            )
+        );
+
+        for (const entry of this.widgetToIdentifier) {
+            if (entry[1].addToStruct) {
                 build.line(
-                    `lv_obj_t *${this.getWidgetStructFieldName(widget)};`
-                )
-            );
+                    `lv_obj_t *${this.getLvglObjectIdentifierInSourceCode(
+                        entry[0],
+                        false
+                    )};`
+                );
+            }
+        }
 
-            build.unindent();
-            build.line(`} ${screenStructName};`);
-            build.line(``);
-            build.line(
-                `${screenStructName} *${this.getScreenCreateFunctionName(
-                    page
-                )}();`
-            );
-            build.line(
-                `void ${this.getScreenTickFunctionName(
-                    page
-                )}(${screenStructName} *screen);`
-            );
-            build.line(``);
+        build.unindent();
+        build.line(`} objects_t;`);
+        build.line("");
+        build.line(`extern objects_t objects;`);
+
+        for (const page of this.project.pages) {
+            build.line("");
+            build.line(`void ${this.getScreenCreateFunctionName(page)}();`);
+            build.line(`void ${this.getScreenTickFunctionName(page)}();`);
         }
 
         return this.result;
@@ -204,6 +206,9 @@ export class LVGLBuild {
         this.result = "";
         this.indentation = "";
         const build = this;
+
+        build.line(`objects_t objects;`);
+        build.line("");
 
         for (const page of this.project.pages) {
             page._lvglWidgets.forEach(widget => {
@@ -281,24 +286,14 @@ export class LVGLBuild {
         }
 
         for (const page of this.project.pages) {
-            const screenStructName = build.getScreenStructName(page);
-
-            build.line(
-                `${screenStructName} *${this.getScreenCreateFunctionName(
-                    page
-                )}() {`
-            );
+            build.line(`void ${this.getScreenCreateFunctionName(page)}() {`);
             build.indent();
             page.lvglBuild(this);
             build.unindent();
             build.line("}");
             build.line("");
 
-            build.line(
-                `void ${this.getScreenTickFunctionName(
-                    page
-                )}(${screenStructName} *screen) {`
-            );
+            build.line(`void ${this.getScreenTickFunctionName(page)}() {`);
             build.indent();
             page.lvglBuildTick(this);
             build.unindent();
@@ -314,28 +309,7 @@ export class LVGLBuild {
         this.indentation = "";
         const build = this;
 
-        build.line("typedef lv_obj_t **screen_t;");
-
-        build.line("");
-
-        build.line("enum {");
-        build.indent();
-        for (const page of this.project.pages) {
-            build.line(
-                `${getName(
-                    "SCREEN_",
-                    page,
-                    NamingConvention.UnderscoreUpperCase
-                )},`
-            );
-        }
-        build.line("NUM_SCREENS");
-        build.unindent();
-        build.line("};");
-
-        build.line("");
-
-        build.line("screen_t get_screen(int screen_index);");
+        build.line("void create_screens();");
         build.line("void tick_screen(int screen_index);");
 
         return this.result;
@@ -346,58 +320,31 @@ export class LVGLBuild {
         this.indentation = "";
         const build = this;
 
-        build.line("#include <assert.h>");
-
-        build.line("");
-
-        build.line("typedef screen_t (*create_screen_func_t)();");
-
-        build.line("");
-
-        build.line("create_screen_func_t create_screen_funcs[] = {");
+        build.line("void create_screens() {");
         build.indent();
         for (const page of this.project.pages) {
-            build.line(
-                `(create_screen_func_t)${this.getScreenCreateFunctionName(
-                    page
-                )},`
-            );
+            build.line(`${this.getScreenCreateFunctionName(page)}();`);
         }
         build.unindent();
-        build.line("};");
+        build.line("}");
 
         build.line("");
 
-        build.line("typedef void (*tick_screen_func_t)(screen_t);");
+        build.line("typedef void (*tick_screen_func_t)();");
 
         build.line("");
 
         build.line("tick_screen_func_t tick_screen_funcs[] = {");
         build.indent();
         for (const page of this.project.pages) {
-            build.line(
-                `(tick_screen_func_t)${this.getScreenTickFunctionName(page)},`
-            );
+            build.line(`${this.getScreenTickFunctionName(page)},`);
         }
         build.unindent();
         build.line("};");
 
-        build.line("");
-
-        build.line("screen_t screens[NUM_SCREENS];");
-
         build.text(`
-screen_t get_screen(int screen_index) {
-    assert(screen_index >= 0 && screen_index < NUM_SCREENS);
-    if (!screens[screen_index]) {
-        screens[screen_index] = create_screen_funcs[screen_index]();
-    }
-    return screens[screen_index];
-}
-
 void tick_screen(int screen_index) {
-    assert(screen_index >= 0 && screen_index < NUM_SCREENS);
-    tick_screen_funcs[screen_index](get_screen(screen_index));
+    tick_screen_funcs[screen_index]();
 }
 `);
 

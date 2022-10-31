@@ -284,14 +284,10 @@ export class LVGLWidget extends Widget {
                             return null;
                         }
 
-                        const page = getAncestorOfType(
-                            parent,
-                            ProjectEditor.PageClass.classInfo
-                        ) as Page;
-
                         if (
-                            page._lvglWidgetIdentifiers.get(newIdentifer) ==
-                            undefined
+                            ProjectEditor.getProject(
+                                parent
+                            )._lvglIdentifiers.get(newIdentifer) == undefined
                         ) {
                             return null;
                         }
@@ -653,18 +649,6 @@ export class LVGLWidget extends Widget {
             componentWidth: computed,
             componentHeight: computed
         });
-    }
-
-    get widgetIndex() {
-        const page = getAncestorOfType(
-            this,
-            ProjectEditor.PageClass.classInfo
-        ) as Page;
-        const widgetIndex = page._lvglWidgets.indexOf(this);
-        if (widgetIndex == -1) {
-            return -1;
-        }
-        return widgetIndex + 1;
     }
 
     override get relativePosition() {
@@ -1031,11 +1015,15 @@ export class LVGLWidget extends Widget {
     createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {}
 
     lvglBuild(build: LVGLBuild): void {
-        build.line(`// ${build.getWidgetIdentifier(this)}`);
+        if (this.identifier) {
+            build.line(`// ${this.identifier}`);
+        }
 
         this.lvglBuildObj(build);
 
-        build.line(`screen->${build.getWidgetStructFieldName(this)} = obj;`);
+        if (build.isLvglObjectAccessible(this)) {
+            build.line(`${build.getLvglObjectAccessor(this)} = obj;`);
+        }
 
         build.line(
             `lv_obj_set_pos(obj, ${this.lvglBuildLeft}, ${this.lvglBuildTop});`
@@ -1050,7 +1038,7 @@ export class LVGLWidget extends Widget {
             build.line(
                 `lv_obj_add_event_cb(obj, ${build.getEventHandlerCallbackName(
                     this
-                )}, LV_EVENT_ALL, screen);`
+                )}, LV_EVENT_ALL, 0);`
             );
         }
 
@@ -1158,7 +1146,7 @@ export class LVGLWidget extends Widget {
             }
 
             build.line(
-                `bool cur_val = lv_obj_has_state(screen->${build.getWidgetStructFieldName(
+                `bool cur_val = lv_obj_has_state(${build.getLvglObjectAccessor(
                     this
                 )}, LV_STATE_CHECKED);`
             );
@@ -1166,12 +1154,12 @@ export class LVGLWidget extends Widget {
             build.line(`if (new_val != cur_val) {`);
             build.indent();
             build.line(
-                `if (new_val) lv_obj_add_state(screen->${build.getWidgetStructFieldName(
+                `if (new_val) lv_obj_add_state(${build.getLvglObjectAccessor(
                     this
                 )}, LV_STATE_CHECKED);`
             );
             build.line(
-                `else lv_obj_clear_state(screen->${build.getWidgetStructFieldName(
+                `else lv_obj_clear_state(${build.getLvglObjectAccessor(
                     this
                 )}, LV_STATE_CHECKED);`
             );
@@ -1213,7 +1201,7 @@ export class LVGLWidget extends Widget {
             }
 
             build.line(
-                `bool cur_val = lv_obj_has_state(screen->${build.getWidgetStructFieldName(
+                `bool cur_val = lv_obj_has_state(${build.getLvglObjectAccessor(
                     this
                 )}, LV_STATE_DISABLED);`
             );
@@ -1221,12 +1209,12 @@ export class LVGLWidget extends Widget {
             build.line(`if (new_val != cur_val) {`);
             build.indent();
             build.line(
-                `if (new_val) lv_obj_add_state(screen->${build.getWidgetStructFieldName(
+                `if (new_val) lv_obj_add_state(${build.getLvglObjectAccessor(
                     this
                 )}, LV_STATE_DISABLED);`
             );
             build.line(
-                `else lv_obj_clear_state(screen->${build.getWidgetStructFieldName(
+                `else lv_obj_clear_state(${build.getLvglObjectAccessor(
                     this
                 )}, LV_STATE_DISABLED);`
             );
@@ -1268,7 +1256,7 @@ export class LVGLWidget extends Widget {
             }
 
             build.line(
-                `bool cur_val = lv_obj_has_flag(screen->${build.getWidgetStructFieldName(
+                `bool cur_val = lv_obj_has_flag(${build.getLvglObjectAccessor(
                     this
                 )}, LV_OBJ_FLAG_HIDDEN);`
             );
@@ -1276,12 +1264,12 @@ export class LVGLWidget extends Widget {
             build.line(`if (new_val != cur_val) {`);
             build.indent();
             build.line(
-                `if (new_val) lv_obj_add_flag(screen->${build.getWidgetStructFieldName(
+                `if (new_val) lv_obj_add_flag(${build.getLvglObjectAccessor(
                     this
                 )}, LV_OBJ_FLAG_HIDDEN);`
             );
             build.line(
-                `else lv_obj_clear_flag(screen->${build.getWidgetStructFieldName(
+                `else lv_obj_clear_flag(${build.getLvglObjectAccessor(
                     this
                 )}, LV_OBJ_FLAG_HIDDEN);`
             );
@@ -1323,7 +1311,7 @@ export class LVGLWidget extends Widget {
             }
 
             build.line(
-                `bool cur_val = lv_obj_has_flag(screen->${build.getWidgetStructFieldName(
+                `bool cur_val = lv_obj_has_flag(${build.getLvglObjectAccessor(
                     this
                 )}, LV_OBJ_FLAG_CLICKABLE);`
             );
@@ -1331,12 +1319,12 @@ export class LVGLWidget extends Widget {
             build.line(`if (new_val != cur_val) {`);
             build.indent();
             build.line(
-                `if (new_val) lv_obj_add_flag(screen->${build.getWidgetStructFieldName(
+                `if (new_val) lv_obj_add_flag(${build.getLvglObjectAccessor(
                     this
                 )}, LV_OBJ_FLAG_CLICKABLE);`
             );
             build.line(
-                `else lv_obj_clear_flag(screen->${build.getWidgetStructFieldName(
+                `else lv_obj_clear_flag(${build.getLvglObjectAccessor(
                     this
                 )}, LV_OBJ_FLAG_CLICKABLE);`
             );
@@ -1674,12 +1662,15 @@ export class LVGLLabelWidget extends LVGLWidget {
         });
     }
 
-    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
         const textExpr = this.getExpressionPropertyData(runtime, "text");
 
         const obj = runtime.wasm._lvglCreateLabel(
             parentObj,
-            this.widgetIndex,
+            runtime.getWidgetIndex(this),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -1802,10 +1793,13 @@ export class LVGLButtonWidget extends LVGLWidget {
         makeObservable(this, {});
     }
 
-    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
         return runtime.wasm._lvglCreateButton(
             parentObj,
-            this.widgetIndex,
+            runtime.getWidgetIndex(this),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -1885,10 +1879,13 @@ export class LVGLPanelWidget extends LVGLWidget {
         makeObservable(this, {});
     }
 
-    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
         return runtime.wasm._lvglCreatePanel(
             parentObj,
-            this.widgetIndex,
+            runtime.getWidgetIndex(this),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -2042,10 +2039,13 @@ export class LVGLImageWidget extends LVGLWidget {
         });
     }
 
-    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
         const obj = runtime.wasm._lvglCreateImage(
             parentObj,
-            this.widgetIndex,
+            runtime.getWidgetIndex(this),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -2254,7 +2254,10 @@ export class LVGLSliderWidget extends LVGLWidget {
         );
     }
 
-    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
         const valueExpr = this.getExpressionPropertyData(runtime, "value");
         const valueLeftExpr =
             this.mode == "RANGE"
@@ -2263,7 +2266,7 @@ export class LVGLSliderWidget extends LVGLWidget {
 
         const obj = runtime.wasm._lvglCreateSlider(
             parentObj,
-            this.widgetIndex,
+            runtime.getWidgetIndex(this),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -2502,10 +2505,13 @@ export class LVGLRollerWidget extends LVGLWidget {
         });
     }
 
-    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
         return runtime.wasm._lvglCreateRoller(
             parentObj,
-            this.widgetIndex,
+            runtime.getWidgetIndex(this),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -2591,10 +2597,13 @@ export class LVGLSwitchWidget extends LVGLWidget {
         makeObservable(this, {});
     }
 
-    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
         return runtime.wasm._lvglCreateSwitch(
             parentObj,
-            this.widgetIndex,
+            runtime.getWidgetIndex(this),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -2746,7 +2755,10 @@ export class LVGLBarWidget extends LVGLWidget {
         );
     }
 
-    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
         const valueExpr = this.getExpressionPropertyData(runtime, "value");
         const valueStartExpr =
             this.mode == "RANGE"
@@ -2755,7 +2767,7 @@ export class LVGLBarWidget extends LVGLWidget {
 
         const obj = runtime.wasm._lvglCreateBar(
             parentObj,
-            this.widgetIndex,
+            runtime.getWidgetIndex(this),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -2921,10 +2933,13 @@ export class LVGLDropdownWidget extends LVGLWidget {
         });
     }
 
-    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
         return runtime.wasm._lvglCreateDropdown(
             parentObj,
-            this.widgetIndex,
+            runtime.getWidgetIndex(this),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -3105,12 +3120,15 @@ export class LVGLArcWidget extends LVGLWidget {
         return super.hasEventHandler || this.valueType == "expression";
     }
 
-    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
         const valueExpr = this.getExpressionPropertyData(runtime, "value");
 
         const obj = runtime.wasm._lvglCreateArc(
             parentObj,
-            this.widgetIndex,
+            runtime.getWidgetIndex(this),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -3259,10 +3277,13 @@ export class LVGLSpinnerWidget extends LVGLWidget {
         makeObservable(this, {});
     }
 
-    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
         return runtime.wasm._lvglCreateSpinner(
             parentObj,
-            this.widgetIndex,
+            runtime.getWidgetIndex(this),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -3345,10 +3366,13 @@ export class LVGLCheckboxWidget extends LVGLWidget {
         makeObservable(this, { text: observable });
     }
 
-    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
         return runtime.wasm._lvglCreateCheckbox(
             parentObj,
-            this.widgetIndex,
+            runtime.getWidgetIndex(this),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -3498,12 +3522,15 @@ export class LVGLTextareaWidget extends LVGLWidget {
         });
     }
 
-    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
         const textExpr = this.getExpressionPropertyData(runtime, "text");
 
         const obj = runtime.wasm._lvglCreateTextarea(
             parentObj,
-            this.widgetIndex,
+            runtime.getWidgetIndex(this),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -3745,10 +3772,13 @@ export class LVGLCalendarWidget extends LVGLWidget {
         });
     }
 
-    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
         const obj = runtime.wasm._lvglCreateCalendar(
             parentObj,
-            this.widgetIndex,
+            runtime.getWidgetIndex(this),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -3891,10 +3921,13 @@ export class LVGLColorwheelWidget extends LVGLWidget {
         });
     }
 
-    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
         const obj = runtime.wasm._lvglCreateColorwheel(
             parentObj,
-            this.widgetIndex,
+            runtime.getWidgetIndex(this),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -3917,9 +3950,7 @@ export class LVGLColorwheelWidget extends LVGLWidget {
             );
         }
         if (this.fixedMode) {
-            build.line(
-                `lv_colorwheel_set_mode_fixed(ui_Screen1_Colorwheel2, true);`
-            );
+            build.line(`lv_colorwheel_set_mode_fixed(obj, true);`);
         }
     }
 }
@@ -4150,10 +4181,13 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
         });
     }
 
-    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
         const obj = runtime.wasm._lvglCreateImgbutton(
             parentObj,
-            this.widgetIndex,
+            runtime.getWidgetIndex(this),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -4445,14 +4479,11 @@ export class LVGLKeyboardWidget extends LVGLWidget {
             let messages: Message[] = [];
 
             if (widget.textarea) {
-                const page = getAncestorOfType(
-                    widget,
-                    ProjectEditor.PageClass.classInfo
-                ) as Page;
-                const lvglWidgetIndex = page._lvglWidgetIdentifiers.get(
-                    widget.textarea
-                );
-                if (lvglWidgetIndex == undefined) {
+                if (
+                    !ProjectEditor.getProject(widget)._lvglIdentifiers.get(
+                        widget.textarea
+                    )
+                ) {
                     messages.push(propertyNotFoundMessage(widget, "textarea"));
                 }
             }
@@ -4496,10 +4527,13 @@ export class LVGLKeyboardWidget extends LVGLWidget {
         });
     }
 
-    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
         const obj = runtime.wasm._lvglCreateKeyboard(
             parentObj,
-            this.widgetIndex,
+            runtime.getWidgetIndex(this),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -4512,15 +4546,11 @@ export class LVGLKeyboardWidget extends LVGLWidget {
 
     override lvglPostCreate(runtime: LVGLPageRuntime) {
         if (this.textarea) {
-            const page = getAncestorOfType(
-                this,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
-            const lvglWidgetIndex = page._lvglWidgetIdentifiers.get(
-                this.textarea
-            );
-            if (lvglWidgetIndex != undefined) {
-                const textareaWidget = page._lvglWidgets[lvglWidgetIndex - 1];
+            const lvglIdentifier = ProjectEditor.getProject(
+                this
+            )._lvglIdentifiers.get(this.textarea);
+            if (lvglIdentifier) {
+                const textareaWidget = lvglIdentifier.object;
                 if (textareaWidget) {
                     setTimeout(() => {
                         if (this._lvglObj && textareaWidget._lvglObj) {
@@ -4550,25 +4580,16 @@ export class LVGLKeyboardWidget extends LVGLWidget {
     override lvglPostBuild(build: LVGLBuild) {
         if (this.textarea) {
             if (this.textarea) {
-                const page = getAncestorOfType(
-                    this,
-                    ProjectEditor.PageClass.classInfo
-                ) as Page;
-                const lvglWidgetIndex = page._lvglWidgetIdentifiers.get(
-                    this.textarea
-                );
-                if (lvglWidgetIndex != undefined) {
-                    const textareaWidget =
-                        page._lvglWidgets[lvglWidgetIndex - 1];
-                    if (textareaWidget && textareaWidget._lvglObj) {
-                        build.line(
-                            `lv_keyboard_set_textarea(screen->${build.getWidgetStructFieldName(
-                                this
-                            )}, screen->${build.getWidgetStructFieldName(
-                                textareaWidget
-                            )});`
-                        );
-                    }
+                const lvglIdentifier = ProjectEditor.getProject(
+                    this
+                )._lvglIdentifiers.get(this.textarea);
+                if (lvglIdentifier != undefined) {
+                    const textareaWidget = lvglIdentifier.object;
+                    build.line(
+                        `lv_keyboard_set_textarea(${build.getLvglObjectAccessor(
+                            this
+                        )}, ${build.getLvglObjectAccessor(textareaWidget)});`
+                    );
                 }
             }
         }
@@ -4655,10 +4676,13 @@ export class LVGLChartWidget extends LVGLWidget {
         makeObservable(this, {});
     }
 
-    override lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number) {
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
         const obj = runtime.wasm._lvglCreateChart(
             parentObj,
-            this.widgetIndex,
+            runtime.getWidgetIndex(this),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,

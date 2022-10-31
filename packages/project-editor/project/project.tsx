@@ -24,6 +24,7 @@ import {
 } from "eez-studio-ui/generic-dialog";
 import { Tree } from "eez-studio-ui/tree";
 import { BootstrapButton } from "project-editor/ui-components/BootstrapButton";
+import * as notification from "eez-studio-ui/notification";
 
 import {
     ClassInfo,
@@ -101,6 +102,7 @@ import { Rect } from "eez-studio-shared/geometry";
 import { PageTabState } from "project-editor/features/page/PageEditor";
 import { validators } from "eez-studio-shared/validation";
 import { createProjectTypeTraits } from "./project-type-traits";
+import type { LVGLWidget } from "project-editor/lvgl/widgets";
 
 export { ProjectType } from "project-editor/core/object";
 
@@ -1515,6 +1517,43 @@ export class Project extends EezObject {
     colors: Color[];
     themes: Theme[];
 
+    get _lvglIdentifiers() {
+        const widgetIdentifiers = new Map<
+            string,
+            { identifier: string; object: LVGLWidget | Page; index: number }
+        >();
+
+        let index = 0;
+
+        for (const page of this.pages) {
+            widgetIdentifiers.set(page.name, {
+                identifier: page.name,
+                object: page,
+                index: index++
+            });
+        }
+
+        for (const page of this.pages) {
+            page._lvglWidgets.forEach(widget => {
+                if (widget.identifier) {
+                    if (!widgetIdentifiers.get(widget.identifier)) {
+                        widgetIdentifiers.set(widget.identifier, {
+                            identifier: widget.identifier,
+                            object: widget,
+                            index: index++
+                        });
+                    } else {
+                        notification.error(
+                            `Duplicate widget name: ${widget.identifier}`
+                        );
+                    }
+                }
+            });
+        }
+
+        return widgetIdentifiers;
+    }
+
     constructor() {
         super();
 
@@ -1546,7 +1585,8 @@ export class Project extends EezObject {
             colorToIndexMap: computed,
             buildColors: computed({ keepAlive: true }),
             projectTypeTraits: computed,
-            _objectsMap: computed
+            _objectsMap: computed,
+            _lvglIdentifiers: computed({ keepAlive: true })
         });
     }
 
