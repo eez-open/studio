@@ -513,8 +513,8 @@ export class WatchVariableActionComponent extends ActionComponent {
 
 export class EvalJSExprActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        label: () => "Eval JS expression",
-        componentPaletteLabel: "Eval JS expr.",
+        label: () => "Eval JS",
+        componentPaletteLabel: "Eval JS",
         componentPaletteGroupName: "Dashboard Specific",
         properties: [
             {
@@ -885,18 +885,21 @@ class SwitchTest extends EezObject {
             makeExpressionProperty(
                 {
                     name: "condition",
+                    displayName: "When condition",
                     type: PropertyType.MultilineText
                 },
                 "boolean"
             ),
             {
                 name: "outputName",
+                displayName: "Then output",
                 type: PropertyType.String,
                 unique: componentOutputUnique
             },
             makeExpressionProperty(
                 {
                     name: "outputValue",
+                    displayName: "With value",
                     type: PropertyType.MultilineText
                 },
                 "any"
@@ -990,10 +993,12 @@ class SwitchTest extends EezObject {
 export class SwitchActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SWITCH_ACTION,
-
+        label: () => "SwitchCase",
+        componentPaletteLabel: "SwitchCase",
         properties: [
             {
                 name: "tests",
+                displayName: "Cases",
                 type: PropertyType.Array,
                 typeClass: SwitchTest,
                 propertyGridGroup: specificGroup,
@@ -1012,8 +1017,10 @@ export class SwitchActionComponent extends ActionComponent {
                 strokeLinejoin="round"
             >
                 <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M8 8a3.5 3 0 0 1 3.5 -3h1a3.5 3 0 0 1 3.5 3a3 3 0 0 1 -2 3a3 4 0 0 0 -2 4"></path>
-                <line x1="12" y1="19" x2="12" y2="19.01"></line>
+                <path d="M21 17h-8l-3.5 -5h-6.5"></path>
+                <path d="M21 7h-8l-3.495 5"></path>
+                <path d="M18 10l3 -3l-3 -3"></path>
+                <path d="M18 20l3 -3l-3 -3"></path>
             </svg>
         ),
         componentHeaderColor: "#AAAA66",
@@ -1711,9 +1718,18 @@ export class LogActionComponent extends ActionComponent {
             }
         },
         icon: (
-            <svg viewBox="0 0 448 448">
-                <path d="M223.988 0C128.473 0 46.934 59.804 14.727 144h34.639c9.396-20.484 22.457-39.35 38.868-55.762C124.497 51.973 172.709 32 223.988 32c51.286 0 99.504 19.973 135.771 56.239C396.027 124.505 416 172.719 416 224c0 51.285-19.973 99.501-56.239 135.765C323.494 396.029 275.275 416 223.988 416c-51.281 0-99.493-19.971-135.755-56.234C71.821 343.354 58.76 324.486 49.362 304H14.725c32.206 84.201 113.746 144 209.264 144C347.703 448 448 347.715 448 224 448 100.298 347.703 0 223.988 0z" />
-                <path d="M174.863 291.883l22.627 22.627L288 224l-90.51-90.51-22.628 22.628L226.745 208H0v32h226.745z" />
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M4 21v-13a3 3 0 0 1 3 -3h10a3 3 0 0 1 3 3v6a3 3 0 0 1 -3 3h-9l-4 4"></path>
+                <line x1="12" y1="8" x2="12" y2="11"></line>
+                <line x1="12" y1="14" x2="12" y2="14.01"></line>
             </svg>
         ),
         componentHeaderColor: "#C0DEED"
@@ -2354,12 +2370,8 @@ export class LoopActionComponent extends ActionComponent {
                 strokeLinejoin="round"
             >
                 <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M9 4.55a8 8 0 0 1 6 14.9m0 -4.45v5h5"></path>
-                <line x1="5.63" y1="7.16" x2="5.63" y2="7.17"></line>
-                <line x1="4.06" y1="11" x2="4.06" y2="11.01"></line>
-                <line x1="4.63" y1="15.1" x2="4.63" y2="15.11"></line>
-                <line x1="7.16" y1="18.37" x2="7.16" y2="18.38"></line>
-                <line x1="11" y1="19.94" x2="11" y2="19.95"></line>
+                <path d="M4 12v-3a3 3 0 0 1 3 -3h13m-3 -3l3 3l-3 3"></path>
+                <path d="M20 12v3a3 3 0 0 1 -3 3h-13m3 3l-3 -3l3 -3"></path>
             </svg>
         ),
         componentHeaderColor: "#E2D96E",
@@ -2448,7 +2460,7 @@ export class OnEventActionComponent extends ActionComponent {
 
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_ON_EVENT_ACTION,
-
+        componentPaletteGroupName: "GUI Actions",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
 
@@ -2523,6 +2535,7 @@ export class OnEventActionComponent extends ActionComponent {
 export class ShowPageActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SHOW_PAGE_ACTION,
+        componentPaletteGroupName: "GUI Actions",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
         properties: [
@@ -2615,6 +2628,7 @@ const MESSAGE_BOX_TYPE_ERROR = 2;
 export class ShowMessageBoxActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SHOW_MESSAGE_BOX_ACTION,
+        componentPaletteGroupName: "GUI Actions",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
         properties: [
@@ -2714,6 +2728,7 @@ export class ShowMessageBoxActionComponent extends ActionComponent {
 export class ShowKeyboardActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SHOW_KEYBOARD_ACTION,
+        componentPaletteGroupName: "GUI Actions",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
         properties: [
@@ -2841,6 +2856,7 @@ export class ShowKeyboardActionComponent extends ActionComponent {
 export class ShowKeypadActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SHOW_KEYPAD_ACTION,
+        componentPaletteGroupName: "GUI Actions",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
         properties: [
@@ -2968,6 +2984,7 @@ export class ShowKeypadActionComponent extends ActionComponent {
 export class SelectLanguageActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SELECT_LANGUAGE_ACTION,
+        componentPaletteGroupName: "GUI Actions",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
         properties: [
@@ -2981,7 +2998,7 @@ export class SelectLanguageActionComponent extends ActionComponent {
             )
         ],
         icon: LANGUAGE_ICON,
-        componentHeaderColor: "#fff5c2"
+        componentHeaderColor: "#DEB887"
     });
 
     language: string;
@@ -3024,6 +3041,7 @@ export class SelectLanguageActionComponent extends ActionComponent {
 export class SetPageDirectionActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SET_PAGE_DIRECTION_ACTION,
+        componentPaletteGroupName: "GUI Actions",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
         properties: [
@@ -3038,7 +3056,7 @@ export class SetPageDirectionActionComponent extends ActionComponent {
             }
         ],
         icon: LANGUAGE_ICON,
-        componentHeaderColor: "#fff5c2"
+        componentHeaderColor: "#DEB887"
     });
 
     direction: string;
@@ -3093,6 +3111,7 @@ export class SetPageDirectionActionComponent extends ActionComponent {
 export class AnimateActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_ANIMATE_ACTION,
+        componentPaletteGroupName: "GUI Actions",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
         properties: [
@@ -3151,7 +3170,7 @@ export class AnimateActionComponent extends ActionComponent {
                 <path d="M8 4v16m8-16v16M4 8h4m-4 8h4m-4-4h16m-4-4h4m-4 8h4" />
             </svg>
         ),
-        componentHeaderColor: "#fff5c2",
+        componentHeaderColor: "#DEB887",
         defaultValue: {
             from: "Flow.pageTimelinePosition()"
         }
@@ -3215,7 +3234,8 @@ export class AnimateActionComponent extends ActionComponent {
 export class NoopActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_NOOP_ACTION,
-
+        label: () => "NoOp",
+        componentPaletteLabel: "NoOp",
         properties: [
             {
                 name: "name",
@@ -3519,19 +3539,18 @@ registerClass("SwitchActionComponent", SwitchActionComponent);
 registerClass("CompareActionComponent", CompareActionComponent);
 registerClass("IsTrueActionComponent", IsTrueActionComponent);
 
-registerClass("ConstantActionComponent", ConstantActionComponent);
-
 registerClass("DelayActionComponent", DelayActionComponent);
 
-registerClass("CounterActionComponent", CounterActionComponent);
 registerClass("LoopActionComponent", LoopActionComponent);
+registerClass("CounterActionComponent", CounterActionComponent);
 
+registerClass("ConstantActionComponent", ConstantActionComponent);
 registerClass("DateNowActionComponent", DateNowActionComponent);
+
+registerClass("LogActionComponent", LogActionComponent);
 
 registerClass("ReadSettingActionComponent", ReadSettingActionComponent);
 registerClass("WriteSettingsActionComponent", WriteSettingsActionComponent);
-
-registerClass("LogActionComponent", LogActionComponent);
 
 registerClass("CallActionActionComponent", CallActionActionComponent);
 registerClass(
