@@ -216,7 +216,7 @@ let files = [
         copyright: "Copyright © 2022 Envox d.o.o.",
         productName,
 
-        nodeGypRebuild: false,
+        nodeGypRebuild: true,
         npmRebuild: false,
         buildDependenciesFromSource: true,
 
@@ -243,15 +243,15 @@ let files = [
             target: [
                 {
                     target: "dmg",
-                    arch: ["universal"]
+                    arch: ["x64", "arm64"]
                 },
                 {
                     target: "pkg",
-                    arch: ["universal"]
+                    arch: ["x64"]
                 },
                 {
                     target: "zip",
-                    arch: ["universal"]
+                    arch: ["x64"]
                 }
             ],
             category: "public.app-category.utilities",
