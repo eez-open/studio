@@ -148,8 +148,6 @@ export class StartActionComponent extends ActionComponent {
     }
 }
 
-registerClass("StartActionComponent", StartActionComponent);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class EndActionComponent extends ActionComponent {
@@ -176,8 +174,6 @@ export class EndActionComponent extends ActionComponent {
         ];
     }
 }
-
-registerClass("EndActionComponent", EndActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -267,8 +263,6 @@ export class InputActionComponent extends ActionComponent {
     }
 }
 
-registerClass("InputActionComponent", InputActionComponent);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class OutputActionComponent extends ActionComponent {
@@ -357,15 +351,13 @@ export class OutputActionComponent extends ActionComponent {
     }
 }
 
-registerClass("OutputActionComponent", OutputActionComponent);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class EvalExprActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_EVAL_EXPR_ACTION,
-        label: () => "Eval Expression",
-        componentPaletteLabel: "Eval expr.",
+        label: () => "Evaluate",
+        componentPaletteLabel: "Evaluate",
         properties: [
             makeExpressionProperty(
                 {
@@ -433,13 +425,13 @@ export class EvalExprActionComponent extends ActionComponent {
     }
 }
 
-registerClass("EvalExprActionComponent", EvalExprActionComponent);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class WatchVariableActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_WATCH_VARIABLE_ACTION,
+        label: () => "Watch",
+        componentPaletteLabel: "Watch",
         properties: [
             makeExpressionProperty(
                 {
@@ -516,8 +508,6 @@ export class WatchVariableActionComponent extends ActionComponent {
         );
     }
 }
-
-registerClass("WatchVariableActionComponent", WatchVariableActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -695,8 +685,6 @@ export class EvalJSExprActionComponent extends ActionComponent {
         });
     }
 }
-
-registerClass("EvalJSExprActionComponent", EvalJSExprActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -884,8 +872,6 @@ export class SetVariableActionComponent extends ActionComponent {
         });
     }
 }
-
-registerClass("SetVariableActionComponent", SetVariableActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1113,8 +1099,6 @@ export class SwitchActionComponent extends ActionComponent {
     }
 }
 
-registerClass("SwitchActionComponent", SwitchActionComponent);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class CompareActionComponent extends ActionComponent {
@@ -1310,8 +1294,6 @@ export class CompareActionComponent extends ActionComponent {
     }
 }
 
-registerClass("CompareActionComponent", CompareActionComponent);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class IsTrueActionComponent extends ActionComponent {
@@ -1416,8 +1398,6 @@ export class IsTrueActionComponent extends ActionComponent {
     }
 }
 
-registerClass("IsTrueActionComponent", IsTrueActionComponent);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ConstantActionComponent extends ActionComponent {
@@ -1513,8 +1493,6 @@ export class ConstantActionComponent extends ActionComponent {
     }
 }
 
-registerClass("ConstantActionComponent", ConstantActionComponent);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DateNowActionComponent extends ActionComponent {
@@ -1557,8 +1535,6 @@ export class DateNowActionComponent extends ActionComponent {
         ];
     }
 }
-
-registerClass("DateNowActionComponent", DateNowActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1638,8 +1614,6 @@ export class ReadSettingActionComponent extends ActionComponent {
     }
 }
 
-registerClass("ReadSettingActionComponent", ReadSettingActionComponent);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class WriteSettingsActionComponent extends ActionComponent {
@@ -1706,8 +1680,6 @@ export class WriteSettingsActionComponent extends ActionComponent {
         ];
     }
 }
-
-registerClass("WriteSettingsActionComponent", WriteSettingsActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1795,8 +1767,6 @@ export class LogActionComponent extends ActionComponent {
         );
     }
 }
-
-registerClass("LogActionComponent", LogActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2015,8 +1985,6 @@ export class CallActionActionComponent extends ActionComponent {
     }
 }
 
-registerClass("CallActionActionComponent", CallActionActionComponent);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DynamicCallActionActionComponent extends ActionComponent {
@@ -2084,11 +2052,6 @@ export class DynamicCallActionActionComponent extends ActionComponent {
     }
 }
 
-registerClass(
-    "DynamicCallActionActionComponent",
-    DynamicCallActionActionComponent
-);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DelayActionComponent extends ActionComponent {
@@ -2155,8 +2118,6 @@ export class DelayActionComponent extends ActionComponent {
     }
 }
 
-registerClass("DelayActionComponent", DelayActionComponent);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ErrorActionComponent extends ActionComponent {
@@ -2214,8 +2175,6 @@ export class ErrorActionComponent extends ActionComponent {
     }
 }
 
-registerClass("ErrorActionComponent", ErrorActionComponent);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class CatchErrorActionComponent extends ActionComponent {
@@ -2248,8 +2207,6 @@ export class CatchErrorActionComponent extends ActionComponent {
         ];
     }
 }
-
-registerClass("CatchErrorActionComponent", CatchErrorActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2335,8 +2292,6 @@ export class CounterActionComponent extends ActionComponent {
         );
     }
 }
-
-registerClass("CounterActionComponent", CounterActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2479,8 +2434,6 @@ export class LoopActionComponent extends ActionComponent {
     }
 }
 
-registerClass("LoopActionComponent", LoopActionComponent);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class OnEventActionComponent extends ActionComponent {
@@ -2564,8 +2517,6 @@ export class OnEventActionComponent extends ActionComponent {
         dataBuffer.writeUint8(event);
     }
 }
-
-registerClass("OnEventActionComponent", OnEventActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2655,8 +2606,6 @@ export class ShowPageActionComponent extends ActionComponent {
         dataBuffer.writeInt16(page);
     }
 }
-
-registerClass("ShowPageActionComponent", ShowPageActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2759,8 +2708,6 @@ export class ShowMessageBoxActionComponent extends ActionComponent {
         dataBuffer.writeUint8(this.messageType);
     }
 }
-
-registerClass("ShowMessageBoxActionComponent", ShowMessageBoxActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2889,8 +2836,6 @@ export class ShowKeyboardActionComponent extends ActionComponent {
     }
 }
 
-registerClass("ShowKeyboardActionComponent", ShowKeyboardActionComponent);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ShowKeypadActionComponent extends ActionComponent {
@@ -3018,8 +2963,6 @@ export class ShowKeypadActionComponent extends ActionComponent {
     }
 }
 
-registerClass("ShowKeypadActionComponent", ShowKeypadActionComponent);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class SelectLanguageActionComponent extends ActionComponent {
@@ -3075,8 +3018,6 @@ export class SelectLanguageActionComponent extends ActionComponent {
         ];
     }
 }
-
-registerClass("SelectLanguageActionComponent", SelectLanguageActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3146,11 +3087,6 @@ export class SetPageDirectionActionComponent extends ActionComponent {
         dataBuffer.writeUint8(this.direction == "LTR" ? 0 : 1);
     }
 }
-
-registerClass(
-    "SetPageDirectionActionComponent",
-    SetPageDirectionActionComponent
-);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3274,8 +3210,6 @@ export class AnimateActionComponent extends ActionComponent {
     }
 }
 
-registerClass("AnimateActionComponent", AnimateActionComponent);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class NoopActionComponent extends ActionComponent {
@@ -3354,8 +3288,6 @@ export class NoopActionComponent extends ActionComponent {
         ];
     }
 }
-
-registerClass("NoopActionComponent", NoopActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3570,4 +3502,59 @@ export class CommentActionComponent extends ActionComponent {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+registerClass("StartActionComponent", StartActionComponent);
+registerClass("EndActionComponent", EndActionComponent);
+registerClass("InputActionComponent", InputActionComponent);
+registerClass("OutputActionComponent", OutputActionComponent);
+
+registerClass("EvalExprActionComponent", EvalExprActionComponent);
+registerClass("EvalJSExprActionComponent", EvalJSExprActionComponent);
+registerClass("WatchVariableActionComponent", WatchVariableActionComponent);
+
+registerClass("SetVariableActionComponent", SetVariableActionComponent);
+
+registerClass("SwitchActionComponent", SwitchActionComponent);
+registerClass("CompareActionComponent", CompareActionComponent);
+registerClass("IsTrueActionComponent", IsTrueActionComponent);
+
+registerClass("ConstantActionComponent", ConstantActionComponent);
+
+registerClass("DelayActionComponent", DelayActionComponent);
+
+registerClass("CounterActionComponent", CounterActionComponent);
+registerClass("LoopActionComponent", LoopActionComponent);
+
+registerClass("DateNowActionComponent", DateNowActionComponent);
+
+registerClass("ReadSettingActionComponent", ReadSettingActionComponent);
+registerClass("WriteSettingsActionComponent", WriteSettingsActionComponent);
+
+registerClass("LogActionComponent", LogActionComponent);
+
+registerClass("CallActionActionComponent", CallActionActionComponent);
+registerClass(
+    "DynamicCallActionActionComponent",
+    DynamicCallActionActionComponent
+);
+
+registerClass("OnEventActionComponent", OnEventActionComponent);
+
+registerClass("ShowPageActionComponent", ShowPageActionComponent);
+registerClass("ShowMessageBoxActionComponent", ShowMessageBoxActionComponent);
+registerClass("ShowKeyboardActionComponent", ShowKeyboardActionComponent);
+registerClass("ShowKeypadActionComponent", ShowKeypadActionComponent);
+registerClass("SelectLanguageActionComponent", SelectLanguageActionComponent);
+registerClass(
+    "SetPageDirectionActionComponent",
+    SetPageDirectionActionComponent
+);
+
+registerClass("AnimateActionComponent", AnimateActionComponent);
+
+registerClass("ErrorActionComponent", ErrorActionComponent);
+registerClass("CatchErrorActionComponent", CatchErrorActionComponent);
+
+registerClass("NoopActionComponent", NoopActionComponent);
 registerClass("CommentActionComponent", CommentActionComponent);
