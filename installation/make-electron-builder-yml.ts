@@ -218,6 +218,7 @@ let files = [
 
         nodeGypRebuild: false,
         npmRebuild: false,
+        buildDependenciesFromSource: true,
 
         files,
 
