@@ -319,15 +319,16 @@ export function createStore({
             )} FROM "${storeName}" WHERE id = ?`;
 
             const row = db.prepare(query).get(object.id);
-
-            _map(propertyNames, propertyName => {
-                undoValues.push(row[propertyName]);
-                let type = properties[propertyName];
-                undoObject[propertyName] = type.fromDB
-                    ? type.fromDB(row[propertyName])
-                    : row[propertyName];
-            });
-            undoValues.push(object.id);
+            if (row) {
+                _map(propertyNames, propertyName => {
+                    undoValues.push(row[propertyName]);
+                    let type = properties[propertyName];
+                    undoObject[propertyName] = type.fromDB
+                        ? type.fromDB(row[propertyName])
+                        : row[propertyName];
+                });
+                undoValues.push(object.id);
+            }
         }
 
         // update
