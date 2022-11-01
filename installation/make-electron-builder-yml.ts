@@ -216,7 +216,7 @@ let files = [
         copyright: "Copyright © 2022 Envox d.o.o.",
         productName,
 
-        nodeGypRebuild: true,
+        nodeGypRebuild: false,
         npmRebuild: false,
         buildDependenciesFromSource: true,
 
