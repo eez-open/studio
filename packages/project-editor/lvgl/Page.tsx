@@ -50,7 +50,12 @@ export const LVGLPage = observer(
                     ref={this.canvasRef}
                     width={this.context.project.settings.general.displayWidth}
                     height={this.context.project.settings.general.displayHeight}
-                    style={{ imageRendering: "pixelated" }}
+                    style={{
+                        imageRendering:
+                            this.props.flowContext.viewState.transform.scale > 1
+                                ? "pixelated"
+                                : undefined
+                    }}
                 ></canvas>
             );
         }

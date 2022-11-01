@@ -509,22 +509,22 @@ function buildEditMenu(win: IWindow | undefined) {
 function buildViewMenu(win: IWindow | undefined) {
     let viewSubmenu: Electron.MenuItemConstructorOptions[] = [];
 
-    if (win?.activeTabType === "project") {
-        viewSubmenu.push(
-            {
-                label: "Command Palette...",
-                accelerator: "CmdOrCtrl+Shift+P",
-                click: function (item, focusedWindow) {
-                    if (focusedWindow) {
-                        focusedWindow.webContents.send("command-palette");
-                    }
-                }
-            },
-            {
-                type: "separator"
-            }
-        );
-    }
+    // if (win?.activeTabType === "project") {
+    //     viewSubmenu.push(
+    //         {
+    //             label: "Command Palette...",
+    //             accelerator: "CmdOrCtrl+Shift+P",
+    //             click: function (item, focusedWindow) {
+    //                 if (focusedWindow) {
+    //                     focusedWindow.webContents.send("command-palette");
+    //                 }
+    //             }
+    //         },
+    //         {
+    //             type: "separator"
+    //         }
+    //     );
+    // }
 
     viewSubmenu.push(
         {

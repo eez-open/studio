@@ -58,6 +58,29 @@ export class LayoutModels {
         component: "breakpointsPanel"
     };
 
+    static GLOBAL_VARS_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Global Vars",
+        id: LayoutModels.GLOBAL_VARS_TAB_ID,
+        component: "globals"
+    };
+
+    static PAGES_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Pages",
+        component: "pages"
+    };
+
+    static PAGE_STRUCTURE_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Page Structure",
+        component: "page-structure",
+        id: LayoutModels.PAGE_STRUCTURE_TAB_ID
+    };
+
     static LOCAL_VARS_TAB: FlexLayout.IJsonTabNode = {
         type: "tab",
         enableClose: false,
@@ -81,14 +104,6 @@ export class LayoutModels {
         id: LayoutModels.ENUMS_TAB_ID,
         component: "enums"
     };
-
-    models: {
-        name: string;
-        version: number;
-        json: FlexLayout.IJsonModel;
-        get: () => FlexLayout.Model;
-        set: (model: FlexLayout.Model) => void;
-    }[];
 
     rootEditor: FlexLayout.Model;
     rootRuntime: FlexLayout.Model;
@@ -134,65 +149,83 @@ export class LayoutModels {
             styles: observable,
             themes: observable
         });
+    }
 
-        this.models = [
+    get borders() {
+        const borders: FlexLayout.IJsonBorderNode[] = [
+            {
+                type: "border",
+                location: "top",
+                children: []
+            }
+        ];
+
+        if (!this.projectEditorStore.projectTypeTraits.isLVGL) {
+            borders.push({
+                type: "border",
+                location: "right",
+                children: [
+                    {
+                        type: "tab",
+                        enableClose: false,
+                        name: "Themes",
+                        component: "themesSideView"
+                    }
+                ]
+            });
+        }
+
+        borders.push({
+            type: "border",
+            location: "bottom",
+            children: [
+                {
+                    type: "tab",
+                    enableClose: false,
+                    name: "Checks",
+                    id: LayoutModels.CHECKS_TAB_ID,
+                    component: "checksMessages"
+                },
+                {
+                    type: "tab",
+                    enableClose: false,
+                    name: "Output",
+                    id: LayoutModels.OUTPUT_TAB_ID,
+                    component: "outputMessages"
+                },
+                {
+                    type: "tab",
+                    enableClose: false,
+                    name: "Search Results",
+                    id: LayoutModels.SEARCH_RESULTS_TAB_ID,
+                    component: "searchResultsMessages"
+                }
+            ]
+        });
+
+        return borders;
+    }
+
+    get models(): {
+        name: string;
+        version: number;
+        json: FlexLayout.IJsonModel;
+        get: () => FlexLayout.Model;
+        set: (model: FlexLayout.Model) => void;
+    }[] {
+        return [
             {
                 name: "rootEditor",
-                version: 20,
+                version: 33,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
-                    borders: [
-                        {
-                            type: "border",
-                            location: "top",
-                            children: []
-                        },
-                        {
-                            type: "border",
-                            location: "right",
-                            children: [
-                                {
-                                    type: "tab",
-                                    enableClose: false,
-                                    name: "Themes",
-                                    component: "themesSideView"
-                                }
-                            ]
-                        },
-                        {
-                            type: "border",
-                            location: "bottom",
-                            children: [
-                                {
-                                    type: "tab",
-                                    enableClose: false,
-                                    name: "Checks",
-                                    id: LayoutModels.CHECKS_TAB_ID,
-                                    component: "checksMessages"
-                                },
-                                {
-                                    type: "tab",
-                                    enableClose: false,
-                                    name: "Output",
-                                    id: LayoutModels.OUTPUT_TAB_ID,
-                                    component: "outputMessages"
-                                },
-                                {
-                                    type: "tab",
-                                    enableClose: false,
-                                    name: "Search Results",
-                                    id: LayoutModels.SEARCH_RESULTS_TAB_ID,
-                                    component: "searchResultsMessages"
-                                }
-                            ]
-                        }
-                    ],
+                    borders: this.borders,
                     layout: {
                         type: "row",
                         children: [
                             {
                                 type: "tabset",
-                                weight: 20,
+                                weight: 15,
                                 enableTabStrip: false,
                                 enableDrag: false,
                                 enableDrop: false,
@@ -226,7 +259,7 @@ export class LayoutModels {
                             },
                             {
                                 type: "row",
-                                weight: 20,
+                                weight: 25,
                                 children: [
                                     {
                                         type: "tabset",
@@ -403,7 +436,7 @@ export class LayoutModels {
             },
             {
                 name: "variables",
-                version: 4,
+                version: 7,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: [],
@@ -411,18 +444,23 @@ export class LayoutModels {
                         type: "row",
                         children: [
                             {
-                                type: "tabset",
+                                type: "row",
                                 children: [
                                     {
-                                        type: "tab",
-                                        enableClose: false,
-                                        name: "Global Vars",
-                                        id: LayoutModels.GLOBAL_VARS_TAB_ID,
-                                        component: "globals"
+                                        type: "tabset",
+                                        children: [LayoutModels.GLOBAL_VARS_TAB]
                                     },
-                                    LayoutModels.LOCAL_VARS_TAB,
-                                    LayoutModels.STRUCTS_TAB,
-                                    LayoutModels.ENUMS_TAB
+                                    {
+                                        type: "tabset",
+                                        children: [LayoutModels.LOCAL_VARS_TAB]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        children: [
+                                            LayoutModels.STRUCTS_TAB,
+                                            LayoutModels.ENUMS_TAB
+                                        ]
+                                    }
                                 ]
                             }
                         ]
@@ -520,7 +558,7 @@ export class LayoutModels {
             },
             {
                 name: "pagesEditor",
-                version: 5,
+                version: 6,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: [],
@@ -532,27 +570,17 @@ export class LayoutModels {
                                 children: [
                                     {
                                         type: "tabset",
-                                        children: [
-                                            {
-                                                type: "tab",
-                                                enableClose: false,
-                                                name: "Pages",
-                                                component: "pages"
-                                            }
-                                        ]
+                                        children: [LayoutModels.PAGES_TAB]
                                     },
                                     {
                                         type: "tabset",
                                         children: [
-                                            {
-                                                type: "tab",
-                                                enableClose: false,
-                                                name: "Page Structure",
-                                                component: "page-structure",
-                                                id: LayoutModels.PAGE_STRUCTURE_TAB_ID
-                                            },
-                                            LayoutModels.LOCAL_VARS_TAB
+                                            LayoutModels.PAGE_STRUCTURE_TAB
                                         ]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        children: [LayoutModels.LOCAL_VARS_TAB]
                                     }
                                 ]
                             }
