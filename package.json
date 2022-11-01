@@ -94,7 +94,6 @@
         "less": "^3.13.1",
         "less-plugin-clean-css": "^1.5.1",
         "madge": "^5.0.1",
-        "node-gyp": "8.4.1",
         "node-watch": "^0.7.1",
         "pump": "^3.0.0",
         "request": "^2.88.2",
