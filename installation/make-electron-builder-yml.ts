@@ -217,7 +217,7 @@ let files = [
         productName,
 
         nodeGypRebuild: false,
-        npmRebuild: true,
+        npmRebuild: false,
         buildDependenciesFromSource: true,
 
         files,
