@@ -219,7 +219,10 @@ export class DataBuffer {
                 this.addPadding();
             }
 
-            this.buffer.writeUInt32LE(currentOffset, writeLater.currentOffset);
+            this.buffer.writeInt32LE(
+                currentOffset - writeLater.currentOffset,
+                writeLater.currentOffset
+            );
         }
 
         this.writeLaterObjectList = [];

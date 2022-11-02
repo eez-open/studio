@@ -9,7 +9,7 @@ import { setup } from "setup/setup";
 
 import type * as HomeWindowModule from "main/home-window";
 import type * as SettingsModule from "main/settings";
-import { unloadVisa } from "instrument/connection/connection-main";
+import { unloadVisa } from "instrument/connection/interfaces/visa-dll";
 
 // disable security warnings inside dev console
 process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = true as any;

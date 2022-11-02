@@ -39,7 +39,7 @@ import {
     Message,
     ProjectEditorStore
 } from "project-editor/store";
-import { isDashboardProject } from "project-editor/project/project-type-traits";
+import { isNotDashboardProject } from "project-editor/project/project-type-traits";
 import {
     buildExpression,
     buildAssignableExpression,
@@ -78,7 +78,7 @@ export class SCPIActionComponent extends ActionComponent {
                     name: "instrument",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: isDashboardProject
+                    hideInPropertyGrid: isNotDashboardProject
                 },
                 "object:Instrument"
             ),

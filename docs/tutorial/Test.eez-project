@@ -1,13 +1,18 @@
 {
+  "objID": "6666cd76-f969-5646-9e7b-e39d750cc7d9",
   "settings": {
+    "objID": "e007d988-9fba-797d-72e9-efc33ca6d05c",
     "general": {
+      "objID": "fd434352-2277-c4a8-e87e-e96cfcbf2305",
       "projectVersion": "v3",
       "projectType": "dashboard",
       "imports": []
     },
     "build": {
+      "objID": "72794a43-a0fc-13c2-7eb5-67dd952141a4",
       "configurations": [
         {
+          "objID": "bba0546c-06b8-604d-c43e-ecf1963e7492",
           "name": "Default"
         }
       ],
@@ -15,18 +20,22 @@
     }
   },
   "variables": {
+    "objID": "c6c71e16-53e1-217f-d03b-cef56c6b037a",
     "globalVariables": [
       {
+        "objID": "5a960336-5376-6ed0-b4ce-bd465150a952",
         "name": "voltage",
         "type": "float",
         "defaultValue": "0"
       },
       {
+        "objID": "309620e2-1044-9963-2c6d-0dbd00fafdb4",
         "name": "current",
         "type": "float",
         "defaultValue": "0"
       },
       {
+        "objID": "979a7ace-1cc6-96f9-ed7d-406cf51e366a",
         "name": "instrument",
         "description": "BB3 Instrument",
         "type": "object:Instrument",
@@ -40,16 +49,18 @@
   "actions": [],
   "pages": [
     {
+      "objID": "c727bd09-d9c8-0552-5693-ba9c44e7bcd7",
       "components": [
         {
+          "objID": "1a331409-37d5-13ac-651e-26eb227b18b1",
           "type": "Button",
           "left": 20,
           "top": 178,
           "width": 103,
           "height": 32,
-          "wireID": "96d0e6bf-5efa-4147-810c-d20b4089ddef",
           "customInputs": [
             {
+              "objID": "416dca8e-e80f-a4f2-b546-c9c21d889f03",
               "name": "enabled",
               "type": "boolean"
             }
@@ -61,27 +72,32 @@
           "data": "\"Start\"",
           "action": "",
           "style": {
+            "objID": "759e70f7-0da0-ee89-4fb3-c9fe64b200c5",
             "inheritFrom": "default"
           },
+          "timeline": [],
           "enabled": "enabled",
           "disabledStyle": {
+            "objID": "fe1b3d77-8f68-b150-fde2-4735d5606d77",
             "inheritFrom": "default"
           }
         },
         {
+          "objID": "b1d5a0ef-dd40-0055-2de1-a16cf1b7597e",
           "type": "SCPIActionComponent",
           "left": -100,
           "top": 681,
           "width": 191,
           "height": 73,
-          "wireID": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
           "customInputs": [],
           "customOutputs": [
             {
+              "objID": "91b9e3be-7aac-c8b3-cfcc-2246a996cb34",
               "name": "voltage",
               "type": "float"
             },
             {
+              "objID": "0de07477-4f13-29a5-08d9-e87965ff0b63",
               "name": "current",
               "type": "float"
             }
@@ -90,14 +106,15 @@
           "scpi": "voltage = meas:volt?\ncurrent = meas:curr?"
         },
         {
+          "objID": "58d84e03-0aa1-9a55-2f99-b308ea38dba0",
           "type": "Button",
           "left": 20,
           "top": 257,
           "width": 103,
           "height": 32,
-          "wireID": "17a56676-cba2-425f-cb12-87e07fe927ac",
           "customInputs": [
             {
+              "objID": "673df889-d5c8-4114-3e9d-17189f52b3c3",
               "name": "enabled",
               "type": "boolean"
             }
@@ -108,22 +125,26 @@
           ],
           "data": "\"Stop\"",
           "style": {
+            "objID": "cdbcd671-bbcc-389e-954e-de0c2ea9c9dc",
             "inheritFrom": "default"
           },
+          "timeline": [],
           "enabled": "enabled",
           "disabledStyle": {
+            "objID": "6b13711c-85a5-93f8-73bc-76db5bac5806",
             "inheritFrom": "default"
           }
         },
         {
+          "objID": "ad6d7962-be1f-dc32-3dac-0c8c6052db45",
           "type": "Gauge",
           "left": 217,
           "top": 20,
           "width": 233,
           "height": 190,
-          "wireID": "e09a754c-f52c-41c3-e5cb-091fc475b670",
           "customInputs": [
             {
+              "objID": "5233cbaa-797b-1455-e168-5736eba79f3c",
               "name": "data",
               "type": "float"
             }
@@ -131,13 +152,16 @@
           "customOutputs": [],
           "data": "data",
           "style": {
+            "objID": "ba5a759e-2822-af12-0dfa-0a34816facd6",
             "inheritFrom": "default"
           },
+          "timeline": [],
           "title": "Voltage",
           "minRange": 0,
           "maxRange": 40,
           "color": "#0000ff",
           "margin": {
+            "objID": "9560a234-bccb-01d2-7947-131d076ec016",
             "top": 50,
             "right": 0,
             "bottom": 0,
@@ -145,27 +169,41 @@
           }
         },
         {
+          "objID": "c489d6a8-f950-d778-2e3e-90bd3017c953",
           "type": "LineChart",
           "left": 468,
           "top": 20,
           "width": 479,
           "height": 190,
-          "wireID": "85873f52-29f9-4c3c-e1f9-fdd8a2ba4e94",
           "customInputs": [
             {
+              "objID": "50135bb5-97da-2c20-3247-10061c8e7742",
               "name": "data",
               "type": "float"
             }
           ],
           "customOutputs": [],
-          "data": "data",
           "style": {
+            "objID": "72862002-7fbd-278c-4a47-f5102d88d446",
             "inheritFrom": "default"
           },
+          "timeline": [],
+          "xValue": "Date.now()",
+          "lines": [
+            {
+              "objID": "f3690b75-c532-69fe-44aa-ac63eeb77317",
+              "label": "\"Data\"",
+              "value": "data"
+            }
+          ],
           "title": "Voltage",
+          "showLegend": true,
+          "yAxisRangeOption": "floating",
+          "yAxisRangeFrom": 0,
+          "yAxisRangeTo": 10,
           "maxPoints": 100,
-          "color": "#0000ff",
           "margin": {
+            "objID": "6a1f8836-8585-b685-bc5d-eba27b2fdef0",
             "top": 50,
             "right": 25,
             "bottom": 40,
@@ -173,14 +211,15 @@
           }
         },
         {
+          "objID": "fb4b3fa1-d53b-75a6-c45d-c41ad06c4923",
           "type": "Gauge",
           "left": 217,
           "top": 257,
           "width": 233,
           "height": 190,
-          "wireID": "2ae88f53-4898-4d54-ea81-e0d4b8c134b6",
           "customInputs": [
             {
+              "objID": "95f34a75-ad32-0682-635a-fef32a4b37a3",
               "name": "data",
               "type": "float"
             }
@@ -188,13 +227,16 @@
           "customOutputs": [],
           "data": "data",
           "style": {
+            "objID": "9770ac8c-3842-2571-d0a9-dfe61d2abbc7",
             "inheritFrom": "default"
           },
+          "timeline": [],
           "title": "Current",
           "minRange": 0,
           "maxRange": 5,
           "color": "#ff0000",
           "margin": {
+            "objID": "4a9d7f41-6591-ac75-b6d7-771d7d22ca72",
             "top": 50,
             "right": 0,
             "bottom": 0,
@@ -202,27 +244,41 @@
           }
         },
         {
+          "objID": "da721dd5-7a45-4d91-0d3f-bb4336957e03",
           "type": "LineChart",
           "left": 468,
           "top": 257,
           "width": 479,
           "height": 190,
-          "wireID": "72b6face-cd0f-40cf-cbd0-51e4c30b5123",
           "customInputs": [
             {
+              "objID": "895b91ea-1cff-8b23-87d7-08c1494cbb58",
               "name": "data",
               "type": "float"
             }
           ],
           "customOutputs": [],
-          "data": "data",
           "style": {
+            "objID": "f8322731-da0e-c354-7dfe-25934a164257",
             "inheritFrom": "default"
           },
+          "timeline": [],
+          "xValue": "Date.now()",
+          "lines": [
+            {
+              "objID": "967b5b2e-cdd1-b563-080c-8e7fb955dc5a",
+              "label": "\"Data\"",
+              "value": "data"
+            }
+          ],
           "title": "Current",
+          "showLegend": true,
+          "yAxisRangeOption": "floating",
+          "yAxisRangeFrom": 0,
+          "yAxisRangeTo": 10,
           "maxPoints": 100,
-          "color": "#ff0000",
           "margin": {
+            "objID": "1be27b0f-8740-49e4-7082-cb17526fdfab",
             "top": 50,
             "right": 25,
             "bottom": 40,
@@ -230,85 +286,79 @@
           }
         },
         {
+          "objID": "65ed2992-be4b-7a4c-f423-578e05f582f3",
           "type": "IsTrueActionComponent",
           "left": 80,
           "top": 865,
-          "width": 87,
+          "width": 96,
           "height": 73,
-          "wireID": "ef5a90e6-4958-4606-8bf1-f932c3f964c0",
-          "customInputs": [
+          "customInputs": [],
+          "customOutputs": [],
+          "value": "continue"
+        },
+        {
+          "objID": "9928539e-ace8-3aa6-dcc9-ffdf62bf6708",
+          "type": "SetVariableActionComponent",
+          "left": -247,
+          "top": 430,
+          "width": 147,
+          "height": 56,
+          "customInputs": [],
+          "customOutputs": [],
+          "entries": [
             {
-              "name": "value",
-              "type": "string"
+              "objID": "76c40539-4698-6537-dee1-38712f5535ca",
+              "variable": "continue",
+              "value": "false"
             }
-          ],
-          "customOutputs": [],
-          "value": "value"
+          ]
         },
         {
-          "type": "WatchVariableActionComponent",
-          "left": -116,
-          "top": 865,
-          "width": 123,
-          "height": 54,
-          "wireID": "3e958be7-9ce1-4645-844c-d3b0380dbcfb",
-          "customInputs": [],
-          "customOutputs": [],
-          "variable": "continue"
-        },
-        {
+          "objID": "99e9c249-06b1-5559-9a34-fe49f3d52d4e",
           "type": "SetVariableActionComponent",
-          "left": -262,
-          "top": 455,
-          "width": 132,
-          "height": 58,
-          "wireID": "6c7b5504-dba4-41a7-f576-9365c69c92ed",
+          "left": -240,
+          "top": 312,
+          "width": 140,
+          "height": 56,
           "customInputs": [],
           "customOutputs": [],
-          "variable": "continue",
-          "value": "false"
+          "entries": [
+            {
+              "objID": "1555069c-9b32-1c57-e6e8-8d0ced468a91",
+              "variable": "continue",
+              "value": "true"
+            }
+          ]
         },
         {
-          "type": "SetVariableActionComponent",
-          "left": -275,
-          "top": 310,
-          "width": 126,
-          "height": 58,
-          "wireID": "b1c9fde7-e1cd-4a4e-bcf5-14762b1b7d00",
-          "customInputs": [],
-          "customOutputs": [],
-          "variable": "continue",
-          "value": "true"
-        },
-        {
+          "objID": "d0b96dee-f004-1f63-44e4-c4c2a4fcfe06",
           "type": "WatchVariableActionComponent",
-          "left": -298,
-          "top": 65,
+          "left": -389,
+          "top": 79,
           "width": 289,
-          "height": 54,
-          "wireID": "894df5b9-459f-4aae-db8a-8ad0926a4157",
+          "height": 55,
           "customInputs": [],
           "customOutputs": [],
           "variable": "instrument.isConnected && !continue"
         },
         {
+          "objID": "629c9db1-9301-9dd6-7aa2-63da25ece3c9",
           "type": "WatchVariableActionComponent",
-          "left": -258,
-          "top": 181,
+          "left": -223,
+          "top": 196,
           "width": 123,
-          "height": 54,
-          "wireID": "8e014cae-346a-48b2-fbe1-dc1b33607f6f",
+          "height": 55,
           "customInputs": [],
           "customOutputs": [],
           "variable": "continue"
         },
         {
+          "objID": "449dea31-af3a-6a20-5c48-ba9d732e4a81",
           "type": "DelayActionComponent",
           "left": 236,
           "top": 681,
           "width": 87,
-          "height": 53,
-          "wireID": "69bdc907-a931-4d1d-81ef-2d7a5f939bf7",
+          "height": 55,
           "customInputs": [],
           "customOutputs": [],
           "milliseconds": "50"
@@ -316,86 +366,93 @@
       ],
       "connectionLines": [
         {
-          "source": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
+          "objID": "e01fb943-1840-a801-55ed-ff0cc445981d",
+          "source": "b1d5a0ef-dd40-0055-2de1-a16cf1b7597e",
           "output": "voltage",
-          "target": "85873f52-29f9-4c3c-e1f9-fdd8a2ba4e94",
+          "target": "c489d6a8-f950-d778-2e3e-90bd3017c953",
           "input": "data"
         },
         {
-          "source": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
+          "objID": "27777050-79d0-0a5f-9fa1-ee264738518b",
+          "source": "b1d5a0ef-dd40-0055-2de1-a16cf1b7597e",
           "output": "current",
-          "target": "2ae88f53-4898-4d54-ea81-e0d4b8c134b6",
+          "target": "fb4b3fa1-d53b-75a6-c45d-c41ad06c4923",
           "input": "data"
         },
         {
-          "source": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
+          "objID": "b8f91348-5463-3225-833b-8aad757d9d9f",
+          "source": "b1d5a0ef-dd40-0055-2de1-a16cf1b7597e",
           "output": "current",
-          "target": "72b6face-cd0f-40cf-cbd0-51e4c30b5123",
+          "target": "da721dd5-7a45-4d91-0d3f-bb4336957e03",
           "input": "data"
         },
         {
-          "source": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
+          "objID": "cbf2af9b-a321-ac06-1db5-4503f162563f",
+          "source": "b1d5a0ef-dd40-0055-2de1-a16cf1b7597e",
           "output": "voltage",
-          "target": "e09a754c-f52c-41c3-e5cb-091fc475b670",
+          "target": "ad6d7962-be1f-dc32-3dac-0c8c6052db45",
           "input": "data"
         },
         {
-          "source": "3e958be7-9ce1-4645-844c-d3b0380dbcfb",
-          "output": "variable",
-          "target": "ef5a90e6-4958-4606-8bf1-f932c3f964c0",
-          "input": "value"
-        },
-        {
-          "source": "b1c9fde7-e1cd-4a4e-bcf5-14762b1b7d00",
+          "objID": "c2ea86ab-6bbd-c44d-c245-85e3289a9065",
+          "source": "99e9c249-06b1-5559-9a34-fe49f3d52d4e",
           "output": "@seqout",
-          "target": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
+          "target": "b1d5a0ef-dd40-0055-2de1-a16cf1b7597e",
           "input": "@seqin"
         },
         {
-          "source": "96d0e6bf-5efa-4147-810c-d20b4089ddef",
+          "objID": "2a171df8-8240-43aa-8997-d1da30af5fc0",
+          "source": "1a331409-37d5-13ac-651e-26eb227b18b1",
           "output": "action",
-          "target": "b1c9fde7-e1cd-4a4e-bcf5-14762b1b7d00",
+          "target": "99e9c249-06b1-5559-9a34-fe49f3d52d4e",
           "input": "@seqin"
         },
         {
-          "source": "17a56676-cba2-425f-cb12-87e07fe927ac",
+          "objID": "7e21fbf7-268f-8b13-fe15-4e0bb0505101",
+          "source": "58d84e03-0aa1-9a55-2f99-b308ea38dba0",
           "output": "action",
-          "target": "6c7b5504-dba4-41a7-f576-9365c69c92ed",
+          "target": "9928539e-ace8-3aa6-dcc9-ffdf62bf6708",
           "input": "@seqin"
         },
         {
-          "source": "894df5b9-459f-4aae-db8a-8ad0926a4157",
+          "objID": "1da7cb50-2758-8f34-e7a0-d1c3b785f611",
+          "source": "d0b96dee-f004-1f63-44e4-c4c2a4fcfe06",
           "output": "variable",
-          "target": "96d0e6bf-5efa-4147-810c-d20b4089ddef",
+          "target": "1a331409-37d5-13ac-651e-26eb227b18b1",
           "input": "enabled"
         },
         {
-          "source": "8e014cae-346a-48b2-fbe1-dc1b33607f6f",
+          "objID": "d3992b47-17a5-0a70-c32e-c1b3f167b7b9",
+          "source": "629c9db1-9301-9dd6-7aa2-63da25ece3c9",
           "output": "variable",
-          "target": "17a56676-cba2-425f-cb12-87e07fe927ac",
+          "target": "58d84e03-0aa1-9a55-2f99-b308ea38dba0",
           "input": "enabled"
         },
         {
-          "source": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
+          "objID": "d1f5e68c-4378-e75c-2e81-4a30c0c9cb03",
+          "source": "b1d5a0ef-dd40-0055-2de1-a16cf1b7597e",
           "output": "@seqout",
-          "target": "69bdc907-a931-4d1d-81ef-2d7a5f939bf7",
+          "target": "449dea31-af3a-6a20-5c48-ba9d732e4a81",
           "input": "@seqin"
         },
         {
-          "source": "69bdc907-a931-4d1d-81ef-2d7a5f939bf7",
+          "objID": "97c18dc4-6b97-35b1-6ccc-fd4d107c6c8c",
+          "source": "449dea31-af3a-6a20-5c48-ba9d732e4a81",
           "output": "@seqout",
-          "target": "ef5a90e6-4958-4606-8bf1-f932c3f964c0",
+          "target": "65ed2992-be4b-7a4c-f423-578e05f582f3",
           "input": "@seqin"
         },
         {
-          "source": "ef5a90e6-4958-4606-8bf1-f932c3f964c0",
+          "objID": "c9ad1047-7b2e-ba9f-dd8f-06f1cb3768d8",
+          "source": "65ed2992-be4b-7a4c-f423-578e05f582f3",
           "output": "True",
-          "target": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
+          "target": "b1d5a0ef-dd40-0055-2de1-a16cf1b7597e",
           "input": "@seqin"
         }
       ],
       "localVariables": [
         {
+          "objID": "96cc272a-928e-0ed3-7037-6d58a5a5b03f",
           "name": "continue",
           "type": "boolean",
           "defaultValue": "false"
@@ -407,15 +464,20 @@
       "top": 0,
       "width": 967,
       "height": 467,
-      "dataContextOverrides": "false"
+      "dataContextOverrides": "false",
+      "lvglLocalStyles": {
+        "objID": "7404c6da-b956-34e1-41f0-42784e0686d9"
+      }
     }
   ],
   "styles": [
     {
+      "objID": "04157789-da53-2f4a-e658-4ca10aa5fbef",
       "name": "default",
       "font": "default"
     },
     {
+      "objID": "c49c1adf-a610-28c0-027c-0e452dadb32b",
       "name": "page",
       "inheritFrom": "default",
       "borderSize": "1px",
@@ -428,6 +490,7 @@
   "colors": [],
   "themes": [
     {
+      "objID": "a7943c4e-90c6-cf58-2c43-9f24cf4b097c",
       "name": "default",
       "colors": []
     }

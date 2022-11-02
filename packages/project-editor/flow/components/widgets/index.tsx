@@ -1630,7 +1630,7 @@ export class LayoutViewWidget extends Widget {
                 dataBuffer.writeUint8(0);
             }
         } else {
-            dataBuffer.writeInt16(0);
+            dataBuffer.writeInt16(-1);
             dataBuffer.writeUint8(0);
             dataBuffer.writeUint8(0);
         }

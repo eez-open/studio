@@ -18,8 +18,7 @@ import type { InstrumentObject } from "instrument/instrument-object";
 import { EthernetInterface } from "instrument/connection/interfaces/ethernet";
 import { SerialInterface } from "instrument/connection/interfaces/serial";
 import { UsbTmcInterface } from "instrument/connection/interfaces/usbtmc";
-import type * as VisaInterfaceModule from "instrument/connection/interfaces/visa";
-import type * as VisaDllModule from "instrument/connection/interfaces/visa-dll";
+import { VisaInterface } from "instrument/connection/interfaces/visa";
 import { WebSimulatorInterface } from "instrument/connection/interfaces/web-simulator";
 import type {
     CommunicationInterface,
@@ -48,8 +47,6 @@ const CONF_HOUSEKEEPING_INTERVAL = 100;
 const CONF_IDN_EXPECTED_TIMEOUT = 5000;
 const CONF_COMBINE_IF_BELOW_MS = 250;
 const CONF_ACQUIRE_TIMEOUT = 3000;
-
-let visaLoaded = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -183,11 +180,7 @@ export class Connection
         } else if (this.connectionParameters.type === "web-simulator") {
             this.communicationInterface = new WebSimulatorInterface(this);
         } else {
-            const { VisaInterface } =
-                require("instrument/connection/interfaces/visa") as typeof VisaInterfaceModule;
-
             this.communicationInterface = new VisaInterface(this);
-            visaLoaded = true;
         }
 
         this.communicationInterface!.connect();
@@ -891,14 +884,4 @@ export function createMainProcessConnection(instrument: InstrumentObject) {
     const connection = new Connection(instrument);
     runInAction(() => connections.set(instrument.id.toString(), connection));
     return connection;
-}
-
-export function unloadVisa() {
-    if (!visaLoaded) {
-        return;
-    }
-
-    const { unloadVisa } =
-        require("instrument/connection/interfaces/visa-dll") as typeof VisaDllModule;
-    unloadVisa();
 }
