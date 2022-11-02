@@ -48,6 +48,7 @@ import { SessionInfo } from "instrument/window/history/session/info-view";
 import { IListNode, List, ListContainer, ListItem } from "eez-studio-ui/list";
 import { settingsController } from "home/settings";
 import { IMruItem } from "main/settings";
+import { SearchInput } from "eez-studio-ui/search-input";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -525,13 +526,20 @@ const Projects = observer(
     class Projects extends React.Component {
         selectedFilePath: string | undefined;
 
+        searchText: string = "";
+
         constructor(props: any) {
             super(props);
 
             makeObservable(this, {
-                selectedFilePath: observable
+                selectedFilePath: observable,
+                searchText: observable
             });
         }
+
+        onSearchChange = (event: any) => {
+            this.searchText = ($(event.target).val() as string).trim();
+        };
 
         render() {
             return (
@@ -564,15 +572,29 @@ const Projects = observer(
                         </ToolbarHeader>
                     </Header>
                     <Body>
+                        <SearchInput
+                            searchText={this.searchText}
+                            onChange={this.onSearchChange}
+                            onKeyDown={this.onSearchChange}
+                        />
                         <ListContainer tabIndex={0}>
                             <List
-                                nodes={settingsController.mru.map(mruItem => ({
-                                    id: mruItem.filePath,
-                                    data: mruItem,
-                                    selected:
-                                        mruItem.filePath ==
-                                        this.selectedFilePath
-                                }))}
+                                nodes={settingsController.mru
+                                    .filter(
+                                        mruItem =>
+                                            mruItem.filePath
+                                                .toLowerCase()
+                                                .indexOf(
+                                                    this.searchText.toLowerCase()
+                                                ) != -1
+                                    )
+                                    .map(mruItem => ({
+                                        id: mruItem.filePath,
+                                        data: mruItem,
+                                        selected:
+                                            mruItem.filePath ==
+                                            this.selectedFilePath
+                                    }))}
                                 renderNode={(node: IListNode<IMruItem>) => {
                                     let mruItem = node.data;
 
