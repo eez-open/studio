@@ -3234,7 +3234,6 @@ export class AnimateActionComponent extends ActionComponent {
 export class NoopActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_NOOP_ACTION,
-        label: () => "NoOp",
         componentPaletteLabel: "NoOp",
         properties: [
             {
