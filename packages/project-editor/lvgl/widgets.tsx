@@ -916,7 +916,7 @@ export class LVGLWidget extends Widget {
                 );
             }
 
-            if (this.hiddenInEditor) {
+            if (this.hiddenInEditor && runtime.isEditor) {
                 runtime.wasm._lvglObjAddFlag(
                     obj,
                     getCode(["HIDDEN"], LVGL_FLAG_CODES)
