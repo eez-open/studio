@@ -55,6 +55,41 @@ import { getProjectIcon } from "home/helper";
 
 const selectedInstrument = observable.box<string | undefined>();
 
+const SORT_ALPHA_ICON = (
+    <svg
+        viewBox="0 0 24 24"
+        strokeWidth="2"
+        stroke="currentColor"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+        <path d="M15 10v-5c0 -1.38 .62 -2 2 -2s2 .62 2 2v5m0 -3h-4"></path>
+        <path d="M19 21h-4l4 -7h-4"></path>
+        <path d="M4 15l3 3l3 -3"></path>
+        <path d="M7 6v12"></path>
+    </svg>
+);
+
+const SORT_RECENT_ICON = (
+    <svg
+        viewBox="0 0 24 24"
+        strokeWidth="2"
+        stroke="currentColor"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+        <line x1="4" y1="6" x2="13" y2="6"></line>
+        <line x1="4" y1="12" x2="11" y2="12"></line>
+        <line x1="4" y1="18" x2="11" y2="18"></line>
+        <polyline points="15 15 18 18 21 15"></polyline>
+        <line x1="18" y1="6" x2="18" y2="18"></line>
+    </svg>
+);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 function deleteInstrument(instrument: InstrumentObject) {
@@ -529,14 +564,51 @@ const Projects = observer(
 
         searchText: string = "";
 
+        sortAlphabetically: boolean = false;
+
         constructor(props: any) {
             super(props);
 
+            this.sortAlphabetically =
+                localStorage.getItem("homeTabProjectsSort") == "alphabetically"
+                    ? true
+                    : false;
+
             makeObservable(this, {
                 selectedFilePath: observable,
-                searchText: observable
+                searchText: observable,
+                sortAlphabetically: observable,
+                mru: computed,
+                mruAlpha: computed
             });
         }
+
+        get mruAlpha() {
+            const mru = [...settingsController.mru];
+            mru.sort((mruItem1, mruItem2) => {
+                const baseName1 = path.basename(mruItem1.filePath);
+                const baseName2 = path.basename(mruItem2.filePath);
+                return stringCompare(baseName1, baseName2);
+            });
+            return mru;
+        }
+
+        get mru() {
+            return this.sortAlphabetically
+                ? this.mruAlpha
+                : settingsController.mru;
+        }
+
+        toggleSort = () => {
+            runInAction(
+                () => (this.sortAlphabetically = !this.sortAlphabetically)
+            );
+
+            localStorage.setItem(
+                "homeTabProjectsSort",
+                this.sortAlphabetically ? "alphabetically" : "most-recent"
+            );
+        };
 
         onSearchChange = (event: any) => {
             this.searchText = ($(event.target).val() as string).trim();
@@ -573,14 +645,31 @@ const Projects = observer(
                         </ToolbarHeader>
                     </Header>
                     <Body>
-                        <SearchInput
-                            searchText={this.searchText}
-                            onChange={this.onSearchChange}
-                            onKeyDown={this.onSearchChange}
-                        />
+                        <div className="d-flex">
+                            <SearchInput
+                                searchText={this.searchText}
+                                onChange={this.onSearchChange}
+                                onKeyDown={this.onSearchChange}
+                            />
+                            <div style={{ padding: 5 }}>
+                                {this.sortAlphabetically ? (
+                                    <IconAction
+                                        icon={SORT_ALPHA_ICON}
+                                        title={"Sort alphabetically"}
+                                        onClick={this.toggleSort}
+                                    />
+                                ) : (
+                                    <IconAction
+                                        icon={SORT_RECENT_ICON}
+                                        title={"Show most recent first"}
+                                        onClick={this.toggleSort}
+                                    />
+                                )}
+                            </div>
+                        </div>
                         <ListContainer tabIndex={0}>
                             <List
-                                nodes={settingsController.mru
+                                nodes={this.mru
                                     .filter(
                                         mruItem =>
                                             mruItem.filePath
