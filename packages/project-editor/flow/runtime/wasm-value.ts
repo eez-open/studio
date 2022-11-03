@@ -20,6 +20,7 @@ import {
     FLOW_VALUE_TYPE_NULL,
     FLOW_VALUE_TYPE_STREAM,
     FLOW_VALUE_TYPE_STRING,
+    FLOW_VALUE_TYPE_STRING_ASSET,
     FLOW_VALUE_TYPE_STRING_REF,
     FLOW_VALUE_TYPE_UINT16,
     FLOW_VALUE_TYPE_UINT32,
@@ -321,6 +322,12 @@ export function getValue(
         const ptr = WasmFlowRuntime.HEAP32[offset >> 2];
         return {
             value: WasmFlowRuntime.UTF8ToString(ptr),
+            valueType: "string"
+        };
+    } else if (type == FLOW_VALUE_TYPE_STRING_ASSET) {
+        const relptr = WasmFlowRuntime.HEAP32[offset >> 2];
+        return {
+            value: WasmFlowRuntime.UTF8ToString(offset + relptr),
             valueType: "string"
         };
     } else if (type == FLOW_VALUE_TYPE_ARRAY) {

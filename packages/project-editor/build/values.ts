@@ -18,7 +18,7 @@ import {
     FLOW_VALUE_TYPE_FLOAT,
     FLOW_VALUE_TYPE_INT32,
     FLOW_VALUE_TYPE_NULL,
-    FLOW_VALUE_TYPE_STRING,
+    FLOW_VALUE_TYPE_STRING_ASSET,
     FLOW_VALUE_TYPE_UINT32,
     FLOW_VALUE_TYPE_UNDEFINED
 } from "project-editor/build/value-types";
@@ -43,7 +43,7 @@ export function getValueType(valueType: ValueType) {
     } else if (valueType == "boolean") {
         return FLOW_VALUE_TYPE_BOOLEAN;
     } else if (valueType == "string") {
-        return FLOW_VALUE_TYPE_STRING;
+        return FLOW_VALUE_TYPE_STRING_ASSET;
     } else if (valueType == "date") {
         return FLOW_VALUE_TYPE_DATE;
     } else if (isEnumType(valueType)) {
@@ -149,7 +149,7 @@ function buildFlowValue(
             dataBuffer.writeUint32(0);
         } else if (flowValue.type == FLOW_VALUE_TYPE_DOUBLE) {
             dataBuffer.writeDouble(flowValue.value);
-        } else if (flowValue.type == FLOW_VALUE_TYPE_STRING) {
+        } else if (flowValue.type == FLOW_VALUE_TYPE_STRING_ASSET) {
             dataBuffer.writeObjectOffset(() => {
                 dataBuffer.writeString(flowValue.value);
             });
