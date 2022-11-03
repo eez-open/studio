@@ -63,6 +63,16 @@ export const LVGL_BASIC_TYPE_NAMES = [
     "string"
 ];
 
+export const LVGL_FLOW_BASIC_TYPE_NAMES = [
+    "integer",
+    "float",
+    "double",
+    "boolean",
+    "string",
+    "date",
+    "any"
+];
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export const ACTION_PARAMS_STRUCT_NAME = "$ActionParams";
@@ -277,11 +287,11 @@ const VariableTypeSelect = observer(
 
         const { value, onChange, project } = props;
 
-        const basicTypeNames =
-            !props.project.projectTypeTraits.isLVGL ||
-            props.project.projectTypeTraits.hasFlowSupport
-                ? BASIC_TYPE_NAMES
-                : LVGL_BASIC_TYPE_NAMES;
+        const basicTypeNames = props.project.projectTypeTraits.isLVGL
+            ? props.project.projectTypeTraits.hasFlowSupport
+                ? LVGL_FLOW_BASIC_TYPE_NAMES
+                : LVGL_BASIC_TYPE_NAMES
+            : BASIC_TYPE_NAMES;
 
         const basicTypes = basicTypeNames.map(basicTypeName => {
             return (
@@ -292,15 +302,17 @@ const VariableTypeSelect = observer(
         });
         basicTypes.unshift(<option key="__empty" value={addType("")} />);
 
-        const objectTypes = props.project.projectTypeTraits.hasFlowSupport
-            ? [...objectVariableTypes.keys()].map(name => {
-                  return (
-                      <option key={name} value={addType(`object:${name}`)}>
-                          {humanizeVariableType(`object:${name}`)}
-                      </option>
-                  );
-              })
-            : [];
+        const objectTypes =
+            props.project.projectTypeTraits.hasFlowSupport &&
+            !props.project.projectTypeTraits.isLVGL
+                ? [...objectVariableTypes.keys()].map(name => {
+                      return (
+                          <option key={name} value={addType(`object:${name}`)}>
+                              {humanizeVariableType(`object:${name}`)}
+                          </option>
+                      );
+                  })
+                : [];
 
         const enums = project.variables.enums.map(enumDef => (
             <option key={enumDef.name} value={addType(`enum:${enumDef.name}`)}>
@@ -308,17 +320,20 @@ const VariableTypeSelect = observer(
             </option>
         ));
 
+        const structureTypes = [
+            ...project.variables.structures,
+            ...(props.project.projectTypeTraits.isLVGL ? [] : SYSTEM_STRUCTURES)
+        ];
+
         const structures = props.project.projectTypeTraits.hasFlowSupport
-            ? [...project.variables.structures, ...SYSTEM_STRUCTURES].map(
-                  struct => (
-                      <option
-                          key={struct.name}
-                          value={addType(`struct:${struct.name}`)}
-                      >
-                          {humanizeVariableType(`struct:${struct.name}`)}
-                      </option>
-                  )
-              )
+            ? structureTypes.map(struct => (
+                  <option
+                      key={struct.name}
+                      value={addType(`struct:${struct.name}`)}
+                  >
+                      {humanizeVariableType(`struct:${struct.name}`)}
+                  </option>
+              ))
             : [];
 
         const arrayOfBasicTypes =
@@ -336,18 +351,20 @@ const VariableTypeSelect = observer(
                   })
                 : [];
 
-        const arrayOfObjects = props.project.projectTypeTraits.hasFlowSupport
-            ? [...objectVariableTypes.keys()].map(name => {
-                  return (
-                      <option
-                          key={name}
-                          value={addType(`array:object:${name}`)}
-                      >
-                          {humanizeVariableType(`array:object:${name}`)}
-                      </option>
-                  );
-              })
-            : [];
+        const arrayOfObjects =
+            props.project.projectTypeTraits.hasFlowSupport &&
+            !props.project.projectTypeTraits.isLVGL
+                ? [...objectVariableTypes.keys()].map(name => {
+                      return (
+                          <option
+                              key={name}
+                              value={addType(`array:object:${name}`)}
+                          >
+                              {humanizeVariableType(`array:object:${name}`)}
+                          </option>
+                      );
+                  })
+                : [];
 
         const arrayOfEnums =
             !props.project.projectTypeTraits.isLVGL ||
@@ -363,16 +380,14 @@ const VariableTypeSelect = observer(
                 : [];
 
         const arrayOfStructures = props.project.projectTypeTraits.hasFlowSupport
-            ? [...project.variables.structures, ...SYSTEM_STRUCTURES].map(
-                  struct => (
-                      <option
-                          key={struct.name}
-                          value={addType(`array:struct:${struct.name}`)}
-                      >
-                          {humanizeVariableType(`array:struct:${struct.name}`)}
-                      </option>
-                  )
-              )
+            ? structureTypes.map(struct => (
+                  <option
+                      key={struct.name}
+                      value={addType(`array:struct:${struct.name}`)}
+                  >
+                      {humanizeVariableType(`array:struct:${struct.name}`)}
+                  </option>
+              ))
             : [];
 
         if (!allTypes.has(value)) {
