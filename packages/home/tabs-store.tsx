@@ -44,6 +44,7 @@ import { ProjectEditorView } from "project-editor/project/ProjectEditor";
 import { firstTime } from "./first-time";
 import { initProjectEditor } from "project-editor/project-editor-bootstrap";
 import { PROJECT_TAB_ID_PREFIX } from "home/tabs-store-conf";
+import { getProjectIcon } from "home/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -636,7 +637,13 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     get icon() {
-        return <Icon icon="material:developer_board" />;
+        return this.projectEditorStore &&
+            this.projectEditorStore.project.settings.general.projectType
+            ? getProjectIcon(
+                  this.filePath,
+                  this.projectEditorStore.project.settings.general.projectType
+              )
+            : undefined;
     }
 
     render() {

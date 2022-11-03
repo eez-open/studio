@@ -356,7 +356,10 @@ export class ProjectEditorStore {
     }
 
     updateMruFilePath() {
-        ipcRenderer.send("setMruFilePath", this.filePath);
+        ipcRenderer.send("setMruFilePath", {
+            filePath: this.filePath,
+            projectType: this.project.settings.general.projectType
+        });
     }
 
     getFilePathRelativeToProjectPath(absoluteFilePath: string) {

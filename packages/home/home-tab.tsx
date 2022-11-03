@@ -49,6 +49,7 @@ import { IListNode, List, ListContainer, ListItem } from "eez-studio-ui/list";
 import { settingsController } from "home/settings";
 import { IMruItem } from "main/settings";
 import { SearchInput } from "eez-studio-ui/search-input";
+import { getProjectIcon } from "home/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -614,11 +615,10 @@ const Projects = observer(
 
                                     return (
                                         <ListItem
-                                            leftIcon={
-                                                isProject
-                                                    ? "../eez-studio-ui/_images/eez-project.png"
-                                                    : "../eez-studio-ui/_images/eez-dashboard.png"
-                                            }
+                                            leftIcon={getProjectIcon(
+                                                mruItem.filePath,
+                                                mruItem.projectType
+                                            )}
                                             leftIconSize={48}
                                             label={
                                                 <div className="EezStudio_HomeTab_ProjectItem">

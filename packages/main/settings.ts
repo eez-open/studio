@@ -24,6 +24,7 @@ interface WindowState {
 
 export interface IMruItem {
     filePath: string;
+    projectType: string;
 }
 
 class Settings {
@@ -58,27 +59,49 @@ function getSettingsFilePath() {
     return app.getPath("userData") + "/" + SETTINGS_FILE_NAME;
 }
 
-export function loadSettings() {
-    action(() => {
+export async function loadSettings() {
+    runInAction(() => {
         settings.firstTime = true;
         settings.mru = [];
         settings.windowStates = {};
+    });
+
+    try {
+        let data = fs.readFileSync(getSettingsFilePath(), "utf8");
 
         try {
-            let data = fs.readFileSync(getSettingsFilePath(), "utf8");
+            let settingsJs: Settings = JSON.parse(data);
 
-            try {
-                let settingsJs: Settings = JSON.parse(data);
+            if (settingsJs.mru) {
+                const mru = settingsJs.mru.filter((mruItem: IMruItem) =>
+                    fs.existsSync(mruItem.filePath)
+                );
 
-                settings.firstTime = !!settingsJs.firstTime;
-
-                if (settingsJs.mru) {
-                    settings.mru = settingsJs.mru.filter((mruItem: IMruItem) =>
-                        fs.existsSync(mruItem.filePath)
-                    );
-                } else {
-                    settings.mru = [];
+                for (const mruItem of mru) {
+                    if (!mruItem.projectType) {
+                        try {
+                            const jsonStr = await fs.promises.readFile(
+                                mruItem.filePath,
+                                "utf-8"
+                            );
+                            const json = JSON.parse(jsonStr);
+                            mruItem.projectType =
+                                json.settings.general.projectType;
+                        } catch (err) {}
+                    }
                 }
+
+                runInAction(() => {
+                    settings.mru = mru;
+                });
+            } else {
+                runInAction(() => {
+                    settings.mru = [];
+                });
+            }
+
+            runInAction(() => {
+                settings.firstTime = !!settingsJs.firstTime;
 
                 if (settingsJs.windowStates) {
                     settings.windowStates = settingsJs.windowStates;
@@ -91,16 +114,16 @@ export function loadSettings() {
                 settings.dateFormat = settingsJs.dateFormat;
                 settings.timeFormat = settingsJs.timeFormat;
                 settings.isDarkTheme = settingsJs.isDarkTheme;
-            } catch (parseError) {
-                console.log(data);
-                console.error(parseError);
-            }
-        } catch (readFileError) {
-            console.info(
-                `Settings file "${getSettingsFilePath()}" doesn't exists.`
-            );
+            });
+        } catch (parseError) {
+            console.log(data);
+            console.error(parseError);
         }
-    })();
+    } catch (readFileError) {
+        console.info(
+            `Settings file "${getSettingsFilePath()}" doesn't exists.`
+        );
+    }
 
     autorun(() => {
         const mru = toJS(settings.mru);
@@ -237,16 +260,14 @@ export function settingsRegisterWindow(
     window.on("close", closeHandler);
 }
 
-ipcMain.on("setMruFilePath", function (event: any, mruItemFilePath: string) {
+ipcMain.on("setMruFilePath", function (event: any, mruItem: IMruItem) {
     action(() => {
-        var i = findMruIndex(mruItemFilePath);
+        var i = findMruIndex(mruItem.filePath);
         if (i != -1) {
             settings.mru.splice(i, 1);
         }
 
-        settings.mru.unshift({
-            filePath: mruItemFilePath
-        });
+        settings.mru.unshift(mruItem);
     })();
 });
 
@@ -374,8 +395,10 @@ ipcMain.on("setIsDarkTheme", function (event: any, value: boolean) {
     setIsDarkTheme(value);
 });
 
-ipcMain.on("getMRU", function (event: any) {
-    event.returnValue = toJS(settings.mru);
+ipcMain.on("getMRU", function (event: Electron.IpcMainEvent) {
+    const mru: IMruItem[] = toJS(settings.mru);
+
+    event.returnValue = mru;
 });
 
 ipcMain.on("setMRU", function (event: any, mru: IMruItem[]) {

@@ -61,7 +61,7 @@ app.on("ready", async function () {
     }
 
     const { loadSettings } = await import("main/settings");
-    loadSettings();
+    await loadSettings();
 
     await setup();
 

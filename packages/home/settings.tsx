@@ -69,6 +69,7 @@ const setIsDarkTheme = function (value: boolean) {
 
 interface IMruItem {
     filePath: string;
+    projectType: string;
 }
 const getMRU: () => IMruItem[] = function () {
     return ipcRenderer.sendSync("getMRU");
@@ -88,7 +89,10 @@ ipcRenderer.on("mru-changed", async (sender: any, mru: IMruItem[]) => {
             return true;
         }
         for (let i = 0; i < mru1.length; i++) {
-            if (mru1[i].filePath != mru2[i].filePath) {
+            if (
+                mru1[i].filePath != mru2[i].filePath ||
+                mru1[i].projectType != mru2[i].projectType
+            ) {
                 return true;
             }
         }
