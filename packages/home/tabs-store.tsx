@@ -1,3 +1,4 @@
+import fs from "fs";
 import { ipcRenderer } from "electron";
 import { getCurrentWindow } from "@electron/remote";
 import React from "react";
@@ -439,7 +440,8 @@ export class ProjectEditorTab implements IHomeTab {
             projectEditorStore: observable,
             error: observable,
             makeActive: action,
-            showCommandPalette: action
+            showCommandPalette: action,
+            _icon: observable
         });
     }
 
@@ -636,14 +638,38 @@ export class ProjectEditorTab implements IHomeTab {
         return this.filePath;
     }
 
+    _iconPromise: Promise<void> | undefined;
+    _icon: string;
+
     get icon() {
-        return this.projectEditorStore &&
+        if (
+            this.projectEditorStore &&
             this.projectEditorStore.project.settings.general.projectType
-            ? getProjectIcon(
-                  this.filePath,
-                  this.projectEditorStore.project.settings.general.projectType
-              )
-            : undefined;
+        ) {
+            return getProjectIcon(
+                this.filePath,
+                this.projectEditorStore.project.settings.general.projectType
+            );
+        }
+
+        if (this._icon) {
+            return this._icon;
+        }
+
+        if (!this._iconPromise) {
+            this._iconPromise = (async () => {
+                const jsonStr = await fs.promises.readFile(
+                    this.filePath,
+                    "utf-8"
+                );
+                const json = JSON.parse(jsonStr);
+                const projectType = json.settings.general.projectType;
+                const icon = getProjectIcon(this.filePath, projectType);
+                runInAction(() => (this._icon = icon));
+            })();
+        }
+
+        return undefined;
     }
 
     render() {
