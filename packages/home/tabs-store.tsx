@@ -639,7 +639,7 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     _iconPromise: Promise<void> | undefined;
-    _icon: string;
+    _icon: React.ReactNode;
 
     get icon() {
         if (
@@ -648,7 +648,8 @@ export class ProjectEditorTab implements IHomeTab {
         ) {
             return getProjectIcon(
                 this.filePath,
-                this.projectEditorStore.project.settings.general.projectType
+                this.projectEditorStore.project.settings.general.projectType,
+                24
             );
         }
 
@@ -664,7 +665,7 @@ export class ProjectEditorTab implements IHomeTab {
                 );
                 const json = JSON.parse(jsonStr);
                 const projectType = json.settings.general.projectType;
-                const icon = getProjectIcon(this.filePath, projectType);
+                const icon = getProjectIcon(this.filePath, projectType, 24);
                 runInAction(() => (this._icon = icon));
             })();
         }

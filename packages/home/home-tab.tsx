@@ -706,7 +706,8 @@ const Projects = observer(
                                         <ListItem
                                             leftIcon={getProjectIcon(
                                                 mruItem.filePath,
-                                                mruItem.projectType
+                                                mruItem.projectType,
+                                                48
                                             )}
                                             leftIconSize={48}
                                             label={
