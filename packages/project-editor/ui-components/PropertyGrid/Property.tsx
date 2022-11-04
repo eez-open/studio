@@ -1037,24 +1037,25 @@ export const Property = observer(
                                 </button>
                             )}
                         </div>
-                        {this._value && (
-                            <img
-                                src={
-                                    this._value &&
-                                    this._value.startsWith("data:image/")
-                                        ? this._value
-                                        : this.context.getAbsoluteFilePath(
-                                              this._value || ""
-                                          )
-                                }
-                                style={{
-                                    display: "block",
-                                    maxWidth: "100%",
-                                    margin: "auto",
-                                    paddingTop: "5px"
-                                }}
-                            />
-                        )}
+                        {this._value &&
+                            !this.props.propertyInfo.disableBitmapPreview && (
+                                <img
+                                    src={
+                                        this._value &&
+                                        this._value.startsWith("data:image/")
+                                            ? this._value
+                                            : this.context.getAbsoluteFilePath(
+                                                  this._value || ""
+                                              )
+                                    }
+                                    style={{
+                                        display: "block",
+                                        maxWidth: "100%",
+                                        margin: "auto",
+                                        paddingTop: "5px"
+                                    }}
+                                />
+                            )}
                     </div>
                 );
             }

@@ -92,6 +92,7 @@ export class Bitmap extends EezObject {
                 name: "image",
                 type: PropertyType.Image,
                 skipSearch: true,
+                disableBitmapPreview: true,
                 defaultImagesPath: (projectEditorStore: ProjectEditorStore) =>
                     projectEditorStore.project.settings.general.assetsFolder
                         ? projectEditorStore.getAbsoluteFilePath(
