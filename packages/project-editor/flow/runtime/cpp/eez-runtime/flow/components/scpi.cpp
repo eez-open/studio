@@ -203,7 +203,7 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
     if (!evalProperty(flowState, componentIndex, defs_v3::SCPIACTION_COMPONENT_PROPERTY_INSTRUMENT, instrumentValue, "Failed to evaluate Instrument in SCPI")) {
         return;
     }
-    if (instrumentValue.getType() != VALUE_TYPE_ARRAY && instrumentValue.getType() != VALUE_TYPE_ARRAY_REF) {
+    if (!instrumentValue.isArray()) {
         throwError(flowState, componentIndex, "Invalid Instrument value in SCPI\n");
         return;
     }

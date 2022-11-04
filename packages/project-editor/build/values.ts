@@ -11,7 +11,7 @@ import { evalConstantExpression } from "project-editor/flow/expression";
 import { Section } from "project-editor/store";
 import { MessageType } from "project-editor/core/object";
 import {
-    FLOW_VALUE_TYPE_ARRAY,
+    FLOW_VALUE_TYPE_ARRAY_ASSET,
     FLOW_VALUE_TYPE_BOOLEAN,
     FLOW_VALUE_TYPE_DATE,
     FLOW_VALUE_TYPE_DOUBLE,
@@ -49,7 +49,7 @@ export function getValueType(valueType: ValueType) {
     } else if (isEnumType(valueType)) {
         return FLOW_VALUE_TYPE_INT32;
     } else if (isArrayType(valueType) || isStructType(valueType)) {
-        return FLOW_VALUE_TYPE_ARRAY;
+        return FLOW_VALUE_TYPE_ARRAY_ASSET;
     } else {
         return FLOW_VALUE_TYPE_UINT32;
     }
@@ -162,7 +162,7 @@ function buildFlowValue(
             } else {
                 dataBuffer.writeDouble(0);
             }
-        } else if (flowValue.type == FLOW_VALUE_TYPE_ARRAY) {
+        } else if (flowValue.type == FLOW_VALUE_TYPE_ARRAY_ASSET) {
             dataBuffer.writeObjectOffset(() => {
                 let elements: FlowValue[];
 

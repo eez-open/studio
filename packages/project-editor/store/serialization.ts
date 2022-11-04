@@ -18,11 +18,7 @@ import {
     isPropertyOptional
 } from "project-editor/core/object";
 import { Component } from "project-editor/flow/component";
-import type {
-    ConnectionLine,
-    Flow,
-    FlowFragment
-} from "project-editor/flow/flow";
+import { ConnectionLine, Flow, FlowFragment } from "project-editor/flow/flow";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Project } from "project-editor/project/project";
 
@@ -407,9 +403,17 @@ function fixConnectionLines(project: Project) {
         return undefined;
     }
 
+    function sourceComponent(connectionLine: ConnectionLine) {
+        return objectsMap.get(connectionLine.source) as Component;
+    }
+
+    function targetComponent(connectionLine: ConnectionLine) {
+        return objectsMap.get(connectionLine.target) as Component;
+    }
+
     function fixConnectionLine(connectionLine: ConnectionLine) {
         const outputObjID = findObjID(
-            connectionLine.sourceComponent,
+            sourceComponent(connectionLine),
             connectionLine.output
         );
         if (outputObjID) {
@@ -417,7 +421,7 @@ function fixConnectionLines(project: Project) {
         }
 
         const inputObjID = findObjID(
-            connectionLine.targetComponent,
+            targetComponent(connectionLine),
             connectionLine.input
         );
         if (inputObjID) {
@@ -428,6 +432,8 @@ function fixConnectionLines(project: Project) {
     function fixConnectionLinesInFlow(flow: Flow) {
         flow.connectionLines.forEach(fixConnectionLine);
     }
+
+    const objectsMap = project._objectsMap;
 
     project.pages.forEach(fixConnectionLinesInFlow);
     project.actions.forEach(fixConnectionLinesInFlow);

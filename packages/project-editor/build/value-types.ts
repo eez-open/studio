@@ -16,11 +16,12 @@ export const FLOW_VALUE_TYPE_DOUBLE = 12;
 export const FLOW_VALUE_TYPE_STRING = 13;
 export const FLOW_VALUE_TYPE_STRING_ASSET = 14;
 export const FLOW_VALUE_TYPE_ARRAY = 15;
-export const FLOW_VALUE_TYPE_STRING_REF = 16;
-export const FLOW_VALUE_TYPE_ARRAY_REF = 17;
-export const FLOW_VALUE_TYPE_BLOB_REF = 18;
-export const FLOW_VALUE_TYPE_STREAM = 19;
-export const FLOW_VALUE_TYPE_DATE = 20;
+export const FLOW_VALUE_TYPE_ARRAY_ASSET = 16;
+export const FLOW_VALUE_TYPE_STRING_REF = 17;
+export const FLOW_VALUE_TYPE_ARRAY_REF = 18;
+export const FLOW_VALUE_TYPE_BLOB_REF = 19;
+export const FLOW_VALUE_TYPE_STREAM = 20;
+export const FLOW_VALUE_TYPE_DATE = 21;
 
 export const basicFlowValueTypes: ValueType[] = [
     "undefined", // FLOW_VALUE_TYPE_UNDEFINED
@@ -39,6 +40,7 @@ export const basicFlowValueTypes: ValueType[] = [
     "string", // FLOW_VALUE_TYPE_STRING
     "string", // FLOW_VALUE_TYPE_STRING_ASSET
     "array:any", // FLOW_VALUE_TYPE_ARRAY
+    "array:any", // FLOW_VALUE_TYPE_ARRAY_ASSET
     "string", // FLOW_VALUE_TYPE_STRING_REF
     "array:any", // FLOW_VALUE_TYPE_ARRAY_REF
     "blob", // FLOW_VALUE_TYPE_BLOB_REF

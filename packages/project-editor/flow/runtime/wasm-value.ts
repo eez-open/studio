@@ -8,6 +8,7 @@ import type {
 } from "eez-studio-types";
 import {
     FLOW_VALUE_TYPE_ARRAY,
+    FLOW_VALUE_TYPE_ARRAY_ASSET,
     FLOW_VALUE_TYPE_ARRAY_REF,
     FLOW_VALUE_TYPE_BLOB_REF,
     FLOW_VALUE_TYPE_BOOLEAN,
@@ -333,6 +334,9 @@ export function getValue(
     } else if (type == FLOW_VALUE_TYPE_ARRAY) {
         const ptr = WasmFlowRuntime.HEAP32[offset >> 2];
         return getArrayValue(WasmFlowRuntime, ptr);
+    } else if (type == FLOW_VALUE_TYPE_ARRAY_ASSET) {
+        const relptr = WasmFlowRuntime.HEAP32[offset >> 2];
+        return getArrayValue(WasmFlowRuntime, offset + relptr);
     } else if (type == FLOW_VALUE_TYPE_STRING_REF) {
         const refPtr = WasmFlowRuntime.HEAP32[offset >> 2];
         const ptr = WasmFlowRuntime.HEAP32[(refPtr >> 2) + 2];
