@@ -1330,32 +1330,34 @@ export async function buildAssets(
     assets.reportUnusedAssets();
 
     // build enum's
-    if (!sectionNames || sectionNames.indexOf("GUI_PAGES_ENUM") !== -1) {
-        result.GUI_PAGES_ENUM = buildGuiPagesEnum(assets);
-    }
+    if (option != "buildAssets") {
+        if (!sectionNames || sectionNames.indexOf("GUI_PAGES_ENUM") !== -1) {
+            result.GUI_PAGES_ENUM = buildGuiPagesEnum(assets);
+        }
 
-    if (!sectionNames || sectionNames.indexOf("GUI_STYLES_ENUM") !== -1) {
-        result.GUI_STYLES_ENUM = buildGuiStylesEnum(assets);
-    }
+        if (!sectionNames || sectionNames.indexOf("GUI_STYLES_ENUM") !== -1) {
+            result.GUI_STYLES_ENUM = buildGuiStylesEnum(assets);
+        }
 
-    if (!sectionNames || sectionNames.indexOf("GUI_FONTS_ENUM") !== -1) {
-        result.GUI_FONTS_ENUM = buildGuiFontsEnum(assets);
-    }
+        if (!sectionNames || sectionNames.indexOf("GUI_FONTS_ENUM") !== -1) {
+            result.GUI_FONTS_ENUM = buildGuiFontsEnum(assets);
+        }
 
-    if (!sectionNames || sectionNames.indexOf("GUI_BITMAPS_ENUM") !== -1) {
-        result.GUI_BITMAPS_ENUM = buildGuiBitmapsEnum(assets);
-    }
+        if (!sectionNames || sectionNames.indexOf("GUI_BITMAPS_ENUM") !== -1) {
+            result.GUI_BITMAPS_ENUM = buildGuiBitmapsEnum(assets);
+        }
 
-    if (!sectionNames || sectionNames.indexOf("GUI_THEMES_ENUM") !== -1) {
-        result.GUI_THEMES_ENUM = buildGuiThemesEnum(assets);
-    }
+        if (!sectionNames || sectionNames.indexOf("GUI_THEMES_ENUM") !== -1) {
+            result.GUI_THEMES_ENUM = buildGuiThemesEnum(assets);
+        }
 
-    if (!sectionNames || sectionNames.indexOf("GUI_COLORS_ENUM") !== -1) {
-        result.GUI_COLORS_ENUM = buildGuiColorsEnum(assets);
-    }
+        if (!sectionNames || sectionNames.indexOf("GUI_COLORS_ENUM") !== -1) {
+            result.GUI_COLORS_ENUM = buildGuiColorsEnum(assets);
+        }
 
-    if (!sectionNames || sectionNames.indexOf("FLOW_DEFS") !== -1) {
-        result.FLOW_DEFS = buildFlowDefs(assets);
+        if (!sectionNames || sectionNames.indexOf("FLOW_DEFS") !== -1) {
+            result.FLOW_DEFS = buildFlowDefs(assets);
+        }
     }
 
     const buildAssetsDecl =
@@ -1389,25 +1391,28 @@ export async function buildAssets(
         // build all assets as single data chunk
         const compressedAssetsData = await buildGuiAssetsData(assets);
 
-        if (buildAssetsDecl) {
-            result.GUI_ASSETS_DECL = buildGuiAssetsDecl(compressedAssetsData);
-        }
+        if (option != "buildAssets") {
+            if (buildAssetsDecl) {
+                result.GUI_ASSETS_DECL =
+                    buildGuiAssetsDecl(compressedAssetsData);
+            }
 
-        if (buildAssetsDeclCompressed) {
-            result.GUI_ASSETS_DECL_COMPRESSED =
-                buildGuiAssetsDecl(compressedAssetsData);
-        }
+            if (buildAssetsDeclCompressed) {
+                result.GUI_ASSETS_DECL_COMPRESSED =
+                    buildGuiAssetsDecl(compressedAssetsData);
+            }
 
-        if (buildAssetsDef) {
-            result.GUI_ASSETS_DEF = await buildGuiAssetsDef(
-                compressedAssetsData
-            );
-        }
+            if (buildAssetsDef) {
+                result.GUI_ASSETS_DEF = await buildGuiAssetsDef(
+                    compressedAssetsData
+                );
+            }
 
-        if (buildAssetsDefCompressed) {
-            result.GUI_ASSETS_DEF_COMPRESSED = await buildGuiAssetsDef(
-                compressedAssetsData
-            );
+            if (buildAssetsDefCompressed) {
+                result.GUI_ASSETS_DEF_COMPRESSED = await buildGuiAssetsDef(
+                    compressedAssetsData
+                );
+            }
         }
 
         if (buildAssetsData) {
@@ -1427,60 +1432,89 @@ export async function buildAssets(
         }
     }
 
-    if (assets.projectEditorStore.projectTypeTraits.isLVGL) {
-        const lvglBuild = new LVGLBuild(assets);
+    if (option != "buildAssets") {
+        if (assets.projectEditorStore.projectTypeTraits.isLVGL) {
+            const lvglBuild = new LVGLBuild(assets);
 
-        // PASS 1 (find out which LVGL objects are accessible through global objects structure)
-        await lvglBuild.buildScreensDef();
+            // PASS 1 (find out which LVGL objects are accessible through global objects structure)
+            await lvglBuild.buildScreensDef();
 
-        // PASS 2
-        if (!sectionNames || sectionNames.indexOf("LVGL_SCREENS_DECL") !== -1) {
-            result.LVGL_SCREENS_DECL = await lvglBuild.buildScreensDecl();
-        }
+            // PASS 2
+            if (
+                !sectionNames ||
+                sectionNames.indexOf("LVGL_SCREENS_DECL") !== -1
+            ) {
+                result.LVGL_SCREENS_DECL = await lvglBuild.buildScreensDecl();
+            }
 
-        if (!sectionNames || sectionNames.indexOf("LVGL_SCREENS_DEF") !== -1) {
-            result.LVGL_SCREENS_DEF = await lvglBuild.buildScreensDef();
-        }
+            if (
+                !sectionNames ||
+                sectionNames.indexOf("LVGL_SCREENS_DEF") !== -1
+            ) {
+                result.LVGL_SCREENS_DEF = await lvglBuild.buildScreensDef();
+            }
 
-        if (
-            !sectionNames ||
-            sectionNames.indexOf("LVGL_SCREENS_DECL_EXT") !== -1
-        ) {
-            result.LVGL_SCREENS_DECL_EXT =
-                await lvglBuild.buildScreensDeclExt();
-        }
+            if (
+                !sectionNames ||
+                sectionNames.indexOf("LVGL_SCREENS_DECL_EXT") !== -1
+            ) {
+                result.LVGL_SCREENS_DECL_EXT =
+                    await lvglBuild.buildScreensDeclExt();
+            }
 
-        if (
-            !sectionNames ||
-            sectionNames.indexOf("LVGL_SCREENS_DEF_EXT") !== -1
-        ) {
-            result.LVGL_SCREENS_DEF_EXT = await lvglBuild.buildScreensDefExt();
-        }
+            if (
+                !sectionNames ||
+                sectionNames.indexOf("LVGL_SCREENS_DEF_EXT") !== -1
+            ) {
+                result.LVGL_SCREENS_DEF_EXT =
+                    await lvglBuild.buildScreensDefExt();
+            }
 
-        if (!sectionNames || sectionNames.indexOf("LVGL_IMAGES_DECL") !== -1) {
-            result.LVGL_IMAGES_DECL = await lvglBuild.buildImagesDecl();
-        }
+            if (
+                !sectionNames ||
+                sectionNames.indexOf("LVGL_IMAGES_DECL") !== -1
+            ) {
+                result.LVGL_IMAGES_DECL = await lvglBuild.buildImagesDecl();
+            }
 
-        if (!sectionNames || sectionNames.indexOf("LVGL_IMAGES_DEF") !== -1) {
-            result.LVGL_IMAGES_DEF = await lvglBuild.buildImagesDef();
-        }
+            if (
+                !sectionNames ||
+                sectionNames.indexOf("LVGL_IMAGES_DEF") !== -1
+            ) {
+                result.LVGL_IMAGES_DEF = await lvglBuild.buildImagesDef();
+            }
 
-        if (!sectionNames || sectionNames.indexOf("LVGL_FONTS_DECL") !== -1) {
-            result.LVGL_FONTS_DECL = await lvglBuild.buildFontsDecl();
-        }
+            if (
+                !sectionNames ||
+                sectionNames.indexOf("LVGL_FONTS_DECL") !== -1
+            ) {
+                result.LVGL_FONTS_DECL = await lvglBuild.buildFontsDecl();
+            }
 
-        if (!sectionNames || sectionNames.indexOf("LVGL_ACTIONS_DECL") !== -1) {
-            result.LVGL_ACTIONS_DECL = await lvglBuild.buildActionsDecl();
-        }
+            if (
+                !sectionNames ||
+                sectionNames.indexOf("LVGL_ACTIONS_DECL") !== -1
+            ) {
+                result.LVGL_ACTIONS_DECL = await lvglBuild.buildActionsDecl();
+            }
 
-        if (!sectionNames || sectionNames.indexOf("LVGL_VARS_DECL") !== -1) {
-            result.LVGL_VARS_DECL = await lvglBuild.buildVariablesDecl();
-        }
+            if (
+                !sectionNames ||
+                sectionNames.indexOf("LVGL_VARS_DECL") !== -1
+            ) {
+                result.LVGL_VARS_DECL = await lvglBuild.buildVariablesDecl();
+            }
 
-        if (option == "buildFiles") {
-            await lvglBuild.copyFontFiles();
+            if (option == "buildFiles") {
+                await lvglBuild.copyFontFiles();
+            }
         }
     }
+
+    if (option == "buildAssets") {
+        return result;
+    }
+
     return Object.assign(
         result,
         await buildVariables(assets, sectionNames),

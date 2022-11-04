@@ -1478,10 +1478,10 @@ const EnvelopeChartsHeader = observer(
                     this.props.appStore.instrument
                 );
 
-                const newVoltage = objectClone(defaultEnvelopeListData.voltage);
+                const newVoltage = defaultEnvelopeListData.voltage.slice();
                 newVoltage[1].time = this.list.data.duration;
 
-                const newCurrent = objectClone(defaultEnvelopeListData.current);
+                const newCurrent = defaultEnvelopeListData.current.slice();
                 newCurrent[1].time = this.list.data.duration;
 
                 this.props.appStore.undoManager!.addCommand(
