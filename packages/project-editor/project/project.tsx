@@ -771,21 +771,12 @@ export class General extends EezObject {
                     );
                 }
             },
-            {
-                name: "flowSupport",
-                type: PropertyType.Boolean,
-                hideInPropertyGrid: (general: General) => {
-                    return (
-                        general.projectType != ProjectType.FIRMWARE &&
-                        general.projectType != ProjectType.FIRMWARE_MODULE &&
-                        general.projectType != ProjectType.LVGL
-                    );
-                }
-            } /*,
+            /*
             {
                 name: "css",
                 type: PropertyType.CSS
-            }*/,
+            },
+            */
             {
                 name: "displayWidth",
                 type: PropertyType.Number,
@@ -799,6 +790,18 @@ export class General extends EezObject {
                 hideInPropertyGrid: (general: General) =>
                     !ProjectEditor.getProject(general).projectTypeTraits
                         .hasDisplaySizeProperty
+            },
+            {
+                name: "flowSupport",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                hideInPropertyGrid: (general: General) => {
+                    return (
+                        general.projectType != ProjectType.FIRMWARE &&
+                        general.projectType != ProjectType.FIRMWARE_MODULE &&
+                        general.projectType != ProjectType.LVGL
+                    );
+                }
             }
         ],
         check: (general: General) => {

@@ -127,16 +127,23 @@ const ProjectFeature = observer(
                 >
                     <div className="card-body pb-5">
                         <h5 className="card-title">
-                            <i
-                                className="material-icons card-img-top"
-                                style={{
-                                    fontSize: 32,
-                                    display: "inline",
-                                    marginRight: 5
-                                }}
-                            >
-                                {this.props.projectFeature.icon}
-                            </i>
+                            {typeof this.props.projectFeature.icon ==
+                            "string" ? (
+                                <i
+                                    className="material-icons card-img-top"
+                                    style={{
+                                        fontSize: 32,
+                                        display: "inline",
+                                        marginRight: 5
+                                    }}
+                                >
+                                    {this.props.projectFeature.icon}
+                                </i>
+                            ) : (
+                                <span className="EezStudio_SettingsEditor_FeatureIcon">
+                                    {this.props.projectFeature.icon}
+                                </span>
+                            )}
                             {this.props.projectFeature.displayName ||
                                 this.props.projectFeature.name}
                         </h5>
