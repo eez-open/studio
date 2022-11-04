@@ -21,7 +21,7 @@ export const LVGLPage = observer(
         canvasRef = React.createRef<HTMLCanvasElement>();
         runtime: LVGLPageRuntime;
 
-        componentDidMount() {
+        createPageRuntime() {
             if (this.context.runtime) {
                 this.runtime = new LVGLNonActivePageViewerRuntime(
                     this.context,
@@ -38,6 +38,15 @@ export const LVGLPage = observer(
             }
 
             this.runtime.mount();
+        }
+
+        componentDidMount() {
+            this.createPageRuntime();
+        }
+
+        componentDidUpdate() {
+            this.runtime.unmount();
+            this.createPageRuntime();
         }
 
         componentWillUnmount() {

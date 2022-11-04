@@ -198,8 +198,6 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
     autorRunDispose: IReactionDisposer | undefined;
     requestAnimationFrameId: number | undefined;
 
-    mounted: boolean = false;
-
     constructor(page: Page, public ctx: CanvasRenderingContext2D) {
         super(page);
         makeObservable(this, {
@@ -223,53 +221,43 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
     }
 
     mount() {
-        autorun(() => {
-            this.displayWidth;
-            this.displayHeight;
-
-            if (this.mounted) {
-                this.unmount();
+        const wasm = lvgl_flow_runtime_constructor(() => {
+            if (this.wasm != wasm) {
+                return;
             }
 
-            const wasm = lvgl_flow_runtime_constructor(() => {
-                if (this.wasm != wasm) {
-                    return;
-                }
-
-                runInAction(() => {
-                    this.page._lvglRuntime = this;
-                    this.page._lvglObj = undefined;
-                });
-
-                this.wasm._init(0, 0, 0, this.displayWidth, this.displayHeight);
-
-                this.requestAnimationFrameId = window.requestAnimationFrame(
-                    this.tick
-                );
-
-                this.autorRunDispose = autorun(() => {
-                    // set all _lvglObj to undefined
-                    runInAction(() => {
-                        this.page._lvglWidgets.forEach(
-                            widget => (widget._lvglObj = undefined)
-                        );
-                    });
-
-                    const pageObj = this.page.lvglCreate(this, 0).obj;
-                    this.wasm._lvglScreenLoad(-1, pageObj);
-
-                    runInAction(() => {
-                        if (this.page._lvglObj != undefined) {
-                            this.wasm._lvglDeleteObject(this.page._lvglObj);
-                        }
-                        this.page._lvglObj = pageObj;
-                    });
-                });
+            runInAction(() => {
+                this.page._lvglRuntime = this;
+                this.page._lvglObj = undefined;
             });
 
-            this.wasm = wasm;
-            this.mounted = true;
+            this.wasm._init(0, 0, 0, this.displayWidth, this.displayHeight);
+
+            this.requestAnimationFrameId = window.requestAnimationFrame(
+                this.tick
+            );
+
+            this.autorRunDispose = autorun(() => {
+                // set all _lvglObj to undefined
+                runInAction(() => {
+                    this.page._lvglWidgets.forEach(
+                        widget => (widget._lvglObj = undefined)
+                    );
+                });
+
+                const pageObj = this.page.lvglCreate(this, 0).obj;
+                this.wasm._lvglScreenLoad(-1, pageObj);
+
+                runInAction(() => {
+                    if (this.page._lvglObj != undefined) {
+                        this.wasm._lvglDeleteObject(this.page._lvglObj);
+                    }
+                    this.page._lvglObj = pageObj;
+                });
+            });
         });
+
+        this.wasm = wasm;
     }
 
     tick = () => {
@@ -307,15 +295,15 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
     unmount() {
         if (this.requestAnimationFrameId != undefined) {
             window.cancelAnimationFrame(this.requestAnimationFrameId);
+            this.requestAnimationFrameId = undefined;
         }
 
         if (this.autorRunDispose) {
             this.autorRunDispose();
+            this.autorRunDispose = undefined;
         }
 
         LVGLPageRuntime.detachRuntimeFromPage(this.page);
-
-        this.mounted = false;
     }
 
     override getWidgetIndex(object: LVGLWidget | Page) {
