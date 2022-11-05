@@ -124,8 +124,24 @@ export class EventHandler extends EezObject {
             }
         ],
 
-        updateObjectValueHook: (eventHandler: EventHandler, values: any) => {
+        updateObjectValueHook: (
+            eventHandler: EventHandler,
+            values: Partial<EventHandler>
+        ) => {
             if (
+                values.handlerType == "action" &&
+                eventHandler.handlerType == "flow"
+            ) {
+                const widget = getAncestorOfType<LVGLWidget>(
+                    eventHandler,
+                    ProjectEditor.LVGLWidgetClass.classInfo
+                )!;
+
+                ProjectEditor.getFlow(widget).deleteConnectionLinesFromOutput(
+                    widget,
+                    eventHandler.trigger
+                );
+            } else if (
                 values.trigger != undefined &&
                 eventHandler.trigger != values.trigger
             ) {
