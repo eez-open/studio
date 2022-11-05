@@ -217,14 +217,23 @@ function buildComponent(
 
     // outputs
     const outputs = component.buildOutputs;
-    outputs.forEach((output, componentOutputIndex) =>
-        assets.registerComponentOutput(
-            component,
-            output.name,
-            componentIndex,
-            componentOutputIndex
-        )
-    );
+    outputs.forEach((output, componentOutputIndex) => {
+        if (output.type == "output") {
+            assets.registerComponentOutput(
+                component,
+                output.name,
+                componentIndex,
+                componentOutputIndex
+            );
+        } else {
+            assets.registerComponentOutput(
+                component,
+                output.name,
+                -1,
+                assets.getFlowIndexFromComponentProperty(component, output.name)
+            );
+        }
+    });
     dataBuffer.writeArray(outputs, (output, outputIndex) => {
         const connectionLines = flow.connectionLines.filter(
             connectionLine =>

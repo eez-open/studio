@@ -5,7 +5,8 @@ import { createTransformer } from "mobx-utils";
 
 import {
     writeTextFile,
-    writeBinaryData
+    writeBinaryData,
+    makeFolder
 } from "eez-studio-shared/util-electron";
 import { _map } from "eez-studio-shared/algorithm";
 
@@ -323,7 +324,7 @@ export async function build(
             );
 
             if (!fs.existsSync(destinationFolderPath)) {
-                throw new BuildException("Cannot find destination folder.");
+                await makeFolder(destinationFolderPath);
             }
 
             if (!project.projectTypeTraits.isDashboard) {

@@ -899,6 +899,21 @@ export class Assets {
         return this.getFlowState(flow).index;
     }
 
+    getFlowIndexFromComponentProperty(
+        component: Component,
+        propertyName: string
+    ) {
+        const actionName = getProperty(component, propertyName);
+        if (!actionName) {
+            return -1;
+        }
+        const action = this.actions.find(action => action.name == actionName);
+        if (!action) {
+            return -1;
+        }
+        return this.getFlowIndex(action);
+    }
+
     getConstantIndex(value: any, valueType: ValueType) {
         let index = this.constantsMap.get(value);
         if (index == undefined) {

@@ -16,6 +16,12 @@ process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = true as any;
 
 configure({ enforceActions: "observed" });
 
+const contextMenu = require("electron-context-menu");
+
+contextMenu({
+    showSaveImageAs: true
+});
+
 ////////////////////////////////////////////////////////////////////////////////
 
 let setupFinished: boolean = false;

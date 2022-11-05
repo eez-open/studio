@@ -1960,7 +1960,10 @@ export class CallActionActionComponent extends ActionComponent {
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
         const action = findAction(getProject(this), this.action);
         if (action) {
-            if (action.implementationType == "native") {
+            if (
+                assets.option == "buildFiles" &&
+                action.implementationType == "native"
+            ) {
                 dataBuffer.writeInt16(
                     assets.flows.length +
                         assets.getWidgetActionIndex(this, "action")
@@ -3448,7 +3451,9 @@ export class CommentActionComponent extends ActionComponent {
             object: CommentActionComponent,
             jsObject: Partial<CommentActionComponent>
         ) => {
-            delete jsObject.description;
+            if (jsObject.description) {
+                delete jsObject.description;
+            }
         },
         icon: (
             <svg viewBox="0 0 14 13.5">

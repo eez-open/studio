@@ -109,6 +109,7 @@
         "css": "^3.0.0",
         "decompress": "^4.2.1",
         "deep-equal": "^2.0.5",
+        "electron-context-menu": "^3.6.0",
         "ffi-napi": "^4.0.3",
         "fft-windowing": "^0.1.4",
         "file-type": "^8.1.0",
