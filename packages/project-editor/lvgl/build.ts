@@ -251,11 +251,27 @@ export class LVGLBuild {
 
                         build.indent();
                         if (eventHandler.handlerType == "action") {
-                            build.line(
-                                `${this.getActionFunctionName(
-                                    eventHandler.action
-                                )}(e);`
+                            const action = ProjectEditor.findAction(
+                                this.project,
+                                eventHandler.action
                             );
+                            if (action) {
+                                if (action.implementationType == "native") {
+                                    build.line(
+                                        `${this.getActionFunctionName(
+                                            eventHandler.action
+                                        )}(e);`
+                                    );
+                                } else {
+                                    let flowIndex =
+                                        build.assets.getFlowIndex(page);
+                                    let actionFlowIndex =
+                                        build.assets.getFlowIndex(action);
+                                    build.line(
+                                        `flowPropagateValue(${flowIndex}, -1, ${actionFlowIndex});`
+                                    );
+                                }
+                            }
                         } else {
                             let flowIndex = build.assets.getFlowIndex(page);
                             let componentIndex =
@@ -265,7 +281,6 @@ export class LVGLBuild {
                                     widget,
                                     eventHandler.trigger
                                 );
-
                             build.line(
                                 `flowPropagateValue(${flowIndex}, ${componentIndex}, ${outputIndex});`
                             );

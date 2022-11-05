@@ -859,6 +859,23 @@ export class LVGLWidget extends Widget {
                                 );
                             }
                         }
+                    } else if (eventHandler.action) {
+                        const action = ProjectEditor.findAction(
+                            ProjectEditor.getProject(this),
+                            eventHandler.action
+                        );
+                        if (action) {
+                            const actionPath = getObjectPathAsString(action);
+                            const actionFlowIndex =
+                                runtime.wasm.assetsMap.flowIndexes[actionPath];
+                            runtime.wasm._lvglAddObjectFlowCallback(
+                                obj,
+                                eventHandler.triggerCode,
+                                flowIndex,
+                                -1,
+                                actionFlowIndex
+                            );
+                        }
                     }
                 }
 

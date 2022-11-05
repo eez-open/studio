@@ -187,17 +187,10 @@ export class EventHandler extends EezObject {
                         {
                             name: "action",
                             type: "enum",
-                            enumItems: project.actions
-                                .filter(
-                                    action =>
-                                        !project.projectTypeTraits
-                                            .hasFlowSupport ||
-                                        action.implementationType == "native"
-                                )
-                                .map(action => ({
-                                    id: action.name,
-                                    label: action.name
-                                })),
+                            enumItems: project.actions.map(action => ({
+                                id: action.name,
+                                label: action.name
+                            })),
                             visible: (values: any) => {
                                 return values.handlerType == "action";
                             }
