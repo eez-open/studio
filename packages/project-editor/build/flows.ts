@@ -439,7 +439,8 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
                 assets.globalVariables.filter(
                     globalVariable =>
                         !(
-                            assets.option == "buildFiles" &&
+                            (assets.option == "buildFiles" ||
+                                globalVariable.id != undefined) &&
                             globalVariable.native
                         ) // only non-native variables
                 ),

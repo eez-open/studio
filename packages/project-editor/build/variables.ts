@@ -69,7 +69,10 @@ export function buildVariables(
         if (assets.projectEditorStore.projectTypeTraits.hasFlowSupport) {
             // only native
             projectVariables = projectVariables.filter(
-                variable => assets.option == "buildFiles" && variable.native
+                variable =>
+                    (assets.option == "buildFiles" ||
+                        variable.id != undefined) &&
+                    variable.native
             );
         }
 

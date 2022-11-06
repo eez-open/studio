@@ -10,6 +10,8 @@
 #include <eez/flow/components.h>
 #include <eez/flow/flow_defs_v3.h>
 
+#include "./gui/keypad.h"
+
 static int g_started = false;
 
 uint32_t DISPLAY_WIDTH;
@@ -93,6 +95,8 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSi
     eez::flow::executeDashboardComponentHook = executeDashboardComponent;
     eez::flow::onArrayValueFreeHook = onArrayValueFree;
     eez::flow::stopScriptHook = stopScript;
+    eez::flow::showKeyboardHook = eez::gui::showKeyboard;
+    eez::flow::showKeypadHook = eez::gui::showKeypad;
     eez::flow::registerComponent(eez::flow::defs_v3::COMPONENT_TYPE_SCPIACTION, eez::flow::executeScpiComponent);
 
     eez::flow::onDebuggerClientConnected();

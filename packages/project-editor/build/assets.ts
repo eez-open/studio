@@ -237,7 +237,8 @@ export class Assets {
                 project =>
                     project.actions.filter(
                         action =>
-                            this.option == "buildAssets" ||
+                            (this.option == "buildAssets" &&
+                                action.id == undefined) ||
                             action.implementationType == "flow"
                     ),
                 assetIncludePredicate
@@ -254,7 +255,11 @@ export class Assets {
                 project.variables ? project.variables.globalVariables : [],
             globalVariable =>
                 assetIncludePredicate(globalVariable) &&
-                !(this.option == "buildFiles" && globalVariable.native)
+                !(
+                    (this.option == "buildFiles" ||
+                        globalVariable.id != undefined) &&
+                    globalVariable.native
+                )
         );
 
         const nativeVariables: Variable[] = [];
@@ -263,7 +268,6 @@ export class Assets {
                 project.variables ? project.variables.globalVariables : [],
             globalVariable =>
                 assetIncludePredicate(globalVariable) &&
-                this.option == "buildFiles" &&
                 globalVariable.native &&
                 globalVariable.id != undefined
         ).forEach(
@@ -312,7 +316,7 @@ export class Assets {
             project => project.actions,
             action =>
                 assetIncludePredicate(action) &&
-                (this.option != "buildFiles" ||
+                ((this.option != "buildFiles" && action.id == undefined) ||
                     action.implementationType != "native")
         );
 
@@ -321,7 +325,6 @@ export class Assets {
             project => project.actions,
             action =>
                 assetIncludePredicate(action) &&
-                this.option == "buildFiles" &&
                 action.implementationType == "native" &&
                 action.id != undefined
         ).forEach(action => (nativeActions[action.id! - 1] = action));
@@ -1023,13 +1026,14 @@ export class Assets {
                 }
 
                 if (
-                    this.option == "buildFiles" &&
+                    (this.option == "buildFiles" || action.id != undefined) &&
                     action.implementationType === "native"
                 ) {
                     const actionIndex = this.actions
                         .filter(
                             action =>
-                                this.option == "buildFiles" &&
+                                (this.option == "buildFiles" ||
+                                    action.id != undefined) &&
                                 action.implementationType === "native"
                         )
                         .findIndex(action => action.name == actionName);

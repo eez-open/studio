@@ -170,10 +170,12 @@ enum ColorsEnum {
 
 enum PagesEnum {
     PAGE_ID_NONE = 0,
-    PAGE_ID_MAIN = 1
+    PAGE_ID_MAIN = 1,
+    PAGE_ID_KEYBOARD = 2,
+    PAGE_ID_NUMERIC_KEYPAD = 3
 };
 
-extern const uint8_t assets[8451];
+extern const uint8_t assets[8444];
 
 } // namespace gui
 } // namespace eez

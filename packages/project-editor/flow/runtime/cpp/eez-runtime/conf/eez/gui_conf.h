@@ -2,7 +2,6 @@
 
 #include "../../gui/document.h"
 
-#define PAGE_ID_NUMERIC_KEYPAD -1
 #define PAGE_ID_ASYNC_OPERATION_IN_PROGRESS 0
 #define COLOR_ID_BOOKMARK 0
 
