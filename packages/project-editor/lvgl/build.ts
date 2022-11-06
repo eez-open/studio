@@ -256,7 +256,11 @@ export class LVGLBuild {
                                 eventHandler.action
                             );
                             if (action) {
-                                if (action.implementationType == "native") {
+                                if (
+                                    action.implementationType == "native" ||
+                                    !this.project.projectTypeTraits
+                                        .hasFlowSupport
+                                ) {
                                     build.line(
                                         `${this.getActionFunctionName(
                                             eventHandler.action
@@ -517,6 +521,36 @@ extern const ext_img_desc_t images[${this.project.bitmaps.length}];
                 );
             }
         }
+
+        return this.result;
+    }
+
+    async buildNativeVarsTableDef() {
+        this.result = "";
+        this.indentation = "";
+        const build = this;
+
+        build.line("native_var_t native_vars[] = {");
+        build.indent();
+
+        build.line("{ NATIVE_VAR_TYPE_NONE, 0, 0 },");
+
+        for (const variable of this.project.variables.globalVariables) {
+            if (
+                !this.assets.projectEditorStore.projectTypeTraits
+                    .hasFlowSupport ||
+                variable.native
+            ) {
+                build.line(
+                    `{ NATIVE_VAR_TYPE_${variable.type.toUpperCase()}, ${this.getVariableGetterFunctionName(
+                        variable.name
+                    )}, ${this.getVariableSetterFunctionName(variable.name)} }`
+                );
+            }
+        }
+
+        build.unindent();
+        build.line("};");
 
         return this.result;
     }

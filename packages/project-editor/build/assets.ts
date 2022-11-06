@@ -1524,6 +1524,14 @@ export async function buildAssets(
                 result.LVGL_VARS_DECL = await lvglBuild.buildVariablesDecl();
             }
 
+            if (
+                !sectionNames ||
+                sectionNames.indexOf("LVGL_NATIVE_VARS_TABLE_DEF") !== -1
+            ) {
+                result.LVGL_NATIVE_VARS_TABLE_DEF =
+                    await lvglBuild.buildNativeVarsTableDef();
+            }
+
             if (option == "buildFiles") {
                 await lvglBuild.copyFontFiles();
             }

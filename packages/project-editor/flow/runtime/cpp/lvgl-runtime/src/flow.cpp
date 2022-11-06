@@ -5,6 +5,7 @@
 
 #include <eez/core/os.h>
 #include <eez/core/action.h>
+#include <eez/core/vars.h>
 
 #include <eez/flow/flow.h>
 #include <eez/flow/expression.h>
@@ -307,3 +308,7 @@ extern "C" void flowPropagateValue(unsigned pageIndex, unsigned componentIndex, 
     eez::flow::FlowState *flowState = eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
     eez::flow::propagateValue(flowState, componentIndex, outputIndex);
 }
+
+native_var_t native_vars[] = {
+    { NATIVE_VAR_TYPE_NONE, 0, 0 },
+};
