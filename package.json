@@ -75,7 +75,7 @@
         "@types/usb": "^1.5.3",
         "@types/xml-formatter": "^2.1.1",
         "@types/xterm": "^3.0.0",
-        "electron": "18.3.6",
+        "electron": "18.3.7",
         "electron-builder": "^23.3.3",
         "globby": "^11.1.0",
         "gulp": "^4.0.2",
