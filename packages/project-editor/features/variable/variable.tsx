@@ -497,14 +497,14 @@ export class Variable extends EezObject {
                 messages.push(propertyNotSetMessage(variable, "type"));
             }
 
-            if (
-                projectEditorStore.projectTypeTraits.hasFlowSupport &&
-                (variable.type === "any" || variable.type === "array:any")
-            ) {
-                messages.push(
-                    new Message(MessageType.WARNING, `Any type used`, variable)
-                );
-            }
+            // if (
+            //     projectEditorStore.projectTypeTraits.hasFlowSupport &&
+            //     (variable.type === "any" || variable.type === "array:any")
+            // ) {
+            //     messages.push(
+            //         new Message(MessageType.WARNING, `Any type used`, variable)
+            //     );
+            // }
 
             if (!isValidType(projectEditorStore.project, variable.type)) {
                 messages.push(
@@ -996,18 +996,18 @@ export class StructureField extends EezObject implements IStructureField {
                 messages.push(propertyNotSetMessage(structureField, "type"));
             }
 
-            if (
-                structureField.type === "any" ||
-                structureField.type === "array:any"
-            ) {
-                messages.push(
-                    new Message(
-                        MessageType.WARNING,
-                        `Any type used`,
-                        getChildOfObject(structureField, "type")
-                    )
-                );
-            }
+            // if (
+            //     structureField.type === "any" ||
+            //     structureField.type === "array:any"
+            // ) {
+            //     messages.push(
+            //         new Message(
+            //             MessageType.WARNING,
+            //             `Any type used`,
+            //             getChildOfObject(structureField, "type")
+            //         )
+            //     );
+            // }
 
             const projectEditorStore = getProjectEditorStore(structureField);
             if (!isValidType(projectEditorStore.project, structureField.type)) {

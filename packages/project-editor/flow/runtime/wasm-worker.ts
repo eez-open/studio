@@ -463,7 +463,8 @@ export function createWasmWorker(
                     flowStateIndex,
                     componentIndex,
                     propertyIndex,
-                    iteratorsPtr
+                    iteratorsPtr,
+                    true
                 );
 
                 if (iteratorsPtr) {

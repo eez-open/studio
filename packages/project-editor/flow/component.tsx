@@ -2182,18 +2182,18 @@ export class Component extends EezObject {
             // check connections to inputs
             component.inputs.forEach(componentInput => {
                 if (componentInput instanceof CustomInput) {
-                    if (
-                        componentInput.type === "any" ||
-                        componentInput.type === "array:any"
-                    ) {
-                        messages.push(
-                            new Message(
-                                MessageType.WARNING,
-                                `Any type used`,
-                                getChildOfObject(componentInput, "type")
-                            )
-                        );
-                    }
+                    // if (
+                    //     componentInput.type === "any" ||
+                    //     componentInput.type === "array:any"
+                    // ) {
+                    //     messages.push(
+                    //         new Message(
+                    //             MessageType.WARNING,
+                    //             `Any type used`,
+                    //             getChildOfObject(componentInput, "type")
+                    //         )
+                    //     );
+                    // }
 
                     const project = ProjectEditor.getProject(component);
                     if (!isValidType(project, componentInput.type)) {
@@ -2251,18 +2251,18 @@ export class Component extends EezObject {
             // check connection from outputs
             component.outputs.forEach(componentOutput => {
                 if (componentOutput instanceof CustomOutput) {
-                    if (
-                        componentOutput.type === "any" ||
-                        componentOutput.type === "array:any"
-                    ) {
-                        messages.push(
-                            new Message(
-                                MessageType.WARNING,
-                                `Any type used`,
-                                getChildOfObject(componentOutput, "type")
-                            )
-                        );
-                    }
+                    // if (
+                    //     componentOutput.type === "any" ||
+                    //     componentOutput.type === "array:any"
+                    // ) {
+                    //     messages.push(
+                    //         new Message(
+                    //             MessageType.WARNING,
+                    //             `Any type used`,
+                    //             getChildOfObject(componentOutput, "type")
+                    //         )
+                    //     );
+                    // }
 
                     const project = ProjectEditor.getProject(componentOutput);
                     if (!isValidType(project, componentOutput.type)) {

@@ -824,7 +824,7 @@ export function isValueTypeOf(
         return null;
     }
 
-    return `not an ${type}`;
+    return `not a ${type}`;
 }
 
 export function isValidType(project: Project, valueType: ValueType): boolean {

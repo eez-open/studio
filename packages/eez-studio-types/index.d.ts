@@ -347,7 +347,7 @@ export interface IWasmFlowRuntime {
     _getInputValue(flowStateIndex: number, inputIndex: number): number;
     _clearInputValue(flowStateIndex: number, inputIndex: number);
 
-    _evalProperty(flowStateIndex: number, componentIndex: number, propertyIndex: number, iteratorsPtr: number): number;
+    _evalProperty(flowStateIndex: number, componentIndex: number, propertyIndex: number, iteratorsPtr: number, disableThrowError: boolean): number;
     _assignProperty(flowStateIndex: number, componentIndex: number, propertyIndex: number, iteratorsPtr: number, valuePtr: number): number;
 
     _setPropertyField(flowStateIndex: number, componentIndex: number, propertyIndex: number, fieldIndex: number, valuePtr: number);

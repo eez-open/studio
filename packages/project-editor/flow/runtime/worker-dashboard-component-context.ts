@@ -186,7 +186,8 @@ export class DashboardComponentContext implements IDashboardComponentContext {
             this.flowStateIndex,
             this.componentIndex,
             propertyIndex,
-            0
+            0,
+            false
         );
 
         if (!valuePtr) {
