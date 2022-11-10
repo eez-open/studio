@@ -134,14 +134,14 @@ export function getFontData(font: Font, dataBuffer: DataBuffer) {
 
             let glyph = font.glyphs.find(glyph => glyph.encoding == i);
 
-            if (glyph && glyph.glyphBitmap && glyph.glyphBitmap.pixelArray) {
+            if (glyph && glyph.pixelArray) {
                 dataBuffer.packInt8(glyph.dx);
                 dataBuffer.packInt8(glyph.width);
                 dataBuffer.packInt8(glyph.height);
                 dataBuffer.packInt8(glyph.x);
                 dataBuffer.packInt8(glyph.y);
 
-                dataBuffer.packArray(glyph.glyphBitmap.pixelArray);
+                dataBuffer.packArray(glyph.pixelArray);
             } else {
                 dataBuffer.packInt8(255);
             }

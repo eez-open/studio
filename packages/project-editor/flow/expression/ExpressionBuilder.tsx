@@ -3,7 +3,7 @@ import { computed, observable, action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
 import { _map } from "eez-studio-shared/algorithm";
-import { humanize } from "eez-studio-shared/string";
+import { humanize, stringCompare } from "eez-studio-shared/string";
 
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
 
@@ -214,11 +214,15 @@ const SelectItemDialog = observer(
         }
 
         get localVariables() {
-            return this.flow.localVariables;
+            const vars = [...this.flow.localVariables];
+            vars.sort((a, b) => stringCompare(a.name, b.name));
+            return vars;
         }
 
         get globalVariables() {
-            return this.context.project.allGlobalVariables;
+            const vars = [...this.context.project.allGlobalVariables.slice()];
+            vars.sort((a, b) => stringCompare(a.name, b.name));
+            return vars;
         }
 
         getTypeChildren(type: string, prefix: string): ITreeNode<string>[] {

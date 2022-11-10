@@ -375,14 +375,10 @@ export class Assets {
                 project => project.styles,
                 style => style.id == undefined && style.alwaysBuild
             ).forEach(style => this.styles.push(style));
+            const missingIDs: number[] = [];
             for (let i = 0; i < this.styles.length; i++) {
                 if (!this.styles[i]) {
-                    this.projectEditorStore.outputSectionsStore.write(
-                        Section.OUTPUT,
-                        MessageType.WARNING,
-                        `Missing style with ID = ${i + 1}`,
-                        this.rootProject.styles
-                    );
+                    missingIDs.push(i + 1);
                     for (let j = 0; j < this.styles.length; j++) {
                         if (this.styles[j]) {
                             this.styles[i] = this.styles[j];
@@ -390,6 +386,17 @@ export class Assets {
                         }
                     }
                 }
+            }
+
+            if (missingIDs.length > 0) {
+                this.projectEditorStore.outputSectionsStore.write(
+                    Section.OUTPUT,
+                    MessageType.WARNING,
+                    `Missing styles with following ID's: ${missingIDs.join(
+                        ", "
+                    )}`,
+                    this.rootProject.styles
+                );
             }
         }
 

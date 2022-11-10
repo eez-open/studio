@@ -1955,6 +1955,11 @@ export class Style extends EezObject {
     }
 
     get cssPreview() {
+        const project = ProjectEditor.getProject(this);
+        if (!project.projectTypeTraits.isDashboard) {
+            return "";
+        }
+
         let cssPreview = "";
 
         if (this.inheritFrom) {

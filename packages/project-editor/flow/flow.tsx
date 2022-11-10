@@ -6,6 +6,7 @@ import {
     EezObject,
     getParent,
     IEezObject,
+    isAncestor,
     isSubclassOf,
     MessageType,
     PropertyInfo,
@@ -576,8 +577,8 @@ export abstract class Flow extends EezObject {
         this.connectionLines
             .filter(
                 connectionLine =>
-                    connectionLine.sourceComponent == component ||
-                    connectionLine.targetComponent == component
+                    isAncestor(connectionLine.sourceComponent, component) ||
+                    isAncestor(connectionLine.targetComponent, component)
             )
             .forEach(connectionLine => deleteObject(connectionLine));
     }

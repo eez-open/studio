@@ -1576,6 +1576,7 @@ export class LayoutViewWidget extends Widget {
             const projectEditorStore = getProjectEditorStore(this);
 
             return projectEditorStore.replaceObject(
+                getParent(this),
                 this,
                 createObject<ContainerWidget>(
                     projectEditorStore,
@@ -4610,10 +4611,20 @@ export class ScrollBarWidget extends Widget {
                             draw.fillRect(ctx, x, y, x + w - 1, y + h - 1);
 
                             // draw thumb
-                            const [size, position, pageSize] = (widget.data &&
+                            let data = (widget.data &&
                                 flowContext.dataContext.get(widget.data)) || [
                                 100, 25, 20
                             ];
+
+                            if (!Array.isArray(data)) {
+                                data = [
+                                    data.numItems,
+                                    data.position,
+                                    data.itemsPerPage
+                                ];
+                            }
+
+                            const [size, position, pageSize] = data;
 
                             let xThumb;
                             let widthThumb;
@@ -4998,6 +5009,7 @@ registerClass("CanvasWidget", CanvasWidget);
 class LineChartLine extends EezObject {
     label: string;
     color: string;
+    width: number;
     value: string;
 
     static classInfo: ClassInfo = {
@@ -5014,6 +5026,12 @@ class LineChartLine extends EezObject {
                 type: PropertyType.Color,
                 propertyGridGroup: specificGroup
             },
+            {
+                name: "width",
+                displayName: "Line width",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup
+            },
             makeExpressionProperty(
                 {
                     name: "value",
@@ -5022,6 +5040,14 @@ class LineChartLine extends EezObject {
                 "double"
             )
         ],
+        beforeLoadHook: (
+            object: LineChartLine,
+            jsObject: Partial<LineChartLine>
+        ) => {
+            if (jsObject.width == undefined) {
+                jsObject.width = 1.5;
+            }
+        },
         check: (lineChartTrace: LineChartLine) => {
             let messages: Message[] = [];
 
@@ -5062,7 +5088,8 @@ class LineChartLine extends EezObject {
             return messages;
         },
         defaultValue: {
-            color: "#333333"
+            color: "#333333",
+            lineWidth: 1.5
         }
     };
 
@@ -5072,6 +5099,7 @@ class LineChartLine extends EezObject {
         makeObservable(this, {
             label: observable,
             color: observable,
+            width: observable,
             value: observable
         });
     }
@@ -5152,6 +5180,7 @@ export class LineChartEmbeddedWidget extends Widget {
                 propertyGridGroup: specificGroup,
                 enumerable: false
             },
+            makeStylePropertyInfo("titleStyle"),
             makeStylePropertyInfo("legendStyle"),
             makeStylePropertyInfo("xAxisStyle"),
             makeStylePropertyInfo("yAxisStyle")
@@ -5184,6 +5213,9 @@ export class LineChartEmbeddedWidget extends Widget {
                     type: "any"
                 }
             ],
+            titleStyle: {
+                inheritFrom: "default"
+            },
             legendStyle: {
                 inheritFrom: "default"
             },
@@ -5209,6 +5241,7 @@ export class LineChartEmbeddedWidget extends Widget {
     maxPoints: number;
     margin: RectObject;
 
+    titleStyle: Style;
     legendStyle: Style;
     xAxisStyle: Style;
     yAxisStyle: Style;
@@ -5226,6 +5259,7 @@ export class LineChartEmbeddedWidget extends Widget {
             yAxisRangeTo: observable,
             maxPoints: observable,
             margin: observable,
+            titleStyle: observable,
             legendStyle: observable,
             xAxisStyle: observable,
             yAxisStyle: observable
@@ -5284,7 +5318,7 @@ export class LineChartEmbeddedWidget extends Widget {
                             ticksDelta: number;
                         }
 
-                        function calcAutoTicks(axis: Axis) {
+                        function calcAutoTicks(axis: Axis, maxTicks: number) {
                             const pxStart =
                                 axis.position == "x"
                                     ? axis.rect.x
@@ -5296,17 +5330,15 @@ export class LineChartEmbeddedWidget extends Widget {
 
                             let range = axis.max - axis.min;
 
-                            const min = axis.min - 0.1 * range;
-                            const max = axis.max + 0.1 * range;
+                            const min = axis.min - 0.05 * range;
+                            const max = axis.max + 0.05 * range;
 
                             range = max - min;
 
                             axis.scale = pxRange / range;
                             axis.offset = pxStart - min * axis.scale;
 
-                            const MAX_TICKS = 8;
-
-                            const x = range / MAX_TICKS;
+                            const x = range / maxTicks;
                             const exp = Math.floor(Math.log10(x));
                             const nx = x * Math.pow(10, -exp);
                             const ndelta = nx < 2 ? 2 : nx < 5 ? 5 : 10;
@@ -5329,7 +5361,7 @@ export class LineChartEmbeddedWidget extends Widget {
                                     y,
                                     w,
                                     h,
-                                    this.style,
+                                    this.titleStyle,
                                     false
                                 );
                             }
@@ -5586,7 +5618,7 @@ export class LineChartEmbeddedWidget extends Widget {
                                 }
 
                                 ctx.strokeStyle = line.color;
-                                ctx.lineWidth = 1.5;
+                                ctx.lineWidth = line.width;
                                 ctx.stroke();
                             }
                         };
@@ -5703,18 +5735,40 @@ export class LineChartEmbeddedWidget extends Widget {
                         const { legendWidth, legendLineHeight } =
                             measLegendWidth();
 
-                        const marginRight = Math.max(
-                            this.margin.right,
-                            legendWidth
-                        );
+                        const marginLeft =
+                            this.margin.left +
+                            this.style.borderSizeRect.left +
+                            Math.max(
+                                this.style.borderRadiusSpec.topLeftX,
+                                this.style.borderRadiusSpec.bottomLeftX
+                            );
+                        const marginTop =
+                            this.margin.top +
+                            this.style.borderSizeRect.top +
+                            Math.max(
+                                this.style.borderRadiusSpec.topLeftY,
+                                this.style.borderRadiusSpec.topRightY
+                            );
+                        const marginRight =
+                            Math.max(this.margin.right, legendWidth) +
+                            this.style.borderSizeRect.right +
+                            Math.max(
+                                this.style.borderRadiusSpec.topRightX,
+                                this.style.borderRadiusSpec.bottomRightX
+                            );
+                        const marginBottom =
+                            this.margin.bottom +
+                            this.style.borderSizeRect.bottom +
+                            Math.max(
+                                this.style.borderRadiusSpec.bottomLeftY,
+                                this.style.borderRadiusSpec.bottomRightY
+                            );
 
                         let gridRect = {
-                            x: widgetRect.x + this.margin.left,
-                            y: widgetRect.y + this.margin.top,
-                            w: widgetRect.w - (this.margin.left + marginRight),
-                            h:
-                                widgetRect.h -
-                                (this.margin.top + this.margin.bottom)
+                            x: widgetRect.x + marginLeft,
+                            y: widgetRect.y + marginTop,
+                            w: widgetRect.w - (marginLeft + marginRight),
+                            h: widgetRect.h - (marginTop + marginBottom)
                         };
 
                         chart.xAxis.rect.x = gridRect.x;
@@ -5722,13 +5776,41 @@ export class LineChartEmbeddedWidget extends Widget {
                         chart.xAxis.rect.w = gridRect.w;
                         chart.xAxis.rect.h = this.margin.bottom;
 
-                        chart.yAxis.rect.x = widgetRect.x;
+                        chart.yAxis.rect.x =
+                            widgetRect.x + marginLeft - this.margin.left;
                         chart.yAxis.rect.y = gridRect.y;
                         chart.yAxis.rect.w = this.margin.left;
                         chart.yAxis.rect.h = gridRect.h;
 
-                        calcAutoTicks(chart.xAxis);
-                        calcAutoTicks(chart.yAxis);
+                        const xAxisFont = styleGetFont(this.xAxisStyle);
+                        let xAxisLabelWidth;
+                        if (xAxisFont) {
+                            xAxisLabelWidth = draw.measureStr(
+                                "12345",
+                                xAxisFont,
+                                gridRect.w
+                            );
+                        } else {
+                            xAxisLabelWidth = 50;
+                        }
+                        calcAutoTicks(
+                            chart.xAxis,
+                            Math.round(gridRect.w / xAxisLabelWidth)
+                        );
+
+                        const yAxisFont = styleGetFont(this.yAxisStyle);
+                        let yAxisLabelHeight;
+                        if (yAxisFont) {
+                            yAxisLabelHeight = Math.round(
+                                yAxisFont.height * 1.25
+                            );
+                        } else {
+                            yAxisLabelHeight = 25;
+                        }
+                        calcAutoTicks(
+                            chart.yAxis,
+                            Math.round(gridRect.h / yAxisLabelHeight)
+                        );
 
                         draw.drawBackground(
                             ctx,
@@ -5744,7 +5826,7 @@ export class LineChartEmbeddedWidget extends Widget {
                             widgetRect.x,
                             widgetRect.y,
                             widgetRect.w,
-                            this.margin.top
+                            marginTop
                         );
 
                         if (showLegend) {
@@ -5798,6 +5880,9 @@ export class LineChartEmbeddedWidget extends Widget {
         dataBuffer.writeInt16(this.margin.right);
         dataBuffer.writeInt16(this.margin.bottom);
 
+        // titleStyle
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "titleStyle"));
+
         // legendStyle
         dataBuffer.writeInt16(assets.getStyleIndex(this, "legendStyle"));
 
@@ -5809,9 +5894,6 @@ export class LineChartEmbeddedWidget extends Widget {
 
         // component index
         dataBuffer.writeUint16(assets.getComponentIndex(this));
-
-        // resrved
-        dataBuffer.writeUint16(0);
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
@@ -5835,6 +5917,8 @@ export class LineChartEmbeddedWidget extends Widget {
             }
             dataBuffer.writeUint16(color);
             dataBuffer.writeUint16(0);
+
+            dataBuffer.writeFloat(line.width);
 
             dataBuffer.writeObjectOffset(() =>
                 buildExpression(assets, dataBuffer, this, line.value)

@@ -272,9 +272,12 @@ export let deleteObjects = action((objects: IEezObject[]) => {
 });
 
 export let replaceObject = action(
-    (object: IEezObject, replaceWithObject: EezObject) => {
-        let parent = getParent(object);
-
+    (
+        object: IEezObject,
+        replaceWithObject: EezObject,
+        newParent?: IEezObject
+    ) => {
+        const parent = getParent(object);
         setParent(replaceWithObject, parent);
 
         const undoManager = getProjectEditorStore(parent).undoManager;
@@ -285,10 +288,16 @@ export let replaceObject = action(
 
             undoManager.executeCommand({
                 execute: action(() => {
+                    if (newParent) {
+                        setParent(object, newParent);
+                    }
                     array[index] = replaceWithObject;
                 }),
 
                 undo: action(() => {
+                    if (newParent) {
+                        setParent(object, parent);
+                    }
                     array[index] = object;
                 }),
 
@@ -307,9 +316,13 @@ export let replaceObject = action(
 );
 
 export let replaceObjects = action(
-    (objects: IEezObject[], replaceWithObject: EezObject) => {
+    (
+        objects: IEezObject[],
+        replaceWithObject: EezObject,
+        newParent: IEezObject | undefined
+    ) => {
         if (objects.length === 1) {
-            return replaceObject(objects[0], replaceWithObject);
+            return replaceObject(objects[0], replaceWithObject, newParent);
         }
 
         const parent = getParent(objects[0]);
@@ -323,11 +336,18 @@ export let replaceObjects = action(
 
         getProjectEditorStore(parent).undoManager.executeCommand({
             execute: action(() => {
+                if (newParent) {
+                    setParent(objects[0], newParent);
+                }
+
                 array[index] = replaceWithObject;
 
                 undoIndexes = [];
                 for (let i = 1; i < objects.length; i++) {
                     let object = objects[i];
+                    if (newParent) {
+                        setParent(object, newParent);
+                    }
                     let index = array.indexOf(object);
                     undoIndexes.push(index);
                     array.splice(index, 1);
@@ -337,10 +357,16 @@ export let replaceObjects = action(
             undo: action(() => {
                 for (let i = objects.length - 1; i >= 1; i--) {
                     let object = objects[i];
+                    if (newParent) {
+                        setParent(object, parent);
+                    }
                     let index = undoIndexes[i - 1];
                     array.splice(index, 0, object);
                 }
 
+                if (newParent) {
+                    setParent(objects[0], parent);
+                }
                 array[index] = objects[0];
             }),
 

@@ -69,7 +69,7 @@ function buildFontData(font: Font, dataBuffer: DataBuffer) {
     });
 
     dataBuffer.writeArray(glyphs, glyph => {
-        if (glyph && glyph.glyphBitmap && glyph.glyphBitmap.pixelArray) {
+        if (glyph && glyph.pixelArray) {
             dataBuffer.writeInt8(glyph.dx);
             dataBuffer.writeUint8(glyph.width);
             dataBuffer.writeUint8(glyph.height);
@@ -79,7 +79,7 @@ function buildFontData(font: Font, dataBuffer: DataBuffer) {
             dataBuffer.writeUint8(0); // reserved
             dataBuffer.writeUint8(0); // reserved
 
-            dataBuffer.writeUint8Array(glyph.glyphBitmap.pixelArray);
+            dataBuffer.writeUint8Array(glyph.pixelArray);
         } else {
             dataBuffer.writeInt8(-128); // empty glyph
         }

@@ -37,7 +37,7 @@ import {
 } from "eez-studio-ui/header-with-body";
 import { Toolbar } from "eez-studio-ui/toolbar";
 //import { TextAction } from "eez-studio-ui/action";
-import { RightArrow } from "project-editor/flow/components/actions";
+import { RightArrow } from "project-editor/ui-components/icons";
 import { Splitter } from "eez-studio-ui/splitter";
 import {
     DEFAULT_SCALE,
@@ -565,7 +565,7 @@ export const ChangesEditor = observer(
             }
 
             return (
-                <div className="d-flex">
+                <div>
                     <span>{getHashLabel(revisionBefore?.hash)}</span>
                     <RightArrow />
                     <span>{getHashLabel(revisionAfter.hash)}</span>

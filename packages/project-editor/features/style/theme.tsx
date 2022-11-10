@@ -490,7 +490,8 @@ export class Theme extends EezObject implements ITheme {
             {
                 name: "colors",
                 type: PropertyType.StringArray,
-                hideInPropertyGrid: true
+                hideInPropertyGrid: true,
+                partOfNavigation: false
             }
         ],
         newItem: async (parent: IEezObject) => {

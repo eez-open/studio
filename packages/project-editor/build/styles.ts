@@ -1,6 +1,7 @@
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 import type { Style } from "project-editor/features/style/style";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
+import { _uniqBy } from "eez-studio-shared/algorithm";
 
 export const STYLE_FLAGS_HORZ_ALIGN_LEFT = 0;
 export const STYLE_FLAGS_HORZ_ALIGN_RIGHT = 1;
@@ -13,7 +14,10 @@ export const STYLE_FLAGS_VERT_ALIGN_CENTER = 2 << 3;
 export const STYLE_FLAGS_BLINK = 1 << 6;
 
 export function buildGuiStylesEnum(assets: Assets) {
-    const styleEnumItems = assets.styles.map((style, i) => {
+    let styles = assets.styles.filter(style => style.id != undefined);
+    styles = _uniqBy(styles, style => style.id);
+
+    const styleEnumItems = styles.map((style, i) => {
         return `${TAB}${getName(
             "STYLE_ID_",
             style.name ? style : "inline" + i,

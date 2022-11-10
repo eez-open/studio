@@ -191,10 +191,14 @@ function buildFlowValue(
                     }));
                 }
 
-                dataBuffer.writeUint32(elements.length); // arraySize
+                // arraySize
+                dataBuffer.writeUint32(elements.length);
 
+                // arrayType
                 let arrayType = assets.getTypeIndex(flowValue.valueType);
                 dataBuffer.writeUint32(arrayType);
+
+                // values
                 elements.forEach(element =>
                     buildFlowValue(assets, dataBuffer, element)
                 );

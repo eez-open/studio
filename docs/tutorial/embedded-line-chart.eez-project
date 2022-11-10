@@ -157,6 +157,10 @@
             "bottom": 30,
             "left": 30
           },
+          "titleStyle": {
+            "objID": "19e18310-7370-1f33-6c3a-588d96cf9728",
+            "inheritFrom": "line_chart"
+          },
           "legendStyle": {
             "objID": "7a93edb4-28a0-8808-06f8-18f31f7ed04e",
             "inheritFrom": "line_chart_legend"
@@ -495,7 +499,10 @@
       "left": 0,
       "top": 0,
       "width": 480,
-      "height": 272
+      "height": 272,
+      "lvglLocalStyles": {
+        "objID": "1b4d3944-2a33-2556-6e3f-c1c1bb594fb7"
+      }
     }
   ],
   "styles": [

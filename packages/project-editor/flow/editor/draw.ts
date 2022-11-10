@@ -172,9 +172,15 @@ export function drawGlyph(
     }
 
     let glyph = getGlyph(font, encoding);
-    if (!glyph || !glyph.glyphBitmap) {
+    if (!glyph || !glyph.pixelArray) {
         return 0;
     }
+
+    const glyphBitmap = {
+        width: glyph.width,
+        height: glyph.height,
+        pixelArray: glyph.pixelArray
+    };
 
     let x_glyph = x + glyph.x;
     let y_glyph = y + font.ascent - (glyph.y + glyph.height);
@@ -187,11 +193,11 @@ export function drawGlyph(
         const offset = (MAX_GLYPH_WIDTH - width) * 4;
         const fgColorRgb = tinycolor(fgColor).toRgb();
         const bgColorRgb = tinycolor(bgColor).toRgb();
-        const pixelArray = glyph.glyphBitmap.pixelArray;
+        const pixelArray = glyphBitmap.pixelArray;
         if (pixelArray) {
             if (font.bpp === 8) {
                 let pixelArrayIndex = 0;
-                const pixelArrayOffset = glyph.glyphBitmap.width - width;
+                const pixelArrayOffset = glyph.width - width;
                 for (let y = 0; y < height; y++) {
                     for (let x = 0; x < width; x++) {
                         pixelData[i++] = fgColorRgb.r;
@@ -206,9 +212,7 @@ export function drawGlyph(
                 for (let y = 0; y < height; y++) {
                     for (let x = 0; x < width; x++) {
                         const pixel =
-                            pixelArray[
-                                getPixelByteIndex(glyph.glyphBitmap, x, y)
-                            ] &
+                            pixelArray[getPixelByteIndex(glyphBitmap, x, y)] &
                             (0x80 >> x % 8);
                         if (pixel) {
                             pixelData[i++] = fgColorRgb.r;

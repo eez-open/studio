@@ -135,10 +135,7 @@ export abstract class RuntimeBase {
             this._selectedPage = value;
         });
 
-        if (
-            this.state == State.STARTING ||
-            (this.isDebuggerActive && !this.isPaused)
-        ) {
+        if (this.isDebuggerActive) {
             this.projectEditorStore.editorsStore.openEditor(this.selectedPage);
         }
     }

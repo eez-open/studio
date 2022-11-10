@@ -93,33 +93,17 @@ import {
     COMPONENT_TYPE_SELECT_LANGUAGE_ACTION,
     COMPONENT_TYPE_SET_PAGE_DIRECTION_ACTION,
     COMPONENT_TYPE_ANIMATE_ACTION,
-    COMPONENT_TYPE_ON_EVENT_ACTION
+    COMPONENT_TYPE_ON_EVENT_ACTION,
+    COMPONENT_TYPE_OVERRIDE_STYLE_ACTION
 } from "project-editor/flow/components/component_types";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { LANGUAGE_ICON } from "project-editor/features/texts";
 import { humanize } from "eez-studio-shared/string";
-import { LeftArrow } from "project-editor/ui-components/icons";
+import { LeftArrow, RightArrow } from "project-editor/ui-components/icons";
+import { Icon } from "eez-studio-ui/icon";
 
 const NOT_NAMED_LABEL = "<not named>";
-
-export const RightArrow = () => (
-    <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        strokeWidth="2"
-        stroke="currentColor"
-        fill="none"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-    >
-        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-        <line x1="5" y1="12" x2="19" y2="12"></line>
-        <line x1="15" y1="16" x2="19" y2="12"></line>
-        <line x1="15" y1="8" x2="19" y2="12"></line>
-    </svg>
-);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2627,6 +2611,7 @@ export class ShowPageActionComponent extends ActionComponent {
 
 const MESSAGE_BOX_TYPE_INFO = 1;
 const MESSAGE_BOX_TYPE_ERROR = 2;
+const MESSAGE_BOX_TYPE_QUESTION = 3;
 
 export class ShowMessageBoxActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
@@ -2640,7 +2625,8 @@ export class ShowMessageBoxActionComponent extends ActionComponent {
                 type: PropertyType.Enum,
                 enumItems: [
                     { id: MESSAGE_BOX_TYPE_INFO, label: "Info" },
-                    { id: MESSAGE_BOX_TYPE_ERROR, label: "Error" }
+                    { id: MESSAGE_BOX_TYPE_ERROR, label: "Error" },
+                    { id: MESSAGE_BOX_TYPE_QUESTION, label: "Question" }
                 ],
                 propertyGridGroup: specificGroup
             },
@@ -2651,6 +2637,17 @@ export class ShowMessageBoxActionComponent extends ActionComponent {
                     propertyGridGroup: specificGroup
                 },
                 "string"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "buttons",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (
+                        component: ShowMessageBoxActionComponent
+                    ) => component.messageType != MESSAGE_BOX_TYPE_QUESTION
+                },
+                "array:string"
             )
         ],
         icon: (
@@ -2671,13 +2668,15 @@ export class ShowMessageBoxActionComponent extends ActionComponent {
 
     messageType: number;
     message: string;
+    buttons: string;
 
     constructor() {
         super();
 
         makeObservable(this, {
             messageType: observable,
-            message: observable
+            message: observable,
+            buttons: observable
         });
     }
 
@@ -2713,6 +2712,8 @@ export class ShowMessageBoxActionComponent extends ActionComponent {
                         ? "Info: "
                         : this.messageType == MESSAGE_BOX_TYPE_ERROR
                         ? "Error: "
+                        : this.messageType == MESSAGE_BOX_TYPE_QUESTION
+                        ? "Question: "
                         : ""}
                     : {this.message}
                 </pre>
@@ -3106,6 +3107,87 @@ export class SetPageDirectionActionComponent extends ActionComponent {
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeUint8(this.direction == "LTR" ? 0 : 1);
+    }
+}
+
+export class OverrideStyleActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: COMPONENT_TYPE_OVERRIDE_STYLE_ACTION,
+        componentPaletteGroupName: "GUI Actions",
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
+        properties: [
+            {
+                name: "fromStyle",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "styles",
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "toStyle",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "styles",
+                propertyGridGroup: specificGroup
+            }
+        ],
+        icon: <Icon icon="material:format_color_fill" size={17} />,
+        componentHeaderColor: "#DEB887"
+    });
+
+    fromStyle: string;
+    toStyle: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            fromStyle: observable,
+            toStyle: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            }
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        return (
+            <div className="body">
+                <pre>
+                    {this.fromStyle}
+                    <RightArrow />
+                    {this.toStyle}
+                </pre>
+            </div>
+        );
+    }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // fromStyle
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "fromStyle"));
+        // toStyle
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "toStyle"));
     }
 }
 
@@ -3573,6 +3655,7 @@ registerClass(
     "SetPageDirectionActionComponent",
     SetPageDirectionActionComponent
 );
+registerClass("OverrideStyle", OverrideStyleActionComponent);
 
 registerClass("AnimateActionComponent", AnimateActionComponent);
 

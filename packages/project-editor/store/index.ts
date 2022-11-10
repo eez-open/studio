@@ -808,20 +808,20 @@ export class ProjectEditorStore {
         }
     }
 
-    replaceObject(object: IEezObject, replaceWithObject: EezObject) {
-        if (getParent(object) !== getParent(replaceWithObject)) {
-            console.error("assert failed");
-        }
-
-        return replaceObject(object, replaceWithObject);
+    replaceObject(
+        object: IEezObject,
+        replaceWithObject: EezObject,
+        newParent?: IEezObject
+    ) {
+        return replaceObject(object, replaceWithObject, newParent);
     }
 
-    replaceObjects(objects: IEezObject[], replaceWithObject: EezObject) {
-        if (getParent(objects[0]) !== getParent(replaceWithObject)) {
-            console.error("assert failed");
-        }
-
-        return replaceObjects(objects, replaceWithObject);
+    replaceObjects(
+        objects: IEezObject[],
+        replaceWithObject: EezObject,
+        newParent?: IEezObject
+    ) {
+        return replaceObjects(objects, replaceWithObject, newParent);
     }
 
     insertObjectBefore(object: IEezObject, objectToInsert: any) {

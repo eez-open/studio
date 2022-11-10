@@ -156,7 +156,16 @@ export function getObjectFromPath(rootObject: IEezObject, path: string[]) {
 export function getObjectFromStringPath(
     rootObject: IEezObject,
     stringPath: string
-) {
+): IEezObject {
+    if (stringPath.startsWith("[")) {
+        const i = stringPath.indexOf(":");
+        const absoluteFilePath = stringPath.substring(1, i - 1);
+        const projectEditorStore = getProjectEditorStore(rootObject);
+        const project =
+            projectEditorStore.externalProjects.get(absoluteFilePath);
+        stringPath = stringPath.substring(stringPath.indexOf(":") + 1);
+        return getObjectFromStringPath(project!, stringPath);
+    }
     if (stringPath == "/") {
         return rootObject;
     }
@@ -382,7 +391,15 @@ export function getObjectPath(object: IEezObject): (string | number)[] {
 }
 
 export function getObjectPathAsString(object: IEezObject) {
-    return "/" + getObjectPath(object).join("/");
+    const path = getObjectPath(object).join("/");
+    const project = getProject(object);
+    const projectEditorStore = project._DocumentStore;
+    const absoluteFilePath =
+        projectEditorStore.mapExternalProjectToAbsolutePath.get(project);
+    if (absoluteFilePath != undefined) {
+        return `[${absoluteFilePath}]:/${path}`;
+    }
+    return `/${path}`;
 }
 
 export function isObjectExists(object: IEezObject) {

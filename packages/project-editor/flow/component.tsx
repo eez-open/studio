@@ -37,7 +37,8 @@ import {
     MessageType,
     registerClass,
     FlowPropertyType,
-    getObjectPropertyDisplayName
+    getObjectPropertyDisplayName,
+    setParent
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -49,7 +50,8 @@ import {
     Message,
     propertyNotSetMessage,
     updateObject,
-    createObject
+    createObject,
+    ProjectEditorStore
 } from "project-editor/store";
 import {
     isLVGLProject,
@@ -3708,7 +3710,7 @@ export class Widget extends Component {
                         label: "Put in Container",
                         click: () => {
                             const containerWidget = Widget.putInContainer(
-                                objects as Component[]
+                                objects as Widget[]
                             );
                             context.selectObject(containerWidget);
                         }
@@ -3720,7 +3722,7 @@ export class Widget extends Component {
                         label: "Put in List",
                         click: () => {
                             const listWidget = Widget.putInList(
-                                objects as Component[]
+                                objects as Widget[]
                             );
                             context.selectObject(listWidget);
                         }
@@ -3733,7 +3735,7 @@ export class Widget extends Component {
                         click: async () => {
                             const layoutWidget =
                                 await Widget.createCustomWidget(
-                                    objects as Component[]
+                                    objects as Widget[]
                                 );
                             if (layoutWidget) {
                                 context.selectObject(layoutWidget);
@@ -3748,7 +3750,7 @@ export class Widget extends Component {
                         click: async () => {
                             const layoutWidget =
                                 await Widget.replaceWithCustomWidget(
-                                    objects as Component[]
+                                    objects as Widget[]
                                 );
                             if (layoutWidget) {
                                 context.selectObject(layoutWidget);
@@ -3912,36 +3914,43 @@ export class Widget extends Component {
     }
 
     putInSelect() {
-        let thisWidgetJsObject = objectToJS(this);
+        const projectEditorStore = getProjectEditorStore(this);
 
-        var selectWidgetJsObject: Partial<SelectWidget> = Object.assign(
+        var selectWidgetProperties: Partial<SelectWidget> = Object.assign(
             {},
             getClassFromType("Select")?.classInfo.defaultValue,
             { type: "Select" }
         );
 
-        selectWidgetJsObject.left = this.left;
-        selectWidgetJsObject.top = this.top;
-        selectWidgetJsObject.width = this.width;
-        selectWidgetJsObject.height = this.height;
-
-        thisWidgetJsObject.left = 0;
-        delete thisWidgetJsObject.left_;
-        thisWidgetJsObject.top = 0;
-        delete thisWidgetJsObject.top_;
-
-        selectWidgetJsObject.widgets = [thisWidgetJsObject];
-
-        const projectEditorStore = getProjectEditorStore(this);
-
-        return projectEditorStore.replaceObject(
-            this,
-            createObject<SelectWidget>(
-                projectEditorStore,
-                selectWidgetJsObject,
-                ProjectEditor.SelectWidgetClass
-            )
+        const selectWidget = createObject<SelectWidget>(
+            projectEditorStore,
+            selectWidgetProperties,
+            ProjectEditor.SelectWidgetClass
         );
+
+        selectWidget.left = this.left;
+        selectWidget.top = this.top;
+        selectWidget.width = this.width;
+        selectWidget.height = this.height;
+
+        selectWidget.widgets.push(this);
+
+        projectEditorStore.undoManager.setCombineCommands(true);
+
+        const result = projectEditorStore.replaceObject(
+            this,
+            selectWidget,
+            selectWidget.widgets
+        );
+
+        projectEditorStore.updateObject(this, {
+            left: 0,
+            top: 0
+        });
+
+        projectEditorStore.undoManager.setCombineCommands(false);
+
+        return result;
     }
 
     static createWidgets(fromWidgets: Component[]) {
@@ -3981,85 +3990,164 @@ export class Widget extends Component {
         };
     }
 
-    static putInContainer(fromWidgets: Component[]) {
-        var containerWidgetJsObject: Partial<ContainerWidget> = Object.assign(
+    static getBoundingRect(widgets: Widget[]) {
+        let x1 = widgets[0].left;
+        let y1 = widgets[0].top;
+        let x2 = widgets[0].left + widgets[0].width;
+        let y2 = widgets[0].top + widgets[0].height;
+
+        for (let i = 1; i < widgets.length; i++) {
+            let widget = widgets[i];
+
+            x1 = Math.min(widget.left, x1);
+            y1 = Math.min(widget.top, y1);
+            x2 = Math.max(widget.left + widget.width, x2);
+            y2 = Math.max(widget.top + widget.height, y2);
+        }
+
+        return {
+            left: x1,
+            top: y1,
+            width: x2 - x1,
+            height: y2 - y1
+        };
+    }
+
+    static repositionWidgets(
+        projectEditorStore: ProjectEditorStore,
+        widgets: Widget[],
+        boundingRect: Rect
+    ) {
+        for (let i = 0; i < widgets.length; i++) {
+            let widget = widgets[i];
+
+            projectEditorStore.updateObject(widget, {
+                left: widgets[i].left - boundingRect.left,
+                top: widgets[i].top - boundingRect.top
+            });
+        }
+    }
+
+    static putInContainer(fromWidgets: Widget[]) {
+        const projectEditorStore = getProjectEditorStore(fromWidgets[0]);
+
+        var containerWidgetProperties: Partial<ContainerWidget> = Object.assign(
             {},
             getClassFromType("Container")?.classInfo.defaultValue,
             { type: "Container" }
         );
 
-        const createWidgetsResult = Widget.createWidgets(fromWidgets);
-
-        containerWidgetJsObject.widgets = createWidgetsResult.widgets;
-
-        containerWidgetJsObject.left = createWidgetsResult.left;
-        containerWidgetJsObject.top = createWidgetsResult.top;
-        containerWidgetJsObject.width = createWidgetsResult.width;
-        containerWidgetJsObject.height = createWidgetsResult.height;
-
-        const projectEditorStore = getProjectEditorStore(fromWidgets[0]);
-
-        return projectEditorStore.replaceObjects(
-            fromWidgets,
-            createObject<ContainerWidget>(
-                projectEditorStore,
-                containerWidgetJsObject,
-                ProjectEditor.ContainerWidgetClass
-            )
+        var containerWidget = createObject<ContainerWidget>(
+            projectEditorStore,
+            containerWidgetProperties,
+            ProjectEditor.ContainerWidgetClass
         );
+
+        const boundingRect = Widget.getBoundingRect(fromWidgets);
+
+        containerWidget.left = boundingRect.left;
+        containerWidget.top = boundingRect.top;
+        containerWidget.width = boundingRect.width;
+        containerWidget.height = boundingRect.height;
+
+        fromWidgets.forEach(widget => {
+            containerWidget.widgets.push(widget);
+        });
+
+        projectEditorStore.undoManager.setCombineCommands(true);
+
+        const result = projectEditorStore.replaceObjects(
+            fromWidgets,
+            containerWidget,
+            containerWidget.widgets
+        );
+
+        Widget.repositionWidgets(projectEditorStore, fromWidgets, boundingRect);
+
+        projectEditorStore.undoManager.setCombineCommands(false);
+
+        return result;
     }
 
-    static putInList(fromWidgets: Component[]) {
-        let containerWidgetJsObject: ContainerWidget;
+    static putInList(fromWidgets: Widget[]) {
+        const projectEditorStore = getProjectEditorStore(fromWidgets[0]);
+
+        let boundingRect: Rect | undefined;
+
+        let containerWidget: ContainerWidget;
         if (
             fromWidgets.length == 1 &&
             (fromWidgets[0].type == "Container" ||
                 fromWidgets[0].type == "ContainerWidget")
         ) {
-            containerWidgetJsObject = objectToJS(fromWidgets[0]);
+            containerWidget = fromWidgets[0] as ContainerWidget;
         } else {
-            containerWidgetJsObject = Object.assign(
-                {},
-                getClassFromType("Container")?.classInfo.defaultValue,
-                { type: "Container" }
+            var containerWidgetJsObjectProperties: Partial<ContainerWidget> =
+                Object.assign(
+                    {},
+                    getClassFromType("Container")?.classInfo.defaultValue,
+                    { type: "Container" }
+                );
+
+            containerWidget = createObject<ContainerWidget>(
+                projectEditorStore,
+                containerWidgetJsObjectProperties,
+                ProjectEditor.ContainerWidgetClass
             );
 
-            const createWidgetsResult = Widget.createWidgets(fromWidgets);
+            boundingRect = Widget.getBoundingRect(fromWidgets);
 
-            containerWidgetJsObject.widgets = createWidgetsResult.widgets;
+            fromWidgets.forEach(widget => {
+                containerWidget.widgets.push(widget);
+            });
 
-            containerWidgetJsObject.left = createWidgetsResult.left;
-            containerWidgetJsObject.top = createWidgetsResult.top;
-            containerWidgetJsObject.width = createWidgetsResult.width;
-            containerWidgetJsObject.height = createWidgetsResult.height;
+            containerWidget.left = boundingRect.left;
+            containerWidget.top = boundingRect.top;
+            containerWidget.width = boundingRect.width;
+            containerWidget.height = boundingRect.height;
         }
 
-        var listWidgetJsObject: Partial<ListWidget> = Object.assign(
+        var listWidgetJsObjectProperties: Partial<ListWidget> = Object.assign(
             {},
             getClassFromType("List")?.classInfo.defaultValue,
             { type: "List" }
         );
-
-        listWidgetJsObject.itemWidget = containerWidgetJsObject;
-
-        listWidgetJsObject.left = containerWidgetJsObject.left;
-        listWidgetJsObject.top = containerWidgetJsObject.top;
-        listWidgetJsObject.width = containerWidgetJsObject.width;
-        listWidgetJsObject.height = containerWidgetJsObject.height;
-
-        containerWidgetJsObject.left = 0;
-        containerWidgetJsObject.top = 0;
-
-        const projectEditorStore = getProjectEditorStore(fromWidgets[0]);
-
-        return projectEditorStore.replaceObjects(
-            fromWidgets,
-            createObject<ListWidget>(
-                projectEditorStore,
-                listWidgetJsObject,
-                ProjectEditor.ListWidgetClass
-            )
+        const listWidget = createObject<ListWidget>(
+            projectEditorStore,
+            listWidgetJsObjectProperties,
+            ProjectEditor.ListWidgetClass
         );
+
+        listWidget.itemWidget = containerWidget;
+        setParent(containerWidget, listWidget);
+
+        listWidget.left = containerWidget.left;
+        listWidget.top = containerWidget.top;
+        listWidget.width = containerWidget.width;
+        listWidget.height = containerWidget.height;
+
+        containerWidget.left = 0;
+        containerWidget.top = 0;
+
+        projectEditorStore.undoManager.setCombineCommands(true);
+
+        const result = projectEditorStore.replaceObjects(
+            fromWidgets,
+            listWidget,
+            containerWidget.widgets
+        );
+
+        if (boundingRect) {
+            Widget.repositionWidgets(
+                projectEditorStore,
+                fromWidgets,
+                boundingRect
+            );
+        }
+
+        projectEditorStore.undoManager.setCombineCommands(false);
+
+        return result;
     }
 
     static async createCustomWidget(fromWidgets: Component[]) {

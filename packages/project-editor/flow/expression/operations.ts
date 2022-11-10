@@ -1,3 +1,4 @@
+import { objectClone } from "eez-studio-shared/util";
 import * as os from "os";
 import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
 import type { ValueType } from "project-editor/features/variable/value-type";
@@ -855,6 +856,66 @@ export const builtInFunctions: {
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
         ) => args[0].slice(args[1], args[2]),
+        getValueType: (...args: ValueType[]) => {
+            return args[0];
+        }
+    },
+
+    "Array.allocate": {
+        arity: 1,
+        args: ["size"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => new Array(args[0]),
+        getValueType: (...args: ValueType[]) => {
+            return "array:any";
+        }
+    },
+
+    "Array.append": {
+        arity: 2,
+        args: ["array", "value"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => [...args[0], args[1]],
+        getValueType: (...args: ValueType[]) => {
+            return args[0];
+        }
+    },
+
+    "Array.insert": {
+        arity: 3,
+        args: ["array", "position", "value"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => [...args[0].slice(0, args[2]), args[2], ...args[0].slice(args[2])],
+        getValueType: (...args: ValueType[]) => {
+            return args[0];
+        }
+    },
+
+    "Array.remove": {
+        arity: 2,
+        args: ["array", "position"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => [...args[0].slice(0, args[2]), ...args[0].slice(args[2] + 1)],
+        getValueType: (...args: ValueType[]) => {
+            return args[0];
+        }
+    },
+
+    "Array.clone": {
+        arity: 1,
+        args: ["array"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => objectClone(args[0]),
         getValueType: (...args: ValueType[]) => {
             return args[0];
         }

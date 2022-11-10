@@ -439,7 +439,6 @@ function buildExpressionNode(
             node.valueType
         );
         if (!type || type.kind != "object") {
-            console.log("chacha", node.valueType, type);
             throw `Can't build ObjectExpression for type: ${node.valueType}`;
         }
 

@@ -216,10 +216,10 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                 }
 
                 const project = ProjectEditor.getProject(component);
-                if (
-                    project._DocumentStore.typesStore.getType(node.valueType) ==
-                    undefined
-                ) {
+                const type = project._DocumentStore.typesStore.getType(
+                    node.valueType
+                );
+                if (type?.kind != "object") {
                     throw `Invalid type '${node.valueType}'`;
                 }
             }

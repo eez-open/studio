@@ -1,7 +1,7 @@
 import React from "react";
 
 import { registerActionComponents } from "project-editor/flow/component";
-import { RightArrow } from "project-editor/flow/components/actions";
+import { RightArrow } from "project-editor/ui-components/icons";
 
 const pythonIcon: any = (
     <svg
@@ -139,9 +139,9 @@ registerActionComponents("Python", [
                     <span
                         style={{ display: "inline-flex", alignItems: "center" }}
                     >
-                        <span style={{ paddingRight: 10 }}>{props[1]}</span>
+                        {props[1]}
                         <RightArrow />
-                        <span style={{ paddingLeft: 10 }}>{props[0]}</span>
+                        {props[0]}
                     </span>
                 </pre>
             );

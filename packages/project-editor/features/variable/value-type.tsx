@@ -80,6 +80,7 @@ export const CHECKBOX_ACTION_PARAMS_STRUCT_NAME = "$CheckboxActionParams";
 export const TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME = "$TextInputActionParams";
 export const DROP_DOWN_LIST_ACTION_PARAMS_STRUCT_NAME =
     "$DropDownListActionParams";
+export const SCROLLBAR_STATE_STRUCT_NAME = "$ScrollbarState";
 
 export const SYSTEM_STRUCTURES: IStructure[] = [
     {
@@ -145,6 +146,28 @@ export const SYSTEM_STRUCTURES: IStructure[] = [
             },
             {
                 name: "selectedIndex",
+                type: "integer"
+            }
+        ],
+        fieldsMap: new Map()
+    },
+    {
+        name: SCROLLBAR_STATE_STRUCT_NAME,
+        fields: [
+            {
+                name: "numItems",
+                type: "integer"
+            },
+            {
+                name: "itemsPerPage",
+                type: "integer"
+            },
+            {
+                name: "positionIncrement",
+                type: "integer"
+            },
+            {
+                name: "position",
                 type: "integer"
             }
         ],

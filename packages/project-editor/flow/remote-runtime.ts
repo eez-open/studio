@@ -92,6 +92,8 @@ const LOG_ITEM_TYPE_SCPI = 3;
 const LOG_ITEM_TYPE_INFO = 4;
 const LOG_ITEM_TYPE_DEBUG = 5;
 
+const FIRST_INTERNAL_PAGE_ID = 32000;
+
 export class RemoteRuntime extends RuntimeBase {
     connection: ConnectionBase | undefined;
     debuggerConnection: DebuggerConnectionBase | undefined;
@@ -370,6 +372,12 @@ export class RemoteRuntime extends RuntimeBase {
             this.debuggerConnection.sendMessageFromDebugger(
                 `${MessagesFromDebugger.MESSAGE_FROM_DEBUGGER_RESUME}\n`
             );
+
+            if (this.isDebuggerActive) {
+                this.projectEditorStore.editorsStore.openEditor(
+                    this.selectedPage
+                );
+            }
         }
     }
 
@@ -1430,7 +1438,9 @@ export abstract class DebuggerConnectionBase {
                             pageId < 0 ||
                             pageId >= this.runtime.assetsMap.flows.length
                         ) {
-                            console.error("UNEXPECTED!");
+                            if (pageId < FIRST_INTERNAL_PAGE_ID) {
+                                console.error("UNEXPECTED!");
+                            }
                             return;
                         }
 
