@@ -13,7 +13,6 @@ import {
     objectToString
 } from "project-editor/store/helper";
 import type { ProjectEditorStore } from "project-editor/store";
-import { LayoutModels } from "project-editor/store/layout-models";
 import { objectEqual } from "eez-studio-shared/util";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -145,7 +144,11 @@ export class EditorsStore {
 
     dispose1: mobx.IReactionDisposer;
 
-    constructor(public projectEditorStore: ProjectEditorStore) {
+    constructor(
+        public projectEditorStore: ProjectEditorStore,
+        public getLayoutModel: () => FlexLayout.Model,
+        public tabsetID: string
+    ) {
         makeObservable(this, {
             editors: observable,
             activeEditor: observable,
@@ -174,8 +177,8 @@ export class EditorsStore {
 
     get tabsModel() {
         return (
-            this.projectEditorStore.layoutModels.editors
-                .getNodeById(LayoutModels.EDITORS_TABSET_ID)
+            this.getLayoutModel()
+                .getNodeById(this.tabsetID)
                 .getChildren()[0] as FlexLayout.TabNode
         ).getExtraData().model as FlexLayout.Model;
     }
@@ -194,7 +197,7 @@ export class EditorsStore {
 
     get tabs() {
         const tabs: FlexLayout.TabNode[] = [];
-        this.tabsModel.visitNodes(node => {
+        this.tabsModel?.visitNodes(node => {
             if (node instanceof FlexLayout.TabNode) {
                 tabs.push(node);
             }
@@ -276,6 +279,7 @@ export class EditorsStore {
             if (showActiveEditor) {
                 const activeEditor = this.activeEditor;
                 if (activeEditor) {
+                    activeEditor.makeActive();
                     this.projectEditorStore.navigationStore.showObjects(
                         [activeEditor.subObject ?? activeEditor.object],
                         false,
@@ -289,15 +293,6 @@ export class EditorsStore {
 
     activateEditor(editor: Editor) {
         this.tabsModel.doAction(FlexLayout.Actions.selectTab(editor.tabId));
-
-        setTimeout(() => {
-            const el = document.querySelector(
-                "#eez-project-active-editor [tabindex]"
-            );
-            if (el && el instanceof HTMLElement) {
-                el.focus();
-            }
-        }, 0);
     }
 
     openEditor(object: IEezObject, subObject?: IEezObject, params?: any) {

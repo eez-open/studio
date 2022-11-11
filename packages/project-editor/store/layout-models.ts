@@ -27,7 +27,8 @@ export class LayoutModels {
     static OUTPUT_TAB_ID = "OUTPUT";
     static SEARCH_RESULTS_TAB_ID = "SEARCH_RESULTS";
     static NAVIGATION_TABSET_ID = "NAVIGATION";
-    static EDITORS_TABSET_ID = "EDITORS";
+    static EDITOR_MODE_EDITORS_TABSET_ID = "EDITORS";
+    static RUNTIME_MODE_EDITORS_TABSET_ID = "RUNTIME-EDITORS";
     static PROPERTIES_TAB_ID = "PROPERTIES";
     static COMPONENTS_PALETTE_TAB_ID = "COMPONENTS_PALETTE";
     static BREAKPOINTS_TAB_ID = "BREAKPOINTS_PALETTE";
@@ -108,7 +109,8 @@ export class LayoutModels {
     rootEditor: FlexLayout.Model;
     rootRuntime: FlexLayout.Model;
 
-    editors: FlexLayout.Model;
+    editorModeEditors: FlexLayout.Model;
+    runtimeModeEditors: FlexLayout.Model;
 
     variables: FlexLayout.Model;
     bitmaps: FlexLayout.Model;
@@ -125,13 +127,20 @@ export class LayoutModels {
     themes: FlexLayout.Model;
     texts: FlexLayout.Model;
 
+    get editors() {
+        return this.projectEditorStore.runtime
+            ? this.runtimeModeEditors
+            : this.editorModeEditors;
+    }
+
     constructor(public projectEditorStore: ProjectEditorStore) {
         makeObservable(this, {
             root: computed,
             rootEditor: observable,
             rootRuntime: observable,
 
-            editors: observable,
+            editorModeEditors: observable,
+            runtimeModeEditors: observable,
 
             variables: observable,
             bitmaps: observable,
@@ -247,7 +256,7 @@ export class LayoutModels {
                                 enableDrag: false,
                                 enableDrop: false,
                                 enableClose: false,
-                                id: LayoutModels.EDITORS_TABSET_ID,
+                                id: LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID,
                                 children: [
                                     {
                                         type: "tab",
@@ -328,7 +337,7 @@ export class LayoutModels {
                                 enableDrag: false,
                                 enableDrop: false,
                                 enableClose: false,
-                                id: LayoutModels.EDITORS_TABSET_ID,
+                                id: LayoutModels.RUNTIME_MODE_EDITORS_TABSET_ID,
                                 children: [
                                     {
                                         type: "tab",
@@ -402,7 +411,7 @@ export class LayoutModels {
                                 enableTabStrip: false,
                                 enableDrag: false,
                                 enableDrop: false,
-                                id: LayoutModels.EDITORS_TABSET_ID,
+                                id: LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID,
                                 children: [
                                     {
                                         type: "tab",
@@ -431,8 +440,54 @@ export class LayoutModels {
                         ]
                     }
                 },
-                get: () => this.editors,
-                set: action(model => (this.editors = model))
+                get: () => this.editorModeEditors,
+                set: action(model => (this.editorModeEditors = model))
+            },
+            {
+                name: "runtimeEditors",
+                version: 3,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "tabset",
+                                enableTabStrip: false,
+                                enableDrag: false,
+                                enableDrop: false,
+                                id: LayoutModels.RUNTIME_MODE_EDITORS_TABSET_ID,
+                                children: [
+                                    {
+                                        type: "tab",
+                                        component: "sub",
+                                        config: {
+                                            model: {
+                                                global: {
+                                                    ...LayoutModels.GLOBAL_OPTIONS,
+                                                    tabEnableClose: true
+                                                },
+                                                borders: [],
+                                                layout: {
+                                                    type: "row",
+                                                    children: [
+                                                        {
+                                                            type: "tabset",
+                                                            children: []
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.runtimeModeEditors,
+                set: action(model => (this.runtimeModeEditors = model))
             },
             {
                 name: "variables",

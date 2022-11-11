@@ -96,8 +96,17 @@ export class ProjectEditorStore {
 
     undoManager = new UndoManager(this);
     navigationStore = new NavigationStore(this);
-    editorsStore = new EditorsStore(this);
     layoutModels = new LayoutModels(this);
+    editorModeEditorsStore = new EditorsStore(
+        this,
+        () => this.layoutModels.editorModeEditors,
+        LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID
+    );
+    runtimeModeEditorsStore = new EditorsStore(
+        this,
+        () => this.layoutModels.runtimeModeEditors,
+        LayoutModels.RUNTIME_MODE_EDITORS_TABSET_ID
+    );
     uiStateStore = new UIStateStore(this);
     runtimeSettings = new RuntimeSettings(this);
     outputSectionsStore = new OutputSections(this);
@@ -129,6 +138,12 @@ export class ProjectEditorStore {
     dispose6: mobx.IReactionDisposer;
 
     watcher: FSWatcher | undefined = undefined;
+
+    get editorsStore() {
+        return this.runtime
+            ? this.runtimeModeEditorsStore
+            : this.editorModeEditorsStore;
+    }
 
     get projectTypeTraits() {
         return this.project.projectTypeTraits;
@@ -859,6 +874,8 @@ export class ProjectEditorStore {
             notification.error(err.toString());
             runInAction(() => (this.runtime = undefined));
         }
+
+        this.editorsStore.refresh(true);
     }
 
     async setEditorMode() {
@@ -876,6 +893,8 @@ export class ProjectEditorStore {
             runInAction(() => {
                 this.runtime = undefined;
             });
+
+            this.editorsStore.refresh(true);
         }
     }
 
@@ -947,6 +966,7 @@ export class ProjectEditorStore {
         runtime.startRuntime(true);
         runtime.loadDebugInfo(filePath);
         runInAction(() => (this.runtime = runtime));
+        this.editorsStore.refresh(true);
     }
 }
 

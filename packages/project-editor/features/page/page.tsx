@@ -365,6 +365,9 @@ export class Page extends Flow {
             if (page.isRuntimeSelectedPage) {
                 label = <strong>{label}</strong>;
             }
+            if (page.isRuntimePageWithoutFlowState) {
+                label = <span style={{ opacity: 0.5 }}>{label}</span>;
+            }
             return label;
         },
         beforeLoadHook: (page: Page, jsObject: any) => {
@@ -625,11 +628,22 @@ export class Page extends Flow {
     get isRuntimeSelectedPage() {
         const projectEditorStore = getProjectEditorStore(this);
         return (
+            !projectEditorStore.projectTypeTraits.isDashboard &&
             projectEditorStore.runtime &&
             projectEditorStore.runtime instanceof
                 ProjectEditor.WasmRuntimeClass &&
-            projectEditorStore.runtime.selectedPage == this &&
-            !projectEditorStore.projectTypeTraits.isDashboard
+            projectEditorStore.runtime.selectedPage == this
+        );
+    }
+
+    get isRuntimePageWithoutFlowState() {
+        const projectEditorStore = getProjectEditorStore(this);
+        return (
+            !projectEditorStore.projectTypeTraits.isDashboard &&
+            projectEditorStore.runtime &&
+            projectEditorStore.runtime instanceof
+                ProjectEditor.WasmRuntimeClass &&
+            !projectEditorStore.runtime.getFlowState(this)
         );
     }
 
