@@ -159,6 +159,15 @@
         "defaultValue": "false",
         "persistent": false,
         "native": true
+      },
+      {
+        "objID": "a9ffa048-5b35-45d8-e6b5-f3dc2552e139",
+        "id": 15,
+        "name": "keypad_label",
+        "type": "string",
+        "defaultValue": "\"\"",
+        "persistent": false,
+        "native": true
       }
     ],
     "structures": [],

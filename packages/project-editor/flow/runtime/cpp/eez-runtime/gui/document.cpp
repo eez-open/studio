@@ -18,7 +18,8 @@ DataOperationsFunction g_dataOperationsFunctions[] = {
     data_keypad_option3_enabled,
     data_keypad_option3_text,
     data_keypad_mode,
-    data_keypad_ok_enabled
+    data_keypad_ok_enabled,
+    data_keypad_label
 };
 
 ActionExecFunc g_actionExecFunctions[] = {

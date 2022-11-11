@@ -1,10 +1,14 @@
 {
+  "objID": "6666cd76-f969-5646-9e7b-e39d750cc7d9",
   "settings": {
+    "objID": "e007d988-9fba-797d-72e9-efc33ca6d05c",
     "general": {
+      "objID": "fd434352-2277-c4a8-e87e-e96cfcbf2305",
       "projectVersion": "v3",
       "projectType": "firmware-module",
       "imports": [
         {
+          "objID": "70e48ba1-a593-86b0-e5d5-53724a68d9a2",
           "projectFilePath": "firmware.eez-project"
         }
       ],
@@ -13,11 +17,14 @@
       "displayHeight": 272
     },
     "build": {
+      "objID": "72794a43-a0fc-13c2-7eb5-67dd952141a4",
       "configurations": [
         {
+          "objID": "e983be1c-ebd7-890f-b662-bbce244c3ec2",
           "name": "stm32"
         },
         {
+          "objID": "a62ada2e-942d-3e8b-b6ef-e1a713efccae",
           "name": "simulator"
         }
       ],
@@ -25,8 +32,10 @@
     }
   },
   "variables": {
+    "objID": "c6c71e16-53e1-217f-d03b-cef56c6b037a",
     "globalVariables": [
       {
+        "objID": "8d036022-3aa0-8665-e250-e5f72b7daf0a",
         "id": 1,
         "name": "alert_message",
         "description": "Message in alert dialog",
@@ -35,6 +44,7 @@
         "native": true
       },
       {
+        "objID": "6af90499-33d5-cf55-96b4-db69069d3284",
         "id": 2,
         "name": "keypad_text",
         "type": "string",
@@ -43,6 +53,7 @@
         "native": true
       },
       {
+        "objID": "d1301c3b-9e1e-885d-6671-44ee2c4d759a",
         "id": 3,
         "name": "keypad_edit_unit",
         "type": "string",
@@ -51,6 +62,7 @@
         "native": true
       },
       {
+        "objID": "4dfc5687-39dc-2a76-7ef3-7796cb573be6",
         "id": 4,
         "name": "keypad_sign_enabled",
         "type": "boolean",
@@ -59,6 +71,7 @@
         "native": true
       },
       {
+        "objID": "22643b89-b5ae-33e4-0c8d-becfd2a6cc74",
         "id": 5,
         "name": "keypad_unit_enabled",
         "type": "boolean",
@@ -67,6 +80,7 @@
         "native": true
       },
       {
+        "objID": "8dad11cd-415e-31ab-3989-e10c5ae8151a",
         "id": 6,
         "name": "keypad_dot_enabled",
         "type": "boolean",
@@ -75,6 +89,7 @@
         "native": true
       },
       {
+        "objID": "ed8a505e-9009-4686-16a6-8ba0f363465e",
         "id": 7,
         "name": "keypad_option1_enabled",
         "type": "boolean",
@@ -83,6 +98,7 @@
         "native": true
       },
       {
+        "objID": "224ec51a-5d39-358b-f50b-5be9796ba7ef",
         "id": 8,
         "name": "keypad_option1_text",
         "type": "string",
@@ -91,6 +107,7 @@
         "native": true
       },
       {
+        "objID": "6d8f87c0-fc47-e042-f8d1-f4d1e6edf055",
         "id": 9,
         "name": "keypad_option2_enabled",
         "type": "boolean",
@@ -99,6 +116,7 @@
         "native": true
       },
       {
+        "objID": "676f335a-43cd-122b-8938-8a72aaacb7b0",
         "id": 10,
         "name": "keypad_option2_text",
         "type": "string",
@@ -107,6 +125,7 @@
         "native": true
       },
       {
+        "objID": "f679ba87-a685-fc14-dafd-6e0a6e464a3e",
         "id": 11,
         "name": "keypad_option3_enabled",
         "type": "boolean",
@@ -115,6 +134,7 @@
         "native": true
       },
       {
+        "objID": "34c63b5a-68b7-d8c7-c563-8ed9d108f95a",
         "id": 12,
         "name": "keypad_option3_text",
         "type": "string",
@@ -123,6 +143,7 @@
         "native": true
       },
       {
+        "objID": "59c64ca6-dfd0-67d4-7324-393999afe18b",
         "id": 13,
         "name": "keypad_mode",
         "type": "integer",
@@ -131,10 +152,20 @@
         "native": true
       },
       {
+        "objID": "8ccc0106-722d-72ce-8d20-334820cc6644",
         "id": 14,
         "name": "keypad_ok_enabled",
         "type": "boolean",
         "defaultValue": "false",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "afd857bd-545a-4997-ea0e-a542fcbfc33d",
+        "id": 15,
+        "name": "keypad_label",
+        "type": "string",
+        "defaultValue": "\"\"",
         "persistent": false,
         "native": true
       }
@@ -142,17 +173,21 @@
     "structures": [],
     "enums": [
       {
+        "objID": "c615d7ed-3432-5763-0a60-57afe9f020f2",
         "name": "Touch_calibration_point",
         "members": [
           {
+            "objID": "6a0223cc-0999-18f9-f441-302aaed391b0",
             "name": "Top left",
             "value": 0
           },
           {
+            "objID": "49192d54-22d2-26e9-a8b8-1f8c508e9f82",
             "name": "Bottom right",
             "value": 1
           },
           {
+            "objID": "62fde715-7608-a75b-30f2-6c843881ab09",
             "name": "Top right",
             "value": 2
           }
@@ -162,6 +197,7 @@
   },
   "actions": [
     {
+      "objID": "e13c0f62-502f-17cd-d0e3-a300a502f073",
       "components": [],
       "connectionLines": [],
       "localVariables": [],
@@ -170,6 +206,7 @@
       "implementationType": "native"
     },
     {
+      "objID": "7ad510ea-d6c4-38dd-09da-d70ef31bab9e",
       "components": [],
       "connectionLines": [],
       "localVariables": [],
@@ -178,6 +215,7 @@
       "implementationType": "native"
     },
     {
+      "objID": "5a04afe3-77bd-1878-f284-ca3a25f01520",
       "components": [],
       "connectionLines": [],
       "localVariables": [],
@@ -186,6 +224,7 @@
       "implementationType": "native"
     },
     {
+      "objID": "61b6227f-f3d0-cbf6-549d-cae5987f02e6",
       "components": [],
       "connectionLines": [],
       "localVariables": [],
@@ -194,6 +233,7 @@
       "implementationType": "native"
     },
     {
+      "objID": "9b576a19-f686-f158-9451-f514c22448d3",
       "components": [],
       "connectionLines": [],
       "localVariables": [],
@@ -202,6 +242,7 @@
       "implementationType": "native"
     },
     {
+      "objID": "9269c8bc-ac3c-b7aa-19b4-a364e82778ac",
       "components": [],
       "connectionLines": [],
       "localVariables": [],
@@ -210,6 +251,7 @@
       "implementationType": "native"
     },
     {
+      "objID": "508f8fa5-826c-0fba-ef1e-acf0626c1694",
       "components": [],
       "connectionLines": [],
       "localVariables": [],
@@ -218,6 +260,7 @@
       "implementationType": "native"
     },
     {
+      "objID": "241eeb71-6fd1-e075-d41f-bee6dc247adc",
       "components": [],
       "connectionLines": [],
       "localVariables": [],
@@ -226,6 +269,7 @@
       "implementationType": "native"
     },
     {
+      "objID": "64eafa46-8872-588c-10a5-2704e686258b",
       "components": [],
       "connectionLines": [],
       "localVariables": [],
@@ -234,6 +278,7 @@
       "implementationType": "native"
     },
     {
+      "objID": "542e0eab-9584-85a7-98e2-06544340eb94",
       "components": [],
       "connectionLines": [],
       "localVariables": [],
@@ -242,6 +287,7 @@
       "implementationType": "native"
     },
     {
+      "objID": "53f8524e-f4e1-3f38-f592-af055d1dea9f",
       "components": [],
       "connectionLines": [],
       "localVariables": [],
@@ -250,6 +296,7 @@
       "implementationType": "native"
     },
     {
+      "objID": "6e7661ab-6573-2029-6880-27c63043f82a",
       "components": [],
       "connectionLines": [],
       "localVariables": [],
@@ -258,6 +305,7 @@
       "implementationType": "native"
     },
     {
+      "objID": "0ddfcc89-cf62-a985-072a-2108485186a6",
       "components": [],
       "connectionLines": [],
       "localVariables": [],
@@ -266,6 +314,7 @@
       "implementationType": "native"
     },
     {
+      "objID": "e5f3bed4-6d95-2038-559e-ea4d91549a89",
       "components": [],
       "connectionLines": [],
       "localVariables": [],
@@ -274,6 +323,7 @@
       "implementationType": "native"
     },
     {
+      "objID": "6dee0c45-d549-e3f0-ba9e-a67ed216dfeb",
       "components": [],
       "connectionLines": [],
       "localVariables": [],
@@ -282,6 +332,7 @@
       "implementationType": "native"
     },
     {
+      "objID": "6bfa8fd7-148e-8fcc-097d-9e5a7974a4b2",
       "components": [],
       "connectionLines": [],
       "localVariables": [],
@@ -290,6 +341,7 @@
       "implementationType": "native"
     },
     {
+      "objID": "9f0938e1-3e59-41f0-89e5-2ec241915746",
       "components": [],
       "connectionLines": [],
       "localVariables": [],
@@ -301,6 +353,7 @@
   "pages": [],
   "styles": [
     {
+      "objID": "04157789-da53-2f4a-e658-4ca10aa5fbef",
       "id": 1,
       "name": "default",
       "description": "",
@@ -316,6 +369,7 @@
       "padding": "0"
     },
     {
+      "objID": "d9630995-549b-27a2-06c2-a2794496b85a",
       "id": 2,
       "name": "info_alert",
       "inheritFrom": "default",
@@ -324,6 +378,7 @@
       "margin": "20"
     },
     {
+      "objID": "596e02a3-c281-63d5-74de-a9f10915ecad",
       "id": 3,
       "name": "error_alert",
       "inheritFrom": "default",
@@ -336,6 +391,7 @@
       "margin": "20"
     },
     {
+      "objID": "47f65ab6-cfa3-09b2-b3b4-4260adc98ef5",
       "id": 4,
       "name": "error_alert_button",
       "inheritFrom": "button",
@@ -343,6 +399,7 @@
       "padding": "8 16 8 16"
     },
     {
+      "objID": "99524f6d-f187-67b3-070c-f68da187ac56",
       "id": 5,
       "name": "select_enum_item_popup_container",
       "inheritFrom": "default",
@@ -354,12 +411,14 @@
       "padding": "12"
     },
     {
+      "objID": "451ff6d3-0da3-8dd3-54cc-5630b8a68c1f",
       "id": 6,
       "name": "select_enum_item_popup_container_S",
       "inheritFrom": "select_enum_item_popup_container",
       "alwaysBuild": true
     },
     {
+      "objID": "0d0344fa-33c2-0b11-7d16-e298ad85df1a",
       "id": 7,
       "name": "select_enum_item_popup_item",
       "inheritFrom": "select_enum_item_popup_container",
@@ -367,6 +426,7 @@
       "padding": "6"
     },
     {
+      "objID": "eccd5f27-3959-bf9b-36e6-401768a0cbd2",
       "id": 8,
       "name": "select_enum_item_popup_item_S",
       "inheritFrom": "select_enum_item_popup_container_S",
@@ -375,6 +435,7 @@
       "padding": "6"
     },
     {
+      "objID": "15c183e7-e541-10d2-dc96-701adca53473",
       "id": 9,
       "name": "select_enum_item_popup_disabled_item",
       "inheritFrom": "select_enum_item_popup_item",
@@ -382,6 +443,7 @@
       "color": "drop_down_list_color_disabled"
     },
     {
+      "objID": "32fc2d2f-db93-8b71-6883-195f498d5977",
       "id": 10,
       "name": "select_enum_item_popup_disabled_item_S",
       "inheritFrom": "select_enum_item_popup_item_S",
@@ -389,6 +451,7 @@
       "color": "drop_down_list_color_disabled"
     },
     {
+      "objID": "896bb373-355d-40b9-8386-4332390ce115",
       "id": 11,
       "name": "menu_with_buttons_message",
       "inheritFrom": "default",
@@ -402,6 +465,7 @@
       "margin": "0"
     },
     {
+      "objID": "c8203187-878b-1452-d8ff-9425dede499b",
       "id": 12,
       "name": "menu_with_buttons_container",
       "inheritFrom": "default",
@@ -410,6 +474,7 @@
       "margin": "20"
     },
     {
+      "objID": "85f44e5f-3da1-407e-57a2-aee66a4c68aa",
       "id": 13,
       "name": "menu_with_buttons_button",
       "inheritFrom": "button",
@@ -418,6 +483,7 @@
       "margin": "0"
     },
     {
+      "objID": "b250a172-d01b-d54f-3d84-891f3c6c48ab",
       "id": 14,
       "name": "fps_graph",
       "inheritFrom": "default",
@@ -428,6 +494,7 @@
       "borderColor": "backdrop"
     },
     {
+      "objID": "196d3137-46d6-a552-f1bc-80c98098e3ce",
       "id": 15,
       "name": "slider_widget",
       "inheritFrom": "default",
@@ -435,6 +502,7 @@
       "backgroundColor": "slider_widget_background"
     },
     {
+      "objID": "4d239458-1686-00b4-e6d6-551070c8e0c6",
       "id": 16,
       "name": "switch_widget",
       "inheritFrom": "default",
@@ -448,6 +516,7 @@
       "padding": "3 0"
     },
     {
+      "objID": "54647aad-d4fe-9b42-6da6-1bb8452131c0",
       "id": 17,
       "name": "drop_down_list",
       "inheritFrom": "default",
@@ -458,11 +527,13 @@
       "borderColor": "drop_down_list_border"
     },
     {
+      "objID": "72d784b2-e693-7b06-cc0d-18e32a5ccd25",
       "id": 18,
       "name": "roller_widget",
       "inheritFrom": "default"
     },
     {
+      "objID": "2dccf1f1-b94e-8c75-87b8-e7fd053491d7",
       "id": 19,
       "name": "roller_widget_selected_value",
       "inheritFrom": "default",
@@ -471,12 +542,14 @@
       "borderColor": "#c0c0c0"
     },
     {
+      "objID": "4a89fd1f-824b-fb95-1575-dfe95862c657",
       "id": 20,
       "name": "roller_widget_unselected_value",
       "inheritFrom": "default",
       "color": "#808080"
     },
     {
+      "objID": "b1aa1e30-6a2d-4fe1-8880-b4fecf686ed2",
       "id": 21,
       "name": "background",
       "inheritFrom": "default",
@@ -484,6 +557,7 @@
       "backgroundImage": ""
     },
     {
+      "objID": "07d83b2f-14da-b1c3-ea6e-d277fb3355be",
       "id": 22,
       "name": "button",
       "inheritFrom": "default",
@@ -496,6 +570,7 @@
       "borderColor": "button_border"
     },
     {
+      "objID": "fa680b00-5a77-f63a-7aad-b774279a1c8c",
       "id": 23,
       "name": "button_disabled",
       "inheritFrom": "button",
@@ -506,6 +581,7 @@
       "borderColor": "button_disabled_border"
     },
     {
+      "objID": "00947574-0f82-d1c9-419a-ee1680384ec4",
       "id": 24,
       "name": "note_M",
       "inheritFrom": "default",
@@ -515,10 +591,12 @@
   ],
   "fonts": [
     {
+      "objID": "aa34f362-9500-1f1b-2be2-f0535fdfbe4d",
       "id": 2,
       "name": "shadow",
       "renderingEngine": "freetype",
       "source": {
+        "objID": "e3c49d01-bca2-3963-6242-2f5cec60b3e9",
         "filePath": "Oswald-Medium.ttf",
         "size": 14
       },
@@ -528,6 +606,7 @@
       "descent": 0,
       "glyphs": [
         {
+          "objID": "c13db248-e083-dd86-7c18-09141de00788",
           "encoding": 32,
           "x": 0,
           "y": 0,
@@ -541,6 +620,7 @@
           }
         },
         {
+          "objID": "52b81039-b415-663b-fed0-4f6e23030c3f",
           "encoding": 33,
           "x": 0,
           "y": 0,
@@ -554,6 +634,7 @@
           }
         },
         {
+          "objID": "dd7a3e8e-4dd4-9b9a-c3ad-53e8a10beaf6",
           "encoding": 34,
           "x": 0,
           "y": 0,
@@ -567,6 +648,7 @@
           }
         },
         {
+          "objID": "95f97611-fe89-6dbc-c76c-107818670066",
           "encoding": 35,
           "x": 0,
           "y": 0,
@@ -580,6 +662,7 @@
           }
         },
         {
+          "objID": "50196bf3-3ff7-a034-9c4c-ebae748e607b",
           "encoding": 36,
           "x": 0,
           "y": 0,
@@ -593,6 +676,7 @@
           }
         },
         {
+          "objID": "d03b903b-919c-8fe0-49ab-741e869a50f0",
           "encoding": 37,
           "x": 0,
           "y": 0,
@@ -606,6 +690,7 @@
           }
         },
         {
+          "objID": "3a079f88-c08a-e41e-b19a-ff37f058a5ba",
           "encoding": 38,
           "x": 0,
           "y": 0,
@@ -619,6 +704,7 @@
           }
         },
         {
+          "objID": "bde9e599-1b0d-06a8-ee22-94e885996f1d",
           "encoding": 39,
           "x": 0,
           "y": 0,

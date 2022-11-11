@@ -21,7 +21,8 @@ enum DataEnum {
     DATA_ID_KEYPAD_OPTION3_ENABLED = 11,
     DATA_ID_KEYPAD_OPTION3_TEXT = 12,
     DATA_ID_KEYPAD_MODE = 13,
-    DATA_ID_KEYPAD_OK_ENABLED = 14
+    DATA_ID_KEYPAD_OK_ENABLED = 14,
+    DATA_ID_KEYPAD_LABEL = 15
 };
 
 void data_none(DataOperationEnum operation, const WidgetCursor &cursor, Value &value);
@@ -39,6 +40,7 @@ void data_keypad_option3_enabled(DataOperationEnum operation, const WidgetCursor
 void data_keypad_option3_text(DataOperationEnum operation, const WidgetCursor &cursor, Value &value);
 void data_keypad_mode(DataOperationEnum operation, const WidgetCursor &cursor, Value &value);
 void data_keypad_ok_enabled(DataOperationEnum operation, const WidgetCursor &cursor, Value &value);
+void data_keypad_label(DataOperationEnum operation, const WidgetCursor &cursor, Value &value);
 
 typedef void (*DataOperationsFunction)(DataOperationEnum operation, const WidgetCursor &widgetCursor, Value &value);
 
