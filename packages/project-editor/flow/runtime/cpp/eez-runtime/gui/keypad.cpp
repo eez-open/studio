@@ -126,6 +126,7 @@ void showKeypad(Value label, Value initialValue, Value min, Value max, Unit unit
 	options.max = max.toFloat();
 	options.editValueUnit = unit;
     options.flags.dotButtonEnabled = initialValue.isFloat() || initialValue.isDouble();
+    options.flags.unitChangeEnabled = false;
 
     auto appContext = getAppContextFromId(APP_CONTEXT_ID_DEVICE);
 	eez::gui::startNumericKeypad(appContext, label.getString(), initialValue, options, onOk, nullptr, onCancel);

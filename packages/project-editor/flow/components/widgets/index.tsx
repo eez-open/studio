@@ -5135,8 +5135,21 @@ export class LineChartEmbeddedWidget extends Widget {
                 enumerable: false,
                 defaultValue: []
             },
-            makeDataPropertyInfo("title", {}, "string"),
+            makeDataPropertyInfo("showTitle", {}, "boolean"),
             makeDataPropertyInfo("showLegend", {}, "boolean"),
+            makeDataPropertyInfo(
+                "showXAxis",
+                { displayName: "Show X axis" },
+                "boolean"
+            ),
+            makeDataPropertyInfo(
+                "showYAxis",
+                { displayName: "Show Y axis" },
+                "boolean"
+            ),
+            makeDataPropertyInfo("showYAxis", {}, "boolean"),
+            makeDataPropertyInfo("showGrid", {}, "boolean"),
+            makeDataPropertyInfo("title", {}, "string"),
             {
                 name: "yAxisRangeOption",
                 type: PropertyType.Enum,
@@ -5180,11 +5193,39 @@ export class LineChartEmbeddedWidget extends Widget {
                 propertyGridGroup: specificGroup,
                 enumerable: false
             },
+            makeDataPropertyInfo("marker", {}, "float"),
             makeStylePropertyInfo("titleStyle"),
             makeStylePropertyInfo("legendStyle"),
             makeStylePropertyInfo("xAxisStyle"),
-            makeStylePropertyInfo("yAxisStyle")
+            makeStylePropertyInfo("yAxisStyle"),
+            makeStylePropertyInfo("markerStyle")
         ],
+
+        beforeLoadHook: (
+            widget: LineChartEmbeddedWidget,
+            jsWidget: Partial<LineChartEmbeddedWidget>
+        ) => {
+            if (jsWidget.showTitle == undefined) {
+                jsWidget.showTitle = "true";
+            }
+            if (jsWidget.showXAxis == undefined) {
+                jsWidget.showXAxis = "true";
+            }
+            if (jsWidget.showYAxis == undefined) {
+                jsWidget.showYAxis = "true";
+            }
+            if (jsWidget.showGrid == undefined) {
+                jsWidget.showGrid = "true";
+            }
+            if (jsWidget.marker == undefined) {
+                jsWidget.marker = "null";
+            }
+            if (jsWidget.markerStyle == undefined) {
+                (jsWidget as any).markerStyle = {
+                    inheritFrom: "default"
+                };
+            }
+        },
 
         defaultValue: {
             left: 0,
@@ -5194,7 +5235,11 @@ export class LineChartEmbeddedWidget extends Widget {
             xValue: "Date.now()",
             lines: [],
             title: "",
+            showTitle: "true",
             showLegend: "true",
+            showXAxis: "true",
+            showYAxis: "true",
+            showGrid: "true",
             yAxisRangeOption: "floating",
             yAxisRangeFrom: 0,
             yAxisRangeTo: 10,
@@ -5207,6 +5252,7 @@ export class LineChartEmbeddedWidget extends Widget {
                 bottom: 50,
                 left: 50
             },
+            marker: "null",
             customInputs: [
                 {
                     name: "value",
@@ -5225,6 +5271,9 @@ export class LineChartEmbeddedWidget extends Widget {
             yAxisStyle: {
                 inheritFrom: "default",
                 alignHorizontal: "right"
+            },
+            markerStyle: {
+                inheritFrom: "default"
             }
         },
 
@@ -5234,17 +5283,23 @@ export class LineChartEmbeddedWidget extends Widget {
     xValue: string;
     lines: LineChartLine[];
     title: string;
+    showTitle: string;
     showLegend: string;
+    showXAxis: string;
+    showYAxis: string;
+    showGrid: string;
     yAxisRangeOption: "floating" | "fixed";
     yAxisRangeFrom: string;
     yAxisRangeTo: string;
     maxPoints: number;
     margin: RectObject;
+    marker: string;
 
     titleStyle: Style;
     legendStyle: Style;
     xAxisStyle: Style;
     yAxisStyle: Style;
+    markerStyle: Style;
 
     constructor() {
         super();
@@ -5253,16 +5308,22 @@ export class LineChartEmbeddedWidget extends Widget {
             xValue: observable,
             lines: observable,
             title: observable,
+            showTitle: observable,
             showLegend: observable,
+            showXAxis: observable,
+            showYAxis: observable,
+            showGrid: observable,
             yAxisRangeOption: observable,
             yAxisRangeFrom: observable,
             yAxisRangeTo: observable,
             maxPoints: observable,
             margin: observable,
+            marker: observable,
             titleStyle: observable,
             legendStyle: observable,
             xAxisStyle: observable,
-            yAxisStyle: observable
+            yAxisStyle: observable,
+            markerStyle: observable
         });
     }
 
@@ -5466,7 +5527,7 @@ export class LineChartEmbeddedWidget extends Widget {
 
                             const w = axis.ticksDelta * axis.scale;
 
-                            for (let i = 0; ; i++) {
+                            for (let i = 0; i < 100; i++) {
                                 const tick = from + i * axis.ticksDelta;
                                 if (tick > to) break;
 
@@ -5495,7 +5556,7 @@ export class LineChartEmbeddedWidget extends Widget {
 
                             const h = Math.abs(axis.ticksDelta * axis.scale);
 
-                            for (let i = 0; ; i++) {
+                            for (let i = 0; i < 100; i++) {
                                 const tick = from + i * axis.ticksDelta;
                                 if (tick > to) break;
 
@@ -5527,7 +5588,7 @@ export class LineChartEmbeddedWidget extends Widget {
                                     Math.floor(axis.max / axis.ticksDelta) *
                                     axis.ticksDelta;
 
-                                for (let i = 0; ; i++) {
+                                for (let i = 0; i < 100; i++) {
                                     const tick = from + i * axis.ticksDelta;
                                     if (tick > to) break;
 
@@ -5549,7 +5610,7 @@ export class LineChartEmbeddedWidget extends Widget {
                                     Math.floor(axis.max / axis.ticksDelta) *
                                     axis.ticksDelta;
 
-                                for (let i = 0; ; i++) {
+                                for (let i = 0; i < 100; i++) {
                                     const tick = from + i * axis.ticksDelta;
                                     if (tick > to) break;
 
@@ -5721,6 +5782,17 @@ export class LineChartEmbeddedWidget extends Widget {
                             h: height
                         };
 
+                        let showTitle: boolean;
+                        try {
+                            const result = evalConstantExpression(
+                                ProjectEditor.getProject(this),
+                                this.showTitle
+                            );
+                            showTitle = result.value ? true : false;
+                        } catch (err) {
+                            showTitle = false;
+                        }
+
                         let showLegend: boolean;
                         try {
                             const result = evalConstantExpression(
@@ -5730,6 +5802,39 @@ export class LineChartEmbeddedWidget extends Widget {
                             showLegend = result.value ? true : false;
                         } catch (err) {
                             showLegend = false;
+                        }
+
+                        let showXAxis: boolean;
+                        try {
+                            const result = evalConstantExpression(
+                                ProjectEditor.getProject(this),
+                                this.showXAxis
+                            );
+                            showXAxis = result.value ? true : false;
+                        } catch (err) {
+                            showXAxis = false;
+                        }
+
+                        let showYAxis: boolean;
+                        try {
+                            const result = evalConstantExpression(
+                                ProjectEditor.getProject(this),
+                                this.showYAxis
+                            );
+                            showYAxis = result.value ? true : false;
+                        } catch (err) {
+                            showYAxis = false;
+                        }
+
+                        let showGrid: boolean;
+                        try {
+                            const result = evalConstantExpression(
+                                ProjectEditor.getProject(this),
+                                this.showGrid
+                            );
+                            showGrid = result.value ? true : false;
+                        } catch (err) {
+                            showGrid = false;
                         }
 
                         const { legendWidth, legendLineHeight } =
@@ -5822,12 +5927,14 @@ export class LineChartEmbeddedWidget extends Widget {
                             true
                         );
 
-                        drawTitle(
-                            widgetRect.x,
-                            widgetRect.y,
-                            widgetRect.w,
-                            marginTop
-                        );
+                        if (showTitle) {
+                            drawTitle(
+                                widgetRect.x,
+                                widgetRect.y,
+                                widgetRect.w,
+                                marginTop
+                            );
+                        }
 
                         if (showLegend) {
                             drawLegend(
@@ -5838,11 +5945,17 @@ export class LineChartEmbeddedWidget extends Widget {
                             );
                         }
 
-                        drawXAxis(chart.xAxis);
+                        if (showXAxis) {
+                            drawXAxis(chart.xAxis);
+                        }
 
-                        drawYAxis(chart.yAxis);
+                        if (showYAxis) {
+                            drawYAxis(chart.yAxis);
+                        }
 
-                        drawGrid();
+                        if (showGrid) {
+                            drawGrid();
+                        }
 
                         drawLines();
                     }}
@@ -5856,10 +5969,22 @@ export class LineChartEmbeddedWidget extends Widget {
         // title
         dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "title"));
 
+        // showTitle
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "showTitle"));
+
         // showLegend
         dataBuffer.writeInt16(
             assets.getWidgetDataItemIndex(this, "showLegend")
         );
+
+        // showXAxis
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "showXAxis"));
+
+        // showYAxis
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "showYAxis"));
+
+        // showGrid
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "showGrid"));
 
         // yAxisRangeFrom
         dataBuffer.writeInt16(this.yAxisRangeOption == "fixed" ? 0 : 1);
@@ -5880,6 +6005,9 @@ export class LineChartEmbeddedWidget extends Widget {
         dataBuffer.writeInt16(this.margin.right);
         dataBuffer.writeInt16(this.margin.bottom);
 
+        // marker
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "marker"));
+
         // titleStyle
         dataBuffer.writeInt16(assets.getStyleIndex(this, "titleStyle"));
 
@@ -5891,6 +6019,9 @@ export class LineChartEmbeddedWidget extends Widget {
 
         // yAxisStyle
         dataBuffer.writeInt16(assets.getStyleIndex(this, "yAxisStyle"));
+
+        // markerStyle
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "markerStyle"));
 
         // component index
         dataBuffer.writeUint16(assets.getComponentIndex(this));
