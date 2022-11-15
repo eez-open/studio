@@ -2587,7 +2587,7 @@ export class LVGLSwitchWidget extends LVGLWidget {
         ),
 
         lvgl: {
-            parts: ["MAIN"],
+            parts: ["MAIN", "INDICATOR", "KNOB"],
             flags: [
                 "HIDDEN",
                 "CLICKABLE",
@@ -3361,7 +3361,7 @@ export class LVGLCheckboxWidget extends LVGLWidget {
         ),
 
         lvgl: {
-            parts: ["MAIN"],
+            parts: ["MAIN", "INDICATOR"],
             flags: [
                 "HIDDEN",
                 "CLICKABLE",
