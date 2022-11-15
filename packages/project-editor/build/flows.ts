@@ -601,3 +601,81 @@ export function buildFlowDefs(assets: Assets) {
 
     return defs.join("\n\n");
 }
+
+export function buildFlowStructs(assets: Assets) {
+    const defs = [];
+
+    // enum FlowStructures
+    const structureEnumItems = [];
+    for (const structure of assets.projectEditorStore.project.variables
+        .structures) {
+        structureEnumItems.push(
+            `${TAB}${getName(
+                "FLOW_STRUCTURE_",
+                structure.name,
+                NamingConvention.UnderscoreUpperCase
+            )} = ${assets.projectEditorStore.typesStore.getValueTypeIndex(
+                `struct:${structure.name}`
+            )}`
+        );
+    }
+
+    defs.push(`enum FlowStructures {\n${structureEnumItems.join(",\n")}\n};`);
+
+    // enum FlowArrayOfStructures
+    const arrayOfStructureEnumItems = [];
+    for (const structure of assets.projectEditorStore.project.variables
+        .structures) {
+        arrayOfStructureEnumItems.push(
+            `${TAB}${getName(
+                "FLOW_ARRAY_OF_STRUCTURE_",
+                structure.name,
+                NamingConvention.UnderscoreUpperCase
+            )} = ${assets.projectEditorStore.typesStore.getValueTypeIndex(
+                `array:struct:${structure.name}`
+            )}`
+        );
+    }
+    defs.push(
+        `enum FlowArrayOfStructures {\n${arrayOfStructureEnumItems.join(
+            ",\n"
+        )}\n};`
+    );
+
+    for (const structure of assets.projectEditorStore.project.variables
+        .structures) {
+        const fieldEnumItems = [];
+        for (const field of structure.fields) {
+            fieldEnumItems.push(
+                `${TAB}${getName(
+                    "FLOW_STRUCTURE_",
+                    structure.name,
+                    NamingConvention.UnderscoreUpperCase
+                )}_${getName(
+                    "FIELD_",
+                    field.name,
+                    NamingConvention.UnderscoreUpperCase
+                )} = ${assets.projectEditorStore.typesStore.getFieldIndex(
+                    `struct:${structure.name}`,
+                    field.name
+                )}`
+            );
+        }
+
+        fieldEnumItems.push(
+            `${TAB}${getName(
+                "FLOW_STRUCTURE_",
+                structure.name,
+                NamingConvention.UnderscoreUpperCase
+            )}_NUM_FIELDS`
+        );
+
+        defs.push(
+            `enum ${structure.name}FlowStructureFields {\n${fieldEnumItems.join(
+                ",\n"
+            )}\n};`
+        );
+    }
+
+    return defs.join("\n\n");
+}

@@ -793,7 +793,9 @@ export abstract class DebuggerConnectionBase {
                         } else if (state == DEBUGGER_STATE_SINGLE_STEP) {
                             runtime.transition(StateMachineAction.SINGLE_STEP);
                         } else if (state == DEBUGGER_STATE_STOPPED) {
-                            runtime.projectEditorStore.setEditorMode();
+                            if (!runtime.error) {
+                                runtime.projectEditorStore.setEditorMode();
+                            }
                         }
                     }
                     break;

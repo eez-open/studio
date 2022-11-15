@@ -104,3 +104,22 @@ export function buildVariableNames(assets: Assets, dataBuffer: DataBuffer) {
         }
     );
 }
+
+export function buildFlowGlobalVariablesEnum(assets: Assets) {
+    let variables = assets.globalVariables
+        .filter(globalVariable => !globalVariable.native)
+        .map(
+            (variable, i) =>
+                `${TAB}${getName(
+                    "FLOW_GLOBAL_VARIABLE_",
+                    variable,
+                    NamingConvention.UnderscoreUpperCase
+                )} = ${i}`
+        );
+
+    if (variables.length == 0) {
+        variables.push(`FLOW_GLOBAL_VARIABLE_NONE`);
+    }
+
+    return `enum FlowGlobalVariables {\n${variables.join(",\n")}\n};`;
+}

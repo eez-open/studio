@@ -287,6 +287,10 @@ function getClassFromType(type: string) {
         return findClass("LayoutViewWidget");
     }
 
+    if (type == "OverrideStyle") {
+        type = "OverrideStyleActionComponent";
+    }
+
     let componentClass;
 
     componentClass = findClass(type + "Widget");

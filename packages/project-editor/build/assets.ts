@@ -36,6 +36,7 @@ import {
 
 import { buildActions, buildActionNames } from "project-editor/build/actions";
 import {
+    buildFlowGlobalVariablesEnum,
     buildVariableNames,
     buildVariables
 } from "project-editor/build/variables";
@@ -49,7 +50,11 @@ import {
 } from "project-editor/build/fonts";
 import { buildGuiBitmapsData } from "project-editor/build/bitmaps";
 import { buildGuiColors } from "project-editor/build/themes";
-import { buildFlowData, buildFlowDefs } from "project-editor/build/flows";
+import {
+    buildFlowData,
+    buildFlowDefs,
+    buildFlowStructs
+} from "project-editor/build/flows";
 import { buildGuiBitmapsEnum } from "project-editor/build/bitmaps";
 import {
     buildGuiThemesEnum,
@@ -1379,6 +1384,18 @@ export async function buildAssets(
 
         if (!sectionNames || sectionNames.indexOf("GUI_COLORS_ENUM") !== -1) {
             result.GUI_COLORS_ENUM = buildGuiColorsEnum(assets);
+        }
+
+        if (
+            !sectionNames ||
+            sectionNames.indexOf("FLOW_GLOBAL_VARIABLES_ENUM") !== -1
+        ) {
+            result.FLOW_GLOBAL_VARIABLES_ENUM =
+                buildFlowGlobalVariablesEnum(assets);
+        }
+
+        if (!sectionNames || sectionNames.indexOf("FLOW_STRUCTS") !== -1) {
+            result.FLOW_STRUCTS = buildFlowStructs(assets);
         }
 
         if (!sectionNames || sectionNames.indexOf("FLOW_DEFS") !== -1) {

@@ -203,18 +203,27 @@ const Content = observer(
             node: FlexLayout.TabNode,
             renderValues: FlexLayout.ITabRenderValues
         ) => {
-            if (node.getId() == LayoutModels.CHECKS_TAB_ID) {
+            if (
+                node.getId() == LayoutModels.CHECKS_TAB_ID ||
+                node.getId() == LayoutModels.OUTPUT_TAB_ID
+            ) {
                 const section = this.context.outputSectionsStore.getSection(
-                    Section.CHECKS
+                    node.getId() == LayoutModels.CHECKS_TAB_ID
+                        ? Section.CHECKS
+                        : Section.OUTPUT
                 );
 
                 let icon;
+                let numMessages;
                 if (section.numErrors > 0) {
                     icon = <Icon icon="material:error" className="error" />;
+                    numMessages = section.numErrors;
                 } else if (section.numWarnings > 0) {
                     icon = <Icon icon="material:warning" className="warning" />;
+                    numMessages = section.numWarnings;
                 } else {
                     icon = <Icon icon="material:check" className="info" />;
+                    numMessages = 0;
                 }
 
                 renderValues.leading = section.loading ? (
@@ -223,42 +232,8 @@ const Content = observer(
                     icon
                 );
 
-                const numErrorsAndWarnings =
-                    section.numErrors + section.numWarnings;
-
                 renderValues.content =
-                    section.name +
-                    (numErrorsAndWarnings > 0
-                        ? ` (${section.messages.length})`
-                        : "");
-            } else if (node.getId() == LayoutModels.OUTPUT_TAB_ID) {
-                const section = this.context.outputSectionsStore.getSection(
-                    Section.OUTPUT
-                );
-
-                let icon;
-                if (section.numErrors > 0) {
-                    icon = <Icon icon="material:error" className="error" />;
-                } else if (section.numWarnings > 0) {
-                    icon = <Icon icon="material:warning" className="warning" />;
-                } else if (section.messages.length > 0) {
-                    icon = <Icon icon="material:check" className="info" />;
-                }
-
-                renderValues.leading = section.loading ? (
-                    <Loader size={20} />
-                ) : (
-                    icon
-                );
-
-                const numErrorsAndWarnings =
-                    section.numErrors + section.numWarnings;
-
-                renderValues.content =
-                    section.name +
-                    (numErrorsAndWarnings > 0
-                        ? ` (${section.messages.length})`
-                        : "");
+                    section.name + (numMessages > 0 ? ` (${numMessages})` : "");
             } else if (node.getId() == LayoutModels.SEARCH_RESULTS_TAB_ID) {
                 const section = this.context.outputSectionsStore.getSection(
                     Section.SEARCH

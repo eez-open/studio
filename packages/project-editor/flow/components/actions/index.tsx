@@ -61,6 +61,7 @@ import {
 } from "project-editor/flow/expression";
 import { calcComponentGeometry } from "project-editor/flow/editor/render";
 import {
+    getStructureFromType,
     ValueType,
     VariableTypeUI
 } from "project-editor/features/variable/value-type";
@@ -94,7 +95,8 @@ import {
     COMPONENT_TYPE_SET_PAGE_DIRECTION_ACTION,
     COMPONENT_TYPE_ANIMATE_ACTION,
     COMPONENT_TYPE_ON_EVENT_ACTION,
-    COMPONENT_TYPE_OVERRIDE_STYLE_ACTION
+    COMPONENT_TYPE_OVERRIDE_STYLE_ACTION,
+    COMPONENT_TYPE_SORT_ARRAY_ACTION
 } from "project-editor/flow/components/component_types";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -751,6 +753,7 @@ export class SetVariableActionComponent extends ActionComponent {
                 name: "entries",
                 type: PropertyType.Array,
                 typeClass: SetVariableEntry,
+                arrayItemOrientation: "vertical",
                 propertyGridGroup: specificGroup,
                 partOfNavigation: false,
                 enumerable: false,
@@ -985,6 +988,7 @@ export class SwitchActionComponent extends ActionComponent {
                 displayName: "Cases",
                 type: PropertyType.Array,
                 typeClass: SwitchTest,
+                arrayItemOrientation: "vertical",
                 propertyGridGroup: specificGroup,
                 partOfNavigation: false,
                 enumerable: false,
@@ -1524,6 +1528,224 @@ export class DateNowActionComponent extends ActionComponent {
                 isOptionalOutput: false
             }
         ];
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class SortArrayActionComponent extends ActionComponent {
+    array: string;
+    structureName: string;
+    structureFieldName: string;
+    ascending: boolean;
+    ignoreCase: boolean;
+
+    constructor() {
+        super();
+        makeObservable(this, {
+            array: observable,
+            structureName: observable,
+            structureFieldName: observable,
+            ascending: true,
+            ignoreCase: true
+        });
+    }
+
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: COMPONENT_TYPE_SORT_ARRAY_ACTION,
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "array",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "array:any"
+            ),
+            {
+                name: "structureName",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "variables/structures",
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "structureFieldName",
+                type: PropertyType.Enum,
+                enumItems: (component: SortArrayActionComponent) => {
+                    if (!component.structureName) {
+                        return [];
+                    }
+
+                    const project = ProjectEditor.getProject(component);
+                    const struct = getStructureFromType(
+                        project,
+                        `struct:${component.structureName}`
+                    );
+                    if (!struct) {
+                        return [];
+                    }
+
+                    return struct.fields.map(field => ({
+                        id: field.name,
+                        label: field.name
+                    }));
+                },
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: (component: SortArrayActionComponent) => {
+                    if (!component.structureName) {
+                        return true;
+                    }
+
+                    const project = ProjectEditor.getProject(component);
+                    if (
+                        !getStructureFromType(
+                            project,
+                            `struct:${component.structureName}`
+                        )
+                    ) {
+                        return true;
+                    }
+
+                    return false;
+                }
+            },
+            {
+                name: "ascending",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
+            },
+            {
+                name: "ignoreCase",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
+            }
+        ],
+        icon: (
+            <svg
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <path d="M4 6h7m-7 6h7m-7 6h9m2-9 3-3 3 3m-3-3v12" />
+            </svg>
+        ),
+        componentHeaderColor: "#C0C0C0",
+        defaultValue: {
+            ignoreCase: true,
+            ascending: true
+        },
+        check: (component: SortArrayActionComponent) => {
+            let messages: Message[] = [];
+
+            if (component.structureName) {
+                const project = ProjectEditor.getProject(component);
+                const struct = getStructureFromType(
+                    project,
+                    `struct:${component.structureName}`
+                );
+                if (!struct) {
+                    messages.push(
+                        propertyNotFoundMessage(component, "structureName")
+                    );
+                } else if (!component.structureFieldName) {
+                    messages.push(
+                        propertyNotSetMessage(component, "structureName")
+                    );
+                } else if (
+                    !struct.fieldsMap.get(component.structureFieldName)
+                ) {
+                    messages.push(
+                        propertyNotFoundMessage(component, "structureFieldName")
+                    );
+                }
+            }
+
+            return messages;
+        }
+    });
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
+    getOutputs(): ComponentOutput[] {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            {
+                name: "result",
+                type: "any" as ValueType,
+                isSequenceOutput: false,
+                isOptionalOutput: false
+            }
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        let bodyText;
+        if (this.structureName) {
+            bodyText = `${this.array} BY ${this.structureName}.${this.structureFieldName}`;
+        } else {
+            bodyText = `${this.array}`;
+        }
+
+        bodyText += this.ascending ? " ASCENDING" : " DESCENDING";
+
+        bodyText += this.ignoreCase ? " IGNORE CASE" : " CASE SENSITIVE";
+
+        return (
+            <div className="body">
+                <pre>{bodyText}</pre>
+            </div>
+        );
+    }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // arrayType
+        if (this.structureName) {
+            dataBuffer.writeInt32(
+                assets.getTypeIndex(`array:struct:${this.structureName}`)
+            );
+        } else {
+            dataBuffer.writeInt32(-1);
+        }
+
+        // structFieldIndex
+        dataBuffer.writeInt32(
+            assets.projectEditorStore.typesStore.getFieldIndex(
+                `struct:${this.structureName}`,
+                this.structureFieldName
+            ) ?? -1
+        );
+
+        // flags
+        const SORT_ARRAY_FLAG_ASCENDING = 1 << 0;
+        const SORT_ARRAY_FLAG_IGNORE_CASE = 1 << 1;
+        let flags = 0;
+        if (this.ascending) {
+            flags |= SORT_ARRAY_FLAG_ASCENDING;
+        }
+        if (this.ignoreCase) {
+            flags |= SORT_ARRAY_FLAG_IGNORE_CASE;
+        }
+        dataBuffer.writeUint32(flags);
     }
 }
 
@@ -3633,6 +3855,8 @@ registerClass("CounterActionComponent", CounterActionComponent);
 registerClass("ConstantActionComponent", ConstantActionComponent);
 registerClass("DateNowActionComponent", DateNowActionComponent);
 
+registerClass("SortArrayActionComponent", SortArrayActionComponent);
+
 registerClass("LogActionComponent", LogActionComponent);
 
 registerClass("ReadSettingActionComponent", ReadSettingActionComponent);
@@ -3655,7 +3879,7 @@ registerClass(
     "SetPageDirectionActionComponent",
     SetPageDirectionActionComponent
 );
-registerClass("OverrideStyle", OverrideStyleActionComponent);
+registerClass("OverrideStyleActionComponent", OverrideStyleActionComponent);
 
 registerClass("AnimateActionComponent", AnimateActionComponent);
 

@@ -129,16 +129,26 @@ export abstract class RuntimeBase {
         return this._selectedPage;
     }
 
+    selectedPageTimeout: any;
+
     set selectedPage(value: Page) {
         runInAction(() => {
             this._previousPage = this._selectedPage;
             this._selectedPage = value;
         });
 
-        if (this.isDebuggerActive) {
-            this.projectEditorStore.editorsStore.openEditor(this.selectedPage);
-            this.projectEditorStore.editorsStore.refresh(true);
+        if (this.selectedPageTimeout) {
+            clearTimeout(this.selectedPageTimeout);
         }
+
+        this.selectedPageTimeout = setTimeout(() => {
+            if (this.isDebuggerActive && !this.isPaused) {
+                this.projectEditorStore.editorsStore.openEditor(
+                    this.selectedPage
+                );
+                this.projectEditorStore.editorsStore.refresh(true);
+            }
+        }, 100);
     }
 
     get previousPage() {
