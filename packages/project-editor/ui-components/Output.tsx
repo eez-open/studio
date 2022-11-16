@@ -147,7 +147,7 @@ const Message = observer(
                     className={className}
                     onClick={() => this.props.onSelect(this.props.message)}
                 >
-                    <td title={this.props.message.text}>
+                    <td title={this.props.message.text.toString()}>
                         {icon} {text}
                     </td>
                     <td>{objectPath}</td>

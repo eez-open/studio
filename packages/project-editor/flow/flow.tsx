@@ -549,13 +549,18 @@ export abstract class Flow extends EezObject {
         } else {
             if (
                 (object instanceof ContainerWidget ||
-                    object instanceof SelectWidget) &&
+                    object instanceof SelectWidget ||
+                    object instanceof ProjectEditor.LVGLWidgetClass) &&
                 flowFragment.components.every(
                     component => component instanceof Widget
-                )
+                ) &&
+                pasteFlowFragment.originalComponentIds.indexOf(object.objID) ==
+                    -1
             ) {
                 components = projectEditorStore.addObjects(
-                    object.widgets,
+                    object instanceof ProjectEditor.LVGLWidgetClass
+                        ? object.children
+                        : object.widgets,
                     flowFragment.components
                 );
             } else {
@@ -675,6 +680,8 @@ export class FlowFragment extends EezObject {
     components: Component[];
     connectionLines: ConnectionLine[];
 
+    originalComponentIds: string[];
+
     static classInfo: ClassInfo = {
         properties: [
             {
@@ -686,6 +693,10 @@ export class FlowFragment extends EezObject {
                 name: "connectionLines",
                 type: PropertyType.Array,
                 typeClass: ConnectionLine
+            },
+            {
+                name: "originalComponentIds",
+                type: PropertyType.Any
             }
         ],
 
@@ -713,6 +724,10 @@ export class FlowFragment extends EezObject {
     };
 
     addObjects(flow: Flow, objects: IEezObject[]) {
+        this.originalComponentIds = objects.map(
+            (component: Component) => component.objID
+        );
+
         this.components = [];
         this.connectionLines = [];
 

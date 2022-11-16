@@ -28,6 +28,8 @@ ActionExecFunc g_actionExecFunctions[] = {
 
 static int16_t currentPageId = -1;
 
+bool is_editor = false;
+
 uint32_t screenLoad_animType = 0;
 uint32_t screenLoad_speed = 0;
 uint32_t screenLoad_delay = 0;

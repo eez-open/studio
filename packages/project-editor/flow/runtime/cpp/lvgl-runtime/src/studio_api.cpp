@@ -146,6 +146,9 @@ EM_PORT_API(lv_obj_t *) lvglCreateSpinner(lv_obj_t *parentObj, int32_t index, lv
     lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
     setObjectIndex(obj, index);
+    if (is_editor) {
+        lv_anim_del_all();
+    }
     return obj;
 }
 

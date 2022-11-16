@@ -3694,74 +3694,77 @@ export class Widget extends Component {
 
             var additionalMenuItems: Electron.MenuItem[] = [];
 
-            if (objects.length === 1) {
-                additionalMenuItems.push(
-                    new MenuItem({
-                        label: "Put in Select",
-                        click: () => {
-                            const selectWidget = (
-                                objects[0] as Widget
-                            ).putInSelect();
-                            context.selectObject(selectWidget);
-                        }
-                    })
-                );
-            }
+            const project = ProjectEditor.getProject(objects[0]);
+            if (!project.projectTypeTraits.isLVGL) {
+                if (objects.length === 1) {
+                    additionalMenuItems.push(
+                        new MenuItem({
+                            label: "Put in Select",
+                            click: () => {
+                                const selectWidget = (
+                                    objects[0] as Widget
+                                ).putInSelect();
+                                context.selectObject(selectWidget);
+                            }
+                        })
+                    );
+                }
 
-            if (areAllChildrenOfTheSameParent(objects)) {
-                additionalMenuItems.push(
-                    new MenuItem({
-                        label: "Put in Container",
-                        click: () => {
-                            const containerWidget = Widget.putInContainer(
-                                objects as Widget[]
-                            );
-                            context.selectObject(containerWidget);
-                        }
-                    })
-                );
-
-                additionalMenuItems.push(
-                    new MenuItem({
-                        label: "Put in List",
-                        click: () => {
-                            const listWidget = Widget.putInList(
-                                objects as Widget[]
-                            );
-                            context.selectObject(listWidget);
-                        }
-                    })
-                );
-
-                additionalMenuItems.push(
-                    new MenuItem({
-                        label: "Create Custom Widget",
-                        click: async () => {
-                            const layoutWidget =
-                                await Widget.createCustomWidget(
+                if (areAllChildrenOfTheSameParent(objects)) {
+                    additionalMenuItems.push(
+                        new MenuItem({
+                            label: "Put in Container",
+                            click: () => {
+                                const containerWidget = Widget.putInContainer(
                                     objects as Widget[]
                                 );
-                            if (layoutWidget) {
-                                context.selectObject(layoutWidget);
+                                context.selectObject(containerWidget);
                             }
-                        }
-                    })
-                );
+                        })
+                    );
 
-                additionalMenuItems.push(
-                    new MenuItem({
-                        label: "Replace with Custom Widget",
-                        click: async () => {
-                            const layoutWidget =
-                                await Widget.replaceWithCustomWidget(
+                    additionalMenuItems.push(
+                        new MenuItem({
+                            label: "Put in List",
+                            click: () => {
+                                const listWidget = Widget.putInList(
                                     objects as Widget[]
                                 );
-                            if (layoutWidget) {
-                                context.selectObject(layoutWidget);
+                                context.selectObject(listWidget);
                             }
-                        }
-                    })
-                );
+                        })
+                    );
+
+                    additionalMenuItems.push(
+                        new MenuItem({
+                            label: "Create Custom Widget",
+                            click: async () => {
+                                const layoutWidget =
+                                    await Widget.createCustomWidget(
+                                        objects as Widget[]
+                                    );
+                                if (layoutWidget) {
+                                    context.selectObject(layoutWidget);
+                                }
+                            }
+                        })
+                    );
+
+                    additionalMenuItems.push(
+                        new MenuItem({
+                            label: "Replace with Custom Widget",
+                            click: async () => {
+                                const layoutWidget =
+                                    await Widget.replaceWithCustomWidget(
+                                        objects as Widget[]
+                                    );
+                                if (layoutWidget) {
+                                    context.selectObject(layoutWidget);
+                                }
+                            }
+                        })
+                    );
+                }
             }
 
             if (additionalMenuItems.length > 0) {

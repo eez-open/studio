@@ -643,6 +643,22 @@ export const Tree = observer(
             }
         }
 
+        onClick = (event: React.MouseEvent<HTMLDivElement>) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            this.props.treeAdapter.selectItems([]);
+        };
+
+        onMouseUp = (event: React.MouseEvent<HTMLDivElement>) => {
+            if (event.button == 2) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                this.props.treeAdapter.selectItems([]);
+            }
+        };
+
         onRowDragStart = (event: React.DragEvent<HTMLDivElement>) => {
             event.stopPropagation();
             let item = this.props.treeAdapter.getItemFromId(
@@ -663,6 +679,9 @@ export const Tree = observer(
         };
 
         onRowClick = (event: React.MouseEvent<HTMLDivElement>) => {
+            event.preventDefault();
+            event.stopPropagation();
+
             const $rowDiv = $(event.target).closest(
                 ".tree-row[data-object-id]"
             );
@@ -812,6 +831,8 @@ export const Tree = observer(
                     onDragLeave={this.onDragLeave}
                     onDrop={this.onDrop}
                     onContextMenu={this.onContextMenu}
+                    onClick={this.onClick}
+                    onMouseUp={this.onMouseUp}
                 >
                     <div
                         ref={ref => (this.treeDiv = ref!)}

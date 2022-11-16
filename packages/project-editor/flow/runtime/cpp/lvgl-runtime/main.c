@@ -13,7 +13,7 @@
 
 #define EM_PORT_API(rettype) rettype EMSCRIPTEN_KEEPALIVE
 
-static void hal_init(bool editor);
+static void hal_init();
 static void memory_monitor(lv_timer_t * param);
 
 static lv_disp_t *disp1;
@@ -186,7 +186,7 @@ static void init_fs_driver() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void hal_init(bool editor) {
+static void hal_init() {
     // alloc memory for the display front buffer
     display_fb = (uint32_t *)malloc(sizeof(uint32_t) * hor_res * ver_res);
     memset(display_fb, 0x44, hor_res * ver_res * sizeof(uint32_t));
@@ -208,7 +208,7 @@ static void hal_init(bool editor) {
     // lv_group_t * g = lv_group_create();
     // lv_group_set_default(g);
 
-    if (!editor) {
+    if (!is_editor) {
         /* Add the mouse as input device
         * Use the 'mouse' driver which reads the PC's mouse*/
         //mouse_init();
@@ -256,7 +256,7 @@ static void memory_monitor(lv_timer_t * param)
 bool initialized = false;
 
 EM_PORT_API(void) init(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSize, uint32_t displayWidth, uint32_t displayHeight) {
-    bool editor = assetsSize == 0;
+    is_editor = assetsSize == 0;
 
     hor_res = displayWidth;
     ver_res = displayHeight;
@@ -265,9 +265,9 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSi
     lv_init();
 
     /*Initialize the HAL (display, input devices, tick) for LittlevGL*/
-    hal_init(editor);
+    hal_init();
 
-    if (!editor) {
+    if (!is_editor) {
         flowInit(wasmModuleId, assets, assetsSize);
     }
 
