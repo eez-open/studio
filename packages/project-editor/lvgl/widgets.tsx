@@ -2587,7 +2587,7 @@ export class LVGLSwitchWidget extends LVGLWidget {
         ),
 
         lvgl: {
-            parts: ["MAIN"],
+            parts: ["MAIN", "INDICATOR", "KNOB"],
             flags: [
                 "HIDDEN",
                 "CLICKABLE",
@@ -3309,7 +3309,7 @@ export class LVGLSpinnerWidget extends LVGLWidget {
     }
 
     override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_spinner_create(parent_obj);`);
+        build.line(`lv_obj_t *obj = lv_spinner_create(parent_obj, 1000, 60);`);
     }
 }
 
@@ -3361,7 +3361,7 @@ export class LVGLCheckboxWidget extends LVGLWidget {
         ),
 
         lvgl: {
-            parts: ["MAIN"],
+            parts: ["MAIN", "INDICATOR"],
             flags: [
                 "HIDDEN",
                 "CLICKABLE",
