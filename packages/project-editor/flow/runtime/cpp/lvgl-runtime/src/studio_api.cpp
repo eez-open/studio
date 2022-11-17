@@ -237,8 +237,11 @@ EM_PORT_API(lv_obj_t *) lvglCreateChart(lv_obj_t *parentObj, int32_t index, lv_c
     return obj;
 }
 
+static lv_obj_t *current_screen = 0;
+
 EM_PORT_API(void) lvglScreenLoad(unsigned page_index, lv_obj_t *obj) {
     lv_scr_load_anim(obj, (lv_scr_load_anim_t)screenLoad_animType, screenLoad_speed, screenLoad_delay, false);
+    current_screen = obj;
     screenLoad_animType = 0;
     screenLoad_speed = 0;
     screenLoad_delay = 0;
@@ -248,6 +251,15 @@ EM_PORT_API(void) lvglScreenLoad(unsigned page_index, lv_obj_t *obj) {
 }
 
 EM_PORT_API(void) lvglDeleteObject(lv_obj_t *obj) {
+    if (obj == current_screen) {
+        printf("delete current screen called, set fallback screen\n");
+        static lv_obj_t *fallback_screen = 0;
+        if (!fallback_screen) {
+            fallback_screen = lv_obj_create(0);
+        }
+        lv_scr_load(fallback_screen);
+        current_screen = fallback_screen;
+    }
     lv_obj_del(obj);
 }
 

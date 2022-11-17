@@ -246,6 +246,9 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                 });
 
                 const pageObj = this.page.lvglCreate(this, 0).obj;
+                if (!pageObj) {
+                    console.error("pageObj is undefined");
+                }
                 this.wasm._lvglScreenLoad(-1, pageObj);
 
                 runInAction(() => {
