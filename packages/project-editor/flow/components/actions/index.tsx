@@ -1612,12 +1612,14 @@ export class SortArrayActionComponent extends ActionComponent {
             {
                 name: "ascending",
                 type: PropertyType.Boolean,
-                checkboxStyleSwitch: true
+                checkboxStyleSwitch: true,
+                propertyGridGroup: specificGroup
             },
             {
                 name: "ignoreCase",
                 type: PropertyType.Boolean,
-                checkboxStyleSwitch: true
+                checkboxStyleSwitch: true,
+                propertyGridGroup: specificGroup
             }
         ],
         icon: (

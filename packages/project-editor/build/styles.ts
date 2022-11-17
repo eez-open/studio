@@ -22,7 +22,7 @@ export function buildGuiStylesEnum(assets: Assets) {
             "STYLE_ID_",
             style.name ? style : "inline" + i,
             NamingConvention.UnderscoreUpperCase
-        )} = ${i + 1}`;
+        )} = ${style.id}`;
     });
 
     styleEnumItems.unshift(`${TAB}STYLE_ID_NONE = 0`);

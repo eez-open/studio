@@ -148,7 +148,7 @@ export abstract class RuntimeBase {
                 );
                 this.projectEditorStore.editorsStore.refresh(true);
             }
-        }, 100);
+        }, 50);
     }
 
     get previousPage() {

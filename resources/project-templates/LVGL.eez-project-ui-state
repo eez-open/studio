@@ -67,7 +67,8 @@
                   "component": "navigation",
                   "enableClose": false
                 }
-              ]
+              ],
+              "active": true
             },
             {
               "type": "tabset",
@@ -310,6 +311,60 @@
         }
       }
     },
+    "runtimeEditors": {
+      "version": 3,
+      "json": {
+        "global": {
+          "splitterSize": 4,
+          "splitterExtra": 4,
+          "tabEnableRename": false,
+          "borderEnableAutoHide": true
+        },
+        "borders": [],
+        "layout": {
+          "type": "row",
+          "id": "#546e15a7-34cb-4800-ad8c-b96cd56c2a3e",
+          "children": [
+            {
+              "type": "tabset",
+              "id": "RUNTIME-EDITORS",
+              "enableDrop": false,
+              "enableDrag": false,
+              "enableTabStrip": false,
+              "children": [
+                {
+                  "type": "tab",
+                  "id": "#6e38e548-a6dc-4a82-a0d9-d8134d585e42",
+                  "component": "sub",
+                  "config": {
+                    "model": {
+                      "global": {
+                        "borderEnableAutoHide": true,
+                        "splitterSize": 4,
+                        "splitterExtra": 4,
+                        "legacyOverflowMenu": false,
+                        "tabEnableRename": false,
+                        "tabEnableClose": true
+                      },
+                      "borders": [],
+                      "layout": {
+                        "type": "row",
+                        "children": [
+                          {
+                            "type": "tabset",
+                            "children": []
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
     "variables": {
       "version": 7,
       "json": {
@@ -513,7 +568,8 @@
                       "component": "pages",
                       "enableClose": false
                     }
-                  ]
+                  ],
+                  "active": true
                 },
                 {
                   "type": "tabset",

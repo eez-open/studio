@@ -49,7 +49,7 @@
         {
           "objID": "0f3ea37c-f0d3-4061-c693-76b52bd9d632",
           "fileName": "flow_def.c",
-          "template": "#include \"flow_def.h\"\n\n//${eez-studio GUI_ASSETS_DEF_COMPRESSED}\n"
+          "template": "#include <eez/core/vars.h>\n\n#include \"flow_def.h\"\n#include \"vars.h\"\n\n//${eez-studio GUI_ASSETS_DEF_COMPRESSED}\n\n//${eez-studio LVGL_NATIVE_VARS_TABLE_DEF}\n"
         },
         {
           "objID": "81fa9cb7-33e4-4272-9340-49a50037b327",

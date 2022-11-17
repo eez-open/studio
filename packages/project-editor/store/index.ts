@@ -52,7 +52,7 @@ import { LayoutModels } from "project-editor/store/layout-models";
 import { UIStateStore } from "project-editor/store/ui-state";
 import { RuntimeSettings } from "project-editor/store/runtime-settings";
 import { UndoManager } from "project-editor/store/undo-manager";
-import { OutputSections } from "project-editor/store/output-sections";
+import { OutputSections, Section } from "project-editor/store/output-sections";
 import {
     createObject,
     loadProject,
@@ -548,12 +548,16 @@ export class ProjectEditorStore {
         ProjectEditor.build.buildProject(this, "check");
     }
 
-    build() {
-        this.layoutModels.selectTab(
-            this.layoutModels.root,
-            LayoutModels.OUTPUT_TAB_ID
-        );
-        return ProjectEditor.build.buildProject(this, "buildFiles");
+    async build() {
+        await ProjectEditor.build.buildProject(this, "buildFiles");
+        if (this.outputSectionsStore.getSection(Section.OUTPUT).numErrors > 0) {
+            this.layoutModels.selectTab(
+                this.layoutModels.root,
+                LayoutModels.OUTPUT_TAB_ID
+            );
+        } else {
+            notification.info("Build done.");
+        }
     }
 
     buildAssets() {
