@@ -549,7 +549,10 @@ export class ProjectEditorStore {
     }
 
     async build() {
-        await ProjectEditor.build.buildProject(this, "buildFiles");
+        const result = await ProjectEditor.build.buildProject(
+            this,
+            "buildFiles"
+        );
         if (this.outputSectionsStore.getSection(Section.OUTPUT).numErrors > 0) {
             this.layoutModels.selectTab(
                 this.layoutModels.root,
@@ -558,6 +561,7 @@ export class ProjectEditorStore {
         } else {
             notification.info("Build done.");
         }
+        return result;
     }
 
     buildAssets() {
