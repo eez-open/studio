@@ -806,6 +806,12 @@ export class Tabs {
     }
 
     constructor() {
+        this._instrumentsVisible =
+            localStorage.getItem(LOCAL_STORAGE_INSTRUMENT_VISIBLE_SETTING) ==
+            "false"
+                ? false
+                : true ?? true;
+
         makeObservable(this, {
             tabs: observable,
             activeTab: observable,
@@ -817,7 +823,8 @@ export class Tabs {
             viewDeletedHistory: observable,
             navigateToHistory: action.bound,
             navigateToDeletedHistoryItems: action.bound,
-            navigateToSessionsList: action.bound
+            navigateToSessionsList: action.bound,
+            _instrumentsVisible: observable
         });
 
         loadPreinstalledExtension("instrument").then(async () => {
@@ -1068,6 +1075,23 @@ export class Tabs {
             tab => tab instanceof ProjectEditorTab && tab.filePath == filePath
         );
     }
+
+    _instrumentsVisible: boolean;
+
+    get instrumentsVisible() {
+        return this._instrumentsVisible;
+    }
+
+    set instrumentsVisible(value: boolean) {
+        runInAction(() => {
+            this._instrumentsVisible = value;
+        });
+
+        localStorage.setItem(
+            LOCAL_STORAGE_INSTRUMENT_VISIBLE_SETTING,
+            this._instrumentsVisible ? "true" : "false"
+        );
+    }
 }
 
 export let tabs: Tabs;
@@ -1079,7 +1103,7 @@ export function loadTabs() {
 export const LOCAL_STORAGE_INSTRUMENT_VISIBLE_SETTING = "instrumentsVisible";
 
 export function onSetupSkip() {
-    localStorage.setItem(LOCAL_STORAGE_INSTRUMENT_VISIBLE_SETTING, "false");
+    tabs.instrumentsVisible = false;
     runInAction(() => firstTime.set(false));
     tabs.openTabById("home", true);
 }

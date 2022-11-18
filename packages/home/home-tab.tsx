@@ -778,40 +778,9 @@ export const Home = observer(
         constructor(props: {}) {
             super(props);
 
-            const { LOCAL_STORAGE_INSTRUMENT_VISIBLE_SETTING } =
-                require("home/tabs-store") as typeof TabsStoreModule;
-
-            this._instrumentsVisible =
-                localStorage.getItem(
-                    LOCAL_STORAGE_INSTRUMENT_VISIBLE_SETTING
-                ) == "false"
-                    ? false
-                    : true ?? true;
-
             makeObservable(this, {
-                selectInstrument: action.bound,
-                _instrumentsVisible: observable
+                selectInstrument: action.bound
             });
-        }
-
-        _instrumentsVisible: boolean;
-
-        get instrumentsVisible() {
-            return this._instrumentsVisible;
-        }
-
-        set instrumentsVisible(value: boolean) {
-            runInAction(() => {
-                this._instrumentsVisible = value;
-            });
-
-            const { LOCAL_STORAGE_INSTRUMENT_VISIBLE_SETTING } =
-                require("home/tabs-store") as typeof TabsStoreModule;
-
-            localStorage.setItem(
-                LOCAL_STORAGE_INSTRUMENT_VISIBLE_SETTING,
-                this._instrumentsVisible ? "true" : "false"
-            );
         }
 
         selectInstrument(instrument: InstrumentObject) {
@@ -823,7 +792,7 @@ export const Home = observer(
                 .filter(
                     tab =>
                         tab.instance.id != "home" &&
-                        (this.instrumentsVisible ||
+                        (tabs.instrumentsVisible ||
                             tab.instance.id == "settings")
                 )
                 .map(tab => {
@@ -866,7 +835,7 @@ export const Home = observer(
 
             let body;
 
-            if (this.instrumentsVisible) {
+            if (tabs.instrumentsVisible) {
                 body = (
                     <Splitter
                         type="horizontal"
@@ -881,7 +850,7 @@ export const Home = observer(
                         <div className="EezStudio_HomeTab_Instruments">
                             <Workbench
                                 onClose={() =>
-                                    (this.instrumentsVisible = false)
+                                    (tabs.instrumentsVisible = false)
                                 }
                             />
                         </div>
@@ -899,17 +868,17 @@ export const Home = observer(
                 <div className="EezStudio_HomeTab">
                     <div className="EezStudio_HomeTab_Tabs_And_SessionInfo">
                         {allTabsContainer}
-                        {!this.instrumentsVisible && (
+                        {!tabs.instrumentsVisible && (
                             <button
                                 key={"show-instruments"}
                                 className="btn btn btn-secondary"
-                                onClick={() => (this.instrumentsVisible = true)}
+                                onClick={() => (tabs.instrumentsVisible = true)}
                                 title="Open Instruments Panel"
                             >
                                 <span>Show Instruments</span>
                             </button>
                         )}
-                        {this.instrumentsVisible && sessionInfo}
+                        {tabs.instrumentsVisible && sessionInfo}
                     </div>
                     <div className="EezStudio_HomeTab_Projects_And_Instruments">
                         {body}
