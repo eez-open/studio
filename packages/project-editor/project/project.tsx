@@ -724,7 +724,7 @@ export class General extends EezObject {
             },
             {
                 name: "assetsFolder",
-                type: PropertyType.String
+                type: PropertyType.RelativeFolder
             },
             {
                 name: "scpiDocFolder",

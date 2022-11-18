@@ -25,7 +25,7 @@ import {
     ViewFilter,
     downloadAndInstallExtension
 } from "home/extensions-manager/extensions-manager";
-import { tabs } from "./tabs-store";
+import { onSetupSkip, tabs } from "./tabs-store";
 
 import { createInstrument } from "instrument/instrument-object";
 import { firstTime } from "./first-time";
@@ -133,11 +133,6 @@ function renderExtension(node: IListNode) {
             label={getExtensionName(instrumentExtension)}
         />
     );
-}
-
-function onSkip() {
-    runInAction(() => firstTime.set(false));
-    tabs.openTabById("home", true);
 }
 
 async function onAdd(onAddCallback?: (instrumentId: string) => void) {
@@ -320,7 +315,7 @@ export const Setup = observer(
                                 if (onCancelCallback) {
                                     onCancelCallback();
                                 } else {
-                                    onSkip();
+                                    onSetupSkip();
                                 }
                             }}
                         >

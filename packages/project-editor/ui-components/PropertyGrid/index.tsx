@@ -37,6 +37,7 @@ export const PropertyGrid = observer(
         objects: IEezObject[];
         className?: string;
         readOnly?: boolean;
+        collapsed?: boolean;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
@@ -182,7 +183,8 @@ export const PropertyGrid = observer(
                     propertyInfo,
                     objects,
                     updateObject: this.updateObject,
-                    readOnly: readOnly || propertyReadOnly
+                    readOnly: readOnly || propertyReadOnly,
+                    collapsed: false
                 };
 
                 let propertyMenuEnabled;
@@ -198,6 +200,17 @@ export const PropertyGrid = observer(
                 } else {
                     propertyMenuEnabled = false;
                 }
+
+                const propertyGroup = propertyInfo.propertyGridGroup;
+
+                const collapsed = this.props.collapsed
+                    ? true
+                    : propertyGroup &&
+                      groupCollapsedStore.isCollapsed(propertyGroup)
+                    ? true
+                    : false;
+
+                propertyProps.collapsed = collapsed;
 
                 let property;
                 if (colSpan) {
@@ -236,8 +249,6 @@ export const PropertyGrid = observer(
                     );
                 }
 
-                const propertyGroup = propertyInfo.propertyGridGroup;
-
                 const propertyComponent = (
                     <PropertyEnclosure
                         key={propertyInfo.name}
@@ -250,11 +261,7 @@ export const PropertyGrid = observer(
                         readOnly={propertyProps.readOnly}
                         updateObject={this.updateObject}
                         style={{
-                            visibility:
-                                propertyGroup &&
-                                groupCollapsedStore.isCollapsed(propertyGroup)
-                                    ? "collapse"
-                                    : "visible"
+                            visibility: collapsed ? "collapse" : "visible"
                         }}
                     />
                 );

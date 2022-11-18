@@ -92,6 +92,7 @@ export interface PropertyProps {
     objects: IEezObject[];
     readOnly: boolean;
     updateObject: (propertyValues: Object) => void;
+    collapsed?: boolean;
 }
 
 export interface IOnSelectParams {

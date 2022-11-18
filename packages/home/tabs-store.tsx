@@ -991,6 +991,10 @@ export class Tabs {
     }
 
     addProjectTab(filePath: string | undefined) {
+        if (firstTime.get()) {
+            onSetupSkip();
+        }
+
         const tab = new ProjectEditorTab(this, filePath);
         this.addTab(tab);
         return tab;
@@ -1074,4 +1078,12 @@ export let tabs: Tabs;
 
 export function loadTabs() {
     tabs = new Tabs();
+}
+
+export const LOCAL_STORAGE_INSTRUMENT_VISIBLE_SETTING = "instrumentsVisible";
+
+export function onSetupSkip() {
+    localStorage.setItem(LOCAL_STORAGE_INSTRUMENT_VISIBLE_SETTING, "false");
+    runInAction(() => firstTime.set(false));
+    tabs.openTabById("home", true);
 }

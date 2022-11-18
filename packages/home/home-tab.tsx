@@ -267,7 +267,7 @@ export const workbenchDocument = new WorkbenchDocument();
 ////////////////////////////////////////////////////////////////////////////////
 
 export const WorkbenchToolbar = observer(
-    class WorkbenchToolbar extends React.Component {
+    class WorkbenchToolbar extends React.Component<{ onClose: () => void }> {
         get buttons() {
             let buttons = [
                 {
@@ -319,6 +319,12 @@ export const WorkbenchToolbar = observer(
                                 onClick={button.onClick}
                             />
                         ))}
+                        <ButtonAction
+                            text="Hide Instruments"
+                            title="Hide this section"
+                            onClick={this.props.onClose}
+                            className="btn-secondary"
+                        />
                     </div>
                 </ToolbarHeader>
             );
@@ -498,8 +504,8 @@ export const InstrumentContent = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 export const Workbench = observer(
-    class Workbench extends React.Component<{}, {}> {
-        constructor(props: {}) {
+    class Workbench extends React.Component<{ onClose: () => void }> {
+        constructor(props: any) {
             super(props);
 
             makeObservable(this, {
@@ -515,7 +521,7 @@ export const Workbench = observer(
             return (
                 <VerticalHeaderWithBody>
                     <Header>
-                        <WorkbenchToolbar />
+                        <WorkbenchToolbar onClose={this.props.onClose} />
                     </Header>
                     <Body>
                         <Splitter
@@ -762,13 +768,44 @@ const Projects = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 export const Home = observer(
-    class Home extends React.Component<{}, {}> {
+    class Home extends React.Component {
         constructor(props: {}) {
             super(props);
 
+            const { LOCAL_STORAGE_INSTRUMENT_VISIBLE_SETTING } =
+                require("home/tabs-store") as typeof TabsStoreModule;
+
+            this._instrumentsVisible =
+                localStorage.getItem(
+                    LOCAL_STORAGE_INSTRUMENT_VISIBLE_SETTING
+                ) == "false"
+                    ? false
+                    : true ?? true;
+
             makeObservable(this, {
-                selectInstrument: action.bound
+                selectInstrument: action.bound,
+                _instrumentsVisible: observable
             });
+        }
+
+        _instrumentsVisible: boolean;
+
+        get instrumentsVisible() {
+            return this._instrumentsVisible;
+        }
+
+        set instrumentsVisible(value: boolean) {
+            runInAction(() => {
+                this._instrumentsVisible = value;
+            });
+
+            const { LOCAL_STORAGE_INSTRUMENT_VISIBLE_SETTING } =
+                require("home/tabs-store") as typeof TabsStoreModule;
+
+            localStorage.setItem(
+                LOCAL_STORAGE_INSTRUMENT_VISIBLE_SETTING,
+                this._instrumentsVisible ? "true" : "false"
+            );
         }
 
         selectInstrument(instrument: InstrumentObject) {
@@ -776,34 +813,39 @@ export const Home = observer(
         }
 
         render() {
-            let allTabs = (
-                <div className="EezStudio_HomeTab_TabsContainer">
-                    {tabs.allTabs
-                        .filter(tab => tab.instance.id != "home")
-                        .map(tab => {
-                            let icon;
-                            if (typeof tab.instance.icon == "string") {
-                                icon = <Icon icon={tab.instance.icon} />;
-                            } else {
-                                icon = tab.instance.icon;
+            let allTabs = tabs.allTabs
+                .filter(
+                    tab =>
+                        tab.instance.id != "home" &&
+                        (this.instrumentsVisible ||
+                            tab.instance.id == "settings")
+                )
+                .map(tab => {
+                    let icon;
+                    if (typeof tab.instance.icon == "string") {
+                        icon = <Icon icon={tab.instance.icon} />;
+                    } else {
+                        icon = tab.instance.icon;
+                    }
+                    return (
+                        <button
+                            key={tab.instance.id}
+                            className="btn btn btn-secondary"
+                            onClick={() => tab.open().makeActive()}
+                            title={
+                                tab.instance.tooltipTitle
+                                    ? tab.instance.tooltipTitle
+                                    : `Show ${tab.instance.title} Tab`
                             }
-                            return (
-                                <button
-                                    key={tab.instance.id}
-                                    className="btn btn btn-secondary"
-                                    onClick={() => tab.open().makeActive()}
-                                    title={
-                                        tab.instance.tooltipTitle
-                                            ? tab.instance.tooltipTitle
-                                            : `Show ${tab.instance.title} Tab`
-                                    }
-                                >
-                                    {icon}
-                                    <span>{tab.instance.title}</span>
-                                </button>
-                            );
-                        })}
-                </div>
+                        >
+                            {icon}
+                            <span>{tab.instance.title}</span>
+                        </button>
+                    );
+                });
+
+            let allTabsContainer = (
+                <div className="EezStudio_HomeTab_TabsContainer">{allTabs}</div>
             );
 
             let sessionInfo;
@@ -816,27 +858,55 @@ export const Home = observer(
                 );
             }
 
+            let body;
+
+            if (this.instrumentsVisible) {
+                body = (
+                    <Splitter
+                        type="horizontal"
+                        sizes={"35%|65%"}
+                        persistId={
+                            "home/home-tab/projects-and-instruments-splitter"
+                        }
+                    >
+                        <div className="EezStudio_HomeTab_Projects">
+                            <Projects />
+                        </div>
+                        <div className="EezStudio_HomeTab_Instruments">
+                            <Workbench
+                                onClose={() =>
+                                    (this.instrumentsVisible = false)
+                                }
+                            />
+                        </div>
+                    </Splitter>
+                );
+            } else {
+                body = (
+                    <div className="EezStudio_HomeTab_Projects">
+                        <Projects />
+                    </div>
+                );
+            }
+
             return (
                 <div className="EezStudio_HomeTab">
                     <div className="EezStudio_HomeTab_Tabs_And_SessionInfo">
-                        {allTabs}
-                        {sessionInfo}
+                        {allTabsContainer}
+                        {!this.instrumentsVisible && (
+                            <button
+                                key={"show-instruments"}
+                                className="btn btn btn-secondary"
+                                onClick={() => (this.instrumentsVisible = true)}
+                                title="Open Instruments Panel"
+                            >
+                                <span>Show Instruments</span>
+                            </button>
+                        )}
+                        {this.instrumentsVisible && sessionInfo}
                     </div>
                     <div className="EezStudio_HomeTab_Projects_And_Instruments">
-                        <Splitter
-                            type="horizontal"
-                            sizes={"35%|65%"}
-                            persistId={
-                                "home/home-tab/projects-and-instruments-splitter"
-                            }
-                        >
-                            <div className="EezStudio_HomeTab_Projects">
-                                <Projects />
-                            </div>
-                            <div className="EezStudio_HomeTab_Instruments">
-                                <Workbench />
-                            </div>
-                        </Splitter>
+                        {body}
                     </div>
                 </div>
             );

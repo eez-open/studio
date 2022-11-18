@@ -12,6 +12,8 @@ const collectFontData = require("lv_font_conv/lib/collect_font_data");
 const getFontBinData = require("lv_font_conv/lib/writers/bin");
 const getFontSourceData = require("lv_font_conv/lib/writers/lvgl");
 
+let extractBusy = false;
+
 export class ExtractFont implements IFontExtract {
     fontProperties: FontProperties;
     allEncodings: number[];
@@ -60,6 +62,18 @@ export class ExtractFont implements IFontExtract {
             output
         };
 
+        // wait for !extractBusy
+        await new Promise<void>(resolve => {
+            const interval = setInterval(() => {
+                if (!extractBusy) {
+                    clearInterval(interval);
+                    resolve();
+                }
+            }, 10);
+        });
+
+        extractBusy = true;
+
         this.fontData = await collectFontData(args);
 
         // write font bin file
@@ -73,6 +87,8 @@ export class ExtractFont implements IFontExtract {
         const lvglSourceFilePath =
             path.dirname(this.params.absoluteFilePath) + "/" + output + ".c";
         await fs.promises.writeFile(lvglSourceFilePath, source);
+
+        extractBusy = false;
 
         this.fontProperties = {
             name: this.params.name || "",
