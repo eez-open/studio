@@ -280,7 +280,7 @@ export const Setup = observer(
         } else {
             return (
                 <div className="d-flex flex-column justify-content-center align-items-center h-100">
-                    <h3>Add Instrument</h3>
+                    <h3>Add Instrument or Skip</h3>
                     <div
                         className="d-flex h-50 mt-3"
                         style={{ maxHeight: 400 }}
