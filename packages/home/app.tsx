@@ -13,9 +13,7 @@ import { TabsView } from "eez-studio-ui/tabs";
 
 import { IHomeTab, tabs } from "home/tabs-store";
 import { getAppStore } from "home/history";
-import { Setup } from "home/setup";
 import "home/home-tab";
-import { firstTime } from "home/first-time";
 
 import { SessionInfo } from "instrument/window/history/session/info-view";
 import { InstrumentObject, instruments } from "instrument/instrument-object";
@@ -59,10 +57,6 @@ const AppComponent = observer(
 
         render() {
             const appStore = getAppStore();
-
-            if (firstTime.get()) {
-                return <Setup />;
-            }
 
             const content = (
                 <VerticalHeaderWithBody>

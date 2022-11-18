@@ -991,10 +991,6 @@ export class Tabs {
     }
 
     addProjectTab(filePath: string | undefined) {
-        if (firstTime.get()) {
-            onSetupSkip();
-        }
-
         const tab = new ProjectEditorTab(this, filePath);
         this.addTab(tab);
         return tab;

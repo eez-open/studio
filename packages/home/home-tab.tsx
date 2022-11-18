@@ -50,6 +50,8 @@ import { settingsController } from "home/settings";
 import { IMruItem } from "main/settings";
 import { SearchInput } from "eez-studio-ui/search-input";
 import { getProjectIcon } from "home/helper";
+import { Setup } from "./setup";
+import { firstTime } from "./first-time";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -524,20 +526,24 @@ export const Workbench = observer(
                         <WorkbenchToolbar onClose={this.props.onClose} />
                     </Header>
                     <Body>
-                        <Splitter
-                            type="horizontal"
-                            sizes={/*"240px|100%|240px"*/ "100%|240px"}
-                            persistId="home/designer/splitter"
-                        >
-                            <WorkbenchDocumentComponent
-                                selectedInstrumentId={selectedInstrument.get()}
-                                selectInstrument={this.selectInstrument}
-                            />
+                        {firstTime.get() ? (
+                            <Setup />
+                        ) : (
+                            <Splitter
+                                type="horizontal"
+                                sizes={/*"240px|100%|240px"*/ "100%|240px"}
+                                persistId="home/designer/splitter"
+                            >
+                                <WorkbenchDocumentComponent
+                                    selectedInstrumentId={selectedInstrument.get()}
+                                    selectInstrument={this.selectInstrument}
+                                />
 
-                            <Properties
-                                selectedInstrumentId={selectedInstrument.get()}
-                            />
-                        </Splitter>
+                                <Properties
+                                    selectedInstrumentId={selectedInstrument.get()}
+                                />
+                            </Splitter>
+                        )}
                     </Body>
                 </VerticalHeaderWithBody>
             );
