@@ -40,6 +40,8 @@ import {
     LVGLLabelWidget,
     LVGLRollerWidget,
     LVGLSliderWidget,
+    LVGLKeyboardWidget,
+    LVGLTextareaWidget,
     LVGLWidget
 } from "project-editor/lvgl/widgets";
 import { LeftArrow } from "project-editor/ui-components/icons";
@@ -86,7 +88,8 @@ export class LVGLActionType extends EezObject {
                 enumItems: Object.keys(LVGL_ACTIONS).map(id => ({
                     id
                 })),
-                enumDisallowUndefined: true
+                enumDisallowUndefined: true,
+                readOnlyInPropertyGrid: true
             }
         ],
 
@@ -121,7 +124,6 @@ export class LVGLActionType extends EezObject {
             let actionTypeObject;
 
             if (result.values.action == "CHANGE_SCREEN") {
-                console.log(LVGLChangeScreenActionType.classInfo.defaultValue);
                 actionTypeObject = createObject<LVGLChangeScreenActionType>(
                     project._DocumentStore,
                     Object.assign(
@@ -156,7 +158,10 @@ export class LVGLActionType extends EezObject {
 
     constructor() {
         super();
-        makeObservable(this, {});
+
+        makeObservable(this, {
+            action: observable
+        });
     }
 
     build(assets: Assets, dataBuffer: DataBuffer) {}
@@ -311,9 +316,17 @@ export class LVGLPlayAnimationActionType extends LVGLActionType {
 
     constructor() {
         super();
+
         makeObservable(this, {
             target: observable,
-            delay: observable
+            property: observable,
+            start: observable,
+            end: observable,
+            delay: observable,
+            time: observable,
+            relative: observable,
+            instant: observable,
+            path: observable
         });
     }
 
@@ -478,14 +491,16 @@ const enum PropertyCode {
 
     ROLLER_SELECTED,
 
-    SLIDER_VALUE
+    SLIDER_VALUE,
+
+    KEYBOARD_TEXTAREA
 }
 
 type PropertiesType = {
     [targetType: string]: {
         [propName: string]: {
             code: PropertyCode;
-            type: "number" | "string" | "boolean" | "image";
+            type: "number" | "string" | "boolean" | "image" | "textarea";
             animated: boolean;
         };
     };
@@ -592,6 +607,13 @@ const PROPERTIES = {
             type: "number" as const,
             animated: true
         }
+    },
+    keyboard: {
+        textarea: {
+            code: PropertyCode.KEYBOARD_TEXTAREA,
+            type: "textarea" as const,
+            animated: false
+        }
     }
 };
 
@@ -615,6 +637,8 @@ function filterSetPropertyTarget(
         return object instanceof LVGLRollerWidget;
     } else if (actionType.targetType == "slider") {
         return object instanceof LVGLSliderWidget;
+    } else if (actionType.targetType == "keyboard") {
+        return object instanceof LVGLKeyboardWidget;
     } else {
         return false;
     }
@@ -627,6 +651,7 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
     animated: boolean;
     value: number | string | boolean;
     valueType: LVGLPropertyType;
+    textarea: string;
 
     constructor() {
         super();
@@ -636,7 +661,8 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
             property: observable,
             animated: observable,
             value: observable,
-            valueType: observable
+            valueType: observable,
+            textarea: observable
         });
     }
 
@@ -712,9 +738,34 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
                             return "Image";
                         }
                         return "Value";
-                    }
+                    },
+                    hideInPropertyGrid: (
+                        actionType: LVGLSetPropertyActionType
+                    ) => actionType.propertyInfo.type == "textarea"
                 }
             ),
+            {
+                name: "textarea",
+                type: PropertyType.Enum,
+                enumItems: (actionType: LVGLSetPropertyActionType) => {
+                    const page = getAncestorOfType(
+                        actionType,
+                        ProjectEditor.PageClass.classInfo
+                    ) as Page;
+                    return page._lvglWidgets
+                        .filter(
+                            lvglWidget =>
+                                lvglWidget instanceof LVGLTextareaWidget &&
+                                lvglWidget.identifier
+                        )
+                        .map(lvglWidget => ({
+                            id: lvglWidget.identifier,
+                            label: lvglWidget.identifier
+                        }));
+                },
+                hideInPropertyGrid: (actionType: LVGLSetPropertyActionType) =>
+                    actionType.propertyInfo.type != "textarea"
+            },
             {
                 name: "animated",
                 type: PropertyType.Boolean,
@@ -728,6 +779,26 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
             property: "value",
             animated: false,
             valueType: "literal"
+        },
+        updateObjectValueHook: (
+            actionType: LVGLSetPropertyActionType,
+            values: Partial<LVGLSetPropertyActionType>
+        ) => {
+            if (values.targetType != undefined) {
+                if (
+                    (PROPERTIES as PropertiesType)[values.targetType][
+                        actionType.property
+                    ] == undefined
+                ) {
+                    ProjectEditor.getProject(
+                        actionType
+                    )._DocumentStore.updateObject(actionType, {
+                        property: Object.keys(
+                            (PROPERTIES as PropertiesType)[values.targetType]
+                        )[0]
+                    });
+                }
+            }
         },
         check: (object: LVGLSetPropertyActionType) => {
             let messages: Message[] = [];
@@ -778,6 +849,34 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
                 }
             }
 
+            if (object.propertyInfo.type == "textarea") {
+                if (object.textarea) {
+                    const lvglIdentifier = ProjectEditor.getProject(
+                        object
+                    )._lvglIdentifiers.get(object.textarea);
+                    if (lvglIdentifier == undefined) {
+                        messages.push(
+                            propertyNotFoundMessage(object, "textarea")
+                        );
+                    } else {
+                        if (
+                            !(
+                                lvglIdentifier.object instanceof
+                                LVGLTextareaWidget
+                            )
+                        ) {
+                            messages.push(
+                                new Message(
+                                    MessageType.ERROR,
+                                    `Not a textarea widget`,
+                                    getChildOfObject(object, "textarea")
+                                )
+                            );
+                        }
+                    }
+                }
+            }
+
             return messages;
         }
     });
@@ -791,6 +890,7 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
             }
         );
     }
+
     get valueExpr() {
         if (typeof this.value == "number") {
             return this.value.toString();
@@ -823,7 +923,11 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
                         : "<not set>"
                 }`}
                 <LeftArrow />
-                {this.valueExpr}
+                {this.propertyInfo.type != "textarea"
+                    ? this.valueExpr
+                    : this.textarea
+                    ? this.textarea
+                    : "<null>"}
                 {this.propertyInfo.animated
                     ? `, Animated=${this.animated ? "On" : "Off"}`
                     : ""}
@@ -852,6 +956,12 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
                 ) as LVGLActionComponent,
                 this.valueExpr
             )
+        );
+
+        // textarea
+        dataBuffer.writeInt32(
+            ProjectEditor.getProject(this)._lvglIdentifiers.get(this.textarea)
+                ?.index ?? -1
         );
 
         // animated

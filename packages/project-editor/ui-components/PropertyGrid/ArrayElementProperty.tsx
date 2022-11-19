@@ -95,7 +95,6 @@ const ArrayElementProperty = observer(
                     </>
                 );
             } else {
-                console.log("not visible");
                 return <td />;
             }
         }

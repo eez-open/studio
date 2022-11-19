@@ -4466,9 +4466,9 @@ export class LVGLKeyboardWidget extends LVGLWidget {
             {
                 name: "textarea",
                 type: PropertyType.Enum,
-                enumItems: (actionType: LVGLKeyboardWidget) => {
+                enumItems: (widget: LVGLKeyboardWidget) => {
                     const page = getAncestorOfType(
-                        actionType,
+                        widget,
                         ProjectEditor.PageClass.classInfo
                     ) as Page;
                     return page._lvglWidgets
