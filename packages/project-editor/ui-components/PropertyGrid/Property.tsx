@@ -615,10 +615,18 @@ export const Property = observer(
                     const value = this._value !== undefined ? this._value : "";
 
                     if (
-                        !propertyInfo.enumDisallowUndefined ||
+                        !propertyInfo.enumDisallowUndefined &&
                         enumItems.map(enumItem => enumItem.id).indexOf(value) ==
                             -1
                     ) {
+                        options.unshift(
+                            <option key="__not_found" value={value}>
+                                {value}
+                            </option>
+                        );
+                    }
+
+                    if (!propertyInfo.enumDisallowUndefined) {
                         options.unshift(<option key="__empty" value="" />);
                     }
 

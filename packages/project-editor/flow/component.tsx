@@ -4267,6 +4267,40 @@ export class Widget extends Component {
     }
 
     getResizeHandlers(): IResizeHandler[] | undefined | false {
+        if (this.autoSize == "both") {
+            return [];
+        }
+
+        if (this.autoSize == "width") {
+            return [
+                {
+                    x: 50,
+                    y: 0,
+                    type: "n-resize"
+                },
+                {
+                    x: 50,
+                    y: 100,
+                    type: "s-resize"
+                }
+            ];
+        }
+
+        if (this.autoSize == "height") {
+            return [
+                {
+                    x: 0,
+                    y: 50,
+                    type: "w-resize"
+                },
+                {
+                    x: 100,
+                    y: 50,
+                    type: "e-resize"
+                }
+            ];
+        }
+
         return [
             {
                 x: 0,

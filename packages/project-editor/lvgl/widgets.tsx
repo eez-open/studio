@@ -32,7 +32,10 @@ import {
 
 import { ProjectType } from "project-editor/project/project";
 
-import type { IFlowContext } from "project-editor/flow/flow-interfaces";
+import type {
+    IFlowContext,
+    IResizeHandler
+} from "project-editor/flow/flow-interfaces";
 
 import {
     AutoSize,
@@ -159,7 +162,13 @@ export const GeometryProperty = observer(
             const unitPropertyInfo = findPropertyByNameInClassInfo(
                 classInfo,
                 this.props.propertyInfo.name + "Unit"
-            );
+            ) as PropertyInfo;
+
+            const readOnly =
+                this.props.objects.find(
+                    object =>
+                        (object as any)[unitPropertyInfo.name] == "content"
+                ) != undefined;
 
             return (
                 <div className="EezStudio_LVGLGeometryProperty">
@@ -172,7 +181,7 @@ export const GeometryProperty = observer(
                             }
                         )}
                         objects={this.props.objects}
-                        readOnly={this.props.readOnly}
+                        readOnly={this.props.readOnly || readOnly}
                         updateObject={this.props.updateObject}
                     />
 
@@ -726,6 +735,44 @@ export class LVGLWidget extends Widget {
             }
         }
         return this.height ?? 0;
+    }
+
+    override getResizeHandlers(): IResizeHandler[] | undefined | false {
+        if (this.widthUnit != "px" && this.heightUnit != "px") {
+            return [];
+        }
+
+        if (this.widthUnit != "px") {
+            return [
+                {
+                    x: 50,
+                    y: 0,
+                    type: "n-resize"
+                },
+                {
+                    x: 50,
+                    y: 100,
+                    type: "s-resize"
+                }
+            ];
+        }
+
+        if (this.heightUnit != "px") {
+            return [
+                {
+                    x: 0,
+                    y: 50,
+                    type: "w-resize"
+                },
+                {
+                    x: 100,
+                    y: 50,
+                    type: "e-resize"
+                }
+            ];
+        }
+
+        return super.getResizeHandlers();
     }
 
     getOutputs(): ComponentOutput[] {
@@ -4391,12 +4438,12 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
 const KEYBOARD_MODES = {
     TEXT_LOWER: 0,
     TEXT_UPPER: 1,
-    TEXT_SPECIAL: 2,
-    TEXT_NUMBER: 3,
-    TEXT_USER1: 4,
-    TEXT_USER2: 5,
-    TEXT_USER3: 6,
-    TEXT_USER4: 7
+    SPECIAL: 2,
+    NUMBER: 3,
+    USER1: 4,
+    USER2: 5,
+    USER3: 6,
+    USER4: 7
 };
 
 const keyboardGroup: IPropertyGridGroupDefinition = {
@@ -4427,7 +4474,8 @@ export class LVGLKeyboardWidget extends LVGLWidget {
                     return page._lvglWidgets
                         .filter(
                             lvglWidget =>
-                                lvglWidget instanceof LVGLTextareaWidget
+                                lvglWidget instanceof LVGLTextareaWidget &&
+                                lvglWidget.identifier
                         )
                         .map(lvglWidget => ({
                             id: lvglWidget.identifier,
@@ -4475,7 +4523,7 @@ export class LVGLKeyboardWidget extends LVGLWidget {
                 }
             },
             clickableFlag: true,
-            mode: KEYBOARD_MODES.TEXT_LOWER
+            mode: "TEXT_LOWER"
         },
 
         icon: (

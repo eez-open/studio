@@ -53,6 +53,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import { IEditorState } from "project-editor/project/EditorComponent";
 import { activateConnectionLine } from "project-editor/flow/editor/real-time-traffic-visualizer";
 import { isImplicitConversionPossible } from "project-editor/flow/expression/type";
+import type { LVGLPanelWidget } from "project-editor/lvgl/widgets";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -534,7 +535,7 @@ export abstract class Flow extends EezObject {
             closeCombineCommands = true;
         }
 
-        let components: EezObject[];
+        let components: EezObject[] | undefined = undefined;
 
         if (flowFragment.connectionLines.length > 0) {
             projectEditorStore.addObjects(
@@ -548,21 +549,47 @@ export abstract class Flow extends EezObject {
             );
         } else {
             if (
-                (object instanceof ContainerWidget ||
-                    object instanceof SelectWidget ||
+                (object instanceof Widget ||
                     object instanceof ProjectEditor.LVGLWidgetClass) &&
                 flowFragment.components.every(
                     component => component instanceof Widget
-                ) &&
-                pasteFlowFragment.originalComponentIds.indexOf(object.objID) ==
-                    -1
+                )
             ) {
-                components = projectEditorStore.addObjects(
-                    object instanceof ProjectEditor.LVGLWidgetClass
-                        ? object.children
-                        : object.widgets,
-                    flowFragment.components
-                );
+                let containerAncestor:
+                    | ContainerWidget
+                    | SelectWidget
+                    | LVGLPanelWidget
+                    | undefined = getAncestorOfType(
+                    getParent(getParent(object)),
+                    ContainerWidget.classInfo
+                ) as ContainerWidget | undefined;
+                if (!containerAncestor) {
+                    containerAncestor = getAncestorOfType(
+                        getParent(getParent(object)),
+                        SelectWidget.classInfo
+                    ) as SelectWidget | undefined;
+                    if (!containerAncestor) {
+                        containerAncestor = getAncestorOfType(
+                            getParent(getParent(object)),
+                            ProjectEditor.LVGLPanelWidgetClass.classInfo
+                        ) as LVGLPanelWidget | undefined;
+                    }
+                }
+
+                if (containerAncestor) {
+                    components = projectEditorStore.addObjects(
+                        containerAncestor instanceof
+                            ProjectEditor.LVGLWidgetClass
+                            ? containerAncestor.children
+                            : containerAncestor.widgets,
+                        flowFragment.components
+                    );
+                } else {
+                    components = projectEditorStore.addObjects(
+                        this.components,
+                        flowFragment.components
+                    );
+                }
             } else {
                 components = projectEditorStore.addObjects(
                     this.components,
@@ -680,8 +707,6 @@ export class FlowFragment extends EezObject {
     components: Component[];
     connectionLines: ConnectionLine[];
 
-    originalComponentIds: string[];
-
     static classInfo: ClassInfo = {
         properties: [
             {
@@ -693,10 +718,6 @@ export class FlowFragment extends EezObject {
                 name: "connectionLines",
                 type: PropertyType.Array,
                 typeClass: ConnectionLine
-            },
-            {
-                name: "originalComponentIds",
-                type: PropertyType.Any
             }
         ],
 
@@ -724,10 +745,6 @@ export class FlowFragment extends EezObject {
     };
 
     addObjects(flow: Flow, objects: IEezObject[]) {
-        this.originalComponentIds = objects.map(
-            (component: Component) => component.objID
-        );
-
         this.components = [];
         this.connectionLines = [];
 

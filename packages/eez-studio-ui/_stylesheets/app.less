@@ -2808,6 +2808,10 @@ button.EezStudio_Action {
             /* border-bottom: 1px solid @borderColor; */
             text-align: center;
             font-size: 90%;
+            border-right: 1px solid @borderColor;
+            &:last-child {
+                border-right: none;
+            }
         }
 
         & > tbody {
@@ -2818,14 +2822,15 @@ button.EezStudio_Action {
                 }
 
                 & > td {
-                    margin-right: 5px;
-
-                    /*
+                    border-top: 1px solid @borderColor;
                     border-right: 1px solid @borderColor;
-                    border-bottom: 1px solid @borderColor;
-                    */
+                    &:last-child {
+                        border-right: none;
+                    }
 
-                    padding: 4px 4px;
+                    cursor: pointer;
+
+                    padding: 4px 10px;
 
                     &::last-child {
                         width: 0;

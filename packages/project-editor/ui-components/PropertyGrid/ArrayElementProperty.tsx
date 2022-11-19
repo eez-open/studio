@@ -1,5 +1,11 @@
 import React from "react";
-import { computed, observable, action, makeObservable } from "mobx";
+import {
+    computed,
+    observable,
+    action,
+    makeObservable,
+    runInAction
+} from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -89,7 +95,8 @@ const ArrayElementProperty = observer(
                     </>
                 );
             } else {
-                return null;
+                console.log("not visible");
+                return <td />;
             }
         }
     }
@@ -101,7 +108,7 @@ const ArrayElementProperties = observer(
         readOnly: boolean;
         className?: string;
         selected: boolean;
-        selectObject: (object: IEezObject) => void;
+        selectObject: (object: IEezObject, toggleEnabled: boolean) => void;
         vertical: boolean;
     }> {
         static contextType = ProjectContext;
@@ -111,7 +118,18 @@ const ArrayElementProperties = observer(
             return (
                 <tr
                     className={classNames({ selected: this.props.selected })}
-                    onClick={() => this.props.selectObject(this.props.object)}
+                    onClick={event => {
+                        if (
+                            event.nativeEvent.target instanceof
+                                HTMLTableCellElement ||
+                            event.nativeEvent.target instanceof
+                                HTMLTableRowElement
+                        ) {
+                            this.props.selectObject(this.props.object, true);
+                        } else {
+                            this.props.selectObject(this.props.object, false);
+                        }
+                    }}
                 >
                     {this.props.vertical ? (
                         <td className="inner-table">
@@ -173,8 +191,12 @@ export const ArrayProperty = observer(
 
         selectedObject: EezObject | undefined;
 
-        selectObject = action((object: EezObject) => {
-            this.selectedObject = object;
+        selectObject = action((object: EezObject, toggleEnabled: boolean) => {
+            if (this.selectedObject != object) {
+                this.selectedObject = object;
+            } else if (toggleEnabled) {
+                this.selectedObject = undefined;
+            }
         });
 
         onAdd = (event: any) => {
@@ -221,6 +243,9 @@ export const ArrayProperty = observer(
 
             if (this.selectedObject) {
                 this.context.deleteObject(this.selectedObject);
+                runInAction(() => {
+                    this.selectedObject = undefined;
+                });
             }
         };
 
