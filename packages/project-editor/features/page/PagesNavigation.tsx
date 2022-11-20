@@ -120,6 +120,10 @@ export const PageStructure = observer(
             });
         }
 
+        componentDidMount() {
+            this.context.navigationStore.setInitialSelectedPanel(this);
+        }
+
         get pageTabState() {
             const editor = this.context.editorsStore.activeEditor;
             if (!editor) {

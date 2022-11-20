@@ -1,5 +1,3 @@
-import path from "path";
-import { copyFile } from "eez-studio-shared/util-electron";
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 import type { Bitmap } from "project-editor/features/bitmap/bitmap";
 import { Page } from "project-editor/features/page/page";
@@ -9,6 +7,7 @@ import { getAncestorOfType } from "project-editor/store";
 import type { LVGLWidget } from "./widgets";
 import type { Assets } from "project-editor/build/assets";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
+import { writeTextFile } from "eez-studio-shared/util-electron";
 
 export class LVGLBuild {
     project: Project;
@@ -544,7 +543,9 @@ extern const ext_img_desc_t images[${this.project.bitmaps.length}];
                 build.line(
                     `{ NATIVE_VAR_TYPE_${variable.type.toUpperCase()}, ${this.getVariableGetterFunctionName(
                         variable.name
-                    )}, ${this.getVariableSetterFunctionName(variable.name)} }`
+                    )}, ${this.getVariableSetterFunctionName(
+                        variable.name
+                    )} }, `
                 );
             }
         }
@@ -560,16 +561,21 @@ extern const ext_img_desc_t images[${this.project.bitmaps.length}];
             return;
         }
         for (const font of this.project.fonts) {
-            if (font.lvglSourceFilePath) {
-                copyFile(
-                    this.project._DocumentStore.getAbsoluteFilePath(
-                        font.lvglSourceFilePath
-                    ),
+            if (font.lvglSourceFile) {
+                const output = getName(
+                    "ui_font_",
+                    font.name || "",
+                    NamingConvention.UnderscoreLowerCase
+                );
+
+                await writeTextFile(
                     this.project._DocumentStore.getAbsoluteFilePath(
                         this.project.settings.build.destinationFolder
                     ) +
                         "/" +
-                        path.basename(font.lvglSourceFilePath)
+                        output +
+                        ".c",
+                    font.lvglSourceFile
                 );
             }
         }

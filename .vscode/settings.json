@@ -85,7 +85,8 @@
         "streambuf": "cpp",
         "thread": "cpp",
         "cinttypes": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "string.h": "c"
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "workbench.editor.enablePreview": false,

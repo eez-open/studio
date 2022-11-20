@@ -555,3 +555,10 @@ export const LVGLWidgetStatesProperty = observer(
         }
     }
 );
+
+export function getCode<T extends string>(
+    arr: T[],
+    keyToCode: { [key in T]: number }
+) {
+    return arr.reduce((code, el) => code | keyToCode[el], 0) >>> 0;
+}

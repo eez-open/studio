@@ -778,6 +778,8 @@ export const FlowEditor = observer(
                 "ensure-selection-visible",
                 this.ensureSelectionVisible
             );
+
+            this.context.navigationStore.setInitialSelectedPanel(this);
         }
 
         componentDidCatch(error: any, info: any) {

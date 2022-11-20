@@ -198,6 +198,10 @@ export const ListNavigation = observer(
             );
         }
 
+        componentDidMount() {
+            this.context.navigationStore.setInitialSelectedPanel(this);
+        }
+
         get listAdapter() {
             return new TreeAdapter(
                 new TreeObjectAdapter(this.props.navigationObject),

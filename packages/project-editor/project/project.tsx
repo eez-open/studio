@@ -690,7 +690,6 @@ export type ProjectVersion = "v1" | "v2" | "v3";
 export class General extends EezObject {
     projectVersion: ProjectVersion = "v3";
     projectType: ProjectType;
-    assetsFolder?: string;
     scpiDocFolder?: string;
     namespace: string;
     masterProject: string;
@@ -721,10 +720,6 @@ export class General extends EezObject {
                     { id: ProjectType.LVGL, label: "LVGL" }
                 ],
                 hideInPropertyGrid: isLVGLProject
-            },
-            {
-                name: "assetsFolder",
-                type: PropertyType.RelativeFolder
             },
             {
                 name: "scpiDocFolder",
@@ -896,7 +891,6 @@ export class General extends EezObject {
         makeObservable(this, {
             projectVersion: observable,
             projectType: observable,
-            assetsFolder: observable,
             scpiDocFolder: observable,
             namespace: observable,
             masterProject: observable,

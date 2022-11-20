@@ -1,6 +1,10 @@
+import React from "react";
+import { observer } from "mobx-react";
 import { clipboard, nativeImage } from "@electron/remote";
 import { observable, computed, makeObservable, runInAction } from "mobx";
 import path from "path";
+import fs from "fs";
+import { dialog, getCurrentWindow } from "@electron/remote";
 
 import { Rect } from "eez-studio-shared/geometry";
 import { _minBy, _maxBy, _range } from "eez-studio-shared/algorithm";
@@ -24,7 +28,8 @@ import {
     MessageType,
     PropertyInfo,
     IOnSelectParams,
-    setParent
+    setParent,
+    PropertyProps
 } from "project-editor/core/object";
 import {
     getLabel,
@@ -60,7 +65,7 @@ import {
     serializePixelArray
 } from "project-editor/features/font/utils";
 import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
-import { copyFile, makeFolder } from "eez-studio-shared/util-electron";
+import { BootstrapButton } from "project-editor/ui-components/BootstrapButton";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -899,12 +904,54 @@ registerClass("FontSource", FontSource);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const ExportFontFilePropertyGridUI = observer(
+    class ExportFontFilePropertyGridUI extends React.Component<PropertyProps> {
+        export = async () => {
+            const font = this.props.objects[0] as Font;
+
+            const result = await dialog.showSaveDialog(getCurrentWindow(), {
+                filters: [{ name: "All Files", extensions: ["*"] }],
+                defaultPath: font.source!.filePath
+            });
+            let filePath = result.filePath;
+
+            if (filePath) {
+                const bin = Buffer.from(font.embeddedFontFile!, "base64");
+                try {
+                    await fs.promises.writeFile(filePath, bin);
+                    notification.info(`Font file exported.`);
+                } catch (error) {
+                    notification.error(error.toString());
+                }
+            }
+        };
+
+        render() {
+            if (this.props.objects.length > 1) {
+                return null;
+            }
+            return (
+                <BootstrapButton
+                    color="primary"
+                    size="small"
+                    onClick={this.export}
+                >
+                    Export font file...
+                </BootstrapButton>
+            );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class Font extends EezObject {
     id: number | undefined;
     name: string;
     description?: string;
     renderingEngine: FontRenderingEngine;
     source?: FontSource;
+    embeddedFontFile?: string;
     bpp: number;
     threshold: number;
     height: number;
@@ -918,8 +965,8 @@ export class Font extends EezObject {
         encodings: EncodingRange[];
         symbols: string;
     };
-    lvglBinFilePath?: string;
-    lvglSourceFilePath?: string;
+    lvglBinFile?: string;
+    lvglSourceFile?: string;
 
     constructor() {
         super();
@@ -930,6 +977,7 @@ export class Font extends EezObject {
             description: observable,
             renderingEngine: observable,
             source: observable,
+            embeddedFontFile: observable,
             bpp: observable,
             threshold: observable,
             height: observable,
@@ -939,8 +987,8 @@ export class Font extends EezObject {
             screenOrientation: observable,
             alwaysBuild: observable,
             lvglGlyphs: observable,
-            lvglBinFilePath: observable,
-            lvglSourceFilePath: observable,
+            lvglBinFile: observable,
+            lvglSourceFile: observable,
             glyphsMap: computed({ keepAlive: true }),
             maxDx: computed
         });
@@ -989,6 +1037,11 @@ export class Font extends EezObject {
                 type: PropertyType.Object,
                 typeClass: FontSource,
                 readOnlyInPropertyGrid: isLVGLProject
+            },
+            {
+                name: "embeddedFontFile",
+                type: PropertyType.String,
+                hideInPropertyGrid: true
             },
             {
                 name: "bpp",
@@ -1052,14 +1105,23 @@ export class Font extends EezObject {
                 hideInPropertyGrid: true
             },
             {
-                name: "lvglBinFilePath",
+                name: "lvglBinFile",
                 type: PropertyType.String,
                 hideInPropertyGrid: true
             },
             {
-                name: "lvglSourceFilePath",
+                name: "lvglSourceFile",
                 type: PropertyType.String,
                 hideInPropertyGrid: true
+            },
+            {
+                name: "customUI",
+                type: PropertyType.Any,
+                computed: true,
+                propertyGridRowComponent: ExportFontFilePropertyGridUI,
+                hideInPropertyGrid: (font: Font) => {
+                    return !font.embeddedFontFile;
+                }
             }
         ],
         beforeLoadHook: (font: Font, fontJs: Partial<Font>) => {
@@ -1070,7 +1132,10 @@ export class Font extends EezObject {
             }
         },
         afterLoadHook: (font: Font, projectEditorStore) => {
-            font.loadLvglGlyphs(projectEditorStore);
+            try {
+                font.migrateLvglFont(projectEditorStore);
+                font.loadLvglGlyphs(projectEditorStore);
+            } catch (err) {}
         },
         check: (font: Font) => {
             let messages: Message[] = [];
@@ -1304,40 +1369,6 @@ export class Font extends EezObject {
                         parent
                     ).getFilePathRelativeToProjectPath(result.values.filePath);
 
-                    if (
-                        projectEditorStore.project.settings.general.assetsFolder
-                    ) {
-                        const fontsRelativeFolder =
-                            projectEditorStore.project.settings.general
-                                .assetsFolder + "/fonts";
-
-                        const fontsFolder =
-                            projectEditorStore.getAbsoluteFilePath(
-                                fontsRelativeFolder
-                            );
-                        await makeFolder(fontsFolder);
-
-                        let relativePath = path
-                            .relative(fontsFolder, absoluteFilePath)
-                            .replace(/\\/g, "/");
-
-                        if (relativePath.startsWith("..")) {
-                            relativePath = path.basename(absoluteFilePath);
-                            await copyFile(
-                                absoluteFilePath,
-                                fontsFolder + "/" + relativePath
-                            );
-                        }
-
-                        relativeFilePath =
-                            fontsRelativeFolder + "/" + relativePath;
-
-                        absoluteFilePath =
-                            getProjectEditorStore(parent).getAbsoluteFilePath(
-                                relativeFilePath
-                            );
-                    }
-
                     const fontProperties = await extractFont({
                         name: result.values.name,
                         absoluteFilePath,
@@ -1361,20 +1392,6 @@ export class Font extends EezObject {
                         createBlankGlyphs: result.values.createBlankGlyphs,
                         doNotAddGlyphIfNotFound: false
                     });
-
-                    if (fontProperties.lvglBinFilePath) {
-                        fontProperties.lvglBinFilePath =
-                            projectEditorStore.getFilePathRelativeToProjectPath(
-                                fontProperties.lvglBinFilePath
-                            );
-                    }
-
-                    if (fontProperties.lvglSourceFilePath) {
-                        fontProperties.lvglSourceFilePath =
-                            projectEditorStore.getFilePathRelativeToProjectPath(
-                                fontProperties.lvglSourceFilePath
-                            );
-                    }
 
                     const font = createObject<Font>(
                         projectEditorStore,
@@ -1437,6 +1454,7 @@ export class Font extends EezObject {
             absoluteFilePath: projectEditorStore.getAbsoluteFilePath(
                 this.source!.filePath
             ),
+            embeddedFontFile: this.embeddedFontFile,
             relativeFilePath: this.source!.filePath,
             renderingEngine: this.renderingEngine,
             bpp: this.bpp,
@@ -1460,6 +1478,45 @@ export class Font extends EezObject {
                 setParent(glyph, this.glyphs);
                 this.glyphs.push(glyph);
             }
+        });
+    }
+
+    async migrateLvglFont(projectEditorStore: ProjectEditorStore) {
+        if (!this.lvglGlyphs) {
+            return;
+        }
+
+        if (this.embeddedFontFile) {
+            return;
+        }
+
+        // migrate from assets folder to the embedded asset
+
+        const absoluteFilePath = projectEditorStore.getAbsoluteFilePath(
+            this.source!.filePath
+        );
+
+        const fontProperties = await extractFont({
+            name: this.name,
+            absoluteFilePath,
+            relativeFilePath: this.source!.filePath,
+            renderingEngine: this.renderingEngine,
+            bpp: this.bpp,
+            size: this.source!.size!,
+            threshold: this.threshold,
+            createGlyphs: true,
+            encodings: this.lvglGlyphs.encodings,
+            symbols: this.lvglGlyphs.symbols,
+            createBlankGlyphs: false,
+            doNotAddGlyphIfNotFound: false,
+            getAllGlyphs: true
+        });
+
+        runInAction(() => {
+            this.source!.filePath = path.basename(absoluteFilePath);
+            this.embeddedFontFile = fontProperties.embeddedFontFile;
+            this.lvglBinFile = fontProperties.lvglBinFile;
+            this.lvglSourceFile = fontProperties.lvglSourceFile;
         });
     }
 }

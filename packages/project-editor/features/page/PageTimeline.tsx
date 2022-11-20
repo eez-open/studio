@@ -348,6 +348,8 @@ export const PageTimelineEditor = observer(
             }
 
             this.updateHorizontalScoll();
+
+            this.context.navigationStore.setInitialSelectedPanel(this);
         }
 
         componentWillUnmount() {

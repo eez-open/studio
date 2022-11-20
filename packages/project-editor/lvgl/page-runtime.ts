@@ -1,4 +1,3 @@
-import fs from "fs";
 import {
     IReactionDisposer,
     autorun,
@@ -38,7 +37,7 @@ export abstract class LVGLPageRuntime {
     fontsCache = new Map<
         Font,
         {
-            lvglBinFilePath: string;
+            lvglBinFile: string;
             fontPtrPromise: Promise<number>;
         }
     >();
@@ -114,23 +113,12 @@ export abstract class LVGLPageRuntime {
     }
 
     async loadFont(font: Font): Promise<number> {
-        if (!font.lvglBinFilePath) {
+        if (!font.lvglBinFile) {
             return 0;
         }
 
         const doLoad = async (font: Font) => {
-            const projectEditorStore = ProjectEditor.getProject(
-                this.page
-            )._DocumentStore;
-
-            const binStr = await fs.promises.readFile(
-                projectEditorStore.getAbsoluteFilePath(font.lvglBinFilePath!),
-                {
-                    encoding: "binary"
-                }
-            );
-
-            const bin = Buffer.from(binStr, "binary");
+            const bin = Buffer.from(font.lvglBinFile!, "base64");
 
             const fontMemPtr = this.wasm._malloc(bin.length);
             if (!fontMemPtr) {
@@ -152,7 +140,7 @@ export abstract class LVGLPageRuntime {
         let cashed = this.fontsCache.get(font);
         if (!cashed) {
             cashed = {
-                lvglBinFilePath: font.lvglBinFilePath,
+                lvglBinFile: font.lvglBinFile,
                 fontPtrPromise: doLoad(font)
             };
 
@@ -161,7 +149,7 @@ export abstract class LVGLPageRuntime {
 
         const fontPtr = await cashed.fontPtrPromise;
 
-        if (cashed.lvglBinFilePath == font.lvglBinFilePath) {
+        if (cashed.lvglBinFile == font.lvglBinFile) {
             return fontPtr;
         }
 

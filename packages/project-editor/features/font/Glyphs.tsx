@@ -73,6 +73,7 @@ export const Glyphs = observer(
 
         componentDidMount() {
             this.ensureVisible();
+            this.context.navigationStore.setInitialSelectedPanel(this);
         }
 
         componentDidUpdate() {

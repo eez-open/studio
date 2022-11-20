@@ -16,7 +16,8 @@ import {
     makeDerivedClassInfo,
     MessageType,
     PropertyInfo,
-    getProperty
+    getProperty,
+    LVGL_FLAG_CODES
 } from "project-editor/core/object";
 import {
     createObject,
@@ -74,6 +75,7 @@ import type { LVGLBuild } from "project-editor/lvgl/build";
 import { visitObjects } from "project-editor/core/search";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import { LVGLStylesDefinition } from "project-editor/lvgl/style";
+import { getCode } from "project-editor/lvgl/widget-common";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -893,6 +895,11 @@ export class Page extends Flow {
             this.height
         );
 
+        runtime.wasm._lvglObjClearFlag(
+            obj,
+            getCode(["SCROLLABLE"], LVGL_FLAG_CODES)
+        );
+
         this.lvglLocalStyles.lvglCreate(runtime, obj);
 
         const children = this.components
@@ -915,6 +922,8 @@ export class Page extends Flow {
 
         build.line(`lv_obj_set_pos(obj, ${this.left}, ${this.top});`);
         build.line(`lv_obj_set_size(obj, ${this.width}, ${this.height});`);
+
+        build.line(`lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);`);
 
         this.lvglLocalStyles.lvglBuild(build);
 

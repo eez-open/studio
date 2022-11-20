@@ -37,44 +37,6 @@ file(GLOB_RECURSE header_eez
     ../eez/*.h
 )
 
-# exclude STM32 platform specific files
-set(EXCLUDE_DIR "../eez/platform/stm32")
-
-foreach(TMP_PATH ${src_eez})
-    string(FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
-
-    if(NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
-        list(REMOVE_ITEM src_eez ${TMP_PATH})
-    endif()
-endforeach(TMP_PATH)
-
-foreach(TMP_PATH ${header_eez})
-    string(FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
-
-    if(NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
-        list(REMOVE_ITEM header_eez ${TMP_PATH})
-    endif()
-endforeach(TMP_PATH)
-
-# exclude libscpi
-set(EXCLUDE_DIR "../eez/libs/libscpi")
-
-foreach(TMP_PATH ${src_eez})
-    string(FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
-
-    if(NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
-        list(REMOVE_ITEM src_eez ${TMP_PATH})
-    endif()
-endforeach(TMP_PATH)
-
-foreach(TMP_PATH ${header_eez})
-    string(FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
-
-    if(NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
-        list(REMOVE_ITEM header_eez ${TMP_PATH})
-    endif()
-endforeach(TMP_PATH)
-
 list(APPEND src_files ${src_eez})
 list(APPEND header_files ${header_eez})
 

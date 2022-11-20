@@ -15,6 +15,7 @@ import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { PropertyValueHolder } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import type { LVGLBuild } from "project-editor/lvgl/build";
+import { humanize } from "eez-studio-shared/string";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1155,7 +1156,35 @@ export class LVGLStylesDefinition extends EezObject {
                                     messages.push(
                                         new Message(
                                             MessageType.ERROR,
-                                            `Bitmap not found for style property ${part} - ${state} - ${propertyInfo.name}`,
+                                            `Bitmap not found for style property ${part} - ${state} - ${humanize(
+                                                propertyInfo.name
+                                            )}`,
+                                            this
+                                        )
+                                    );
+                                }
+                            } else if (
+                                propertyInfo.lvglStylePropCode ==
+                                LVGLStylePropCode.LV_STYLE_TEXT_FONT
+                            ) {
+                                const value =
+                                    this.definition[part][state][propertyName];
+
+                                const font = ProjectEditor.findFont(
+                                    ProjectEditor.getProject(this),
+                                    value
+                                );
+
+                                if (
+                                    !font &&
+                                    BUILT_IN_FONTS.indexOf(value) == -1
+                                ) {
+                                    messages.push(
+                                        new Message(
+                                            MessageType.ERROR,
+                                            `Font not found for style property ${part} - ${state} - ${humanize(
+                                                propertyInfo.name
+                                            )}`,
                                             this
                                         )
                                     );
@@ -1217,7 +1246,7 @@ export class LVGLStylesDefinition extends EezObject {
                                         value
                                     );
 
-                                    if (font && font.lvglBinFilePath) {
+                                    if (font) {
                                         (async () => {
                                             const fontPtr =
                                                 await runtime.loadFont(font);

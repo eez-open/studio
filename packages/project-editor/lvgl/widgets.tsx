@@ -68,7 +68,8 @@ import {
     LV_EVENT_ARC_VALUE_CHANGED,
     LV_EVENT_CHECKED_STATE_CHANGED,
     LV_EVENT_SLIDER_VALUE_CHANGED,
-    LV_EVENT_SLIDER_VALUE_LEFT_CHANGED
+    LV_EVENT_SLIDER_VALUE_LEFT_CHANGED,
+    getCode
 } from "project-editor/lvgl/widget-common";
 import {
     expressionPropertyBuildEventHandlerSpecific,
@@ -141,13 +142,6 @@ function changes<T>(defaults: T[], arr: T[]) {
         added,
         cleared
     };
-}
-
-function getCode<T extends string>(
-    arr: T[],
-    keyToCode: { [key in T]: number }
-) {
-    return arr.reduce((code, el) => code | keyToCode[el], 0) >>> 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

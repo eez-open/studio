@@ -71,6 +71,10 @@ export const FontEditor = observer(
             return this.context.navigationStore.selectedGlyphObject.get() as Glyph;
         }
 
+        componentDidMount() {
+            this.context.navigationStore.setInitialSelectedPanel(this);
+        }
+
         onSelectGlyph(glyph: Glyph) {
             this.context.navigationStore.selectedGlyphObject.set(glyph);
         }

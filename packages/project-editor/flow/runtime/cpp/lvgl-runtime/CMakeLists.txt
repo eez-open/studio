@@ -16,7 +16,7 @@ set(SOURCES ${MY_SOURCES})
 # EEZ Framework
 add_definitions(-DEEZ_PLATFORM_SIMULATOR)
 add_definitions(-DEEZ_FOR_LVGL)
-add_definitions(-DOPTION_GUI=0)
+add_definitions(-DEEZ_OPTION_GUI=0)
 
 include_directories(
     ../
@@ -31,61 +31,6 @@ file(GLOB_RECURSE src_eez
     ../eez/*.cpp
     ../eez/*.c
 )
-
-# exclude gui specific files
-set(EXCLUDE_DIR "../eez/gui")
-
-foreach(TMP_PATH ${src_eez})
-    string(FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
-
-    if(NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
-        list(REMOVE_ITEM src_eez ${TMP_PATH})
-    endif()
-endforeach(TMP_PATH)
-
-# exclude fs specific files
-set(EXCLUDE_DIR "../eez/fs")
-
-foreach(TMP_PATH ${src_eez})
-    string(FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
-
-    if(NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
-        list(REMOVE_ITEM src_eez ${TMP_PATH})
-    endif()
-endforeach(TMP_PATH)
-
-# exclude STM32 platform specific files
-set(EXCLUDE_DIR "../eez/platform/stm32")
-
-foreach(TMP_PATH ${src_eez})
-    string(FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
-
-    if(NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
-        list(REMOVE_ITEM src_eez ${TMP_PATH})
-    endif()
-endforeach(TMP_PATH)
-
-# exclude libscpi
-set(EXCLUDE_DIR "../eez/libs/libscpi")
-
-foreach(TMP_PATH ${src_eez})
-    string(FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
-
-    if(NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
-        list(REMOVE_ITEM src_eez ${TMP_PATH})
-    endif()
-endforeach(TMP_PATH)
-
-# exclude agg
-set(EXCLUDE_DIR "../eez/libs/agg")
-
-foreach(TMP_PATH ${src_eez})
-    string(FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
-
-    if(NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
-        list(REMOVE_ITEM src_eez ${TMP_PATH})
-    endif()
-endforeach(TMP_PATH)
 
 list(APPEND src_files ${src_eez})
 

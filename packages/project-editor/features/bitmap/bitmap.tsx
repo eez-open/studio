@@ -1,6 +1,15 @@
 import fs from "fs";
 import path from "path";
-import { computed, observable, action, makeObservable } from "mobx";
+import React from "react";
+import {
+    computed,
+    observable,
+    action,
+    makeObservable,
+    runInAction
+} from "mobx";
+import { observer } from "mobx-react";
+import { dialog, getCurrentWindow } from "@electron/remote";
 
 import * as notification from "eez-studio-ui/notification";
 
@@ -10,7 +19,8 @@ import {
     EezObject,
     registerClass,
     PropertyType,
-    MessageType
+    MessageType,
+    PropertyProps
 } from "project-editor/core/object";
 import { validators } from "eez-studio-shared/validation";
 
@@ -37,8 +47,61 @@ import {
     BitmapColorFormat,
     isLVGLProject
 } from "project-editor/project/project-type-traits";
-import { copyFile, makeFolder } from "eez-studio-shared/util-electron";
 import { IFieldProperties } from "eez-studio-types";
+import { BootstrapButton } from "project-editor/ui-components/BootstrapButton";
+
+////////////////////////////////////////////////////////////////////////////////
+
+const ExportBitmapFilePropertyGridUI = observer(
+    class ExportBitmapFilePropertyGridUI extends React.Component<PropertyProps> {
+        export = async () => {
+            const bitmap = this.props.objects[0] as Bitmap;
+
+            // for example: data:image/png;base64,
+            const i = bitmap.image.indexOf("/");
+            const j = bitmap.image.indexOf(";");
+            const k = bitmap.image.indexOf(",");
+
+            const ext = bitmap.image.substring(i + 1, j);
+            console.log(ext);
+            console.log(bitmap.name);
+
+            const result = await dialog.showSaveDialog(getCurrentWindow(), {
+                filters: [{ name: "All Files", extensions: ["*"] }],
+                defaultPath: bitmap.name + "." + ext
+            });
+            let filePath = result.filePath;
+
+            if (filePath) {
+                const bin = Buffer.from(
+                    bitmap.image.substring(k + 1),
+                    "base64"
+                );
+                try {
+                    await fs.promises.writeFile(filePath, bin);
+                    notification.info(`Bitmap file exported.`);
+                } catch (error) {
+                    notification.error(error.toString());
+                }
+            }
+        };
+
+        render() {
+            if (this.props.objects.length > 1) {
+                return null;
+            }
+            return (
+                <BootstrapButton
+                    color="primary"
+                    size="small"
+                    onClick={this.export}
+                >
+                    Export bitmap file...
+                </BootstrapButton>
+            );
+        }
+    }
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -92,14 +155,7 @@ export class Bitmap extends EezObject {
                 name: "image",
                 type: PropertyType.Image,
                 skipSearch: true,
-                disableBitmapPreview: true,
-                defaultImagesPath: (projectEditorStore: ProjectEditorStore) =>
-                    projectEditorStore.project.settings.general.assetsFolder
-                        ? projectEditorStore.getAbsoluteFilePath(
-                              projectEditorStore.project.settings.general
-                                  .assetsFolder
-                          )
-                        : undefined
+                disableBitmapPreview: true
             },
             {
                 name: "bpp",
@@ -122,6 +178,18 @@ export class Bitmap extends EezObject {
                 name: "alwaysBuild",
                 type: PropertyType.Boolean,
                 hideInPropertyGrid: isLVGLProject
+            },
+            {
+                name: "customUI",
+                type: PropertyType.Any,
+                computed: true,
+                propertyGridRowComponent: ExportBitmapFilePropertyGridUI,
+                hideInPropertyGrid: (bitmap: Bitmap) =>
+                    bitmap.image &&
+                    typeof bitmap.image == "string" &&
+                    bitmap.image.startsWith("data:image/")
+                        ? false
+                        : true
             }
         ],
         check: (bitmap: Bitmap) => {
@@ -194,7 +262,10 @@ export class Bitmap extends EezObject {
                     : result.values.bpp
             );
         },
-        icon: "image"
+        icon: "image",
+        afterLoadHook: (bitmap: Bitmap, projectEditorStore) => {
+            bitmap.migrateLvglBitmap(projectEditorStore);
+        }
     };
 
     private _imageElement: HTMLImageElement | null | undefined = undefined;
@@ -337,6 +408,35 @@ export class Bitmap extends EezObject {
             pixels: pixels
         };
     }
+
+    async migrateLvglBitmap(projectEditorStore: ProjectEditorStore) {
+        if (this.image.startsWith("data:image/")) {
+            return;
+        }
+
+        // migrate from assets folder to the embedded asset
+
+        const absoluteFilePath = projectEditorStore.getAbsoluteFilePath(
+            this.image
+        );
+
+        const imageData = await fs.promises.readFile(
+            absoluteFilePath,
+            "base64"
+        );
+
+        const ext = path.extname(absoluteFilePath).toLowerCase();
+        let fileType: string;
+        if (ext == ".jpg" || ext == ".jpeg") {
+            fileType = "image/jpg";
+        } else {
+            fileType = "image/png";
+        }
+
+        runInAction(() => {
+            this.image = `data:${fileType};base64,` + imageData;
+        });
+    }
 }
 
 registerClass("Bitmap", Bitmap);
@@ -365,64 +465,26 @@ export async function createBitmap(
     }
 
     try {
-        if (projectEditorStore.project.settings.general.assetsFolder) {
-            const assetsFolder = projectEditorStore.getAbsoluteFilePath(
-                projectEditorStore.project.settings.general.assetsFolder
-            );
-            await makeFolder(assetsFolder);
+        const result = fs.readFileSync(filePath, "base64");
 
-            let relativePath = path
-                .relative(assetsFolder, filePath)
-                .replace(/\\/g, "/");
+        const bitmapProperties: Partial<Bitmap> = {
+            name: getUniquePropertyValue(
+                projectEditorStore.project.bitmaps,
+                "name",
+                path.parse(filePath).name
+            ) as string,
+            image: `data:${fileType};base64,` + result,
+            bpp,
+            alwaysBuild: false
+        };
 
-            if (relativePath.startsWith("..")) {
-                relativePath = path.basename(filePath);
-                copyFile(filePath, assetsFolder + "/" + relativePath);
-            }
+        const bitmap = createObject<Bitmap>(
+            projectEditorStore,
+            bitmapProperties,
+            Bitmap
+        );
 
-            const bitmapProperties: Partial<Bitmap> = {
-                name: getUniquePropertyValue(
-                    projectEditorStore.project.bitmaps,
-                    "name",
-                    path.parse(filePath).name
-                ) as string,
-                image:
-                    projectEditorStore.project.settings.general.assetsFolder +
-                    "/" +
-                    relativePath,
-                bpp,
-                alwaysBuild: false
-            };
-
-            const bitmap = createObject<Bitmap>(
-                projectEditorStore,
-                bitmapProperties,
-                Bitmap
-            );
-
-            return bitmap;
-        } else {
-            const result = fs.readFileSync(filePath, "base64");
-
-            const bitmapProperties: Partial<Bitmap> = {
-                name: getUniquePropertyValue(
-                    projectEditorStore.project.bitmaps,
-                    "name",
-                    path.parse(filePath).name
-                ) as string,
-                image: `data:${fileType};base64,` + result,
-                bpp,
-                alwaysBuild: false
-            };
-
-            const bitmap = createObject<Bitmap>(
-                projectEditorStore,
-                bitmapProperties,
-                Bitmap
-            );
-
-            return bitmap;
-        }
+        return bitmap;
     } catch (err) {
         notification.error(err);
         return undefined;

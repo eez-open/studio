@@ -6,7 +6,6 @@ import type {
 } from "project-editor/features/font/font-extract";
 
 import fs from "fs";
-import path from "path";
 import { getName, NamingConvention } from "project-editor/build/helper";
 const collectFontData = require("lv_font_conv/lib/collect_font_data");
 const getFontBinData = require("lv_font_conv/lib/writers/bin");
@@ -22,7 +21,9 @@ export class ExtractFont implements IFontExtract {
     constructor(private params: Params) {}
 
     async start() {
-        let source_bin = fs.readFileSync(this.params.absoluteFilePath);
+        let source_bin = this.params.embeddedFontFile
+            ? Buffer.from(this.params.embeddedFontFile, "base64")
+            : fs.readFileSync(this.params.absoluteFilePath);
 
         const range: number[] = [];
         this.params.encodings!.map(encodingRange =>
@@ -76,17 +77,13 @@ export class ExtractFont implements IFontExtract {
 
         this.fontData = await collectFontData(args);
 
-        // write font bin file
+        // get font bin file
         const bin: Buffer = getFontBinData(args, this.fontData)[output];
-        const lvglBinFilePath =
-            path.dirname(this.params.absoluteFilePath) + "/" + output + ".bin";
-        await fs.promises.writeFile(lvglBinFilePath, bin);
+        const lvglBinFile = bin.toString("base64");
 
-        // write font C file
+        // get font C file
         const source: Buffer = getFontSourceData(args, this.fontData)[output];
-        const lvglSourceFilePath =
-            path.dirname(this.params.absoluteFilePath) + "/" + output + ".c";
-        await fs.promises.writeFile(lvglSourceFilePath, source);
+        const lvglSourceFile = source.toString("base64");
 
         extractBusy = false;
 
@@ -98,6 +95,7 @@ export class ExtractFont implements IFontExtract {
                 size: this.params.size,
                 threshold: this.params.threshold
             },
+            embeddedFontFile: source_bin.toString("base64"),
             bpp: this.params.bpp,
             threshold: this.params.threshold,
             height: this.fontData.ascent - this.fontData.descent,
@@ -108,8 +106,8 @@ export class ExtractFont implements IFontExtract {
                 encodings: this.params.encodings!,
                 symbols
             },
-            lvglBinFilePath,
-            lvglSourceFilePath
+            lvglBinFile,
+            lvglSourceFile
         };
     }
 

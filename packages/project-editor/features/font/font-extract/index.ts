@@ -4,6 +4,7 @@ export interface FontProperties {
     name: string;
     renderingEngine: FontRenderingEngine;
     source?: FontSourceProperties;
+    embeddedFontFile?: string;
     bpp: number;
     threshold: number;
     height: number;
@@ -14,8 +15,8 @@ export interface FontProperties {
         encodings: EncodingRange[];
         symbols: string;
     };
-    lvglBinFilePath?: string;
-    lvglSourceFilePath?: string;
+    lvglBinFile?: string;
+    lvglSourceFile?: string;
 }
 
 export interface FontSourceProperties {
@@ -55,6 +56,7 @@ export interface EncodingRange {
 export interface Params {
     name?: string;
     absoluteFilePath: string;
+    embeddedFontFile?: string;
     relativeFilePath: string;
     renderingEngine: FontRenderingEngine;
     bpp: number;

@@ -42,6 +42,8 @@ export const ReadmeEditor = observer(
             }
 
             this.loadText();
+
+            this.context.navigationStore.setInitialSelectedPanel(this);
         }
 
         componentDidUpdate() {

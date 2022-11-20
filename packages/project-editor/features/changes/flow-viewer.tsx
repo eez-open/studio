@@ -94,6 +94,10 @@ export const FlowViewer = observer(
             return flowContext;
         }
 
+        componentDidMount() {
+            this.context.navigationStore.setInitialSelectedPanel(this);
+        }
+
         componentDidCatch(error: any, info: any) {
             console.error(error, info);
         }

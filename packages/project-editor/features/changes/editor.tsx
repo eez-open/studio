@@ -395,6 +395,8 @@ export const ChangesEditor = observer(
 
         componentDidMount() {
             this.refresh();
+
+            this.context.navigationStore.setInitialSelectedPanel(this);
         }
 
         async refresh() {

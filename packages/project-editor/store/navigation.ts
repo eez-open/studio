@@ -299,6 +299,10 @@ export class NavigationStore {
         };
     }
 
+    setInitialSelectedPanel(selectedPanel: IPanel) {
+        this.setSelectedPanel(selectedPanel);
+    }
+
     setSelectedPanel(selectedPanel: IPanel | undefined) {
         this.selectedPanel = selectedPanel;
     }

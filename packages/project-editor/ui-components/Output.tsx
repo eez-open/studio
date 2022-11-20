@@ -51,6 +51,10 @@ export const Messages = observer(
             });
         }
 
+        componentDidMount() {
+            this.context.navigationStore.setInitialSelectedPanel(this);
+        }
+
         scrollToBottom() {
             if (this.divRef.current && this.props.section.scrollToBottom) {
                 const div: HTMLDivElement = this.divRef.current;
