@@ -246,7 +246,7 @@ EM_PORT_API(void) lvglScreenLoad(unsigned page_index, lv_obj_t *obj) {
     screenLoad_speed = 0;
     screenLoad_delay = 0;
     if (page_index != -1) {
-        flowOnPageLoaded(page_index);
+        flowOnPageLoadedStudio(page_index);
     }
 }
 

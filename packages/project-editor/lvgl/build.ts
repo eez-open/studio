@@ -383,10 +383,13 @@ void tick_screen(int screen_index) {
         }
 
         build.text(`
+#ifndef EXT_IMG_DESC_T
+#define EXT_IMG_DESC_T
 typedef struct _ext_img_desc_t {
     const char *name;
     const lv_img_dsc_t *img_dsc;
 } ext_img_desc_t;
+#endif
 
 extern const ext_img_desc_t images[${this.project.bitmaps.length}];
 `);

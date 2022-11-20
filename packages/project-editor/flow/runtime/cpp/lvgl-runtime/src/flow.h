@@ -30,7 +30,7 @@ extern uint32_t screenLoad_delay;
 
 void flowInit(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSize);
 bool flowTick();
-void flowOnPageLoaded(unsigned pageIndex);
+void flowOnPageLoadedStudio(unsigned pageIndex);
 void flowPropagateValue(unsigned pageIndex, unsigned componentIndex, unsigned outputIndex);
 
 void addUpdateTask(enum UpdateTaskType updateTaskType, lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index);

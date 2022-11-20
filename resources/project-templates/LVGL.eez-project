@@ -6,7 +6,6 @@
       "objID": "fd434352-2277-c4a8-e87e-e96cfcbf2305",
       "projectVersion": "v3",
       "projectType": "lvgl",
-      "assetsFolder": "./assets",
       "imports": [],
       "flowSupport": true,
       "displayWidth": 800,
@@ -29,7 +28,7 @@
         {
           "objID": "2212bc5e-cf4a-4a81-c9ab-a671066d086f",
           "fileName": "screens.c",
-          "template": "#include \"screens.h\"\n#include \"images.h\"\n#include \"fonts.h\"\n#include \"actions.h\"\n#include \"../flow.h\"\n\n//${eez-studio LVGL_SCREENS_DEF}\n//${eez-studio LVGL_SCREENS_DEF_EXT}"
+          "template": "#include \"screens.h\"\n#include \"images.h\"\n#include \"fonts.h\"\n#include \"actions.h\"\n#include \"ui.h\"\n\n//${eez-studio LVGL_SCREENS_DEF}\n//${eez-studio LVGL_SCREENS_DEF_EXT}"
         },
         {
           "objID": "19d3d573-88a3-4550-f4da-753b61d7f0c4",
@@ -65,6 +64,16 @@
           "objID": "bad0addd-10de-48f7-e57e-b40fce3e7c45",
           "fileName": "fonts.h",
           "template": "#ifndef EEZ_LVGL_UI_FONTS_H\r\n#define EEZ_LVGL_UI_FONTS_H\r\n\r\n#include \"lvgl/lvgl.h\"\r\n\r\n//${eez-studio LVGL_FONTS_DECL}\r\n\r\n#endif /*EEZ_LVGL_UI_FONTS_H*/"
+        },
+        {
+          "objID": "ed7d0205-b564-4fe8-da13-3510801d23f2",
+          "fileName": "ui.h",
+          "template": "#ifndef EEZ_LVGL_UI_GUI_H\n#define EEZ_LVGL_UI_GUI_H\n\n#include <stdint.h>\n\n#include <eez/flow/lvgl_api.h>\n\nvoid ui_init();\nvoid ui_tick();\n\n#endif // EEZ_LVGL_UI_GUI_H"
+        },
+        {
+          "objID": "292907a7-7032-4814-e210-405def21551e",
+          "fileName": "ui.c",
+          "template": "#include \"ui.h\"\n#include \"screens.h\"\n#include \"images.h\"\n#include \"flow_def.h\"\n\nvoid ui_init() {\n    eez_flow_init(assets, sizeof(assets), (lv_obj_t **)&objects, sizeof(objects), images, sizeof(images));\n}\n\nvoid ui_tick() {\n    eez_flow_tick();\n    tick_screen(g_currentScreen);\n}\n"
         }
       ],
       "destinationFolder": "src\\ui"

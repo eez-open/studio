@@ -13,16 +13,9 @@
 #include <eez/flow/debugger.h>
 #include <eez/flow/components.h>
 #include <eez/flow/flow_defs_v3.h>
+#include <eez/flow/lvgl_api.h>
 
 #include "flow.h"
-
-namespace eez {
-
-ActionExecFunc g_actionExecFunctions[] = {
-    0
-};
-
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -54,78 +47,6 @@ extern "C" void addUpdateTask(UpdateTaskType updateTaskType, lv_obj_t *obj, unsi
     updateTask.component_index = component_index;
     updateTask.property_index = property_index;
     updateTasks.push_back(updateTask);
-}
-
-static char textValue[1000];
-
-const char *evalTextProperty(unsigned pageIndex, unsigned componentIndex, unsigned propertyIndex, const char *errorMessage) {
-    eez::flow::FlowState *flowState = eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
-    eez::Value value;
-    if (!eez::flow::evalProperty(flowState, componentIndex, propertyIndex, value, errorMessage)) {
-        return "";
-    }
-    value.toText(textValue, sizeof(textValue));
-    return textValue;
-}
-
-extern "C" int32_t evalIntegerProperty(unsigned pageIndex, unsigned componentIndex, unsigned propertyIndex, const char *errorMessage) {
-    eez::flow::FlowState *flowState = eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
-    eez::Value value;
-    if (!eez::flow::evalProperty(flowState, componentIndex, propertyIndex, value, errorMessage)) {
-        return 0;
-    }
-    int err;
-    int32_t intValue = value.toInt32(&err);
-    if (err) {
-        eez::flow::throwError(flowState, componentIndex, errorMessage);
-        return 0;
-    }
-    return intValue;
-}
-
-extern "C" bool evalBooleanProperty(unsigned pageIndex, unsigned componentIndex, unsigned propertyIndex, const char *errorMessage) {
-    eez::flow::FlowState *flowState = eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
-    eez::Value value;
-    if (!eez::flow::evalProperty(flowState, componentIndex, propertyIndex, value, errorMessage)) {
-        return 0;
-    }
-    int err;
-    bool booleanValue = value.toBool(&err);
-    if (err) {
-        eez::flow::throwError(flowState, componentIndex, errorMessage);
-        return 0;
-    }
-    return booleanValue;
-}
-
-extern "C" void assignIntegerProperty(unsigned pageIndex, unsigned componentIndex, unsigned propertyIndex, int32_t value, const char *errorMessage) {
-    eez::flow::FlowState *flowState = eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
-
-    auto component = flowState->flow->components[componentIndex];
-
-    eez::Value dstValue;
-    if (!eez::flow::evalAssignableExpression(flowState, componentIndex, component->properties[propertyIndex]->evalInstructions, dstValue, errorMessage)) {
-        return;
-    }
-
-    eez::Value srcValue((int)value, eez::VALUE_TYPE_INT32);
-
-    eez::flow::assignValue(flowState, componentIndex, dstValue, srcValue);
-}
-
-extern "C" void assignBooleanProperty(unsigned pageIndex, unsigned componentIndex, unsigned propertyIndex, bool value, const char *errorMessage) {
-    eez::flow::FlowState *flowState = eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
-
-    auto component = flowState->flow->components[componentIndex];
-
-    eez::Value dstValue;
-    if (!eez::flow::evalAssignableExpression(flowState, componentIndex, component->properties[propertyIndex]->evalInstructions, dstValue, errorMessage)) {
-        return;
-    }
-
-    eez::Value srcValue(value, eez::VALUE_TYPE_BOOLEAN);
-
-    eez::flow::assignValue(flowState, componentIndex, dstValue, srcValue);
 }
 
 void doUpdateTasks() {
@@ -299,16 +220,11 @@ extern "C" bool flowTick() {
     return true;
 }
 
-extern "C" void flowOnPageLoaded(unsigned pageIndex) {
+extern "C" void flowOnPageLoadedStudio(unsigned pageIndex) {
     if (currentPageId == -1) {
         currentPageId = pageIndex + 1;
     }
     eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
-}
-
-extern "C" void flowPropagateValue(unsigned pageIndex, unsigned componentIndex, unsigned outputIndex) {
-    eez::flow::FlowState *flowState = eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
-    eez::flow::propagateValue(flowState, componentIndex, outputIndex);
 }
 
 native_var_t native_vars[] = {
