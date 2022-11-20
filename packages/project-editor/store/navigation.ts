@@ -299,8 +299,15 @@ export class NavigationStore {
         };
     }
 
+    initialPanelSet = false;
+
     setInitialSelectedPanel(selectedPanel: IPanel) {
-        this.setSelectedPanel(selectedPanel);
+        if (!this.initialPanelSet) {
+            this.setSelectedPanel(selectedPanel);
+            setTimeout(() => {
+                this.initialPanelSet = true;
+            }, 100);
+        }
     }
 
     setSelectedPanel(selectedPanel: IPanel | undefined) {

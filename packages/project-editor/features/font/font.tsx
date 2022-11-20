@@ -1517,6 +1517,7 @@ export class Font extends EezObject {
             this.embeddedFontFile = fontProperties.embeddedFontFile;
             this.lvglBinFile = fontProperties.lvglBinFile;
             this.lvglSourceFile = fontProperties.lvglSourceFile;
+            projectEditorStore.modified = true;
         });
     }
 }
