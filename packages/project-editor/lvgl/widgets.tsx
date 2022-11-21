@@ -69,6 +69,7 @@ import {
     LV_EVENT_CHECKED_STATE_CHANGED,
     LV_EVENT_SLIDER_VALUE_CHANGED,
     LV_EVENT_SLIDER_VALUE_LEFT_CHANGED,
+    LV_EVENT_TEXTAREA_TEXT_CHANGED,
     getCode
 } from "project-editor/lvgl/widget-common";
 import {
@@ -1509,17 +1510,6 @@ export class LVGLWidget extends Widget {
     }
 
     buildEventHandler(build: LVGLBuild) {
-        this.buildEventHandlerSpecific(build);
-    }
-
-    buildEventHandlerSpecific(build: LVGLBuild) {
-        // bool state_new = evalBooleanProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Checked state");
-        // bool state_cur = lv_obj_has_state(updateTask.obj, LV_STATE_CHECKED);
-        // if (state_new != state_cur) {
-        //     if (state_new) lv_obj_add_state(updateTask.obj, LV_STATE_CHECKED);
-        //     else lv_obj_clear_state(updateTask.obj, LV_STATE_CHECKED);
-        // }
-
         if (this.checkedStateType == "expression") {
             build.line("if (event == LV_EVENT_VALUE_CHANGED) {");
             build.indent();
@@ -1555,7 +1545,11 @@ export class LVGLWidget extends Widget {
             build.unindent();
             build.line("}");
         }
+
+        this.buildEventHandlerSpecific(build);
     }
+
+    buildEventHandlerSpecific(build: LVGLBuild) {}
 
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
@@ -3629,6 +3623,23 @@ export class LVGLTextareaWidget extends LVGLWidget {
         return obj;
     }
 
+    override get hasEventHandler() {
+        return super.hasEventHandler || this.textType == "expression";
+    }
+
+    override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
+        const valueExpr = this.getExpressionPropertyData(runtime, "text");
+        if (valueExpr) {
+            runtime.wasm._lvglAddObjectFlowCallback(
+                obj,
+                LV_EVENT_TEXTAREA_TEXT_CHANGED,
+                valueExpr.flowIndex,
+                valueExpr.componentIndex,
+                valueExpr.propertyIndex
+            );
+        }
+    }
+
     override lvglBuildObj(build: LVGLBuild) {
         build.line(`lv_obj_t *obj = lv_textarea_create(parent_obj);`);
     }
@@ -3680,6 +3691,15 @@ export class LVGLTextareaWidget extends LVGLWidget {
             "text" as const,
             "lv_textarea_get_text",
             "lv_textarea_set_text"
+        );
+    }
+
+    override buildEventHandlerSpecific(build: LVGLBuild) {
+        expressionPropertyBuildEventHandlerSpecific<LVGLTextareaWidget>(
+            build,
+            this,
+            "text" as const,
+            "lv_textarea_get_text"
         );
     }
 }

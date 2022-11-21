@@ -383,6 +383,7 @@ void trt(lv_event_t *e) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#define LV_EVENT_TEXTAREA_TEXT_CHANGED 0x79
 #define LV_EVENT_CHECKED_STATE_CHANGED 0x7A
 #define LV_EVENT_ARC_VALUE_CHANGED 0x7B
 #define LV_EVENT_SLIDER_VALUE_CHANGED 0x7C
@@ -399,6 +400,17 @@ struct FlowEventCallbackData {
 void flow_event_callback(lv_event_t *e) {
     FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
     flowPropagateValue(data->page_index, data->component_index, data->output_or_property_index);
+}
+
+void flow_event_textarea_text_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target(e);
+
+        FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+        const char *value = lv_textarea_get_text(ta);
+        assignStringProperty(data->page_index, data->component_index, data->output_or_property_index, value, "Failed to assign Text in Textarea widget");
+    }
 }
 
 void flow_event_checked_state_changed_callback(lv_event_t *e) {
@@ -494,7 +506,9 @@ EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filte
     data->component_index = component_index;
     data->output_or_property_index = output_or_property_index;
 
-    if (filter == LV_EVENT_CHECKED_STATE_CHANGED) {
+    if (filter == LV_EVENT_TEXTAREA_TEXT_CHANGED) {
+        lv_obj_add_event_cb(obj, flow_event_textarea_text_changed_callback, LV_EVENT_VALUE_CHANGED, data);
+    } else if (filter == LV_EVENT_CHECKED_STATE_CHANGED) {
         lv_obj_add_event_cb(obj, flow_event_checked_state_changed_callback, LV_EVENT_VALUE_CHANGED, data);
     } else if (filter == LV_EVENT_ARC_VALUE_CHANGED) {
         lv_obj_add_event_cb(obj, flow_event_arc_value_changed_callback, LV_EVENT_VALUE_CHANGED, data);

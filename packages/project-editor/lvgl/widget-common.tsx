@@ -30,6 +30,7 @@ import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const LV_EVENT_TEXTAREA_TEXT_CHANGED = 0x79;
 export const LV_EVENT_CHECKED_STATE_CHANGED = 0x7a;
 export const LV_EVENT_ARC_VALUE_CHANGED = 0x7b;
 export const LV_EVENT_SLIDER_VALUE_CHANGED = 0x7c;

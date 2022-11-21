@@ -238,11 +238,15 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
 
             if (propertyInfo.expressionType == "string") {
                 build.line(
-                    `const char *new_val = evalTextProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Text in Label widget");`
+                    `const char *new_val = evalTextProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate ${humanize(
+                        propName
+                    )} in ${getComponentName(widget.type)} widget");`
                 );
             } else if (propertyInfo.expressionType == "integer") {
                 build.line(
-                    `int32_t new_val = evalIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Value in Slider widget");`
+                    `int32_t new_val = evalIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate ${humanize(
+                        propName
+                    )} in ${getComponentName(widget.type)} widget");`
                 );
             } else {
                 console.error("UNEXPECTED!");
@@ -310,22 +314,29 @@ export function expressionPropertyBuildEventHandlerSpecific<
     getFunc: string
 ) {
     if ((widget as any)[propName + "Type"] == "expression") {
+        const propertyInfo = findPropertyByNameInClassInfo(
+            getClassInfo(widget),
+            propName
+        );
+        if (!propertyInfo) {
+            console.error("UNEXPECTED!");
+            return;
+        }
+
         build.line("if (event == LV_EVENT_VALUE_CHANGED) {");
         build.indent();
 
         build.line(`lv_obj_t *ta = lv_event_get_target(e);`);
-        build.line(`int32_t value = ${getFunc}(ta);`);
+        if (propertyInfo.expressionType == "integer") {
+            build.line(`int32_t value = ${getFunc}(ta);`);
+        } else if (propertyInfo.expressionType == "string") {
+            build.line(`const char *value = ${getFunc}(ta);`);
+        } else {
+            console.error("UNEXPECTED!");
+            return;
+        }
 
         if (build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport) {
-            const propertyInfo = findPropertyByNameInClassInfo(
-                getClassInfo(widget),
-                propName
-            );
-            if (!propertyInfo) {
-                console.error("UNEXPECTED!");
-                return;
-            }
-
             const page = getAncestorOfType(
                 widget,
                 ProjectEditor.PageClass.classInfo
@@ -340,6 +351,12 @@ export function expressionPropertyBuildEventHandlerSpecific<
             if (propertyInfo.expressionType == "integer") {
                 build.line(
                     `assignIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, value, "Failed to assign ${humanize(
+                        propName
+                    )} in ${getComponentName(widget.type)} widget");`
+                );
+            } else if (propertyInfo.expressionType == "string") {
+                build.line(
+                    `assignStringProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, value, "Failed to assign ${humanize(
                         propName
                     )} in ${getComponentName(widget.type)} widget");`
                 );
