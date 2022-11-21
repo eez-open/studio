@@ -75,7 +75,6 @@ export class Editor implements IEditor {
     }
 
     makeActive() {
-        console.log("makeActive");
         this.projectEditorStore.editorsStore.activateEditor(this);
         if (this.projectEditorStore.runtime) {
             const flow = ProjectEditor.getFlow(this.object);

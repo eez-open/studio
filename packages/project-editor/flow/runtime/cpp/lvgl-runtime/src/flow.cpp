@@ -203,9 +203,9 @@ extern "C" void flowInit(uint32_t wasmModuleId, uint8_t *assets, uint32_t assets
     eez::flow::getLvglObjectFromIndexHook = getLvglObjectFromIndex;
     eez::flow::getLvglImageByNameHook = getLvglImageByName;
 
-    eez::flow::start(eez::g_mainAssets);
-
     eez::flow::onDebuggerClientConnected();
+
+    eez::flow::start(eez::g_mainAssets);
 }
 
 extern "C" bool flowTick() {
