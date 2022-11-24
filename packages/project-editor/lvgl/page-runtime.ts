@@ -12,11 +12,15 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Bitmap } from "project-editor/features/bitmap/bitmap";
 import type { Font } from "project-editor/features/font/font";
 import {
+    createObject,
     getObjectPathAsString,
     ProjectEditorStore
 } from "project-editor/store";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
+import type { Project } from "project-editor/project/project";
+import { getClassesDerivedFrom, setParent } from "project-editor/core/object";
+import type { LVGLStyle } from "./style";
 
 const lvgl_flow_runtime_constructor = require("project-editor/flow/runtime/lvgl_runtime.js");
 
@@ -539,6 +543,211 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
             )!.index;
         }
         return this.widgetIndex++;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
+    autorRunDispose: IReactionDisposer | undefined;
+    requestAnimationFrameId: number | undefined;
+
+    wasmInitialized = false;
+
+    lvglWidgetsMap = new Map<string, LVGLWidget>();
+
+    canvas: HTMLCanvasElement | null = null;
+    selectedStyle: LVGLStyle | undefined;
+
+    constructor(public project: Project) {
+        const page = createObject<Page>(
+            project._DocumentStore,
+            {
+                components: getClassesDerivedFrom(
+                    ProjectEditor.LVGLWidgetClass
+                ).map(componentClass =>
+                    Object.assign(
+                        {},
+                        componentClass.objectClass.classInfo.defaultValue,
+                        {
+                            type: componentClass.name,
+                            localStyles: {}
+                        }
+                    )
+                )
+            },
+            ProjectEditor.PageClass,
+            undefined,
+            true
+        );
+
+        setParent(page, project);
+
+        super(page);
+
+        for (const component of page.components) {
+            this.lvglWidgetsMap.set(component.type, component as LVGLWidget);
+        }
+
+        this.mount();
+    }
+
+    get displayWidth() {
+        return this.project.settings.general.displayWidth;
+    }
+
+    get displayHeight() {
+        return this.project.settings.general.displayHeight;
+    }
+
+    get isEditor() {
+        return true;
+    }
+
+    mount() {
+        autorun(() => {
+            this.displayWidth;
+            this.displayHeight;
+
+            this.unmount();
+
+            const wasm = lvgl_flow_runtime_constructor(() => {
+                if (this.wasm != wasm) {
+                    return;
+                }
+
+                runInAction(() => {
+                    this.page._lvglRuntime = this;
+                    this.page._lvglObj = undefined;
+                });
+
+                this.wasm._init(0, 0, 0, this.displayWidth, this.displayHeight);
+                this.wasmInitialized = true;
+
+                this.requestAnimationFrameId = window.requestAnimationFrame(
+                    this.tick
+                );
+
+                this.autorRunDispose = autorun(() => {
+                    // set all _lvglObj to undefined
+                    runInAction(() => {
+                        this.page._lvglWidgets.forEach(
+                            widget => (widget._lvglObj = undefined)
+                        );
+                    });
+
+                    const pageObj = this.page.lvglCreate(this, 0).obj;
+                    if (!pageObj) {
+                        console.error("pageObj is undefined");
+                    }
+
+                    this.wasm._lvglScreenLoad(-1, pageObj);
+
+                    runInAction(() => {
+                        if (this.page._lvglObj != undefined) {
+                            this.wasm._lvglDeleteObject(this.page._lvglObj);
+                        }
+                        this.page._lvglObj = pageObj;
+                    });
+                });
+            });
+
+            this.wasm = wasm;
+        });
+    }
+
+    unmount() {
+        if (this.requestAnimationFrameId) {
+            window.cancelAnimationFrame(this.requestAnimationFrameId);
+            this.requestAnimationFrameId = undefined;
+        }
+
+        if (this.autorRunDispose) {
+            this.autorRunDispose();
+            this.autorRunDispose = undefined;
+        }
+
+        LVGLPageRuntime.detachRuntimeFromPage(this.page);
+    }
+
+    override getWidgetIndex(object: LVGLWidget | Page) {
+        return 0;
+    }
+
+    getLvglObj(lvglStyle: LVGLStyle) {
+        const lvglWidget = this.lvglWidgetsMap.get(lvglStyle.forWidgetType);
+        return lvglWidget ? lvglWidget._lvglObj : 0;
+    }
+
+    tick = () => {
+        if (this.canvas && this.wasmInitialized) {
+            this.wasm._mainLoop();
+
+            var buf_addr = this.wasm._getSyncedBuffer();
+            if (buf_addr != 0) {
+                const screen = new Uint8ClampedArray(
+                    this.wasm.HEAPU8.subarray(
+                        buf_addr,
+                        buf_addr + this.displayWidth * this.displayHeight * 4
+                    )
+                );
+
+                var imgData = new ImageData(
+                    screen,
+                    this.displayWidth,
+                    this.displayHeight
+                );
+
+                const ctx = this.canvas.getContext("2d");
+
+                if (ctx) {
+                    ctx.putImageData(
+                        imgData,
+                        0,
+                        0,
+                        0,
+                        0,
+                        this.displayWidth,
+                        this.displayHeight
+                    );
+                }
+            }
+        }
+
+        this.requestAnimationFrameId = window.requestAnimationFrame(this.tick);
+    };
+
+    setSelectedStyle(
+        selectedStyle: LVGLStyle | undefined,
+        canvas: HTMLCanvasElement | null
+    ) {
+        this.canvas = canvas;
+
+        runInAction(() => {
+            for (const lvglWidget of this.lvglWidgetsMap.values()) {
+                const flags = lvglWidget.flags.split("|");
+
+                const i = flags.indexOf("HIDDEN");
+                if (i != -1) {
+                    flags.splice(i, 1);
+                }
+
+                if (
+                    selectedStyle &&
+                    this.canvas &&
+                    lvglWidget.type == selectedStyle.forWidgetType
+                ) {
+                    lvglWidget.useStyle = selectedStyle.name;
+                } else {
+                    lvglWidget.useStyle = "";
+                    flags.push("HIDDEN");
+                }
+
+                lvglWidget.flags = flags.join("|");
+            }
+        });
+
+        this.selectedStyle = selectedStyle;
     }
 }
 

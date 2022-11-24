@@ -6,6 +6,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import {
     ClassInfo,
     EezObject,
+    getClassInfoLvglProperties,
     getParent,
     IPropertyGridGroupDefinition,
     LVGL_FLAG_CODES,
@@ -19,7 +20,6 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
     createObject,
     getAncestorOfType,
-    getClassInfo,
     Message,
     propertyNotSetMessage
 } from "project-editor/store";
@@ -288,8 +288,9 @@ export const LVGLWidgetFlagsProperty = observer(
             const flagNames: (keyof typeof LVGL_FLAG_CODES)[] = [];
 
             this.props.objects.map((widget: LVGLWidget) => {
-                const classInfo = getClassInfo(widget);
-                for (const flagName of classInfo.lvgl!.flags) {
+                const lvglClassInfoProperties =
+                    getClassInfoLvglProperties(widget);
+                for (const flagName of lvglClassInfoProperties.flags) {
                     if (
                         flagNames.indexOf(flagName) == -1 &&
                         LVGL_REACTIVE_FLAGS.indexOf(flagName) == -1
@@ -339,10 +340,12 @@ export const LVGLWidgetFlagsProperty = observer(
                                     if (value) {
                                         this.props.objects.forEach(
                                             (widget: LVGLWidget) => {
-                                                const classInfo =
-                                                    getClassInfo(widget);
+                                                const lvglClassInfoProperties =
+                                                    getClassInfoLvglProperties(
+                                                        widget
+                                                    );
                                                 if (
-                                                    classInfo.lvgl!.flags.indexOf(
+                                                    lvglClassInfoProperties.flags.indexOf(
                                                         flagName
                                                     ) == -1
                                                 ) {
@@ -372,10 +375,12 @@ export const LVGLWidgetFlagsProperty = observer(
                                     } else {
                                         this.props.objects.forEach(
                                             (widget: LVGLWidget) => {
-                                                const classInfo =
-                                                    getClassInfo(widget);
+                                                const lvglClassInfoProperties =
+                                                    getClassInfoLvglProperties(
+                                                        widget
+                                                    );
                                                 if (
-                                                    classInfo.lvgl!.flags.indexOf(
+                                                    lvglClassInfoProperties.flags.indexOf(
                                                         flagName
                                                     ) == -1
                                                 ) {
@@ -427,8 +432,9 @@ export const LVGLWidgetStatesProperty = observer(
             const stateNames: (keyof typeof LVGL_STATE_CODES)[] = [];
 
             this.props.objects.map((widget: LVGLWidget) => {
-                const classInfo = getClassInfo(widget);
-                for (const stateName of classInfo.lvgl!.states) {
+                const lvglClassInfoProperties =
+                    getClassInfoLvglProperties(widget);
+                for (const stateName of lvglClassInfoProperties.states) {
                     if (
                         stateNames.indexOf(stateName) == -1 &&
                         LVGL_REACTIVE_STATES.indexOf(stateName) == -1
@@ -478,10 +484,12 @@ export const LVGLWidgetStatesProperty = observer(
                                     if (value) {
                                         this.props.objects.forEach(
                                             (widget: LVGLWidget) => {
-                                                const classInfo =
-                                                    getClassInfo(widget);
+                                                const lvglClassInfoProperties =
+                                                    getClassInfoLvglProperties(
+                                                        widget
+                                                    );
                                                 if (
-                                                    classInfo.lvgl!.states.indexOf(
+                                                    lvglClassInfoProperties.states.indexOf(
                                                         stateName
                                                     ) == -1
                                                 ) {
@@ -511,10 +519,12 @@ export const LVGLWidgetStatesProperty = observer(
                                     } else {
                                         this.props.objects.forEach(
                                             (widget: LVGLWidget) => {
-                                                const classInfo =
-                                                    getClassInfo(widget);
+                                                const lvglClassInfoProperties =
+                                                    getClassInfoLvglProperties(
+                                                        widget
+                                                    );
                                                 if (
-                                                    classInfo.lvgl!.states.indexOf(
+                                                    lvglClassInfoProperties.states.indexOf(
                                                         stateName
                                                     ) == -1
                                                 ) {

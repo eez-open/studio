@@ -67,8 +67,7 @@
                   "component": "navigation",
                   "enableClose": false
                 }
-              ],
-              "active": true
+              ]
             },
             {
               "type": "tabset",
@@ -86,7 +85,8 @@
                   "component": "editors",
                   "enableClose": false
                 }
-              ]
+              ],
+              "active": true
             },
             {
               "type": "row",
@@ -937,6 +937,58 @@
                       "id": "TEXTS_STATISTICS",
                       "name": "Statistics",
                       "component": "statistics",
+                      "enableClose": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "lvglStyles": {
+      "version": 1,
+      "json": {
+        "global": {
+          "splitterSize": 4,
+          "splitterExtra": 4,
+          "tabEnableRename": false,
+          "borderEnableAutoHide": true
+        },
+        "borders": [],
+        "layout": {
+          "type": "row",
+          "id": "#4b499f22-c8bb-41fb-a384-31f578cf5c31",
+          "children": [
+            {
+              "type": "row",
+              "id": "#627d86b8-fbb0-43c4-9f81-b4d32e8b83b4",
+              "children": [
+                {
+                  "type": "tabset",
+                  "id": "#620c0b22-7ee8-408c-8bfb-e0f870e9b24d",
+                  "weight": 75,
+                  "children": [
+                    {
+                      "type": "tab",
+                      "id": "#106097e5-5a85-47a0-bb10-890a61a2657c",
+                      "name": "Styles",
+                      "component": "styles",
+                      "enableClose": false
+                    }
+                  ]
+                },
+                {
+                  "type": "tabset",
+                  "id": "#bbc96687-ac8d-4156-8317-3f07209623b7",
+                  "weight": 25,
+                  "children": [
+                    {
+                      "type": "tab",
+                      "id": "#03b257f5-b570-4d4e-b173-35a8f7f72191",
+                      "name": "Preview",
+                      "component": "preview",
                       "enableClose": false
                     }
                   ]

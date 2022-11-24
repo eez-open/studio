@@ -103,6 +103,7 @@ import { PageTabState } from "project-editor/features/page/PageEditor";
 import { validators } from "eez-studio-shared/validation";
 import { createProjectTypeTraits } from "./project-type-traits";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
+import type { LVGLStyles } from "project-editor/lvgl/style";
 
 export { ProjectType } from "project-editor/core/object";
 
@@ -1187,7 +1188,8 @@ function getProjectClassInfo() {
                     ) {
                         if (
                             projectFeature.key == "fonts" ||
-                            projectFeature.key == "bitmaps"
+                            projectFeature.key == "bitmaps" ||
+                            projectFeature.key == "lvglStyles"
                         ) {
                             return false;
                         }
@@ -1199,6 +1201,10 @@ function getProjectClassInfo() {
                             projectFeature.key == "scpi" ||
                             projectFeature.key == "shortcuts"
                         ) {
+                            return true;
+                        }
+                    } else {
+                        if (projectFeature.key == "lvglStyles") {
                             return true;
                         }
                     }
@@ -1515,6 +1521,8 @@ export class Project extends EezObject {
 
     colors: Color[];
     themes: Theme[];
+
+    lvglStyles: LVGLStyles;
 
     get _lvglIdentifiers() {
         const widgetIdentifiers = new Map<

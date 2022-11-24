@@ -156,6 +156,14 @@ export class LVGLBuild {
         );
     }
 
+    getStyleFunctionName(lvglStyleName: string) {
+        return getName(
+            "apply_style_",
+            lvglStyleName,
+            NamingConvention.UnderscoreLowerCase
+        );
+    }
+
     async buildScreensDecl() {
         this.result = "";
         this.indentation = "";
@@ -340,6 +348,14 @@ export class LVGLBuild {
 
         build.line("void create_screens() {");
         build.indent();
+        build.line("lv_disp_t *dispp = lv_disp_get_default();");
+        build.line(
+            "lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), false, LV_FONT_DEFAULT);"
+        );
+        build.line("lv_disp_set_theme(dispp, theme);");
+
+        build.line("");
+
         for (const page of this.project.pages) {
             build.line(`${this.getScreenCreateFunctionName(page)}();`);
         }
@@ -555,6 +571,44 @@ extern const ext_img_desc_t images[${this.project.bitmaps.length}];
 
         build.unindent();
         build.line("};");
+
+        return this.result;
+    }
+
+    async buildStylesDef() {
+        this.result = "";
+        this.indentation = "";
+        const build = this;
+
+        for (const lvglStyle of this.project.lvglStyles.styles) {
+            build.line(
+                `extern void ${this.getStyleFunctionName(
+                    lvglStyle.name
+                )}(lv_obj_t *obj);`
+            );
+        }
+
+        return this.result;
+    }
+
+    async buildStylesDecl() {
+        this.result = "";
+        this.indentation = "";
+        const build = this;
+
+        for (const lvglStyle of this.project.lvglStyles.styles) {
+            build.line(
+                `void ${this.getStyleFunctionName(
+                    lvglStyle.name
+                )}(lv_obj_t *obj) {`
+            );
+            build.indent();
+
+            lvglStyle.definition.lvglBuild(build);
+
+            build.unindent();
+            build.line("};");
+        }
 
         return this.result;
     }

@@ -160,7 +160,9 @@ const TreeRow = observer(
                 {renderItem ? (
                     renderItem(treeAdapter.getItemId(item))
                 ) : (
-                    <span>{treeAdapter.itemToString(item)}</span>
+                    <span style={{ flex: 1 }}>
+                        {treeAdapter.itemToString(item)}
+                    </span>
                 )}
             </div>
         );
@@ -858,7 +860,12 @@ export const Tree = observer(
                                 onClick={this.onRowClick}
                                 onMouseUp={this.onRowMouseUp}
                                 onDoubleClick={this.onRowDoubleClick}
-                                collapsable={row.collapsable}
+                                collapsable={
+                                    row.collapsable &&
+                                    treeAdapter.getShowTreeCollapseIcon(
+                                        row.item
+                                    )
+                                }
                                 onToggleCollapse={this.onRowToggleCollapse}
                                 onEditItem={onEditItem}
                                 renderItem={renderItem}

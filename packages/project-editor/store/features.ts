@@ -23,6 +23,7 @@ import microPythonFeature from "project-editor/features/micropython/micropython"
 import textsFeature from "project-editor/features/texts";
 import readmeFeature from "project-editor/features/readme";
 import diffFeature from "project-editor/features/changes";
+import jsonStylesFeature from "project-editor/lvgl/style";
 
 export type BuildResult = { [key: string]: string };
 
@@ -58,6 +59,7 @@ let features: ProjectEditorFeature[] = [
     actionFeature,
     variableFeature,
     styleFeature,
+    jsonStylesFeature,
     fontFeature,
     textsFeature,
     bitmapFeature,

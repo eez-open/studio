@@ -9,7 +9,7 @@ import type { Component } from "project-editor/flow/component";
 import { getObjectPathAsString } from "project-editor/store/helper";
 import type { ProjectEditorStore } from "project-editor/store";
 import { Section } from "project-editor/store/output-sections";
-import type { LVGLParts } from "project-editor/lvgl/style";
+import type { LVGLParts } from "project-editor/lvgl/style-definition";
 
 ////////////////////////////////////////////////////////////////////////////////
 

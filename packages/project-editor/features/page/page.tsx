@@ -74,7 +74,7 @@ import {
 import type { LVGLBuild } from "project-editor/lvgl/build";
 import { visitObjects } from "project-editor/core/search";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
-import { LVGLStylesDefinition } from "project-editor/lvgl/style";
+import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
 import { getCode } from "project-editor/lvgl/widget-common";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -198,6 +198,8 @@ export class Page extends Flow {
     _lvglRuntime: LVGLPageRuntime | undefined;
     _lvglObj: number | undefined;
 
+    _refreshCounter: number = 0;
+
     constructor() {
         super();
 
@@ -221,7 +223,8 @@ export class Page extends Flow {
             lvglLocalStyles: observable,
             _lvglRuntime: observable,
             _lvglObj: observable,
-            _lvglWidgets: computed({ keepAlive: true })
+            _lvglWidgets: computed({ keepAlive: true }),
+            _refreshCounter: observable
         });
     }
 
@@ -900,7 +903,7 @@ export class Page extends Flow {
             getCode(["SCROLLABLE"], LVGL_FLAG_CODES)
         );
 
-        this.lvglLocalStyles.lvglCreate(runtime, obj);
+        this.lvglLocalStyles.lvglCreate(runtime, this, obj);
 
         const children = this.components
             .filter(component => component instanceof Widget)

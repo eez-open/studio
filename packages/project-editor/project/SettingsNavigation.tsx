@@ -269,6 +269,10 @@ export const SettingsEditor = observer(
                             ) {
                                 return false;
                             }
+                        } else {
+                            if (extension.key == "lvglStyles") {
+                                return false;
+                            }
                         }
                         return true;
                     })

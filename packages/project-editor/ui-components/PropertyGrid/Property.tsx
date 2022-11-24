@@ -60,12 +60,7 @@ export const Property = observer(
 
         changeDocumentDisposer: any;
 
-        resizeTextArea = () => {
-            if (this.textarea) {
-                this.textarea.style.height = "0";
-                this.textarea.style.height = this.textarea.scrollHeight + "px";
-            }
-        };
+        resizeObserver: ResizeObserver;
 
         constructor(props: PropertyProps) {
             super(props);
@@ -75,7 +70,22 @@ export const Property = observer(
                 componentDidUpdate: action,
                 changeValue: action.bound
             });
+
+            this.resizeObserver = new ResizeObserver(
+                this.resizeObserverCallback
+            );
         }
+
+        resizeTextArea = () => {
+            if (this.textarea) {
+                this.textarea.style.height = "0";
+                this.textarea.style.height = this.textarea.scrollHeight + "px";
+            }
+        };
+
+        resizeObserverCallback = () => {
+            this.resizeTextArea();
+        };
 
         updateChangeDocumentObserver() {
             if (this.changeDocumentDisposer) {
@@ -105,7 +115,9 @@ export const Property = observer(
                 this.updateChangeDocumentObserver();
             }
 
-            this.resizeTextArea();
+            if (this.textarea) {
+                this.resizeTextArea();
+            }
         }
 
         componentDidMount() {
@@ -125,11 +137,18 @@ export const Property = observer(
                 });
             }
 
-            this.resizeTextArea();
+            if (this.textarea) {
+                this.resizeTextArea();
+                this.resizeObserver.observe(this.textarea);
+            }
         }
 
         componentWillUnmount() {
             this.changeDocumentDisposer();
+
+            if (this.textarea) {
+                this.resizeObserver.unobserve(this.textarea);
+            }
         }
 
         onSelect = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
@@ -699,6 +718,7 @@ export const Property = observer(
                     } else {
                         return (
                             <ObjectReferenceInput
+                                objects={this.props.objects}
                                 propertyInfo={propertyInfo}
                                 value={this._value || ""}
                                 onChange={this.changeValue}

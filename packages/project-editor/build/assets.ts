@@ -1556,6 +1556,20 @@ export async function buildAssets(
                     await lvglBuild.buildNativeVarsTableDef();
             }
 
+            if (
+                !sectionNames ||
+                sectionNames.indexOf("LVGL_STYLES_DECL") !== -1
+            ) {
+                result.LVGL_STYLES_DECL = await lvglBuild.buildStylesDef();
+            }
+
+            if (
+                !sectionNames ||
+                sectionNames.indexOf("LVGL_STYLES_DEF") !== -1
+            ) {
+                result.LVGL_STYLES_DEF = await lvglBuild.buildStylesDecl();
+            }
+
             if (option == "buildFiles") {
                 await lvglBuild.copyFontFiles();
             }

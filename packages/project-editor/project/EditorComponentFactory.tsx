@@ -26,6 +26,7 @@ import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import { getAncestorOfType } from "project-editor/store";
 import { ReadmeEditor } from "project-editor/features/readme/navigation";
 import { ChangesEditor } from "project-editor/features/changes/editor";
+import { LVGLSelectedStyleEditor } from "project-editor/lvgl/style";
 
 export function getEditorComponent(
     object: IEezObject,
@@ -91,6 +92,15 @@ export function getEditorComponent(
         return {
             object: project.changes,
             EditorComponent: ChangesEditor
+        };
+    }
+
+    if (isAncestor(object, project.lvglStyles)) {
+        return {
+            object: project.lvglStyles,
+            subObject:
+                project._DocumentStore.navigationStore.selectedStyleObject.get(),
+            EditorComponent: LVGLSelectedStyleEditor
         };
     }
 

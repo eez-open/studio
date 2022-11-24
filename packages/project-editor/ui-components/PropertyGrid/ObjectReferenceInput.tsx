@@ -16,6 +16,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export const ObjectReferenceInput = observer(
     class ObjectReferenceInput extends React.Component<{
+        objects: IEezObject[];
         propertyInfo: PropertyInfo;
         value: any;
         onChange: (newValue: any) => void;
@@ -34,12 +35,7 @@ export const ObjectReferenceInput = observer(
         sortDirection: SortDirectionType = "none";
         searchText: string = "";
 
-        constructor(props: {
-            propertyInfo: PropertyInfo;
-            value: any;
-            onChange: (newValue: any) => void;
-            readOnly: boolean;
-        }) {
+        constructor(props: any) {
             super(props);
 
             makeObservable(this, {
@@ -62,6 +58,14 @@ export const ObjectReferenceInput = observer(
 
             return objects
                 .slice()
+                .filter(object =>
+                    propertyInfo.filterReferencedObjectCollection
+                        ? propertyInfo.filterReferencedObjectCollection(
+                              this.props.objects,
+                              object
+                          )
+                        : true
+                )
                 .map(object => getNameProperty(object))
                 .filter(
                     objectName =>
@@ -211,6 +215,14 @@ export const ObjectReferenceInput = observer(
                 );
             }
 
+            const placeholder =
+                this.props.propertyInfo.inputPlaceholder &&
+                this.props.objects.length == 1
+                    ? this.props.propertyInfo.inputPlaceholder(
+                          this.props.objects[0]
+                      )
+                    : "";
+
             return (
                 <>
                     <div
@@ -223,6 +235,7 @@ export const ObjectReferenceInput = observer(
                             value={value}
                             onChange={this.onChange}
                             readOnly={readOnly}
+                            placeholder={placeholder}
                         />
                         {!readOnly && (
                             <>

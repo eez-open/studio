@@ -43,6 +43,7 @@ import { TextsNavigation } from "project-editor/features/texts/navigation";
 import { Language, TextResource } from "project-editor/features/texts";
 import { ReadmeNavigation } from "project-editor/features/readme/navigation";
 import { ChangesNavigation } from "project-editor/features/changes/navigation";
+import { LVGLStyle, LVGLStylesNavigation } from "project-editor/lvgl/style";
 
 export function getNavigationComponentId(object: IEezObject) {
     const project = getProject(object);
@@ -101,6 +102,10 @@ export function getNavigationComponent(
 
     if (object == project.styles) {
         return StylesNavigation;
+    }
+
+    if (object == project.lvglStyles) {
+        return LVGLStylesNavigation;
     }
 
     if (object == project.variables) {
@@ -199,6 +204,11 @@ export function getNavigationObject(
     }
 
     ancestor = getAncestorOfType(object, Style.classInfo);
+    if (ancestor) {
+        return ancestor;
+    }
+
+    ancestor = getAncestorOfType(object, LVGLStyle.classInfo);
     if (ancestor) {
         return ancestor;
     }

@@ -267,6 +267,10 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSi
     /*Initialize the HAL (display, input devices, tick) for LittlevGL*/
     hal_init();
 
+    lv_disp_t *dispp = lv_disp_get_default();
+    lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), false, LV_FONT_DEFAULT);
+    lv_disp_set_theme(dispp, theme);
+
     if (!is_editor) {
         flowInit(wasmModuleId, assets, assetsSize);
     }

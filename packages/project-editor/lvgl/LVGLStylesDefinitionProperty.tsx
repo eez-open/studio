@@ -3,14 +3,14 @@ import { observer } from "mobx-react";
 import { computed, makeObservable, runInAction } from "mobx";
 import classNames from "classnames";
 
-import { EezObject, PropertyProps } from "project-editor/core/object";
+import {
+    EezObject,
+    getClassInfoLvglProperties,
+    PropertyProps
+} from "project-editor/core/object";
 import type { Page } from "project-editor/features/page/page";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import {
-    getAncestorOfType,
-    getClassInfo,
-    ProjectEditorStore
-} from "project-editor/store";
+import { getAncestorOfType, ProjectEditorStore } from "project-editor/store";
 import React from "react";
 import {
     getStylePropDefaultValue,
@@ -18,11 +18,14 @@ import {
     lvglProperties,
     LVGLStylesDefinition,
     PropertiesGroup
-} from "project-editor/lvgl/style";
+} from "project-editor/lvgl/style-definition";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import { ProjectContext } from "project-editor/project/context";
 import { Icon } from "eez-studio-ui/icon";
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
+import {
+    LVGLPageRuntime,
+    LVGLStylesEditorRuntime
+} from "project-editor/lvgl/page-runtime";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
 import { _intersection } from "eez-studio-shared/algorithm";
 import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
@@ -195,11 +198,12 @@ export const LVGLStylesDefinitionProperty = observer(
             let parts: LVGLParts[] | undefined;
 
             this.props.objects.forEach(widget => {
-                const classInfo = getClassInfo(widget);
+                const lvglClassInfoProperties =
+                    getClassInfoLvglProperties(widget);
                 if (parts == undefined) {
-                    parts = classInfo.lvgl!.parts;
+                    parts = lvglClassInfoProperties.parts;
                 } else {
-                    parts = _intersection(parts, classInfo.lvgl!.parts);
+                    parts = _intersection(parts, lvglClassInfoProperties.parts);
                 }
             });
 
@@ -255,6 +259,7 @@ export const LVGLStylesDefinitionProperty = observer(
         }
 
         selectNode = (node: ITreeNode<TreeNodeData>) => {
+            console.log("selectNode");
             const treeNodeData = node.data;
             if (treeNodeData != undefined) {
                 runInAction(() => {
@@ -278,12 +283,16 @@ export const LVGLStylesDefinitionProperty = observer(
 
             let runtime: LVGLPageRuntime | undefined;
             {
-                const widget = this.props.objects[0] as LVGLWidget;
-                const page = getAncestorOfType(
-                    widget,
-                    ProjectEditor.PageClass.classInfo
-                ) as Page;
-                runtime = page._lvglRuntime;
+                const object = this.props.objects[0];
+                if (object instanceof ProjectEditor.LVGLWidgetClass) {
+                    const page = getAncestorOfType(
+                        object,
+                        ProjectEditor.PageClass.classInfo
+                    ) as Page;
+                    runtime = page && page._lvglRuntime;
+                } else if (object instanceof ProjectEditor.LVGLStyleClass) {
+                    runtime = projectEditorStore.project.lvglStyles.lvglRuntime;
+                }
             }
 
             const part = this.lvglPart;
@@ -378,20 +387,47 @@ export const LVGLStylesDefinitionProperty = observer(
 
                                                     const values: any[] =
                                                         definedValues.map(
-                                                            (definedValue, i) =>
-                                                                definedValue !==
-                                                                undefined
+                                                            (
+                                                                definedValue,
+                                                                i
+                                                            ) => {
+                                                                const object =
+                                                                    this.props
+                                                                        .objects[
+                                                                        i
+                                                                    ];
+
+                                                                let lvglObj:
+                                                                    | number
+                                                                    | undefined;
+
+                                                                if (
+                                                                    object instanceof
+                                                                    ProjectEditor.LVGLWidgetClass
+                                                                ) {
+                                                                    lvglObj =
+                                                                        object._lvglObj;
+                                                                } else if (
+                                                                    object instanceof
+                                                                    ProjectEditor.LVGLStyleClass
+                                                                ) {
+                                                                    lvglObj = (
+                                                                        runtime as LVGLStylesEditorRuntime
+                                                                    ).getLvglObj(
+                                                                        object
+                                                                    );
+                                                                }
+
+                                                                return definedValue !==
+                                                                    undefined
                                                                     ? definedValue
                                                                     : getStylePropDefaultValue(
                                                                           runtime,
-                                                                          this
-                                                                              .props
-                                                                              .objects[
-                                                                              i
-                                                                          ] as LVGLWidget,
+                                                                          lvglObj,
                                                                           part,
                                                                           propertyInfo
-                                                                      )
+                                                                      );
+                                                            }
                                                         );
 
                                                     return (

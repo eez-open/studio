@@ -5,15 +5,16 @@ import { _uniqWith } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
 import { Rect } from "eez-studio-shared/geometry";
 
-import type {
+import {
     ProjectEditorStore,
-    IContextMenuContext
+    IContextMenuContext,
+    getClassInfo
 } from "project-editor/store";
 
 import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
 
 import type { ValueType } from "project-editor/features/variable/value-type";
-import type { LVGLParts } from "project-editor/lvgl/style";
+import type { LVGLParts } from "project-editor/lvgl/style-definition";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -124,6 +125,10 @@ export interface PropertyInfo {
     enumDisallowUndefined?: boolean;
     typeClass?: EezClass;
     referencedObjectCollectionPath?: string;
+    filterReferencedObjectCollection?: (
+        objects: IEezObject[],
+        referencedObject: IEezObject
+    ) => boolean;
     computed?: boolean;
     modifiable?: boolean;
     onSelect?: (
@@ -198,6 +203,7 @@ export interface PropertyInfo {
     checkboxHideLabel?: boolean;
     arrayItemOrientation?: "vertical" | "horizontal";
     disableBitmapPreview?: boolean;
+    inputPlaceholder?: (object: IEezObject) => string;
 }
 
 export type InheritedValue =
@@ -254,6 +260,14 @@ export const LVGL_REACTIVE_STATES: (keyof typeof LVGL_STATE_CODES)[] = [
     "CHECKED",
     "DISABLED"
 ];
+
+interface LVGLClassInfoProperties {
+    parts: LVGLParts[];
+    flags: (keyof typeof LVGL_FLAG_CODES)[];
+    defaultFlags: string;
+    states: (keyof typeof LVGL_STATE_CODES)[];
+    defaultStates?: string;
+}
 
 export interface ClassInfo {
     properties: PropertyInfo[];
@@ -359,13 +373,11 @@ export interface ClassInfo {
 
     onAfterPaste?: (newObject: IEezObject, fromObject: IEezObject) => void;
 
-    lvgl?: {
-        parts: LVGLParts[];
-        flags: (keyof typeof LVGL_FLAG_CODES)[];
-        defaultFlags: string;
-        states: (keyof typeof LVGL_STATE_CODES)[];
-        defaultStates?: string;
-    };
+    lvgl?:
+        | LVGLClassInfoProperties
+        | ((object: IEezObject) => LVGLClassInfoProperties);
+
+    showTreeCollapseIcon?: "always" | "has-children" | "never";
 }
 
 export function makeDerivedClassInfo(
@@ -749,6 +761,19 @@ export function areAllChildrenOfTheSameParent(objects: IEezObject[]) {
 export interface PropertyValueSourceInfo {
     source: "" | "default" | "modified" | "inherited";
     inheritedFrom?: IEezObject;
+}
+
+export function getClassInfoLvglProperties(object: IEezObject) {
+    const classInfo = getClassInfo(object);
+    if (classInfo.lvgl) {
+        if (typeof classInfo.lvgl == "object") {
+            return classInfo.lvgl;
+        }
+
+        return classInfo.lvgl(object);
+    } else {
+        return { parts: [], flags: [], defaultFlags: "", states: [] };
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

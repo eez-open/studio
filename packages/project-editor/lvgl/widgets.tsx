@@ -18,13 +18,15 @@ import {
     getProperty,
     LVGL_REACTIVE_STATES,
     LVGL_REACTIVE_FLAGS,
-    MessageType
+    MessageType,
+    getClassInfoLvglProperties
 } from "project-editor/core/object";
 import {
     getAncestorOfType,
     getChildOfObject,
     getClassInfo,
     getObjectPathAsString,
+    getProjectEditorStore,
     Message,
     propertyNotFoundMessage,
     propertyNotSetMessage
@@ -47,7 +49,10 @@ import {
 } from "project-editor/flow/component";
 
 import { escapeCString } from "project-editor/build/helper";
-import { LVGLParts, LVGLStylesDefinition } from "project-editor/lvgl/style";
+import {
+    LVGLParts,
+    LVGLStylesDefinition
+} from "project-editor/lvgl/style-definition";
 import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import type { LVGLCreateResultType } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
@@ -78,6 +83,8 @@ import {
     LVGLPropertyType,
     makeExpressionProperty
 } from "project-editor/lvgl/expression-property";
+import { Rect } from "eez-studio-shared/geometry";
+import { findLvglStyle, LVGLStyle } from "project-editor/lvgl/style";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -200,10 +207,10 @@ function flagEnabledInWidget(
     component: Component,
     flag: keyof typeof LVGL_FLAG_CODES
 ) {
-    const classInfo = getClassInfo(component);
+    const lvglClassInfoProperties = getClassInfoLvglProperties(component);
     return (
         component instanceof LVGLWidget &&
-        classInfo.lvgl!.flags.indexOf(flag) != -1
+        lvglClassInfoProperties.flags.indexOf(flag) != -1
     );
 }
 
@@ -211,10 +218,10 @@ function stateEnabledInWidget(
     component: Component,
     state: keyof typeof LVGL_STATE_CODES
 ) {
-    const classInfo = getClassInfo(component);
+    const lvglvglClassInfoProperties = getClassInfoLvglProperties(component);
     return (
         component instanceof LVGLWidget &&
-        classInfo.lvgl!.states.indexOf(state) != -1
+        lvglvglClassInfoProperties.states.indexOf(state) != -1
     );
 }
 
@@ -244,6 +251,7 @@ export class LVGLWidget extends Widget {
     disabledStateType: LVGLPropertyType;
     states: string;
 
+    useStyle: string;
     localStyles: LVGLStylesDefinition;
 
     eventHandlers: EventHandler[];
@@ -512,6 +520,28 @@ export class LVGLWidget extends Widget {
                 enumerable: false
             },
             {
+                name: "useStyle",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "lvglStyles/styles",
+                filterReferencedObjectCollection: (
+                    objects: IEezObject[],
+                    lvglStyle: LVGLStyle
+                ) =>
+                    objects.length == 1 &&
+                    objects[0] instanceof LVGLWidget &&
+                    lvglStyle.forWidgetType == objects[0].type &&
+                    ProjectEditor.getProject(lvglStyle).lvglStyles
+                        .defaultStyles[lvglStyle.forWidgetType] !=
+                        lvglStyle.name,
+                propertyGridGroup: styleGroup,
+                inputPlaceholder: (widget: LVGLWidget) => {
+                    return (
+                        ProjectEditor.getProject(widget).lvglStyles
+                            .defaultStyles[widget.type] ?? undefined
+                    );
+                }
+            },
+            {
                 name: "localStyles",
                 type: PropertyType.Object,
                 typeClass: LVGLStylesDefinition,
@@ -611,13 +641,77 @@ export class LVGLWidget extends Widget {
             disabledStateType: "literal"
         },
 
+        setRect: (widget: LVGLWidget, value: Partial<Rect>) => {
+            const projectEditorStore = getProjectEditorStore(widget);
+
+            const props: Partial<Rect> = {};
+
+            const { left, top } = widget.fromRelativePosition(
+                value.left ?? widget.rect.left,
+                value.top ?? widget.rect.top
+            );
+
+            if (widget.leftUnit == "px" && left !== widget.left) {
+                props.left = left;
+            }
+
+            if (widget.topUnit == "px" && top !== widget.top) {
+                props.top = top;
+            }
+
+            const width = value.width ?? widget.rect.width;
+            const height = value.height ?? widget.rect.height;
+
+            if (
+                widget.widthUnit == "px" &&
+                !(widget.autoSize == "width" || widget.autoSize == "both")
+            ) {
+                if (width !== widget.width) {
+                    props.width = width;
+                }
+            }
+
+            if (
+                widget.heightUnit == "px" &&
+                !(widget.autoSize == "height" || widget.autoSize == "both")
+            ) {
+                if (height !== widget.height) {
+                    props.height = height;
+                }
+            }
+
+            projectEditorStore.updateObject(widget, props);
+        },
+
         check: (widget: LVGLWidget) => {
             let messages: Message[] = [];
+
+            const projectEditorStore = getProjectEditorStore(widget);
+
+            if (widget.useStyle) {
+                const lvglStyle = findLvglStyle(
+                    projectEditorStore.project,
+                    widget.useStyle
+                );
+                if (!lvglStyle) {
+                    messages.push(propertyNotFoundMessage(widget, "useStyle"));
+                } else if (widget.type != lvglStyle.forWidgetType) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Style "${widget.useStyle}" is not for this widget type`,
+                            getChildOfObject(widget, "useStyle")
+                        )
+                    );
+                }
+            }
 
             messages.push(...widget.localStyles.check());
 
             return messages;
-        }
+        },
+
+        showTreeCollapseIcon: "has-children"
     });
 
     constructor() {
@@ -643,6 +737,7 @@ export class LVGLWidget extends Widget {
             disabledStateType: observable,
             states: observable,
             allStates: computed,
+            useStyle: observable,
             localStyles: observable,
             eventHandlers: observable,
             state: computed,
@@ -831,8 +926,12 @@ export class LVGLWidget extends Widget {
                     }
                 }
             } else {
-                const classInfo = getClassInfo(this);
-                if (state in (classInfo.lvgl!.defaultStates ?? "").split("|")) {
+                const lvglClassInfoProperties =
+                    getClassInfoLvglProperties(this);
+                if (
+                    state in
+                    (lvglClassInfoProperties.defaultStates ?? "").split("|")
+                ) {
                     if (states.indexOf(state) == -1) {
                         states.push(state);
                     }
@@ -856,8 +955,12 @@ export class LVGLWidget extends Widget {
                     }
                 }
             } else {
-                const classInfo = getClassInfo(this);
-                if (flag in (classInfo.lvgl!.defaultFlags ?? "").split("|")) {
+                const lvglClassInfoProperties =
+                    getClassInfoLvglProperties(this);
+                if (
+                    flag in
+                    (lvglClassInfoProperties.defaultFlags ?? "").split("|")
+                ) {
                     if (flags.indexOf(flag) == -1) {
                         flags.push(flag);
                     }
@@ -868,6 +971,15 @@ export class LVGLWidget extends Widget {
         return flags.join("|");
     }
 
+    get styleTemplate() {
+        if (this.useStyle) {
+            return this.useStyle;
+        }
+        return ProjectEditor.getProject(this).lvglStyles.defaultStyles[
+            this.type
+        ];
+    }
+
     override lvglCreate(
         runtime: LVGLPageRuntime,
         parentObj: number
@@ -875,6 +987,8 @@ export class LVGLWidget extends Widget {
         const obj = this.lvglCreateObj(runtime, parentObj);
 
         runInAction(() => (this._lvglObj = obj));
+
+        const project = ProjectEditor.getProject(this);
 
         if (runtime.wasm.assetsMap) {
             const pagePath = getObjectPathAsString(runtime.page);
@@ -903,7 +1017,7 @@ export class LVGLWidget extends Widget {
                         }
                     } else if (eventHandler.action) {
                         const action = ProjectEditor.findAction(
-                            ProjectEditor.getProject(this),
+                            project,
                             eventHandler.action
                         );
                         if (action) {
@@ -927,12 +1041,12 @@ export class LVGLWidget extends Widget {
             }
         }
 
-        const classInfo = getClassInfo(this);
+        const lvglClassInfoProperties = getClassInfoLvglProperties(this);
 
         // add/clear flags
         {
             const { added, cleared } = changes(
-                (classInfo.lvgl!.defaultFlags ?? "").split("|"),
+                (lvglClassInfoProperties.defaultFlags ?? "").split("|"),
                 this.allFlags.split("|") as (keyof typeof LVGL_FLAG_CODES)[]
             );
 
@@ -986,7 +1100,7 @@ export class LVGLWidget extends Widget {
         // add/clear states
         {
             const { added, cleared } = changes(
-                (classInfo.lvgl!.defaultStates ?? "").split("|"),
+                (lvglClassInfoProperties.defaultStates ?? "").split("|"),
                 this.allStates.split("|") as (keyof typeof LVGL_STATE_CODES)[]
             );
 
@@ -1033,7 +1147,14 @@ export class LVGLWidget extends Widget {
         let children: LVGLCreateResultType[];
 
         if (obj) {
-            this.localStyles.lvglCreate(runtime, obj);
+            const useStyle = this.styleTemplate;
+            if (useStyle) {
+                const lvglStyle = findLvglStyle(project, useStyle);
+                if (lvglStyle) {
+                    lvglStyle.definition.lvglCreate(runtime, this, obj);
+                }
+            }
+            this.localStyles.lvglCreate(runtime, this, obj);
 
             children = this.children.map((widget: LVGLWidget) =>
                 widget.lvglCreate(runtime, obj)
@@ -1101,12 +1222,12 @@ export class LVGLWidget extends Widget {
             );
         }
 
-        const classInfo = getClassInfo(this);
+        const lvglClassInfoProperties = getClassInfoLvglProperties(this);
 
         // add/clear flags
         {
             const { added, cleared } = changes(
-                (classInfo.lvgl!.defaultFlags ?? "").split("|"),
+                (lvglClassInfoProperties.defaultFlags ?? "").split("|"),
                 this.allFlags.split("|") as (keyof typeof LVGL_FLAG_CODES)[]
             );
 
@@ -1130,7 +1251,7 @@ export class LVGLWidget extends Widget {
         // add/clear states
         {
             const { added, cleared } = changes(
-                (classInfo.lvgl!.defaultStates ?? "").split("|"),
+                (lvglClassInfoProperties.defaultStates ?? "").split("|"),
                 this.allStates.split("|") as (keyof typeof LVGL_STATE_CODES)[]
             );
 
@@ -1151,6 +1272,10 @@ export class LVGLWidget extends Widget {
             }
         }
 
+        const useStyle = this.styleTemplate;
+        if (useStyle) {
+            build.line(`${build.getStyleFunctionName(useStyle)}(obj);`);
+        }
         this.localStyles.lvglBuild(build);
 
         if (this.children.length > 0) {
@@ -1474,9 +1599,9 @@ export class LVGLWidget extends Widget {
 
     get part() {
         const project = ProjectEditor.getProject(this);
-        const classInfo = getClassInfo(this);
+        const lvglClassInfoProperties = getClassInfoLvglProperties(this);
         if (
-            classInfo.lvgl!.parts.indexOf(
+            lvglClassInfoProperties.parts.indexOf(
                 project._DocumentStore.uiStateStore.lvglPart
             ) != -1
         ) {
@@ -4517,24 +4642,24 @@ export class LVGLKeyboardWidget extends LVGLWidget {
             height: 120,
             flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
             localStyles: {
-                definition: {
-                    MAIN: {
-                        DEFAULT: {
-                            align: "DEFAULT",
-                            pad_top: 0,
-                            pad_bottom: 0,
-                            pad_left: 0,
-                            pad_right: 0,
-                            pad_row: 3,
-                            pad_column: 3
-                        }
-                    },
-                    ITEMS: {
-                        DEFAULT: {
-                            radius: 6
-                        }
-                    }
-                }
+                // definition: {
+                //     MAIN: {
+                //         DEFAULT: {
+                //             align: "DEFAULT",
+                //             pad_top: 0,
+                //             pad_bottom: 0,
+                //             pad_left: 0,
+                //             pad_right: 0,
+                //             pad_row: 3,
+                //             pad_column: 3
+                //         }
+                //     },
+                //     ITEMS: {
+                //         DEFAULT: {
+                //             radius: 6
+                //         }
+                //     }
+                // }
             },
             clickableFlag: true,
             mode: "TEXT_LOWER"

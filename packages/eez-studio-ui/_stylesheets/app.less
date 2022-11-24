@@ -39,6 +39,10 @@ input::-webkitcalendar-picker-indicator {
     opacity: 100;
 }
 
+input::placeholder {
+    font-style: italic;
+}
+
 .input-group {
     flex-wrap: nowrap;
 }
@@ -2929,7 +2933,7 @@ button.EezStudio_Action {
                 }
 
                 & > td {
-                    vertical-align: middle;
+                    vertical-align: baseline;
                     padding-top: 1px;
                     padding-bottom: 1px;
                 }
@@ -5245,6 +5249,37 @@ button.EezStudio_Action {
     .EezStudio_ToolbarHeader {
         min-height: 28px;
     }
+
+    .EezStudio_Tree {
+        overflow: hidden;
+    }
+
+    .tree-row {
+        width: 100%;
+
+        &.selected,
+        &:hover {
+            .EezStudio_Toolbar {
+                padding-left: 5px;
+                position: static;
+                left: 0;
+                top: 0;
+            }
+        }
+    }
+
+    .EezStudio_WidgetTreeTrow {
+        width: 100%;
+
+        &.withIcon {
+            .EezStudio_Toolbar {
+                padding-left: 5px;
+                position: static;
+                left: 0;
+                top: 0;
+            }
+        }
+    }
 }
 
 .EezStudio_WidgetTreeTrow {
@@ -5763,6 +5798,7 @@ button.EezStudio_Action {
 }
 
 .EezStudio_LVGLStylesDefinition {
+    padding-top: 5px;
     padding-left: 5px;
     padding-bottom: 5px;
     display: flex;
@@ -5860,7 +5896,7 @@ button.EezStudio_Action {
 .EezStudio_LVGProperty {
     width: 100%;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     & > select {
         min-width: 130px;

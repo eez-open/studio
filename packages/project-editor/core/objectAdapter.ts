@@ -921,6 +921,8 @@ export interface ITreeAdapter {
     allRows: ITreeRow[];
     maxLevel?: number;
 
+    getShowTreeCollapseIcon(item: ITreeItem): boolean;
+
     sortDirection?: SortDirectionType;
 
     getItemId(item: ITreeItem): string;
@@ -1075,6 +1077,20 @@ export class TreeAdapter implements ITreeAdapter {
         enumChildren(getChildren(this.rootItem), 0);
 
         return children;
+    }
+
+    getShowTreeCollapseIcon(item: ITreeObjectAdapter) {
+        const classInfo = getClassInfo(item.object);
+        if (
+            !classInfo.showTreeCollapseIcon ||
+            classInfo.showTreeCollapseIcon == "always"
+        ) {
+            return true;
+        }
+        if (classInfo.showTreeCollapseIcon == "never") {
+            return false;
+        }
+        return item.children.length > 0;
     }
 
     getItemId(item: ITreeObjectAdapter) {

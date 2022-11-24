@@ -14,6 +14,7 @@ import {
 } from "project-editor/store/helper";
 import type { ProjectEditorStore } from "project-editor/store";
 import { objectEqual } from "eez-studio-shared/util";
+import type { LVGLStyle } from "project-editor/lvgl/style";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -71,6 +72,10 @@ export class Editor implements IEditor {
             return getTitle(this.subObject);
         }
 
+        if (this.object == this.projectEditorStore.project.lvglStyles) {
+            return `Style: ${(this.subObject as LVGLStyle).name}`;
+        }
+
         return objectToString(this.object);
     }
 
@@ -105,6 +110,9 @@ export class Editor implements IEditor {
 
         if (this.subObject != subObject) {
             if (this.object === this.projectEditorStore.project.settings) {
+                return true;
+            }
+            if (this.object === this.projectEditorStore.project.lvglStyles) {
                 return true;
             }
             return false;
