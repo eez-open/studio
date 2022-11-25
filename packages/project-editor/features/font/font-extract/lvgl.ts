@@ -60,7 +60,8 @@ export class ExtractFont implements IFontExtract {
             lcd_v: false,
             use_color_info: false,
             format: "lvgl",
-            output
+            output,
+            lv_include: this.params.lvglInclude
         };
 
         // wait for !extractBusy

@@ -1390,7 +1390,10 @@ export class Font extends EezObject {
                             : [],
                         symbols: result.values.symbols,
                         createBlankGlyphs: result.values.createBlankGlyphs,
-                        doNotAddGlyphIfNotFound: false
+                        doNotAddGlyphIfNotFound: false,
+                        lvglInclude:
+                            projectEditorStore.project.settings.build
+                                .lvglInclude
                     });
 
                     const font = createObject<Font>(
@@ -1520,6 +1523,39 @@ export class Font extends EezObject {
             projectEditorStore.modified = true;
         });
     }
+
+    async rebuildLvglFont(
+        projectEditorStore: ProjectEditorStore,
+        lvglInclude: string
+    ) {
+        if (!this.embeddedFontFile) {
+            return;
+        }
+
+        const fontProperties = await extractFont({
+            name: this.name,
+            absoluteFilePath: projectEditorStore.getAbsoluteFilePath(
+                this.source!.filePath
+            ),
+            embeddedFontFile: this.embeddedFontFile,
+            relativeFilePath: this.source!.filePath,
+            renderingEngine: this.renderingEngine,
+            bpp: this.bpp,
+            size: this.source!.size!,
+            threshold: this.threshold,
+            createGlyphs: true,
+            encodings: this.lvglGlyphs.encodings,
+            symbols: this.lvglGlyphs.symbols,
+            createBlankGlyphs: false,
+            doNotAddGlyphIfNotFound: false,
+            getAllGlyphs: true,
+            lvglInclude
+        });
+
+        projectEditorStore.updateObject(this, {
+            lvglSourceFile: fontProperties.lvglSourceFile
+        });
+    }
 }
 
 registerClass("Font", Font);
@@ -1535,6 +1571,15 @@ export function findFont(project: Project, fontName: string | undefined) {
         "fonts",
         fontName
     ) as Font | undefined;
+}
+
+export function rebuildLvglFonts(
+    projectEditorStore: ProjectEditorStore,
+    lvglInclude: string
+) {
+    projectEditorStore.project.fonts.forEach(font => {
+        font.rebuildLvglFont(projectEditorStore, lvglInclude);
+    });
 }
 
 ////////////////////////////////////////////////////////////////////////////////

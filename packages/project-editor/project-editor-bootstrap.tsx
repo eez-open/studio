@@ -45,7 +45,11 @@ import {
 
 import { findPage, Page } from "project-editor/features/page/page";
 import { Widget } from "project-editor/flow/component";
-import { findFont, Glyph } from "project-editor/features/font/font";
+import {
+    findFont,
+    Glyph,
+    rebuildLvglFonts
+} from "project-editor/features/font/font";
 import { ConnectionLine, Flow, FlowFragment } from "project-editor/flow/flow";
 import { Action, findAction } from "project-editor/features/action/action";
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
@@ -210,6 +214,7 @@ export async function initProjectEditor(
         findAction,
         findBitmap,
         findFont,
+        rebuildLvglFonts,
         getBitmapData,
         migrateProjectVersion,
         migrateProjectType,

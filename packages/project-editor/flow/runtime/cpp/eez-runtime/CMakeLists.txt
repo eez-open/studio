@@ -11,17 +11,11 @@ add_definitions(-DEMCC_DEBUG)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive -pedantic")
 
-add_definitions(-DEEZ_PLATFORM_SIMULATOR)
-add_definitions(-DEEZ_PLATFORM_SIMULATOR_UNIX)
-add_definitions(-DEEZ_PLATFORM_SIMULATOR_EMSCRIPTEN)
-
-add_definitions(-DOPTION_GUI=1)
-
 include_directories(
-    ../
-    ../eez/libs/agg
-    ../eez/platform/simulator
-    ./conf
+    ./
+    ../eez-framework/src/
+    ../eez-framework/src/eez/libs/agg
+    ../eez-framework/src/eez/platform/simulator
 )
 
 set(src_files)
@@ -30,15 +24,15 @@ set(header_files)
 # ###############################################################################
 # EEZ Framework files
 file(GLOB_RECURSE src_eez
-    ../eez/*.cpp
-    ../eez/*.c
+    ../eez-framework/src/eez/*.cpp
+    ../eez-framework/src/eez/*.c
 )
 file(GLOB_RECURSE header_eez
-    ../eez/*.h
+    ../eez-framework/src/eez/*.h
 )
 
 # exclude libscpi
-set(EXCLUDE_DIR "../eez/libs/libscpi")
+set(EXCLUDE_DIR "../eez-framework/src/eez/libs/libscpi")
 
 foreach(TMP_PATH ${src_eez})
     string(FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)

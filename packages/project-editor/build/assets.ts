@@ -1483,6 +1483,10 @@ export async function buildAssets(
             await lvglBuild.buildScreensDef();
 
             // PASS 2
+            if (!sectionNames || sectionNames.indexOf("LVGL_INCLUDE") !== -1) {
+                result.LVGL_INCLUDE = `#include <${assets.projectEditorStore.project.settings.build.lvglInclude}>`;
+            }
+
             if (
                 !sectionNames ||
                 sectionNames.indexOf("LVGL_SCREENS_DECL") !== -1

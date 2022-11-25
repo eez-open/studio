@@ -57,6 +57,7 @@ import {
 } from "project-editor/store";
 import {
     isLVGLProject,
+    isNotLVGLProject,
     isNotV1Project
 } from "project-editor/project/project-type-traits";
 
@@ -284,6 +285,7 @@ export class Build extends EezObject {
     configurations: BuildConfiguration[];
     files: BuildFile[];
     destinationFolder?: string;
+    lvglInclude: string;
 
     static classInfo: ClassInfo = {
         label: () => "Build",
@@ -307,8 +309,34 @@ export class Build extends EezObject {
             {
                 name: "destinationFolder",
                 type: PropertyType.RelativeFolder
+            },
+            {
+                name: "lvglInclude",
+                displayName: "LVGL include",
+                type: PropertyType.String,
+                hideInPropertyGrid: isNotLVGLProject
             }
-        ]
+        ],
+
+        beforeLoadHook: (object: Build, jsObject: Partial<Build>) => {
+            if (!jsObject.lvglInclude) {
+                jsObject.lvglInclude = "lvgl/lvgl.h";
+            }
+        },
+
+        updateObjectValueHook: (build: Build, values: Partial<Build>) => {
+            const projectEditorStore = getProjectEditorStore(build);
+            if (
+                projectEditorStore.projectTypeTraits.isLVGL &&
+                values.lvglInclude != undefined &&
+                build.lvglInclude != values.lvglInclude
+            ) {
+                ProjectEditor.rebuildLvglFonts(
+                    projectEditorStore,
+                    values.lvglInclude
+                );
+            }
+        }
     };
 
     constructor() {
@@ -317,7 +345,8 @@ export class Build extends EezObject {
         makeObservable(this, {
             configurations: observable,
             files: observable,
-            destinationFolder: observable
+            destinationFolder: observable,
+            lvglInclude: observable
         });
     }
 }

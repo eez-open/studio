@@ -49,10 +49,7 @@ import {
 } from "project-editor/flow/component";
 
 import { escapeCString } from "project-editor/build/helper";
-import {
-    LVGLParts,
-    LVGLStylesDefinition
-} from "project-editor/lvgl/style-definition";
+import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
 import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import type { LVGLCreateResultType } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
@@ -740,8 +737,6 @@ export class LVGLWidget extends Widget {
             useStyle: observable,
             localStyles: observable,
             eventHandlers: observable,
-            state: computed,
-            part: computed,
             _lvglObj: observable,
             _refreshCounter: observable,
             relativePosition: computed,
@@ -1596,36 +1591,6 @@ export class LVGLWidget extends Widget {
     }
 
     lvglBuildSpecific(build: LVGLBuild): void {}
-
-    get part() {
-        const project = ProjectEditor.getProject(this);
-        const lvglClassInfoProperties = getClassInfoLvglProperties(this);
-        if (
-            lvglClassInfoProperties.parts.indexOf(
-                project._DocumentStore.uiStateStore.lvglPart
-            ) != -1
-        ) {
-            return project._DocumentStore.uiStateStore.lvglPart;
-        }
-        return "MAIN";
-    }
-    set part(part: LVGLParts) {
-        const project = ProjectEditor.getProject(this);
-        runInAction(
-            () => (project._DocumentStore.uiStateStore.lvglPart = part)
-        );
-    }
-
-    get state() {
-        const project = ProjectEditor.getProject(this);
-        return project._DocumentStore.uiStateStore.lvglState;
-    }
-    set state(state: string) {
-        const project = ProjectEditor.getProject(this);
-        runInAction(
-            () => (project._DocumentStore.uiStateStore.lvglState = state)
-        );
-    }
 
     get hasEventHandler() {
         return (

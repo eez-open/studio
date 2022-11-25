@@ -19,7 +19,6 @@ import {
     LVGLStylesDefinition,
     PropertiesGroup
 } from "project-editor/lvgl/style-definition";
-import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import { ProjectContext } from "project-editor/project/context";
 import { Icon } from "eez-studio-ui/icon";
 import {
@@ -66,35 +65,27 @@ export const LVGLStylesDefinitionProperty = observer(
         }
 
         get lvglPart() {
-            let part: LVGLParts | undefined;
+            let part: LVGLParts | undefined =
+                this.context.uiStateStore.lvglPart;
 
-            this.props.objects.forEach(widget => {
-                if (!part) {
-                    part = (widget as LVGLWidget).part;
-                } else {
-                    if (part != (widget as LVGLWidget).part) {
-                        part = "MAIN";
+            if (part) {
+                this.props.objects.forEach(object => {
+                    const lvglClassInfoProperties =
+                        getClassInfoLvglProperties(object);
+                    if (
+                        part &&
+                        lvglClassInfoProperties.parts.indexOf(part) == -1
+                    ) {
+                        part = undefined;
                     }
-                }
-            });
+                });
+            }
 
             return part || "MAIN";
         }
 
         get lvglState() {
-            let state = "";
-
-            this.props.objects.forEach(widget => {
-                if (!state) {
-                    state = (widget as LVGLWidget).state;
-                } else {
-                    if (state != (widget as LVGLWidget).state) {
-                        state = "DEFAULT";
-                    }
-                }
-            });
-
-            return state || "DEFAULT";
+            return this.context.uiStateStore.lvglState;
         }
 
         isExpanded = (propertiesGroup: PropertiesGroup) => {
@@ -259,7 +250,6 @@ export const LVGLStylesDefinitionProperty = observer(
         }
 
         selectNode = (node: ITreeNode<TreeNodeData>) => {
-            console.log("selectNode");
             const treeNodeData = node.data;
             if (treeNodeData != undefined) {
                 runInAction(() => {
