@@ -1,5 +1,5 @@
 [submodule "packages/project-editor/flow/runtime/cpp/eez"]
-	path = packages/project-editor/flow/runtime/cpp/eez
+	path = packages/project-editor/flow/runtime/cpp/eez-framework
 	url = https://github.com/eez-open/eez-framework
 [submodule "packages/project-editor/flow/runtime/cpp/lvgl-runtime/lvgl"]
 	path = packages/project-editor/flow/runtime/cpp/lvgl-runtime/lvgl
