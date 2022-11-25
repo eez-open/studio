@@ -433,17 +433,20 @@ extern const ext_img_desc_t images[${this.project.bitmaps.length}];
             build.line(``);
             build.line(`const lv_img_dsc_t ${varName} = {`);
             build.indent();
-            build.line(`.header.always_zero = 0,`);
-            build.line(`.header.w = ${bitmapData.width},`);
-            build.line(`.header.h = ${bitmapData.height},`);
-            build.line(`.data_size = sizeof(${varName}_data),`);
             build.line(
                 `.header.cf = ${
                     bitmapData.bpp == 32
                         ? "LV_IMG_CF_TRUE_COLOR_ALPHA"
-                        : "LV_IMG_CF_TRUE_COLOR"
+                        : bitmapData.bpp == 24
+                        ? "LV_IMG_CF_TRUE_COLOR"
+                        : "LV_IMG_CF_RGB565A8"
                 },`
             );
+            build.line(`.header.always_zero = 0,`);
+            build.line(`.header.reserved = 0,`);
+            build.line(`.header.w = ${bitmapData.width},`);
+            build.line(`.header.h = ${bitmapData.height},`);
+            build.line(`.data_size = sizeof(${varName}_data),`);
             build.line(`.data = ${varName}_data`);
             build.unindent();
             build.line(`};`);

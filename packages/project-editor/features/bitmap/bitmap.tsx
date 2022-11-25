@@ -163,10 +163,13 @@ export class Bitmap extends EezObject {
                 type: PropertyType.Enum,
                 enumItems: (bitmap: Bitmap) =>
                     isLVGLProject(bitmap)
-                        ? [{ id: 24 }, { id: 32 }]
+                        ? [
+                              { id: 16, label: "RGB565A8 (16 + 8 bit)" },
+                              { id: 24, label: "TRUE_COLOR (24 bit)" },
+                              { id: 32, label: "TRUE_COLOR_ALPHA (32 bit)" }
+                          ]
                         : [{ id: 16 }, { id: 32 }],
-                defaultValue: 16,
-                readOnlyInPropertyGrid: isLVGLProject
+                defaultValue: 16
             },
             {
                 name: "style",
@@ -272,7 +275,7 @@ export class Bitmap extends EezObject {
     private _imageElementImage: string;
 
     get backgroundColor() {
-        if (this.bpp !== 32) {
+        if (!isLVGLProject(this) && this.bpp !== 32) {
             const style = findStyle(
                 ProjectEditor.getProject(this),
                 this.style || "default"
@@ -329,7 +332,7 @@ export class Bitmap extends EezObject {
         return this._imageElement;
     }
 
-    get bitmapData() {
+    getBitmapData(bpp: number) {
         const image = this.imageElement;
         if (!(image instanceof HTMLImageElement)) {
             return image;
@@ -355,11 +358,11 @@ export class Bitmap extends EezObject {
 
         let imageData = ctx.getImageData(0, 0, image.width, image.height).data;
 
-        let pixels = new Uint8Array(
-            (this.bpp === 32 ? 4 : this.bpp === 24 ? 3 : 2) *
-                image.width *
-                image.height
-        );
+        const isLVGL = isLVGLProject(this);
+
+        const bytesPerPixel = bpp == 32 ? 4 : bpp == 24 ? 3 : isLVGL ? 3 : 2; // for LVGL 16 bit is actually RGB565A8 (24 bit)
+
+        let pixels = new Uint8Array(bytesPerPixel * image.width * image.height);
 
         const rgb =
             getProject(this).projectTypeTraits.bitmapColorFormat ==
@@ -369,44 +372,51 @@ export class Bitmap extends EezObject {
             let r = imageData[i];
             let g = imageData[i + 1];
             let b = imageData[i + 2];
+            let a = imageData[i + 3];
 
-            if (this.bpp === 32) {
+            if (bpp === 32) {
                 if (rgb) {
-                    let a = imageData[i + 3];
                     pixels[i] = r;
                     pixels[i + 1] = g;
                     pixels[i + 2] = b;
                     pixels[i + 3] = a;
                 } else {
-                    let a = imageData[i + 3];
                     pixels[i] = b;
                     pixels[i + 1] = g;
                     pixels[i + 2] = r;
                     pixels[i + 3] = a;
                 }
-            } else if (this.bpp == 24) {
+            } else if (bpp == 24) {
                 if (rgb) {
-                    pixels[i] = r;
-                    pixels[i + 1] = g;
-                    pixels[i + 2] = b;
+                    pixels[3 * (i / 4) + 0] = r;
+                    pixels[3 * (i / 4) + 1] = g;
+                    pixels[3 * (i / 4) + 2] = b;
                 } else {
-                    pixels[i] = b;
-                    pixels[i + 1] = g;
-                    pixels[i + 2] = r;
+                    pixels[3 * (i / 4) + 0] = b;
+                    pixels[3 * (i / 4) + 1] = g;
+                    pixels[3 * (i / 4) + 2] = r;
                 }
             } else {
                 // rrrrrggggggbbbbb
                 pixels[i / 2] = ((g & 28) << 3) | (b >> 3);
                 pixels[i / 2 + 1] = (r & 248) | (g >> 5);
+
+                if (isLVGL) {
+                    pixels[2 * image.width * image.height + i / 4] = a;
+                }
             }
         }
 
         return {
             width: image.width,
             height: image.height,
-            bpp: this.bpp,
-            pixels: pixels
+            bpp,
+            pixels
         };
+    }
+
+    get bitmapData() {
+        return this.getBitmapData(this.bpp);
     }
 
     async migrateLvglBitmap(projectEditorStore: ProjectEditorStore) {
@@ -502,9 +512,15 @@ export interface BitmapData {
     pixels: Uint8Array;
 }
 
-export async function getBitmapData(bitmap: Bitmap): Promise<BitmapData> {
+export async function getBitmapData(
+    bitmap: Bitmap,
+    bppOverride?: number
+): Promise<BitmapData> {
     while (true) {
-        const bitmapData = bitmap.bitmapData;
+        const bitmapData =
+            bppOverride != undefined
+                ? bitmap.getBitmapData(bppOverride)
+                : bitmap.bitmapData;
         if (bitmapData) {
             return bitmapData;
         }

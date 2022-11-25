@@ -290,8 +290,8 @@ const ANIM_PROPERTIES = {
     WIDTH: 2,
     HEIGHT: 3,
     OPACITY: 4,
-    IMAGE_ANGLE: 5,
-    IMAGE_ZOOM: 6
+    IMAGE_ZOOM: 5,
+    IMAGE_ANGLE: 6
 };
 
 const ANIM_PATHS = {

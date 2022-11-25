@@ -57,7 +57,7 @@ export abstract class LVGLPageRuntime {
 
     async loadBitmap(bitmap: Bitmap): Promise<number> {
         const doLoad = async (bitmap: Bitmap) => {
-            const bitmapData = await ProjectEditor.getBitmapData(bitmap);
+            const bitmapData = await ProjectEditor.getBitmapData(bitmap, 32);
 
             let bitmapPtr = this.wasm._malloc(
                 4 + 4 + 4 + bitmapData.pixels.length
@@ -69,11 +69,14 @@ export abstract class LVGLPageRuntime {
 
             const LV_IMG_CF_TRUE_COLOR = 4;
             const LV_IMG_CF_TRUE_COLOR_ALPHA = 5;
+            const LV_IMG_CF_RGB565A8 = 20;
 
             let header =
-                ((bitmapData.bpp == 24
+                ((bitmapData.bpp == 32
+                    ? LV_IMG_CF_TRUE_COLOR_ALPHA
+                    : bitmapData.bpp == 24
                     ? LV_IMG_CF_TRUE_COLOR
-                    : LV_IMG_CF_TRUE_COLOR_ALPHA) <<
+                    : LV_IMG_CF_RGB565A8) <<
                     0) |
                 (bitmapData.width << 10) |
                 (bitmapData.height << 21);
@@ -82,9 +85,10 @@ export abstract class LVGLPageRuntime {
 
             this.wasm.HEAP32[(bitmapPtr >> 2) + 1] = bitmapData.pixels.length;
 
-            this.wasm.HEAP32[(bitmapPtr >> 2) + 2] = bitmapPtr + 12;
-
             const offset = bitmapPtr + 12;
+
+            this.wasm.HEAP32[(bitmapPtr >> 2) + 2] = offset;
+
             for (let i = 0; i < bitmapData.pixels.length; i++) {
                 this.wasm.HEAP8[offset + i] = bitmapData.pixels[i];
             }
