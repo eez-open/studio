@@ -1538,14 +1538,26 @@ export function getStylePropDefaultValue(
             propertyInfo.type == PropertyType.Number ||
             propertyInfo.type == PropertyType.Enum
         ) {
-            let num = runtime.wasm._lvglObjGetStylePropNum(
-                lvglObj,
-                getPartCode(part),
-                propertyInfo.lvglStylePropCode
-            );
-            return propertyInfo.lvglStylePropValueRead
-                ? propertyInfo.lvglStylePropValueRead(num)
-                : num;
+            if (propertyInfo == text_font_property_info) {
+                let fontIndex = runtime.wasm._lvglObjGetStylePropBuiltInFont(
+                    lvglObj,
+                    getPartCode(part),
+                    propertyInfo.lvglStylePropCode
+                );
+
+                if (fontIndex != -1) {
+                    return BUILT_IN_FONTS[fontIndex];
+                }
+            } else {
+                let num = runtime.wasm._lvglObjGetStylePropNum(
+                    lvglObj,
+                    getPartCode(part),
+                    propertyInfo.lvglStylePropCode
+                );
+                return propertyInfo.lvglStylePropValueRead
+                    ? propertyInfo.lvglStylePropValueRead(num)
+                    : num;
+            }
         } else if (propertyInfo.type == PropertyType.Boolean) {
             let num = runtime.wasm._lvglObjGetStylePropNum(
                 lvglObj,

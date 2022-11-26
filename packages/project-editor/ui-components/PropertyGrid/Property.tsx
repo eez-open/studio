@@ -598,29 +598,33 @@ export const Property = observer(
                     );
                 }
             } else if (propertyInfo.type === PropertyType.Enum) {
+                let enumItems: EnumItem[];
+
+                if (propertyInfo.enumItems) {
+                    enumItems = getEnumItems(this.props.objects, propertyInfo);
+                } else {
+                    enumItems = [];
+                }
+
                 if (readOnly) {
+                    const enumItem = enumItems.find(
+                        enumItem => enumItem.id == this._value
+                    );
+                    const value = enumItem
+                        ? enumItem.label || humanize(enumItem.id.toString())
+                        : this._value;
+
                     return (
                         <input
                             ref={(ref: any) => (this.input = ref)}
                             type="text"
                             className="form-control"
-                            value={this._value || ""}
+                            value={value || ""}
                             readOnly
                         />
                     );
                 } else {
                     let options: JSX.Element[];
-
-                    let enumItems: EnumItem[];
-
-                    if (propertyInfo.enumItems) {
-                        enumItems = getEnumItems(
-                            this.props.objects,
-                            propertyInfo
-                        );
-                    } else {
-                        enumItems = [];
-                    }
 
                     options = enumItems.map(enumItem => {
                         const id = enumItem.id.toString();

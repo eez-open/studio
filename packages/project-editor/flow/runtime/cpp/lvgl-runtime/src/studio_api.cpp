@@ -314,30 +314,41 @@ EM_PORT_API(void) lvglObjSetLocalStylePropPtr(lv_obj_t *obj, lv_style_prop_t pro
     lv_obj_update_layout(obj);
 }
 
+static const lv_font_t *BUILT_IN_FONTS[] = {
+    &lv_font_montserrat_8,
+    &lv_font_montserrat_10,
+    &lv_font_montserrat_12,
+    &lv_font_montserrat_14,
+    &lv_font_montserrat_16,
+    &lv_font_montserrat_18,
+    &lv_font_montserrat_20,
+    &lv_font_montserrat_22,
+    &lv_font_montserrat_24,
+    &lv_font_montserrat_26,
+    &lv_font_montserrat_28,
+    &lv_font_montserrat_30,
+    &lv_font_montserrat_32,
+    &lv_font_montserrat_34,
+    &lv_font_montserrat_36,
+    &lv_font_montserrat_38,
+    &lv_font_montserrat_40,
+    &lv_font_montserrat_42,
+    &lv_font_montserrat_44,
+    &lv_font_montserrat_46,
+    &lv_font_montserrat_48
+};
+
+EM_PORT_API(int32_t) lvglObjGetStylePropBuiltInFont(lv_obj_t *obj, lv_part_t part, lv_style_prop_t prop) {
+    lv_style_value_t value = lv_obj_get_style_prop(obj, part, prop);
+    for (uint32_t fontIndex = 0; fontIndex < sizeof(BUILT_IN_FONTS) / sizeof(lv_font_t *); fontIndex++) {
+        if (value.ptr == BUILT_IN_FONTS[fontIndex]) {
+            return (int32_t)fontIndex;
+        }
+    }
+    return -1;
+}
+
 EM_PORT_API(void) lvglObjSetLocalStylePropBuiltInFont(lv_obj_t *obj, lv_style_prop_t prop, int font_index, lv_style_selector_t selector) {
-    static const lv_font_t *BUILT_IN_FONTS[] = {
-        &lv_font_montserrat_8,
-        &lv_font_montserrat_10,
-        &lv_font_montserrat_12,
-        &lv_font_montserrat_14,
-        &lv_font_montserrat_16,
-        &lv_font_montserrat_18,
-        &lv_font_montserrat_20,
-        &lv_font_montserrat_22,
-        &lv_font_montserrat_24,
-        &lv_font_montserrat_26,
-        &lv_font_montserrat_28,
-        &lv_font_montserrat_30,
-        &lv_font_montserrat_32,
-        &lv_font_montserrat_34,
-        &lv_font_montserrat_36,
-        &lv_font_montserrat_38,
-        &lv_font_montserrat_40,
-        &lv_font_montserrat_42,
-        &lv_font_montserrat_44,
-        &lv_font_montserrat_46,
-        &lv_font_montserrat_48
-    };
     lv_style_value_t value;
     value.ptr = BUILT_IN_FONTS[font_index];
     lv_obj_set_local_style_prop(obj, prop, value, selector);
