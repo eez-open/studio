@@ -132,7 +132,7 @@ interface TemplateProject {
     _image_url: string;
 }
 
-const RESOURCE_PROJECT_NAME = "MicroPython resource";
+const RESOURCE_PROJECT_NAME = "BB3 MicroPython Script";
 
 const NewProjectWizard = observer(
     class NewProjectWizard extends React.Component {
@@ -280,7 +280,7 @@ const NewProjectWizard = observer(
                         children: [
                             {
                                 id: "firmware",
-                                label: "Firmware",
+                                label: "EEZ-GUI",
                                 children: [],
                                 selected: this.type === "firmware",
                                 expanded: false,
@@ -295,8 +295,16 @@ const NewProjectWizard = observer(
                                 data: undefined
                             },
                             {
+                                id: "LVGL",
+                                label: "LVGL",
+                                children: [],
+                                selected: this.type === "LVGL",
+                                expanded: false,
+                                data: undefined
+                            },
+                            {
                                 id: "applet",
-                                label: "Applet",
+                                label: "BB3 Applet",
                                 children: [],
                                 selected: this.type === "applet",
                                 expanded: false,
@@ -307,14 +315,6 @@ const NewProjectWizard = observer(
                                 label: RESOURCE_PROJECT_NAME,
                                 children: [],
                                 selected: this.type === "resource",
-                                expanded: false,
-                                data: undefined
-                            },
-                            {
-                                id: "LVGL",
-                                label: "LVGL",
-                                children: [],
-                                selected: this.type === "LVGL",
                                 expanded: false,
                                 data: undefined
                             },
@@ -1189,7 +1189,7 @@ const NewProjectWizard = observer(
                             <div className="mb-3 row">
                                 <h6>
                                     {this.type == "applet"
-                                        ? "Applet"
+                                        ? "BB3 Applet"
                                         : RESOURCE_PROJECT_NAME}{" "}
                                     project requires BB3 project file. We have
                                     the following options:

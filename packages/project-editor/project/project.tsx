@@ -736,7 +736,10 @@ export class General extends EezObject {
                 name: "projectVersion",
                 type: PropertyType.Enum,
                 enumItems: [{ id: "v1" }, { id: "v2" }, { id: "v3" }],
-                hideInPropertyGrid: isLVGLProject
+                hideInPropertyGrid: (general: General) =>
+                    general.projectType != ProjectType.FIRMWARE &&
+                    general.projectType != ProjectType.FIRMWARE_MODULE &&
+                    general.projectType != ProjectType.RESOURCE
             },
             {
                 name: "projectType",
@@ -745,11 +748,14 @@ export class General extends EezObject {
                     { id: ProjectType.FIRMWARE },
                     { id: ProjectType.FIRMWARE_MODULE },
                     { id: ProjectType.RESOURCE },
-                    { id: ProjectType.APPLET },
+                    { id: ProjectType.APPLET, label: "BB3 Applet" },
                     { id: ProjectType.DASHBOARD },
                     { id: ProjectType.LVGL, label: "LVGL" }
                 ],
-                hideInPropertyGrid: isLVGLProject
+                readOnlyInPropertyGrid: (general: General) =>
+                    general.projectType != ProjectType.FIRMWARE &&
+                    general.projectType != ProjectType.FIRMWARE_MODULE &&
+                    general.projectType != ProjectType.RESOURCE
             },
             {
                 name: "scpiDocFolder",
