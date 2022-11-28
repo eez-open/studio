@@ -1175,12 +1175,12 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  975648: ($0, $1) => { freeComponentExecutionState($0, $1); },  
- 975689: ($0) => { startToDebuggerMessage($0); },  
- 975721: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 975796: ($0) => { finishToDebuggerMessage($0); },  
- 975829: ($0, $1) => { onArrayValueFree($0, $1); },  
- 975859: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
+  976400: ($0, $1) => { freeComponentExecutionState($0, $1); },  
+ 976441: ($0) => { startToDebuggerMessage($0); },  
+ 976473: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 976548: ($0) => { finishToDebuggerMessage($0); },  
+ 976581: ($0, $1) => { onArrayValueFree($0, $1); },  
+ 976611: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
 };
 
 
@@ -4951,6 +4951,9 @@ var _lvglUpdateHiddenFlag = Module["_lvglUpdateHiddenFlag"] = createExportWrappe
 
 /** @type {function(...*):?} */
 var _lvglUpdateClickableFlag = Module["_lvglUpdateClickableFlag"] = createExportWrapper("lvglUpdateClickableFlag");
+
+/** @type {function(...*):?} */
+var _lvglAddTimelineKeyframe = Module["_lvglAddTimelineKeyframe"] = createExportWrapper("lvglAddTimelineKeyframe");
 
 /** @type {function(...*):?} */
 var ___errno_location = Module["___errno_location"] = createExportWrapper("__errno_location");

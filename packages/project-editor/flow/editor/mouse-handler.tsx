@@ -434,6 +434,14 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
     up(context: IFlowContext) {
         super.up(context);
 
+        if (this.objectNodes) {
+            for (let i = 0; i < this.objectNodes.length; ++i) {
+                const node = this.objectNodes[i];
+                node.style.left = this.objectPositionsAtDown[i].x + "px";
+                node.style.top = this.objectPositionsAtDown[i].y + "px";
+            }
+        }
+
         if (this.changed) {
             for (let i = 0; i < this.selectedObjects.length; ++i) {
                 const object = this.selectedObjects[i];

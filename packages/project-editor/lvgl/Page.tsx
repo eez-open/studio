@@ -50,7 +50,7 @@ export const LVGLPage = observer(
         }
 
         componentWillUnmount() {
-            this.runtime.unmount();
+            setTimeout(() => this.runtime.unmount());
         }
 
         render() {

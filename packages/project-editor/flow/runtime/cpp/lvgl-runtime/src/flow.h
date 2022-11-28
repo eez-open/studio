@@ -34,6 +34,15 @@ void flowInit(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSize);
 bool flowTick();
 void flowOnPageLoadedStudio(unsigned pageIndex);
 
+void addTimelineKeyframe(
+    lv_obj_t *obj,
+    unsigned page_index,
+    float start, float end,
+    uint32_t enabledProperties,
+    int16_t x, int16_t y, int16_t width, int16_t height, int16_t opacity,
+    uint8_t xEasingFunc, uint8_t yEasingFunc, uint8_t widthEasingFunc, uint8_t heightEasingFunc, uint8_t opacityEasingFunc
+);
+
 void addUpdateTask(enum UpdateTaskType updateTaskType, lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index);
 
 void setObjectIndex(lv_obj_t *obj, int32_t index);

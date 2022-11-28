@@ -308,6 +308,7 @@ const Controls = observer(
                                             selected={
                                                 this.pageTabState.frontFace
                                             }
+                                            enabled={!this.isShowTimeline}
                                         />
                                         <IconAction
                                             title="Show back face"
@@ -319,34 +320,28 @@ const Controls = observer(
                                             selected={
                                                 !this.pageTabState.frontFace
                                             }
+                                            enabled={!this.isShowTimeline}
                                         />
                                     </div>
 
-                                    {!this.flowTabState?.flowState &&
-                                        !this.context.projectTypeTraits
-                                            .isLVGL && (
-                                            <div
-                                                className="btn-group"
-                                                role="group"
-                                            >
-                                                <IconAction
-                                                    title="Show timeline"
-                                                    icon={
-                                                        <svg viewBox="0 0 551 372">
-                                                            <path d="M42.4631 336.4972H204.996v-42.4224h-65.4195v-60.132h65.4195v-42.4495H0l.0008 145.005zm-.0045-102.5747H99.046v60.132H42.4586zm233.9184-42.4632v42.4405h61.8929v60.132h-61.893v42.4405h61.352l42.4247.009h171.5298v-145.013zM442.0555 294.007h-61.893v-60.132h61.893zm67.1986 0h-24.74v-60.132h24.74z" />
-                                                            <path d="M348.4318 42.4321c0-10.8489-4.1291-21.7155-12.4228-30.0003C327.7332 4.138 316.8667.009 306.0177.009L176.8741 0c-10.849 0-21.7243 4.129-30.0185 12.4227-8.2757 8.2937-12.7264 19.1555-12.4227 30.0004v53.5542l85.791 54.0862v221.6388h42.4495V150.0637l85.7751-54.0861.009-53.5362z" />
-                                                        </svg>
-                                                    }
-                                                    iconSize={24}
-                                                    onClick={() =>
-                                                        this.toggleShowTimeline()
-                                                    }
-                                                    selected={
-                                                        this.isShowTimeline
-                                                    }
-                                                />
-                                            </div>
-                                        )}
+                                    {!this.flowTabState?.flowState && (
+                                        <div className="btn-group" role="group">
+                                            <IconAction
+                                                title="Show timeline"
+                                                icon={
+                                                    <svg viewBox="0 0 551 372">
+                                                        <path d="M42.4631 336.4972H204.996v-42.4224h-65.4195v-60.132h65.4195v-42.4495H0l.0008 145.005zm-.0045-102.5747H99.046v60.132H42.4586zm233.9184-42.4632v42.4405h61.8929v60.132h-61.893v42.4405h61.352l42.4247.009h171.5298v-145.013zM442.0555 294.007h-61.893v-60.132h61.893zm67.1986 0h-24.74v-60.132h24.74z" />
+                                                        <path d="M348.4318 42.4321c0-10.8489-4.1291-21.7155-12.4228-30.0003C327.7332 4.138 316.8667.009 306.0177.009L176.8741 0c-10.849 0-21.7243 4.129-30.0185 12.4227-8.2757 8.2937-12.7264 19.1555-12.4227 30.0004v53.5542l85.791 54.0862v221.6388h42.4495V150.0637l85.7751-54.0861.009-53.5362z" />
+                                                    </svg>
+                                                }
+                                                iconSize={24}
+                                                onClick={() =>
+                                                    this.toggleShowTimeline()
+                                                }
+                                                selected={this.isShowTimeline}
+                                            />
+                                        </div>
+                                    )}
                                 </>
                             )}
 

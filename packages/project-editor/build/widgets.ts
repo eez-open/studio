@@ -170,7 +170,7 @@ export function buildWidget(
     object.buildFlowWidgetSpecific(assets, dataBuffer);
 }
 
-function getEasingFunctionCode(easingFunction: EasingFunction) {
+export function getEasingFunctionCode(easingFunction: EasingFunction) {
     const EASING_FUNC_LINEAR = 0;
     const EASING_FUNC_IN_QUAD = 1;
     const EASING_FUNC_OUT_QUAD = 2;

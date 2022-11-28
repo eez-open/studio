@@ -599,4 +599,22 @@ EM_PORT_API(void) lvglUpdateClickableFlag(lv_obj_t *obj, unsigned page_index, un
     addUpdateTask(UPDATE_TASK_TYPE_CLICKABLE_FLAG, obj, page_index, component_index, property_index);
 }
 
+EM_PORT_API(void) lvglAddTimelineKeyframe(
+    lv_obj_t *obj,
+    unsigned page_index,
+    float start, float end,
+    uint32_t enabledProperties,
+    int16_t x, int16_t y, int16_t width, int16_t height, int16_t opacity,
+    uint8_t xEasingFunc, uint8_t yEasingFunc, uint8_t widthEasingFunc, uint8_t heightEasingFunc, uint8_t opacityEasingFunc
+) {
+    addTimelineKeyframe(
+        obj,
+        page_index,
+        start, end,
+        enabledProperties,
+        x, y, width, height, opacity,
+        xEasingFunc, yEasingFunc, widthEasingFunc, heightEasingFunc, opacityEasingFunc
+    );
+}
+
 ////////////////////////////////////////////////////////////////////////////////

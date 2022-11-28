@@ -429,6 +429,14 @@ export interface IWasmFlowRuntime {
     _lvglUpdateDisabledState(obj: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateHiddenFlag(obj: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateClickableFlag(obj: number, page_index: number, component_index: number, property_index: number): void;
+    _lvglAddTimelineKeyframe(
+        obj: number,
+        page_index: number,
+        start: number, end: number,
+        enabledProperties: number,
+        x: number, y: number, width: number, height: number, opacity: number,
+        xEasingFunc: number, yEasingFunc: number, widthEasingFunc: number, heightEasingFunc: number, opacityEasingFunc: number
+    ): void;
 }
 
 export interface IDashboardComponentContext {

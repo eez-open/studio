@@ -3421,8 +3421,6 @@ export class AnimateActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_ANIMATE_ACTION,
         componentPaletteGroupName: "GUI Actions",
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL,
         properties: [
             makeExpressionProperty(
                 {
