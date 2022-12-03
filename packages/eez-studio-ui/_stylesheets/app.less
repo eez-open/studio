@@ -4204,6 +4204,9 @@ button.EezStudio_Action {
 
                 h5 {
                     margin-bottom: 0;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
                 }
 
                 div {
@@ -4224,11 +4227,18 @@ button.EezStudio_Action {
 
         .EezStudio_HomeTab_Projects {
             .EezStudio_ListContainer {
+                overflow: hidden;
                 max-height: inherit;
                 flex-grow: 1;
 
                 .EezStudio_ListItem {
                     margin-bottom: 10px;
+
+                    > div:nth-child(2) {
+                        overflow: hidden;
+                        white-space: nowrap;
+                        text-overflow: ellipsis;
+                    }
 
                     .EezStudio_HomeTab_ProjectItem {
                         position: relative;
@@ -4237,15 +4247,25 @@ button.EezStudio_Action {
 
                         div.fist-line {
                             font-size: 110%;
+                            overflow: hidden;
+                            white-space: nowrap;
+                            text-overflow: ellipsis;
                         }
 
                         div.text-secondary {
                             color: @actionDisabledColor;
+                            overflow: hidden;
+                            white-space: nowrap;
+                            text-overflow: ellipsis;
                         }
 
-                        .EezStudio_Action {
+                        .remove-icon {
+                            background-color: @backgroundColor;
+                            border: 1px solid @borderColor;
+                            border-radius: 4px;
+                            padding: 3px;
                             position: absolute;
-                            right: 0;
+                            right: 4px;
                             top: 0;
                             display: none;
                             &:hover {
@@ -4254,7 +4274,7 @@ button.EezStudio_Action {
                             }
                         }
                         &:hover {
-                            .EezStudio_Action {
+                            .remove-icon {
                                 display: block;
                             }
                         }

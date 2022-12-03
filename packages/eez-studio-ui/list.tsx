@@ -59,7 +59,7 @@ export const ListItem = observer(
                 <>
                     <div>{leftIcon}</div>
                     <div>{this.props.label}</div>
-                    <div>{rightIcon}</div>
+                    {rightIcon && <div>{rightIcon}</div>}
                 </>
             );
         }

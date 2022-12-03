@@ -631,7 +631,7 @@ const Projects = observer(
                 <VerticalHeaderWithBody>
                     <Header>
                         <ToolbarHeader>
-                            <h5>Recent projects</h5>
+                            <h5>Projects</h5>
                             <div>
                                 <ButtonAction
                                     text="New Project"
@@ -723,7 +723,10 @@ const Projects = observer(
                                             )}
                                             leftIconSize={48}
                                             label={
-                                                <div className="EezStudio_HomeTab_ProjectItem">
+                                                <div
+                                                    className="EezStudio_HomeTab_ProjectItem"
+                                                    title={mruItem.filePath}
+                                                >
                                                     <div className="fist-line">
                                                         <span className="fw-bolder">
                                                             {baseName}
@@ -735,11 +738,13 @@ const Projects = observer(
                                                             mruItem.filePath
                                                         )}
                                                     </div>
-                                                    <IconAction
+                                                    <Icon
+                                                        className="remove-icon"
                                                         icon="material:close"
                                                         title="Remove project from the list"
-                                                        className="btn-secondary"
-                                                        onClick={() => {
+                                                        onClick={event => {
+                                                            event.preventDefault();
+                                                            event.stopPropagation();
                                                             settingsController.removeItemFromMRU(
                                                                 mruItem
                                                             );
