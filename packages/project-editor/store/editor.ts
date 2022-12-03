@@ -72,6 +72,22 @@ export class Editor implements IEditor {
             return getTitle(this.subObject);
         }
 
+        const scpi = this.projectEditorStore.project.scpi;
+        if (
+            this.object === scpi &&
+            this.subObject &&
+            this.subObject != this.object
+        ) {
+            function getTitle(object: IEezObject): string {
+                if (object == scpi) {
+                    return objectToString(object);
+                }
+                const parent = getParent(object);
+                return getTitle(parent) + " / " + objectToString(object);
+            }
+            return getTitle(this.subObject);
+        }
+
         if (this.object == this.projectEditorStore.project.lvglStyles) {
             return `Style: ${(this.subObject as LVGLStyle).name}`;
         }
@@ -109,6 +125,9 @@ export class Editor implements IEditor {
         }
 
         if (this.subObject != subObject) {
+            if (this.object === this.projectEditorStore.project.scpi) {
+                return true;
+            }
             if (this.object === this.projectEditorStore.project.settings) {
                 return true;
             }

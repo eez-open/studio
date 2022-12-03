@@ -1131,10 +1131,10 @@ export class Font extends EezObject {
                 fontJs.renderingEngine = "freetype";
             }
         },
-        afterLoadHook: (font: Font, projectEditorStore) => {
+        afterLoadHook: (font: Font, project) => {
             try {
-                font.migrateLvglFont(projectEditorStore);
-                font.loadLvglGlyphs(projectEditorStore);
+                font.migrateLvglFont(project._DocumentStore);
+                font.loadLvglGlyphs(project._DocumentStore);
             } catch (err) {}
         },
         check: (font: Font) => {

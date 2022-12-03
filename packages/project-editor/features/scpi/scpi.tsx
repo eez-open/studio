@@ -1,4 +1,3 @@
-import React from "react";
 import { observable, computed, makeObservable } from "mobx";
 
 import { humanize } from "eez-studio-shared/string";
@@ -23,7 +22,8 @@ import {
     Message,
     propertyNotSetMessage,
     propertyNotFoundMessage,
-    createObject
+    createObject,
+    getLabel
 } from "project-editor/store";
 
 import type {
@@ -142,18 +142,6 @@ function getDiscreteTypeEnumeration(object: ScpiParameter | ScpiResponse) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-class ScpiParameterTable extends React.Component<{
-    children?: React.ReactNode;
-}> {
-    render() {
-        return (
-            <div className="EezStudio_ScpiParameterTable">
-                <table>{this.props.children}</table>
-            </div>
-        );
-    }
-}
 
 export class ScpiParameter extends EezObject {
     name: string;
@@ -337,7 +325,20 @@ export class ScpiParameter extends EezObject {
             type: []
         },
 
-        propertyGridTableComponent: ScpiParameterTable
+        listLabel: (parameter: ScpiParameter, collapsed: boolean) => {
+            if (!collapsed) {
+                return "";
+            }
+            return `${parameter.name}: ${parameter.type
+                .map(type => getLabel(type))
+                .join(", ")} (${
+                parameter.isOptional ? "Optional" : "Mandatory"
+            }${
+                parameter.description
+                    ? `, Description=${parameter.description}`
+                    : ""
+            })`;
+        }
     };
 
     constructor() {
@@ -750,7 +751,8 @@ export class ScpiCommand extends EezObject {
                 name: "parameters",
                 type: PropertyType.Array,
                 typeClass: ScpiParameter,
-                defaultValue: []
+                defaultValue: [],
+                arrayItemOrientation: "vertical"
             },
             {
                 name: "response",

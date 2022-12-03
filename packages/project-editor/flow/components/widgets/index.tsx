@@ -47,6 +47,7 @@ import {
 import {
     checkObjectReference,
     getProject,
+    Project,
     ProjectType
 } from "project-editor/project/project";
 
@@ -1994,9 +1995,8 @@ export class TextWidget extends Widget {
             )
         ],
 
-        beforeLoadHook: (widget: Widget, jsObject: any) => {
+        beforeLoadHook: (widget: Widget, jsObject: any, project: Project) => {
             if (jsObject.text) {
-                const project = ProjectEditor.getProject(widget);
                 if (project.projectTypeTraits.hasFlowSupport) {
                     if (!jsObject.data) {
                         jsObject.data = `"${jsObject.text}"`;
@@ -2487,9 +2487,8 @@ export class MultilineTextWidget extends Widget {
             }
         ],
 
-        beforeLoadHook: (widget: Widget, jsObject: any) => {
+        beforeLoadHook: (widget: Widget, jsObject: any, project: Project) => {
             if (jsObject.text) {
-                const project = ProjectEditor.getProject(widget);
                 if (project.projectTypeTraits.hasFlowSupport) {
                     if (!jsObject.data) {
                         jsObject.data = `"${jsObject.text}"`;
@@ -3080,9 +3079,12 @@ export class ButtonWidget extends Widget {
             makeStylePropertyInfo("disabledStyle")
         ],
 
-        beforeLoadHook: (widget: IEezObject, jsObject: any) => {
+        beforeLoadHook: (
+            widget: IEezObject,
+            jsObject: any,
+            project: Project
+        ) => {
             if (jsObject.text) {
-                const project = ProjectEditor.getProject(widget);
                 if (project.projectTypeTraits.hasFlowSupport) {
                     if (!jsObject.data) {
                         jsObject.data = `"${jsObject.text}"`;
@@ -4727,9 +4729,9 @@ export class ProgressWidget extends Widget {
 
         beforeLoadHook: (
             progressWidget: ProgressWidget,
-            jsProgressWidget: Partial<ProgressWidget>
+            jsProgressWidget: Partial<ProgressWidget>,
+            project: Project
         ) => {
-            const project = ProjectEditor.getProject(progressWidget);
             if (project.projectTypeTraits.hasFlowSupport) {
                 if (jsProgressWidget.min == undefined) {
                     jsProgressWidget.min = "0";

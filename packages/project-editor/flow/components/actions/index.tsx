@@ -13,11 +13,13 @@ import {
     EezObject,
     ClassInfo,
     getParent,
-    MessageType
+    MessageType,
+    getId
 } from "project-editor/core/object";
 import {
     getAncestorOfType,
     getChildOfObject,
+    getListLabel,
     getProjectEditorStore,
     Message,
     propertyNotFoundMessage,
@@ -732,7 +734,17 @@ class SetVariableEntry extends EezObject {
 
             return messages;
         },
-        defaultValue: {}
+        defaultValue: {},
+        listLabel: (entry: SetVariableEntry, collapsed) =>
+            !collapsed ? (
+                ""
+            ) : (
+                <>
+                    {entry.variable}
+                    <LeftArrow />
+                    {entry.value}
+                </>
+            )
     };
 
     constructor() {
@@ -832,11 +844,9 @@ export class SetVariableActionComponent extends ActionComponent {
         return (
             <div className="body">
                 {this.entries.map((entry, i) => (
-                    <pre key={i}>
-                        {`${i + 1}: `}
-                        {entry.variable}
-                        <LeftArrow />
-                        {entry.value}
+                    <pre key={getId(entry)}>
+                        {`#${i + 1} `}
+                        {getListLabel(entry, true)}
                     </pre>
                 ))}
             </div>
@@ -872,7 +882,7 @@ class SwitchTest extends EezObject {
             makeExpressionProperty(
                 {
                     name: "condition",
-                    displayName: "When condition",
+                    displayName: "When",
                     type: PropertyType.MultilineText
                 },
                 "boolean"
@@ -892,6 +902,13 @@ class SwitchTest extends EezObject {
                 "any"
             )
         ],
+
+        listLabel: (test: SwitchTest, collapsed) =>
+            !collapsed
+                ? ""
+                : `WHEN ${test.condition} THEN OUTPUT ${test.outputName}${
+                      test.outputValue ? ` WITH VALUE ${test.outputValue}` : ""
+                  }`,
 
         check: (switchTest: SwitchTest) => {
             let messages: Message[] = [];
@@ -1061,8 +1078,8 @@ export class SwitchActionComponent extends ActionComponent {
         return (
             <div className="body">
                 {this.tests.map((test, i) => (
-                    <pre key={test.outputName}>
-                        {`${i + 1}: `}
+                    <pre key={getId(test)}>
+                        {`#${i + 1} `}
                         {test.condition}
                     </pre>
                 ))}

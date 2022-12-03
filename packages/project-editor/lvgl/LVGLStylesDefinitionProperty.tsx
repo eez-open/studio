@@ -4,7 +4,6 @@ import { computed, makeObservable, runInAction } from "mobx";
 import classNames from "classnames";
 
 import {
-    EezObject,
     getClassInfoLvglProperties,
     IEezObject,
     PropertyInfo,
@@ -12,15 +11,18 @@ import {
 } from "project-editor/core/object";
 import type { Page } from "project-editor/features/page/page";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { getAncestorOfType, ProjectEditorStore } from "project-editor/store";
+import { getAncestorOfType } from "project-editor/store";
 import React from "react";
+import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
 import {
-    getStylePropDefaultValue,
-    LVGLParts,
     lvglProperties,
-    LVGLStylesDefinition,
-    PropertiesGroup
-} from "project-editor/lvgl/style-definition";
+    LVGLPropertiesGroup,
+    PropertyValueHolder
+} from "project-editor/lvgl/style-catalog";
+import {
+    LVGLParts,
+    getStylePropDefaultValue
+} from "project-editor/lvgl/style-helper";
 import { ProjectContext } from "project-editor/project/context";
 import { Icon } from "eez-studio-ui/icon";
 import {
@@ -90,7 +92,7 @@ export const LVGLStylesDefinitionProperty = observer(
             return this.context.uiStateStore.lvglState;
         }
 
-        isExpanded = (propertiesGroup: PropertiesGroup) => {
+        isExpanded = (propertiesGroup: LVGLPropertiesGroup) => {
             return (
                 this.context.uiStateStore.lvglExpandedPropertiesGroup.indexOf(
                     propertiesGroup.groupName
@@ -98,7 +100,7 @@ export const LVGLStylesDefinitionProperty = observer(
             );
         };
 
-        toggleExpanded = (propertiesGroup: PropertiesGroup) => {
+        toggleExpanded = (propertiesGroup: LVGLPropertiesGroup) => {
             runInAction(() => {
                 const i =
                     this.context.uiStateStore.lvglExpandedPropertiesGroup.indexOf(
@@ -381,7 +383,7 @@ export const LVGLStylesDefinitionTree = observer(
 export const LVGLStylesDefinitionGroupProperties = observer(
     class GroupProperties extends React.Component<{
         objects: IEezObject[];
-        propertiesGroup: PropertiesGroup;
+        propertiesGroup: LVGLPropertiesGroup;
         stylesDefinitions: LVGLStylesDefinition[];
         part: LVGLParts;
         state: string;
@@ -595,7 +597,7 @@ function getNumModificationsForPropertiesGroup(
     propertyInfo: PropertyInfo,
     part: LVGLParts,
     state: string,
-    propertiesGroup: PropertiesGroup
+    propertiesGroup: LVGLPropertiesGroup
 ) {
     let result = 0;
 
@@ -626,16 +628,4 @@ function getNumModificationsForPropertiesGroup(
         }
     }
     return result;
-}
-
-export class PropertyValueHolder extends EezObject {
-    [propertyName: string]: any;
-    constructor(
-        public projectEditorStore: ProjectEditorStore,
-        propertyName: string,
-        propertyValue: any
-    ) {
-        super();
-        this[propertyName] = propertyValue;
-    }
 }

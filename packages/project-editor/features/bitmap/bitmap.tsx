@@ -266,8 +266,8 @@ export class Bitmap extends EezObject {
             );
         },
         icon: "image",
-        afterLoadHook: (bitmap: Bitmap, projectEditorStore) => {
-            bitmap.migrateLvglBitmap(projectEditorStore);
+        afterLoadHook: (bitmap: Bitmap, project) => {
+            bitmap.migrateLvglBitmap(project._DocumentStore);
         }
     };
 

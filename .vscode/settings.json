@@ -86,7 +86,8 @@
         "thread": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp",
-        "string.h": "c"
+        "string.h": "c",
+        "lv_refr.h": "c"
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "workbench.editor.enablePreview": false,

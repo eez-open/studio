@@ -484,7 +484,10 @@ export class Page extends Flow {
                 messages.push(propertyNotFoundMessage(page, "style"));
             }
 
-            if (projectEditorStore.projectTypeTraits.hasDisplaySizeProperty) {
+            if (
+                projectEditorStore.projectTypeTraits.hasDisplaySizeProperty &&
+                !page.isUsedAsCustomWidget
+            ) {
                 const isSimulatorPage =
                     page.usedIn &&
                     page.usedIn.length == 1 &&
@@ -492,6 +495,8 @@ export class Page extends Flow {
 
                 if (
                     !isSimulatorPage &&
+                    projectEditorStore.project.settings.general.displayWidth !=
+                        undefined &&
                     page.width !=
                         projectEditorStore.project.settings.general
                             .displayWidth &&
@@ -506,11 +511,14 @@ export class Page extends Flow {
                     );
                 }
 
-                if (page.width < 1 || page.width > 1280) {
+                const MAX_WIDTH = 1920;
+                const MAX_HEIGHT = 1080;
+
+                if (page.width < 1 || page.width > MAX_WIDTH) {
                     messages.push(
                         new Message(
                             MessageType.ERROR,
-                            `Width must be between 1 and 1280 `,
+                            `Width must be between 1 and ${MAX_WIDTH}`,
                             getChildOfObject(page, "width")
                         )
                     );
@@ -518,6 +526,8 @@ export class Page extends Flow {
 
                 if (
                     !isSimulatorPage &&
+                    projectEditorStore.project.settings.general.displayHeight !=
+                        undefined &&
                     page.height !=
                         projectEditorStore.project.settings.general
                             .displayHeight &&
@@ -532,11 +542,11 @@ export class Page extends Flow {
                     );
                 }
 
-                if (page.height < 1 || page.height > 1280) {
+                if (page.height < 1 || page.height > MAX_HEIGHT) {
                     messages.push(
                         new Message(
                             MessageType.ERROR,
-                            `Height must be between 1 and 1280 `,
+                            `Height must be between 1 and ${MAX_HEIGHT}`,
                             getChildOfObject(page, "height")
                         )
                     );

@@ -120,6 +120,7 @@ export function objectToJson(
 ////////////////////////////////////////////////////////////////////////////////
 
 let currentDocumentStore: ProjectEditorStore | undefined;
+let currentProject: Project | undefined;
 let isLoadProject: boolean;
 let createNewObjectobjIDs: boolean;
 let wireIDToObjID: Map<string, string>;
@@ -183,6 +184,11 @@ function loadObjectInternal(
     }
 
     if (isLoadProject) {
+        if (object instanceof ProjectEditor.ProjectClass) {
+            currentProject = object;
+            currentProject._DocumentStore = currentDocumentStore!;
+        }
+
         if (object instanceof ProjectEditor.FlowClass) {
             wireIDToObjID = new Map<string, string>();
             flowToWireIDToObjID.set(object, wireIDToObjID);
@@ -213,7 +219,11 @@ function loadObjectInternal(
     object.objID = objID;
 
     if (classInfo.beforeLoadHook) {
-        classInfo.beforeLoadHook(object, jsObject, currentDocumentStore!);
+        classInfo.beforeLoadHook(
+            object,
+            jsObject,
+            isLoadProject ? currentProject! : currentDocumentStore!.project
+        );
     }
 
     let flowOrFlowFragment: Flow | FlowFragment | undefined;
@@ -282,7 +292,10 @@ function loadObjectInternal(
     }
 
     if (classInfo.afterLoadHook) {
-        classInfo.afterLoadHook(object, currentDocumentStore!);
+        classInfo.afterLoadHook(
+            object,
+            isLoadProject ? currentProject! : currentDocumentStore!.project!
+        );
     }
 
     return object;

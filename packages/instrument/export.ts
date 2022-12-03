@@ -96,6 +96,20 @@ export interface IdfProperties {
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildPackageJson(idf: IdfProperties, properties: any) {
+    // remove objID
+    properties = JSON.parse(
+        JSON.stringify(
+            properties,
+            (key: string | number, value: any) => {
+                if (key === "objID") {
+                    return undefined;
+                }
+                return value;
+            },
+            2
+        )
+    );
+
     return JSON.stringify(
         {
             id: idf.idfGuid,

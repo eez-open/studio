@@ -3,6 +3,7 @@ import { observable, makeObservable, runInAction, computed } from "mobx";
 import { observer } from "mobx-react";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
+import { Rect } from "eez-studio-shared/geometry";
 
 import {
     registerClass,
@@ -21,6 +22,7 @@ import {
     MessageType,
     getClassInfoLvglProperties
 } from "project-editor/core/object";
+
 import {
     getAncestorOfType,
     getChildOfObject,
@@ -50,19 +52,21 @@ import {
 } from "project-editor/flow/component";
 
 import { escapeCString } from "project-editor/build/helper";
-import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
-import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
-import type { LVGLCreateResultType } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
-import { ProjectEditor } from "project-editor/project-editor-interface";
 import { ProjectContext } from "project-editor/project/context";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Page } from "project-editor/features/page/page";
 import { ComponentsContainerEnclosure } from "project-editor/flow/editor/render";
 import { geometryGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { Property } from "project-editor/ui-components/PropertyGrid/Property";
-import type { LVGLBuild } from "project-editor/lvgl/build";
 import { ValueType } from "project-editor/features/variable/value-type";
+import { getEasingFunctionCode } from "project-editor/build/widgets";
+
+import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
+import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
+import type { LVGLCreateResultType } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
+import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
+import type { LVGLBuild } from "project-editor/lvgl/build";
 import {
     EventHandler,
     eventHandlersProperty,
@@ -81,9 +85,7 @@ import {
     LVGLPropertyType,
     makeExpressionProperty
 } from "project-editor/lvgl/expression-property";
-import { Rect } from "eez-studio-shared/geometry";
 import { findLvglStyle, LVGLStyle } from "project-editor/lvgl/style";
-import { getEasingFunctionCode } from "project-editor/build/widgets";
 
 ////////////////////////////////////////////////////////////////////////////////
 

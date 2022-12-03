@@ -320,6 +320,15 @@ export function getLabel(object: IEezObject): string {
     return getClass(object).name;
 }
 
+export function getListLabel(object: IEezObject, collapsed: boolean) {
+    const listLabel = getClassInfo(object).listLabel;
+    if (listLabel) {
+        return listLabel(object, collapsed);
+    }
+
+    return getLabel(object);
+}
+
 export function isArrayElement(object: IEezObject) {
     return isArray(getParent(object));
 }

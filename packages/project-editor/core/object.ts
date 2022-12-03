@@ -14,7 +14,8 @@ import {
 import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
 
 import type { ValueType } from "project-editor/features/variable/value-type";
-import type { LVGLParts } from "project-editor/lvgl/style-definition";
+import type { LVGLParts } from "project-editor/lvgl/style-helper";
+import type { Project } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -277,7 +278,7 @@ export interface ClassInfo {
     // optional properties
     getClass?: (jsObject: any, aClass: EezClass) => any;
     label?: (object: IEezObject) => string;
-    listLabel?: (object: IEezObject) => React.ReactNode;
+    listLabel?: (object: IEezObject, collapsed: boolean) => React.ReactNode;
 
     parentClassInfo?: ClassInfo;
 
@@ -306,18 +307,13 @@ export interface ClassInfo {
     componentHeaderColor?: string;
     componentHeaderTextColor?: string;
 
-    propertyGridTableComponent?: any;
-
     beforeLoadHook?: (
         object: IEezObject,
         jsObject: any,
-        projectEditorStore: ProjectEditorStore
+        project: Project
     ) => void;
 
-    afterLoadHook?: (
-        object: IEezObject,
-        projectEditorStore: ProjectEditorStore
-    ) => void;
+    afterLoadHook?: (object: IEezObject, project: Project) => void;
 
     updateObjectValueHook?: (object: IEezObject, values: any) => void;
 
@@ -430,10 +426,10 @@ export function makeDerivedClassInfo(
         derivedClassInfoProperties.beforeLoadHook = (
             object: IEezObject,
             jsObject: any,
-            projectEditorStore: ProjectEditorStore
+            project: Project
         ) => {
-            baseBeforeLoadHook(object, jsObject, projectEditorStore);
-            derivedBeforeLoadHook(object, jsObject, projectEditorStore);
+            baseBeforeLoadHook(object, jsObject, project);
+            derivedBeforeLoadHook(object, jsObject, project);
         };
     }
 

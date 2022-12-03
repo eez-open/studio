@@ -36,8 +36,7 @@ import { Assets, DataBuffer } from "project-editor/build/assets";
 import {
     getChildOfObject,
     getProjectEditorStore,
-    Message,
-    ProjectEditorStore
+    Message
 } from "project-editor/store";
 import { isNotDashboardProject } from "project-editor/project/project-type-traits";
 import {
@@ -90,11 +89,7 @@ export class SCPIActionComponent extends ActionComponent {
                 disableSpellcheck: true
             }
         ],
-        beforeLoadHook: (
-            component: SCPIActionComponent,
-            jsObject: any,
-            projectEditorStore: ProjectEditorStore
-        ) => {
+        beforeLoadHook: (component: SCPIActionComponent, jsObject: any) => {
             if (jsObject.scpi) {
                 if (!jsObject.customInputs && !jsObject.customOutputs) {
                     jsObject.customInputs = [];

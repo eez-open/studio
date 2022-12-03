@@ -23,6 +23,7 @@ import {
     createObject,
     getAncestorOfType,
     getChildOfObject,
+    getListLabel,
     Message,
     propertyNotFoundMessage,
     propertyNotSetMessage
@@ -89,7 +90,7 @@ export class LVGLActionType extends EezObject {
                     id
                 })),
                 enumDisallowUndefined: true,
-                readOnlyInPropertyGrid: true
+                hideInPropertyGrid: true
             }
         ],
 
@@ -165,10 +166,6 @@ export class LVGLActionType extends EezObject {
     }
 
     build(assets: Assets, dataBuffer: DataBuffer) {}
-
-    get actionDescription(): React.ReactNode {
-        return "";
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -224,12 +221,12 @@ export class LVGLChangeScreenActionType extends LVGLActionType {
             },
             {
                 name: "speed",
-                displayName: "Speed (ms):",
+                displayName: "Speed (ms)",
                 type: PropertyType.Number
             },
             {
                 name: "delay",
-                displayName: "Delay (ms):",
+                displayName: "Delay (ms)",
                 type: PropertyType.Number
             }
         ],
@@ -237,6 +234,16 @@ export class LVGLChangeScreenActionType extends LVGLActionType {
             fadeMode: "FADE_IN",
             speed: 200,
             delay: 0
+        },
+        listLabel: (action: LVGLChangeScreenActionType, collapsed: boolean) => {
+            if (!collapsed) {
+                return "Change screen";
+            }
+            let singleItem =
+                (getParent(action) as LVGLActionType[]).length == 1;
+            return `${singleItem ? "" : "Change screen: "}Screen=${humanize(
+                action.screen
+            )}, Speed=${action.speed} ms, Delay=${action.delay} ms`;
         },
         check: (object: LVGLChangeScreenActionType) => {
             let messages: Message[] = [];
@@ -253,13 +260,6 @@ export class LVGLChangeScreenActionType extends LVGLActionType {
             return messages;
         }
     });
-
-    override get actionDescription() {
-        let singleItem = (getParent(this) as LVGLActionType[]).length == 1;
-        return `${singleItem ? "" : "Change screen: "}Screen=${humanize(
-            this.screen
-        )}, Speed=${this.speed}, Delay=${this.delay}`;
-    }
 
     override build(assets: Assets, dataBuffer: DataBuffer) {
         // screen
@@ -362,11 +362,12 @@ export class LVGLPlayAnimationActionType extends LVGLActionType {
             },
             {
                 name: "delay",
-                displayName: "Delay (ms):",
+                displayName: "Delay (ms)",
                 type: PropertyType.Number
             },
             {
                 name: "time",
+                displayName: "Time (ms)",
                 type: PropertyType.Number
             },
             {
@@ -396,6 +397,23 @@ export class LVGLPlayAnimationActionType extends LVGLActionType {
             instant: false,
             path: ""
         },
+        listLabel: (
+            action: LVGLPlayAnimationActionType,
+            collapsed: boolean
+        ) => {
+            if (!collapsed) {
+                return "Play animation";
+            }
+            let singleItem =
+                (getParent(action) as LVGLActionType[]).length == 1;
+            return `${singleItem ? "" : "Play animation: "}Target=${
+                action.target
+            }, Property=${action.property}, Start=${action.start}, End=${
+                action.end
+            }, Delay=${action.delay} ms, Time=${action.time} ms, Relative=${
+                action.relative ? "On" : "Off"
+            }, Instant=${action.instant ? "On" : "Off"} ${action.path}`;
+        },
         check: (object: LVGLPlayAnimationActionType) => {
             let messages: Message[] = [];
 
@@ -414,17 +432,6 @@ export class LVGLPlayAnimationActionType extends LVGLActionType {
             return messages;
         }
     });
-
-    override get actionDescription() {
-        let singleItem = (getParent(this) as LVGLActionType[]).length == 1;
-        return `${singleItem ? "" : "Play animation: "}Target=${
-            this.target
-        }, Property=${this.property}, Start=${this.start}, End=${
-            this.end
-        }, Delay=${this.delay}, Time=${this.time}, Relative=${
-            this.relative ? "On" : "Off"
-        }, Instant=${this.instant ? "On" : "Off"} ${this.path}`;
-    }
 
     override build(assets: Assets, dataBuffer: DataBuffer) {
         // target
@@ -780,6 +787,31 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
             animated: false,
             valueType: "literal"
         },
+        listLabel: (action: LVGLSetPropertyActionType, collapsed: boolean) => {
+            if (!collapsed) {
+                return "Set property";
+            }
+            let singleItem =
+                (getParent(action) as LVGLActionType[]).length == 1;
+            return (
+                <>
+                    {`${singleItem ? "" : "Set property: "}${action.target}.${
+                        action.propertyInfo.code != PropertyCode.NONE
+                            ? humanize(action.property)
+                            : "<not set>"
+                    }`}
+                    <LeftArrow />
+                    {action.propertyInfo.type != "textarea"
+                        ? action.valueExpr
+                        : action.textarea
+                        ? action.textarea
+                        : "<null>"}
+                    {action.propertyInfo.animated
+                        ? `, Animated=${action.animated ? "On" : "Off"}`
+                        : ""}
+                </>
+            );
+        },
         updateObjectValueHook: (
             actionType: LVGLSetPropertyActionType,
             values: Partial<LVGLSetPropertyActionType>
@@ -911,28 +943,6 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
         }
 
         return escapeCString(this.value ?? "");
-    }
-
-    override get actionDescription() {
-        let singleItem = (getParent(this) as LVGLActionType[]).length == 1;
-        return (
-            <>
-                {`${singleItem ? "" : "Set property: "}${this.target}.${
-                    this.propertyInfo.code != PropertyCode.NONE
-                        ? humanize(this.property)
-                        : "<not set>"
-                }`}
-                <LeftArrow />
-                {this.propertyInfo.type != "textarea"
-                    ? this.valueExpr
-                    : this.textarea
-                    ? this.textarea
-                    : "<null>"}
-                {this.propertyInfo.animated
-                    ? `, Animated=${this.animated ? "On" : "Off"}`
-                    : ""}
-            </>
-        );
     }
 
     override build(assets: Assets, dataBuffer: DataBuffer) {
@@ -1116,7 +1126,7 @@ export class LVGLActionComponent extends ActionComponent {
                 {this.actions.map((action, i) => (
                     <pre key={getId(action)}>
                         {this.actions.length > 1 ? `#${i + 1} ` : ""}
-                        {action.actionDescription}
+                        {getListLabel(action, true)}
                     </pre>
                 ))}
             </div>

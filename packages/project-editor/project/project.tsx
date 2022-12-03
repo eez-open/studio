@@ -1708,6 +1708,16 @@ export class Project extends EezObject {
         return allVariables;
     }
 
+    get allActions() {
+        let allActions = this.actions;
+        for (const importDirective of this.settings.general.imports) {
+            if (importDirective.project) {
+                allActions.push(...importDirective.project.actions);
+            }
+        }
+        return allActions;
+    }
+
     _themeColors = new Map<string, string>();
 
     getThemeColor(themeId: string, colorId: string) {

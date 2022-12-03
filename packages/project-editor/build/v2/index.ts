@@ -55,6 +55,8 @@ import {
 } from "project-editor/flow/components/widgets";
 import { propertyNotFoundMessage, Section } from "project-editor/store";
 import { MessageType } from "project-editor/core/object";
+import { build as buildVariables } from "project-editor/build/v2/variables";
+import { build as buildActions } from "project-editor/build/v2/actions";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1985,5 +1987,9 @@ export async function build(
         }
     }
 
-    return result;
+    return Object.assign(
+        result,
+        await buildVariables(project, sectionNames, buildConfiguration),
+        await buildActions(project, sectionNames, buildConfiguration)
+    );
 }
