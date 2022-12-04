@@ -13,6 +13,7 @@ import {
     LVGL_REACTIVE_FLAGS,
     LVGL_REACTIVE_STATES,
     LVGL_STATE_CODES,
+    PropertyInfo,
     PropertyProps,
     PropertyType
 } from "project-editor/core/object";
@@ -125,6 +126,14 @@ export class EventHandler extends EezObject {
             }
         ],
 
+        listLabel: (eventHandler: EventHandler, collapsed) =>
+            !collapsed
+                ? ""
+                : `${eventHandler.trigger} ${eventHandler.handlerType}${
+                      eventHandler.handlerType == "action"
+                          ? `: ${eventHandler.action}`
+                          : ""
+                  }`,
         updateObjectValueHook: (
             eventHandler: EventHandler,
             values: Partial<EventHandler>
@@ -267,10 +276,11 @@ const eventsGroup: IPropertyGridGroupDefinition = {
     position: 4
 };
 
-export const eventHandlersProperty = {
+export const eventHandlersProperty: PropertyInfo = {
     name: "eventHandlers",
     type: PropertyType.Array,
     typeClass: EventHandler,
+    arrayItemOrientation: "vertical",
     propertyGridGroup: eventsGroup,
     partOfNavigation: false,
     enumerable: false,
