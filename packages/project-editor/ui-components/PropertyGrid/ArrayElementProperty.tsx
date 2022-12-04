@@ -484,12 +484,7 @@ class ArrayPropertyItemDraggable {
                 itemIndex < this.allItemElements.length;
                 itemIndex++
             ) {
-                this.allItemElements[itemIndex].style.transition =
-                    "transform 0.3s";
-
-                if (itemIndex < this.currentItemIndex) {
-                    this.allItemElements[itemIndex].style.transform = ``;
-                } else if (itemIndex == this.currentItemIndex) {
+                if (itemIndex == this.currentItemIndex) {
                     let height = 0;
                     for (
                         let itemIndex = this.currentItemIndex + 1;
@@ -521,12 +516,7 @@ class ArrayPropertyItemDraggable {
                 itemIndex < this.allItemElements.length;
                 itemIndex++
             ) {
-                this.allItemElements[itemIndex].style.transition =
-                    "transform 0.3s";
-
-                if (itemIndex < this.newItemIndex) {
-                    this.allItemElements[itemIndex].style.transform = ``;
-                } else if (
+                if (
                     itemIndex >= this.newItemIndex &&
                     itemIndex < this.currentItemIndex
                 ) {
@@ -561,6 +551,10 @@ class ArrayPropertyItemDraggable {
         }
 
         this.dragging = true;
+
+        this.allItemElements.forEach(
+            itemElement => (itemElement.style.transition = "transform 0.2s")
+        );
 
         this.itemRects = this.allItemElements.map(itemElement => {
             return itemElement.getBoundingClientRect();
@@ -681,35 +675,34 @@ class ArrayPropertyItemDraggable {
                 this.cloneElement.style.transform = `translate(${dx}px, ${dy}px) scale(${ArrayPropertyItemDraggable.PICKED_UP_SCALE})`;
             }
 
-            let itemIndex;
+            const yPoint = point.y - this.itemRects[0].top;
+            let y = 0;
+            let yNext = 0;
+
+            let newItemIndex = -1;
             for (
-                itemIndex = 0;
+                let itemIndex = 0;
                 itemIndex < this.allItemElements.length;
                 itemIndex++
             ) {
-                const r = this.itemRects[itemIndex];
-                if (itemIndex == 0) {
-                    if (point.y < r.bottom) {
-                        break;
-                    }
-                } else if (itemIndex == this.allItemElements.length - 1) {
-                    if (point.y > r.top) {
-                        break;
-                    }
-                } else {
-                    if (point.y >= r.top && point.y < r.bottom) {
-                        break;
-                    }
+                yNext = y + this.itemRects[itemIndex].height;
+
+                if (yPoint < yNext) {
+                    newItemIndex = itemIndex;
+                    break;
                 }
+
+                y = yNext;
             }
 
-            this.newItemIndex = Math.max(
-                itemIndex,
-                Math.min(itemIndex, this.allItemElements.length - 1),
-                0
-            );
+            if (newItemIndex == -1) {
+                newItemIndex = this.allItemElements.length - 1;
+            }
 
-            this.showMoveItem();
+            if (newItemIndex != this.newItemIndex) {
+                this.newItemIndex = newItemIndex;
+                this.showMoveItem();
+            }
         }
     };
 
@@ -720,7 +713,7 @@ class ArrayPropertyItemDraggable {
 
         if (this.dragging) {
             if (this.cloneElement) {
-                const transitionDuration = 0.3;
+                const transitionDuration = 0.2;
 
                 this.cloneElement.style.transition = `transform ${transitionDuration}s`;
 
