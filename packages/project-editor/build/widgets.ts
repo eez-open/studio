@@ -1,5 +1,6 @@
 import type { Page } from "project-editor/features/page/page";
-import type { EasingFunction, Widget } from "project-editor/flow/component";
+import type { Widget } from "project-editor/flow/component";
+import type { EasingFunction } from "project-editor/flow/timeline";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 

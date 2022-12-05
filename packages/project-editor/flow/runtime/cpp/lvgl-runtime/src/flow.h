@@ -39,9 +39,16 @@ void addTimelineKeyframe(
     unsigned page_index,
     float start, float end,
     uint32_t enabledProperties,
-    int16_t x, int16_t y, int16_t width, int16_t height, int16_t opacity,
-    uint8_t xEasingFunc, uint8_t yEasingFunc, uint8_t widthEasingFunc, uint8_t heightEasingFunc, uint8_t opacityEasingFunc
+    int16_t x, uint8_t xEasingFunc,
+    int16_t y, uint8_t yEasingFunc,
+    int16_t width, uint8_t widthEasingFunc,
+    int16_t height, uint8_t heightEasingFunc,
+    int16_t opacity, uint8_t opacityEasingFunc,
+    int16_t scale, uint8_t scaleEasingFunc,
+    int16_t rotate, uint8_t rotateEasingFunc
 );
+void setTimelinePosition(float timelinePosition);
+void clearTimeline();
 
 void addUpdateTask(enum UpdateTaskType updateTaskType, lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index);
 

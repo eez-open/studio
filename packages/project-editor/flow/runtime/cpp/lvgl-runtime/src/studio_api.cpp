@@ -542,10 +542,11 @@ EM_PORT_API(void) lvglUpdateLabelText(lv_obj_t *obj, unsigned page_index, unsign
     addUpdateTask(UPDATE_TASK_TYPE_LABEL_TEXT, obj, page_index, component_index, property_index);
 }
 
-EM_PORT_API(void) lvglSetImageSrc(lv_obj_t *obj, const void *img_src) {
-    if (img_src != 0) {
-        lv_img_set_src(obj, img_src);
-    }
+EM_PORT_API(void) lvglSetImageSrc(lv_obj_t *obj, const void *img_src, lv_coord_t pivotX, lv_coord_t pivotY, uint16_t zoom, int16_t angle) {
+    lv_img_set_src(obj, img_src);
+    lv_img_set_pivot(obj, pivotX, pivotY);
+    lv_img_set_zoom(obj, zoom);
+    lv_img_set_angle(obj, angle);
     lv_obj_update_layout(obj);
 }
 
@@ -604,17 +605,35 @@ EM_PORT_API(void) lvglAddTimelineKeyframe(
     unsigned page_index,
     float start, float end,
     uint32_t enabledProperties,
-    int16_t x, int16_t y, int16_t width, int16_t height, int16_t opacity,
-    uint8_t xEasingFunc, uint8_t yEasingFunc, uint8_t widthEasingFunc, uint8_t heightEasingFunc, uint8_t opacityEasingFunc
+    int16_t x, uint8_t xEasingFunc,
+    int16_t y, uint8_t yEasingFunc,
+    int16_t width, uint8_t widthEasingFunc,
+    int16_t height, uint8_t heightEasingFunc,
+    int16_t opacity, uint8_t opacityEasingFunc,
+    int16_t scale, uint8_t scaleEasingFunc,
+    int16_t rotate, uint8_t rotateEasingFunc
 ) {
     addTimelineKeyframe(
         obj,
         page_index,
         start, end,
         enabledProperties,
-        x, y, width, height, opacity,
-        xEasingFunc, yEasingFunc, widthEasingFunc, heightEasingFunc, opacityEasingFunc
+        x, xEasingFunc,
+        y, yEasingFunc,
+        width, widthEasingFunc,
+        height, heightEasingFunc,
+        opacity, opacityEasingFunc,
+        scale, scaleEasingFunc,
+        rotate, rotateEasingFunc
     );
+}
+
+EM_PORT_API(void) lvglSetTimelinePosition(float timelinePosition) {
+    setTimelinePosition(timelinePosition);
+}
+
+EM_PORT_API(void) lvglClearTimeline() {
+    clearTimeline();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

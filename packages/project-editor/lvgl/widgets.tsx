@@ -45,11 +45,13 @@ import {
     AutoSize,
     Component,
     ComponentOutput,
-    getTimelineEditorState,
-    isTimelineEditorActive,
-    isTimelineEditorActiveOrActionComponent,
     Widget
 } from "project-editor/flow/component";
+import {
+    getTimelineEditorState,
+    isTimelineEditorActive,
+    isTimelineEditorActiveOrActionComponent
+} from "project-editor/flow/timeline";
 
 import { escapeCString } from "project-editor/build/helper";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
@@ -760,8 +762,19 @@ export class LVGLWidget extends Widget {
         });
     }
 
+    get rect(): Rect {
+        return {
+            left: this.relativePosition.left,
+            top: this.relativePosition.top,
+            width: this.componentWidth,
+            height: this.componentHeight
+        };
+    }
+
     override get relativePosition() {
+        // update when _refreshCounter changes
         this._refreshCounter;
+
         if (this._lvglObj) {
             const page = getAncestorOfType(
                 this,
@@ -1154,64 +1167,90 @@ export class LVGLWidget extends Widget {
             }
         }
 
+        let flowIndex;
         if (runtime.wasm.assetsMap) {
             const pagePath = getObjectPathAsString(runtime.page);
-            const flowIndex = runtime.wasm.assetsMap.flowIndexes[pagePath];
+            flowIndex = runtime.wasm.assetsMap.flowIndexes[pagePath];
+        } else {
+            flowIndex = 0;
+        }
 
-            for (const keyframe of this.timeline) {
-                // enabledProperties
-                const WIDGET_TIMELINE_PROPERTY_X = 1 << 0;
-                const WIDGET_TIMELINE_PROPERTY_Y = 1 << 1;
-                const WIDGET_TIMELINE_PROPERTY_WIDTH = 1 << 2;
-                const WIDGET_TIMELINE_PROPERTY_HEIGHT = 1 << 3;
-                const WIDGET_TIMELINE_PROPERTY_OPACITY = 1 << 4;
+        for (const keyframe of this.timeline) {
+            // enabledProperties
+            const WIDGET_TIMELINE_PROPERTY_X = 1 << 0;
+            const WIDGET_TIMELINE_PROPERTY_Y = 1 << 1;
+            const WIDGET_TIMELINE_PROPERTY_WIDTH = 1 << 2;
+            const WIDGET_TIMELINE_PROPERTY_HEIGHT = 1 << 3;
+            const WIDGET_TIMELINE_PROPERTY_OPACITY = 1 << 4;
+            const WIDGET_TIMELINE_PROPERTY_SCALE = 1 << 5;
+            const WIDGET_TIMELINE_PROPERTY_ROTATE = 1 << 6;
 
-                let enabledProperties = 0;
+            let enabledProperties = 0;
 
-                if (keyframe.left.enabled) {
-                    enabledProperties |= WIDGET_TIMELINE_PROPERTY_X;
-                }
-                if (keyframe.top.enabled) {
-                    enabledProperties |= WIDGET_TIMELINE_PROPERTY_Y;
-                }
-                if (keyframe.width.enabled) {
-                    enabledProperties |= WIDGET_TIMELINE_PROPERTY_WIDTH;
-                }
-                if (keyframe.height.enabled) {
-                    enabledProperties |= WIDGET_TIMELINE_PROPERTY_HEIGHT;
-                }
-                if (keyframe.opacity.enabled) {
-                    enabledProperties |= WIDGET_TIMELINE_PROPERTY_OPACITY;
-                }
-
-                runtime.wasm._lvglAddTimelineKeyframe(
-                    obj,
-                    flowIndex,
-                    keyframe.start,
-                    keyframe.end,
-                    enabledProperties,
-                    keyframe.left.enabled ? keyframe.left.value! : 0,
-                    keyframe.top.enabled ? keyframe.top.value! : 0,
-                    keyframe.top.enabled ? keyframe.top.value! : 0,
-                    keyframe.height.enabled ? keyframe.height.value! : 0,
-                    keyframe.opacity.enabled ? keyframe.opacity.value! : 0,
-                    keyframe.left.enabled
-                        ? getEasingFunctionCode(keyframe.left.easingFunction)
-                        : 0,
-                    keyframe.top.enabled
-                        ? getEasingFunctionCode(keyframe.top.easingFunction)
-                        : 0,
-                    keyframe.width.enabled
-                        ? getEasingFunctionCode(keyframe.width.easingFunction)
-                        : 0,
-                    keyframe.height.enabled
-                        ? getEasingFunctionCode(keyframe.height.easingFunction)
-                        : 0,
-                    keyframe.opacity.enabled
-                        ? getEasingFunctionCode(keyframe.opacity.easingFunction)
-                        : 0
-                );
+            if (keyframe.left.enabled) {
+                enabledProperties |= WIDGET_TIMELINE_PROPERTY_X;
             }
+            if (keyframe.top.enabled) {
+                enabledProperties |= WIDGET_TIMELINE_PROPERTY_Y;
+            }
+            if (keyframe.width.enabled) {
+                enabledProperties |= WIDGET_TIMELINE_PROPERTY_WIDTH;
+            }
+            if (keyframe.height.enabled) {
+                enabledProperties |= WIDGET_TIMELINE_PROPERTY_HEIGHT;
+            }
+            if (keyframe.opacity.enabled) {
+                enabledProperties |= WIDGET_TIMELINE_PROPERTY_OPACITY;
+            }
+            if (keyframe.scale.enabled) {
+                enabledProperties |= WIDGET_TIMELINE_PROPERTY_SCALE;
+            }
+            if (keyframe.rotate.enabled) {
+                enabledProperties |= WIDGET_TIMELINE_PROPERTY_ROTATE;
+            }
+
+            runtime.wasm._lvglAddTimelineKeyframe(
+                obj,
+                flowIndex,
+                keyframe.start,
+                keyframe.end,
+                enabledProperties,
+
+                keyframe.left.enabled ? keyframe.left.value! : 0,
+                keyframe.left.enabled
+                    ? getEasingFunctionCode(keyframe.left.easingFunction)
+                    : 0,
+
+                keyframe.top.enabled ? keyframe.top.value! : 0,
+                keyframe.top.enabled
+                    ? getEasingFunctionCode(keyframe.top.easingFunction)
+                    : 0,
+
+                keyframe.width.enabled ? keyframe.width.value! : 0,
+                keyframe.width.enabled
+                    ? getEasingFunctionCode(keyframe.width.easingFunction)
+                    : 0,
+
+                keyframe.height.enabled ? keyframe.height.value! : 0,
+                keyframe.height.enabled
+                    ? getEasingFunctionCode(keyframe.height.easingFunction)
+                    : 0,
+
+                keyframe.opacity.enabled ? keyframe.opacity.value! : 0,
+                keyframe.opacity.enabled
+                    ? getEasingFunctionCode(keyframe.opacity.easingFunction)
+                    : 0,
+
+                keyframe.scale.enabled ? keyframe.scale.value! : 0,
+                keyframe.scale.enabled
+                    ? getEasingFunctionCode(keyframe.scale.easingFunction)
+                    : 0,
+
+                keyframe.rotate.enabled ? keyframe.rotate.value! : 0,
+                keyframe.rotate.enabled
+                    ? getEasingFunctionCode(keyframe.rotate.easingFunction)
+                    : 0
+            );
         }
 
         let children: LVGLCreateResultType[];
@@ -1601,14 +1640,14 @@ export class LVGLWidget extends Widget {
         if (this.leftUnit == "%") {
             return LV_PCT(this.left);
         }
-        return getTimelineEditorState(this) ? this.rect.left : this.left;
+        return this.left;
     }
 
     get lvglCreateTop() {
         if (this.topUnit == "%") {
             return LV_PCT(this.top);
         }
-        return getTimelineEditorState(this) ? this.rect.top : this.top;
+        return this.top;
     }
 
     get lvglCreateWidth() {
@@ -1617,7 +1656,7 @@ export class LVGLWidget extends Widget {
         } else if (this.widthUnit == "%") {
             return LV_PCT(this.width);
         }
-        return getTimelineEditorState(this) ? this.rect.width : this.width;
+        return this.width;
     }
 
     get lvglCreateHeight() {
@@ -1626,7 +1665,7 @@ export class LVGLWidget extends Widget {
         } else if (this.heightUnit == "%") {
             return LV_PCT(this.height);
         }
-        return getTimelineEditorState(this) ? this.rect.height : this.height;
+        return this.height;
     }
 
     get lvglBuildLeft() {
@@ -2283,7 +2322,14 @@ export class LVGLImageWidget extends LVGLWidget {
             (async () => {
                 const image = await runtime.loadBitmap(bitmap);
                 if (!runtime.isEditor || obj == this._lvglObj) {
-                    runtime.wasm._lvglSetImageSrc(obj, image);
+                    runtime.wasm._lvglSetImageSrc(
+                        obj,
+                        image,
+                        this.pivotX,
+                        this.pivotY,
+                        this.zoom,
+                        this.angle
+                    );
                     runInAction(() => this._refreshCounter++);
                 }
             })();

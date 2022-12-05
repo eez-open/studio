@@ -36,6 +36,8 @@ uint32_t screenLoad_delay = 0;
 #define WIDGET_TIMELINE_PROPERTY_WIDTH (1 << 2)
 #define WIDGET_TIMELINE_PROPERTY_HEIGHT (1 << 3)
 #define WIDGET_TIMELINE_PROPERTY_OPACITY (1 << 4)
+#define WIDGET_TIMELINE_PROPERTY_SCALE (1 << 5)
+#define WIDGET_TIMELINE_PROPERTY_ROTATE (1 << 6)
 
 #define EASING_FUNC_LINEAR 0
 #define EASING_FUNC_IN_QUAD 1
@@ -76,16 +78,25 @@ struct TimelineKeyframe {
     uint32_t enabledProperties;
 
 	int16_t x;
-	int16_t y;
-	int16_t width;
-	int16_t height;
-    float opacity;
-
     uint8_t xEasingFunc;
+
+	int16_t y;
     uint8_t yEasingFunc;
+
+	int16_t width;
     uint8_t widthEasingFunc;
+
+	int16_t height;
     uint8_t heightEasingFunc;
+
+    float opacity;
     uint8_t opacityEasingFunc;
+
+    int16_t scale;
+    uint8_t scaleEasingFunc;
+
+    int16_t rotate;
+    uint8_t rotateEasingFunc;
 
     uint8_t reserved1;
     uint8_t reserved2;
@@ -103,6 +114,8 @@ struct WidgetTimeline {
 	int16_t width;
 	int16_t height;
     int16_t opacity;
+    int16_t scale;
+    int16_t rotate;
 
     std::vector<TimelineKeyframe> timeline;
 };
@@ -114,8 +127,13 @@ extern "C" void addTimelineKeyframe(
     unsigned page_index,
     float start, float end,
     uint32_t enabledProperties,
-    int16_t x, int16_t y, int16_t width, int16_t height, int16_t opacity,
-    uint8_t xEasingFunc, uint8_t yEasingFunc, uint8_t widthEasingFunc, uint8_t heightEasingFunc, uint8_t opacityEasingFunc
+    int16_t x, uint8_t xEasingFunc,
+    int16_t y, uint8_t yEasingFunc,
+    int16_t width, uint8_t widthEasingFunc,
+    int16_t height, uint8_t heightEasingFunc,
+    int16_t opacity, uint8_t opacityEasingFunc,
+    int16_t scale, uint8_t scaleEasingFunc,
+    int16_t rotate, uint8_t rotateEasingFunc
 ) {
     TimelineKeyframe timelineKeyframe;
 
@@ -125,16 +143,25 @@ extern "C" void addTimelineKeyframe(
     timelineKeyframe.enabledProperties = enabledProperties;
 
 	timelineKeyframe.x = x;
-	timelineKeyframe.y = y;
-	timelineKeyframe.width = width;
-	timelineKeyframe.height = height;
-    timelineKeyframe.opacity = opacity;
-
     timelineKeyframe.xEasingFunc = xEasingFunc;
+
+	timelineKeyframe.y = y;
     timelineKeyframe.yEasingFunc = yEasingFunc;
+
+	timelineKeyframe.width = width;
     timelineKeyframe.widthEasingFunc = widthEasingFunc;
+
+	timelineKeyframe.height = height;
     timelineKeyframe.heightEasingFunc = heightEasingFunc;
+
+    timelineKeyframe.opacity = opacity;
     timelineKeyframe.opacityEasingFunc = opacityEasingFunc;
+
+    timelineKeyframe.scale = scale;
+    timelineKeyframe.scaleEasingFunc = scaleEasingFunc;
+
+    timelineKeyframe.rotate = rotate;
+    timelineKeyframe.rotateEasingFunc = rotateEasingFunc;
 
     for (auto it = widgetTimelines.begin(); it != widgetTimelines.end(); it++) {
         WidgetTimeline &widgetTimeline = *it;
@@ -148,14 +175,132 @@ extern "C" void addTimelineKeyframe(
     widgetTimeline.obj = obj;
     widgetTimeline.lastTimelinePosition = 0;
     widgetTimeline.pageIndex = page_index;
-    widgetTimeline.x = lv_obj_get_x(obj);
-    widgetTimeline.y = lv_obj_get_y(obj);
-    widgetTimeline.width = lv_obj_get_width(obj);
-    widgetTimeline.height = lv_obj_get_height(obj);
+
+    widgetTimeline.x = lv_obj_get_style_prop(obj, LV_PART_MAIN, LV_STYLE_X).num;
+    widgetTimeline.y = lv_obj_get_style_prop(obj, LV_PART_MAIN, LV_STYLE_Y).num;
+    widgetTimeline.width = lv_obj_get_style_prop(obj, LV_PART_MAIN, LV_STYLE_WIDTH).num;
+    widgetTimeline.height = lv_obj_get_style_prop(obj, LV_PART_MAIN, LV_STYLE_HEIGHT).num;
     widgetTimeline.opacity = lv_obj_get_style_prop(obj, LV_PART_MAIN, LV_STYLE_OPA).num / 255.0f;
+    widgetTimeline.scale = lv_obj_get_style_prop(obj, LV_PART_MAIN, LV_STYLE_TRANSFORM_ZOOM).num;
+    widgetTimeline.rotate = lv_obj_get_style_prop(obj, LV_PART_MAIN, LV_STYLE_TRANSFORM_ANGLE).num;
+
     widgetTimeline.timeline.push_back(timelineKeyframe);
 
     widgetTimelines.push_back(widgetTimeline);
+}
+
+void updateTimelineProperties(WidgetTimeline &widgetTimeline, float timelinePosition) {
+    float x = widgetTimeline.x;
+    float y = widgetTimeline.y;
+    float w = widgetTimeline.width;
+    float h = widgetTimeline.height;
+    float opacity = widgetTimeline.opacity;
+    float scale = widgetTimeline.scale;
+    float rotate = widgetTimeline.rotate;
+
+    for (auto itKeyframe = widgetTimeline.timeline.begin(); itKeyframe != widgetTimeline.timeline.end(); itKeyframe++) {
+        TimelineKeyframe &keyframe = *itKeyframe;
+
+        if (timelinePosition < keyframe.start) {
+            continue;
+        }
+
+        if (timelinePosition >= keyframe.start && timelinePosition <= keyframe.end) {
+            auto t =
+                keyframe.start == keyframe.end
+                    ? 1
+                    : (timelinePosition - keyframe.start) /
+                    (keyframe.end - keyframe.start);
+
+            if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_X) {
+                auto savedX = x;
+                x += eez::g_easingFuncs[keyframe.xEasingFunc](t) * (keyframe.x - x);
+                if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_WIDTH) {
+                    auto right = savedX + w;
+                    right += eez::g_easingFuncs[keyframe.widthEasingFunc](t) * ((keyframe.x + keyframe.width) - right);
+                    w = right - x;
+                }
+            } else if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_WIDTH) {
+                w += eez::g_easingFuncs[keyframe.widthEasingFunc](t) * (keyframe.width - w);
+            }
+
+            if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_Y) {
+                auto savedY = y;
+                y += eez::g_easingFuncs[keyframe.yEasingFunc](t) * (keyframe.y - y);
+                if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_HEIGHT) {
+                    auto bottom = savedY + h;
+                    bottom += eez::g_easingFuncs[keyframe.heightEasingFunc](t) * ((keyframe.y + keyframe.height) - bottom);
+                    h = bottom - y;
+                }
+            } else if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_HEIGHT) {
+                h += eez::g_easingFuncs[keyframe.heightEasingFunc](t) * (keyframe.height - h);
+            }
+
+            if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_OPACITY) {
+                opacity += eez::g_easingFuncs[keyframe.opacityEasingFunc](t) * (keyframe.opacity - opacity);
+            }
+
+            if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_SCALE) {
+                scale += eez::g_easingFuncs[keyframe.scaleEasingFunc](t) * (keyframe.scale - scale);
+            }
+
+            if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_ROTATE) {
+                rotate += eez::g_easingFuncs[keyframe.rotateEasingFunc](t) * (keyframe.rotate - rotate);
+            }
+
+            break;
+        }
+
+        if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_X) {
+            x = keyframe.x;
+        }
+        if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_Y) {
+            y = keyframe.y;
+        }
+        if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_WIDTH) {
+            w = keyframe.width;
+        }
+        if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_HEIGHT) {
+            h = keyframe.height;
+        }
+
+        if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_OPACITY) {
+            opacity = keyframe.opacity;
+        }
+
+        if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_SCALE) {
+            scale = keyframe.scale;
+        }
+
+        if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_ROTATE) {
+            rotate = keyframe.rotate;
+        }
+    }
+
+    lv_style_value_t value;
+
+    value.num = (int16_t)roundf(x);
+    lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_X, value, LV_PART_MAIN);
+
+    value.num = (int16_t)roundf(y);
+    lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_Y, value, LV_PART_MAIN);
+
+    value.num = (int16_t)roundf(w);
+    lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_WIDTH, value, LV_PART_MAIN);
+
+    value.num = (int16_t)roundf(h);
+    lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_HEIGHT, value, LV_PART_MAIN);
+
+    value.num = (int32_t)roundf(opacity * 255.0f);
+    lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_OPA, value, LV_PART_MAIN);
+
+    value.num = (int32_t)roundf(scale);
+    lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_TRANSFORM_ZOOM, value, LV_PART_MAIN);
+
+    value.num = (int32_t)roundf(rotate);
+    lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_TRANSFORM_ANGLE, value, LV_PART_MAIN);
+
+    lv_obj_update_layout(widgetTimeline.obj);
 }
 
 void doAnimate() {
@@ -166,91 +311,23 @@ void doAnimate() {
             WidgetTimeline &widgetTimeline = *it;
             if (widgetTimeline.pageIndex == pageIndex) {
                 if (flowState->timelinePosition != widgetTimeline.lastTimelinePosition) {
-                    float x = widgetTimeline.x;
-                    float y = widgetTimeline.y;
-                    float w = widgetTimeline.width;
-                    float h = widgetTimeline.height;
-                    float opacity = widgetTimeline.opacity;
-
-                    float timelinePosition = flowState->timelinePosition;
-
-                    for (auto itKeyframe = widgetTimeline.timeline.begin(); itKeyframe != widgetTimeline.timeline.end(); itKeyframe++) {
-                        TimelineKeyframe &keyframe = *itKeyframe;
-
-                        if (timelinePosition < keyframe.start) {
-                            continue;
-                        }
-
-                        if (timelinePosition >= keyframe.start && timelinePosition <= keyframe.end) {
-                            auto t =
-                                keyframe.start == keyframe.end
-                                    ? 1
-                                    : (timelinePosition - keyframe.start) /
-                                    (keyframe.end - keyframe.start);
-
-                            if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_X) {
-                                auto savedX = x;
-                                x += eez::g_easingFuncs[keyframe.xEasingFunc](t) * (keyframe.x - x);
-                                if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_WIDTH) {
-                                    auto right = savedX + w;
-                                    right += eez::g_easingFuncs[keyframe.widthEasingFunc](t) * ((keyframe.x + keyframe.width) - right);
-                                    w = right - x;
-                                }
-                            } else if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_WIDTH) {
-                                w += eez::g_easingFuncs[keyframe.widthEasingFunc](t) * (keyframe.width - w);
-                            }
-
-                            if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_Y) {
-                                auto savedY = y;
-                                y += eez::g_easingFuncs[keyframe.yEasingFunc](t) * (keyframe.y - y);
-                                if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_HEIGHT) {
-                                    auto bottom = savedY + h;
-                                    bottom += eez::g_easingFuncs[keyframe.heightEasingFunc](t) * ((keyframe.y + keyframe.height) - bottom);
-                                    h = bottom - y;
-                                }
-                            } else if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_HEIGHT) {
-                                h += eez::g_easingFuncs[keyframe.heightEasingFunc](t) * (keyframe.height - h);
-                            }
-
-                            if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_OPACITY) {
-                                opacity += eez::g_easingFuncs[keyframe.opacityEasingFunc](t) * (keyframe.opacity - opacity);
-                            }
-
-                            break;
-                        }
-
-                        if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_X) {
-                            x = keyframe.x;
-                        }
-                        if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_Y) {
-                            y = keyframe.y;
-                        }
-                        if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_WIDTH) {
-                            w = keyframe.width;
-                        }
-                        if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_HEIGHT) {
-                            h = keyframe.height;
-                        }
-
-                        if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_OPACITY) {
-                            opacity = keyframe.opacity;
-                        }
-                    }
-
-                    lv_obj_set_x(widgetTimeline.obj, (int16_t)roundf(x));
-                    lv_obj_set_y(widgetTimeline.obj, (int16_t)roundf(y));
-                    lv_obj_set_width(widgetTimeline.obj, (int16_t)roundf(w));
-                    lv_obj_set_height(widgetTimeline.obj, (int16_t)roundf(h));
-
-                    lv_style_value_t value;
-                    value.num = (int32_t)roundf(opacity * 255.0f);
-                    lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_OPA, value, LV_PART_MAIN);
-
+                    updateTimelineProperties(widgetTimeline, flowState->timelinePosition);
                     widgetTimeline.lastTimelinePosition = flowState->timelinePosition;
                 }
             }
         }
     }
+}
+
+void setTimelinePosition(float timelinePosition) {
+    for (auto it = widgetTimelines.begin(); it != widgetTimelines.end(); it++) {
+        WidgetTimeline &widgetTimeline = *it;
+        updateTimelineProperties(widgetTimeline, timelinePosition);
+    }
+}
+
+void clearTimeline() {
+    widgetTimelines.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

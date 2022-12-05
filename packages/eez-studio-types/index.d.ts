@@ -415,7 +415,7 @@ export interface IWasmFlowRuntime {
     _lvglLoadFont(font_file_path: number): number;
     _lvglFreeFont(font_ptr: number): void;
     _lvglAddObjectFlowCallback(obj: number, filter: number, page_index: number, component_index: number, output_or_property_index: number): void;
-    _lvglSetImageSrc(parentObj: number, img_src: number): void;
+    _lvglSetImageSrc(parentObj: number, img_src: number, pivotX: number, pivotY: number, zoom: number, angle: number): void;
     _lvglSetImgbuttonImageSrc(obj: number, statE: number, img_src: number): void;
     _lvglSetKeyboardTextarea(obj: number, textarea: number): void;
     _lvglUpdateLabelText(obj: number, page_index: number, component_index: number, property_index: number): void;
@@ -434,9 +434,16 @@ export interface IWasmFlowRuntime {
         page_index: number,
         start: number, end: number,
         enabledProperties: number,
-        x: number, y: number, width: number, height: number, opacity: number,
-        xEasingFunc: number, yEasingFunc: number, widthEasingFunc: number, heightEasingFunc: number, opacityEasingFunc: number
+        x: number, xEasingFunc: number,
+        y: number, yEasingFunc: number,
+        width: number, widthEasingFunc: number,
+        height: number, heightEasingFunc: number,
+        opacity: number, opacityEasingFunc: number,
+        scale: number, scaleEasingFunc: number,
+        rotate: number, rotateEasingFunc: number
     ): void;
+    _lvglSetTimelinePosition(timelinePosition: number);
+    _lvglClearTimeline(): void;
 }
 
 export interface IDashboardComponentContext {

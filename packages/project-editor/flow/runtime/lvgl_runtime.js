@@ -4956,6 +4956,12 @@ var _lvglUpdateClickableFlag = Module["_lvglUpdateClickableFlag"] = createExport
 var _lvglAddTimelineKeyframe = Module["_lvglAddTimelineKeyframe"] = createExportWrapper("lvglAddTimelineKeyframe");
 
 /** @type {function(...*):?} */
+var _lvglSetTimelinePosition = Module["_lvglSetTimelinePosition"] = createExportWrapper("lvglSetTimelinePosition");
+
+/** @type {function(...*):?} */
+var _lvglClearTimeline = Module["_lvglClearTimeline"] = createExportWrapper("lvglClearTimeline");
+
+/** @type {function(...*):?} */
 var ___errno_location = Module["___errno_location"] = createExportWrapper("__errno_location");
 
 /** @type {function(...*):?} */

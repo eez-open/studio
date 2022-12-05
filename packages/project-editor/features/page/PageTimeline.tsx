@@ -37,7 +37,8 @@ import { ProjectContext } from "project-editor/project/context";
 import { setupDragScroll } from "project-editor/flow/editor/drag-scroll";
 import { IPointerEvent } from "project-editor/flow/editor/mouse-handler";
 
-import type { Widget, TimelineKeyframe } from "project-editor/flow/component";
+import type { Widget } from "project-editor/flow/component";
+import type { TimelineKeyframe } from "project-editor/flow/timeline";
 
 import type { PageTabState } from "project-editor/features/page/PageEditor";
 

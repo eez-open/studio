@@ -14,6 +14,7 @@ import type { Font } from "project-editor/features/font/font";
 import {
     createObject,
     getObjectPathAsString,
+    getProjectEditorStore,
     ProjectEditorStore
 } from "project-editor/store";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
@@ -21,6 +22,7 @@ import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import type { Project } from "project-editor/project/project";
 import { getClassesDerivedFrom, setParent } from "project-editor/core/object";
 import type { LVGLStyle } from "./style";
+import type { PageTabState } from "project-editor/features/page/PageEditor";
 
 const lvgl_flow_runtime_constructor = require("project-editor/flow/runtime/lvgl_runtime.js");
 
@@ -241,10 +243,24 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                     );
                 });
 
+                this.wasm._lvglClearTimeline();
+
                 const pageObj = this.page.lvglCreate(this, 0).obj;
                 if (!pageObj) {
                     console.error("pageObj is undefined");
                 }
+
+                const editor = getProjectEditorStore(this.page).editorsStore
+                    .activeEditor;
+                if (editor) {
+                    const pageTabState = editor.state as PageTabState;
+                    if (pageTabState.timeline.isEditorActive) {
+                        this.wasm._lvglSetTimelinePosition(
+                            pageTabState.timeline.position
+                        );
+                    }
+                }
+
                 this.wasm._lvglScreenLoad(-1, pageObj);
 
                 runInAction(() => {
