@@ -14,7 +14,6 @@ import {
     PageTabState
 } from "project-editor/features/page/PageEditor";
 
-import { LineMarkers } from "project-editor/flow/editor/ConnectionLineComponent";
 import {
     Editor,
     getChildren,
@@ -99,7 +98,6 @@ export const ProjectEditorView = observer(
                     </div>
                     {this.context.uiStateStore.showCommandPalette &&
                         !this.context.runtime && <CommandPalette />}
-                    <LineMarkers />
                 </div>
             );
         }

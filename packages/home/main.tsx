@@ -25,6 +25,8 @@ import { settingsController } from "home/settings";
 import { App } from "home/app";
 import { openProject } from "home/open-project";
 
+import { LineMarkers } from "project-editor/flow/editor/ConnectionLineComponent";
+
 import "home/settings";
 
 configure({ enforceActions: "observed" });
@@ -145,6 +147,7 @@ async function main() {
     root.render(
         <Main>
             <App />
+            <LineMarkers />
         </Main>
     );
 
