@@ -84,7 +84,15 @@ export class PageTabState extends FlowTabState {
         scale: 1
     });
 
-    timeline: PageTimelineEditorState;
+    _timeline: PageTimelineEditorState;
+
+    get timeline() {
+        return this._timeline;
+    }
+
+    set timeline(value: PageTimelineEditorState) {
+        this._timeline = value;
+    }
 
     constructor(object: IEezObject) {
         super(object as Flow);
@@ -115,11 +123,14 @@ export class PageTabState extends FlowTabState {
         return this.flow as Page;
     }
 
+    get isTimelineEditorActive() {
+        return this.timeline.isEditorActive;
+    }
+
     get frontFace() {
         return this.isRuntime
             ? this.projectEditorStore.uiStateStore.pageRuntimeFrontFace
-            : this.projectEditorStore.uiStateStore.pageEditorFrontFace ||
-                  this.timeline.isEditorActive;
+            : this.projectEditorStore.uiStateStore.pageEditorFrontFace;
     }
 
     set frontFace(frontFace: boolean) {

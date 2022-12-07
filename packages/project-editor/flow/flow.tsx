@@ -54,6 +54,7 @@ import { IEditorState } from "project-editor/project/EditorComponent";
 import { activateConnectionLine } from "project-editor/flow/editor/real-time-traffic-visualizer";
 import { isImplicitConversionPossible } from "project-editor/flow/expression/type";
 import type { LVGLPanelWidget } from "project-editor/lvgl/widgets";
+import type { PageTimelineEditorState } from "project-editor/features/page/PageTimeline";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -871,6 +872,10 @@ export abstract class FlowTabState implements IEditorState {
 
     get isRuntime() {
         return !!this.projectEditorStore.runtime;
+    }
+
+    get timeline(): PageTimelineEditorState | undefined {
+        return undefined;
     }
 
     abstract get widgetContainer(): ITreeObjectAdapter;

@@ -440,7 +440,8 @@ export interface IWasmFlowRuntime {
         height: number, heightEasingFunc: number,
         opacity: number, opacityEasingFunc: number,
         scale: number, scaleEasingFunc: number,
-        rotate: number, rotateEasingFunc: number
+        rotate: number, rotateEasingFunc: number,
+        cp1x: number, cp1y: number, cp2x: number, cp2y: number
     ): void;
     _lvglSetTimelinePosition(timelinePosition: number);
     _lvglClearTimeline(): void;

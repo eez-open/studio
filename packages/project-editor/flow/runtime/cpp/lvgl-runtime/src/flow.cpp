@@ -38,6 +38,8 @@ uint32_t screenLoad_delay = 0;
 #define WIDGET_TIMELINE_PROPERTY_OPACITY (1 << 4)
 #define WIDGET_TIMELINE_PROPERTY_SCALE (1 << 5)
 #define WIDGET_TIMELINE_PROPERTY_ROTATE (1 << 6)
+#define WIDGET_TIMELINE_PROPERTY_CP1 (1 << 7)
+#define WIDGET_TIMELINE_PROPERTY_CP2 (1 << 8)
 
 #define EASING_FUNC_LINEAR 0
 #define EASING_FUNC_IN_QUAD 1
@@ -98,9 +100,10 @@ struct TimelineKeyframe {
     int16_t rotate;
     uint8_t rotateEasingFunc;
 
-    uint8_t reserved1;
-    uint8_t reserved2;
-    uint8_t reserved3;
+    int32_t cp1x;
+    int32_t cp1y;
+    int32_t cp2x;
+    int32_t cp2y;
 };
 
 struct WidgetTimeline {
@@ -133,7 +136,8 @@ extern "C" void addTimelineKeyframe(
     int16_t height, uint8_t heightEasingFunc,
     int16_t opacity, uint8_t opacityEasingFunc,
     int16_t scale, uint8_t scaleEasingFunc,
-    int16_t rotate, uint8_t rotateEasingFunc
+    int16_t rotate, uint8_t rotateEasingFunc,
+    int32_t cp1x, int32_t cp1y, int32_t cp2x, int32_t cp2y
 ) {
     TimelineKeyframe timelineKeyframe;
 
@@ -162,6 +166,11 @@ extern "C" void addTimelineKeyframe(
 
     timelineKeyframe.rotate = rotate;
     timelineKeyframe.rotateEasingFunc = rotateEasingFunc;
+
+    timelineKeyframe.cp1x = cp1x;
+    timelineKeyframe.cp1y = cp1y;
+    timelineKeyframe.cp2x = cp2x;
+    timelineKeyframe.cp2y = cp2y;
 
     for (auto it = widgetTimelines.begin(); it != widgetTimelines.end(); it++) {
         WidgetTimeline &widgetTimeline = *it;
@@ -213,26 +222,66 @@ void updateTimelineProperties(WidgetTimeline &widgetTimeline, float timelinePosi
                     (keyframe.end - keyframe.start);
 
             if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_X) {
-                auto savedX = x;
-                x += eez::g_easingFuncs[keyframe.xEasingFunc](t) * (keyframe.x - x);
-                if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_WIDTH) {
-                    auto right = savedX + w;
-                    right += eez::g_easingFuncs[keyframe.widthEasingFunc](t) * ((keyframe.x + keyframe.width) - right);
-                    w = right - x;
+                auto t2 = eez::g_easingFuncs[keyframe.xEasingFunc](t);
+
+                if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_CP2) {
+                    auto p1 = x;
+                    auto p2 = keyframe.cp1x;
+                    auto p3 = keyframe.cp2x;
+                    auto p4 = keyframe.x;
+                    x =
+                        (1 - t2) * (1 - t2) * (1 - t2) * p1 +
+                        3 * (1 - t2) * (1 - t2) * t2 * p2 +
+                        3 * (1 - t2) * t2 * t2 * p3 +
+                        t2 * t2 * t2 * p4;
+                } else if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_CP1) {
+                    auto p1 = x;
+                    auto p2 = keyframe.cp1x;
+                    auto p3 = keyframe.x;
+                    x =
+                        (1 - t2) * (1 - t2) * p1 +
+                        2 * (1 - t2) * t2 * p2 +
+                        t2 * t2 * p3;
+                } else {
+                    auto p1 = x;
+                    auto p2 = keyframe.x;
+                    x = (1 - t2) * p1 + t2 * p2;
                 }
-            } else if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_WIDTH) {
+            }
+
+            if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_WIDTH) {
                 w += eez::g_easingFuncs[keyframe.widthEasingFunc](t) * (keyframe.width - w);
             }
 
             if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_Y) {
-                auto savedY = y;
-                y += eez::g_easingFuncs[keyframe.yEasingFunc](t) * (keyframe.y - y);
-                if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_HEIGHT) {
-                    auto bottom = savedY + h;
-                    bottom += eez::g_easingFuncs[keyframe.heightEasingFunc](t) * ((keyframe.y + keyframe.height) - bottom);
-                    h = bottom - y;
+                auto t2 = eez::g_easingFuncs[keyframe.yEasingFunc](t);
+
+                if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_CP2) {
+                    auto p1 = y;
+                    auto p2 = keyframe.cp1y;
+                    auto p3 = keyframe.cp2y;
+                    auto p4 = keyframe.y;
+                    y =
+                        (1 - t2) * (1 - t2) * (1 - t2) * p1 +
+                        3 * (1 - t2) * (1 - t2) * t2 * p2 +
+                        3 * (1 - t2) * t2 * t2 * p3 +
+                        t2 * t2 * t2 * p4;
+                } else if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_CP1) {
+                    auto p1 = y;
+                    auto p2 = keyframe.cp1y;
+                    auto p3 = keyframe.y;
+                    y =
+                        (1 - t2) * (1 - t2) * p1 +
+                        2 * (1 - t2) * t2 * p2 +
+                        t2 * t2 * p3;
+                } else {
+                    auto p1 = y;
+                    auto p2 = keyframe.y;
+                    y = (1 - t2) * p1 + t2 * p2;
                 }
-            } else if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_HEIGHT) {
+            }
+
+            if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_HEIGHT) {
                 h += eez::g_easingFuncs[keyframe.heightEasingFunc](t) * (keyframe.height - h);
             }
 

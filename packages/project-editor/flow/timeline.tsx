@@ -41,6 +41,12 @@ import { easingFunctions } from "project-editor/flow/easing-functions";
 import type { Component, Widget } from "project-editor/flow/component";
 import type { PageTabState } from "project-editor/features/page/PageEditor";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
+import { DataBuffer } from "project-editor/build/data-buffer";
+import { getEasingFunctionCode } from "project-editor/build/widgets";
+import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
+import type { LVGLBuild } from "project-editor/lvgl/build";
+import type { Page } from "project-editor/features/page/page";
+import type { LVGLWidget } from "project-editor/lvgl/widgets";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -78,6 +84,8 @@ export class TimelineKeyframe extends EezObject {
     rotate: TimelineKeyframePropertyValue<number>;
 
     opacity: TimelineKeyframePropertyValue<number>;
+
+    controlPoints: string;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -124,6 +132,10 @@ export class TimelineKeyframe extends EezObject {
             {
                 name: "opacity",
                 type: PropertyType.Any
+            },
+            {
+                name: "controlPoints",
+                type: PropertyType.String
             }
         ],
         label: (keyframe: TimelineKeyframe) => {
@@ -231,8 +243,259 @@ export class TimelineKeyframe extends EezObject {
             scaleX: observable,
             scaleY: observable,
             rotate: observable,
-            opacity: observable
+            opacity: observable,
+            controlPoints: observable,
+            controlPointsArray: computed
         });
+    }
+
+    get controlPointsArray() {
+        let array = (this.controlPoints || "")
+            .split(",")
+            .join("")
+            .split("(")
+            .join("")
+            .split(")")
+            .join("")
+            .split(" ")
+            .map(num => Number.parseFloat(num))
+            .filter(num => !isNaN(num))
+            .map(num => Math.round(num));
+
+        if (array.length > 4) {
+            array = array.slice(0, 4);
+        } else if (array.length == 3) {
+            array = array.slice(0, 2);
+        } else if (array.length < 2) {
+            array = [];
+        }
+
+        return array;
+    }
+
+    build(dataBuffer: DataBuffer) {
+        // start
+        dataBuffer.writeFloat(this.start);
+
+        // end
+        dataBuffer.writeFloat(this.end);
+
+        // enabledProperties
+        const WIDGET_TIMELINE_PROPERTY_X = 1 << 0;
+        const WIDGET_TIMELINE_PROPERTY_Y = 1 << 1;
+        const WIDGET_TIMELINE_PROPERTY_WIDTH = 1 << 2;
+        const WIDGET_TIMELINE_PROPERTY_HEIGHT = 1 << 3;
+        const WIDGET_TIMELINE_PROPERTY_OPACITY = 1 << 4;
+        const WIDGET_TIMELINE_PROPERTY_CP1 = 1 << 5;
+        const WIDGET_TIMELINE_PROPERTY_CP2 = 1 << 6;
+
+        const controlPointsArray = this.controlPointsArray;
+
+        let enabledProperties = 0;
+
+        if (this.left.enabled) {
+            enabledProperties |= WIDGET_TIMELINE_PROPERTY_X;
+        }
+        if (this.top.enabled) {
+            enabledProperties |= WIDGET_TIMELINE_PROPERTY_Y;
+        }
+        if (this.width.enabled) {
+            enabledProperties |= WIDGET_TIMELINE_PROPERTY_WIDTH;
+        }
+        if (this.height.enabled) {
+            enabledProperties |= WIDGET_TIMELINE_PROPERTY_HEIGHT;
+        }
+        if (this.opacity.enabled) {
+            enabledProperties |= WIDGET_TIMELINE_PROPERTY_OPACITY;
+        }
+        if (this.controlPointsArray.length == 2) {
+            enabledProperties |= WIDGET_TIMELINE_PROPERTY_CP1;
+        }
+        if (this.controlPointsArray.length == 4) {
+            enabledProperties |= WIDGET_TIMELINE_PROPERTY_CP2;
+        }
+
+        dataBuffer.writeUint32(enabledProperties);
+
+        // x
+        dataBuffer.writeInt16(this.left.enabled ? this.left.value! : 0);
+
+        // y
+        dataBuffer.writeInt16(this.top.enabled ? this.top.value! : 0);
+
+        // width
+        dataBuffer.writeInt16(this.width.enabled ? this.width.value! : 0);
+
+        // height
+        dataBuffer.writeInt16(this.height.enabled ? this.height.value! : 0);
+
+        // opacity
+        dataBuffer.writeFloat(this.opacity.enabled ? this.opacity.value! : 0);
+
+        // xEasingFunc
+        dataBuffer.writeUint8(
+            this.left.enabled
+                ? getEasingFunctionCode(this.left.easingFunction)
+                : 0
+        );
+
+        // yEasingFunc
+        dataBuffer.writeUint8(
+            this.top.enabled
+                ? getEasingFunctionCode(this.top.easingFunction)
+                : 0
+        );
+
+        // widthEasingFunc
+        dataBuffer.writeUint8(
+            this.width.enabled
+                ? getEasingFunctionCode(this.width.easingFunction)
+                : 0
+        );
+
+        // heightEasingFunc
+        dataBuffer.writeUint8(
+            this.height.enabled
+                ? getEasingFunctionCode(this.height.easingFunction)
+                : 0
+        );
+
+        // opacityEasingFunc
+        dataBuffer.writeUint8(
+            this.opacity.enabled
+                ? getEasingFunctionCode(this.opacity.easingFunction)
+                : 0
+        );
+
+        // reserved1
+        dataBuffer.writeUint8(0);
+
+        // reserved2
+        dataBuffer.writeUint16(0);
+
+        // cp1x
+        dataBuffer.writeInt16(
+            this.controlPointsArray.length == 2 ||
+                this.controlPointsArray.length == 4
+                ? controlPointsArray[0]
+                : 0
+        );
+
+        // cp1y
+        dataBuffer.writeInt16(
+            this.controlPointsArray.length == 2 ||
+                this.controlPointsArray.length == 4
+                ? controlPointsArray[1]
+                : 0
+        );
+
+        // cp2x
+        dataBuffer.writeInt16(
+            this.controlPointsArray.length == 4 ? controlPointsArray[2] : 0
+        );
+
+        // cp2y
+        dataBuffer.writeInt16(
+            this.controlPointsArray.length == 4 ? controlPointsArray[3] : 0
+        );
+    }
+
+    lvglCreate(runtime: LVGLPageRuntime, obj: number, flowIndex: number) {
+        // enabledProperties
+        const WIDGET_TIMELINE_PROPERTY_X = 1 << 0;
+        const WIDGET_TIMELINE_PROPERTY_Y = 1 << 1;
+        const WIDGET_TIMELINE_PROPERTY_WIDTH = 1 << 2;
+        const WIDGET_TIMELINE_PROPERTY_HEIGHT = 1 << 3;
+        const WIDGET_TIMELINE_PROPERTY_OPACITY = 1 << 4;
+        const WIDGET_TIMELINE_PROPERTY_SCALE = 1 << 5;
+        const WIDGET_TIMELINE_PROPERTY_ROTATE = 1 << 6;
+        const WIDGET_TIMELINE_PROPERTY_CP1 = 1 << 7;
+        const WIDGET_TIMELINE_PROPERTY_CP2 = 1 << 8;
+
+        const controlPointsArray = this.controlPointsArray;
+
+        let enabledProperties = 0;
+        if (this.left.enabled) {
+            enabledProperties |= WIDGET_TIMELINE_PROPERTY_X;
+        }
+        if (this.top.enabled) {
+            enabledProperties |= WIDGET_TIMELINE_PROPERTY_Y;
+        }
+        if (this.width.enabled) {
+            enabledProperties |= WIDGET_TIMELINE_PROPERTY_WIDTH;
+        }
+        if (this.height.enabled) {
+            enabledProperties |= WIDGET_TIMELINE_PROPERTY_HEIGHT;
+        }
+        if (this.opacity.enabled) {
+            enabledProperties |= WIDGET_TIMELINE_PROPERTY_OPACITY;
+        }
+        if (this.scale.enabled) {
+            enabledProperties |= WIDGET_TIMELINE_PROPERTY_SCALE;
+        }
+        if (this.rotate.enabled) {
+            enabledProperties |= WIDGET_TIMELINE_PROPERTY_ROTATE;
+        }
+        if (this.controlPointsArray.length == 2) {
+            enabledProperties |= WIDGET_TIMELINE_PROPERTY_CP1;
+        }
+        if (this.controlPointsArray.length == 4) {
+            enabledProperties |= WIDGET_TIMELINE_PROPERTY_CP2;
+        }
+
+        runtime.wasm._lvglAddTimelineKeyframe(
+            obj,
+            flowIndex,
+            this.start,
+            this.end,
+            enabledProperties,
+
+            this.left.enabled ? this.left.value! : 0,
+            this.left.enabled
+                ? getEasingFunctionCode(this.left.easingFunction)
+                : 0,
+
+            this.top.enabled ? this.top.value! : 0,
+            this.top.enabled
+                ? getEasingFunctionCode(this.top.easingFunction)
+                : 0,
+
+            this.width.enabled ? this.width.value! : 0,
+            this.width.enabled
+                ? getEasingFunctionCode(this.width.easingFunction)
+                : 0,
+
+            this.height.enabled ? this.height.value! : 0,
+            this.height.enabled
+                ? getEasingFunctionCode(this.height.easingFunction)
+                : 0,
+
+            this.opacity.enabled ? this.opacity.value! : 0,
+            this.opacity.enabled
+                ? getEasingFunctionCode(this.opacity.easingFunction)
+                : 0,
+
+            this.scale.enabled ? this.scale.value! : 0,
+            this.scale.enabled
+                ? getEasingFunctionCode(this.scale.easingFunction)
+                : 0,
+
+            this.rotate.enabled ? this.rotate.value! : 0,
+            this.rotate.enabled
+                ? getEasingFunctionCode(this.rotate.easingFunction)
+                : 0,
+
+            this.controlPointsArray.length == 2 ||
+                this.controlPointsArray.length == 4
+                ? controlPointsArray[0]
+                : 0,
+            this.controlPointsArray.length == 2 ||
+                this.controlPointsArray.length == 4
+                ? controlPointsArray[1]
+                : 0,
+            this.controlPointsArray.length == 4 ? controlPointsArray[2] : 0,
+            this.controlPointsArray.length == 4 ? controlPointsArray[3] : 0
+        );
     }
 }
 
@@ -539,29 +802,15 @@ export const TimelineKeyframePropertyUI = observer(
         getValue<T>(
             get: (keyframe: TimelineKeyframe) => T | undefined
         ): T | undefined {
-            let value: T | undefined;
-
-            for (const keyframe of this.keyframes) {
-                if (keyframe == undefined) {
-                    continue;
-                }
-
-                const keyframeValue = get(keyframe);
-
-                if (value === undefined) {
-                    value = keyframeValue;
-                } else {
-                    if (keyframeValue != value) {
-                        return undefined;
-                    }
-                }
-            }
-
-            return value;
+            return getKeyframesValue(this.keyframes, get);
         }
 
         setValue<T>(
-            propertyName: TimelineKeyframeProperty | "start" | "end",
+            propertyName:
+                | TimelineKeyframeProperty
+                | "start"
+                | "end"
+                | "controlPoints",
             get: (keyframe: TimelineKeyframe) => T
         ) {
             this.context.undoManager.setCombineCommands(true);
@@ -663,38 +912,11 @@ export const TimelineKeyframePropertyUI = observer(
         }
 
         getPropertyValue(propertyName: TimelineKeyframeProperty) {
-            return this.getValue<number>(keyframe => {
-                const propertyValue = keyframe[propertyName];
-                return propertyValue.enabled ? propertyValue.value : undefined;
-            });
+            return getKeyframesPropertyValue(this.keyframes, propertyName);
         }
 
         getFromPropertyValue(propertyName: TimelineKeyframeProperty) {
-            return this.getValue<number>(keyframe => {
-                const widget: Widget = getAncestorOfType(
-                    keyframe,
-                    ProjectEditor.WidgetClass.classInfo
-                )!;
-
-                let fromValue;
-
-                const keyframeIndex = widget.timeline.indexOf(keyframe);
-                if (keyframeIndex > 0) {
-                    fromValue = getTimelineProperty(
-                        widget,
-                        widget.timeline[keyframeIndex - 1].end,
-                        propertyName
-                    );
-                } else {
-                    fromValue = getTimelineProperty(
-                        widget,
-                        keyframe.start - 1e-9,
-                        propertyName
-                    );
-                }
-
-                return Math.round(fromValue * 100) / 100;
-            });
+            return getKeyframesFromPropertyValue(this.keyframes, propertyName);
         }
 
         setPropertyValue(
@@ -888,21 +1110,60 @@ export const TimelineKeyframePropertyUI = observer(
                                 </a>
                             </td>
                         </tr>
+
                         {this.renderProperty("left")}
                         {this.renderProperty("top")}
+
                         {this.renderProperty("width")}
                         {this.renderProperty("height")}
+
                         {this.context.projectTypeTraits.isLVGL &&
                             this.renderProperty("scale", 0)}
+
                         {this.context.projectTypeTraits.isDashboard &&
                             this.renderProperty("scaleX", 0)}
                         {this.context.projectTypeTraits.isDashboard &&
                             this.renderProperty("scaleY", 0)}
+
                         {this.context.projectTypeTraits.isDashboard &&
                             this.renderProperty("rotate", -360, 360)}
                         {this.context.projectTypeTraits.isLVGL &&
                             this.renderProperty("rotate", -3600, 3600)}
+
                         {this.renderProperty("opacity", 0, 1)}
+
+                        {(this.getPropertyValue("left") ||
+                            this.getPropertyValue("top")) && (
+                            <>
+                                <tr>
+                                    <td>&nbsp;</td>
+                                </tr>
+                                <tr>
+                                    <td colSpan={2}>
+                                        Animation path curve control points
+                                    </td>
+                                    <td colSpan={2}>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            value={
+                                                this.getValue<string>(
+                                                    keyframe =>
+                                                        keyframe.controlPoints
+                                                ) || ""
+                                            }
+                                            onChange={event =>
+                                                this.setValue(
+                                                    "controlPoints",
+                                                    keyframe =>
+                                                        event.target.value
+                                                )
+                                            }
+                                        />
+                                    </td>
+                                </tr>
+                            </>
+                        )}
                     </tbody>
                 </table>
             );
@@ -1062,39 +1323,60 @@ export function setWidgetRectInTimelineEditor(
         const keyframe = widget.timeline[i];
 
         if (time == keyframe.end) {
-            projectEditorStore.updateObject(keyframe, {
-                left: {
+            const changes: {
+                [key: string]: TimelineKeyframePropertyValue<number>;
+            } = {};
+
+            if (
+                keyframe.left.enabled ||
+                newKeyframe.left.value != widget.left
+            ) {
+                changes.left = {
                     enabled: true,
                     value: newKeyframe.left.value,
                     easingFunction: keyframe.left.enabled
                         ? keyframe.left.easingFunction
                         : "linear"
-                },
+                };
+            }
 
-                top: {
+            if (keyframe.top.enabled || newKeyframe.top.value != widget.top) {
+                changes.top = {
                     enabled: true,
                     value: newKeyframe.top.value,
                     easingFunction: keyframe.top.enabled
                         ? keyframe.top.easingFunction
                         : "linear"
-                },
+                };
+            }
 
-                width: {
+            if (
+                keyframe.width.enabled ||
+                newKeyframe.width.value != widget.width
+            ) {
+                changes.width = {
                     enabled: newKeyframe.width.enabled,
                     value: newKeyframe.width.value,
                     easingFunction: keyframe.width.enabled
                         ? keyframe.width.easingFunction
                         : "linear"
-                },
+                };
+            }
 
-                height: {
+            if (
+                keyframe.height.enabled ||
+                newKeyframe.height.value != widget.height
+            ) {
+                changes.height = {
                     enabled: newKeyframe.height.enabled,
                     value: newKeyframe.height.value,
                     easingFunction: keyframe.height.enabled
                         ? keyframe.height.easingFunction
                         : "linear"
-                }
-            });
+                };
+            }
+
+            projectEditorStore.updateObject(keyframe, changes);
 
             return;
         }
@@ -1157,6 +1439,7 @@ export function getTimelineRect(
     timelinePosition: number
 ): Rect {
     const project = ProjectEditor.getProject(widget);
+
     const roundValues =
         project.projectTypeTraits.isFirmware &&
         project.projectTypeTraits.hasFlowSupport;
@@ -1176,6 +1459,8 @@ export function getTimelineRect(
                 timelinePosition >= keyframe.start &&
                 timelinePosition <= keyframe.end
             ) {
+                const controlPoints = keyframe.controlPointsArray;
+
                 const t =
                     keyframe.start == keyframe.end
                         ? 1
@@ -1183,55 +1468,87 @@ export function getTimelineRect(
                           (keyframe.end - keyframe.start);
 
                 if (keyframe.left.enabled) {
-                    const savedLeft = left;
-                    left +=
-                        easingFunctions[keyframe.left.easingFunction](t) *
-                        (keyframe.left.value! - left);
+                    const t2 = easingFunctions[keyframe.left.easingFunction](t);
+
+                    if (controlPoints.length == 4) {
+                        const p1 = left;
+                        const p2 = controlPoints[0];
+                        const p3 = controlPoints[2];
+                        const p4 = keyframe.left.value!;
+                        left =
+                            (1 - t2) * (1 - t2) * (1 - t2) * p1 +
+                            3 * (1 - t2) * (1 - t2) * t2 * p2 +
+                            3 * (1 - t2) * t2 * t2 * p3 +
+                            t2 * t2 * t2 * p4;
+                    } else if (controlPoints.length == 2) {
+                        const p1 = left;
+                        const p2 = controlPoints[0];
+                        const p3 = keyframe.left.value!;
+                        left =
+                            (1 - t2) * (1 - t2) * p1 +
+                            2 * (1 - t2) * t2 * p2 +
+                            t2 * t2 * p3;
+                    } else {
+                        const p1 = left;
+                        const p2 = keyframe.left.value!;
+                        left = (1 - t2) * p1 + t2 * p2;
+                    }
+
                     if (roundValues) {
                         left = Math.floor(left);
                     }
-                    if (keyframe.width.enabled) {
-                        let right = savedLeft + width;
-                        right +=
-                            easingFunctions[keyframe.width.easingFunction](t) *
-                            (keyframe.left.value! +
-                                keyframe.width.value! -
-                                right);
-                        if (roundValues) {
-                            right = Math.floor(right);
-                        }
-                        width = right - left;
-                    }
-                } else if (keyframe.width.enabled) {
+                }
+
+                if (keyframe.width.enabled) {
                     width +=
                         easingFunctions[keyframe.width.easingFunction](t) *
                         (keyframe.width.value! - width);
+
+                    if (roundValues) {
+                        width = Math.floor(width);
+                    }
                 }
 
                 if (keyframe.top.enabled) {
-                    const savedTop = top;
-                    top +=
-                        easingFunctions[keyframe.top.easingFunction](t) *
-                        (keyframe.top.value! - top);
+                    const t2 = easingFunctions[keyframe.top.easingFunction](t);
+
+                    if (controlPoints.length == 4) {
+                        const p1 = top;
+                        const p2 = controlPoints[1];
+                        const p3 = controlPoints[3];
+                        const p4 = keyframe.top.value!;
+                        top =
+                            (1 - t2) * (1 - t2) * (1 - t2) * p1 +
+                            3 * (1 - t2) * (1 - t2) * t2 * p2 +
+                            3 * (1 - t2) * t2 * t2 * p3 +
+                            t2 * t2 * t2 * p4;
+                    } else if (controlPoints.length == 2) {
+                        const p1 = top;
+                        const p2 = controlPoints[1];
+                        const p3 = keyframe.top.value!;
+                        top =
+                            (1 - t2) * (1 - t2) * p1 +
+                            2 * (1 - t2) * t2 * p2 +
+                            t2 * t2 * p3;
+                    } else {
+                        const p1 = top;
+                        const p2 = keyframe.top.value!;
+                        top = (1 - t2) * p1 + t2 * p2;
+                    }
+
                     if (roundValues) {
                         top = Math.floor(top);
                     }
-                    if (keyframe.height.enabled) {
-                        let bottom = savedTop + height;
-                        bottom +=
-                            easingFunctions[keyframe.height.easingFunction](t) *
-                            (keyframe.top.value! +
-                                keyframe.height.value! -
-                                bottom);
-                        if (roundValues) {
-                            bottom = Math.floor(bottom);
-                        }
-                        height = bottom - top;
-                    }
-                } else if (keyframe.height.enabled) {
+                }
+
+                if (keyframe.height.enabled) {
                     height +=
                         easingFunctions[keyframe.height.easingFunction](t) *
                         (keyframe.height.value! - height);
+
+                    if (roundValues) {
+                        height = Math.floor(height);
+                    }
                 }
 
                 break;
@@ -1317,6 +1634,72 @@ export function getTimelineProperty(
     return value;
 }
 
+function getKeyframesValue<T>(
+    keyframes: (TimelineKeyframe | undefined)[],
+    get: (keyframe: TimelineKeyframe) => T | undefined
+): T | undefined {
+    let value: T | undefined;
+
+    for (const keyframe of keyframes) {
+        if (keyframe == undefined) {
+            continue;
+        }
+
+        const keyframeValue = get(keyframe);
+
+        if (value === undefined) {
+            value = keyframeValue;
+        } else {
+            if (keyframeValue != value) {
+                return undefined;
+            }
+        }
+    }
+
+    return value;
+}
+
+export function getKeyframesPropertyValue(
+    keyframes: (TimelineKeyframe | undefined)[],
+    propertyName: TimelineKeyframeProperty
+) {
+    return getKeyframesValue<number>(keyframes, keyframe => {
+        const propertyValue = keyframe[propertyName];
+        return propertyValue.enabled ? propertyValue.value : undefined;
+    });
+}
+
+export function getKeyframesFromPropertyValue(
+    keyframes: (TimelineKeyframe | undefined)[],
+    propertyName: TimelineKeyframeProperty
+) {
+    return getKeyframesValue<number>(keyframes, keyframe => {
+        const widget: Widget = getAncestorOfType(
+            keyframe,
+            ProjectEditor.WidgetClass.classInfo
+        )!;
+
+        let fromValue;
+
+        const keyframeIndex = widget.timeline.indexOf(keyframe);
+        if (keyframeIndex > 0) {
+            fromValue = getTimelineProperty(
+                widget,
+                widget.timeline[keyframeIndex - 1].end,
+                propertyName
+            );
+        } else {
+            fromValue = getTimelineProperty(
+                widget,
+                keyframe.start - 1e-9,
+                propertyName
+            );
+        }
+
+        return Math.round(fromValue * 100) / 100;
+    });
+}
+
 export function timelineStyleHook(
     widget: Widget,
     style: React.CSSProperties,
@@ -1370,5 +1753,419 @@ export function timelineStyleHook(
         }
 
         style.transform = transform;
+    }
+}
+
+export function lvglBuildPageTimeline(build: LVGLBuild, page: Page) {
+    const hasTimeline = page._lvglWidgets.find(
+        lvglWidget => lvglWidget.timeline.length > 0
+    );
+
+    if (hasTimeline) {
+        let flowIndex = build.assets.getFlowIndex(page);
+
+        build.line(`{`);
+        build.indent();
+
+        build.line(
+            `float timeline_position = getTimelinePosition(${flowIndex});`
+        );
+
+        //
+        //
+        build.line("");
+
+        build.line(`static struct {`);
+        build.indent();
+        build.line("float last_timeline_position;");
+
+        interface KeyframeProperty {
+            name: keyof TimelineKeyframe;
+            lvglName: string;
+            lvglStylePropName: string;
+            lvglFromValue?: (value: string) => string;
+            lvglAnimStep?: (
+                keyframe: TimelineKeyframe,
+                defaultSourceCode: string
+            ) => void;
+            lvglToValue?: (value: string) => string;
+        }
+
+        const KEYFRAME_PROPERTIES: KeyframeProperty[] = [
+            {
+                name: "left",
+                lvglName: "x",
+                lvglStylePropName: "X",
+                lvglAnimStep: (
+                    keyframe: TimelineKeyframe,
+                    defaultSourceCode: string
+                ) => {
+                    build.line(`// x`);
+                    build.line("{");
+                    build.indent();
+
+                    build.line(
+                        `float t2 = eez_${keyframe.left.easingFunction}(t);`
+                    );
+
+                    const controlPointsArray = keyframe.controlPointsArray;
+
+                    if (controlPointsArray.length == 4) {
+                        build.line(
+                            `x_value = (1 - t2) * (1 - t2) * (1 - t2) * x_value + 3 * (1 - t2) * (1 - t2) * t2 * ${
+                                controlPointsArray[0]
+                            } + 3 * (1 - t2) * t2 * t2 * ${
+                                controlPointsArray[2]
+                            } + t2 * t2 * t2 * ${keyframe.left.value!};`
+                        );
+                    } else if (controlPointsArray.length == 2) {
+                        build.line(
+                            `x_value = (1 - t2) * (1 - t2) * x_value + 2 * (1 - t2) * t2 * ${
+                                controlPointsArray[0]
+                            } + t2 * t2 * ${keyframe.left.value!};`
+                        );
+                    } else {
+                        build.line(
+                            `x_value = (1 - t2) * x_value + t2 * ${keyframe.left
+                                .value!};`
+                        );
+                    }
+
+                    build.unindent();
+                    build.line("}");
+                }
+            },
+            {
+                name: "top",
+                lvglName: "y",
+                lvglStylePropName: "Y",
+                lvglAnimStep: (
+                    keyframe: TimelineKeyframe,
+                    defaultSourceCode: string
+                ) => {
+                    build.line(`// y`);
+                    build.line("{");
+                    build.indent();
+
+                    build.line(
+                        `float t2 = eez_${keyframe.top.easingFunction}(t);`
+                    );
+
+                    const controlPointsArray = keyframe.controlPointsArray;
+
+                    if (controlPointsArray.length == 4) {
+                        build.line(
+                            `y_value = (1 - t2) * (1 - t2) * (1 - t2) * y_value + 3 * (1 - t2) * (1 - t2) * t2 * ${
+                                controlPointsArray[1]
+                            } + 3 * (1 - t2) * t2 * t2 * ${
+                                controlPointsArray[3]
+                            } + t2 * t2 * t2 * ${keyframe.top.value!};`
+                        );
+                    } else if (controlPointsArray.length == 2) {
+                        build.line(
+                            `y_value = (1 - t2) * (1 - t2) * y_value + 2 * (1 - t2) * t2 * ${
+                                controlPointsArray[1]
+                            } + t2 * t2 * ${keyframe.top.value!};`
+                        );
+                    } else {
+                        build.line(
+                            `y_value = (1 - t2) * y_value + t2 * ${keyframe.top
+                                .value!};`
+                        );
+                    }
+
+                    build.unindent();
+                    build.line("}");
+                }
+            },
+            {
+                name: "width",
+                lvglName: "width",
+                lvglStylePropName: "WIDTH"
+            },
+            {
+                name: "height",
+                lvglName: "height",
+                lvglStylePropName: "HEIGHT"
+            },
+            {
+                name: "opacity",
+                lvglName: "opacity",
+                lvglStylePropName: "OPA",
+                lvglFromValue: (value: string) => `${value} / 255.0f`,
+                lvglToValue: (value: string) => `${value} * 255.0f`
+            },
+            {
+                name: "scale",
+                lvglName: "scale",
+                lvglStylePropName: "TRANSFORM_ZOOM"
+            },
+            {
+                name: "rotate",
+                lvglName: "rotate",
+                lvglStylePropName: "TRANSFORM_ANGLE",
+                lvglFromValue: (value: string) => value,
+                lvglToValue: (value: string) => value
+            }
+        ];
+
+        function getWidgetPropertyNamesInTimeline(lvglWidget: LVGLWidget) {
+            const propertyNames = new Set<string>();
+            if (lvglWidget.timeline.length > 0) {
+                for (const keyframe of lvglWidget.timeline) {
+                    for (const keyframeProperty of KEYFRAME_PROPERTIES) {
+                        if (
+                            (
+                                keyframe[
+                                    keyframeProperty.name
+                                ] as TimelineKeyframePropertyValue<number>
+                            ).enabled
+                        ) {
+                            propertyNames.add(keyframeProperty.lvglName);
+                        }
+                    }
+                }
+            }
+            return propertyNames;
+        }
+
+        function lvglFromValue(
+            keyframeProperty: KeyframeProperty,
+            value: string
+        ) {
+            if (keyframeProperty.lvglFromValue) {
+                return keyframeProperty.lvglFromValue(value);
+            }
+            return value;
+        }
+
+        function lvglAnimStep(
+            keyframe: TimelineKeyframe,
+            keyframeProperty: KeyframeProperty,
+            defaultSourceCode: string
+        ) {
+            if (keyframeProperty.lvglAnimStep) {
+                keyframeProperty.lvglAnimStep(keyframe, defaultSourceCode);
+            } else {
+                build.line(`// ${keyframeProperty.lvglName}`);
+                build.line(defaultSourceCode);
+            }
+        }
+
+        function lvglToValue(
+            keyframeProperty: KeyframeProperty,
+            value: string
+        ) {
+            if (keyframeProperty.lvglToValue) {
+                return keyframeProperty.lvglToValue(value);
+            }
+            return value;
+        }
+
+        for (const lvglWidget of page._lvglWidgets) {
+            for (const propertyName of getWidgetPropertyNamesInTimeline(
+                lvglWidget
+            )) {
+                build.line(
+                    `int32_t obj_${build.getLvglObjectIdentifierInSourceCode(
+                        lvglWidget,
+                        false
+                    )}_${propertyName}_init_value;`
+                );
+            }
+        }
+
+        build.unindent();
+        build.line(`} anim_state = { -1 };`);
+
+        //
+        //
+        build.line("");
+
+        build.line(`if (anim_state.last_timeline_position == -1) {`);
+        build.indent();
+
+        build.line(`anim_state.last_timeline_position = 0;`);
+
+        for (const lvglWidget of page._lvglWidgets) {
+            for (const propertyName of getWidgetPropertyNamesInTimeline(
+                lvglWidget
+            )) {
+                const keyframeProperty = KEYFRAME_PROPERTIES.find(
+                    keyframeProperty =>
+                        keyframeProperty.lvglName == propertyName
+                )!;
+
+                build.line(
+                    `anim_state.obj_${build.getLvglObjectIdentifierInSourceCode(
+                        lvglWidget,
+                        false
+                    )}_${propertyName}_init_value = ${lvglFromValue(
+                        keyframeProperty,
+                        `lv_obj_get_style_prop(${build.getLvglObjectAccessor(
+                            lvglWidget
+                        )}, LV_PART_MAIN, LV_STYLE_${
+                            keyframeProperty.lvglStylePropName
+                        }).num`
+                    )};`
+                );
+            }
+        }
+
+        build.unindent();
+        build.line(`}`);
+
+        //
+        //
+        build.line("");
+
+        build.line(
+            `if (timeline_position != anim_state.last_timeline_position) {`
+        );
+        build.indent();
+
+        build.line(`anim_state.last_timeline_position = timeline_position;`);
+
+        for (const lvglWidget of page._lvglWidgets) {
+            if (lvglWidget.timeline.length > 0) {
+                build.line(`{`);
+                build.indent();
+                build.line(
+                    `lv_obj_t *obj = ${build.getLvglObjectAccessor(
+                        lvglWidget
+                    )};`
+                );
+
+                build.line("");
+
+                const propertyNames =
+                    getWidgetPropertyNamesInTimeline(lvglWidget);
+
+                for (const propertyName of propertyNames) {
+                    build.line(
+                        `float ${propertyName}_value = anim_state.obj_${build.getLvglObjectIdentifierInSourceCode(
+                            lvglWidget,
+                            false
+                        )}_${propertyName}_init_value;`
+                    );
+                }
+
+                build.line("");
+
+                for (
+                    let keyframeIndex = 0;
+                    keyframeIndex < lvglWidget.timeline.length;
+                    keyframeIndex++
+                ) {
+                    const keyframe = lvglWidget.timeline[keyframeIndex];
+
+                    build.line(
+                        `if (timeline_position >= ${keyframe.start} && timeline_position <= ${keyframe.end}) {`
+                    );
+                    build.indent();
+
+                    build.line(
+                        `float t = ${
+                            keyframe.start == keyframe.end
+                                ? "1"
+                                : `(timeline_position - ${keyframe.start}) / ${
+                                      keyframe.end - keyframe.start
+                                  }`
+                        };`
+                    );
+
+                    for (const keyframeProperty of KEYFRAME_PROPERTIES) {
+                        if (
+                            (
+                                keyframe[
+                                    keyframeProperty.name
+                                ] as TimelineKeyframePropertyValue<number>
+                            ).enabled
+                        ) {
+                            lvglAnimStep(
+                                keyframe,
+                                keyframeProperty,
+                                `${keyframeProperty.lvglName}_value += eez_${
+                                    (
+                                        keyframe[
+                                            keyframeProperty.name
+                                        ] as TimelineKeyframePropertyValue<number>
+                                    ).easingFunction
+                                }(t) * (${
+                                    (
+                                        keyframe[
+                                            keyframeProperty.name
+                                        ] as TimelineKeyframePropertyValue<number>
+                                    ).value
+                                } - ${keyframeProperty.lvglName}_value);`
+                            );
+                        }
+                    }
+
+                    build.unindent();
+
+                    build.line(`} else {`);
+                    build.indent();
+
+                    for (const keyframeProperty of KEYFRAME_PROPERTIES) {
+                        if (
+                            (
+                                keyframe[
+                                    keyframeProperty.name
+                                ] as TimelineKeyframePropertyValue<number>
+                            ).enabled
+                        ) {
+                            build.line(
+                                `${keyframeProperty.lvglName}_value = ${
+                                    (
+                                        keyframe[
+                                            keyframeProperty.name
+                                        ] as TimelineKeyframePropertyValue<number>
+                                    ).value
+                                };`
+                            );
+                        }
+                    }
+                }
+
+                for (
+                    let keyframeIndex = 0;
+                    keyframeIndex < lvglWidget.timeline.length;
+                    keyframeIndex++
+                ) {
+                    build.unindent();
+                    build.line(`}`);
+                }
+
+                build.line("");
+                build.line("lv_style_value_t value;");
+
+                for (const propertyName of propertyNames) {
+                    const keyframeProperty = KEYFRAME_PROPERTIES.find(
+                        keyframeProperty =>
+                            keyframeProperty.lvglName == propertyName
+                    )!;
+                    build.line("");
+                    build.line(
+                        `value.num = (int32_t)roundf(${lvglToValue(
+                            keyframeProperty,
+                            `${keyframeProperty.lvglName}_value`
+                        )});`
+                    );
+                    build.line(
+                        `lv_obj_set_local_style_prop(obj, LV_STYLE_${keyframeProperty.lvglStylePropName}, value, LV_PART_MAIN);`
+                    );
+                }
+
+                build.unindent();
+                build.line(`}`);
+            }
+        }
+
+        build.unindent();
+        build.line(`}`);
+
+        build.unindent();
+        build.line(`}`);
     }
 }

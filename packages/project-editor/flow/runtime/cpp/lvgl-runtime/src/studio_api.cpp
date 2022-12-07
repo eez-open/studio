@@ -611,7 +611,8 @@ EM_PORT_API(void) lvglAddTimelineKeyframe(
     int16_t height, uint8_t heightEasingFunc,
     int16_t opacity, uint8_t opacityEasingFunc,
     int16_t scale, uint8_t scaleEasingFunc,
-    int16_t rotate, uint8_t rotateEasingFunc
+    int16_t rotate, uint8_t rotateEasingFunc,
+    int32_t cp1x, int32_t cp1y, int32_t cp2x, int32_t cp2y
 ) {
     addTimelineKeyframe(
         obj,
@@ -624,7 +625,8 @@ EM_PORT_API(void) lvglAddTimelineKeyframe(
         height, heightEasingFunc,
         opacity, opacityEasingFunc,
         scale, scaleEasingFunc,
-        rotate, rotateEasingFunc
+        rotate, rotateEasingFunc,
+        cp1x, cp1y, cp2x, cp2y
     );
 }
 

@@ -308,7 +308,6 @@ const Controls = observer(
                                             selected={
                                                 this.pageTabState.frontFace
                                             }
-                                            enabled={!this.isShowTimeline}
                                         />
                                         <IconAction
                                             title="Show back face"
@@ -320,7 +319,6 @@ const Controls = observer(
                                             selected={
                                                 !this.pageTabState.frontFace
                                             }
-                                            enabled={!this.isShowTimeline}
                                         />
                                     </div>
 

@@ -62,7 +62,6 @@ import { ComponentsContainerEnclosure } from "project-editor/flow/editor/render"
 import { geometryGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { Property } from "project-editor/ui-components/PropertyGrid/Property";
 import { ValueType } from "project-editor/features/variable/value-type";
-import { getEasingFunctionCode } from "project-editor/build/widgets";
 
 import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
 import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
@@ -1176,81 +1175,7 @@ export class LVGLWidget extends Widget {
         }
 
         for (const keyframe of this.timeline) {
-            // enabledProperties
-            const WIDGET_TIMELINE_PROPERTY_X = 1 << 0;
-            const WIDGET_TIMELINE_PROPERTY_Y = 1 << 1;
-            const WIDGET_TIMELINE_PROPERTY_WIDTH = 1 << 2;
-            const WIDGET_TIMELINE_PROPERTY_HEIGHT = 1 << 3;
-            const WIDGET_TIMELINE_PROPERTY_OPACITY = 1 << 4;
-            const WIDGET_TIMELINE_PROPERTY_SCALE = 1 << 5;
-            const WIDGET_TIMELINE_PROPERTY_ROTATE = 1 << 6;
-
-            let enabledProperties = 0;
-
-            if (keyframe.left.enabled) {
-                enabledProperties |= WIDGET_TIMELINE_PROPERTY_X;
-            }
-            if (keyframe.top.enabled) {
-                enabledProperties |= WIDGET_TIMELINE_PROPERTY_Y;
-            }
-            if (keyframe.width.enabled) {
-                enabledProperties |= WIDGET_TIMELINE_PROPERTY_WIDTH;
-            }
-            if (keyframe.height.enabled) {
-                enabledProperties |= WIDGET_TIMELINE_PROPERTY_HEIGHT;
-            }
-            if (keyframe.opacity.enabled) {
-                enabledProperties |= WIDGET_TIMELINE_PROPERTY_OPACITY;
-            }
-            if (keyframe.scale.enabled) {
-                enabledProperties |= WIDGET_TIMELINE_PROPERTY_SCALE;
-            }
-            if (keyframe.rotate.enabled) {
-                enabledProperties |= WIDGET_TIMELINE_PROPERTY_ROTATE;
-            }
-
-            runtime.wasm._lvglAddTimelineKeyframe(
-                obj,
-                flowIndex,
-                keyframe.start,
-                keyframe.end,
-                enabledProperties,
-
-                keyframe.left.enabled ? keyframe.left.value! : 0,
-                keyframe.left.enabled
-                    ? getEasingFunctionCode(keyframe.left.easingFunction)
-                    : 0,
-
-                keyframe.top.enabled ? keyframe.top.value! : 0,
-                keyframe.top.enabled
-                    ? getEasingFunctionCode(keyframe.top.easingFunction)
-                    : 0,
-
-                keyframe.width.enabled ? keyframe.width.value! : 0,
-                keyframe.width.enabled
-                    ? getEasingFunctionCode(keyframe.width.easingFunction)
-                    : 0,
-
-                keyframe.height.enabled ? keyframe.height.value! : 0,
-                keyframe.height.enabled
-                    ? getEasingFunctionCode(keyframe.height.easingFunction)
-                    : 0,
-
-                keyframe.opacity.enabled ? keyframe.opacity.value! : 0,
-                keyframe.opacity.enabled
-                    ? getEasingFunctionCode(keyframe.opacity.easingFunction)
-                    : 0,
-
-                keyframe.scale.enabled ? keyframe.scale.value! : 0,
-                keyframe.scale.enabled
-                    ? getEasingFunctionCode(keyframe.scale.easingFunction)
-                    : 0,
-
-                keyframe.rotate.enabled ? keyframe.rotate.value! : 0,
-                keyframe.rotate.enabled
-                    ? getEasingFunctionCode(keyframe.rotate.easingFunction)
-                    : 0
-            );
+            keyframe.lvglCreate(runtime, obj, flowIndex);
         }
 
         let children: LVGLCreateResultType[];
