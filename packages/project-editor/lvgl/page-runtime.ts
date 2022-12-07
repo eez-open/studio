@@ -22,7 +22,7 @@ import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import type { Project } from "project-editor/project/project";
 import { getClassesDerivedFrom, setParent } from "project-editor/core/object";
 import type { LVGLStyle } from "./style";
-import type { PageTabState } from "project-editor/features/page/PageEditor";
+import { PageTabState } from "project-editor/features/page/PageEditor";
 
 const lvgl_flow_runtime_constructor = require("project-editor/flow/runtime/lvgl_runtime.js");
 
@@ -254,7 +254,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                     .activeEditor;
                 if (editor) {
                     const pageTabState = editor.state as PageTabState;
-                    if (pageTabState.timeline.isEditorActive) {
+                    if (pageTabState?.timeline?.isEditorActive) {
                         this.wasm._lvglSetTimelinePosition(
                             pageTabState.timeline.position
                         );
