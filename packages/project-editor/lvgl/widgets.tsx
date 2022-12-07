@@ -78,6 +78,8 @@ import {
     LV_EVENT_SLIDER_VALUE_CHANGED,
     LV_EVENT_SLIDER_VALUE_LEFT_CHANGED,
     LV_EVENT_TEXTAREA_TEXT_CHANGED,
+    LV_EVENT_DROPDOWN_SELECTED_CHANGED,
+    LV_EVENT_ROLLER_SELECTED_CHANGED,
     getCode
 } from "project-editor/lvgl/widget-common";
 import {
@@ -2608,6 +2610,8 @@ export const rollerGroup: IPropertyGridGroupDefinition = {
 
 export class LVGLRollerWidget extends LVGLWidget {
     options: string;
+    selected: number | string;
+    selectedType: LVGLPropertyType;
     mode: keyof typeof ROLLER_MODES;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
@@ -2622,6 +2626,15 @@ export class LVGLRollerWidget extends LVGLWidget {
                 type: PropertyType.MultilineText,
                 propertyGridGroup: rollerGroup
             },
+            ...makeExpressionProperty(
+                "selected",
+                "integer",
+                "assignable",
+                ["literal", "expression"],
+                {
+                    propertyGridGroup: rollerGroup
+                }
+            ),
             {
                 name: "mode",
                 type: PropertyType.Enum,
@@ -2642,7 +2655,19 @@ export class LVGLRollerWidget extends LVGLWidget {
             flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
             clickableFlag: true,
             options: "Option 1\nOption 2\nOption 3",
+            selected: 0,
+            selectedType: "literal",
             mode: "NORMAL"
+        },
+
+        beforeLoadHook: (
+            object: LVGLRollerWidget,
+            jsObject: Partial<LVGLRollerWidget>
+        ) => {
+            if (jsObject.selected == undefined) {
+                jsObject.selected = 0;
+                jsObject.selectedType = "literal";
+            }
         },
 
         icon: (
@@ -2689,15 +2714,26 @@ export class LVGLRollerWidget extends LVGLWidget {
 
         makeObservable(this, {
             options: observable,
+            selected: observable,
+            selectedType: observable,
             mode: observable
         });
+    }
+
+    override get hasEventHandler() {
+        return super.hasEventHandler || this.selectedType == "expression";
     }
 
     override lvglCreateObj(
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
-        return runtime.wasm._lvglCreateRoller(
+        const selectedExpr = this.getExpressionPropertyData(
+            runtime,
+            "selected"
+        );
+
+        const obj = runtime.wasm._lvglCreateRoller(
             parentObj,
             runtime.getWidgetIndex(this),
             this.lvglCreateLeft,
@@ -2705,8 +2741,36 @@ export class LVGLRollerWidget extends LVGLWidget {
             this.lvglCreateWidth,
             this.lvglCreateHeight,
             runtime.wasm.allocateUTF8(this.options),
+            selectedExpr ? 0 : (this.selected as number),
             ROLLER_MODES[this.mode]
         );
+
+        if (selectedExpr) {
+            runtime.wasm._lvglUpdateRollerSelected(
+                obj,
+                selectedExpr.flowIndex,
+                selectedExpr.componentIndex,
+                selectedExpr.propertyIndex
+            );
+        }
+
+        return obj;
+    }
+
+    override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
+        const selectedExpr = this.getExpressionPropertyData(
+            runtime,
+            "selected"
+        );
+        if (selectedExpr) {
+            runtime.wasm._lvglAddObjectFlowCallback(
+                obj,
+                LV_EVENT_ROLLER_SELECTED_CHANGED,
+                selectedExpr.flowIndex,
+                selectedExpr.componentIndex,
+                selectedExpr.propertyIndex
+            );
+        }
     }
 
     override lvglBuildObj(build: LVGLBuild) {
@@ -2718,6 +2782,34 @@ export class LVGLRollerWidget extends LVGLWidget {
             `lv_roller_set_options(obj, ${escapeCString(
                 this.options ?? ""
             )}, LV_ROLLER_MODE_${this.mode});`
+        );
+
+        if (this.selectedType == "literal") {
+            if (this.selected != 0) {
+                build.line(
+                    `lv_roller_set_selected(obj, ${this.selected}, LV_ANIM_OFF);`
+                );
+            }
+        }
+    }
+
+    override lvglBuildTickSpecific(build: LVGLBuild) {
+        expressionPropertyBuildTickSpecific<LVGLRollerWidget>(
+            build,
+            this,
+            "selected" as const,
+            "lv_roller_get_selected",
+            "lv_roller_set_selected",
+            ", LV_ANIM_OFF"
+        );
+    }
+
+    override buildEventHandlerSpecific(build: LVGLBuild) {
+        expressionPropertyBuildEventHandlerSpecific<LVGLRollerWidget>(
+            build,
+            this,
+            "selected" as const,
+            "lv_roller_get_selected"
         );
     }
 }
@@ -3059,6 +3151,8 @@ export const dropdownGroup: IPropertyGridGroupDefinition = {
 
 export class LVGLDropdownWidget extends LVGLWidget {
     options: string;
+    selected: number | string;
+    selectedType: LVGLPropertyType;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -3071,7 +3165,16 @@ export class LVGLDropdownWidget extends LVGLWidget {
                 name: "options",
                 type: PropertyType.MultilineText,
                 propertyGridGroup: dropdownGroup
-            }
+            },
+            ...makeExpressionProperty(
+                "selected",
+                "integer",
+                "assignable",
+                ["literal", "expression"],
+                {
+                    propertyGridGroup: rollerGroup
+                }
+            )
         ],
 
         defaultValue: {
@@ -3083,7 +3186,18 @@ export class LVGLDropdownWidget extends LVGLWidget {
             flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
             clickableFlag: true,
             options: "Option 1\nOption 2\nOption 3",
-            mode: "NORMAL"
+            selected: 0,
+            selectedType: "literal"
+        },
+
+        beforeLoadHook: (
+            object: LVGLDropdownWidget,
+            jsObject: Partial<LVGLDropdownWidget>
+        ) => {
+            if (jsObject.selected == undefined) {
+                jsObject.selected = 0;
+                jsObject.selectedType = "literal";
+            }
         },
 
         icon: (
@@ -3117,23 +3231,62 @@ export class LVGLDropdownWidget extends LVGLWidget {
         super();
 
         makeObservable(this, {
-            options: observable
+            options: observable,
+            selected: observable,
+            selectedType: observable
         });
+    }
+
+    override get hasEventHandler() {
+        return super.hasEventHandler || this.selectedType == "expression";
     }
 
     override lvglCreateObj(
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
-        return runtime.wasm._lvglCreateDropdown(
+        const selectedExpr = this.getExpressionPropertyData(
+            runtime,
+            "selected"
+        );
+
+        const obj = runtime.wasm._lvglCreateDropdown(
             parentObj,
             runtime.getWidgetIndex(this),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
             this.lvglCreateHeight,
-            runtime.wasm.allocateUTF8(this.options)
+            runtime.wasm.allocateUTF8(this.options),
+            selectedExpr ? 0 : (this.selected as number)
         );
+
+        if (selectedExpr) {
+            runtime.wasm._lvglUpdateDropdownSelected(
+                obj,
+                selectedExpr.flowIndex,
+                selectedExpr.componentIndex,
+                selectedExpr.propertyIndex
+            );
+        }
+
+        return obj;
+    }
+
+    override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
+        const selectedExpr = this.getExpressionPropertyData(
+            runtime,
+            "selected"
+        );
+        if (selectedExpr) {
+            runtime.wasm._lvglAddObjectFlowCallback(
+                obj,
+                LV_EVENT_DROPDOWN_SELECTED_CHANGED,
+                selectedExpr.flowIndex,
+                selectedExpr.componentIndex,
+                selectedExpr.propertyIndex
+            );
+        }
     }
 
     override lvglBuildObj(build: LVGLBuild) {
@@ -3145,6 +3298,33 @@ export class LVGLDropdownWidget extends LVGLWidget {
             `lv_dropdown_set_options(obj, ${escapeCString(
                 this.options ?? ""
             )});`
+        );
+
+        if (this.selectedType == "literal") {
+            if (this.selected != 0) {
+                build.line(
+                    `lv_dropdown_set_selected(obj, ${this.selected}, LV_ANIM_OFF);`
+                );
+            }
+        }
+    }
+
+    override lvglBuildTickSpecific(build: LVGLBuild) {
+        expressionPropertyBuildTickSpecific<LVGLDropdownWidget>(
+            build,
+            this,
+            "selected" as const,
+            "lv_dropdown_get_selected",
+            "lv_dropdown_set_selected"
+        );
+    }
+
+    override buildEventHandlerSpecific(build: LVGLBuild) {
+        expressionPropertyBuildEventHandlerSpecific<LVGLDropdownWidget>(
+            build,
+            this,
+            "selected" as const,
+            "lv_dropdown_get_selected"
         );
     }
 }

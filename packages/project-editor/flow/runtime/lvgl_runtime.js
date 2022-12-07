@@ -1175,12 +1175,12 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  976400: ($0, $1) => { freeComponentExecutionState($0, $1); },  
- 976441: ($0) => { startToDebuggerMessage($0); },  
- 976473: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 976548: ($0) => { finishToDebuggerMessage($0); },  
- 976581: ($0, $1) => { onArrayValueFree($0, $1); },  
- 976611: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
+  976576: ($0, $1) => { freeComponentExecutionState($0, $1); },  
+ 976617: ($0) => { startToDebuggerMessage($0); },  
+ 976649: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 976724: ($0) => { finishToDebuggerMessage($0); },  
+ 976757: ($0, $1) => { onArrayValueFree($0, $1); },  
+ 976787: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
 };
 
 
@@ -4921,6 +4921,12 @@ var _lvglSetImgbuttonImageSrc = Module["_lvglSetImgbuttonImageSrc"] = createExpo
 
 /** @type {function(...*):?} */
 var _lvglSetKeyboardTextarea = Module["_lvglSetKeyboardTextarea"] = createExportWrapper("lvglSetKeyboardTextarea");
+
+/** @type {function(...*):?} */
+var _lvglUpdateDropdownSelected = Module["_lvglUpdateDropdownSelected"] = createExportWrapper("lvglUpdateDropdownSelected");
+
+/** @type {function(...*):?} */
+var _lvglUpdateRollerSelected = Module["_lvglUpdateRollerSelected"] = createExportWrapper("lvglUpdateRollerSelected");
 
 /** @type {function(...*):?} */
 var _lvglUpdateSliderValue = Module["_lvglUpdateSliderValue"] = createExportWrapper("lvglUpdateSliderValue");

@@ -382,10 +382,10 @@ export interface IWasmFlowRuntime {
     _lvglCreatePanel(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateImage(parentObj: number, index: number, x: number, y: number, w: number, h: number, img_src: number, pivotX: number, pivotY: number, zoom: number, angle: number): number;
     _lvglCreateSlider(parentObj: number, index: number, x: number, y: number, w: number, h: number, min: number, max: number, mode: number, value: number, value_left: number): number;
-    _lvglCreateRoller(parentObj: number, index: number, x: number, y: number, w: number, h: number, options: number, mode: number): number;
+    _lvglCreateRoller(parentObj: number, index: number, x: number, y: number, w: number, h: number, options: number, selected: number, mode: number): number;
     _lvglCreateSwitch(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateBar(parentObj: number, index: number, x: number, y: number, w: number, h: number, min: number, max: number, mode: number, value: number, value_left: number): number;
-    _lvglCreateDropdown(parentObj: number, index: number, x: number, y: number, w: number, h: number, options: number): number;
+    _lvglCreateDropdown(parentObj: number, index: number, x: number, y: number, w: number, h: number, options: number, selected: number): number;
     _lvglCreateArc(parentObj: number, index: number, x: number, y: number, w: number, h: number, range_min: number, range_max: number, value: number, bg_start_angle: number, bg_end_angle: number, mode: number, rotation: number): number;
     _lvglCreateSpinner(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateCheckbox(parentObj: number, index: number, x: number, y: number, w: number, h: number, text: number): number;
@@ -419,6 +419,8 @@ export interface IWasmFlowRuntime {
     _lvglSetImgbuttonImageSrc(obj: number, statE: number, img_src: number): void;
     _lvglSetKeyboardTextarea(obj: number, textarea: number): void;
     _lvglUpdateLabelText(obj: number, page_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateRollerSelected(obj: number, page_index: number, component_index: number, property_index: number);
+    _lvglUpdateDropdownSelected(obj: number, page_index: number, component_index: number, property_index: number);
     _lvglUpdateSliderValue(obj: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateSliderValueLeft(obj: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateBarValue(obj: number, page_index: number, component_index: number, property_index: number): void;

@@ -31,6 +31,8 @@ import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const LV_EVENT_DROPDOWN_SELECTED_CHANGED = 0x77;
+export const LV_EVENT_ROLLER_SELECTED_CHANGED = 0x78;
 export const LV_EVENT_TEXTAREA_TEXT_CHANGED = 0x79;
 export const LV_EVENT_CHECKED_STATE_CHANGED = 0x7a;
 export const LV_EVENT_ARC_VALUE_CHANGED = 0x7b;

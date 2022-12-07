@@ -80,10 +80,11 @@ EM_PORT_API(lv_obj_t *) lvglCreateSlider(lv_obj_t *parentObj, int32_t index, lv_
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateRoller(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, char *options, lv_roller_mode_t mode) {
+EM_PORT_API(lv_obj_t *) lvglCreateRoller(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, char *options, uint16_t selected, lv_roller_mode_t mode) {
     lv_obj_t *obj = lv_roller_create(parentObj);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
+    lv_roller_set_selected(obj, selected, LV_ANIM_OFF);
     lv_roller_set_options(obj, options, mode);
     free(options);
     lv_obj_update_layout(obj);
@@ -115,11 +116,12 @@ EM_PORT_API(lv_obj_t *) lvglCreateBar(lv_obj_t *parentObj, int32_t index, lv_coo
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateDropdown(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, char *options) {
+EM_PORT_API(lv_obj_t *) lvglCreateDropdown(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, char *options, uint16_t selected) {
     lv_obj_t *obj = lv_dropdown_create(parentObj);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_dropdown_set_options(obj, options);
+    lv_dropdown_set_selected(obj, selected);
     free(options);
     lv_obj_update_layout(obj);
     setObjectIndex(obj, index);
@@ -394,6 +396,8 @@ void trt(lv_event_t *e) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#define LV_EVENT_DROPDOWN_SELECTED_CHANGED 0x77
+#define LV_EVENT_ROLLER_SELECTED_CHANGED 0x78
 #define LV_EVENT_TEXTAREA_TEXT_CHANGED 0x79
 #define LV_EVENT_CHECKED_STATE_CHANGED 0x7A
 #define LV_EVENT_ARC_VALUE_CHANGED 0x7B
@@ -468,6 +472,28 @@ void flow_event_bar_value_start_changed_callback(lv_event_t *e) {
     }
 }
 
+void flow_event_dropdown_selected_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target(e);
+
+        FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+        uint16_t selected = lv_dropdown_get_selected(ta);
+        assignIntegerProperty(data->page_index, data->component_index, data->output_or_property_index, selected, "Failed to assign Selected in Dropdown widget");
+    }
+}
+
+void flow_event_roller_selected_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target(e);
+
+        FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+        uint16_t selected = lv_roller_get_selected(ta);
+        assignIntegerProperty(data->page_index, data->component_index, data->output_or_property_index, selected, "Failed to assign Selected in Roller widget");
+    }
+}
+
 void flow_event_slider_value_changed_callback(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     if (event == LV_EVENT_VALUE_CHANGED) {
@@ -517,7 +543,11 @@ EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filte
     data->component_index = component_index;
     data->output_or_property_index = output_or_property_index;
 
-    if (filter == LV_EVENT_TEXTAREA_TEXT_CHANGED) {
+    if (filter == LV_EVENT_DROPDOWN_SELECTED_CHANGED) {
+        lv_obj_add_event_cb(obj, flow_event_dropdown_selected_changed_callback, LV_EVENT_VALUE_CHANGED, data);
+    } else if (filter == LV_EVENT_ROLLER_SELECTED_CHANGED) {
+        lv_obj_add_event_cb(obj, flow_event_roller_selected_changed_callback, LV_EVENT_VALUE_CHANGED, data);
+    } else if (filter == LV_EVENT_TEXTAREA_TEXT_CHANGED) {
         lv_obj_add_event_cb(obj, flow_event_textarea_text_changed_callback, LV_EVENT_VALUE_CHANGED, data);
     } else if (filter == LV_EVENT_CHECKED_STATE_CHANGED) {
         lv_obj_add_event_cb(obj, flow_event_checked_state_changed_callback, LV_EVENT_VALUE_CHANGED, data);
@@ -558,6 +588,14 @@ EM_PORT_API(void) lvglSetImgbuttonImageSrc(lv_obj_t *obj, lv_imgbtn_state_t stat
 EM_PORT_API(void) lvglSetKeyboardTextarea(lv_obj_t *obj, lv_obj_t *textarea) {
     lv_keyboard_set_textarea(obj, textarea);
     lv_obj_update_layout(obj);
+}
+
+EM_PORT_API(void) lvglUpdateDropdownSelected(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_DROPDOWN_SELECTED, obj, page_index, component_index, property_index);
+}
+
+EM_PORT_API(void) lvglUpdateRollerSelected(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_ROLLER_SELECTED, obj, page_index, component_index, property_index);
 }
 
 EM_PORT_API(void) lvglUpdateSliderValue(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {

@@ -412,6 +412,14 @@ void doUpdateTasks() {
             const char *new_val = evalTextProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Text in Textarea widget");
             const char *cur_val = lv_textarea_get_text(updateTask.obj);
             if (strcmp(new_val, cur_val) != 0) lv_textarea_set_text(updateTask.obj, new_val);
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_DROPDOWN_SELECTED) {
+            uint16_t new_val = (uint16_t)evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Selected in Dropdown widget");
+            uint16_t cur_val = lv_dropdown_get_selected(updateTask.obj);
+            if (new_val != cur_val) lv_dropdown_set_selected(updateTask.obj, new_val);
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_ROLLER_SELECTED) {
+            uint16_t new_val = (uint16_t)evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Selected in Roller widget");
+            uint16_t cur_val = lv_roller_get_selected(updateTask.obj);
+            if (new_val != cur_val) lv_roller_set_selected(updateTask.obj, new_val, LV_ANIM_OFF);
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_SLIDER_VALUE) {
             int32_t new_val = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Slider widget");
             int32_t cur_val = lv_slider_get_value(updateTask.obj);
