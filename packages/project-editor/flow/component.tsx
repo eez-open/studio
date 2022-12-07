@@ -133,7 +133,7 @@ import {
 import { ProjectContext } from "project-editor/project/context";
 import { Icon } from "eez-studio-ui/icon";
 import type { LVGLCreateResultType } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
+import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import {
     getTimelineEditorState,
     getTimelineProperty,

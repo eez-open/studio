@@ -182,16 +182,8 @@ extern "C" void addTimelineKeyframe(
 
     WidgetTimeline widgetTimeline;
     widgetTimeline.obj = obj;
-    widgetTimeline.lastTimelinePosition = 0;
+    widgetTimeline.lastTimelinePosition = -1;
     widgetTimeline.pageIndex = page_index;
-
-    widgetTimeline.x = lv_obj_get_style_prop(obj, LV_PART_MAIN, LV_STYLE_X).num;
-    widgetTimeline.y = lv_obj_get_style_prop(obj, LV_PART_MAIN, LV_STYLE_Y).num;
-    widgetTimeline.width = lv_obj_get_style_prop(obj, LV_PART_MAIN, LV_STYLE_WIDTH).num;
-    widgetTimeline.height = lv_obj_get_style_prop(obj, LV_PART_MAIN, LV_STYLE_HEIGHT).num;
-    widgetTimeline.opacity = lv_obj_get_style_prop(obj, LV_PART_MAIN, LV_STYLE_OPA).num / 255.0f;
-    widgetTimeline.scale = lv_obj_get_style_prop(obj, LV_PART_MAIN, LV_STYLE_TRANSFORM_ZOOM).num;
-    widgetTimeline.rotate = lv_obj_get_style_prop(obj, LV_PART_MAIN, LV_STYLE_TRANSFORM_ANGLE).num;
 
     widgetTimeline.timeline.push_back(timelineKeyframe);
 
@@ -199,6 +191,22 @@ extern "C" void addTimelineKeyframe(
 }
 
 void updateTimelineProperties(WidgetTimeline &widgetTimeline, float timelinePosition) {
+    if (widgetTimeline.lastTimelinePosition == -1) {
+        widgetTimeline.x = lv_obj_get_style_prop(widgetTimeline.obj, LV_PART_MAIN, LV_STYLE_X).num;
+        widgetTimeline.y = lv_obj_get_style_prop(widgetTimeline.obj, LV_PART_MAIN, LV_STYLE_Y).num;
+        widgetTimeline.width = lv_obj_get_style_prop(widgetTimeline.obj, LV_PART_MAIN, LV_STYLE_WIDTH).num;
+        widgetTimeline.height = lv_obj_get_style_prop(widgetTimeline.obj, LV_PART_MAIN, LV_STYLE_HEIGHT).num;
+        widgetTimeline.opacity = lv_obj_get_style_prop(widgetTimeline.obj, LV_PART_MAIN, LV_STYLE_OPA).num / 255.0f;
+        widgetTimeline.scale = lv_obj_get_style_prop(widgetTimeline.obj, LV_PART_MAIN, LV_STYLE_TRANSFORM_ZOOM).num;
+        widgetTimeline.rotate = lv_obj_get_style_prop(widgetTimeline.obj, LV_PART_MAIN, LV_STYLE_TRANSFORM_ANGLE).num;
+
+        widgetTimeline.lastTimelinePosition = 0;
+    }
+
+    if (timelinePosition == widgetTimeline.lastTimelinePosition) {
+        return;
+    }
+
     float x = widgetTimeline.x;
     float y = widgetTimeline.y;
     float w = widgetTimeline.width;
@@ -359,10 +367,7 @@ void doAnimate() {
         for (auto it = widgetTimelines.begin(); it != widgetTimelines.end(); it++) {
             WidgetTimeline &widgetTimeline = *it;
             if (widgetTimeline.pageIndex == pageIndex) {
-                if (flowState->timelinePosition != widgetTimeline.lastTimelinePosition) {
-                    updateTimelineProperties(widgetTimeline, flowState->timelinePosition);
-                    widgetTimeline.lastTimelinePosition = flowState->timelinePosition;
-                }
+                updateTimelineProperties(widgetTimeline, flowState->timelinePosition);
             }
         }
     }

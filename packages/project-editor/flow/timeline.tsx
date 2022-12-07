@@ -23,7 +23,8 @@ import {
     PropertyType,
     PropertyProps,
     registerClass,
-    getObjectPropertyDisplayName
+    getObjectPropertyDisplayName,
+    getId
 } from "project-editor/core/object";
 import {
     getAncestorOfType,
@@ -47,6 +48,8 @@ import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { LVGLBuild } from "project-editor/lvgl/build";
 import type { Page } from "project-editor/features/page/page";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
+import type { EditorFlowContext } from "project-editor/flow/editor/context";
+import { Svg } from "project-editor/flow/editor/render";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1219,6 +1222,217 @@ export const TimelineKeyframePropertyUI = observer(
     }
 );
 
+////////////////////////////////////////////////////////////////////////////////
+
+export const TimelineAnimationCurve = observer(
+    ({ flowContext }: { flowContext: EditorFlowContext }) => {
+        const widget = flowContext.tabState.selectedObject;
+        if (!(widget instanceof ProjectEditor.WidgetClass)) {
+            return null;
+        }
+
+        const timeline = flowContext.tabState.timeline;
+        if (!timeline) {
+            return null;
+        }
+
+        if (!timeline.isEditorActive) {
+            return null;
+        }
+
+        const keyframes = widget.timeline.filter(
+            keyframe => keyframe.left.enabled || keyframe.top.enabled
+        );
+        if (keyframes.length == 0) {
+            return null;
+        }
+
+        console.log("T1");
+
+        return (
+            <Svg flowContext={flowContext}>
+                {keyframes
+                    .map(keyframe => {
+                        const controlPointsArray = keyframe.controlPointsArray;
+
+                        const CURVE_STROKE_WIDTH = 2;
+                        const CURVE_COLOR = "green";
+
+                        const LINE_TO_CONTROL_POINT_STROKE_WIDTH = 0.5;
+                        const LINE_TO_CONTROL_POINT_COLOR = "green";
+
+                        const CONTROL_POINT_HANDLE_COLOR = "green";
+
+                        const keyframes = [keyframe];
+
+                        const leftFrom = getKeyframesFromPropertyValue(
+                            keyframes,
+                            "left"
+                        );
+                        if (leftFrom == undefined) {
+                            return null;
+                        }
+
+                        const leftTo = getKeyframesPropertyValue(
+                            keyframes,
+                            "left"
+                        );
+                        if (leftTo == undefined) {
+                            return null;
+                        }
+
+                        const topFrom = getKeyframesFromPropertyValue(
+                            keyframes,
+                            "top"
+                        );
+                        if (topFrom == undefined) {
+                            return null;
+                        }
+
+                        const topTo = getKeyframesPropertyValue(
+                            keyframes,
+                            "top"
+                        );
+                        if (topTo == undefined) {
+                            return null;
+                        }
+
+                        const pFrom = {
+                            x: leftFrom,
+                            y: topFrom
+                        };
+                        const pTo = {
+                            x: leftTo,
+                            y: topTo
+                        };
+
+                        if (controlPointsArray.length == 4) {
+                            const p1 = pFrom;
+
+                            const p2 = {
+                                x: controlPointsArray[0],
+                                y: controlPointsArray[1]
+                            };
+
+                            const p3 = {
+                                x: controlPointsArray[2],
+                                y: controlPointsArray[3]
+                            };
+
+                            const p4 = pTo;
+
+                            if (
+                                p2.x != undefined &&
+                                p2.y != undefined &&
+                                p3.x != undefined &&
+                                p3.y != undefined
+                            ) {
+                                return (
+                                    <g key={getId(keyframe)}>
+                                        <path
+                                            d={`M ${p1.x} ${p1.y} C ${p2.x} ${p2.y} ${p3.x} ${p3.y} ${p4.x} ${p4.y}`}
+                                            strokeWidth={CURVE_STROKE_WIDTH}
+                                            stroke={CURVE_COLOR}
+                                            fill="none"
+                                            strokeLinecap="round"
+                                            markerEnd="url(#timelineAnimationCurveEndMarker)"
+                                        />
+                                        <path
+                                            d={`M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`}
+                                            strokeWidth={
+                                                LINE_TO_CONTROL_POINT_STROKE_WIDTH
+                                            }
+                                            stroke={LINE_TO_CONTROL_POINT_COLOR}
+                                            fill="none"
+                                        />
+                                        <path
+                                            d={`M ${p4.x} ${p4.y} L ${p3.x} ${p3.y}`}
+                                            strokeWidth={
+                                                LINE_TO_CONTROL_POINT_STROKE_WIDTH
+                                            }
+                                            stroke={LINE_TO_CONTROL_POINT_COLOR}
+                                            fill="none"
+                                        />
+                                        <circle
+                                            cx={p2.x}
+                                            cy={p2.y}
+                                            r={8}
+                                            fill={CONTROL_POINT_HANDLE_COLOR}
+                                        />
+                                        <circle
+                                            cx={p3.x}
+                                            cy={p3.y}
+                                            r={8}
+                                            fill={CONTROL_POINT_HANDLE_COLOR}
+                                        />
+                                    </g>
+                                );
+                            }
+                        } else if (controlPointsArray.length == 2) {
+                            const p1 = pFrom;
+
+                            const p2 = {
+                                x: controlPointsArray[0],
+                                y: controlPointsArray[1]
+                            };
+
+                            const p3 = pTo;
+
+                            if (p2.x != undefined && p2.y != undefined) {
+                                return (
+                                    <g key={getId(keyframe)}>
+                                        <path
+                                            d={`M ${p1.x} ${p1.y} Q ${p2.x} ${p2.y} ${p3.x} ${p3.y}`}
+                                            strokeWidth={CURVE_STROKE_WIDTH}
+                                            stroke={CURVE_COLOR}
+                                            fill="none"
+                                            strokeLinecap="round"
+                                            markerEnd="url(#timelineAnimationCurveEndMarker)"
+                                        />
+                                        <path
+                                            d={`M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`}
+                                            strokeWidth={
+                                                LINE_TO_CONTROL_POINT_STROKE_WIDTH
+                                            }
+                                            stroke={LINE_TO_CONTROL_POINT_COLOR}
+                                            fill="none"
+                                        />
+                                        <circle
+                                            cx={p2.x}
+                                            cy={p2.y}
+                                            r={8}
+                                            fill={CONTROL_POINT_HANDLE_COLOR}
+                                        />
+                                    </g>
+                                );
+                            }
+                        } else {
+                            const p1 = pFrom;
+                            const p2 = pTo;
+                            return (
+                                <g key={getId(keyframe)}>
+                                    <path
+                                        d={`M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`}
+                                        strokeWidth={CURVE_STROKE_WIDTH}
+                                        stroke={CURVE_COLOR}
+                                        fill="none"
+                                        strokeLinecap="round"
+                                        markerEnd="url(#timelineAnimationCurveEndMarker)"
+                                    />
+                                </g>
+                            );
+                        }
+
+                        return null;
+                    })
+                    .filter(node => node != null)}
+            </Svg>
+        );
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export function getTimelineEditorState(component: Component) {
     if (component instanceof ProjectEditor.WidgetClass) {
         const projectEditorStore = getProjectEditorStore(component);
@@ -1757,6 +1971,181 @@ export function timelineStyleHook(
 }
 
 export function lvglBuildPageTimeline(build: LVGLBuild, page: Page) {
+    interface KeyframeProperty {
+        name: keyof TimelineKeyframe;
+        lvglName: string;
+        lvglStylePropName: string;
+        lvglFromValue?: (value: string) => string;
+        lvglAnimStep?: (
+            keyframe: TimelineKeyframe,
+            defaultSourceCode: string
+        ) => void;
+        lvglToValue?: (value: string) => string;
+    }
+
+    const KEYFRAME_PROPERTIES: KeyframeProperty[] = [
+        {
+            name: "left",
+            lvglName: "x",
+            lvglStylePropName: "X",
+            lvglAnimStep: (
+                keyframe: TimelineKeyframe,
+                defaultSourceCode: string
+            ) => {
+                build.line(`// x`);
+                build.line("{");
+                build.indent();
+
+                build.line(
+                    `float t2 = eez_${keyframe.left.easingFunction}(t);`
+                );
+
+                const controlPointsArray = keyframe.controlPointsArray;
+
+                if (controlPointsArray.length == 4) {
+                    build.line(
+                        `x_value = (1 - t2) * (1 - t2) * (1 - t2) * x_value + 3 * (1 - t2) * (1 - t2) * t2 * ${
+                            controlPointsArray[0]
+                        } + 3 * (1 - t2) * t2 * t2 * ${
+                            controlPointsArray[2]
+                        } + t2 * t2 * t2 * ${keyframe.left.value!};`
+                    );
+                } else if (controlPointsArray.length == 2) {
+                    build.line(
+                        `x_value = (1 - t2) * (1 - t2) * x_value + 2 * (1 - t2) * t2 * ${
+                            controlPointsArray[0]
+                        } + t2 * t2 * ${keyframe.left.value!};`
+                    );
+                } else {
+                    build.line(
+                        `x_value = (1 - t2) * x_value + t2 * ${keyframe.left
+                            .value!};`
+                    );
+                }
+
+                build.unindent();
+                build.line("}");
+            }
+        },
+        {
+            name: "top",
+            lvglName: "y",
+            lvglStylePropName: "Y",
+            lvglAnimStep: (
+                keyframe: TimelineKeyframe,
+                defaultSourceCode: string
+            ) => {
+                build.line(`// y`);
+                build.line("{");
+                build.indent();
+
+                build.line(`float t2 = eez_${keyframe.top.easingFunction}(t);`);
+
+                const controlPointsArray = keyframe.controlPointsArray;
+
+                if (controlPointsArray.length == 4) {
+                    build.line(
+                        `y_value = (1 - t2) * (1 - t2) * (1 - t2) * y_value + 3 * (1 - t2) * (1 - t2) * t2 * ${
+                            controlPointsArray[1]
+                        } + 3 * (1 - t2) * t2 * t2 * ${
+                            controlPointsArray[3]
+                        } + t2 * t2 * t2 * ${keyframe.top.value!};`
+                    );
+                } else if (controlPointsArray.length == 2) {
+                    build.line(
+                        `y_value = (1 - t2) * (1 - t2) * y_value + 2 * (1 - t2) * t2 * ${
+                            controlPointsArray[1]
+                        } + t2 * t2 * ${keyframe.top.value!};`
+                    );
+                } else {
+                    build.line(
+                        `y_value = (1 - t2) * y_value + t2 * ${keyframe.top
+                            .value!};`
+                    );
+                }
+
+                build.unindent();
+                build.line("}");
+            }
+        },
+        {
+            name: "width",
+            lvglName: "width",
+            lvglStylePropName: "WIDTH"
+        },
+        {
+            name: "height",
+            lvglName: "height",
+            lvglStylePropName: "HEIGHT"
+        },
+        {
+            name: "opacity",
+            lvglName: "opacity",
+            lvglStylePropName: "OPA",
+            lvglFromValue: (value: string) => `${value} / 255.0f`,
+            lvglToValue: (value: string) => `${value} * 255.0f`
+        },
+        {
+            name: "scale",
+            lvglName: "scale",
+            lvglStylePropName: "TRANSFORM_ZOOM"
+        },
+        {
+            name: "rotate",
+            lvglName: "rotate",
+            lvglStylePropName: "TRANSFORM_ANGLE",
+            lvglFromValue: (value: string) => value,
+            lvglToValue: (value: string) => value
+        }
+    ];
+
+    function getWidgetPropertyNamesInTimeline(lvglWidget: LVGLWidget) {
+        const propertyNames = new Set<string>();
+        if (lvglWidget.timeline.length > 0) {
+            for (const keyframe of lvglWidget.timeline) {
+                for (const keyframeProperty of KEYFRAME_PROPERTIES) {
+                    if (
+                        (
+                            keyframe[
+                                keyframeProperty.name
+                            ] as TimelineKeyframePropertyValue<number>
+                        ).enabled
+                    ) {
+                        propertyNames.add(keyframeProperty.lvglName);
+                    }
+                }
+            }
+        }
+        return propertyNames;
+    }
+
+    function lvglFromValue(keyframeProperty: KeyframeProperty, value: string) {
+        if (keyframeProperty.lvglFromValue) {
+            return keyframeProperty.lvglFromValue(value);
+        }
+        return value;
+    }
+
+    function lvglAnimStep(
+        keyframe: TimelineKeyframe,
+        keyframeProperty: KeyframeProperty,
+        defaultSourceCode: string
+    ) {
+        if (keyframeProperty.lvglAnimStep) {
+            keyframeProperty.lvglAnimStep(keyframe, defaultSourceCode);
+        } else {
+            build.line(`// ${keyframeProperty.lvglName}`);
+            build.line(defaultSourceCode);
+        }
+    }
+
+    function lvglToValue(keyframeProperty: KeyframeProperty, value: string) {
+        if (keyframeProperty.lvglToValue) {
+            return keyframeProperty.lvglToValue(value);
+        }
+        return value;
+    }
+
     const hasTimeline = page._lvglWidgets.find(
         lvglWidget => lvglWidget.timeline.length > 0
     );
@@ -1765,407 +2154,283 @@ export function lvglBuildPageTimeline(build: LVGLBuild, page: Page) {
         let flowIndex = build.assets.getFlowIndex(page);
 
         build.line(`{`);
-        build.indent();
+        {
+            build.indent();
 
-        build.line(
-            `float timeline_position = getTimelinePosition(${flowIndex});`
-        );
+            build.line(
+                `float timeline_position = getTimelinePosition(${flowIndex});`
+            );
 
-        //
-        //
-        build.line("");
-
-        build.line(`static struct {`);
-        build.indent();
-        build.line("float last_timeline_position;");
-
-        interface KeyframeProperty {
-            name: keyof TimelineKeyframe;
-            lvglName: string;
-            lvglStylePropName: string;
-            lvglFromValue?: (value: string) => string;
-            lvglAnimStep?: (
-                keyframe: TimelineKeyframe,
-                defaultSourceCode: string
-            ) => void;
-            lvglToValue?: (value: string) => string;
-        }
-
-        const KEYFRAME_PROPERTIES: KeyframeProperty[] = [
+            //
+            //
+            build.line("");
+            build.line(`static struct {`);
             {
-                name: "left",
-                lvglName: "x",
-                lvglStylePropName: "X",
-                lvglAnimStep: (
-                    keyframe: TimelineKeyframe,
-                    defaultSourceCode: string
-                ) => {
-                    build.line(`// x`);
-                    build.line("{");
-                    build.indent();
-
-                    build.line(
-                        `float t2 = eez_${keyframe.left.easingFunction}(t);`
-                    );
-
-                    const controlPointsArray = keyframe.controlPointsArray;
-
-                    if (controlPointsArray.length == 4) {
-                        build.line(
-                            `x_value = (1 - t2) * (1 - t2) * (1 - t2) * x_value + 3 * (1 - t2) * (1 - t2) * t2 * ${
-                                controlPointsArray[0]
-                            } + 3 * (1 - t2) * t2 * t2 * ${
-                                controlPointsArray[2]
-                            } + t2 * t2 * t2 * ${keyframe.left.value!};`
-                        );
-                    } else if (controlPointsArray.length == 2) {
-                        build.line(
-                            `x_value = (1 - t2) * (1 - t2) * x_value + 2 * (1 - t2) * t2 * ${
-                                controlPointsArray[0]
-                            } + t2 * t2 * ${keyframe.left.value!};`
-                        );
-                    } else {
-                        build.line(
-                            `x_value = (1 - t2) * x_value + t2 * ${keyframe.left
-                                .value!};`
-                        );
-                    }
-
-                    build.unindent();
-                    build.line("}");
-                }
-            },
-            {
-                name: "top",
-                lvglName: "y",
-                lvglStylePropName: "Y",
-                lvglAnimStep: (
-                    keyframe: TimelineKeyframe,
-                    defaultSourceCode: string
-                ) => {
-                    build.line(`// y`);
-                    build.line("{");
-                    build.indent();
-
-                    build.line(
-                        `float t2 = eez_${keyframe.top.easingFunction}(t);`
-                    );
-
-                    const controlPointsArray = keyframe.controlPointsArray;
-
-                    if (controlPointsArray.length == 4) {
-                        build.line(
-                            `y_value = (1 - t2) * (1 - t2) * (1 - t2) * y_value + 3 * (1 - t2) * (1 - t2) * t2 * ${
-                                controlPointsArray[1]
-                            } + 3 * (1 - t2) * t2 * t2 * ${
-                                controlPointsArray[3]
-                            } + t2 * t2 * t2 * ${keyframe.top.value!};`
-                        );
-                    } else if (controlPointsArray.length == 2) {
-                        build.line(
-                            `y_value = (1 - t2) * (1 - t2) * y_value + 2 * (1 - t2) * t2 * ${
-                                controlPointsArray[1]
-                            } + t2 * t2 * ${keyframe.top.value!};`
-                        );
-                    } else {
-                        build.line(
-                            `y_value = (1 - t2) * y_value + t2 * ${keyframe.top
-                                .value!};`
-                        );
-                    }
-
-                    build.unindent();
-                    build.line("}");
-                }
-            },
-            {
-                name: "width",
-                lvglName: "width",
-                lvglStylePropName: "WIDTH"
-            },
-            {
-                name: "height",
-                lvglName: "height",
-                lvglStylePropName: "HEIGHT"
-            },
-            {
-                name: "opacity",
-                lvglName: "opacity",
-                lvglStylePropName: "OPA",
-                lvglFromValue: (value: string) => `${value} / 255.0f`,
-                lvglToValue: (value: string) => `${value} * 255.0f`
-            },
-            {
-                name: "scale",
-                lvglName: "scale",
-                lvglStylePropName: "TRANSFORM_ZOOM"
-            },
-            {
-                name: "rotate",
-                lvglName: "rotate",
-                lvglStylePropName: "TRANSFORM_ANGLE",
-                lvglFromValue: (value: string) => value,
-                lvglToValue: (value: string) => value
-            }
-        ];
-
-        function getWidgetPropertyNamesInTimeline(lvglWidget: LVGLWidget) {
-            const propertyNames = new Set<string>();
-            if (lvglWidget.timeline.length > 0) {
-                for (const keyframe of lvglWidget.timeline) {
-                    for (const keyframeProperty of KEYFRAME_PROPERTIES) {
-                        if (
-                            (
-                                keyframe[
-                                    keyframeProperty.name
-                                ] as TimelineKeyframePropertyValue<number>
-                            ).enabled
-                        ) {
-                            propertyNames.add(keyframeProperty.lvglName);
-                        }
-                    }
-                }
-            }
-            return propertyNames;
-        }
-
-        function lvglFromValue(
-            keyframeProperty: KeyframeProperty,
-            value: string
-        ) {
-            if (keyframeProperty.lvglFromValue) {
-                return keyframeProperty.lvglFromValue(value);
-            }
-            return value;
-        }
-
-        function lvglAnimStep(
-            keyframe: TimelineKeyframe,
-            keyframeProperty: KeyframeProperty,
-            defaultSourceCode: string
-        ) {
-            if (keyframeProperty.lvglAnimStep) {
-                keyframeProperty.lvglAnimStep(keyframe, defaultSourceCode);
-            } else {
-                build.line(`// ${keyframeProperty.lvglName}`);
-                build.line(defaultSourceCode);
-            }
-        }
-
-        function lvglToValue(
-            keyframeProperty: KeyframeProperty,
-            value: string
-        ) {
-            if (keyframeProperty.lvglToValue) {
-                return keyframeProperty.lvglToValue(value);
-            }
-            return value;
-        }
-
-        for (const lvglWidget of page._lvglWidgets) {
-            for (const propertyName of getWidgetPropertyNamesInTimeline(
-                lvglWidget
-            )) {
-                build.line(
-                    `int32_t obj_${build.getLvglObjectIdentifierInSourceCode(
-                        lvglWidget,
-                        false
-                    )}_${propertyName}_init_value;`
-                );
-            }
-        }
-
-        build.unindent();
-        build.line(`} anim_state = { -1 };`);
-
-        //
-        //
-        build.line("");
-
-        build.line(`if (anim_state.last_timeline_position == -1) {`);
-        build.indent();
-
-        build.line(`anim_state.last_timeline_position = 0;`);
-
-        for (const lvglWidget of page._lvglWidgets) {
-            for (const propertyName of getWidgetPropertyNamesInTimeline(
-                lvglWidget
-            )) {
-                const keyframeProperty = KEYFRAME_PROPERTIES.find(
-                    keyframeProperty =>
-                        keyframeProperty.lvglName == propertyName
-                )!;
-
-                build.line(
-                    `anim_state.obj_${build.getLvglObjectIdentifierInSourceCode(
-                        lvglWidget,
-                        false
-                    )}_${propertyName}_init_value = ${lvglFromValue(
-                        keyframeProperty,
-                        `lv_obj_get_style_prop(${build.getLvglObjectAccessor(
-                            lvglWidget
-                        )}, LV_PART_MAIN, LV_STYLE_${
-                            keyframeProperty.lvglStylePropName
-                        }).num`
-                    )};`
-                );
-            }
-        }
-
-        build.unindent();
-        build.line(`}`);
-
-        //
-        //
-        build.line("");
-
-        build.line(
-            `if (timeline_position != anim_state.last_timeline_position) {`
-        );
-        build.indent();
-
-        build.line(`anim_state.last_timeline_position = timeline_position;`);
-
-        for (const lvglWidget of page._lvglWidgets) {
-            if (lvglWidget.timeline.length > 0) {
-                build.line(`{`);
                 build.indent();
-                build.line(
-                    `lv_obj_t *obj = ${build.getLvglObjectAccessor(
+                build.line("float last_timeline_position;");
+
+                for (const lvglWidget of page._lvglWidgets) {
+                    for (const propertyName of getWidgetPropertyNamesInTimeline(
                         lvglWidget
-                    )};`
-                );
-
-                build.line("");
-
-                const propertyNames =
-                    getWidgetPropertyNamesInTimeline(lvglWidget);
-
-                for (const propertyName of propertyNames) {
-                    build.line(
-                        `float ${propertyName}_value = anim_state.obj_${build.getLvglObjectIdentifierInSourceCode(
-                            lvglWidget,
-                            false
-                        )}_${propertyName}_init_value;`
-                    );
-                }
-
-                build.line("");
-
-                for (
-                    let keyframeIndex = 0;
-                    keyframeIndex < lvglWidget.timeline.length;
-                    keyframeIndex++
-                ) {
-                    const keyframe = lvglWidget.timeline[keyframeIndex];
-
-                    build.line(
-                        `if (timeline_position >= ${keyframe.start} && timeline_position <= ${keyframe.end}) {`
-                    );
-                    build.indent();
-
-                    build.line(
-                        `float t = ${
-                            keyframe.start == keyframe.end
-                                ? "1"
-                                : `(timeline_position - ${keyframe.start}) / ${
-                                      keyframe.end - keyframe.start
-                                  }`
-                        };`
-                    );
-
-                    for (const keyframeProperty of KEYFRAME_PROPERTIES) {
-                        if (
-                            (
-                                keyframe[
-                                    keyframeProperty.name
-                                ] as TimelineKeyframePropertyValue<number>
-                            ).enabled
-                        ) {
-                            lvglAnimStep(
-                                keyframe,
-                                keyframeProperty,
-                                `${keyframeProperty.lvglName}_value += eez_${
-                                    (
-                                        keyframe[
-                                            keyframeProperty.name
-                                        ] as TimelineKeyframePropertyValue<number>
-                                    ).easingFunction
-                                }(t) * (${
-                                    (
-                                        keyframe[
-                                            keyframeProperty.name
-                                        ] as TimelineKeyframePropertyValue<number>
-                                    ).value
-                                } - ${keyframeProperty.lvglName}_value);`
-                            );
-                        }
+                    )) {
+                        build.line(
+                            `int32_t obj_${build.getLvglObjectIdentifierInSourceCode(
+                                lvglWidget,
+                                false
+                            )}_${propertyName}_init_value;`
+                        );
                     }
-
-                    build.unindent();
-
-                    build.line(`} else {`);
-                    build.indent();
-
-                    for (const keyframeProperty of KEYFRAME_PROPERTIES) {
-                        if (
-                            (
-                                keyframe[
-                                    keyframeProperty.name
-                                ] as TimelineKeyframePropertyValue<number>
-                            ).enabled
-                        ) {
-                            build.line(
-                                `${keyframeProperty.lvglName}_value = ${
-                                    (
-                                        keyframe[
-                                            keyframeProperty.name
-                                        ] as TimelineKeyframePropertyValue<number>
-                                    ).value
-                                };`
-                            );
-                        }
-                    }
-                }
-
-                for (
-                    let keyframeIndex = 0;
-                    keyframeIndex < lvglWidget.timeline.length;
-                    keyframeIndex++
-                ) {
-                    build.unindent();
-                    build.line(`}`);
-                }
-
-                build.line("");
-                build.line("lv_style_value_t value;");
-
-                for (const propertyName of propertyNames) {
-                    const keyframeProperty = KEYFRAME_PROPERTIES.find(
-                        keyframeProperty =>
-                            keyframeProperty.lvglName == propertyName
-                    )!;
-                    build.line("");
-                    build.line(
-                        `value.num = (int32_t)roundf(${lvglToValue(
-                            keyframeProperty,
-                            `${keyframeProperty.lvglName}_value`
-                        )});`
-                    );
-                    build.line(
-                        `lv_obj_set_local_style_prop(obj, LV_STYLE_${keyframeProperty.lvglStylePropName}, value, LV_PART_MAIN);`
-                    );
                 }
 
                 build.unindent();
-                build.line(`}`);
             }
+            build.line(`} anim_state = { -1 };`);
+
+            //
+            //
+            build.line("");
+            build.line(`if (anim_state.last_timeline_position == -1) {`);
+            {
+                build.indent();
+
+                build.line(`anim_state.last_timeline_position = 0;`);
+
+                for (const lvglWidget of page._lvglWidgets) {
+                    for (const propertyName of getWidgetPropertyNamesInTimeline(
+                        lvglWidget
+                    )) {
+                        const keyframeProperty = KEYFRAME_PROPERTIES.find(
+                            keyframeProperty =>
+                                keyframeProperty.lvglName == propertyName
+                        )!;
+
+                        build.line(
+                            `anim_state.obj_${build.getLvglObjectIdentifierInSourceCode(
+                                lvglWidget,
+                                false
+                            )}_${propertyName}_init_value = ${lvglFromValue(
+                                keyframeProperty,
+                                `lv_obj_get_style_prop(${build.getLvglObjectAccessor(
+                                    lvglWidget
+                                )}, LV_PART_MAIN, LV_STYLE_${
+                                    keyframeProperty.lvglStylePropName
+                                }).num`
+                            )};`
+                        );
+                    }
+                }
+
+                build.unindent();
+            }
+            build.line(`}`);
+
+            //
+            //
+            build.line("");
+            build.line(
+                `if (timeline_position != anim_state.last_timeline_position) {`
+            );
+            {
+                build.indent();
+
+                build.line(
+                    `anim_state.last_timeline_position = timeline_position;`
+                );
+
+                build.line("");
+
+                for (const lvglWidget of page._lvglWidgets) {
+                    if (lvglWidget.timeline.length > 0) {
+                        build.line(`{`);
+                        {
+                            build.indent();
+                            build.line(
+                                `lv_obj_t *obj = ${build.getLvglObjectAccessor(
+                                    lvglWidget
+                                )};`
+                            );
+
+                            const propertyNames =
+                                getWidgetPropertyNamesInTimeline(lvglWidget);
+
+                            //
+                            //
+                            build.line("");
+                            for (const propertyName of propertyNames) {
+                                build.line(
+                                    `float ${propertyName}_value = anim_state.obj_${build.getLvglObjectIdentifierInSourceCode(
+                                        lvglWidget,
+                                        false
+                                    )}_${propertyName}_init_value;`
+                                );
+                            }
+
+                            //
+                            //
+                            build.line("");
+                            build.line("while (1) {");
+                            {
+                                build.indent();
+
+                                //
+                                //
+                                for (
+                                    let keyframeIndex = 0;
+                                    keyframeIndex < lvglWidget.timeline.length;
+                                    keyframeIndex++
+                                ) {
+                                    const keyframe =
+                                        lvglWidget.timeline[keyframeIndex];
+
+                                    build.line(
+                                        `// keyframe #${keyframeIndex + 1}`
+                                    );
+
+                                    if (
+                                        keyframeIndex == 0 ||
+                                        lvglWidget.timeline[keyframeIndex - 1]
+                                            .end < keyframe.start
+                                    ) {
+                                        build.line(
+                                            `if (timeline_position < ${keyframe.start}) {`
+                                        );
+                                        {
+                                            build.indent();
+                                            build.line("break;");
+                                            build.unindent();
+                                            build.line("}");
+                                        }
+                                    }
+
+                                    if (keyframe.start < keyframe.end) {
+                                        build.line(
+                                            `if (timeline_position >= ${keyframe.start} && timeline_position < ${keyframe.end}) {`
+                                        );
+                                        {
+                                            build.indent();
+
+                                            build.line(
+                                                `float t = ${
+                                                    keyframe.start ==
+                                                    keyframe.end
+                                                        ? "1"
+                                                        : `(timeline_position - ${
+                                                              keyframe.start
+                                                          }) / ${
+                                                              keyframe.end -
+                                                              keyframe.start
+                                                          }`
+                                                };`
+                                            );
+
+                                            for (const keyframeProperty of KEYFRAME_PROPERTIES) {
+                                                if (
+                                                    (
+                                                        keyframe[
+                                                            keyframeProperty
+                                                                .name
+                                                        ] as TimelineKeyframePropertyValue<number>
+                                                    ).enabled
+                                                ) {
+                                                    lvglAnimStep(
+                                                        keyframe,
+                                                        keyframeProperty,
+                                                        `${
+                                                            keyframeProperty.lvglName
+                                                        }_value += eez_${
+                                                            (
+                                                                keyframe[
+                                                                    keyframeProperty
+                                                                        .name
+                                                                ] as TimelineKeyframePropertyValue<number>
+                                                            ).easingFunction
+                                                        }(t) * (${
+                                                            (
+                                                                keyframe[
+                                                                    keyframeProperty
+                                                                        .name
+                                                                ] as TimelineKeyframePropertyValue<number>
+                                                            ).value
+                                                        } - ${
+                                                            keyframeProperty.lvglName
+                                                        }_value);`
+                                                    );
+                                                }
+                                            }
+
+                                            build.line("break;");
+                                            build.unindent();
+                                        }
+                                        build.line("}");
+                                    }
+
+                                    for (const keyframeProperty of KEYFRAME_PROPERTIES) {
+                                        if (
+                                            (
+                                                keyframe[
+                                                    keyframeProperty.name
+                                                ] as TimelineKeyframePropertyValue<number>
+                                            ).enabled
+                                        ) {
+                                            build.line(
+                                                `${
+                                                    keyframeProperty.lvglName
+                                                }_value = ${
+                                                    (
+                                                        keyframe[
+                                                            keyframeProperty
+                                                                .name
+                                                        ] as TimelineKeyframePropertyValue<number>
+                                                    ).value
+                                                };`
+                                            );
+                                        }
+                                    }
+
+                                    build.line("");
+                                }
+
+                                //
+                                //
+                                build.line("break;");
+                                build.unindent();
+                            }
+                            build.line("}");
+
+                            //
+                            //
+                            build.line("");
+                            build.line("lv_style_value_t value;");
+
+                            for (const propertyName of propertyNames) {
+                                const keyframeProperty =
+                                    KEYFRAME_PROPERTIES.find(
+                                        keyframeProperty =>
+                                            keyframeProperty.lvglName ==
+                                            propertyName
+                                    )!;
+                                build.line("");
+                                build.line(
+                                    `value.num = (int32_t)roundf(${lvglToValue(
+                                        keyframeProperty,
+                                        `${keyframeProperty.lvglName}_value`
+                                    )});`
+                                );
+                                build.line(
+                                    `lv_obj_set_local_style_prop(obj, LV_STYLE_${keyframeProperty.lvglStylePropName}, value, LV_PART_MAIN);`
+                                );
+                            }
+
+                            build.unindent();
+                        }
+                        build.line(`}`);
+                    }
+                }
+
+                build.unindent();
+            }
+            build.line(`}`);
         }
-
-        build.unindent();
-        build.line(`}`);
-
-        build.unindent();
         build.line(`}`);
     }
 }

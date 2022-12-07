@@ -325,6 +325,7 @@ export const LineMarkers = () => (
                 id="selectedLineEndInViewer"
                 color={selectedLineColorInViewer()}
             />
+            <AnimationCurveEndMarker />
         </defs>
     </svg>
 );
@@ -347,6 +348,30 @@ function LineEndMarker({ id, color }: { id: string; color: string }) {
                     fill: color,
                     strokeLinecap: "butt",
                     strokeLinejoin: "miter"
+                }}
+            />
+        </marker>
+    );
+}
+
+function AnimationCurveEndMarker() {
+    return (
+        <marker
+            id="timelineAnimationCurveEndMarker"
+            markerWidth="20"
+            markerHeight="20"
+            refX="13"
+            refY="8"
+            orient="auto"
+            markerUnits="userSpaceOnUse"
+        >
+            <path
+                d="M4,4 L4,12 L14,8 L4,4 L4,12"
+                style={{
+                    stroke: "green",
+                    fill: "green",
+                    strokeLinecap: "butt",
+                    strokeLinejoin: "round"
                 }}
             />
         </marker>
