@@ -852,6 +852,10 @@ export class LVGLWidget extends Widget {
     }
 
     override getResizeHandlers(): IResizeHandler[] | undefined | false {
+        if (isTimelineEditorActive(this)) {
+            return [];
+        }
+
         if (this.widthUnit != "px" && this.heightUnit != "px") {
             return [];
         }

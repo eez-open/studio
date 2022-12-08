@@ -350,7 +350,7 @@ function checkAssignableExpressionNode(
             console.log("TODO check ObjectExpression", node);
         }
 
-        throw `Unknown expression node "${node.type}"`;
+        throw `Invalid expression node "${node.type}"`;
     }
 
     const project = ProjectEditor.getProject(component);

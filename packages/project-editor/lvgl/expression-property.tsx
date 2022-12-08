@@ -24,11 +24,7 @@ import type { LVGLBuild } from "project-editor/lvgl/build";
 import { humanize } from "eez-studio-shared/string";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 
-export type LVGLPropertyType =
-    | "literal"
-    | "expression"
-    | "variable"
-    | "text-resource";
+export type LVGLPropertyType = "literal" | "expression";
 
 const LVGLProperty = observer(
     class LVGLProperty extends React.Component<PropertyProps> {
@@ -193,6 +189,11 @@ export function makeExpressionProperty(
                         !ProjectEditor.getProject(object).projectTypeTraits
                             .hasFlowSupport && id == "expression"
                             ? "Variable"
+                            : ProjectEditor.getProject(object).projectTypeTraits
+                                  .hasFlowSupport &&
+                              id == "expression" &&
+                              flowProperty == "assignable"
+                            ? "Assignable"
                             : undefined
                 })),
             enumDisallowUndefined: true,

@@ -43,13 +43,18 @@ import type { Component, Widget } from "project-editor/flow/component";
 import type { PageTabState } from "project-editor/features/page/PageEditor";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { DataBuffer } from "project-editor/build/data-buffer";
-import { getEasingFunctionCode } from "project-editor/build/widgets";
 import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { LVGLBuild } from "project-editor/lvgl/build";
 import type { Page } from "project-editor/features/page/page";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import type { EditorFlowContext } from "project-editor/flow/editor/context";
 import { Svg } from "project-editor/flow/editor/render";
+import {
+    opa_property_info,
+    transform_angle_property_info,
+    transform_zoom_property_info
+} from "project-editor/lvgl/style-catalog";
+import { getStylePropDefaultValue } from "project-editor/lvgl/style-helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -253,6 +258,10 @@ export class TimelineKeyframe extends EezObject {
     }
 
     get controlPointsArray() {
+        if (!this.left.enabled || !this.top.enabled) {
+            return [];
+        }
+
         let array = (this.controlPoints || "")
             .split(",")
             .join("")
@@ -659,6 +668,8 @@ const NumberInput = observer(
                         value={this.value}
                         onChange={this.onChange}
                         onKeyDown={this.onKeyDown}
+                        readOnly={this.props.readOnly}
+                        disabled={this.props.readOnly}
                     ></input>
                     {this.error && <div className="error">{this.error}</div>}
                 </>
@@ -977,9 +988,16 @@ export const TimelineKeyframePropertyUI = observer(
                             this.enableProperty(propertyName, checked)
                         }
                     />
-                    <td style={{ paddingLeft: 20 }}>
-                        {propertyEnabled &&
-                            this.getFromPropertyValue(propertyName)}
+                    <td>
+                        {propertyEnabled && (
+                            <NumberInput
+                                value={this.getFromPropertyValue(propertyName)}
+                                onChange={value => {}}
+                                min={min}
+                                max={max}
+                                readOnly={true}
+                            />
+                        )}
                     </td>
                     <td>
                         {propertyEnabled && (
@@ -1014,6 +1032,177 @@ export const TimelineKeyframePropertyUI = observer(
                             </select>
                         )}
                     </td>
+                </tr>
+            );
+        }
+
+        setControlPoints(array: number[]) {
+            const controlPoints =
+                array.length == 4
+                    ? `(${array[0]}, ${array[1]}) (${array[2]}, ${array[3]})`
+                    : array.length == 2
+                    ? `(${array[0]}, ${array[1]})`
+                    : "";
+            this.setValue("controlPoints", keyframe => controlPoints);
+        }
+
+        renderControlPoint(keyframe: TimelineKeyframe, index: number) {
+            const controlPointsArray = keyframe.controlPointsArray;
+
+            let hasCheckbox: boolean;
+            let checkboxEnabled: boolean;
+            let x = 0;
+            let y = 0;
+            if (index == 0) {
+                if (controlPointsArray.length == 2) {
+                    hasCheckbox = true;
+                    checkboxEnabled = true;
+                    x = controlPointsArray[0];
+                    y = controlPointsArray[1];
+                } else if (controlPointsArray.length == 4) {
+                    hasCheckbox = false;
+                    checkboxEnabled = true;
+                    x = controlPointsArray[0];
+                    y = controlPointsArray[1];
+                } else {
+                    hasCheckbox = true;
+                    checkboxEnabled = false;
+                }
+            } else {
+                hasCheckbox = true;
+                if (controlPointsArray.length == 4) {
+                    checkboxEnabled = true;
+                    x = controlPointsArray[2];
+                    y = controlPointsArray[3];
+                } else {
+                    checkboxEnabled = false;
+                }
+            }
+
+            const label = `Control pt ${index + 1}`;
+
+            return (
+                <tr>
+                    <td>
+                        <label>
+                            <input
+                                type="checkbox"
+                                className="form-check-input"
+                                checked={checkboxEnabled}
+                                onChange={e => {
+                                    if (e.target.checked) {
+                                        const from = {
+                                            x:
+                                                getKeyframesFromPropertyValue(
+                                                    [keyframe],
+                                                    "left"
+                                                ) || 0,
+                                            y:
+                                                getKeyframesFromPropertyValue(
+                                                    [keyframe],
+                                                    "top"
+                                                ) || 0
+                                        };
+
+                                        const to = {
+                                            x:
+                                                (keyframe.left.enabled
+                                                    ? keyframe.left.value
+                                                    : getKeyframesFromPropertyValue(
+                                                          [keyframe],
+                                                          "left"
+                                                      )) || 0,
+                                            y:
+                                                (keyframe.top.enabled
+                                                    ? keyframe.top.value
+                                                    : getKeyframesFromPropertyValue(
+                                                          [keyframe],
+                                                          "top"
+                                                      )) || 0
+                                        };
+
+                                        const cp1 = [
+                                            from.x + 0.1 * (to.x - from.x),
+                                            from.y + 0.1 * (to.y - from.y)
+                                        ];
+
+                                        const cp2 = [
+                                            from.x + 0.9 * (to.x - from.x),
+                                            from.y + 0.9 * (to.y - from.y)
+                                        ];
+
+                                        if (index == 0) {
+                                            this.setControlPoints(cp1);
+                                        } else {
+                                            if (
+                                                controlPointsArray.length == 2
+                                            ) {
+                                                this.setControlPoints([
+                                                    ...controlPointsArray,
+                                                    ...cp2
+                                                ]);
+                                            } else {
+                                                this.setControlPoints([
+                                                    ...cp1,
+                                                    ...cp2
+                                                ]);
+                                            }
+                                        }
+                                    } else {
+                                        if (index == 0) {
+                                            this.setControlPoints([]);
+                                        } else {
+                                            this.setControlPoints(
+                                                controlPointsArray.slice(0, 2)
+                                            );
+                                        }
+                                    }
+                                }}
+                                readOnly={!hasCheckbox}
+                                disabled={!hasCheckbox}
+                            ></input>{" "}
+                            {label}
+                        </label>
+                    </td>
+                    <td>
+                        {checkboxEnabled && (
+                            <NumberInput
+                                value={x}
+                                onChange={value => {
+                                    const newControlPointsArray =
+                                        controlPointsArray.slice();
+                                    newControlPointsArray[index == 0 ? 0 : 2] =
+                                        value;
+                                    this.setControlPoints(
+                                        newControlPointsArray
+                                    );
+                                }}
+                                min={undefined}
+                                max={undefined}
+                                readOnly={false}
+                            />
+                        )}
+                    </td>
+                    <td>
+                        {checkboxEnabled && (
+                            <NumberInput
+                                value={y}
+                                onChange={value => {
+                                    const newControlPointsArray =
+                                        controlPointsArray.slice();
+                                    newControlPointsArray[index == 0 ? 1 : 3] =
+                                        value;
+                                    this.setControlPoints(
+                                        newControlPointsArray
+                                    );
+                                }}
+                                min={undefined}
+                                max={undefined}
+                                readOnly={false}
+                            />
+                        )}
+                    </td>
+                    <td />
                 </tr>
             );
         }
@@ -1086,7 +1275,7 @@ export const TimelineKeyframePropertyUI = observer(
                                     readOnly={end == undefined}
                                 />
                             </td>
-                            <td style={{ paddingLeft: 20 }}>
+                            <td style={{ paddingLeft: 14 }}>
                                 {this.getDuration()}
                             </td>
                         </tr>
@@ -1135,38 +1324,27 @@ export const TimelineKeyframePropertyUI = observer(
 
                         {this.renderProperty("opacity", 0, 1)}
 
-                        {(this.getPropertyValue("left") ||
-                            this.getPropertyValue("top")) && (
-                            <>
-                                <tr>
-                                    <td>&nbsp;</td>
-                                </tr>
-                                <tr>
-                                    <td colSpan={2}>
-                                        Animation path curve control points
-                                    </td>
-                                    <td colSpan={2}>
-                                        <input
-                                            type="text"
-                                            className="form-control"
-                                            value={
-                                                this.getValue<string>(
-                                                    keyframe =>
-                                                        keyframe.controlPoints
-                                                ) || ""
-                                            }
-                                            onChange={event =>
-                                                this.setValue(
-                                                    "controlPoints",
-                                                    keyframe =>
-                                                        event.target.value
-                                                )
-                                            }
-                                        />
-                                    </td>
-                                </tr>
-                            </>
-                        )}
+                        {this.keyframes.length == 1 &&
+                            this.keyframes[0] != undefined &&
+                            this.keyframes[0].left.enabled &&
+                            this.keyframes[0].top.enabled && (
+                                <>
+                                    <tr>
+                                        <td></td>
+                                        <td className="property-heading">X</td>
+                                        <td className="property-heading">Y</td>
+                                        <td></td>
+                                    </tr>
+                                    {this.renderControlPoint(
+                                        this.keyframes[0]!,
+                                        0
+                                    )}
+                                    {this.renderControlPoint(
+                                        this.keyframes[0]!,
+                                        1
+                                    )}
+                                </>
+                            )}
                     </tbody>
                 </table>
             );
@@ -1247,191 +1425,437 @@ export const TimelineAnimationCurve = observer(
             return null;
         }
 
-        console.log("T1");
+        const CURVE_STROKE_WIDTH = 2;
+        const CURVE_COLOR = "#337bb7";
+
+        const LINE_TO_CONTROL_POINT_STROKE_WIDTH = 0.5;
+        const LINE_TO_CONTROL_POINT_COLOR = "#337bb7";
+
+        const CONTROL_POINT_HANDLE_COLOR = "#337bb7";
+        const CONTROL_POINT_HANDLE_STROKE_WIDTH = 1.5;
+        const CONTROL_POINT_RADIUS = 5;
+
+        const TO_POINT_HANDLE_COLOR = "#337bb7";
+        const TO_POINT_HANDLE_STROKE_WIDTH = 1.5;
+        const TO_POINT_RADIUS = 5;
 
         return (
             <Svg flowContext={flowContext}>
-                {keyframes
-                    .map(keyframe => {
-                        const controlPointsArray = keyframe.controlPointsArray;
+                <>
+                    {keyframes
+                        .map(keyframe => {
+                            const controlPointsArray =
+                                keyframe.controlPointsArray;
 
-                        const CURVE_STROKE_WIDTH = 2;
-                        const CURVE_COLOR = "green";
+                            const keyframes = [keyframe];
 
-                        const LINE_TO_CONTROL_POINT_STROKE_WIDTH = 0.5;
-                        const LINE_TO_CONTROL_POINT_COLOR = "green";
-
-                        const CONTROL_POINT_HANDLE_COLOR = "green";
-
-                        const keyframes = [keyframe];
-
-                        const leftFrom = getKeyframesFromPropertyValue(
-                            keyframes,
-                            "left"
-                        );
-                        if (leftFrom == undefined) {
-                            return null;
-                        }
-
-                        const leftTo = getKeyframesPropertyValue(
-                            keyframes,
-                            "left"
-                        );
-                        if (leftTo == undefined) {
-                            return null;
-                        }
-
-                        const topFrom = getKeyframesFromPropertyValue(
-                            keyframes,
-                            "top"
-                        );
-                        if (topFrom == undefined) {
-                            return null;
-                        }
-
-                        const topTo = getKeyframesPropertyValue(
-                            keyframes,
-                            "top"
-                        );
-                        if (topTo == undefined) {
-                            return null;
-                        }
-
-                        const pFrom = {
-                            x: leftFrom,
-                            y: topFrom
-                        };
-                        const pTo = {
-                            x: leftTo,
-                            y: topTo
-                        };
-
-                        if (controlPointsArray.length == 4) {
-                            const p1 = pFrom;
-
-                            const p2 = {
-                                x: controlPointsArray[0],
-                                y: controlPointsArray[1]
-                            };
-
-                            const p3 = {
-                                x: controlPointsArray[2],
-                                y: controlPointsArray[3]
-                            };
-
-                            const p4 = pTo;
-
-                            if (
-                                p2.x != undefined &&
-                                p2.y != undefined &&
-                                p3.x != undefined &&
-                                p3.y != undefined
-                            ) {
-                                return (
-                                    <g key={getId(keyframe)}>
-                                        <path
-                                            d={`M ${p1.x} ${p1.y} C ${p2.x} ${p2.y} ${p3.x} ${p3.y} ${p4.x} ${p4.y}`}
-                                            strokeWidth={CURVE_STROKE_WIDTH}
-                                            stroke={CURVE_COLOR}
-                                            fill="none"
-                                            strokeLinecap="round"
-                                            markerEnd="url(#timelineAnimationCurveEndMarker)"
-                                        />
-                                        <path
-                                            d={`M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`}
-                                            strokeWidth={
-                                                LINE_TO_CONTROL_POINT_STROKE_WIDTH
-                                            }
-                                            stroke={LINE_TO_CONTROL_POINT_COLOR}
-                                            fill="none"
-                                        />
-                                        <path
-                                            d={`M ${p4.x} ${p4.y} L ${p3.x} ${p3.y}`}
-                                            strokeWidth={
-                                                LINE_TO_CONTROL_POINT_STROKE_WIDTH
-                                            }
-                                            stroke={LINE_TO_CONTROL_POINT_COLOR}
-                                            fill="none"
-                                        />
-                                        <circle
-                                            cx={p2.x}
-                                            cy={p2.y}
-                                            r={8}
-                                            fill={CONTROL_POINT_HANDLE_COLOR}
-                                        />
-                                        <circle
-                                            cx={p3.x}
-                                            cy={p3.y}
-                                            r={8}
-                                            fill={CONTROL_POINT_HANDLE_COLOR}
-                                        />
-                                    </g>
-                                );
-                            }
-                        } else if (controlPointsArray.length == 2) {
-                            const p1 = pFrom;
-
-                            const p2 = {
-                                x: controlPointsArray[0],
-                                y: controlPointsArray[1]
-                            };
-
-                            const p3 = pTo;
-
-                            if (p2.x != undefined && p2.y != undefined) {
-                                return (
-                                    <g key={getId(keyframe)}>
-                                        <path
-                                            d={`M ${p1.x} ${p1.y} Q ${p2.x} ${p2.y} ${p3.x} ${p3.y}`}
-                                            strokeWidth={CURVE_STROKE_WIDTH}
-                                            stroke={CURVE_COLOR}
-                                            fill="none"
-                                            strokeLinecap="round"
-                                            markerEnd="url(#timelineAnimationCurveEndMarker)"
-                                        />
-                                        <path
-                                            d={`M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`}
-                                            strokeWidth={
-                                                LINE_TO_CONTROL_POINT_STROKE_WIDTH
-                                            }
-                                            stroke={LINE_TO_CONTROL_POINT_COLOR}
-                                            fill="none"
-                                        />
-                                        <circle
-                                            cx={p2.x}
-                                            cy={p2.y}
-                                            r={8}
-                                            fill={CONTROL_POINT_HANDLE_COLOR}
-                                        />
-                                    </g>
-                                );
-                            }
-                        } else {
-                            const p1 = pFrom;
-                            const p2 = pTo;
-                            return (
-                                <g key={getId(keyframe)}>
-                                    <path
-                                        d={`M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`}
-                                        strokeWidth={CURVE_STROKE_WIDTH}
-                                        stroke={CURVE_COLOR}
-                                        fill="none"
-                                        strokeLinecap="round"
-                                        markerEnd="url(#timelineAnimationCurveEndMarker)"
-                                    />
-                                </g>
+                            const leftFrom = getKeyframesFromPropertyValue(
+                                keyframes,
+                                "left"
                             );
-                        }
+                            if (leftFrom == undefined) {
+                                return null;
+                            }
 
-                        return null;
-                    })
-                    .filter(node => node != null)}
+                            const leftTo = getKeyframesPropertyValue(
+                                keyframes,
+                                "left"
+                            );
+                            if (leftTo == undefined) {
+                                return null;
+                            }
+
+                            const topFrom = getKeyframesFromPropertyValue(
+                                keyframes,
+                                "top"
+                            );
+                            if (topFrom == undefined) {
+                                return null;
+                            }
+
+                            const topTo = getKeyframesPropertyValue(
+                                keyframes,
+                                "top"
+                            );
+                            if (topTo == undefined) {
+                                return null;
+                            }
+
+                            const pFrom = {
+                                x: leftFrom,
+                                y: topFrom
+                            };
+                            const pTo = {
+                                x: leftTo,
+                                y: topTo
+                            };
+
+                            if (controlPointsArray.length == 4) {
+                                const p1 = pFrom;
+
+                                const p2 = {
+                                    x: controlPointsArray[0],
+                                    y: controlPointsArray[1]
+                                };
+
+                                const p3 = {
+                                    x: controlPointsArray[2],
+                                    y: controlPointsArray[3]
+                                };
+
+                                const p4 = pTo;
+
+                                if (
+                                    p2.x != undefined &&
+                                    p2.y != undefined &&
+                                    p3.x != undefined &&
+                                    p3.y != undefined
+                                ) {
+                                    return (
+                                        <g key={getId(keyframe)}>
+                                            <path
+                                                d={`M ${p1.x} ${p1.y} C ${p2.x} ${p2.y} ${p3.x} ${p3.y} ${p4.x} ${p4.y}`}
+                                                strokeWidth={CURVE_STROKE_WIDTH}
+                                                stroke={CURVE_COLOR}
+                                                fill="none"
+                                                strokeLinecap="round"
+                                                markerEnd="url(#timelineAnimationCurveEndMarker)"
+                                            />
+                                            <path
+                                                d={`M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`}
+                                                strokeWidth={
+                                                    LINE_TO_CONTROL_POINT_STROKE_WIDTH
+                                                }
+                                                stroke={
+                                                    LINE_TO_CONTROL_POINT_COLOR
+                                                }
+                                                fill="none"
+                                            />
+                                            <path
+                                                d={`M ${p4.x} ${p4.y} L ${p3.x} ${p3.y}`}
+                                                strokeWidth={
+                                                    LINE_TO_CONTROL_POINT_STROKE_WIDTH
+                                                }
+                                                stroke={
+                                                    LINE_TO_CONTROL_POINT_COLOR
+                                                }
+                                                fill="none"
+                                            />
+                                        </g>
+                                    );
+                                }
+                            } else if (controlPointsArray.length == 2) {
+                                const p1 = pFrom;
+
+                                const p2 = {
+                                    x: controlPointsArray[0],
+                                    y: controlPointsArray[1]
+                                };
+
+                                const p3 = pTo;
+
+                                if (p2.x != undefined && p2.y != undefined) {
+                                    return (
+                                        <g key={getId(keyframe)}>
+                                            <path
+                                                d={`M ${p1.x} ${p1.y} Q ${p2.x} ${p2.y} ${p3.x} ${p3.y}`}
+                                                strokeWidth={CURVE_STROKE_WIDTH}
+                                                stroke={CURVE_COLOR}
+                                                fill="none"
+                                                strokeLinecap="round"
+                                                markerEnd="url(#timelineAnimationCurveEndMarker)"
+                                            />
+                                            <path
+                                                d={`M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`}
+                                                strokeWidth={
+                                                    LINE_TO_CONTROL_POINT_STROKE_WIDTH
+                                                }
+                                                stroke={
+                                                    LINE_TO_CONTROL_POINT_COLOR
+                                                }
+                                                fill="none"
+                                            />
+                                        </g>
+                                    );
+                                }
+                            } else {
+                                const p1 = pFrom;
+                                const p2 = pTo;
+                                return (
+                                    <g key={getId(keyframe)}>
+                                        <path
+                                            d={`M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`}
+                                            strokeWidth={CURVE_STROKE_WIDTH}
+                                            stroke={CURVE_COLOR}
+                                            fill="none"
+                                            strokeLinecap="round"
+                                            markerEnd="url(#timelineAnimationCurveEndMarker)"
+                                        />
+                                    </g>
+                                );
+                            }
+
+                            return null;
+                        })
+                        .filter(node => node != null)}
+                </>
+                <>
+                    {keyframes
+                        .map(keyframe => {
+                            const controlPointsArray =
+                                keyframe.controlPointsArray;
+
+                            const keyframes = [keyframe];
+
+                            const leftFrom = getKeyframesFromPropertyValue(
+                                keyframes,
+                                "left"
+                            );
+                            if (leftFrom == undefined) {
+                                return null;
+                            }
+
+                            const leftTo = getKeyframesPropertyValue(
+                                keyframes,
+                                "left"
+                            );
+                            if (leftTo == undefined) {
+                                return null;
+                            }
+
+                            const topFrom = getKeyframesFromPropertyValue(
+                                keyframes,
+                                "top"
+                            );
+                            if (topFrom == undefined) {
+                                return null;
+                            }
+
+                            const topTo = getKeyframesPropertyValue(
+                                keyframes,
+                                "top"
+                            );
+                            if (topTo == undefined) {
+                                return null;
+                            }
+
+                            const pTo = {
+                                x: leftTo,
+                                y: topTo
+                            };
+
+                            if (controlPointsArray.length == 4) {
+                                const p2 = {
+                                    x: controlPointsArray[0],
+                                    y: controlPointsArray[1]
+                                };
+
+                                const p3 = {
+                                    x: controlPointsArray[2],
+                                    y: controlPointsArray[3]
+                                };
+
+                                const p4 = pTo;
+
+                                if (
+                                    p2.x != undefined &&
+                                    p2.y != undefined &&
+                                    p3.x != undefined &&
+                                    p3.y != undefined
+                                ) {
+                                    const R = CONTROL_POINT_RADIUS;
+                                    return (
+                                        <g key={getId(keyframe)}>
+                                            <circle
+                                                cx={p4.x}
+                                                cy={p4.y}
+                                                r={TO_POINT_RADIUS}
+                                                stroke={TO_POINT_HANDLE_COLOR}
+                                                strokeWidth={
+                                                    TO_POINT_HANDLE_STROKE_WIDTH
+                                                }
+                                                fill={"white"}
+                                                style={{ cursor: "grab" }}
+                                                className="timeline-animation-curve-to-point"
+                                                data-keyframe={keyframe.objID}
+                                            />
+                                            <path
+                                                d={`M ${p2.x} ${
+                                                    p2.y - 5
+                                                } l ${R} ${R} l -${R} 5 l -${R} -${R} Z`}
+                                                stroke={
+                                                    CONTROL_POINT_HANDLE_COLOR
+                                                }
+                                                strokeWidth={
+                                                    CONTROL_POINT_HANDLE_STROKE_WIDTH
+                                                }
+                                                fill={"white"}
+                                                style={{ cursor: "grab" }}
+                                                className="timeline-animation-curve-control-point"
+                                                data-keyframe={`${keyframe.objID}:0`}
+                                            />
+                                            <path
+                                                d={`M ${p3.x} ${
+                                                    p3.y - 5
+                                                } l ${R} ${R} l -${R} 5 l -${R} -${R} Z`}
+                                                stroke={
+                                                    CONTROL_POINT_HANDLE_COLOR
+                                                }
+                                                strokeWidth={
+                                                    CONTROL_POINT_HANDLE_STROKE_WIDTH
+                                                }
+                                                fill={"white"}
+                                                style={{ cursor: "grab" }}
+                                                className="timeline-animation-curve-control-point"
+                                                data-keyframe={`${keyframe.objID}:1`}
+                                            />
+                                        </g>
+                                    );
+                                }
+                            } else if (controlPointsArray.length == 2) {
+                                const p2 = {
+                                    x: controlPointsArray[0],
+                                    y: controlPointsArray[1]
+                                };
+
+                                const p3 = pTo;
+
+                                if (p2.x != undefined && p2.y != undefined) {
+                                    const R = CONTROL_POINT_RADIUS;
+                                    return (
+                                        <g key={getId(keyframe)}>
+                                            <circle
+                                                cx={p3.x}
+                                                cy={p3.y}
+                                                r={TO_POINT_RADIUS}
+                                                stroke={TO_POINT_HANDLE_COLOR}
+                                                strokeWidth={
+                                                    TO_POINT_HANDLE_STROKE_WIDTH
+                                                }
+                                                fill="white"
+                                                style={{ cursor: "grab" }}
+                                                className="timeline-animation-curve-to-point"
+                                                data-keyframe={keyframe.objID}
+                                            />
+                                            <path
+                                                d={`M ${p2.x} ${
+                                                    p2.y - 5
+                                                } l ${R} ${R} l -${R} 5 l -${R} -${R} Z`}
+                                                stroke={
+                                                    CONTROL_POINT_HANDLE_COLOR
+                                                }
+                                                strokeWidth={
+                                                    CONTROL_POINT_HANDLE_STROKE_WIDTH
+                                                }
+                                                fill="white"
+                                                style={{ cursor: "grab" }}
+                                                className="timeline-animation-curve-control-point"
+                                                data-keyframe={`${keyframe.objID}:0`}
+                                            />
+                                        </g>
+                                    );
+                                }
+                            } else {
+                                const p2 = pTo;
+                                return (
+                                    <g key={getId(keyframe)}>
+                                        <circle
+                                            cx={p2.x}
+                                            cy={p2.y}
+                                            r={TO_POINT_RADIUS}
+                                            stroke={TO_POINT_HANDLE_COLOR}
+                                            strokeWidth={
+                                                TO_POINT_HANDLE_STROKE_WIDTH
+                                            }
+                                            fill="white"
+                                            style={{ cursor: "grab" }}
+                                            className="timeline-animation-curve-to-point"
+                                            data-keyframe={keyframe.objID}
+                                        />
+                                    </g>
+                                );
+                            }
+
+                            return null;
+                        })
+                        .filter(node => node != null)}
+                </>
             </Svg>
         );
     }
 );
 
 ////////////////////////////////////////////////////////////////////////////////
+
+export function getEasingFunctionCode(easingFunction: EasingFunction) {
+    const EASING_FUNC_LINEAR = 0;
+    const EASING_FUNC_IN_QUAD = 1;
+    const EASING_FUNC_OUT_QUAD = 2;
+    const EASING_FUNC_IN_OUT_QUAD = 3;
+    const EASING_FUNC_IN_CUBIC = 4;
+    const EASING_FUNC_OUT_CUBIC = 5;
+    const EASING_FUNC_IN_OUT_CUBIC = 6;
+    const EASING_FUNC_IN__QUART = 7;
+    const EASING_FUNC_OUT_QUART = 8;
+    const EASING_FUNC_IN_OUT_QUART = 9;
+    const EASING_FUNC_IN_QUINT = 10;
+    const EASING_FUNC_OUT_QUINT = 11;
+    const EASING_FUNC_IN_OUT_QUINT = 12;
+    const EASING_FUNC_IN_SINE = 13;
+    const EASING_FUNC_OUT_SINE = 14;
+    const EASING_FUNC_IN_OUT_SINE = 15;
+    const EASING_FUNC_IN_EXPO = 16;
+    const EASING_FUNC_OUT_EXPO = 17;
+    const EASING_FUNC_IN_OUT_EXPO = 18;
+    const EASING_FUNC_IN_CIRC = 19;
+    const EASING_FUNC_OUT_CIRC = 20;
+    const EASING_FUNC_IN_OUT_CIRC = 21;
+    const EASING_FUNC_IN_BACK = 22;
+    const EASING_FUNC_OUT_BACK = 23;
+    const EASING_FUNC_IN_OUT_BACK = 24;
+    const EASING_FUNC_IN_ELASTIC = 25;
+    const EASING_FUNC_OUT_ELASTIC = 26;
+    const EASING_FUNC_IN_OUT_ELASTIC = 27;
+    const EASING_FUNC_IN_BOUNCE = 28;
+    const EASING_FUNC_OUT_BOUNCE = 29;
+    const EASING_FUNC_IN_OUT_BOUNCE = 30;
+
+    const toCode = {
+        linear: EASING_FUNC_LINEAR,
+        easeInQuad: EASING_FUNC_IN_QUAD,
+        easeOutQuad: EASING_FUNC_OUT_QUAD,
+        easeInOutQuad: EASING_FUNC_IN_OUT_QUAD,
+        easeInCubic: EASING_FUNC_IN_CUBIC,
+        easeOutCubic: EASING_FUNC_OUT_CUBIC,
+        easeInOutCubic: EASING_FUNC_IN_OUT_CUBIC,
+        easeInQuart: EASING_FUNC_IN__QUART,
+        easeOutQuart: EASING_FUNC_OUT_QUART,
+        easeInOutQuart: EASING_FUNC_IN_OUT_QUART,
+        easeInQuint: EASING_FUNC_IN_QUINT,
+        easeOutQuint: EASING_FUNC_OUT_QUINT,
+        easeInOutQuint: EASING_FUNC_IN_OUT_QUINT,
+        easeInSine: EASING_FUNC_IN_SINE,
+        easeOutSine: EASING_FUNC_OUT_SINE,
+        easeInOutSine: EASING_FUNC_IN_OUT_SINE,
+        easeInExpo: EASING_FUNC_IN_EXPO,
+        easeOutExpo: EASING_FUNC_OUT_EXPO,
+        easeInOutExpo: EASING_FUNC_IN_OUT_EXPO,
+        easeInCirc: EASING_FUNC_IN_CIRC,
+        easeOutCirc: EASING_FUNC_OUT_CIRC,
+        easeInOutCirc: EASING_FUNC_IN_OUT_CIRC,
+        easeInBack: EASING_FUNC_IN_BACK,
+        easeOutBack: EASING_FUNC_OUT_BACK,
+        easeInOutBack: EASING_FUNC_IN_OUT_BACK,
+        easeInElastic: EASING_FUNC_IN_ELASTIC,
+        easeOutElastic: EASING_FUNC_OUT_ELASTIC,
+        easeInOutElastic: EASING_FUNC_IN_OUT_ELASTIC,
+        easeInBounce: EASING_FUNC_IN_BOUNCE,
+        easeOutBounce: EASING_FUNC_OUT_BOUNCE,
+        easeInOutBounce: EASING_FUNC_IN_OUT_BOUNCE
+    };
+
+    return toCode[easingFunction] ?? EASING_FUNC_LINEAR;
+}
 
 export function getTimelineEditorState(component: Component) {
     if (component instanceof ProjectEditor.WidgetClass) {
@@ -1805,13 +2229,50 @@ export function getTimelineProperty(
         propertyName == "height"
     ) {
         value = widget[propertyName] ?? 0;
-    } else if (propertyName == "scaleX" || propertyName == "scaleY") {
-        value = 1;
-    } else if (propertyName == "rotate") {
-        value = 0;
     } else {
-        // propertyName == "opacity"
-        value = 1;
+        if (widget instanceof ProjectEditor.LVGLWidgetClass) {
+            const page = getAncestorOfType(
+                widget,
+                ProjectEditor.PageClass.classInfo
+            ) as Page;
+
+            let stylePropertyInfo;
+
+            if (propertyName == "scale") {
+                stylePropertyInfo = transform_zoom_property_info;
+            } else if (propertyName == "rotate") {
+                stylePropertyInfo = transform_angle_property_info;
+            } else {
+                stylePropertyInfo = opa_property_info;
+            }
+
+            value = widget.localStyles.getPropertyValue(
+                stylePropertyInfo,
+                "MAIN",
+                "DEFAULT"
+            );
+            if (value == undefined) {
+                value = getStylePropDefaultValue(
+                    page._lvglRuntime,
+                    widget._lvglObj,
+                    "MAIN",
+                    stylePropertyInfo
+                ) as number;
+            }
+
+            if (propertyName == "opacity") {
+                value /= 255;
+            }
+        } else {
+            if (propertyName == "scaleX" || propertyName == "scaleY") {
+                value = 1;
+            } else if (propertyName == "rotate") {
+                value = 0;
+            } else {
+                // propertyName == "opacity"
+                value = 1;
+            }
+        }
     }
 
     for (const keyframe of widget.timeline) {

@@ -414,7 +414,7 @@ const translate_y_property_info: LVGLPropertyInfo = {
         extDraw: false
     }
 };
-const transform_zoom_property_info: LVGLPropertyInfo = {
+export const transform_zoom_property_info: LVGLPropertyInfo = {
     name: "transform_zoom",
     type: PropertyType.Number,
     lvglStyleProp: {
@@ -427,7 +427,7 @@ const transform_zoom_property_info: LVGLPropertyInfo = {
         extDraw: false
     }
 };
-const transform_angle_property_info: LVGLPropertyInfo = {
+export const transform_angle_property_info: LVGLPropertyInfo = {
     name: "transform_angle",
     type: PropertyType.Number,
     lvglStyleProp: {
@@ -1331,7 +1331,7 @@ const clip_corner_property_info: LVGLPropertyInfo = {
         extDraw: false
     }
 };
-const opa_property_info: LVGLPropertyInfo = {
+export const opa_property_info: LVGLPropertyInfo = {
     name: "opa",
     displayName: "Opacity",
     type: PropertyType.Number,

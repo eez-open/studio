@@ -5535,7 +5535,7 @@ button.EezStudio_Action {
         margin-bottom: 10px;
 
         td {
-            vertical-align: text-top;
+            vertical-align: middle;
 
             input[type="number"] {
                 width: 100%;
@@ -5550,24 +5550,16 @@ button.EezStudio_Action {
         }
 
         td:nth-child(1) {
-            width: 20%;
-        }
-
-        td:nth-child(2) {
-            width: 25%;
-            margin: auto;
-        }
-
-        td:nth-child(3) {
-            width: 25%;
-        }
-
-        td:nth-child(4) {
-            width: 30%;
+            label {
+                white-space: nowrap;
+            }
+            padding-right: 5px;
         }
 
         .duration-heading,
         .property-heading {
+            padding-left: 14px;
+            white-space: nowrap;
             text-transform: uppercase;
             font-weight: bold;
             font-size: 80%;
@@ -5575,6 +5567,10 @@ button.EezStudio_Action {
 
         .property-heading {
             padding-top: 10px;
+        }
+
+        td:nth-child(1).property-heading {
+            padding-left: 0;
         }
     }
 }

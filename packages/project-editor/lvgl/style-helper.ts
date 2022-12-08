@@ -8,7 +8,7 @@ import {
     LVGLPropertyInfo,
     text_font_property_info
 } from "project-editor/lvgl/style-catalog";
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
+import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 
 ////////////////////////////////////////////////////////////////////////////////
 
