@@ -1431,12 +1431,14 @@ export const TimelineAnimationCurve = observer(
         const LINE_TO_CONTROL_POINT_STROKE_WIDTH = 0.5;
         const LINE_TO_CONTROL_POINT_COLOR = "#337bb7";
 
-        const CONTROL_POINT_HANDLE_COLOR = "#337bb7";
+        const CONTROL_POINT_HANDLE_STROKE_COLOR = "#337bb7";
         const CONTROL_POINT_HANDLE_STROKE_WIDTH = 1.5;
+        const CONTROL_POINT_HANDLE_FILL_COLOR = "white";
         const CONTROL_POINT_RADIUS = 5;
 
-        const TO_POINT_HANDLE_COLOR = "#337bb7";
+        const TO_POINT_HANDLE_FILL_COLOR = "#ff8c00";
         const TO_POINT_HANDLE_STROKE_WIDTH = 1.5;
+        const TO_POINT_HANDLE_STROKE_COLOR = "#ff8c00";
         const TO_POINT_RADIUS = 5;
 
         return (
@@ -1670,11 +1672,15 @@ export const TimelineAnimationCurve = observer(
                                                 cx={p4.x}
                                                 cy={p4.y}
                                                 r={TO_POINT_RADIUS}
-                                                stroke={TO_POINT_HANDLE_COLOR}
+                                                stroke={
+                                                    TO_POINT_HANDLE_STROKE_COLOR
+                                                }
                                                 strokeWidth={
                                                     TO_POINT_HANDLE_STROKE_WIDTH
                                                 }
-                                                fill={"white"}
+                                                fill={
+                                                    TO_POINT_HANDLE_FILL_COLOR
+                                                }
                                                 style={{ cursor: "grab" }}
                                                 className="timeline-animation-curve-to-point"
                                                 data-keyframe={keyframe.objID}
@@ -1684,12 +1690,14 @@ export const TimelineAnimationCurve = observer(
                                                     p2.y - 5
                                                 } l ${R} ${R} l -${R} 5 l -${R} -${R} Z`}
                                                 stroke={
-                                                    CONTROL_POINT_HANDLE_COLOR
+                                                    CONTROL_POINT_HANDLE_STROKE_COLOR
                                                 }
                                                 strokeWidth={
                                                     CONTROL_POINT_HANDLE_STROKE_WIDTH
                                                 }
-                                                fill={"white"}
+                                                fill={
+                                                    CONTROL_POINT_HANDLE_FILL_COLOR
+                                                }
                                                 style={{ cursor: "grab" }}
                                                 className="timeline-animation-curve-control-point"
                                                 data-keyframe={`${keyframe.objID}:0`}
@@ -1699,12 +1707,14 @@ export const TimelineAnimationCurve = observer(
                                                     p3.y - 5
                                                 } l ${R} ${R} l -${R} 5 l -${R} -${R} Z`}
                                                 stroke={
-                                                    CONTROL_POINT_HANDLE_COLOR
+                                                    CONTROL_POINT_HANDLE_STROKE_COLOR
                                                 }
                                                 strokeWidth={
                                                     CONTROL_POINT_HANDLE_STROKE_WIDTH
                                                 }
-                                                fill={"white"}
+                                                fill={
+                                                    CONTROL_POINT_HANDLE_FILL_COLOR
+                                                }
                                                 style={{ cursor: "grab" }}
                                                 className="timeline-animation-curve-control-point"
                                                 data-keyframe={`${keyframe.objID}:1`}
@@ -1728,11 +1738,15 @@ export const TimelineAnimationCurve = observer(
                                                 cx={p3.x}
                                                 cy={p3.y}
                                                 r={TO_POINT_RADIUS}
-                                                stroke={TO_POINT_HANDLE_COLOR}
+                                                stroke={
+                                                    TO_POINT_HANDLE_STROKE_COLOR
+                                                }
                                                 strokeWidth={
                                                     TO_POINT_HANDLE_STROKE_WIDTH
                                                 }
-                                                fill="white"
+                                                fill={
+                                                    TO_POINT_HANDLE_FILL_COLOR
+                                                }
                                                 style={{ cursor: "grab" }}
                                                 className="timeline-animation-curve-to-point"
                                                 data-keyframe={keyframe.objID}
@@ -1742,12 +1756,14 @@ export const TimelineAnimationCurve = observer(
                                                     p2.y - 5
                                                 } l ${R} ${R} l -${R} 5 l -${R} -${R} Z`}
                                                 stroke={
-                                                    CONTROL_POINT_HANDLE_COLOR
+                                                    CONTROL_POINT_HANDLE_STROKE_COLOR
                                                 }
                                                 strokeWidth={
                                                     CONTROL_POINT_HANDLE_STROKE_WIDTH
                                                 }
-                                                fill="white"
+                                                fill={
+                                                    CONTROL_POINT_HANDLE_FILL_COLOR
+                                                }
                                                 style={{ cursor: "grab" }}
                                                 className="timeline-animation-curve-control-point"
                                                 data-keyframe={`${keyframe.objID}:0`}
@@ -1763,11 +1779,13 @@ export const TimelineAnimationCurve = observer(
                                             cx={p2.x}
                                             cy={p2.y}
                                             r={TO_POINT_RADIUS}
-                                            stroke={TO_POINT_HANDLE_COLOR}
+                                            stroke={
+                                                TO_POINT_HANDLE_STROKE_COLOR
+                                            }
                                             strokeWidth={
                                                 TO_POINT_HANDLE_STROKE_WIDTH
                                             }
-                                            fill="white"
+                                            fill={TO_POINT_HANDLE_FILL_COLOR}
                                             style={{ cursor: "grab" }}
                                             className="timeline-animation-curve-to-point"
                                             data-keyframe={keyframe.objID}

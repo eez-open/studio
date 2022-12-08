@@ -1575,6 +1575,7 @@ export async function buildAssets(
             }
 
             if (option == "buildFiles") {
+                await lvglBuild.copyBitmapFiles();
                 await lvglBuild.copyFontFiles();
             }
         }

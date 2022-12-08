@@ -8,6 +8,7 @@ import type { LVGLWidget } from "./widgets";
 import type { Assets } from "project-editor/build/assets";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 import { writeTextFile } from "eez-studio-shared/util-electron";
+import { getLvglBitmapSourceFile } from "project-editor/lvgl/bitmap";
 
 export class LVGLBuild {
     project: Project;
@@ -418,41 +419,6 @@ extern const ext_img_desc_t images[${this.project.bitmaps.length}];
         this.indentation = "";
         const build = this;
 
-        for (const bitmap of this.project.bitmaps) {
-            const varName = this.getImageVariableName(bitmap);
-
-            const bitmapData = await ProjectEditor.getBitmapData(bitmap);
-
-            const bgrPixels = new Uint8Array(bitmapData.pixels);
-
-            build.line(
-                `const LV_ATTRIBUTE_MEM_ALIGN uint8_t ${varName}_data[] = { ${bgrPixels.join(
-                    ", "
-                )} };`
-            );
-            build.line(``);
-            build.line(`const lv_img_dsc_t ${varName} = {`);
-            build.indent();
-            build.line(
-                `.header.cf = ${
-                    bitmapData.bpp == 32
-                        ? "LV_IMG_CF_TRUE_COLOR_ALPHA"
-                        : bitmapData.bpp == 24
-                        ? "LV_IMG_CF_TRUE_COLOR"
-                        : "LV_IMG_CF_RGB565A8"
-                },`
-            );
-            build.line(`.header.always_zero = 0,`);
-            build.line(`.header.reserved = 0,`);
-            build.line(`.header.w = ${bitmapData.width},`);
-            build.line(`.header.h = ${bitmapData.height},`);
-            build.line(`.data_size = sizeof(${varName}_data),`);
-            build.line(`.data = ${varName}_data`);
-            build.unindent();
-            build.line(`};`);
-            build.line(``);
-        }
-
         build.line(
             `const ext_img_desc_t images[${this.project.bitmaps.length}] = {`
         );
@@ -614,6 +580,29 @@ extern const ext_img_desc_t images[${this.project.bitmaps.length}];
         }
 
         return this.result;
+    }
+
+    async copyBitmapFiles() {
+        if (!this.project.settings.build.destinationFolder) {
+            return;
+        }
+        for (const bitmap of this.project.bitmaps) {
+            const output = getName(
+                "ui_image_",
+                bitmap.name || "",
+                NamingConvention.UnderscoreLowerCase
+            );
+
+            await writeTextFile(
+                this.project._DocumentStore.getAbsoluteFilePath(
+                    this.project.settings.build.destinationFolder
+                ) +
+                    "/" +
+                    output +
+                    ".c",
+                await getLvglBitmapSourceFile(bitmap)
+            );
+        }
     }
 
     async copyFontFiles() {

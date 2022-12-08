@@ -105,6 +105,26 @@ const ExportBitmapFilePropertyGridUI = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const CF_ALPHA_1_BIT = 1;
+export const CF_ALPHA_2_BIT = 2;
+export const CF_ALPHA_4_BIT = 3;
+export const CF_ALPHA_8_BIT = 4;
+
+export const CF_INDEXED_1_BIT = 41;
+export const CF_INDEXED_2_BIT = 42;
+export const CF_INDEXED_4_BIT = 43;
+export const CF_INDEXED_8_BIT = 44;
+
+export const CF_RAW = 51;
+export const CF_RAW_CHROMA = 52;
+export const CF_RAW_ALPHA = 53;
+
+export const CF_TRUE_COLOR = 24;
+export const CF_TRUE_COLOR_ALPHA = 32;
+export const CF_TRUE_COLOR_CHROMA = 33;
+
+export const CF_RGB565A8 = 16;
+
 export class Bitmap extends EezObject {
     id: number | undefined;
     name: string;
@@ -164,9 +184,31 @@ export class Bitmap extends EezObject {
                 enumItems: (bitmap: Bitmap) =>
                     isLVGLProject(bitmap)
                         ? [
-                              { id: 16, label: "RGB565A8 (16 + 8 bit)" },
-                              { id: 24, label: "TRUE_COLOR (24 bit)" },
-                              { id: 32, label: "TRUE_COLOR_ALPHA (32 bit)" }
+                              { id: CF_ALPHA_1_BIT, label: "ALPHA 1 BIT" },
+                              { id: CF_ALPHA_2_BIT, label: "ALPHA 2 BIT" },
+                              { id: CF_ALPHA_4_BIT, label: "ALPHA 4 BIT" },
+                              { id: CF_ALPHA_8_BIT, label: "ALPHA 8 BIT" },
+
+                              { id: CF_INDEXED_1_BIT, label: "INDEXED 1 BIT" },
+                              { id: CF_INDEXED_2_BIT, label: "INDEXED 2 BIT" },
+                              { id: CF_INDEXED_4_BIT, label: "INDEXED 4 BIT" },
+                              { id: CF_INDEXED_8_BIT, label: "INDEXED 8 BIT" },
+
+                              { id: CF_RAW, label: "RAW" },
+                              { id: CF_RAW_CHROMA, label: "RAW CHROMA" },
+                              { id: CF_RAW_ALPHA, label: "RAW ALPHA" },
+
+                              { id: CF_TRUE_COLOR, label: "TRUE COLOR" },
+                              {
+                                  id: CF_TRUE_COLOR_ALPHA,
+                                  label: "TRUE COLOR ALPHA"
+                              },
+                              {
+                                  id: CF_TRUE_COLOR_CHROMA,
+                                  label: "TRUE COLOR CHROMA"
+                              },
+
+                              { id: CF_RGB565A8, label: "RGB565A8" }
                           ]
                         : [{ id: 16 }, { id: 32 }],
                 defaultValue: 16
