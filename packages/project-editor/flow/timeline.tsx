@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Fragment } from "react";
 import {
     observable,
     computed,
@@ -23,8 +23,7 @@ import {
     PropertyType,
     PropertyProps,
     registerClass,
-    getObjectPropertyDisplayName,
-    getId
+    getObjectPropertyDisplayName
 } from "project-editor/core/object";
 import {
     getAncestorOfType,
@@ -59,6 +58,7 @@ import {
     IPointerEvent,
     MouseHandler
 } from "project-editor/flow/editor/mouse-handler";
+import { addAlphaToColor } from "eez-studio-shared/color";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1415,7 +1415,7 @@ class WidgetTimelinePath {
         });
     }
 
-    get timelinePosition() {
+    get timeline() {
         const projectEditorStore = getProjectEditorStore(this.widget);
 
         const editor = projectEditorStore.editorsStore.activeEditor;
@@ -1423,12 +1423,16 @@ class WidgetTimelinePath {
             if (editor.object instanceof ProjectEditor.PageClass) {
                 const pageTabState = editor.state as PageTabState;
                 if (pageTabState.timeline.isEditorActive) {
-                    return pageTabState.timeline.position;
+                    return pageTabState.timeline;
                 }
             }
         }
 
-        return 0;
+        return undefined;
+    }
+
+    get timelinePosition() {
+        return this.timeline?.position ?? 0;
     }
 
     get offsetToCenter() {
@@ -1438,10 +1442,20 @@ class WidgetTimelinePath {
             width,
             height
         } = this.widget.getTimelineRect(this.timelinePosition);
-        let { left: left2, top: top2 } = this.widget.relativePosition;
 
-        const x = left2 - left1 + width / 2;
-        const y = top2 - top1 + height / 2;
+        let x;
+        let y;
+
+        if (this.widget instanceof ProjectEditor.LVGLWidgetClass) {
+            // For the LVGL widget, the relative position changes when the timeline position changes.
+            let { left: left2, top: top2 } = this.widget.relativePosition;
+
+            x = left2 - left1 + width / 2;
+            y = top2 - top1 + height / 2;
+        } else {
+            x = width / 2;
+            y = height / 2;
+        }
 
         return { x, y };
     }
@@ -1539,7 +1553,9 @@ class WidgetTimelinePath {
             .map(keyframe => ({
                 keyframe,
                 curvePoints: this.getKeyframeCurvePoints(keyframe),
-                editorHandleProps: this.getEditorHandleProps(keyframe)
+                editorHandleProps: this.getEditorHandleProps(keyframe),
+                selected:
+                    this.timeline?.selectedKeyframes.indexOf(keyframe) != -1
             }))
             .filter(pathCurve => pathCurve.curvePoints.length > 0);
     }
@@ -1747,8 +1763,8 @@ export class WidgetTimelinePathEditorHandler extends MouseHandler {
                     const d2 = pointDistance(p, p2);
 
                     const cp2Prev = {
-                        x: (-p1.x / d2) * d1,
-                        y: (-p1.y / d2) * d1
+                        x: p.x + (-(p1.x - p.x) / d1) * d2,
+                        y: p.y + (-(p1.y - p.y) / d1) * d2
                     };
 
                     context.projectEditorStore.updateObject(this.keyframePrev, {
@@ -1759,13 +1775,46 @@ export class WidgetTimelinePathEditorHandler extends MouseHandler {
                 }
             }
         } else if (this.handleId == "cp2") {
-            // pomičem još cp1 od next
-
             context.projectEditorStore.updateObject(this.keyframe, {
                 controlPoints: `(${this.cp1AtStart!.x}, ${
                     this.cp1AtStart!.y
                 }) (${this.cp2AtStart!.x + dx}, ${this.cp2AtStart!.y + dy})`
             });
+
+            if (!event.ctrlKey) {
+                if (this.cp1NextAtStart) {
+                    const p1 = {
+                        x: this.cp2AtStart!.x + dx,
+                        y: this.cp2AtStart!.y + dy
+                    };
+                    const p = this.toAtStart!;
+                    const p2 = this.cp1NextAtStart;
+
+                    const d1 = pointDistance(p, p1);
+                    const d2 = pointDistance(p, p2);
+
+                    const cp1Next = {
+                        x: p.x + (-(p1.x - p.x) / d1) * d2,
+                        y: p.y + (-(p1.y - p.y) / d1) * d2
+                    };
+
+                    if (this.cp2NextAtStart) {
+                        context.projectEditorStore.updateObject(
+                            this.keyframeNext,
+                            {
+                                controlPoints: `(${cp1Next.x}, ${cp1Next.y}) (${this.cp2NextAtStart.x}, ${this.cp2NextAtStart.y})`
+                            }
+                        );
+                    } else {
+                        context.projectEditorStore.updateObject(
+                            this.keyframeNext,
+                            {
+                                controlPoints: `(${cp1Next.x}, ${cp1Next.y})`
+                            }
+                        );
+                    }
+                }
+            }
         }
     }
 
@@ -1777,239 +1826,307 @@ export class WidgetTimelinePathEditorHandler extends MouseHandler {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const SelectedWidgetTimelinePathEditor = observer(
+export const TimelinePathEditor = observer(
     ({ flowContext }: { flowContext: EditorFlowContext }) => {
         const timeline = flowContext.tabState.timeline;
         if (!timeline || !timeline.isEditorActive) {
             return null;
         }
 
-        const widget = flowContext.tabState.selectedObject;
-        if (!(widget instanceof ProjectEditor.WidgetClass)) {
-            return null;
-        }
+        const widgetTimelinePaths = flowContext.tabState.selectedObjects
+            .map(object =>
+                object instanceof ProjectEditor.WidgetClass
+                    ? new WidgetTimelinePath(object)
+                    : undefined
+            )
+            .filter(
+                widgetTimelinePath =>
+                    widgetTimelinePath && widgetTimelinePath.path.length > 0
+            ) as WidgetTimelinePath[];
 
-        const CURVE_STROKE_WIDTH = 2;
-        const CURVE_COLOR = "#337bb7";
-
-        const LINE_TO_CONTROL_POINT_STROKE_WIDTH = 0.5;
-        const LINE_TO_CONTROL_POINT_COLOR = "#337bb7";
-
-        const CONTROL_POINT_HANDLE_STROKE_COLOR = "#337bb7";
-        const CONTROL_POINT_HANDLE_STROKE_WIDTH = 1.5;
-        const CONTROL_POINT_HANDLE_FILL_COLOR = "white";
-        const CONTROL_POINT_RADIUS = 5;
-
-        const TO_POINT_HANDLE_FILL_COLOR = "#ff8c00";
-        const TO_POINT_HANDLE_STROKE_WIDTH = 1.5;
-        const TO_POINT_HANDLE_STROKE_COLOR = "#ff8c00";
-        const TO_POINT_RADIUS = 5;
-
-        const widgetTimelinePath = new WidgetTimelinePath(widget);
-
-        if (widgetTimelinePath.path.length == 0) {
+        if (widgetTimelinePaths.length == 0) {
             return null;
         }
 
         return (
             <Svg flowContext={flowContext}>
-                <>
-                    {widgetTimelinePath.path
-                        .map(({ keyframe, curvePoints }) => {
-                            if (curvePoints.length == 4) {
-                                const [p1, p2, p3, p4] = curvePoints;
-
-                                return (
-                                    <g key={getId(keyframe)}>
-                                        <path
-                                            d={`M ${p1.x} ${p1.y} C ${p2.x} ${p2.y} ${p3.x} ${p3.y} ${p4.x} ${p4.y}`}
-                                            strokeWidth={CURVE_STROKE_WIDTH}
-                                            stroke={CURVE_COLOR}
-                                            fill="none"
-                                            strokeLinecap="round"
-                                            markerEnd="url(#timelineAnimationCurveEndMarker)"
-                                        />
-                                        <path
-                                            d={`M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`}
-                                            strokeWidth={
-                                                LINE_TO_CONTROL_POINT_STROKE_WIDTH
-                                            }
-                                            stroke={LINE_TO_CONTROL_POINT_COLOR}
-                                            fill="none"
-                                        />
-                                        <path
-                                            d={`M ${p4.x} ${p4.y} L ${p3.x} ${p3.y}`}
-                                            strokeWidth={
-                                                LINE_TO_CONTROL_POINT_STROKE_WIDTH
-                                            }
-                                            stroke={LINE_TO_CONTROL_POINT_COLOR}
-                                            fill="none"
-                                        />
-                                    </g>
-                                );
-                            } else if (curvePoints.length == 3) {
-                                const [p1, p2, p3] = curvePoints;
-
-                                return (
-                                    <g key={getId(keyframe)}>
-                                        <path
-                                            d={`M ${p1.x} ${p1.y} Q ${p2.x} ${p2.y} ${p3.x} ${p3.y}`}
-                                            strokeWidth={CURVE_STROKE_WIDTH}
-                                            stroke={CURVE_COLOR}
-                                            fill="none"
-                                            strokeLinecap="round"
-                                            markerEnd="url(#timelineAnimationCurveEndMarker)"
-                                        />
-                                        <path
-                                            d={`M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`}
-                                            strokeWidth={
-                                                LINE_TO_CONTROL_POINT_STROKE_WIDTH
-                                            }
-                                            stroke={LINE_TO_CONTROL_POINT_COLOR}
-                                            fill="none"
-                                        />
-                                    </g>
-                                );
-                            } else if (curvePoints.length == 2) {
-                                const [p1, p2] = curvePoints;
-                                return (
-                                    <g key={getId(keyframe)}>
-                                        <path
-                                            d={`M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`}
-                                            strokeWidth={CURVE_STROKE_WIDTH}
-                                            stroke={CURVE_COLOR}
-                                            fill="none"
-                                            strokeLinecap="round"
-                                            markerEnd="url(#timelineAnimationCurveEndMarker)"
-                                        />
-                                    </g>
-                                );
-                            }
-
-                            return null;
-                        })
-                        .filter(node => node != null)}
-                </>
-                <>
-                    {widgetTimelinePath.path
-                        .map(({ keyframe, curvePoints, editorHandleProps }) => {
-                            if (curvePoints.length == 4) {
-                                const [_, p2, p3, p4] = curvePoints;
-                                const R = CONTROL_POINT_RADIUS;
-                                return (
-                                    <g key={getId(keyframe)}>
-                                        <circle
-                                            cx={p4.x}
-                                            cy={p4.y}
-                                            r={TO_POINT_RADIUS}
-                                            stroke={
-                                                TO_POINT_HANDLE_STROKE_COLOR
-                                            }
-                                            strokeWidth={
-                                                TO_POINT_HANDLE_STROKE_WIDTH
-                                            }
-                                            fill={TO_POINT_HANDLE_FILL_COLOR}
-                                            style={{ cursor: "grab" }}
-                                            {...editorHandleProps.to}
-                                        />
-                                        <path
-                                            d={`M ${p2.x} ${
-                                                p2.y - 5
-                                            } l ${R} ${R} l -${R} 5 l -${R} -${R} Z`}
-                                            stroke={
-                                                CONTROL_POINT_HANDLE_STROKE_COLOR
-                                            }
-                                            strokeWidth={
-                                                CONTROL_POINT_HANDLE_STROKE_WIDTH
-                                            }
-                                            fill={
-                                                CONTROL_POINT_HANDLE_FILL_COLOR
-                                            }
-                                            style={{ cursor: "grab" }}
-                                            {...editorHandleProps.cp1}
-                                        />
-                                        <path
-                                            d={`M ${p3.x} ${
-                                                p3.y - 5
-                                            } l ${R} ${R} l -${R} 5 l -${R} -${R} Z`}
-                                            stroke={
-                                                CONTROL_POINT_HANDLE_STROKE_COLOR
-                                            }
-                                            strokeWidth={
-                                                CONTROL_POINT_HANDLE_STROKE_WIDTH
-                                            }
-                                            fill={
-                                                CONTROL_POINT_HANDLE_FILL_COLOR
-                                            }
-                                            style={{ cursor: "grab" }}
-                                            {...editorHandleProps.cp2}
-                                        />
-                                    </g>
-                                );
-                            } else if (curvePoints.length == 3) {
-                                const [_, p2, p3] = curvePoints;
-                                const R = CONTROL_POINT_RADIUS;
-                                return (
-                                    <g key={getId(keyframe)}>
-                                        <circle
-                                            cx={p3.x}
-                                            cy={p3.y}
-                                            r={TO_POINT_RADIUS}
-                                            stroke={
-                                                TO_POINT_HANDLE_STROKE_COLOR
-                                            }
-                                            strokeWidth={
-                                                TO_POINT_HANDLE_STROKE_WIDTH
-                                            }
-                                            fill={TO_POINT_HANDLE_FILL_COLOR}
-                                            style={{ cursor: "grab" }}
-                                            {...editorHandleProps.to}
-                                        />
-                                        <path
-                                            d={`M ${p2.x} ${
-                                                p2.y - 5
-                                            } l ${R} ${R} l -${R} 5 l -${R} -${R} Z`}
-                                            stroke={
-                                                CONTROL_POINT_HANDLE_STROKE_COLOR
-                                            }
-                                            strokeWidth={
-                                                CONTROL_POINT_HANDLE_STROKE_WIDTH
-                                            }
-                                            fill={
-                                                CONTROL_POINT_HANDLE_FILL_COLOR
-                                            }
-                                            style={{ cursor: "grab" }}
-                                            {...editorHandleProps.cp1}
-                                        />
-                                    </g>
-                                );
-                            } else if (curvePoints.length == 2) {
-                                const [_, p2] = curvePoints;
-                                return (
-                                    <g key={getId(keyframe)}>
-                                        <circle
-                                            cx={p2.x}
-                                            cy={p2.y}
-                                            r={TO_POINT_RADIUS}
-                                            stroke={
-                                                TO_POINT_HANDLE_STROKE_COLOR
-                                            }
-                                            strokeWidth={
-                                                TO_POINT_HANDLE_STROKE_WIDTH
-                                            }
-                                            fill={TO_POINT_HANDLE_FILL_COLOR}
-                                            style={{ cursor: "grab" }}
-                                            {...editorHandleProps.to}
-                                        />
-                                    </g>
-                                );
-                            }
-
-                            return null;
-                        })
-                        .filter(node => node != null)}
-                </>
+                {widgetTimelinePaths.map(widgetTimelinePath => (
+                    <Fragment key={widgetTimelinePath.widget.objID}>
+                        <WidgetTimelinePathCurves
+                            widgetTimelinePath={widgetTimelinePath}
+                        ></WidgetTimelinePathCurves>
+                        <WidgetTimelinePathHandles
+                            widgetTimelinePath={widgetTimelinePath}
+                        ></WidgetTimelinePathHandles>
+                    </Fragment>
+                ))}
             </Svg>
+        );
+    }
+);
+
+const WidgetTimelinePathCurves = observer(
+    (props: { widgetTimelinePath: WidgetTimelinePath }) => {
+        const CURVE_STROKE_WIDTH = 2;
+        const CURVE_COLOR_SELECTED = "#337bb7";
+        const CURVE_COLOR = addAlphaToColor(CURVE_COLOR_SELECTED, 0.5);
+
+        const LINE_TO_CONTROL_POINT_STROKE_WIDTH = 0.5;
+        const LINE_TO_CONTROL_POINT_COLOR_SELECTED = "#337bb7";
+        const LINE_TO_CONTROL_POINT_COLOR = addAlphaToColor(
+            LINE_TO_CONTROL_POINT_COLOR_SELECTED,
+            0.5
+        );
+
+        return (
+            <>
+                {props.widgetTimelinePath.path.map(
+                    ({ selected, keyframe, curvePoints }) => {
+                        if (curvePoints.length == 4) {
+                            const [p1, p2, p3, p4] = curvePoints;
+
+                            return (
+                                <Fragment key={keyframe.objID}>
+                                    <path
+                                        d={`M ${p1.x} ${p1.y} C ${p2.x} ${p2.y} ${p3.x} ${p3.y} ${p4.x} ${p4.y}`}
+                                        strokeWidth={CURVE_STROKE_WIDTH}
+                                        stroke={
+                                            selected
+                                                ? CURVE_COLOR_SELECTED
+                                                : CURVE_COLOR
+                                        }
+                                        fill="none"
+                                        strokeLinecap="round"
+                                        markerEnd="url(#timelineAnimationCurveEndMarker)"
+                                    />
+                                    <path
+                                        d={`M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`}
+                                        strokeWidth={
+                                            LINE_TO_CONTROL_POINT_STROKE_WIDTH
+                                        }
+                                        stroke={
+                                            selected
+                                                ? LINE_TO_CONTROL_POINT_COLOR_SELECTED
+                                                : LINE_TO_CONTROL_POINT_COLOR
+                                        }
+                                        fill="none"
+                                    />
+                                    <path
+                                        d={`M ${p4.x} ${p4.y} L ${p3.x} ${p3.y}`}
+                                        strokeWidth={
+                                            LINE_TO_CONTROL_POINT_STROKE_WIDTH
+                                        }
+                                        stroke={
+                                            selected
+                                                ? LINE_TO_CONTROL_POINT_COLOR_SELECTED
+                                                : LINE_TO_CONTROL_POINT_COLOR
+                                        }
+                                        fill="none"
+                                    />
+                                </Fragment>
+                            );
+                        } else if (curvePoints.length == 3) {
+                            const [p1, p2, p3] = curvePoints;
+
+                            return (
+                                <Fragment key={keyframe.objID}>
+                                    <path
+                                        d={`M ${p1.x} ${p1.y} Q ${p2.x} ${p2.y} ${p3.x} ${p3.y}`}
+                                        strokeWidth={CURVE_STROKE_WIDTH}
+                                        stroke={
+                                            selected
+                                                ? CURVE_COLOR_SELECTED
+                                                : CURVE_COLOR
+                                        }
+                                        fill="none"
+                                        strokeLinecap="round"
+                                        markerEnd="url(#timelineAnimationCurveEndMarker)"
+                                    />
+                                    <path
+                                        d={`M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`}
+                                        strokeWidth={
+                                            LINE_TO_CONTROL_POINT_STROKE_WIDTH
+                                        }
+                                        stroke={
+                                            selected
+                                                ? LINE_TO_CONTROL_POINT_COLOR_SELECTED
+                                                : LINE_TO_CONTROL_POINT_COLOR
+                                        }
+                                        fill="none"
+                                    />
+                                </Fragment>
+                            );
+                        } else {
+                            const [p1, p2] = curvePoints;
+                            return (
+                                <Fragment key={keyframe.objID}>
+                                    <path
+                                        d={`M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`}
+                                        strokeWidth={CURVE_STROKE_WIDTH}
+                                        stroke={CURVE_COLOR}
+                                        fill="none"
+                                        strokeLinecap="round"
+                                        markerEnd="url(#timelineAnimationCurveEndMarker)"
+                                    />
+                                </Fragment>
+                            );
+                        }
+                    }
+                )}
+            </>
+        );
+    }
+);
+
+const WidgetTimelinePathHandles = observer(
+    (props: { widgetTimelinePath: WidgetTimelinePath }) => {
+        const CONTROL_POINT_HANDLE_STROKE_COLOR = "#337bb7";
+        const CONTROL_POINT_HANDLE_STROKE_WIDTH = 1.5;
+        const CONTROL_POINT_HANDLE_FILL_COLOR = "white";
+        const CONTROL_POINT_HANDLE_FILL_COLOR_SELECTED = "#337bb7";
+        const CONTROL_POINT_RADIUS = 5;
+
+        const TO_POINT_HANDLE_STROKE_WIDTH = 1.5;
+        const TO_POINT_HANDLE_STROKE_COLOR = "#ff8c00";
+        const TO_POINT_HANDLE_FILL_COLOR = "white";
+        const TO_POINT_HANDLE_FILL_COLOR_SELECTED = "#ff8c00";
+        const TO_POINT_RADIUS = 5;
+
+        return (
+            <>
+                {props.widgetTimelinePath.path.map(
+                    ({
+                        keyframe,
+                        curvePoints,
+                        editorHandleProps,
+                        selected
+                    }) => {
+                        if (curvePoints.length == 4) {
+                            const [_, p2, p3, p4] = curvePoints;
+                            const R = CONTROL_POINT_RADIUS;
+                            return (
+                                <Fragment key={keyframe.objID}>
+                                    <circle
+                                        cx={p4.x}
+                                        cy={p4.y}
+                                        r={TO_POINT_RADIUS}
+                                        stroke={TO_POINT_HANDLE_STROKE_COLOR}
+                                        strokeWidth={
+                                            TO_POINT_HANDLE_STROKE_WIDTH
+                                        }
+                                        fill={
+                                            selected
+                                                ? TO_POINT_HANDLE_FILL_COLOR_SELECTED
+                                                : TO_POINT_HANDLE_FILL_COLOR
+                                        }
+                                        style={{ cursor: "grab" }}
+                                        {...editorHandleProps.to}
+                                    />
+                                    <path
+                                        d={`M ${p2.x} ${
+                                            p2.y - 5
+                                        } l ${R} ${R} l -${R} 5 l -${R} -${R} Z`}
+                                        stroke={
+                                            CONTROL_POINT_HANDLE_STROKE_COLOR
+                                        }
+                                        strokeWidth={
+                                            CONTROL_POINT_HANDLE_STROKE_WIDTH
+                                        }
+                                        fill={
+                                            selected
+                                                ? CONTROL_POINT_HANDLE_FILL_COLOR_SELECTED
+                                                : CONTROL_POINT_HANDLE_FILL_COLOR
+                                        }
+                                        style={{ cursor: "grab" }}
+                                        {...editorHandleProps.cp1}
+                                    />
+                                    <path
+                                        d={`M ${p3.x} ${
+                                            p3.y - 5
+                                        } l ${R} ${R} l -${R} 5 l -${R} -${R} Z`}
+                                        stroke={
+                                            CONTROL_POINT_HANDLE_STROKE_COLOR
+                                        }
+                                        strokeWidth={
+                                            CONTROL_POINT_HANDLE_STROKE_WIDTH
+                                        }
+                                        fill={
+                                            selected
+                                                ? CONTROL_POINT_HANDLE_FILL_COLOR_SELECTED
+                                                : CONTROL_POINT_HANDLE_FILL_COLOR
+                                        }
+                                        style={{ cursor: "grab" }}
+                                        {...editorHandleProps.cp2}
+                                    />
+                                </Fragment>
+                            );
+                        } else if (curvePoints.length == 3) {
+                            const [_, p2, p3] = curvePoints;
+                            const R = CONTROL_POINT_RADIUS;
+                            return (
+                                <Fragment key={keyframe.objID}>
+                                    <circle
+                                        cx={p3.x}
+                                        cy={p3.y}
+                                        r={TO_POINT_RADIUS}
+                                        stroke={TO_POINT_HANDLE_STROKE_COLOR}
+                                        strokeWidth={
+                                            TO_POINT_HANDLE_STROKE_WIDTH
+                                        }
+                                        fill={
+                                            selected
+                                                ? TO_POINT_HANDLE_FILL_COLOR_SELECTED
+                                                : TO_POINT_HANDLE_FILL_COLOR
+                                        }
+                                        style={{ cursor: "grab" }}
+                                        {...editorHandleProps.to}
+                                    />
+                                    <path
+                                        d={`M ${p2.x} ${
+                                            p2.y - 5
+                                        } l ${R} ${R} l -${R} 5 l -${R} -${R} Z`}
+                                        stroke={
+                                            CONTROL_POINT_HANDLE_STROKE_COLOR
+                                        }
+                                        strokeWidth={
+                                            CONTROL_POINT_HANDLE_STROKE_WIDTH
+                                        }
+                                        fill={
+                                            selected
+                                                ? CONTROL_POINT_HANDLE_FILL_COLOR_SELECTED
+                                                : CONTROL_POINT_HANDLE_FILL_COLOR
+                                        }
+                                        style={{ cursor: "grab" }}
+                                        {...editorHandleProps.cp1}
+                                    />
+                                </Fragment>
+                            );
+                        } else {
+                            const [_, p2] = curvePoints;
+                            return (
+                                <Fragment key={keyframe.objID}>
+                                    <circle
+                                        cx={p2.x}
+                                        cy={p2.y}
+                                        r={TO_POINT_RADIUS}
+                                        stroke={TO_POINT_HANDLE_STROKE_COLOR}
+                                        strokeWidth={
+                                            TO_POINT_HANDLE_STROKE_WIDTH
+                                        }
+                                        fill={
+                                            selected
+                                                ? TO_POINT_HANDLE_FILL_COLOR_SELECTED
+                                                : TO_POINT_HANDLE_FILL_COLOR
+                                        }
+                                        style={{ cursor: "grab" }}
+                                        {...editorHandleProps.to}
+                                    />
+                                </Fragment>
+                            );
+                        }
+                    }
+                )}
+            </>
         );
     }
 );

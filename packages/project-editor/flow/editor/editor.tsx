@@ -61,7 +61,7 @@ import {
     DragSnapLinesOverlay
 } from "project-editor/flow/editor/snap-lines";
 import {
-    SelectedWidgetTimelinePathEditor,
+    TimelinePathEditor,
     WidgetTimelinePathEditorHandler
 } from "project-editor/flow/timeline";
 
@@ -1155,7 +1155,7 @@ export const FlowEditor = observer(
                                     </div>
                                 }
 
-                                <SelectedWidgetTimelinePathEditor
+                                <TimelinePathEditor
                                     flowContext={this.flowContext}
                                 />
 

@@ -645,10 +645,6 @@ export class LVGLWidget extends Widget {
             disabledStateType: "literal"
         },
 
-        isMoveable(widget: Widget) {
-            return !widget.locked && !getTimelineEditorState(widget);
-        },
-
         setRect: (widget: LVGLWidget, value: Partial<Rect>) => {
             const projectEditorStore = getProjectEditorStore(widget);
 

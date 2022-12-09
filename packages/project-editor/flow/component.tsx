@@ -140,7 +140,6 @@ import {
     getTimelineRect,
     isTimelineEditorActive,
     isTimelineEditorActiveOrActionComponent,
-    setWidgetRectInTimelineEditor,
     TimelineKeyframe,
     TimelineKeyframeProperty,
     TimelineKeyframePropertyUI,
@@ -1953,7 +1952,6 @@ export class Component extends EezObject {
             if (object instanceof Widget) {
                 const timelineEditorState = getTimelineEditorState(object);
                 if (timelineEditorState) {
-                    setWidgetRectInTimelineEditor(object, value);
                     return;
                 }
             }
@@ -2836,7 +2834,7 @@ export class Widget extends Component {
             return !widget.locked;
         },
         isMoveable(widget: Widget) {
-            return !widget.locked;
+            return !widget.locked && !getTimelineEditorState(widget);
         }
     });
 
@@ -3208,6 +3206,10 @@ export class Widget extends Component {
     }
 
     getResizeHandlers(): IResizeHandler[] | undefined | false {
+        if (isTimelineEditorActive(this)) {
+            return [];
+        }
+
         if (this.autoSize == "both") {
             return [];
         }
