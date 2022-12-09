@@ -50,9 +50,7 @@ import {
     DragMouseHandler,
     isSelectionMoveable,
     ResizeMouseHandler,
-    RubberBandSelectionMouseHandler,
-    DragTimelineAnimationCurveControlPoint,
-    DragTimelineAnimationCurveToPoint
+    RubberBandSelectionMouseHandler
 } from "project-editor/flow/editor/mouse-handler";
 import { Selection } from "project-editor/flow/editor/selection";
 import { setupDragScroll } from "project-editor/flow/editor/drag-scroll";
@@ -63,8 +61,8 @@ import {
     DragSnapLinesOverlay
 } from "project-editor/flow/editor/snap-lines";
 import {
-    TimelineAnimationCurve,
-    TimelineKeyframe
+    SelectedWidgetTimelinePathEditor,
+    WidgetTimelinePathEditorHandler
 } from "project-editor/flow/timeline";
 
 const CONF_DOUBLE_CLICK_TIME = 350; // ms
@@ -236,9 +234,7 @@ export const Canvas = observer(
                     this.mouseHandler instanceof DragMouseHandler ||
                     this.mouseHandler instanceof ResizeMouseHandler ||
                     this.mouseHandler instanceof
-                        DragTimelineAnimationCurveControlPoint ||
-                    this.mouseHandler instanceof
-                        DragTimelineAnimationCurveToPoint)
+                        WidgetTimelinePathEditorHandler)
             ) {
                 this.dragScrollDispose = setupDragScroll(
                     this.div,
@@ -421,37 +417,14 @@ export const Canvas = observer(
 
                 let el: HTMLElement = closestByClass(
                     event.target,
-                    "timeline-animation-curve-control-point"
+                    WidgetTimelinePathEditorHandler.CLASS_NAME
                 );
                 if (el) {
-                    const [keyframeId, cpIndex] = el
-                        .getAttribute("data-keyframe")!
-                        .split(":");
-
-                    const keyframe =
-                        this.props.flowContext.projectEditorStore.project._objectsMap.get(
-                            keyframeId
-                        ) as TimelineKeyframe;
-
-                    return new DragTimelineAnimationCurveControlPoint(
-                        keyframe,
-                        Number.parseInt(cpIndex)
+                    return new WidgetTimelinePathEditorHandler(
+                        el.getAttribute(
+                            WidgetTimelinePathEditorHandler.DATA_ATTR_NAME
+                        )!
                     );
-                }
-
-                el = closestByClass(
-                    event.target,
-                    "timeline-animation-curve-to-point"
-                );
-                if (el) {
-                    const keyframeId = el.getAttribute("data-keyframe")!;
-
-                    const keyframe =
-                        this.props.flowContext.projectEditorStore.project._objectsMap.get(
-                            keyframeId
-                        ) as TimelineKeyframe;
-
-                    return new DragTimelineAnimationCurveToPoint(keyframe);
                 }
 
                 let isMoveable = isSelectionMoveable(flowContext);
@@ -1182,7 +1155,7 @@ export const FlowEditor = observer(
                                     </div>
                                 }
 
-                                <TimelineAnimationCurve
+                                <SelectedWidgetTimelinePathEditor
                                     flowContext={this.flowContext}
                                 />
 

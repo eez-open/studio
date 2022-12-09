@@ -593,15 +593,19 @@ extern const ext_img_desc_t images[${this.project.bitmaps.length}];
                 NamingConvention.UnderscoreLowerCase
             );
 
-            await writeTextFile(
-                this.project._DocumentStore.getAbsoluteFilePath(
-                    this.project.settings.build.destinationFolder
-                ) +
-                    "/" +
-                    output +
-                    ".c",
-                await getLvglBitmapSourceFile(bitmap)
-            );
+            try {
+                await writeTextFile(
+                    this.project._DocumentStore.getAbsoluteFilePath(
+                        this.project.settings.build.destinationFolder
+                    ) +
+                        "/" +
+                        output +
+                        ".c",
+                    await getLvglBitmapSourceFile(bitmap)
+                );
+            } catch (err) {
+                console.error(err);
+            }
         }
     }
 

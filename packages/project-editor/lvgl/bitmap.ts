@@ -63,12 +63,7 @@ export async function getLvglBitmapSourceFile(bitmap: Bitmap) {
         outName: "img_" + bitmap.name,
         swapEndian: false,
         outputFormat: OutputMode.C,
-        binaryFormat:
-            bitmap.bpp == CF_TRUE_COLOR ||
-            bitmap.bpp == CF_TRUE_COLOR_ALPHA ||
-            bitmap.bpp == CF_TRUE_COLOR_CHROMA
-                ? ImageMode.ICF_TRUE_COLOR_ARGB8888
-                : undefined,
+        binaryFormat: undefined,
         overrideWidth: result.width,
         overrideHeight: result.height
     })) as string;

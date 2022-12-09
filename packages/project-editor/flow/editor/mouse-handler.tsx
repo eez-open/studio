@@ -25,7 +25,6 @@ import type { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { getId } from "project-editor/core/object";
 import type { Component } from "project-editor/flow/component";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import type { TimelineKeyframe } from "project-editor/flow/timeline";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1509,86 +1508,5 @@ export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
                 })}
             </svg>
         );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export class DragTimelineAnimationCurveControlPoint extends MouseHandler {
-    controlPointsArray: number[];
-
-    cursor: string = "grabbing";
-
-    constructor(private keyframe: TimelineKeyframe, private cpIndex: number) {
-        super();
-
-        this.controlPointsArray = this.keyframe.controlPointsArray.slice();
-    }
-
-    down(context: IFlowContext, event: IPointerEvent) {
-        super.down(context, event);
-    }
-
-    move(context: IFlowContext, event: IPointerEvent) {
-        super.move(context, event);
-
-        const array = this.controlPointsArray.slice();
-
-        if (this.cpIndex == 0) {
-            array[0] += this.modelDistance.x;
-            array[1] += this.modelDistance.y;
-        } else {
-            array[2] += this.modelDistance.x;
-            array[3] += this.modelDistance.y;
-        }
-
-        context.projectEditorStore.updateObject(this.keyframe, {
-            controlPoints:
-                array.length == 4
-                    ? `(${array[0]}, ${array[1]}) (${array[2]}, ${array[3]})`
-                    : array.length == 2
-                    ? `(${array[0]}, ${array[1]})`
-                    : ""
-        });
-    }
-
-    up(context: IFlowContext) {
-        super.up(context);
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export class DragTimelineAnimationCurveToPoint extends MouseHandler {
-    cursor: string = "grabbing";
-
-    left: number;
-    top: number;
-
-    constructor(private keyframe: TimelineKeyframe) {
-        super();
-        this.left = this.keyframe.left.value!;
-        this.top = this.keyframe.top.value!;
-    }
-
-    down(context: IFlowContext, event: IPointerEvent) {
-        super.down(context, event);
-    }
-
-    move(context: IFlowContext, event: IPointerEvent) {
-        super.move(context, event);
-
-        context.projectEditorStore.updateObject(this.keyframe, {
-            left: Object.assign({}, this.keyframe.left, {
-                value: this.left + this.modelDistance.x
-            }),
-            top: Object.assign({}, this.keyframe.left, {
-                value: this.top + this.modelDistance.y
-            })
-        });
-    }
-
-    up(context: IFlowContext) {
-        super.up(context);
     }
 }
