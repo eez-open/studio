@@ -98,24 +98,16 @@ export async function buildPalette(
         images.forEach(image => paletteQuantizer.sample(image));
 
         let palette: Palette;
-        let timerId: NodeJS.Immediate;
         const iterator = paletteQuantizer.quantize();
-        const next = () => {
-            try {
-                const result = iterator.next();
-                if (result.done) {
-                    resolve(palette);
-                } else {
-                    if (result.value.palette) palette = result.value.palette;
-                    if (onProgress) onProgress(result.value.progress);
-                    timerId = setImmediate(next);
-                }
-            } catch (error) {
-                clearImmediate(timerId);
-                reject(error);
+        while (true) {
+            const result = iterator.next();
+            if (result.done) {
+                resolve(palette!);
+                break;
+            } else {
+                if (result.value.palette) palette = result.value.palette;
             }
-        };
-        timerId = setImmediate(next);
+        }
     });
 }
 
@@ -151,26 +143,18 @@ export async function applyPalette(
         );
 
         let outPointContainer: PointContainer;
-        let timerId: NodeJS.Immediate;
         const iterator = imageQuantizer.quantize(image, palette);
-        const next = () => {
-            try {
-                const result = iterator.next();
-                if (result.done) {
-                    resolve(outPointContainer);
-                } else {
-                    if (result.value.pointContainer) {
-                        outPointContainer = result.value.pointContainer;
-                    }
-                    if (onProgress) onProgress(result.value.progress);
-                    timerId = setImmediate(next);
+        while (true) {
+            const result = iterator.next();
+            if (result.done) {
+                resolve(outPointContainer!);
+                break;
+            } else {
+                if (result.value.pointContainer) {
+                    outPointContainer = result.value.pointContainer;
                 }
-            } catch (error) {
-                clearImmediate(timerId);
-                reject(error);
             }
-        };
-        timerId = setImmediate(next);
+        }
     });
 }
 

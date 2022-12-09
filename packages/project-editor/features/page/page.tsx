@@ -512,8 +512,8 @@ export class Page extends Flow {
                     );
                 }
 
-                const MAX_WIDTH = 1920;
-                const MAX_HEIGHT = 1080;
+                const MAX_WIDTH = 4096;
+                const MAX_HEIGHT = 4096;
 
                 if (page.width < 1 || page.width > MAX_WIDTH) {
                     messages.push(
