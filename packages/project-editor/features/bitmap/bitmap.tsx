@@ -91,13 +91,15 @@ const ExportBitmapFilePropertyGridUI = observer(
                 return null;
             }
             return (
-                <BootstrapButton
-                    color="primary"
-                    size="small"
-                    onClick={this.export}
-                >
-                    Export bitmap file...
-                </BootstrapButton>
+                <div style={{ marginTop: 10 }}>
+                    <BootstrapButton
+                        color="primary"
+                        size="small"
+                        onClick={this.export}
+                    >
+                        Export bitmap file...
+                    </BootstrapButton>
+                </div>
             );
         }
     }
@@ -179,7 +181,8 @@ export class Bitmap extends EezObject {
             },
             {
                 name: "bpp",
-                displayName: "Bits per pixel",
+                displayName: (bitmap: Bitmap) =>
+                    isLVGLProject(bitmap) ? "Color format" : "Bits per pixel",
                 type: PropertyType.Enum,
                 enumItems: (bitmap: Bitmap) =>
                     isLVGLProject(bitmap)

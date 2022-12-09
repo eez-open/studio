@@ -1441,6 +1441,24 @@ export const TimelineAnimationCurve = observer(
         const TO_POINT_HANDLE_STROKE_COLOR = "#ff8c00";
         const TO_POINT_RADIUS = 5;
 
+        let timelinePosition = 0;
+        const editor = flowContext.projectEditorStore.editorsStore.activeEditor;
+        if (editor) {
+            if (editor.object instanceof ProjectEditor.PageClass) {
+                const pageTabState = editor.state as PageTabState;
+                if (pageTabState.timeline.isEditorActive) {
+                    timelinePosition = pageTabState.timeline.position;
+                }
+            }
+        }
+
+        let { left: left1, top: top1 } =
+            widget.getTimelineRect(timelinePosition);
+        let { left: left2, top: top2 } = widget.relativePosition;
+
+        const x = left2 - left1;
+        const y = top2 - top1;
+
         return (
             <Svg flowContext={flowContext}>
                 <>
@@ -1484,25 +1502,25 @@ export const TimelineAnimationCurve = observer(
                             }
 
                             const pFrom = {
-                                x: leftFrom,
-                                y: topFrom
+                                x: x + leftFrom,
+                                y: y + topFrom
                             };
                             const pTo = {
-                                x: leftTo,
-                                y: topTo
+                                x: x + leftTo,
+                                y: y + topTo
                             };
 
                             if (controlPointsArray.length == 4) {
                                 const p1 = pFrom;
 
                                 const p2 = {
-                                    x: controlPointsArray[0],
-                                    y: controlPointsArray[1]
+                                    x: x + controlPointsArray[0],
+                                    y: y + controlPointsArray[1]
                                 };
 
                                 const p3 = {
-                                    x: controlPointsArray[2],
-                                    y: controlPointsArray[3]
+                                    x: x + controlPointsArray[2],
+                                    y: y + controlPointsArray[3]
                                 };
 
                                 const p4 = pTo;
@@ -1642,19 +1660,19 @@ export const TimelineAnimationCurve = observer(
                             }
 
                             const pTo = {
-                                x: leftTo,
-                                y: topTo
+                                x: x + leftTo,
+                                y: y + topTo
                             };
 
                             if (controlPointsArray.length == 4) {
                                 const p2 = {
-                                    x: controlPointsArray[0],
-                                    y: controlPointsArray[1]
+                                    x: x + controlPointsArray[0],
+                                    y: y + controlPointsArray[1]
                                 };
 
                                 const p3 = {
-                                    x: controlPointsArray[2],
-                                    y: controlPointsArray[3]
+                                    x: x + controlPointsArray[2],
+                                    y: y + controlPointsArray[3]
                                 };
 
                                 const p4 = pTo;
@@ -2105,123 +2123,121 @@ export function getTimelineRect(
     let width = widget.width ?? 0;
     let height = widget.height ?? 0;
 
-    if (!project.projectTypeTraits.isLVGL) {
-        for (const keyframe of widget.timeline) {
-            if (timelinePosition < keyframe.start) {
-                continue;
-            }
+    for (const keyframe of widget.timeline) {
+        if (timelinePosition < keyframe.start) {
+            continue;
+        }
 
-            if (
-                timelinePosition >= keyframe.start &&
-                timelinePosition <= keyframe.end
-            ) {
-                const controlPoints = keyframe.controlPointsArray;
+        if (
+            timelinePosition >= keyframe.start &&
+            timelinePosition <= keyframe.end
+        ) {
+            const controlPoints = keyframe.controlPointsArray;
 
-                const t =
-                    keyframe.start == keyframe.end
-                        ? 1
-                        : (timelinePosition - keyframe.start) /
-                          (keyframe.end - keyframe.start);
-
-                if (keyframe.left.enabled) {
-                    const t2 = easingFunctions[keyframe.left.easingFunction](t);
-
-                    if (controlPoints.length == 4) {
-                        const p1 = left;
-                        const p2 = controlPoints[0];
-                        const p3 = controlPoints[2];
-                        const p4 = keyframe.left.value!;
-                        left =
-                            (1 - t2) * (1 - t2) * (1 - t2) * p1 +
-                            3 * (1 - t2) * (1 - t2) * t2 * p2 +
-                            3 * (1 - t2) * t2 * t2 * p3 +
-                            t2 * t2 * t2 * p4;
-                    } else if (controlPoints.length == 2) {
-                        const p1 = left;
-                        const p2 = controlPoints[0];
-                        const p3 = keyframe.left.value!;
-                        left =
-                            (1 - t2) * (1 - t2) * p1 +
-                            2 * (1 - t2) * t2 * p2 +
-                            t2 * t2 * p3;
-                    } else {
-                        const p1 = left;
-                        const p2 = keyframe.left.value!;
-                        left = (1 - t2) * p1 + t2 * p2;
-                    }
-
-                    if (roundValues) {
-                        left = Math.floor(left);
-                    }
-                }
-
-                if (keyframe.width.enabled) {
-                    width +=
-                        easingFunctions[keyframe.width.easingFunction](t) *
-                        (keyframe.width.value! - width);
-
-                    if (roundValues) {
-                        width = Math.floor(width);
-                    }
-                }
-
-                if (keyframe.top.enabled) {
-                    const t2 = easingFunctions[keyframe.top.easingFunction](t);
-
-                    if (controlPoints.length == 4) {
-                        const p1 = top;
-                        const p2 = controlPoints[1];
-                        const p3 = controlPoints[3];
-                        const p4 = keyframe.top.value!;
-                        top =
-                            (1 - t2) * (1 - t2) * (1 - t2) * p1 +
-                            3 * (1 - t2) * (1 - t2) * t2 * p2 +
-                            3 * (1 - t2) * t2 * t2 * p3 +
-                            t2 * t2 * t2 * p4;
-                    } else if (controlPoints.length == 2) {
-                        const p1 = top;
-                        const p2 = controlPoints[1];
-                        const p3 = keyframe.top.value!;
-                        top =
-                            (1 - t2) * (1 - t2) * p1 +
-                            2 * (1 - t2) * t2 * p2 +
-                            t2 * t2 * p3;
-                    } else {
-                        const p1 = top;
-                        const p2 = keyframe.top.value!;
-                        top = (1 - t2) * p1 + t2 * p2;
-                    }
-
-                    if (roundValues) {
-                        top = Math.floor(top);
-                    }
-                }
-
-                if (keyframe.height.enabled) {
-                    height +=
-                        easingFunctions[keyframe.height.easingFunction](t) *
-                        (keyframe.height.value! - height);
-
-                    if (roundValues) {
-                        height = Math.floor(height);
-                    }
-                }
-
-                break;
-            }
+            const t =
+                keyframe.start == keyframe.end
+                    ? 1
+                    : (timelinePosition - keyframe.start) /
+                      (keyframe.end - keyframe.start);
 
             if (keyframe.left.enabled) {
-                left = keyframe.left.value!;
+                const t2 = easingFunctions[keyframe.left.easingFunction](t);
+
+                if (controlPoints.length == 4) {
+                    const p1 = left;
+                    const p2 = controlPoints[0];
+                    const p3 = controlPoints[2];
+                    const p4 = keyframe.left.value!;
+                    left =
+                        (1 - t2) * (1 - t2) * (1 - t2) * p1 +
+                        3 * (1 - t2) * (1 - t2) * t2 * p2 +
+                        3 * (1 - t2) * t2 * t2 * p3 +
+                        t2 * t2 * t2 * p4;
+                } else if (controlPoints.length == 2) {
+                    const p1 = left;
+                    const p2 = controlPoints[0];
+                    const p3 = keyframe.left.value!;
+                    left =
+                        (1 - t2) * (1 - t2) * p1 +
+                        2 * (1 - t2) * t2 * p2 +
+                        t2 * t2 * p3;
+                } else {
+                    const p1 = left;
+                    const p2 = keyframe.left.value!;
+                    left = (1 - t2) * p1 + t2 * p2;
+                }
+
+                if (roundValues) {
+                    left = Math.floor(left);
+                }
             }
-            if (keyframe.top.enabled) {
-                top = keyframe.top.value!;
-            }
+
             if (keyframe.width.enabled) {
-                width = keyframe.width.value!;
+                width +=
+                    easingFunctions[keyframe.width.easingFunction](t) *
+                    (keyframe.width.value! - width);
+
+                if (roundValues) {
+                    width = Math.floor(width);
+                }
             }
+
+            if (keyframe.top.enabled) {
+                const t2 = easingFunctions[keyframe.top.easingFunction](t);
+
+                if (controlPoints.length == 4) {
+                    const p1 = top;
+                    const p2 = controlPoints[1];
+                    const p3 = controlPoints[3];
+                    const p4 = keyframe.top.value!;
+                    top =
+                        (1 - t2) * (1 - t2) * (1 - t2) * p1 +
+                        3 * (1 - t2) * (1 - t2) * t2 * p2 +
+                        3 * (1 - t2) * t2 * t2 * p3 +
+                        t2 * t2 * t2 * p4;
+                } else if (controlPoints.length == 2) {
+                    const p1 = top;
+                    const p2 = controlPoints[1];
+                    const p3 = keyframe.top.value!;
+                    top =
+                        (1 - t2) * (1 - t2) * p1 +
+                        2 * (1 - t2) * t2 * p2 +
+                        t2 * t2 * p3;
+                } else {
+                    const p1 = top;
+                    const p2 = keyframe.top.value!;
+                    top = (1 - t2) * p1 + t2 * p2;
+                }
+
+                if (roundValues) {
+                    top = Math.floor(top);
+                }
+            }
+
             if (keyframe.height.enabled) {
-                height = keyframe.height.value!;
+                height +=
+                    easingFunctions[keyframe.height.easingFunction](t) *
+                    (keyframe.height.value! - height);
+
+                if (roundValues) {
+                    height = Math.floor(height);
+                }
             }
+
+            break;
+        }
+
+        if (keyframe.left.enabled) {
+            left = keyframe.left.value!;
+        }
+        if (keyframe.top.enabled) {
+            top = keyframe.top.value!;
+        }
+        if (keyframe.width.enabled) {
+            width = keyframe.width.value!;
+        }
+        if (keyframe.height.enabled) {
+            height = keyframe.height.value!;
         }
     }
 

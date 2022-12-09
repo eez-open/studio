@@ -931,13 +931,15 @@ const ExportFontFilePropertyGridUI = observer(
                 return null;
             }
             return (
-                <BootstrapButton
-                    color="primary"
-                    size="small"
-                    onClick={this.export}
-                >
-                    Export font file...
-                </BootstrapButton>
+                <div style={{ marginTop: 10 }}>
+                    <BootstrapButton
+                        color="primary"
+                        size="small"
+                        onClick={this.export}
+                    >
+                        Export font file...
+                    </BootstrapButton>
+                </div>
             );
         }
     }
