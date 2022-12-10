@@ -139,7 +139,6 @@ import {
     getTimelineProperty,
     getTimelineRect,
     isTimelineEditorActive,
-    isTimelineEditorActiveOrActionComponent,
     TimelineKeyframe,
     TimelineKeyframeProperty,
     TimelineKeyframePropertyUI,
@@ -1801,26 +1800,24 @@ export class Component extends EezObject {
             {
                 name: "left",
                 type: PropertyType.Number,
-                propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isTimelineEditorActive
+                propertyGridGroup: geometryGroup
             },
             {
                 name: "top",
                 type: PropertyType.Number,
-                propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isTimelineEditorActive
+                propertyGridGroup: geometryGroup
             },
             {
                 name: "width",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isTimelineEditorActiveOrActionComponent
+                hideInPropertyGrid: isActionComponent
             },
             {
                 name: "height",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isTimelineEditorActiveOrActionComponent
+                hideInPropertyGrid: isActionComponent
             },
             {
                 name: "absolutePosition",

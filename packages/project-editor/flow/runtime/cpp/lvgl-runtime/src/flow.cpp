@@ -386,6 +386,143 @@ void clearTimeline() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static UpdateTask *g_updateTask;
+
+void flow_event_callback(lv_event_t *e) {
+    FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+    flowPropagateValue(data->page_index, data->component_index, data->output_or_property_index);
+}
+
+void flow_event_textarea_text_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target(e);
+        if (!g_updateTask || g_updateTask->obj != ta) {
+            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+            const char *value = lv_textarea_get_text(ta);
+            assignStringProperty(data->page_index, data->component_index, data->output_or_property_index, value, "Failed to assign Text in Textarea widget");
+        }
+    }
+}
+
+void flow_event_checked_state_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target(e);
+        if (!g_updateTask || g_updateTask->obj != ta) {
+            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+            bool value = lv_obj_has_state(ta, LV_STATE_CHECKED);
+            assignBooleanProperty(data->page_index, data->component_index, data->output_or_property_index, value, "Failed to assign Checked state");
+        }
+    }
+}
+
+void flow_event_arc_value_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target(e);
+        if (!g_updateTask || g_updateTask->obj != ta) {
+            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+            int32_t value = lv_arc_get_value(ta);
+            assignIntegerProperty(data->page_index, data->component_index, data->output_or_property_index, value, "Failed to assign Value in Arc widget");
+        }
+    }
+}
+
+void flow_event_bar_value_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target(e);
+        if (!g_updateTask || g_updateTask->obj != ta) {
+            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+            int32_t value = lv_bar_get_value(ta);
+            assignIntegerProperty(data->page_index, data->component_index, data->output_or_property_index, value, "Failed to assign Value in Bar widget");
+        }
+    }
+}
+
+void flow_event_bar_value_start_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target(e);
+        if (!g_updateTask || g_updateTask->obj != ta) {
+            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+            int32_t value = lv_bar_get_start_value(ta);
+            assignIntegerProperty(data->page_index, data->component_index, data->output_or_property_index, value, "Failed to assign Value Start in Bar widget");
+        }
+    }
+}
+
+void flow_event_dropdown_selected_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target(e);
+        if (!g_updateTask || g_updateTask->obj != ta) {
+            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+            uint16_t selected = lv_dropdown_get_selected(ta);
+            assignIntegerProperty(data->page_index, data->component_index, data->output_or_property_index, selected, "Failed to assign Selected in Dropdown widget");
+        }
+    }
+}
+
+void flow_event_roller_selected_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target(e);
+        if (!g_updateTask || g_updateTask->obj != ta) {
+            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+            uint16_t selected = lv_roller_get_selected(ta);
+            assignIntegerProperty(data->page_index, data->component_index, data->output_or_property_index, selected, "Failed to assign Selected in Roller widget");
+        }
+    }
+}
+
+void flow_event_slider_value_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target(e);
+        if (!g_updateTask || g_updateTask->obj != ta) {
+            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+            int32_t value = lv_slider_get_value(ta);
+            assignIntegerProperty(data->page_index, data->component_index, data->output_or_property_index, value, "Failed to assign Value in Slider widget");
+        }
+    }
+}
+
+void flow_event_slider_value_left_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target(e);
+        if (!g_updateTask || g_updateTask->obj != ta) {
+            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+            int32_t value = lv_slider_get_left_value(ta);
+            assignIntegerProperty(data->page_index, data->component_index, data->output_or_property_index, value, "Failed to assign Value Left in Slider widget");
+        }
+    }
+}
+
+void flow_event_checked_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    lv_obj_t *ta = lv_event_get_target(e);
+    if (event == LV_EVENT_VALUE_CHANGED && lv_obj_has_state(ta, LV_STATE_CHECKED)) {
+        flow_event_callback(e);
+    }
+}
+
+void flow_event_unchecked_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    lv_obj_t *ta = lv_event_get_target(e);
+    if (event == LV_EVENT_VALUE_CHANGED && !lv_obj_has_state(ta, LV_STATE_CHECKED)) {
+        flow_event_callback(e);
+    }
+}
+
+void flow_event_callback_delete_user_data(lv_event_t *e) {
+    lv_mem_free(e->user_data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 struct UpdateTask {
     UpdateTaskType updateTaskType;
     lv_obj_t *obj;
@@ -409,6 +546,7 @@ extern "C" void addUpdateTask(UpdateTaskType updateTaskType, lv_obj_t *obj, unsi
 void doUpdateTasks() {
     for (auto it = updateTasks.begin(); it != updateTasks.end(); it++) {
         UpdateTask &updateTask = *it;
+        g_updateTask = &updateTask;
         if (updateTask.updateTaskType == UPDATE_TASK_TYPE_LABEL_TEXT) {
             const char *new_val = evalTextProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Text in Label widget");
             const char *cur_val = lv_label_get_text(updateTask.obj);
@@ -474,6 +612,7 @@ void doUpdateTasks() {
                 else lv_obj_clear_flag(updateTask.obj, LV_OBJ_FLAG_CLICKABLE);
             }
         }
+        g_updateTask = nullptr;
     }
 
 }

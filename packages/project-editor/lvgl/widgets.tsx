@@ -49,8 +49,7 @@ import {
 } from "project-editor/flow/component";
 import {
     getTimelineEditorState,
-    isTimelineEditorActive,
-    isTimelineEditorActiveOrActionComponent
+    isTimelineEditorActive
 } from "project-editor/flow/timeline";
 
 import { escapeCString } from "project-editor/build/helper";
@@ -318,8 +317,7 @@ export class LVGLWidget extends Widget {
                 name: "left",
                 type: PropertyType.Number,
                 propertyGridColumnComponent: GeometryProperty,
-                propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isTimelineEditorActive
+                propertyGridGroup: geometryGroup
             },
             {
                 name: "leftUnit",
@@ -336,8 +334,7 @@ export class LVGLWidget extends Widget {
                 name: "top",
                 type: PropertyType.Number,
                 propertyGridColumnComponent: GeometryProperty,
-                propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isTimelineEditorActive
+                propertyGridGroup: geometryGroup
             },
             {
                 name: "topUnit",
@@ -354,8 +351,7 @@ export class LVGLWidget extends Widget {
                 name: "width",
                 type: PropertyType.Number,
                 propertyGridColumnComponent: GeometryProperty,
-                propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isTimelineEditorActiveOrActionComponent
+                propertyGridGroup: geometryGroup
             },
             {
                 name: "widthUnit",
@@ -373,8 +369,7 @@ export class LVGLWidget extends Widget {
                 name: "height",
                 type: PropertyType.Number,
                 propertyGridColumnComponent: GeometryProperty,
-                propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isTimelineEditorActiveOrActionComponent
+                propertyGridGroup: geometryGroup
             },
             {
                 name: "heightUnit",
@@ -1365,24 +1360,22 @@ export class LVGLWidget extends Widget {
                 );
             }
 
+            const objectAccessor = build.getLvglObjectAccessor(this);
+
             build.line(
-                `bool cur_val = lv_obj_has_state(${build.getLvglObjectAccessor(
-                    this
-                )}, LV_STATE_CHECKED);`
+                `bool cur_val = lv_obj_has_state(${objectAccessor}, LV_STATE_CHECKED);`
             );
 
             build.line(`if (new_val != cur_val) {`);
             build.indent();
+            build.line(`tick_value_change_obj = ${objectAccessor};`);
             build.line(
-                `if (new_val) lv_obj_add_state(${build.getLvglObjectAccessor(
-                    this
-                )}, LV_STATE_CHECKED);`
+                `if (new_val) lv_obj_add_state(${objectAccessor}, LV_STATE_CHECKED);`
             );
             build.line(
-                `else lv_obj_clear_state(${build.getLvglObjectAccessor(
-                    this
-                )}, LV_STATE_CHECKED);`
+                `else lv_obj_clear_state(${objectAccessor}, LV_STATE_CHECKED);`
             );
+            build.line(`tick_value_change_obj = NULL;`);
             build.unindent();
             build.line(`}`);
 
@@ -1419,25 +1412,22 @@ export class LVGLWidget extends Widget {
                     )}();`
                 );
             }
+            const objectAccessor = build.getLvglObjectAccessor(this);
 
             build.line(
-                `bool cur_val = lv_obj_has_state(${build.getLvglObjectAccessor(
-                    this
-                )}, LV_STATE_DISABLED);`
+                `bool cur_val = lv_obj_has_state(${objectAccessor}, LV_STATE_DISABLED);`
             );
 
             build.line(`if (new_val != cur_val) {`);
             build.indent();
+            build.line(`tick_value_change_obj = ${objectAccessor};`);
             build.line(
-                `if (new_val) lv_obj_add_state(${build.getLvglObjectAccessor(
-                    this
-                )}, LV_STATE_DISABLED);`
+                `if (new_val) lv_obj_add_state(${objectAccessor}, LV_STATE_DISABLED);`
             );
             build.line(
-                `else lv_obj_clear_state(${build.getLvglObjectAccessor(
-                    this
-                )}, LV_STATE_DISABLED);`
+                `else lv_obj_clear_state(${objectAccessor}, LV_STATE_DISABLED);`
             );
+            build.line(`tick_value_change_obj = NULL;`);
             build.unindent();
             build.line(`}`);
 
@@ -1475,24 +1465,22 @@ export class LVGLWidget extends Widget {
                 );
             }
 
+            const objectAccessor = build.getLvglObjectAccessor(this);
+
             build.line(
-                `bool cur_val = lv_obj_has_flag(${build.getLvglObjectAccessor(
-                    this
-                )}, LV_OBJ_FLAG_HIDDEN);`
+                `bool cur_val = lv_obj_has_flag(${objectAccessor}, LV_OBJ_FLAG_HIDDEN);`
             );
 
             build.line(`if (new_val != cur_val) {`);
             build.indent();
+            build.line(`tick_value_change_obj = ${objectAccessor};`);
             build.line(
-                `if (new_val) lv_obj_add_flag(${build.getLvglObjectAccessor(
-                    this
-                )}, LV_OBJ_FLAG_HIDDEN);`
+                `if (new_val) lv_obj_add_flag(${objectAccessor}, LV_OBJ_FLAG_HIDDEN);`
             );
             build.line(
-                `else lv_obj_clear_flag(${build.getLvglObjectAccessor(
-                    this
-                )}, LV_OBJ_FLAG_HIDDEN);`
+                `else lv_obj_clear_flag(${objectAccessor}, LV_OBJ_FLAG_HIDDEN);`
             );
+            build.line(`tick_value_change_obj = NULL;`);
             build.unindent();
             build.line(`}`);
 
@@ -1530,24 +1518,22 @@ export class LVGLWidget extends Widget {
                 );
             }
 
+            const objectAccessor = build.getLvglObjectAccessor(this);
+
             build.line(
-                `bool cur_val = lv_obj_has_flag(${build.getLvglObjectAccessor(
-                    this
-                )}, LV_OBJ_FLAG_CLICKABLE);`
+                `bool cur_val = lv_obj_has_flag(${objectAccessor}, LV_OBJ_FLAG_CLICKABLE);`
             );
 
             build.line(`if (new_val != cur_val) {`);
             build.indent();
+            build.line(`tick_value_change_obj = ${objectAccessor};`);
             build.line(
-                `if (new_val) lv_obj_add_flag(${build.getLvglObjectAccessor(
-                    this
-                )}, LV_OBJ_FLAG_CLICKABLE);`
+                `if (new_val) lv_obj_add_flag(${objectAccessor}, LV_OBJ_FLAG_CLICKABLE);`
             );
             build.line(
-                `else lv_obj_clear_flag(${build.getLvglObjectAccessor(
-                    this
-                )}, LV_OBJ_FLAG_CLICKABLE);`
+                `else lv_obj_clear_flag(${objectAccessor}, LV_OBJ_FLAG_CLICKABLE);`
             );
+            build.line(`tick_value_change_obj = NULL;`);
             build.unindent();
             build.line(`}`);
 
@@ -1662,9 +1648,13 @@ export class LVGLWidget extends Widget {
                     "checkedState"
                 );
 
+                build.line(`if (tick_value_change_obj != ta) {`);
+                build.indent();
                 build.line(
                     `assignBooleanProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, value, "Failed to assign Checked state");`
                 );
+                build.unindent();
+                build.line("}");
             } else {
                 build.line(
                     `${build.getVariableSetterFunctionName(

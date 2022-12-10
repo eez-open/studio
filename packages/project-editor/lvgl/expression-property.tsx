@@ -273,29 +273,33 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
         }
 
         if (propertyInfo.expressionType == "string") {
-            build.line(
-                `const char *cur_val = ${getFunc}(${build.getLvglObjectAccessor(
-                    widget
-                )});`
-            );
+            const objectAccessor = build.getLvglObjectAccessor(widget);
 
+            build.line(`const char *cur_val = ${getFunc}(${objectAccessor});`);
+
+            build.line("if (strcmp(new_val, cur_val) != 0) {");
+            build.indent();
+            build.line(`tick_value_change_obj = ${objectAccessor};`);
             build.line(
-                `if (strcmp(new_val, cur_val) != 0) ${setFunc}(${build.getLvglObjectAccessor(
-                    widget
-                )}, new_val${setFuncOptArgs ?? ""});`
+                `${setFunc}(${objectAccessor}, new_val${setFuncOptArgs ?? ""});`
             );
+            build.line(`tick_value_change_obj = NULL;`);
+            build.unindent();
+            build.line("}");
         } else if (propertyInfo.expressionType == "integer") {
-            build.line(
-                `int32_t cur_val = ${getFunc}(${build.getLvglObjectAccessor(
-                    widget
-                )});`
-            );
+            const objectAccessor = build.getLvglObjectAccessor(widget);
 
+            build.line(`int32_t cur_val = ${getFunc}(${objectAccessor});`);
+
+            build.line("if (new_val != cur_val) {");
+            build.indent();
+            build.line(`tick_value_change_obj = ${objectAccessor};`);
             build.line(
-                `if (new_val != cur_val) ${setFunc}(${build.getLvglObjectAccessor(
-                    widget
-                )}, new_val${setFuncOptArgs ?? ""});`
+                `${setFunc}(${objectAccessor}, new_val${setFuncOptArgs ?? ""});`
             );
+            build.line(`tick_value_change_obj = NULL;`);
+            build.unindent();
+            build.line("}");
         } else {
             console.error("UNEXPECTED!");
             return;
@@ -349,6 +353,9 @@ export function expressionPropertyBuildEventHandlerSpecific<
                 propName
             );
 
+            build.line(`if (tick_value_change_obj != ta) {`);
+            build.indent();
+
             if (propertyInfo.expressionType == "integer") {
                 build.line(
                     `assignIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, value, "Failed to assign ${humanize(
@@ -365,6 +372,9 @@ export function expressionPropertyBuildEventHandlerSpecific<
                 console.error("UNEXPECTED!");
                 return;
             }
+
+            build.unindent();
+            build.line("}");
         } else {
             build.line(
                 `${build.getVariableSetterFunctionName(

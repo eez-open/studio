@@ -216,6 +216,7 @@ export class LVGLBuild {
         const build = this;
 
         build.line(`objects_t objects;`);
+        build.line(`lv_obj_t *tick_value_change_obj;`);
         build.line("");
 
         for (const page of this.project.pages) {
