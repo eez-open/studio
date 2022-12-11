@@ -1,3 +1,5 @@
+import React from "react";
+
 import { objectClone } from "eez-studio-shared/util";
 import * as os from "os";
 import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
@@ -922,12 +924,15 @@ export const builtInFunctions: {
     }
 };
 
-export const builtInConstants: {
+type BuiltInConstantsType = {
     [name: string]: {
         value: (projectEditorStore: ProjectEditorStore) => any;
         valueType: ValueType;
+        label?: (name: string) => React.ReactNode;
     };
-} = {
+};
+
+const commonConstants: BuiltInConstantsType = {
     "System.Platform": {
         value: (projectEditorStore: ProjectEditorStore) => {
             const platform = os.platform();
@@ -960,12 +965,98 @@ export const builtInConstants: {
     "Math.Infinity": {
         value: () => Infinity,
         valueType: "double"
-    },
-    "LVGL.LV_SYMBOL_SETTINGS": {
-        value: () => "\uF013",
-        valueType: "string"
     }
 };
+
+function LVGL_SYMBOL(value: string): {
+    value: (projectEditorStore: ProjectEditorStore) => string;
+    valueType: ValueType;
+    label: (name: string) => React.ReactNode;
+} {
+    return {
+        value: (projectEditorStore: ProjectEditorStore) => value,
+        valueType: "string",
+        label: name => (
+            <>
+                <span className="EezStudio_LVGLSymbolIcon font-awesome-icons">
+                    {value}
+                </span>
+                <span>{name}</span>
+            </>
+        )
+    };
+}
+
+const lvglConstants: BuiltInConstantsType = {
+    ...commonConstants,
+    "LVGL.LV_SYMBOL_AUDIO": LVGL_SYMBOL("\uF001"),
+    "LVGL.LV_SYMBOL_VIDEO": LVGL_SYMBOL("\uF008"),
+    "LVGL.LV_SYMBOL_LIST": LVGL_SYMBOL("\uF00B"),
+    "LVGL.LV_SYMBOL_OK": LVGL_SYMBOL("\uF00C"),
+    "LVGL.LV_SYMBOL_CLOSE": LVGL_SYMBOL("\uF00D"),
+    "LVGL.LV_SYMBOL_POWER": LVGL_SYMBOL("\uF011"),
+    "LVGL.LV_SYMBOL_SETTINGS": LVGL_SYMBOL("\uF013"),
+    "LVGL.LV_SYMBOL_HOME": LVGL_SYMBOL("\uF015"),
+    "LVGL.LV_SYMBOL_DOWNLOAD": LVGL_SYMBOL("\uF019"),
+    "LVGL.LV_SYMBOL_DRIVE": LVGL_SYMBOL("\uF01C"),
+    "LVGL.LV_SYMBOL_REFRESH": LVGL_SYMBOL("\uF021"),
+    "LVGL.LV_SYMBOL_MUTE": LVGL_SYMBOL("\uF026"),
+    "LVGL.LV_SYMBOL_VOLUME_MID": LVGL_SYMBOL("\uF027"),
+    "LVGL.LV_SYMBOL_VOLUME_MAX": LVGL_SYMBOL("\uF028"),
+    "LVGL.LV_SYMBOL_IMAGE": LVGL_SYMBOL("\uF03E"),
+    "LVGL.LV_SYMBOL_TINT": LVGL_SYMBOL("\uF043"),
+    "LVGL.LV_SYMBOL_PREV": LVGL_SYMBOL("\uF048"),
+    "LVGL.LV_SYMBOL_PLAY": LVGL_SYMBOL("\uF04B"),
+    "LVGL.LV_SYMBOL_PAUSE": LVGL_SYMBOL("\uF04C"),
+    "LVGL.LV_SYMBOL_STOP": LVGL_SYMBOL("\uF04D"),
+    "LVGL.LV_SYMBOL_NEXT": LVGL_SYMBOL("\uF051"),
+    "LVGL.LV_SYMBOL_EJECT": LVGL_SYMBOL("\uF052"),
+    "LVGL.LV_SYMBOL_LEFT": LVGL_SYMBOL("\uF053"),
+    "LVGL.LV_SYMBOL_RIGHT": LVGL_SYMBOL("\uF054"),
+    "LVGL.LV_SYMBOL_PLUS": LVGL_SYMBOL("\uF067"),
+    "LVGL.LV_SYMBOL_MINUS": LVGL_SYMBOL("\uF068"),
+    "LVGL.LV_SYMBOL_EYE_OPEN": LVGL_SYMBOL("\uF06E"),
+    "LVGL.LV_SYMBOL_EYE_CLOSE": LVGL_SYMBOL("\uF070"),
+    "LVGL.LV_SYMBOL_WARNING": LVGL_SYMBOL("\uF071"),
+    "LVGL.LV_SYMBOL_SHUFFLE": LVGL_SYMBOL("\uF074"),
+    "LVGL.LV_SYMBOL_UP": LVGL_SYMBOL("\uF077"),
+    "LVGL.LV_SYMBOL_DOWN": LVGL_SYMBOL("\uF078"),
+    "LVGL.LV_SYMBOL_LOOP": LVGL_SYMBOL("\uF079"),
+    "LVGL.LV_SYMBOL_DIRECTORY": LVGL_SYMBOL("\uF07B"),
+    "LVGL.LV_SYMBOL_UPLOAD": LVGL_SYMBOL("\uF093"),
+    "LVGL.LV_SYMBOL_CALL": LVGL_SYMBOL("\uF095"),
+    "LVGL.LV_SYMBOL_CUT": LVGL_SYMBOL("\uF0C4"),
+    "LVGL.LV_SYMBOL_COPY": LVGL_SYMBOL("\uF0C5"),
+    "LVGL.LV_SYMBOL_SAVE": LVGL_SYMBOL("\uF0C7"),
+    "LVGL.LV_SYMBOL_BARS": LVGL_SYMBOL("\uF0C9"),
+    "LVGL.LV_SYMBOL_ENVELOPE": LVGL_SYMBOL("\uF0E0"),
+    "LVGL.LV_SYMBOL_CHARGE": LVGL_SYMBOL("\uF0E7"),
+    "LVGL.LV_SYMBOL_PASTE": LVGL_SYMBOL("\uF0EA"),
+    "LVGL.LV_SYMBOL_BELL": LVGL_SYMBOL("\uF0F3"),
+    "LVGL.LV_SYMBOL_KEYBOARD": LVGL_SYMBOL("\uF11C"),
+    "LVGL.LV_SYMBOL_GPS": LVGL_SYMBOL("\uF124"),
+    "LVGL.LV_SYMBOL_FILE": LVGL_SYMBOL("\uF158"),
+    "LVGL.LV_SYMBOL_WIFI": LVGL_SYMBOL("\uF1EB"),
+    "LVGL.LV_SYMBOL_BATTERY_FULL": LVGL_SYMBOL("\uF240"),
+    "LVGL.LV_SYMBOL_BATTERY_3": LVGL_SYMBOL("\uF241"),
+    "LVGL.LV_SYMBOL_BATTERY_2": LVGL_SYMBOL("\uF242"),
+    "LVGL.LV_SYMBOL_BATTERY_1": LVGL_SYMBOL("\uF243"),
+    "LVGL.LV_SYMBOL_BATTERY_EMPTY": LVGL_SYMBOL("\uF244"),
+    "LVGL.LV_SYMBOL_USB": LVGL_SYMBOL("\uF287"),
+    "LVGL.LV_SYMBOL_BLUETOOTH": LVGL_SYMBOL("\uF293"),
+    "LVGL.LV_SYMBOL_TRASH": LVGL_SYMBOL("\uF2ED"),
+    "LVGL.LV_SYMBOL_EDIT": LVGL_SYMBOL("\uF304"),
+    "LVGL.LV_SYMBOL_BACKSPACE": LVGL_SYMBOL("\uF55A"),
+    "LVGL.LV_SYMBOL_SD_CARD": LVGL_SYMBOL("\uF7C2"),
+    "LVGL.LV_SYMBOL_NEW_LINE": LVGL_SYMBOL("\uF8A2")
+};
+
+export const builtInConstants: (
+    projectEditorStore: ProjectEditorStore
+) => BuiltInConstantsType = (projectEditorStore: ProjectEditorStore) =>
+    projectEditorStore.projectTypeTraits.isLVGL
+        ? lvglConstants
+        : commonConstants;
 
 export const operationIndexes: { [key: string]: number } = {};
 

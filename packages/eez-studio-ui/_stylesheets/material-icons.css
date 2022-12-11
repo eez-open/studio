@@ -6,6 +6,41 @@
         url(MaterialIcons-Regular.woff2) format("woff2");
 }
 
+@font-face {
+    font-family: "Font Awesome Icons";
+    font-style: normal;
+    font-weight: 400;
+    src: local("FontAwesome5-Solid+Brands+Regular"),
+        url(FontAwesome5-Solid+Brands+Regular.woff) format("woff");
+}
+
+.font-awesome-icons {
+    font-family: "Font Awesome Icons";
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px; /* Preferred icon size */
+    display: inline-block;
+    line-height: 1;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+
+    /* Support for all WebKit browsers. */
+    -webkit-font-smoothing: antialiased;
+    /* Support for Safari and Chrome. */
+    text-rendering: optimizeLegibility;
+
+    /* Support for Firefox. */
+    -moz-osx-font-smoothing: grayscale;
+
+    /* Support for IE. */
+    font-feature-settings: "liga";
+
+    vertical-align: middle !important;
+}
+
 .material-icons {
     font-family: "Material Icons";
     font-weight: normal;

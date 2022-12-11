@@ -355,7 +355,9 @@ function buildExpressionNode(
             }
 
             const builtInConstantName = `${node.object.name}.${node.property.name}`;
-            const buildInConstantValue = builtInConstants[builtInConstantName];
+            const buildInConstantValue = builtInConstants(
+                assets.projectEditorStore
+            )[builtInConstantName];
             if (buildInConstantValue != undefined) {
                 return [
                     makePushConstantInstruction(

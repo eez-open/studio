@@ -293,8 +293,9 @@ export function evalConstantExpressionNode(
                 }
 
                 const builtInConstantName = `${node.object.name}.${node.property.name}`;
-                const buildInConstantValue =
-                    builtInConstants[builtInConstantName];
+                const buildInConstantValue = builtInConstants(
+                    project._DocumentStore
+                )[builtInConstantName];
                 if (buildInConstantValue != undefined) {
                     return buildInConstantValue.value(project._DocumentStore);
                 }
@@ -452,8 +453,9 @@ function evalExpressionWithContext(
                 }
 
                 const builtInConstantName = `${node.object.name}.${node.property.name}`;
-                const buildInConstantValue =
-                    builtInConstants[builtInConstantName];
+                const buildInConstantValue = builtInConstants(
+                    expressionContext.projectEditorStore
+                )[builtInConstantName];
                 if (buildInConstantValue != undefined) {
                     return buildInConstantValue.value(
                         expressionContext.projectEditorStore

@@ -368,8 +368,8 @@ function AnimationCurveEndMarker() {
             <path
                 d="M4,4 L4,12 L14,8 L4,4 L4,12"
                 style={{
-                    stroke: "green",
-                    fill: "green",
+                    stroke: "#337bb7",
+                    fill: "#337bb7",
                     strokeLinecap: "butt",
                     strokeLinejoin: "round"
                 }}

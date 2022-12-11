@@ -522,10 +522,12 @@ const SelectItemDialog = observer(
                     id: "built-in-constants",
                     label: "Built-in Constants",
                     children: _map(
-                        builtInConstants,
+                        builtInConstants(this.context),
                         (constant, constantName) => ({
                             id: constantName,
-                            label: constantName,
+                            label: constant.label
+                                ? constant.label(constantName)
+                                : constantName,
                             children: [],
                             selected: this.selection == constantName,
                             expanded: false,

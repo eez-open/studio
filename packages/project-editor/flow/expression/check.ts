@@ -249,9 +249,11 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                         throw `Unknown enumeration type ${node.object.valueType}`;
                     }
                 } else {
+                    const project = ProjectEditor.getProject(component);
                     const builtInConstantName = `${node.object.name}.${node.property.name}`;
-                    const buildInConstantValue =
-                        builtInConstants[builtInConstantName];
+                    const buildInConstantValue = builtInConstants(
+                        project._DocumentStore
+                    )[builtInConstantName];
                     if (buildInConstantValue != undefined) {
                         return;
                     }

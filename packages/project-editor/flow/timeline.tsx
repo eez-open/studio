@@ -28,7 +28,8 @@ import {
     PropertyType,
     PropertyProps,
     registerClass,
-    getObjectPropertyDisplayName
+    getObjectPropertyDisplayName,
+    getId
 } from "project-editor/core/object";
 import {
     getAncestorOfType,
@@ -1544,26 +1545,41 @@ export const TimelineKeyframePropertyUI = observer(
 class WidgetTimelinePath {
     constructor(public widget: Widget) {
         makeObservable(this, {
+            pageTabState: computed,
+            isWidgetSelected: computed,
+            timeline: computed,
             timelinePosition: computed,
             offsetToCenter: computed,
             path: computed
         });
     }
 
-    get timeline() {
+    get pageTabState() {
         const projectEditorStore = getProjectEditorStore(this.widget);
 
         const editor = projectEditorStore.editorsStore.activeEditor;
         if (editor) {
             if (editor.object instanceof ProjectEditor.PageClass) {
-                const pageTabState = editor.state as PageTabState;
-                if (pageTabState.timeline.isEditorActive) {
-                    return pageTabState.timeline;
-                }
+                return editor.state as PageTabState;
             }
         }
 
         return undefined;
+    }
+
+    get isWidgetSelected() {
+        return this.pageTabState
+            ? this.pageTabState.selectedObjects.indexOf(this.widget) != -1
+            : false;
+    }
+
+    get timeline() {
+        if (!this.pageTabState) {
+            return undefined;
+        }
+        return this.pageTabState.timeline.isEditorActive
+            ? this.pageTabState.timeline
+            : undefined;
     }
 
     get timelinePosition() {
@@ -1697,7 +1713,8 @@ class WidgetTimelinePath {
                 curvePoints: this.getKeyframeCurvePoints(keyframe),
                 editorHandleProps: this.getEditorHandleProps(keyframe),
                 selected:
-                    this.timeline?.selectedKeyframes.indexOf(keyframe) != -1
+                    this.timeline?.selectedKeyframes.indexOf(keyframe) != -1,
+                widgetSelected: this.isWidgetSelected
             }))
             .filter(pathCurve => pathCurve.curvePoints.length > 0);
     }
@@ -1736,8 +1753,6 @@ export class WidgetTimelinePathEditorHandler extends MouseHandlerWithSnapLines {
     }
 
     down(context: IFlowContext, event: IPointerEvent) {
-        super.down(context, event);
-
         const [widgetObjId, keyframeObjId, handleId] =
             this.editorHandleId.split("/");
 
@@ -1750,6 +1765,24 @@ export class WidgetTimelinePathEditorHandler extends MouseHandlerWithSnapLines {
         this.keyframe = context.projectEditorStore.project._objectsMap.get(
             keyframeObjId
         ) as TimelineKeyframe;
+
+        if (handleId == "from" || handleId == "to") {
+            runInAction(() => {
+                this.widgetTimelinePath.timeline!.position =
+                    handleId == "from" ? 0 : this.keyframe.end;
+                this.widgetTimelinePath.timeline!.selectedKeyframes = [
+                    this.keyframe
+                ];
+            });
+
+            context.viewState.selectObjects([
+                context.document.findObjectById(
+                    getId(this.widgetTimelinePath.widget)
+                )!
+            ]);
+        }
+
+        super.down(context, event);
 
         this.handleId = handleId as string;
 
@@ -2038,7 +2071,7 @@ export const TimelinePathEditor = observer(
             return null;
         }
 
-        const widgetTimelinePaths = flowContext.tabState.selectedObjects
+        const widgetTimelinePaths = flowContext.flow.components
             .map(object =>
                 object instanceof ProjectEditor.WidgetClass
                     ? new WidgetTimelinePath(object)
@@ -2046,7 +2079,9 @@ export const TimelinePathEditor = observer(
             )
             .filter(
                 widgetTimelinePath =>
-                    widgetTimelinePath && widgetTimelinePath.path.length > 0
+                    widgetTimelinePath &&
+                    widgetTimelinePath.path.length > 0 &&
+                    !widgetTimelinePath.widget.hiddenInEditor
             ) as WidgetTimelinePath[];
 
         if (widgetTimelinePaths.length == 0) {
@@ -2072,9 +2107,14 @@ export const TimelinePathEditor = observer(
 
 const WidgetTimelinePathCurves = observer(
     (props: { widgetTimelinePath: WidgetTimelinePath }) => {
-        const CURVE_STROKE_WIDTH = 2;
+        const CURVE_STROKE_WIDTH_SELECTED = 2;
+        const CURVE_STROKE_WIDTH = 1;
         const CURVE_COLOR_SELECTED = "#337bb7";
-        const CURVE_COLOR = addAlphaToColor(CURVE_COLOR_SELECTED, 0.5);
+        const CURVE_COLOR_WIDGET_SELECTED = addAlphaToColor(
+            CURVE_COLOR_SELECTED,
+            0.9
+        );
+        const CURVE_COLOR = addAlphaToColor(CURVE_COLOR_SELECTED, 0.3);
 
         const LINE_TO_CONTROL_POINT_STROKE_WIDTH = 0.5;
         const LINE_TO_CONTROL_POINT_COLOR_SELECTED = "#337bb7";
@@ -2086,7 +2126,7 @@ const WidgetTimelinePathCurves = observer(
         return (
             <>
                 {props.widgetTimelinePath.path.map(
-                    ({ selected, keyframe, curvePoints }) => {
+                    ({ widgetSelected, selected, keyframe, curvePoints }) => {
                         if (curvePoints.length == 4) {
                             const [p1, p2, p3, p4] = curvePoints;
 
@@ -2094,10 +2134,16 @@ const WidgetTimelinePathCurves = observer(
                                 <Fragment key={keyframe.objID}>
                                     <path
                                         d={`M ${p1.x} ${p1.y} C ${p2.x} ${p2.y} ${p3.x} ${p3.y} ${p4.x} ${p4.y}`}
-                                        strokeWidth={CURVE_STROKE_WIDTH}
+                                        strokeWidth={
+                                            selected
+                                                ? CURVE_STROKE_WIDTH_SELECTED
+                                                : CURVE_STROKE_WIDTH
+                                        }
                                         stroke={
                                             selected
                                                 ? CURVE_COLOR_SELECTED
+                                                : widgetSelected
+                                                ? CURVE_COLOR_WIDGET_SELECTED
                                                 : CURVE_COLOR
                                         }
                                         fill="none"
@@ -2137,10 +2183,16 @@ const WidgetTimelinePathCurves = observer(
                                 <Fragment key={keyframe.objID}>
                                     <path
                                         d={`M ${p1.x} ${p1.y} Q ${p2.x} ${p2.y} ${p3.x} ${p3.y}`}
-                                        strokeWidth={CURVE_STROKE_WIDTH}
+                                        strokeWidth={
+                                            selected
+                                                ? CURVE_STROKE_WIDTH_SELECTED
+                                                : CURVE_STROKE_WIDTH
+                                        }
                                         stroke={
                                             selected
                                                 ? CURVE_COLOR_SELECTED
+                                                : widgetSelected
+                                                ? CURVE_COLOR_WIDGET_SELECTED
                                                 : CURVE_COLOR
                                         }
                                         fill="none"
@@ -2167,8 +2219,18 @@ const WidgetTimelinePathCurves = observer(
                                 <Fragment key={keyframe.objID}>
                                     <path
                                         d={`M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`}
-                                        strokeWidth={CURVE_STROKE_WIDTH}
-                                        stroke={CURVE_COLOR}
+                                        strokeWidth={
+                                            selected
+                                                ? CURVE_STROKE_WIDTH_SELECTED
+                                                : CURVE_STROKE_WIDTH
+                                        }
+                                        stroke={
+                                            selected
+                                                ? CURVE_COLOR_SELECTED
+                                                : widgetSelected
+                                                ? CURVE_COLOR_WIDGET_SELECTED
+                                                : CURVE_COLOR
+                                        }
                                         fill="none"
                                         strokeLinecap="round"
                                         markerEnd="url(#timelineAnimationCurveEndMarker)"
