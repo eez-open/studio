@@ -15,7 +15,12 @@ import {
 } from "eez-studio-shared/validation";
 import { humanize } from "eez-studio-shared/string";
 import { Icon } from "eez-studio-ui/icon";
-import { Point, pointDistance, Rect } from "eez-studio-shared/geometry";
+import {
+    Point,
+    pointDistance,
+    Rect,
+    splitCurveAt
+} from "eez-studio-shared/geometry";
 
 import {
     EezObject,
@@ -29,7 +34,8 @@ import {
     getAncestorOfType,
     updateObject,
     createObject,
-    getProjectEditorStore
+    getProjectEditorStore,
+    getClassInfo
 } from "project-editor/store";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -56,7 +62,7 @@ import {
 import { getStylePropDefaultValue } from "project-editor/lvgl/style-helper";
 import {
     IPointerEvent,
-    MouseHandler
+    MouseHandlerWithSnapLines
 } from "project-editor/flow/editor/mouse-handler";
 import { addAlphaToColor } from "eez-studio-shared/color";
 
@@ -791,11 +797,140 @@ export const TimelineKeyframePropertyUI = observer(
                     if (position < keyframe.end) {
                         newKeyframe.start = keyframe.start;
 
+                        if (keyframe.left.enabled && keyframe.top.enabled) {
+                            const widgetTimelinePath = new WidgetTimelinePath(
+                                widget
+                            );
+                            const path = widgetTimelinePath.path;
+                            const curve = path.find(
+                                curve => curve.keyframe == keyframe
+                            );
+                            if (curve) {
+                                const t =
+                                    (position - keyframe.start) /
+                                    (keyframe.end - keyframe.start);
+
+                                if (curve.curvePoints.length == 4) {
+                                    const [p1, p2, p3, p4] = curve.curvePoints;
+
+                                    const { x: xOffset, y: yOffset } =
+                                        widgetTimelinePath.offsetToCenter;
+
+                                    const result = splitCurveAt(
+                                        t,
+                                        p1.x - xOffset,
+                                        p1.y - yOffset,
+                                        p2.x - xOffset,
+                                        p2.y - yOffset,
+                                        p3.x - xOffset,
+                                        p3.y - yOffset,
+                                        p4.x - xOffset,
+                                        p4.y - yOffset
+                                    );
+
+                                    for (let i = 0; i < result.length; i++) {
+                                        result[i] = Math.round(result[i]);
+                                    }
+
+                                    // const p11 = { x: result[0], y: result[1] };
+                                    const p21 = { x: result[2], y: result[3] };
+                                    const p31 = { x: result[4], y: result[5] };
+                                    const p41 = { x: result[6], y: result[7] };
+
+                                    // const p12 = { x: result[6], y: result[7] };
+                                    const p22 = { x: result[8], y: result[9] };
+                                    const p32 = {
+                                        x: result[10],
+                                        y: result[11]
+                                    };
+                                    // const p42 = {
+                                    //     x: result[12],
+                                    //     y: result[13]
+                                    // };
+
+                                    newKeyframe.left.enabled = true;
+                                    newKeyframe.left.value = p41.x;
+
+                                    newKeyframe.top.enabled = true;
+                                    newKeyframe.top.value = p41.y;
+
+                                    newKeyframe.controlPoints = `(${p21.x}, ${p21.y}) (${p31.x}, ${p31.y})`;
+
+                                    this.context.updateObject(keyframe, {
+                                        controlPoints: `(${p22.x}, ${p22.y}) (${p32.x}, ${p32.y})`
+                                    });
+                                } else if (curve.curvePoints.length == 3) {
+                                    const [p1, p2, p3] = curve.curvePoints;
+
+                                    const { x: xOffset, y: yOffset } =
+                                        widgetTimelinePath.offsetToCenter;
+
+                                    const result = splitCurveAt(
+                                        t,
+                                        p1.x - xOffset,
+                                        p1.y - yOffset,
+                                        p2.x - xOffset,
+                                        p2.y - yOffset,
+                                        p3.x - xOffset,
+                                        p3.y - yOffset
+                                    );
+
+                                    for (let i = 0; i < result.length; i++) {
+                                        result[i] = Math.round(result[i]);
+                                    }
+
+                                    // const p11 = { x: result[0], y: result[1] };
+                                    const p21 = { x: result[2], y: result[3] };
+                                    const p41 = { x: result[4], y: result[5] };
+
+                                    // const p12 = { x: result[4], y: result[5] };
+                                    const p22 = { x: result[6], y: result[7] };
+                                    // const p42 = {
+                                    //     x: result[8],
+                                    //     y: result[9]
+                                    // };
+
+                                    newKeyframe.left.enabled = true;
+                                    newKeyframe.left.value = p41.x;
+
+                                    newKeyframe.top.enabled = true;
+                                    newKeyframe.top.value = p41.y;
+
+                                    newKeyframe.controlPoints = `(${p21.x}, ${p21.y})`;
+
+                                    this.context.updateObject(keyframe, {
+                                        controlPoints: `(${p22.x}, ${p22.y})`
+                                    });
+                                } else {
+                                    const [p1, p2] = curve.curvePoints;
+
+                                    const { x: xOffset, y: yOffset } =
+                                        widgetTimelinePath.offsetToCenter;
+
+                                    p1.x -= xOffset;
+                                    p1.y -= yOffset;
+                                    p2.x -= xOffset;
+                                    p2.y -= yOffset;
+
+                                    newKeyframe.left.enabled = true;
+                                    newKeyframe.left.value = Math.round(
+                                        p1.x + t * (p2.x - p1.x)
+                                    );
+
+                                    newKeyframe.top.enabled = true;
+                                    newKeyframe.top.value = Math.round(
+                                        p1.y + t * (p2.y - p1.y)
+                                    );
+                                }
+                            }
+                        }
+
                         this.context.updateObject(keyframe, {
                             start: position
                         });
 
                         this.context.insertObjectBefore(keyframe, newKeyframe);
+
                         return;
                     }
 
@@ -1533,6 +1668,13 @@ class WidgetTimelinePath {
 
     getEditorHandleProps(keyframe: TimelineKeyframe) {
         return {
+            from:
+                this.widget.timeline.indexOf(keyframe) == 0
+                    ? {
+                          className: WidgetTimelinePathEditorHandler.CLASS_NAME,
+                          [WidgetTimelinePathEditorHandler.DATA_ATTR_NAME]: `${this.widget.objID}/${keyframe.objID}/from`
+                      }
+                    : undefined,
             cp1: {
                 className: WidgetTimelinePathEditorHandler.CLASS_NAME,
                 [WidgetTimelinePathEditorHandler.DATA_ATTR_NAME]: `${this.widget.objID}/${keyframe.objID}/cp1`
@@ -1561,15 +1703,18 @@ class WidgetTimelinePath {
     }
 }
 
-export class WidgetTimelinePathEditorHandler extends MouseHandler {
-    static CLASS_NAME = "widget-timeline-path-editor-handle";
+export class WidgetTimelinePathEditorHandler extends MouseHandlerWithSnapLines {
+    static CLASS_NAME = "widget-timeline-path-editor-ha ndle";
     static DATA_ATTR_NAME = "data-handle-id";
 
     cursor: string = "grabbing";
 
     widgetTimelinePath: WidgetTimelinePath;
 
+    widgetRectAtStart: Rect;
+
     keyframe: TimelineKeyframe;
+    fromAtStart: Point;
     toAtStart: Point;
     cp1AtStart: Point | undefined;
     cp2AtStart: Point | undefined;
@@ -1607,6 +1752,16 @@ export class WidgetTimelinePathEditorHandler extends MouseHandler {
         ) as TimelineKeyframe;
 
         this.handleId = handleId as string;
+
+        const classInfo = getClassInfo(this.widgetTimelinePath.widget);
+        this.widgetRectAtStart = classInfo.getRect!(
+            this.widgetTimelinePath.widget
+        );
+
+        this.fromAtStart = {
+            x: this.widgetTimelinePath.widget.left,
+            y: this.widgetTimelinePath.widget.top
+        };
 
         this.toAtStart = {
             x: this.keyframe.left.value!,
@@ -1697,10 +1852,60 @@ export class WidgetTimelinePathEditorHandler extends MouseHandler {
     move(context: IFlowContext, event: IPointerEvent) {
         super.move(context, event);
 
-        const dx = Math.round(this.modelDistance.x);
-        const dy = Math.round(this.modelDistance.y);
+        let dx = Math.round(this.modelDistance.x);
+        let dy = Math.round(this.modelDistance.y);
 
-        if (this.handleId == "to") {
+        if (this.handleId == "from") {
+            this.snapLines.enabled =
+                this.widgetTimelinePath.timelinePosition == this.keyframe.start;
+
+            const { left, top } = this.snapLines.dragSnap(
+                this.widgetRectAtStart.left + dx,
+                this.widgetRectAtStart.top + dy,
+                this.widgetRectAtStart.width,
+                this.widgetRectAtStart.height
+            );
+
+            dx += left - (this.widgetRectAtStart.left + dx);
+            dy += top - (this.widgetRectAtStart.top + dy);
+
+            context.projectEditorStore.updateObject(
+                this.widgetTimelinePath.widget,
+                {
+                    left: this.fromAtStart.x + dx,
+                    top: this.fromAtStart.y + dy
+                }
+            );
+
+            if (!event.shiftKey) {
+                if (this.cp1AtStart && this.cp2AtStart) {
+                    context.projectEditorStore.updateObject(this.keyframe, {
+                        controlPoints: `(${this.cp1AtStart.x + dx}, ${
+                            this.cp1AtStart.y + dy
+                        }) (${this.cp2AtStart.x}, ${this.cp2AtStart.y})`
+                    });
+                } else if (this.cp1AtStart) {
+                    context.projectEditorStore.updateObject(this.keyframe, {
+                        controlPoints: `(${this.cp1AtStart.x + dx}, ${
+                            this.cp1AtStart.y + dy
+                        })`
+                    });
+                }
+            }
+        } else if (this.handleId == "to") {
+            this.snapLines.enabled =
+                this.widgetTimelinePath.timelinePosition == this.keyframe.end;
+
+            const { left, top } = this.snapLines.dragSnap(
+                this.widgetRectAtStart.left + dx,
+                this.widgetRectAtStart.top + dy,
+                this.widgetRectAtStart.width,
+                this.widgetRectAtStart.height
+            );
+
+            dx += left - (this.widgetRectAtStart.left + dx);
+            dy += top - (this.widgetRectAtStart.top + dy);
+
             context.projectEditorStore.updateObject(this.keyframe, {
                 left: Object.assign({}, this.keyframe.left, {
                     value: this.toAtStart.x + dx
@@ -1710,7 +1915,7 @@ export class WidgetTimelinePathEditorHandler extends MouseHandler {
                 })
             });
 
-            if (!event.ctrlKey) {
+            if (!event.shiftKey) {
                 if (this.cp1AtStart && this.cp2AtStart) {
                     context.projectEditorStore.updateObject(this.keyframe, {
                         controlPoints: `(${this.cp1AtStart.x}, ${
@@ -1750,7 +1955,7 @@ export class WidgetTimelinePathEditorHandler extends MouseHandler {
                 });
             }
 
-            if (!event.ctrlKey) {
+            if (!event.shiftKey) {
                 if (this.cp2PrevAtStart) {
                     const p1 = {
                         x: this.cp1AtStart!.x + dx,
@@ -1781,7 +1986,7 @@ export class WidgetTimelinePathEditorHandler extends MouseHandler {
                 }) (${this.cp2AtStart!.x + dx}, ${this.cp2AtStart!.y + dy})`
             });
 
-            if (!event.ctrlKey) {
+            if (!event.shiftKey) {
                 if (this.cp1NextAtStart) {
                     const p1 = {
                         x: this.cp2AtStart!.x + dx,
@@ -2002,10 +2207,20 @@ const WidgetTimelinePathHandles = observer(
                         selected
                     }) => {
                         if (curvePoints.length == 4) {
-                            const [_, p2, p3, p4] = curvePoints;
+                            const [p1, p2, p3, p4] = curvePoints;
                             const R = CONTROL_POINT_RADIUS;
                             return (
                                 <Fragment key={keyframe.objID}>
+                                    {editorHandleProps.from && (
+                                        <circle
+                                            cx={p1.x}
+                                            cy={p1.y}
+                                            r={TO_POINT_RADIUS}
+                                            fill={TO_POINT_HANDLE_FILL_COLOR}
+                                            style={{ cursor: "grab" }}
+                                            {...editorHandleProps.from}
+                                        />
+                                    )}
                                     <circle
                                         cx={p4.x}
                                         cy={p4.y}
@@ -2061,10 +2276,20 @@ const WidgetTimelinePathHandles = observer(
                                 </Fragment>
                             );
                         } else if (curvePoints.length == 3) {
-                            const [_, p2, p3] = curvePoints;
+                            const [p1, p2, p3] = curvePoints;
                             const R = CONTROL_POINT_RADIUS;
                             return (
                                 <Fragment key={keyframe.objID}>
+                                    {editorHandleProps.from && (
+                                        <circle
+                                            cx={p1.x}
+                                            cy={p1.y}
+                                            r={TO_POINT_RADIUS}
+                                            fill={TO_POINT_HANDLE_FILL_COLOR}
+                                            style={{ cursor: "grab" }}
+                                            {...editorHandleProps.from}
+                                        />
+                                    )}
                                     <circle
                                         cx={p3.x}
                                         cy={p3.y}
@@ -2102,9 +2327,19 @@ const WidgetTimelinePathHandles = observer(
                                 </Fragment>
                             );
                         } else {
-                            const [_, p2] = curvePoints;
+                            const [p1, p2] = curvePoints;
                             return (
                                 <Fragment key={keyframe.objID}>
+                                    {editorHandleProps.from && (
+                                        <circle
+                                            cx={p1.x}
+                                            cy={p1.y}
+                                            r={TO_POINT_RADIUS}
+                                            fill={TO_POINT_HANDLE_FILL_COLOR}
+                                            style={{ cursor: "grab" }}
+                                            {...editorHandleProps.from}
+                                        />
+                                    )}
                                     <circle
                                         cx={p2.x}
                                         cy={p2.y}

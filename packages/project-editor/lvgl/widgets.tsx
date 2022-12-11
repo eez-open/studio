@@ -47,10 +47,7 @@ import {
     ComponentOutput,
     Widget
 } from "project-editor/flow/component";
-import {
-    getTimelineEditorState,
-    isTimelineEditorActive
-} from "project-editor/flow/timeline";
+import { isTimelineEditorActive } from "project-editor/flow/timeline";
 
 import { escapeCString } from "project-editor/build/helper";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
@@ -645,13 +642,6 @@ export class LVGLWidget extends Widget {
 
             const props: Partial<Rect> = {};
 
-            const timelineEditorState = getTimelineEditorState(widget);
-            if (timelineEditorState) {
-                runInAction(() => {
-                    widget._refreshCounter++;
-                });
-                return;
-            }
             const { left, top } = widget.fromRelativePosition(
                 value.left ?? widget.rect.left,
                 value.top ?? widget.rect.top

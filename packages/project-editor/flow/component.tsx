@@ -1946,13 +1946,6 @@ export class Component extends EezObject {
         setRect: (object: Component, value: Partial<Rect>) => {
             const projectEditorStore = getProjectEditorStore(object);
 
-            if (object instanceof Widget) {
-                const timelineEditorState = getTimelineEditorState(object);
-                if (timelineEditorState) {
-                    return;
-                }
-            }
-
             const props: Partial<Rect> = {};
 
             const { left, top } = object.fromRelativePosition(

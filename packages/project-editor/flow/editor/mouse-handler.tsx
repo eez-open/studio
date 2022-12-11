@@ -294,7 +294,7 @@ export class RubberBandSelectionMouseHandler extends MouseHandler {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MouseHandlerWithSnapLines extends MouseHandler {
+export class MouseHandlerWithSnapLines extends MouseHandler {
     snapLines = new SnapLines();
 
     down(context: IFlowContext, event: IPointerEvent) {

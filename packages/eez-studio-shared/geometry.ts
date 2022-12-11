@@ -345,3 +345,132 @@ export function segmentLengthSquared(s: Segment) {
 export function segmentLength(s: Segment) {
     return pointDistance(s.p1, s.p2);
 }
+
+// With throw RangeError if not 0 < position < 1
+// x1, y1, x2, y2, x3, y3 for quadratic curves
+// x1, y1, x2, y2, x3, y3, x4, y4 for cubic curves
+// Returns an array of points representing 2 curves. The curves are the same type as the split curve
+export function splitCurveAt(
+    position: number,
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    x3: number,
+    y3: number,
+    x4?: number,
+    y4?: number
+) {
+    var v1: Point;
+    let v2: Point;
+    let v3: Point;
+    let v4: Point;
+    let quad: boolean;
+    let retPoints: number[];
+    let i: number;
+    let c: number;
+
+    // =============================================================================================
+    // you may remove this as the function will still work and resulting curves will still render
+    // but other curve functions may not like curves with 0 length
+    // =============================================================================================
+    if (position <= 0 || position >= 1) {
+        throw RangeError("spliteCurveAt requires position > 0 && position < 1");
+    }
+
+    // =============================================================================================
+    // If you remove the above range error you may use one or both of the following commented sections
+    // Splitting curves position < 0 or position > 1 will still create valid curves but they will
+    // extend past the end points
+
+    // =============================================================================================
+    // Lock the position to split on the curve.
+    /* optional A
+                                        position = position < 0 ? 0 : position > 1 ? 1 : position;
+                                        optional A end */
+
+    // =============================================================================================
+    // the next commented section will return the original curve if the split results in 0 length curve
+    // You may wish to uncomment this If you desire such functionality
+    /*  optional B
+                                        if(position <= 0 || position >= 1){
+                                            if(x4 === undefined || x4 === null){
+                                                return [x1, y1, x2, y2, x3, y3];
+                                            }else{
+                                                return [x1, y1, x2, y2, x3, y3, x4, y4];
+                                            }
+                                        }
+                                        optional B end */
+
+    retPoints = []; // array of coordinates
+    i = 0;
+    quad = false; // presume cubic bezier
+    v1 = { x: x1, y: y1 };
+    v2 = { x: x2, y: y2 };
+    v3 = { x: x3, y: y3 };
+    if (x4 == undefined || y4 == undefined) {
+        quad = true; // this is a quadratic bezier
+        v4 = v3;
+    } else {
+        v4 = { x: x4, y: y4 };
+    }
+    c = position;
+    retPoints[i++] = v1.x; // start point
+    retPoints[i++] = v1.y;
+
+    if (quad) {
+        // split quadratic bezier
+        v1.x += (v2.x - v1.x) * c;
+        v1.y += (v2.y - v1.y) * c;
+        retPoints[i++] = v1.x; // new control point for first curve
+        retPoints[i++] = v1.y;
+        v2.x += (v4.x - v2.x) * c;
+        v2.y += (v4.y - v2.y) * c;
+        retPoints[i++] = v1.x + (v2.x - v1.x) * c; // new end and start of first and second curves
+        retPoints[i++] = v1.y + (v2.y - v1.y) * c;
+        retPoints[i++] = v2.x; // new control point for second curve
+        retPoints[i++] = v2.y;
+        retPoints[i++] = v4.x; // new endpoint of second curve
+        retPoints[i++] = v4.y;
+        //=======================================================
+        // return array with 2 curves
+        return retPoints;
+    }
+
+    v1.x += (v2.x - v1.x) * c;
+    v1.y += (v2.y - v1.y) * c;
+
+    retPoints[i++] = v1.x; // first curve first control point
+    retPoints[i++] = v1.y;
+
+    v2.x += (v3.x - v2.x) * c;
+    v2.y += (v3.y - v2.y) * c;
+
+    v3.x += (v4.x - v3.x) * c;
+    v3.y += (v4.y - v3.y) * c;
+
+    v1.x += (v2.x - v1.x) * c;
+    v1.y += (v2.y - v1.y) * c;
+
+    retPoints[i++] = v1.x; // first curve second control point
+    retPoints[i++] = v1.y;
+
+    v2.x += (v3.x - v2.x) * c;
+    v2.y += (v3.y - v2.y) * c;
+
+    retPoints[i++] = v1.x + (v2.x - v1.x) * c; // end and start point of first second curves
+    retPoints[i++] = v1.y + (v2.y - v1.y) * c;
+
+    retPoints[i++] = v2.x; // second curve first control point
+    retPoints[i++] = v2.y;
+
+    retPoints[i++] = v3.x; // second curve second control point
+    retPoints[i++] = v3.y;
+
+    retPoints[i++] = v4.x; // endpoint of second curve
+    retPoints[i++] = v4.y;
+
+    //=======================================================
+    // return array with 2 curves
+    return retPoints;
+}

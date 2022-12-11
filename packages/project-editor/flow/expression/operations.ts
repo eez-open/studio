@@ -960,6 +960,10 @@ export const builtInConstants: {
     "Math.Infinity": {
         value: () => Infinity,
         valueType: "double"
+    },
+    "LVGL.LV_SYMBOL_SETTINGS": {
+        value: () => "\uF013",
+        valueType: "string"
     }
 };
 
