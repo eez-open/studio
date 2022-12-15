@@ -232,7 +232,7 @@ export class EditorsStore {
         return tabs;
     }
 
-    async refresh(showActiveEditor: boolean) {
+    refresh(showActiveEditor: boolean) {
         const editors: Editor[] = [];
         const tabIdToEditorMap = new Map<string, Editor>();
 
@@ -297,43 +297,41 @@ export class EditorsStore {
 
         this.saveState();
 
-        await new Promise<void>(resolve => {
-            setTimeout(() => {
-                runInAction(() => {
-                    this.editors = editors;
-                    this.activeEditor = activeEditor;
-                });
-
-                if (showActiveEditor) {
-                    const activeEditor = this.activeEditor;
-                    if (activeEditor) {
-                        activeEditor.makeActive();
-                        this.projectEditorStore.navigationStore.showObjects(
-                            [activeEditor.subObject ?? activeEditor.object],
-                            false,
-                            false,
-                            true
-                        );
-                    }
-                }
-
-                resolve();
+        setTimeout(() => {
+            runInAction(() => {
+                this.editors = editors;
+                this.activeEditor = activeEditor;
             });
+
+            if (showActiveEditor) {
+                const activeEditor = this.activeEditor;
+                if (activeEditor) {
+                    activeEditor.makeActive();
+                    this.projectEditorStore.navigationStore.showObjects(
+                        [activeEditor.subObject ?? activeEditor.object],
+                        false,
+                        false,
+                        true
+                    );
+                }
+            }
         });
+
+        return editors;
     }
 
     activateEditor(editor: Editor) {
         this.tabsModel.doAction(FlexLayout.Actions.selectTab(editor.tabId));
     }
 
-    async openEditor(object: IEezObject, subObject?: IEezObject, params?: any) {
-        await this.refresh(false);
+    openEditor(object: IEezObject, subObject?: IEezObject, params?: any) {
+        const editors = this.refresh(false);
 
         let editorFound: Editor | undefined;
 
-        for (let i = 0; i < this.editors.length; i++) {
-            if (this.editors[i].compare(object, subObject, params)) {
-                editorFound = this.editors[i];
+        for (let i = 0; i < editors.length; i++) {
+            if (editors[i].compare(object, subObject, params)) {
+                editorFound = editors[i];
                 break;
             }
         }
