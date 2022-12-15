@@ -646,16 +646,16 @@ export const Tree = observer(
         }
 
         onClick = (event: React.MouseEvent<HTMLDivElement>) => {
-            event.preventDefault();
-            event.stopPropagation();
+            //event.preventDefault();
+            //event.stopPropagation();
 
             this.props.treeAdapter.selectItems([]);
         };
 
         onMouseUp = (event: React.MouseEvent<HTMLDivElement>) => {
             if (event.button == 2) {
-                event.preventDefault();
-                event.stopPropagation();
+                //event.preventDefault();
+                //event.stopPropagation();
 
                 this.props.treeAdapter.selectItems([]);
             }

@@ -187,7 +187,7 @@ export class EditorsStore {
         // close editor if editor object doesn't exists anymore
         this.dispose1 = autorun(() => {
             this.editors.slice().forEach(editor => {
-                if (!isObjectExists(editor.object)) {
+                if (!editor.object || !isObjectExists(editor.object)) {
                     this.closeEditor(editor);
                 }
             });
@@ -232,7 +232,7 @@ export class EditorsStore {
         return tabs;
     }
 
-    refresh(showActiveEditor: boolean) {
+    async refresh(showActiveEditor: boolean) {
         const editors: Editor[] = [];
         const tabIdToEditorMap = new Map<string, Editor>();
 
@@ -297,24 +297,28 @@ export class EditorsStore {
 
         this.saveState();
 
-        setTimeout(() => {
-            runInAction(() => {
-                this.editors = editors;
-                this.activeEditor = activeEditor;
-            });
+        await new Promise<void>(resolve => {
+            setTimeout(() => {
+                runInAction(() => {
+                    this.editors = editors;
+                    this.activeEditor = activeEditor;
+                });
 
-            if (showActiveEditor) {
-                const activeEditor = this.activeEditor;
-                if (activeEditor) {
-                    activeEditor.makeActive();
-                    this.projectEditorStore.navigationStore.showObjects(
-                        [activeEditor.subObject ?? activeEditor.object],
-                        false,
-                        false,
-                        true
-                    );
+                if (showActiveEditor) {
+                    const activeEditor = this.activeEditor;
+                    if (activeEditor) {
+                        activeEditor.makeActive();
+                        this.projectEditorStore.navigationStore.showObjects(
+                            [activeEditor.subObject ?? activeEditor.object],
+                            false,
+                            false,
+                            true
+                        );
+                    }
                 }
-            }
+
+                resolve();
+            });
         });
     }
 
@@ -322,7 +326,9 @@ export class EditorsStore {
         this.tabsModel.doAction(FlexLayout.Actions.selectTab(editor.tabId));
     }
 
-    openEditor(object: IEezObject, subObject?: IEezObject, params?: any) {
+    async openEditor(object: IEezObject, subObject?: IEezObject, params?: any) {
+        await this.refresh(false);
+
         let editorFound: Editor | undefined;
 
         for (let i = 0; i < this.editors.length; i++) {
@@ -347,7 +353,9 @@ export class EditorsStore {
         }
 
         let editor = new Editor(this.projectEditorStore);
-        this.editors.push(editor);
+        runInAction(() => {
+            this.editors.push(editor);
+        });
 
         editor.object = object;
         editor.subObject = subObject;

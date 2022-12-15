@@ -13,6 +13,7 @@ function roundN(value: number, decimals: number) {
 
 export const binaryOperators: {
     [operator: string]: {
+        operationIndex: number;
         name: string;
         eval: (
             expressionContext: IExpressionContext | undefined,
@@ -23,6 +24,7 @@ export const binaryOperators: {
     };
 } = {
     "+": {
+        operationIndex: 0,
         name: "add",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a + b,
@@ -56,6 +58,7 @@ export const binaryOperators: {
         }
     },
     "-": {
+        operationIndex: 1,
         name: "sub",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a - b,
@@ -76,6 +79,7 @@ export const binaryOperators: {
         }
     },
     "*": {
+        operationIndex: 2,
         name: "mul",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a * b,
@@ -96,6 +100,7 @@ export const binaryOperators: {
         }
     },
     "/": {
+        operationIndex: 3,
         name: "div",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a / b,
@@ -116,6 +121,7 @@ export const binaryOperators: {
         }
     },
     "%": {
+        operationIndex: 4,
         name: "mod",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a % b,
@@ -130,6 +136,7 @@ export const binaryOperators: {
         }
     },
     "<<": {
+        operationIndex: 5,
         name: "left_shift",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a << b,
@@ -144,6 +151,7 @@ export const binaryOperators: {
         }
     },
     ">>": {
+        operationIndex: 6,
         name: "right_shift",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a >> b,
@@ -158,6 +166,7 @@ export const binaryOperators: {
         }
     },
     "&": {
+        operationIndex: 7,
         name: "binary_and",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a & b,
@@ -172,6 +181,7 @@ export const binaryOperators: {
         }
     },
     "|": {
+        operationIndex: 8,
         name: "binary_or",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a | b,
@@ -186,6 +196,7 @@ export const binaryOperators: {
         }
     },
     "^": {
+        operationIndex: 9,
         name: "binary_xor",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a ^ b,
@@ -203,6 +214,7 @@ export const binaryOperators: {
 
 export const logicalOperators: {
     [operator: string]: {
+        operationIndex: number;
         name: string;
         eval: (
             expressionContext: IExpressionContext | undefined,
@@ -213,6 +225,7 @@ export const logicalOperators: {
     };
 } = {
     "==": {
+        operationIndex: 10,
         name: "equal",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a == b,
@@ -221,6 +234,7 @@ export const logicalOperators: {
         }
     },
     "!=": {
+        operationIndex: 11,
         name: "not_equal",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a != b,
@@ -229,6 +243,7 @@ export const logicalOperators: {
         }
     },
     "<": {
+        operationIndex: 12,
         name: "less",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a < b,
@@ -237,6 +252,7 @@ export const logicalOperators: {
         }
     },
     ">": {
+        operationIndex: 13,
         name: "greater",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a > b,
@@ -245,6 +261,7 @@ export const logicalOperators: {
         }
     },
     "<=": {
+        operationIndex: 14,
         name: "less_or_equal",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a <= b,
@@ -253,6 +270,7 @@ export const logicalOperators: {
         }
     },
     ">=": {
+        operationIndex: 15,
         name: "greater_or_equal",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a >= b,
@@ -261,6 +279,7 @@ export const logicalOperators: {
         }
     },
     "&&": {
+        operationIndex: 16,
         name: "logical_and",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a && b,
@@ -269,6 +288,7 @@ export const logicalOperators: {
         }
     },
     "||": {
+        operationIndex: 17,
         name: "logical_or",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a || b,
@@ -280,6 +300,7 @@ export const logicalOperators: {
 
 export const unaryOperators: {
     [operator: string]: {
+        operationIndex: number;
         name: string;
         eval: (
             expressionContext: IExpressionContext | undefined,
@@ -289,6 +310,7 @@ export const unaryOperators: {
     };
 } = {
     "+": {
+        operationIndex: 18,
         name: "unary_plus",
         eval: (expressionContext: IExpressionContext | undefined, a) => +a,
         getValueType: (a: ValueType) => {
@@ -299,6 +321,7 @@ export const unaryOperators: {
         }
     },
     "-": {
+        operationIndex: 19,
         name: "unary_minus",
         eval: (expressionContext: IExpressionContext | undefined, a) => -a,
         getValueType: (a: ValueType) => {
@@ -309,6 +332,7 @@ export const unaryOperators: {
         }
     },
     "~": {
+        operationIndex: 20,
         name: "binary_one_complement",
         eval: (expressionContext: IExpressionContext | undefined, a) => ~a,
         getValueType: (a: ValueType) => {
@@ -319,6 +343,7 @@ export const unaryOperators: {
         }
     },
     "!": {
+        operationIndex: 21,
         name: "not",
         eval: (expressionContext: IExpressionContext | undefined, a) => !a,
         getValueType: (a: ValueType) => {
@@ -334,6 +359,7 @@ export const CONDITIONAL_OPERATOR = "conditional"; // {test} ? {consequent} : {a
 
 export const builtInFunctions: {
     [name: string]: {
+        operationIndex: number;
         arity: number | { min: number; max?: number };
         args: string[];
         eval: (
@@ -344,6 +370,7 @@ export const builtInFunctions: {
     };
 } = {
     "System.getTick": {
+        operationIndex: 23,
         arity: 0,
         args: [],
         eval: (
@@ -358,6 +385,7 @@ export const builtInFunctions: {
     },
 
     "Flow.index": {
+        operationIndex: 24,
         arity: 1,
         args: ["index"],
         eval: (
@@ -387,6 +415,7 @@ export const builtInFunctions: {
         }
     },
     "Flow.isPageActive": {
+        operationIndex: 25,
         arity: 0,
         args: [],
         eval: (
@@ -407,6 +436,7 @@ export const builtInFunctions: {
         }
     },
     "Flow.pageTimelinePosition": {
+        operationIndex: 26,
         arity: 0,
         args: [],
         eval: (
@@ -422,6 +452,7 @@ export const builtInFunctions: {
         }
     },
     "Flow.makeValue": {
+        operationIndex: 27,
         arity: 2,
         args: ["struct", "value"],
         eval: (
@@ -435,6 +466,7 @@ export const builtInFunctions: {
         }
     },
     "Flow.makeArrayValue": {
+        operationIndex: 28,
         arity: 1,
         args: ["value"],
         eval: (
@@ -448,6 +480,7 @@ export const builtInFunctions: {
         }
     },
     "Flow.languages": {
+        operationIndex: 29,
         arity: 0,
         args: [],
         eval: (
@@ -465,6 +498,7 @@ export const builtInFunctions: {
         }
     },
     "Flow.translate": {
+        operationIndex: 30,
         arity: 1,
         args: ["textResourceID"],
         eval: (
@@ -492,6 +526,7 @@ export const builtInFunctions: {
         }
     },
     "Flow.parseInteger": {
+        operationIndex: 31,
         arity: 1,
         args: ["str"],
         eval: (
@@ -505,6 +540,7 @@ export const builtInFunctions: {
         }
     },
     "Flow.parseFloat": {
+        operationIndex: 32,
         arity: 1,
         args: ["str"],
         eval: (
@@ -518,6 +554,7 @@ export const builtInFunctions: {
         }
     },
     "Flow.parseDouble": {
+        operationIndex: 33,
         arity: 1,
         args: ["str"],
         eval: (
@@ -532,6 +569,7 @@ export const builtInFunctions: {
     },
 
     "Date.now": {
+        operationIndex: 34,
         arity: 0,
         args: [],
         eval: (
@@ -543,6 +581,7 @@ export const builtInFunctions: {
         }
     },
     "Date.toString": {
+        operationIndex: 35,
         arity: 1,
         args: ["date"],
         eval: (
@@ -553,7 +592,20 @@ export const builtInFunctions: {
             return "string";
         }
     },
+    "Date.toLocaleString": {
+        operationIndex: 59,
+        arity: 1,
+        args: ["date"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => new Date(args[0]).toLocaleString(),
+        getValueType: (...args: ValueType[]) => {
+            return "string";
+        }
+    },
     "Date.fromString": {
+        operationIndex: 36,
         arity: 1,
         args: ["dateStr"],
         eval: (
@@ -564,8 +616,122 @@ export const builtInFunctions: {
             return "date";
         }
     },
+    "Date.getYear": {
+        operationIndex: 60,
+        arity: 1,
+        args: ["date"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => new Date(args[0]).getFullYear(),
+        getValueType: (...args: ValueType[]) => {
+            return "integer";
+        }
+    },
+    "Date.getMonth": {
+        operationIndex: 61,
+        arity: 1,
+        args: ["date"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => new Date(args[0]).getMonth(),
+        getValueType: (...args: ValueType[]) => {
+            return "integer";
+        }
+    },
+    "Date.getDay": {
+        operationIndex: 62,
+        arity: 1,
+        args: ["date"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => new Date(args[0]).getDay(),
+        getValueType: (...args: ValueType[]) => {
+            return "integer";
+        }
+    },
+    "Date.getHours": {
+        operationIndex: 63,
+        arity: 1,
+        args: ["date"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => new Date(args[0]).getHours(),
+        getValueType: (...args: ValueType[]) => {
+            return "integer";
+        }
+    },
+    "Date.getMinutes": {
+        operationIndex: 64,
+        arity: 1,
+        args: ["date"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => new Date(args[0]).getMinutes(),
+        getValueType: (...args: ValueType[]) => {
+            return "integer";
+        }
+    },
+    "Date.getSeconds": {
+        operationIndex: 65,
+        arity: 1,
+        args: ["date"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => new Date(args[0]).getSeconds(),
+        getValueType: (...args: ValueType[]) => {
+            return "integer";
+        }
+    },
+    "Date.getMilliseconds": {
+        operationIndex: 66,
+        arity: 1,
+        args: ["date"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => new Date(args[0]).getMilliseconds(),
+        getValueType: (...args: ValueType[]) => {
+            return "integer";
+        }
+    },
+    "Date.make": {
+        operationIndex: 67,
+        arity: 7,
+        args: [
+            "year",
+            "month",
+            "day",
+            "hours",
+            "minutes",
+            "seconds",
+            "milliseconds"
+        ],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) =>
+            new Date(
+                args[0],
+                args[1] - 1,
+                args[2],
+                args[3],
+                args[4],
+                args[5],
+                args[6]
+            ),
+        getValueType: (...args: ValueType[]) => {
+            return "date";
+        }
+    },
 
     "Math.sin": {
+        operationIndex: 37,
         arity: 1,
         args: ["value"],
         eval: (
@@ -587,6 +753,7 @@ export const builtInFunctions: {
         }
     },
     "Math.cos": {
+        operationIndex: 38,
         arity: 1,
         args: ["value"],
         eval: (
@@ -608,6 +775,7 @@ export const builtInFunctions: {
         }
     },
     "Math.log": {
+        operationIndex: 39,
         arity: 1,
         args: ["value"],
         eval: (
@@ -629,6 +797,7 @@ export const builtInFunctions: {
         }
     },
     "Math.log10": {
+        operationIndex: 40,
         arity: 1,
         args: ["value"],
         eval: (
@@ -650,6 +819,7 @@ export const builtInFunctions: {
         }
     },
     "Math.abs": {
+        operationIndex: 41,
         arity: 1,
         args: ["value"],
         eval: (
@@ -674,6 +844,7 @@ export const builtInFunctions: {
         }
     },
     "Math.floor": {
+        operationIndex: 42,
         arity: 1,
         args: ["value"],
         eval: (
@@ -695,6 +866,7 @@ export const builtInFunctions: {
         }
     },
     "Math.ceil": {
+        operationIndex: 43,
         arity: 1,
         args: ["value"],
         eval: (
@@ -716,6 +888,7 @@ export const builtInFunctions: {
         }
     },
     "Math.round": {
+        operationIndex: 44,
         arity: { min: 1, max: 2 },
         args: ["value", "numOfDigits"],
         eval: (
@@ -737,6 +910,7 @@ export const builtInFunctions: {
         }
     },
     "Math.min": {
+        operationIndex: 45,
         arity: { min: 2 },
         args: ["value", "..."],
         eval: (
@@ -758,6 +932,7 @@ export const builtInFunctions: {
         }
     },
     "Math.max": {
+        operationIndex: 46,
         arity: { min: 2 },
         args: ["value", "..."],
         eval: (
@@ -780,6 +955,7 @@ export const builtInFunctions: {
     },
 
     "String.length": {
+        operationIndex: 47,
         arity: 1,
         args: ["string", "start", "end"],
         eval: (
@@ -792,6 +968,7 @@ export const builtInFunctions: {
     },
 
     "String.substring": {
+        operationIndex: 48,
         arity: { min: 2 },
         args: ["string", "start", "end"],
         eval: (
@@ -804,6 +981,7 @@ export const builtInFunctions: {
     },
 
     "String.find": {
+        operationIndex: 49,
         arity: 2,
         args: ["string", "substring"],
         eval: (
@@ -816,6 +994,7 @@ export const builtInFunctions: {
     },
 
     "String.padStart": {
+        operationIndex: 50,
         arity: 3,
         args: ["string", "targetLength", "padString"],
         eval: (
@@ -828,6 +1007,7 @@ export const builtInFunctions: {
     },
 
     "String.split": {
+        operationIndex: 51,
         arity: 2,
         args: ["string", "separator"],
         eval: (
@@ -840,6 +1020,7 @@ export const builtInFunctions: {
     },
 
     "Array.length": {
+        operationIndex: 52,
         arity: 1,
         args: ["array"],
         eval: (
@@ -852,6 +1033,7 @@ export const builtInFunctions: {
     },
 
     "Array.slice": {
+        operationIndex: 53,
         arity: { min: 2, max: 3 },
         args: ["array", "from", "[to]"],
         eval: (
@@ -864,6 +1046,7 @@ export const builtInFunctions: {
     },
 
     "Array.allocate": {
+        operationIndex: 54,
         arity: 1,
         args: ["size"],
         eval: (
@@ -876,6 +1059,7 @@ export const builtInFunctions: {
     },
 
     "Array.append": {
+        operationIndex: 55,
         arity: 2,
         args: ["array", "value"],
         eval: (
@@ -888,6 +1072,7 @@ export const builtInFunctions: {
     },
 
     "Array.insert": {
+        operationIndex: 56,
         arity: 3,
         args: ["array", "position", "value"],
         eval: (
@@ -900,6 +1085,7 @@ export const builtInFunctions: {
     },
 
     "Array.remove": {
+        operationIndex: 57,
         arity: 2,
         args: ["array", "position"],
         eval: (
@@ -912,6 +1098,7 @@ export const builtInFunctions: {
     },
 
     "Array.clone": {
+        operationIndex: 58,
         arity: 1,
         args: ["array"],
         eval: (
@@ -1061,32 +1248,32 @@ export const builtInConstants: (
 export const operationIndexes: { [key: string]: number } = {};
 
 function buildOperationIndexes() {
-    let nextOperationIndex = 0;
-
     for (const name in binaryOperators) {
         if (binaryOperators.hasOwnProperty(name)) {
-            operationIndexes[binaryOperators[name].name] = nextOperationIndex++;
+            operationIndexes[binaryOperators[name].name] =
+                binaryOperators[name].operationIndex;
         }
     }
 
     for (const name in logicalOperators) {
         if (logicalOperators.hasOwnProperty(name)) {
             operationIndexes[logicalOperators[name].name] =
-                nextOperationIndex++;
+                logicalOperators[name].operationIndex;
         }
     }
 
     for (const name in unaryOperators) {
         if (unaryOperators.hasOwnProperty(name)) {
-            operationIndexes[unaryOperators[name].name] = nextOperationIndex++;
+            operationIndexes[unaryOperators[name].name] =
+                unaryOperators[name].operationIndex;
         }
     }
 
-    operationIndexes[CONDITIONAL_OPERATOR] = nextOperationIndex++;
+    operationIndexes[CONDITIONAL_OPERATOR] = 22;
 
     for (const name in builtInFunctions) {
         if (builtInFunctions.hasOwnProperty(name)) {
-            operationIndexes[name] = nextOperationIndex++;
+            operationIndexes[name] = builtInFunctions[name].operationIndex;
         }
     }
 }

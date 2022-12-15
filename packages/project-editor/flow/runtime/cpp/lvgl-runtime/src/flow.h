@@ -12,8 +12,15 @@ extern uint32_t screenLoad_animType;
 extern uint32_t screenLoad_speed;
 extern uint32_t screenLoad_delay;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 void flowInit(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSize);
 bool flowTick();
+#ifdef __cplusplus
+}
+#endif
+
 void flowOnPageLoadedStudio(unsigned pageIndex);
 
 void addTimelineKeyframe(

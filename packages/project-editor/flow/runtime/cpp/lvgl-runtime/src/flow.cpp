@@ -125,7 +125,7 @@ struct WidgetTimeline {
 
 std::vector<WidgetTimeline> widgetTimelines;
 
-extern "C" void addTimelineKeyframe(
+void addTimelineKeyframe(
     lv_obj_t *obj,
     unsigned page_index,
     float start, float end,
@@ -386,6 +386,14 @@ void clearTimeline() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+struct UpdateTask {
+    UpdateTaskType updateTaskType;
+    lv_obj_t *obj;
+    unsigned page_index;
+    unsigned component_index;
+    unsigned property_index;
+};
+
 static UpdateTask *g_updateTask;
 
 void flow_event_callback(lv_event_t *e) {
@@ -523,17 +531,9 @@ void flow_event_callback_delete_user_data(lv_event_t *e) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct UpdateTask {
-    UpdateTaskType updateTaskType;
-    lv_obj_t *obj;
-    unsigned page_index;
-    unsigned component_index;
-    unsigned property_index;
-};
-
 std::vector<UpdateTask> updateTasks;
 
-extern "C" void addUpdateTask(UpdateTaskType updateTaskType, lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
+void addUpdateTask(UpdateTaskType updateTaskType, lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
     UpdateTask updateTask;
     updateTask.updateTaskType = updateTaskType;
     updateTask.obj = obj;
@@ -726,7 +726,7 @@ extern "C" bool flowTick() {
     return true;
 }
 
-extern "C" void flowOnPageLoadedStudio(unsigned pageIndex) {
+void flowOnPageLoadedStudio(unsigned pageIndex) {
     if (currentPageId == -1) {
         currentPageId = pageIndex + 1;
     }
