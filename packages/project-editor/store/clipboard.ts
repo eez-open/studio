@@ -65,6 +65,7 @@ export function objectsToClipboardData(
     projectEditorStore: ProjectEditorStore,
     objects: IEezObject[]
 ): string {
+    console.log("objectsToClipboardData");
     return JSON.stringify({
         objectClassName: getClass(objects[0]).name,
         objects: objects.map(object =>

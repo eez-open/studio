@@ -301,13 +301,16 @@ export class Bitmap extends EezObject {
                 }
             });
 
+            const name: string = result.values.name;
+
+            const bpp: number = result.values.bpp;
+
             return createBitmap(
                 projectEditorStore,
                 result.values.imageFilePath,
                 undefined,
-                projectEditorStore.projectTypeTraits.isLVGL
-                    ? undefined
-                    : result.values.bpp
+                name,
+                projectEditorStore.projectTypeTraits.isLVGL ? undefined : bpp
             );
         },
         icon: "image",
@@ -501,6 +504,7 @@ export async function createBitmap(
     projectEditorStore: ProjectEditorStore,
     filePath: string,
     fileType?: string,
+    name?: string,
     bpp?: number
 ) {
     if (fileType == undefined) {
@@ -520,15 +524,19 @@ export async function createBitmap(
         }
     }
 
+    if (!name) {
+        name = getUniquePropertyValue(
+            projectEditorStore.project.bitmaps,
+            "name",
+            path.parse(filePath).name
+        ) as string;
+    }
+
     try {
         const result = fs.readFileSync(filePath, "base64");
 
         const bitmapProperties: Partial<Bitmap> = {
-            name: getUniquePropertyValue(
-                projectEditorStore.project.bitmaps,
-                "name",
-                path.parse(filePath).name
-            ) as string,
+            name,
             image: `data:${fileType};base64,` + result,
             bpp,
             alwaysBuild: false

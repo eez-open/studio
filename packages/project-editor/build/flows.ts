@@ -61,17 +61,12 @@ function getComponentTypes() {
 
 function getFlowComponents(flow: Flow) {
     const components: Component[] = [];
-    const v = visitObjects(flow);
-    while (true) {
-        let visitResult = v.next();
-        if (visitResult.done) {
-            break;
-        }
-        if (visitResult.value instanceof Component) {
-            const component = visitResult.value;
-            if (!(component instanceof CommentActionComponent)) {
-                components.push(component);
-            }
+    for (const component of visitObjects(flow)) {
+        if (
+            component instanceof Component &&
+            !(component instanceof CommentActionComponent)
+        ) {
+            components.push(component);
         }
     }
     return components;

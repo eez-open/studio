@@ -986,13 +986,7 @@ export class Page extends Flow {
     get _lvglWidgets() {
         const widgets: LVGLWidget[] = [];
 
-        const v = visitObjects(this.components);
-        while (true) {
-            let visitResult = v.next();
-            if (visitResult.done) {
-                break;
-            }
-            const widget = visitResult.value;
+        for (const widget of visitObjects(this.components)) {
             if (widget instanceof ProjectEditor.LVGLWidgetClass) {
                 widgets.push(widget);
             }

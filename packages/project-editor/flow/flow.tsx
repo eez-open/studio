@@ -222,6 +222,14 @@ export class ConnectionLine extends EezObject {
             }
 
             return messages;
+        },
+
+        objectsToClipboardData: (components: Component[]) => {
+            const flow = ProjectEditor.getFlow(components[0]);
+            if (flow) {
+                return flow.objectsToClipboardData(components);
+            }
+            return undefined;
         }
     };
 
@@ -491,14 +499,8 @@ export abstract class Flow extends EezObject {
     get actionComponents() {
         const components = [];
 
-        const v = visitObjects(this.components);
-        while (true) {
-            let visitResult = v.next();
-            if (visitResult.done) {
-                break;
-            }
-            if (visitResult.value instanceof ActionComponent) {
-                const component = visitResult.value;
+        for (const component of visitObjects(this.components)) {
+            if (component instanceof ActionComponent) {
                 components.push(component);
             }
         }
@@ -767,22 +769,17 @@ export class FlowFragment extends EezObject {
         }
 
         objects.forEach((object: Component) => {
+            if (!(object instanceof Component)) {
+                return;
+            }
             const clone = cloneObject(projectEditorStore, object) as Component;
             this.components.push(clone);
 
             objIDMap.add(object.objID);
 
-            const v = visitObjects(object);
-            while (true) {
-                let visitResult = v.next();
-                if (visitResult.done) {
-                    break;
-                }
-                if (
-                    visitResult.value != object &&
-                    visitResult.value instanceof Component
-                ) {
-                    objIDMap.add(visitResult.value.objID);
+            for (const object2 of visitObjects(object)) {
+                if (object2 != object && object2 instanceof Component) {
+                    objIDMap.add(object2.objID);
                 }
             }
         });
@@ -811,20 +808,11 @@ export class FlowFragment extends EezObject {
             objIDMap.set(object.objID, objID);
             object.objID = objID;
 
-            const v = visitObjects(object);
-            while (true) {
-                let visitResult = v.next();
-                if (visitResult.done) {
-                    break;
-                }
-
-                if (
-                    visitResult.value != object &&
-                    visitResult.value instanceof Component
-                ) {
+            for (const object2 of visitObjects(object)) {
+                if (object2 != object && object2 instanceof Component) {
                     const objID = guid();
-                    objIDMap.set(visitResult.value.objID, objID);
-                    visitResult.value.objID = objID;
+                    objIDMap.set(object2.objID, objID);
+                    object2.objID = objID;
                 }
             }
         });

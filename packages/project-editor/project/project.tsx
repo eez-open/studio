@@ -1525,14 +1525,9 @@ export class Project extends EezObject {
     get _objectsMap() {
         const objectsMap = new Map<string, EezObject>();
 
-        const v = visitObjects(this);
-        while (true) {
-            let visitResult = v.next();
-            if (visitResult.done) {
-                break;
-            }
-            if (visitResult.value instanceof EezObject) {
-                objectsMap.set(visitResult.value.objID, visitResult.value);
+        for (const object of visitObjects(this)) {
+            if (object instanceof EezObject) {
+                objectsMap.set(object.objID, object);
             }
         }
 

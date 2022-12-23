@@ -23,6 +23,9 @@ import {
 } from "project-editor/store/helper";
 
 import { ICommand } from "project-editor/store/undo-manager";
+import { visitObjects } from "project-editor/core/search";
+import { ProjectEditor } from "project-editor/project-editor-interface";
+import type { LVGLWidget } from "project-editor/lvgl/widgets";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -422,6 +425,39 @@ function ensureUniqueProperties(
         }
         existingObjects.push(object);
     });
+
+    // make sure LVGL widget identifiers are unique
+    const project = ProjectEditor.getProject(parentObject);
+    if (project.projectTypeTraits.isLVGL) {
+        const existingLvglWidgets: LVGLWidget[] = [];
+
+        for (const widget of visitObjects(parentObject)) {
+            if (widget instanceof ProjectEditor.LVGLWidgetClass) {
+                existingLvglWidgets.push(widget);
+            }
+        }
+
+        const newLvglWidgets: LVGLWidget[] = [];
+
+        objects.forEach(object => {
+            for (const widget of visitObjects(object)) {
+                if (widget instanceof ProjectEditor.LVGLWidgetClass) {
+                    newLvglWidgets.push(widget);
+                }
+            }
+        });
+
+        newLvglWidgets.forEach(newLvglWidget => {
+            if (newLvglWidget.identifier) {
+                newLvglWidget.identifier = getUniquePropertyValue(
+                    existingLvglWidgets,
+                    "identifier",
+                    newLvglWidget.identifier
+                ) as string;
+            }
+            existingLvglWidgets.push(newLvglWidget);
+        });
+    }
 }
 
 export function getUniquePropertyValue(
@@ -442,11 +478,11 @@ export function getUniquePropertyValue(
         if (typeof value == "number") {
             value++;
         } else {
-            var groups = value.match(/(.+) \((\d+)\)/);
+            var groups = value.match(/(.+)_(\d+)/);
             if (groups) {
-                value = groups[1] + " (" + (parseInt(groups[2]) + 1) + ")";
+                value = groups[1] + "_" + (parseInt(groups[2]) + 1);
             } else {
-                value += " (1)";
+                value += "_1";
             }
         }
     }

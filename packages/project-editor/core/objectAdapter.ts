@@ -654,15 +654,11 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             let objects = this.selectedItems.map(
                 item => item.object as EezObject
             );
-            // if (objects.length == 1) {
-            //     copyItem(objects[0]);
-            // } else {
             copyToClipboard(
                 getProjectEditorStore(this.object).objectsToClipboardData(
                     objects
                 )
             );
-            // }
         }
     }
 

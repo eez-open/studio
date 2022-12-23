@@ -353,19 +353,16 @@ export const PageStructure = observer(
                                 });
 
                                 const childWidgets: Widget[] = [];
-                                const v = visitObjects(widget);
-                                while (true) {
-                                    let visitResult = v.next();
-                                    if (visitResult.done) {
-                                        break;
-                                    }
+
+                                for (const object of visitObjects(widget)) {
                                     if (
-                                        visitResult.value instanceof
+                                        object instanceof
                                         ProjectEditor.WidgetClass
                                     ) {
-                                        childWidgets.push(visitResult.value);
+                                        childWidgets.push(object);
                                     }
                                 }
+
                                 childWidgets.forEach(childWidget =>
                                     this.context.updateObject(childWidget, {
                                         hiddenInEditor

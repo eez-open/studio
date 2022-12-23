@@ -856,9 +856,11 @@ export class ProjectEditorStore {
     }
 
     objectsToClipboardData(objects: EezObject[]) {
-        const classInfo = getClassInfo(objects[0]);
-        if (classInfo.objectsToClipboardData) {
-            return classInfo.objectsToClipboardData(objects);
+        for (const object of objects) {
+            const classInfo = getClassInfo(object);
+            if (classInfo.objectsToClipboardData) {
+                return classInfo.objectsToClipboardData(objects);
+            }
         }
         return objectsToClipboardData(this, objects);
     }

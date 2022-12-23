@@ -34,14 +34,9 @@ export function migrateProjectVersion(
 
 function getRectangleWidgets(project: Project) {
     const rectangleWidgets: RectangleWidget[] = [];
-    const v = visitObjects(project);
-    while (true) {
-        let visitResult = v.next();
-        if (visitResult.done) {
-            break;
-        }
-        if (visitResult.value instanceof RectangleWidget) {
-            rectangleWidgets.push(visitResult.value);
+    for (const object of visitObjects(project)) {
+        if (object instanceof RectangleWidget) {
+            rectangleWidgets.push(object);
         }
     }
     return rectangleWidgets;
