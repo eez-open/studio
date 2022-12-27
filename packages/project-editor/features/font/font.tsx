@@ -432,6 +432,8 @@ export class Glyph extends EezObject {
 
         // draw pixels
         if (this.glyphBitmap) {
+            const project = ProjectEditor.getProject(this);
+
             ctx.fillStyle = "black";
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
@@ -439,10 +441,10 @@ export class Glyph extends EezObject {
                         this.glyphBitmap,
                         x,
                         y,
-                        font.bpp
+                        project.projectTypeTraits.isLVGL ? 8 : font.bpp
                     );
 
-                    if (font.bpp === 8) {
+                    if (font.bpp === 8 || project.projectTypeTraits.isLVGL) {
                         ctx.globalAlpha = pixelValue / 255;
                     }
 
@@ -1453,7 +1455,6 @@ export class Font extends EezObject {
         if (!this.lvglGlyphs) {
             return;
         }
-
         const fontProperties = await extractFont({
             name: this.name,
             absoluteFilePath: projectEditorStore.getAbsoluteFilePath(

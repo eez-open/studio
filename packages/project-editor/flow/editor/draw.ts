@@ -195,7 +195,8 @@ export function drawGlyph(
         const bgColorRgb = tinycolor(bgColor).toRgb();
         const pixelArray = glyphBitmap.pixelArray;
         if (pixelArray) {
-            if (font.bpp === 8) {
+            const project = ProjectEditor.getProject(font);
+            if (font.bpp === 8 || project.projectTypeTraits.isLVGL) {
                 let pixelArrayIndex = 0;
                 const pixelArrayOffset = glyph.width - width;
                 for (let y = 0; y < height; y++) {
