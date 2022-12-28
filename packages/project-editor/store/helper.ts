@@ -713,7 +713,7 @@ export function pasteItem(object: IEezObject) {
                             c.serializedData.object,
                             getClass(c.serializedData.object),
                             undefined,
-                            true
+                            false
                         );
 
                         return projectEditorStore.insertObject(
@@ -735,7 +735,7 @@ export function pasteItem(object: IEezObject) {
                             c.serializedData.object,
                             getClass(c.serializedData.object),
                             undefined,
-                            true
+                            false
                         );
 
                         return projectEditorStore.addObject(
@@ -750,7 +750,7 @@ export function pasteItem(object: IEezObject) {
                             object,
                             getClass(object),
                             undefined,
-                            true
+                            false
                         )
                     );
 

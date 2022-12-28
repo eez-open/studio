@@ -4,7 +4,6 @@ import { observable, toJS } from "mobx";
 
 import {
     IEezObject,
-    ClassInfo,
     PropertyInfo,
     PropertyType,
     EezClass,
@@ -17,8 +16,7 @@ import {
     getKey,
     isPropertyOptional
 } from "project-editor/core/object";
-import { Component } from "project-editor/flow/component";
-import { ConnectionLine, Flow, FlowFragment } from "project-editor/flow/flow";
+import { visitObjects } from "project-editor/core/search";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Project } from "project-editor/project/project";
 
@@ -53,7 +51,7 @@ export function loadProject(
     isLoadProject = true;
     createNewObjectobjIDs = false;
 
-    flowToWireIDToObjID = new Map<Flow, Map<string, string>>();
+    rewireBegin();
 
     const project = loadObjectInternal(
         undefined,
@@ -73,10 +71,7 @@ export function loadProject(
 
     project._DocumentStore = projectEditorStore;
 
-    fixConnectionLines(project);
-
-    wireIDToObjID = undefined as any;
-    flowToWireIDToObjID = undefined as any;
+    rewireEnd(project);
 
     return project;
 }
@@ -123,8 +118,8 @@ let currentDocumentStore: ProjectEditorStore | undefined;
 let currentProject: Project | undefined;
 let isLoadProject: boolean;
 let createNewObjectobjIDs: boolean;
-let wireIDToObjID: Map<string, string>;
-let flowToWireIDToObjID: Map<Flow, Map<string, string>>;
+let wireIDToObjID: Map<string, string> = new Map<string, string>();
+let oldObjID_to_newObjID: Map<string, string> = new Map<string, string>();
 
 function loadArrayObject(
     arrayObject: any,
@@ -188,26 +183,7 @@ function loadObjectInternal(
             currentProject = object;
             currentProject._DocumentStore = currentDocumentStore!;
         }
-
-        if (object instanceof ProjectEditor.FlowClass) {
-            wireIDToObjID = new Map<string, string>();
-            flowToWireIDToObjID.set(object, wireIDToObjID);
-        }
-
-        if (object instanceof ProjectEditor.ConnectionLineClass) {
-            const source = wireIDToObjID.get(jsObject.source);
-            if (source) {
-                jsObject.source = source;
-            }
-
-            const target = wireIDToObjID.get(jsObject.target);
-            if (target) {
-                jsObject.target = target;
-            }
-        }
     }
-
-    const classInfo = getClassInfo(object);
 
     setId(currentDocumentStore!, object, currentDocumentStore!.getChildId());
     setParent(object, parent as IEezObject);
@@ -215,26 +191,19 @@ function loadObjectInternal(
         setKey(object, key);
     }
 
-    let objID = getObjID(object, jsObject, classInfo, key);
-    object.objID = objID;
+    const currentObjID = getObjID(object, jsObject, key);
+    object.objID = getNewObjID(currentObjID, object, jsObject, key);
+    if (currentObjID != undefined && currentObjID != object.objID) {
+        oldObjID_to_newObjID.set(currentObjID, object.objID);
+    }
 
+    const classInfo = getClassInfo(object);
     if (classInfo.beforeLoadHook) {
         classInfo.beforeLoadHook(
             object,
             jsObject,
             isLoadProject ? currentProject! : currentDocumentStore!.project
         );
-    }
-
-    let flowOrFlowFragment: Flow | FlowFragment | undefined;
-    if (
-        !isLoadProject &&
-        createNewObjectobjIDs &&
-        (object instanceof ProjectEditor.FlowClass ||
-            object instanceof ProjectEditor.FlowFragmentClass)
-    ) {
-        createNewObjectobjIDs = false;
-        flowOrFlowFragment = object;
     }
 
     for (const propertyInfo of classInfo.properties) {
@@ -286,11 +255,6 @@ function loadObjectInternal(
         }
     }
 
-    if (flowOrFlowFragment) {
-        flowOrFlowFragment.rewire();
-        createNewObjectobjIDs = true;
-    }
-
     if (classInfo.afterLoadHook) {
         classInfo.afterLoadHook(
             object,
@@ -301,22 +265,31 @@ function loadObjectInternal(
     return object;
 }
 
-function getObjID(
-    object: EezObject,
-    jsObject: any,
-    classInfo: ClassInfo,
-    key: string | undefined
-) {
-    if (createNewObjectobjIDs) {
-        return guid();
-    }
-
+function getObjID(object: EezObject, jsObject: any, key: string | undefined) {
     if (jsObject.objID != undefined) {
         return jsObject.objID;
     }
 
     if (jsObject.wireID != undefined) {
         return getObjIdFromWireId(object, jsObject, key);
+    }
+
+    return undefined;
+}
+
+function getNewObjID(
+    currentObjID: string | undefined,
+    object: EezObject,
+    jsObject: any,
+    key: string | undefined
+) {
+    if (createNewObjectobjIDs) {
+        console.log("guid");
+        return guid();
+    }
+
+    if (currentObjID != undefined) {
+        return currentObjID;
     }
 
     return generateObjId(object, jsObject, key);
@@ -390,64 +363,49 @@ function getObjIdFromWireId(
     return objID;
 }
 
-function fixConnectionLines(project: Project) {
-    function findObjID(component: Component, wireID: string) {
-        if (component) {
-            let flow;
+export function rewireBegin() {
+    wireIDToObjID.clear();
+    oldObjID_to_newObjID.clear();
+}
 
-            if (
-                component instanceof
-                ProjectEditor.CallActionActionComponentClass
-            ) {
-                flow = ProjectEditor.findAction(project, component.action);
-            } else if (
-                component instanceof ProjectEditor.LayoutViewWidgetClass
-            ) {
-                flow = ProjectEditor.findPage(project, component.layout);
+export function rewireEnd(object: IEezObject) {
+    for (const connectionLine of visitObjects(object)) {
+        if (connectionLine instanceof ProjectEditor.ConnectionLineClass) {
+            if (connectionLine.source) {
+                const newSource =
+                    wireIDToObjID.get(connectionLine.source) ||
+                    oldObjID_to_newObjID.get(connectionLine.source);
+                if (newSource != undefined) {
+                    connectionLine.source = newSource;
+                }
             }
 
-            if (flow) {
-                const wireIDToObjID = flowToWireIDToObjID.get(flow);
-                if (wireIDToObjID) {
-                    return wireIDToObjID.get(wireID);
+            if (connectionLine.output) {
+                const newOutput =
+                    wireIDToObjID.get(connectionLine.output) ||
+                    oldObjID_to_newObjID.get(connectionLine.output);
+                if (newOutput != undefined) {
+                    connectionLine.output = newOutput;
+                }
+            }
+
+            if (connectionLine.target) {
+                const newTarget =
+                    wireIDToObjID.get(connectionLine.target) ||
+                    oldObjID_to_newObjID.get(connectionLine.target);
+                if (newTarget != undefined) {
+                    connectionLine.target = newTarget;
+                }
+            }
+
+            if (connectionLine.input) {
+                const newInput =
+                    wireIDToObjID.get(connectionLine.input) ||
+                    oldObjID_to_newObjID.get(connectionLine.input);
+                if (newInput != undefined) {
+                    connectionLine.input = newInput;
                 }
             }
         }
-        return undefined;
     }
-
-    function sourceComponent(connectionLine: ConnectionLine) {
-        return objectsMap.get(connectionLine.source) as Component;
-    }
-
-    function targetComponent(connectionLine: ConnectionLine) {
-        return objectsMap.get(connectionLine.target) as Component;
-    }
-
-    function fixConnectionLine(connectionLine: ConnectionLine) {
-        const outputObjID = findObjID(
-            sourceComponent(connectionLine),
-            connectionLine.output
-        );
-        if (outputObjID) {
-            connectionLine.output = outputObjID;
-        }
-
-        const inputObjID = findObjID(
-            targetComponent(connectionLine),
-            connectionLine.input
-        );
-        if (inputObjID) {
-            connectionLine.input = inputObjID;
-        }
-    }
-
-    function fixConnectionLinesInFlow(flow: Flow) {
-        flow.connectionLines.forEach(fixConnectionLine);
-    }
-
-    const objectsMap = project._objectsMap;
-
-    project.pages.forEach(fixConnectionLinesInFlow);
-    project.actions.forEach(fixConnectionLinesInFlow);
 }

@@ -774,6 +774,31 @@ export const builtInFunctions: {
             return "double";
         }
     },
+    "Math.pow": {
+        operationIndex: 68,
+        arity: 2,
+        args: ["base", "exponent"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => Math.pow(args[0], args[1]),
+        getValueType: (...args: ValueType[]) => {
+            if (
+                (args[0] != "integer" &&
+                    args[0] != "float" &&
+                    args[0] != "double") ||
+                (args[1] != "integer" &&
+                    args[1] != "float" &&
+                    args[1] != "double")
+            ) {
+                return "undefined";
+            }
+            if (args[0] == "float" && args[1] == "float") {
+                return "float";
+            }
+            return "double";
+        }
+    },
     "Math.log": {
         operationIndex: 39,
         arity: 1,

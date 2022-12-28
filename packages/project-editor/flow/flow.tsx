@@ -23,7 +23,7 @@ import {
     ProjectEditorStore,
     createObject,
     getClass,
-    objectToClipboardDataWithoutNewObjIds
+    objectToClipboardData
 } from "project-editor/store";
 import {
     ActionComponent,
@@ -402,6 +402,7 @@ export abstract class Flow extends EezObject {
                 hideInPropertyGrid: true
             }
         ],
+
         findPastePlaceInside: (
             flow: Flow,
             classInfo: ClassInfo,
@@ -511,101 +512,10 @@ export abstract class Flow extends EezObject {
     objectsToClipboardData(objects: IEezObject[]) {
         const flowFragment = new FlowFragment();
         flowFragment.addObjects(this, objects);
-        return objectToClipboardDataWithoutNewObjIds(flowFragment);
-    }
-
-    rewire() {
-        const flowFragment = new FlowFragment();
-        flowFragment.components = this.components;
-        flowFragment.connectionLines = this.connectionLines;
-        flowFragment.rewire();
-    }
-
-    pasteFlowFragment(pasteFlowFragment: FlowFragment, object: IEezObject) {
-        const projectEditorStore = getProjectEditorStore(this);
-
-        const flowFragment = createObject(
-            projectEditorStore,
-            pasteFlowFragment,
-            FlowFragment,
-            undefined,
-            true
+        return objectToClipboardData(
+            ProjectEditor.getProject(this)._DocumentStore,
+            flowFragment
         );
-
-        let closeCombineCommands = false;
-        if (!projectEditorStore.undoManager.combineCommands) {
-            projectEditorStore.undoManager.setCombineCommands(true);
-            closeCombineCommands = true;
-        }
-
-        let components: EezObject[] | undefined = undefined;
-
-        if (flowFragment.connectionLines.length > 0) {
-            projectEditorStore.addObjects(
-                this.connectionLines,
-                flowFragment.connectionLines
-            );
-
-            components = projectEditorStore.addObjects(
-                this.components,
-                flowFragment.components
-            );
-        } else {
-            if (
-                (object instanceof Widget ||
-                    object instanceof ProjectEditor.LVGLWidgetClass) &&
-                flowFragment.components.every(
-                    component => component instanceof Widget
-                )
-            ) {
-                let containerAncestor:
-                    | ContainerWidget
-                    | SelectWidget
-                    | LVGLPanelWidget
-                    | undefined = getAncestorOfType(
-                    getParent(getParent(object)),
-                    ContainerWidget.classInfo
-                ) as ContainerWidget | undefined;
-                if (!containerAncestor) {
-                    containerAncestor = getAncestorOfType(
-                        getParent(getParent(object)),
-                        SelectWidget.classInfo
-                    ) as SelectWidget | undefined;
-                    if (!containerAncestor) {
-                        containerAncestor = getAncestorOfType(
-                            getParent(getParent(object)),
-                            ProjectEditor.LVGLPanelWidgetClass.classInfo
-                        ) as LVGLPanelWidget | undefined;
-                    }
-                }
-
-                if (containerAncestor) {
-                    components = projectEditorStore.addObjects(
-                        containerAncestor instanceof
-                            ProjectEditor.LVGLWidgetClass
-                            ? containerAncestor.children
-                            : containerAncestor.widgets,
-                        flowFragment.components
-                    );
-                } else {
-                    components = projectEditorStore.addObjects(
-                        this.components,
-                        flowFragment.components
-                    );
-                }
-            } else {
-                components = projectEditorStore.addObjects(
-                    this.components,
-                    flowFragment.components
-                );
-            }
-        }
-
-        if (closeCombineCommands) {
-            projectEditorStore.undoManager.setCombineCommands(false);
-        }
-
-        return components;
     }
 
     deleteConnectionLines(component: Component) {
@@ -739,11 +649,93 @@ export class FlowFragment extends EezObject {
             }
         ) => {
             const flow = ProjectEditor.getFlow(clipboardData.pastePlace);
+            const pasteFlowFragment = clipboardData.serializedData
+                .object as FlowFragment;
 
-            return flow.pasteFlowFragment(
-                clipboardData.serializedData.object as FlowFragment,
-                object
+            const projectEditorStore = getProjectEditorStore(flow);
+
+            const flowFragment = createObject(
+                projectEditorStore,
+                pasteFlowFragment,
+                FlowFragment,
+                undefined,
+                false
             );
+
+            let closeCombineCommands = false;
+            if (!projectEditorStore.undoManager.combineCommands) {
+                projectEditorStore.undoManager.setCombineCommands(true);
+                closeCombineCommands = true;
+            }
+
+            let components: EezObject[] | undefined = undefined;
+
+            if (flowFragment.connectionLines.length > 0) {
+                projectEditorStore.addObjects(
+                    flow.connectionLines,
+                    flowFragment.connectionLines
+                );
+
+                components = projectEditorStore.addObjects(
+                    flow.components,
+                    flowFragment.components
+                );
+            } else {
+                if (
+                    (object instanceof Widget ||
+                        object instanceof ProjectEditor.LVGLWidgetClass) &&
+                    flowFragment.components.every(
+                        component => component instanceof Widget
+                    )
+                ) {
+                    let containerAncestor:
+                        | ContainerWidget
+                        | SelectWidget
+                        | LVGLPanelWidget
+                        | undefined = getAncestorOfType(
+                        getParent(getParent(object)),
+                        ContainerWidget.classInfo
+                    ) as ContainerWidget | undefined;
+                    if (!containerAncestor) {
+                        containerAncestor = getAncestorOfType(
+                            getParent(getParent(object)),
+                            SelectWidget.classInfo
+                        ) as SelectWidget | undefined;
+                        if (!containerAncestor) {
+                            containerAncestor = getAncestorOfType(
+                                getParent(getParent(object)),
+                                ProjectEditor.LVGLPanelWidgetClass.classInfo
+                            ) as LVGLPanelWidget | undefined;
+                        }
+                    }
+
+                    if (containerAncestor) {
+                        components = projectEditorStore.addObjects(
+                            containerAncestor instanceof
+                                ProjectEditor.LVGLWidgetClass
+                                ? containerAncestor.children
+                                : containerAncestor.widgets,
+                            flowFragment.components
+                        );
+                    } else {
+                        components = projectEditorStore.addObjects(
+                            flow.components,
+                            flowFragment.components
+                        );
+                    }
+                } else {
+                    components = projectEditorStore.addObjects(
+                        flow.components,
+                        flowFragment.components
+                    );
+                }
+            }
+
+            if (closeCombineCommands) {
+                projectEditorStore.undoManager.setCombineCommands(false);
+            }
+
+            return components;
         }
     };
 
@@ -795,34 +787,6 @@ export class FlowFragment extends EezObject {
                 ) as ConnectionLine;
                 this.connectionLines.push(clone);
             }
-        });
-
-        this.rewire();
-    }
-
-    rewire() {
-        const objIDMap = new Map<string, string>();
-
-        this.components.forEach((object: Component) => {
-            const objID = guid();
-            objIDMap.set(object.objID, objID);
-            object.objID = objID;
-
-            for (const object2 of visitObjects(object)) {
-                if (object2 != object && object2 instanceof Component) {
-                    const objID = guid();
-                    objIDMap.set(object2.objID, objID);
-                    object2.objID = objID;
-                }
-            }
-        });
-
-        this.connectionLines.forEach(connectionLine => {
-            connectionLine.objID = guid();
-            const newSource = objIDMap.get(connectionLine.source)!;
-            const newTarget = objIDMap.get(connectionLine.target)!;
-            connectionLine.source = newSource;
-            connectionLine.target = newTarget;
         });
     }
 }

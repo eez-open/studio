@@ -20,44 +20,39 @@ import {
     isArray,
     isObject,
     objectToJson,
-    ProjectEditorStore
+    ProjectEditorStore,
+    rewireBegin,
+    rewireEnd
 } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const CLIPOARD_DATA_ID = "application/eez-studio-project-editor-data";
 
-export function cloneObjectWithNewObjIds(
+function cloneObjectWithNewObjIds(
     projectEditorStore: ProjectEditorStore,
     object: IEezObject
 ) {
-    const clonedObject = createObject(
+    return createObject(
         projectEditorStore,
         toJS(object) as any,
         getClass(object),
         undefined,
         true
-    ) as EezObject;
-
-    return objectToJson(clonedObject);
+    );
 }
 
 export function objectToClipboardData(
     projectEditorStore: ProjectEditorStore,
     object: IEezObject
 ): string {
-    return JSON.stringify({
-        objectClassName: getClass(object).name,
-        object: cloneObjectWithNewObjIds(projectEditorStore, object)
-    });
-}
+    rewireBegin();
+    const clonedObject = cloneObjectWithNewObjIds(projectEditorStore, object);
+    rewireEnd(clonedObject);
 
-export function objectToClipboardDataWithoutNewObjIds(
-    object: IEezObject
-): string {
     return JSON.stringify({
         objectClassName: getClass(object).name,
-        object: objectToJson(object)
+        object: objectToJson(clonedObject)
     });
 }
 
@@ -65,16 +60,19 @@ export function objectsToClipboardData(
     projectEditorStore: ProjectEditorStore,
     objects: IEezObject[]
 ): string {
-    console.log("objectsToClipboardData");
+    rewireBegin();
+    const clonedObjects = objects.map(object =>
+        cloneObjectWithNewObjIds(projectEditorStore, object)
+    );
+    rewireEnd(clonedObjects);
+
     return JSON.stringify({
         objectClassName: getClass(objects[0]).name,
-        objects: objects.map(object =>
-            cloneObjectWithNewObjIds(projectEditorStore, object)
-        )
+        objects: clonedObjects.map(clonedObject => objectToJson(clonedObject))
     });
 }
 
-export function clipboardDataToObject(
+function clipboardDataToObject(
     projectEditorStore: ProjectEditorStore,
     data: string
 ) {

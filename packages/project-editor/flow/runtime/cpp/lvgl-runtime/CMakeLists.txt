@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 project(lvgl_runtime)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 --no-entry")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -gsource-map --no-entry")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s DEMANGLE_SUPPORT=1 -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0 -s INITIAL_MEMORY=83886080 -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_RUNTIME_METHODS=allocateUTF8 --pre-js ${PROJECT_SOURCE_DIR}/pre.js --post-js ${PROJECT_SOURCE_DIR}/post.js")
 
 include_directories(${PROJECT_SOURCE_DIR})

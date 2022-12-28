@@ -1175,12 +1175,12 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  964896: ($0, $1) => { freeComponentExecutionState($0, $1); },  
- 964937: ($0) => { startToDebuggerMessage($0); },  
- 964969: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 965044: ($0) => { finishToDebuggerMessage($0); },  
- 965077: ($0, $1) => { onArrayValueFree($0, $1); },  
- 965107: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
+  965440: ($0, $1) => { freeComponentExecutionState($0, $1); },  
+ 965481: ($0) => { startToDebuggerMessage($0); },  
+ 965513: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 965588: ($0) => { finishToDebuggerMessage($0); },  
+ 965621: ($0, $1) => { onArrayValueFree($0, $1); },  
+ 965651: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
 };
 
 
@@ -4321,9 +4321,6 @@ var ___wasm_call_ctors = Module["___wasm_call_ctors"] = createExportWrapper("__w
 var _init = Module["_init"] = createExportWrapper("init");
 
 /** @type {function(...*):?} */
-var _malloc = Module["_malloc"] = createExportWrapper("malloc");
-
-/** @type {function(...*):?} */
 var _mainLoop = Module["_mainLoop"] = createExportWrapper("mainLoop");
 
 /** @type {function(...*):?} */
@@ -4337,6 +4334,9 @@ var _onPointerEvent = Module["_onPointerEvent"] = createExportWrapper("onPointer
 
 /** @type {function(...*):?} */
 var _onMouseWheelEvent = Module["_onMouseWheelEvent"] = createExportWrapper("onMouseWheelEvent");
+
+/** @type {function(...*):?} */
+var _malloc = Module["_malloc"] = createExportWrapper("malloc");
 
 /** @type {function(...*):?} */
 var _createUndefinedValue = Module["_createUndefinedValue"] = createExportWrapper("createUndefinedValue");
