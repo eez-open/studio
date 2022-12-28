@@ -3901,9 +3901,10 @@ export class LVGLTextareaWidget extends LVGLWidget {
             !this.placeholder ? 0 : runtime.wasm.allocateUTF8(this.placeholder),
             this.oneLineMode,
             this.passwordMode,
-            !this.acceptedCharacters
-                ? 0
-                : runtime.wasm.allocateUTF8(this.acceptedCharacters),
+            (!runtime.isEditor || this.textType != "expression") &&
+                this.acceptedCharacters
+                ? runtime.allocateUTF8(this.acceptedCharacters, true)
+                : 0,
             this.maxTextLength
         );
 

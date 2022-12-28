@@ -170,7 +170,6 @@ EM_PORT_API(lv_obj_t *) lvglCreateTextarea(lv_obj_t *parentObj, int32_t index, l
     lv_obj_set_size(obj, w, h);
     if (accepted_characters) {
         lv_textarea_set_accepted_chars(obj, accepted_characters);
-        free(accepted_characters);
     }
     lv_textarea_set_max_length(obj, max_text_length);
     if (text != 0) {

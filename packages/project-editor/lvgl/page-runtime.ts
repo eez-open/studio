@@ -169,6 +169,23 @@ export abstract class LVGLPageRuntime {
         return this.loadFont(font);
     }
 
+    strings: number[] = [];
+
+    allocateUTF8(str: string, free: boolean) {
+        const stringPtr = this.wasm.allocateUTF8(str);
+        if (free) {
+            this.strings.push(stringPtr);
+        }
+        return stringPtr;
+    }
+
+    freeStrings() {
+        for (const stringPtr of this.strings) {
+            this.wasm._free(stringPtr);
+        }
+        this.strings = [];
+    }
+
     static detachRuntimeFromPage(page: Page) {
         runInAction(() => {
             const runtime = page._lvglRuntime;
@@ -244,6 +261,8 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                 });
 
                 this.wasm._lvglClearTimeline();
+
+                this.freeStrings();
 
                 const pageObj = this.page.lvglCreate(this, 0).obj;
                 if (!pageObj) {
