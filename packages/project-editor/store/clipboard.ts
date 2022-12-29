@@ -82,14 +82,17 @@ function clipboardDataToObject(
     if (aClass) {
         serializedData.classInfo = aClass.classInfo;
         if (serializedData.object) {
+            rewireBegin();
             serializedData.object = createObject(
                 projectEditorStore,
                 serializedData.object,
                 aClass,
                 undefined,
-                false
+                true
             ) as EezObject;
+            rewireEnd(serializedData.object);
         } else if (serializedData.objects) {
+            rewireBegin();
             serializedData.objects = serializedData.objects.map(
                 object =>
                     createObject(
@@ -97,9 +100,10 @@ function clipboardDataToObject(
                         object,
                         aClass,
                         undefined,
-                        false
+                        true
                     ) as EezObject
             );
+            rewireEnd(serializedData.objects);
         }
     }
 
