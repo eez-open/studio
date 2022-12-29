@@ -2112,14 +2112,13 @@ export class CallActionActionComponent extends ActionComponent {
                     })
                 );
 
-                if (action.startComponent) {
-                    inputs.unshift({
-                        name: "@seqin",
-                        type: "any" as ValueType,
-                        isSequenceInput: true,
-                        isOptionalInput: false
-                    });
-                }
+                inputs.unshift({
+                    name: "@seqin",
+                    type: "any" as ValueType,
+                    isSequenceInput: true,
+                    isOptionalInput: !action.startComponent,
+                    alwaysBuild: action.startComponent ? true : false
+                });
             }
         } else {
             inputs = [];

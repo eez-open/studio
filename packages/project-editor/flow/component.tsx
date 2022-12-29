@@ -692,6 +692,8 @@ export interface ComponentInput {
         | boolean
         | ((component: Component, componentInput: ComponentInput) => boolean);
 
+    alwaysBuild?: boolean;
+
     displayName?:
         | ((component: Component, componentInput: ComponentInput) => string)
         | string;
@@ -2448,6 +2450,7 @@ export class Component extends EezObject {
         return this.inputs.filter(
             input =>
                 input.name != "@seqin" ||
+                input.alwaysBuild === true ||
                 flow.connectionLines.find(
                     connectionLine =>
                         connectionLine.targetComponent == this &&
