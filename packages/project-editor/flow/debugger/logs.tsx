@@ -8,7 +8,11 @@ import {
     getObjectPathAsString
 } from "project-editor/store";
 import type { ConnectionLine } from "project-editor/flow/flow";
-import type { FlowState, RuntimeBase } from "project-editor/flow/runtime";
+import type {
+    FlowState,
+    QueueTask,
+    RuntimeBase
+} from "project-editor/flow/runtime";
 import {
     Component,
     getInputDisplayName,
@@ -63,12 +67,12 @@ export class ActionEndLogItem extends LogItem {
 }
 
 export class ExecuteComponentLogItem extends LogItem {
-    constructor(flowState: FlowState | undefined, sourceComponent: Component) {
-        super("debug", undefined, flowState, sourceComponent);
+    constructor(public queueTask: QueueTask) {
+        super("debug", undefined, queueTask.flowState, queueTask.component);
     }
 
     get label() {
-        return `Execute component: ${getLabel(this.component!)}`;
+        return `Execute component: ${getQueueTaskLabel(this.queueTask)}`;
     }
 }
 
@@ -257,4 +261,28 @@ export class RuntimeLogs {
             return logItem;
         });
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function getFlowStateLabel(flowState: FlowState) {
+    return `${getLabel(flowState.flow)} (${flowState.flowStateIndex})`;
+}
+
+function getFullFlowStateLabel(flowState: FlowState): string {
+    return flowState.parentFlowState
+        ? `${getFullFlowStateLabel(
+              flowState.parentFlowState
+          )} / ${getFlowStateLabel(flowState)}`
+        : getFlowStateLabel(flowState);
+}
+
+export function getQueueTaskLabel(queueTask: QueueTask) {
+    return `${getFullFlowStateLabel(queueTask.flowState)} / ${
+        queueTask.connectionLine &&
+        queueTask.connectionLine.sourceComponent &&
+        queueTask.connectionLine.targetComponent
+            ? getLabel(queueTask.connectionLine)
+            : getLabel(queueTask.component)
+    }`;
 }

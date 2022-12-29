@@ -37,11 +37,12 @@ function writeDebuggerBuffer(wasmModuleId: number, arr: any) {
     if (!WasmFlowRuntime) {
         return;
     }
+
     const data: WorkerToRenderMessage = {
         messageToDebugger: new Uint8Array(arr)
     };
 
-    WasmFlowRuntime.postWorkerToRendererMessage(data);
+    setTimeout(() => WasmFlowRuntime.postWorkerToRendererMessage(data));
 }
 
 function finishToDebuggerMessage(wasmModuleId: number) {}
@@ -79,7 +80,7 @@ function executeScpi(
         }
     };
 
-    WasmFlowRuntime.postWorkerToRendererMessage(data);
+    setTimeout(() => WasmFlowRuntime.postWorkerToRendererMessage(data));
 }
 
 function executeDashboardComponent(
@@ -118,7 +119,8 @@ function onArrayValueFree(wasmModuleId: number, ptr: number) {
     const data: WorkerToRenderMessage = {
         freeArrayValue: arrayValue
     };
-    WasmFlowRuntime.postWorkerToRendererMessage(data);
+
+    setTimeout(() => WasmFlowRuntime.postWorkerToRendererMessage(data));
 }
 
 function getLvglImageByName(wasmModuleId: number, name: string) {

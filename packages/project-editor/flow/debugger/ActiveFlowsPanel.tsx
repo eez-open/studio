@@ -4,7 +4,7 @@ import classNames from "classnames";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
 import { action, computed, makeObservable } from "mobx";
 import { FlowState, RuntimeBase } from "project-editor/flow/runtime";
-import { getLabel } from "project-editor/store";
+import { getFlowStateLabel } from "project-editor/flow/debugger/logs";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -54,7 +54,7 @@ const FlowsTree = observer(
                                         : undefined
                                 }}
                             >
-                                {getLabel(flowState.flow)}
+                                {getFlowStateLabel(flowState)}
                             </span>
                         </div>
                     ),

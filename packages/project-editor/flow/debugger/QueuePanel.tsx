@@ -5,8 +5,8 @@ import { Panel } from "project-editor/ui-components/Panel";
 import { action, computed, makeObservable } from "mobx";
 import { QueueTask, RuntimeBase } from "project-editor/flow/runtime";
 import { IconAction } from "eez-studio-ui/action";
-import { getLabel } from "project-editor/store";
 import { DebugInfoRuntime } from "project-editor/flow/debug-info-runtime";
+import { getQueueTaskLabel } from "project-editor/flow/debugger/logs";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -183,24 +183,12 @@ const QueueList = observer(
         }
 
         get rootNode(): ITreeNode<QueueTask> {
-            function getQueueTaskLabel(queueTask: QueueTask) {
-                if (
-                    queueTask.connectionLine &&
-                    queueTask.connectionLine.sourceComponent &&
-                    queueTask.connectionLine.targetComponent
-                ) {
-                    return <div>{getLabel(queueTask.connectionLine)}</div>;
-                } else {
-                    return <div>{getLabel(queueTask.component)}</div>;
-                }
-            }
-
             function getChildren(
                 queueTasks: QueueTask[]
             ): ITreeNode<QueueTask>[] {
                 return queueTasks.map(queueTask => ({
                     id: queueTask.id.toString(),
-                    label: getQueueTaskLabel(queueTask),
+                    label: <div>{getQueueTaskLabel(queueTask)}</div>,
                     children: [],
                     selected: queueTask == selectedQueueTask,
                     expanded: false,

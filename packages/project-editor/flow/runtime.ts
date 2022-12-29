@@ -815,7 +815,8 @@ export class FlowState {
         public runtime: RuntimeBase,
         public flow: Flow,
         public parentFlowState?: FlowState,
-        public component?: Component
+        public component?: Component,
+        public flowStateIndex?: number
     ) {
         makeObservable(this, {
             flowStates: observable,

@@ -214,6 +214,7 @@ function buildComponent(
     const outputs = component.buildOutputs;
     outputs.forEach((output, componentOutputIndex) => {
         if (output.type == "output") {
+            // output to flow
             assets.registerComponentOutput(
                 component,
                 output.name,
@@ -221,6 +222,7 @@ function buildComponent(
                 componentOutputIndex
             );
         } else {
+            // output to action flow
             assets.registerComponentOutput(
                 component,
                 output.name,

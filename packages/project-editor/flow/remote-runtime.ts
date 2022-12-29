@@ -931,10 +931,7 @@ export abstract class DebuggerConnectionBase {
                     {
                         if (runtime.queue.length > 0) {
                             runtime.logs.addLogItem(
-                                new ExecuteComponentLogItem(
-                                    runtime.queue[0].flowState,
-                                    runtime.queue[0].component
-                                )
+                                new ExecuteComponentLogItem(runtime.queue[0])
                             );
 
                             runtime.popTask();
@@ -1241,7 +1238,8 @@ export abstract class DebuggerConnectionBase {
                             runtime,
                             flow,
                             parentFlowState,
-                            parentComponent
+                            parentComponent,
+                            flowStateIndex
                         );
 
                         runtime.flowStateMap.set(flowStateIndex, {
