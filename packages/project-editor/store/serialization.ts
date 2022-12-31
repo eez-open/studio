@@ -284,7 +284,6 @@ function getNewObjID(
     key: string | undefined
 ) {
     if (createNewObjectobjIDs) {
-        console.log("guid");
         return guid();
     }
 

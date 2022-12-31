@@ -29,13 +29,6 @@ export function getConnectionLineShape(
             width: connectionLine.sourceComponent.width,
             height: connectionLine.sourceComponent.height
         };
-    } else {
-        sourceRect = {
-            left: sourcePositionX,
-            top: sourcePositionY,
-            width: 1,
-            height: 1
-        };
     }
 
     let targetRect;
@@ -45,13 +38,6 @@ export function getConnectionLineShape(
             top: connectionLine.targetComponent.absolutePositionPoint.y,
             width: connectionLine.targetComponent.width,
             height: connectionLine.targetComponent.height
-        };
-    } else {
-        targetRect = {
-            left: targetPositionX,
-            top: targetPositionY,
-            width: 1,
-            height: 1
         };
     }
 
@@ -79,20 +65,32 @@ export function getConnectionLineShape(
     }
 
     if (dx || dy) {
-        if (isObjectSelected(connectionLine.sourceComponent)) {
+        if (
+            isObjectSelected(connectionLine.sourceComponent) ||
+            (!connectionLine.isValidSource &&
+                isObjectSelected(connectionLine.targetComponent))
+        ) {
             sourcePositionX += dx;
             sourcePositionY += dy;
 
-            sourceRect.left += dx;
-            sourceRect.top += dy;
+            if (sourceRect) {
+                sourceRect.left += dx;
+                sourceRect.top += dy;
+            }
         }
 
-        if (isObjectSelected(connectionLine.targetComponent)) {
+        if (
+            isObjectSelected(connectionLine.targetComponent) ||
+            (!connectionLine.isValidTarget &&
+                isObjectSelected(connectionLine.sourceComponent))
+        ) {
             targetPositionX += dx;
             targetPositionY += dy;
 
-            targetRect.left += dx;
-            targetRect.top += dy;
+            if (targetRect) {
+                targetRect.left += dx;
+                targetRect.top += dy;
+            }
         }
     }
 

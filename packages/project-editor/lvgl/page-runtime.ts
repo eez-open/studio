@@ -269,8 +269,9 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                     console.error("pageObj is undefined");
                 }
 
-                const editor = getProjectEditorStore(this.page).editorsStore
-                    .activeEditor;
+                const editor = getProjectEditorStore(
+                    this.page
+                ).editorsStore.getEditorByObject(this.page);
                 if (editor) {
                     const pageTabState = editor.state as PageTabState;
                     if (pageTabState?.timeline?.isEditorActive) {

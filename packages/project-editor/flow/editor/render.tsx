@@ -142,6 +142,8 @@ export const ComponentEnclosure = observer(
     }> {
         elRef = React.createRef<HTMLDivElement>();
 
+        updateComponentTimeout: any;
+
         constructor(props: any) {
             super(props);
 
@@ -164,6 +166,11 @@ export const ComponentEnclosure = observer(
         }
 
         updateComponentGeometry() {
+            if (this.updateComponentTimeout) {
+                clearTimeout(this.updateComponentTimeout);
+                this.updateComponentTimeout = undefined;
+            }
+
             if (this.elRef.current && this.listIndex == 0) {
                 const component = this.props.component;
                 if (component instanceof ProjectEditor.PageClass) {
@@ -178,6 +185,12 @@ export const ComponentEnclosure = observer(
 
                 if (this.elRef.current.offsetParent == null) {
                     // do not calculate geometry if element is not visible
+
+                    this.updateComponentTimeout = setTimeout(() => {
+                        this.updateComponentTimeout = undefined;
+                        this.updateComponentGeometry();
+                    });
+
                     return;
                 }
 
@@ -186,9 +199,12 @@ export const ComponentEnclosure = observer(
                     this.elRef.current,
                     this.props.flowContext
                 );
+
                 runInAction(() => {
                     component.geometry = geometry;
                 });
+
+                return;
             }
         }
 
@@ -198,6 +214,13 @@ export const ComponentEnclosure = observer(
 
         componentDidUpdate() {
             this.updateComponentGeometry();
+        }
+
+        componentWillUnmount() {
+            if (this.updateComponentTimeout) {
+                clearTimeout(this.updateComponentTimeout);
+                this.updateComponentTimeout = undefined;
+            }
         }
 
         render() {

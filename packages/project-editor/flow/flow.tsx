@@ -255,6 +255,22 @@ export class ConnectionLine extends EezObject {
         });
     }
 
+    get isValidTarget() {
+        return (
+            this.targetComponent &&
+            this.targetComponent.inputs.find(input => input.name == this.input)
+        );
+    }
+
+    get isValidSource() {
+        return (
+            this.sourceComponent &&
+            this.sourceComponent.outputs.find(
+                output => output.name == this.output
+            )
+        );
+    }
+
     get sourceComponent() {
         const project = ProjectEditor.getProject(this);
         return project._objectsMap.get(this.source) as Component;
@@ -322,13 +338,13 @@ export class ConnectionLine extends EezObject {
         }
 
         if (this._sourcePosition && !this._targetPosition) {
-            targetPositionX = sourcePositionX + 20;
-            targetPositionY = sourcePositionY + 20;
+            targetPositionX = sourcePositionX + 50;
+            targetPositionY = sourcePositionY;
         }
 
         if (!this._sourcePosition && this._targetPosition) {
-            sourcePositionX = targetPositionX - 20;
-            sourcePositionY = targetPositionY - 20;
+            sourcePositionX = targetPositionX - 50;
+            sourcePositionY = targetPositionY;
         }
 
         return {

@@ -194,6 +194,10 @@ export class EditorsStore {
         });
     }
 
+    getEditorByObject(object: IEezObject) {
+        return this.editors.find(editor => editor.object == object);
+    }
+
     saveState() {
         for (const editor of this.editors) {
             if (editor.state && editor.state.saveState) {

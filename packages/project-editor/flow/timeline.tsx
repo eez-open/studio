@@ -1555,9 +1555,13 @@ class WidgetTimelinePath {
     }
 
     get pageTabState() {
-        const projectEditorStore = getProjectEditorStore(this.widget);
+        const page = getAncestorOfType<Page>(
+            this.widget,
+            ProjectEditor.PageClass.classInfo
+        )!;
+        const projectEditorStore = getProjectEditorStore(page);
 
-        const editor = projectEditorStore.editorsStore.activeEditor;
+        const editor = projectEditorStore.editorsStore.getEditorByObject(page);
         if (editor) {
             if (editor.object instanceof ProjectEditor.PageClass) {
                 return editor.state as PageTabState;
@@ -3030,13 +3034,14 @@ export function timelineStyleHook(
     if (flowContext.flowState) {
         timelinePosition = flowContext.flowState.timelinePosition;
     } else {
-        const editor = flowContext.projectEditorStore.editorsStore.activeEditor;
-        if (editor) {
-            if (editor.object instanceof ProjectEditor.PageClass) {
-                const pageTabState = editor.state as PageTabState;
-                if (pageTabState.timeline.isEditorActive) {
-                    timelinePosition = pageTabState.timeline.position;
-                }
+        const editor =
+            flowContext.projectEditorStore.editorsStore.getEditorByObject(
+                flowContext.document.flow.object
+            );
+        if (editor && editor.object instanceof ProjectEditor.PageClass) {
+            const pageTabState = editor.state as PageTabState;
+            if (pageTabState.timeline.isEditorActive) {
+                timelinePosition = pageTabState.timeline.position;
             }
         }
     }
