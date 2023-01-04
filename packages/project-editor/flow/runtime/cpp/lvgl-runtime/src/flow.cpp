@@ -15,6 +15,7 @@
 #include <eez/flow/debugger.h>
 #include <eez/flow/components.h>
 #include <eez/flow/flow_defs_v3.h>
+#include <eez/flow/operations.h>
 #include <eez/flow/lvgl_api.h>
 
 #include "flow.h"
@@ -392,6 +393,7 @@ struct UpdateTask {
     unsigned page_index;
     unsigned component_index;
     unsigned property_index;
+    void *subobj;
 };
 
 static UpdateTask *g_updateTask;
@@ -525,6 +527,24 @@ void flow_event_unchecked_callback(lv_event_t *e) {
     }
 }
 
+void flow_event_meter_tick_label_event_callback(lv_event_t *e) {
+    lv_obj_draw_part_dsc_t * draw_part_dsc = lv_event_get_draw_part_dsc(e);
+
+    // Be sure it's drawing meter related parts
+    if (draw_part_dsc->class_p != &lv_meter_class) return;
+
+    // Be sure it's drawing the ticks
+    if (draw_part_dsc->type != LV_METER_DRAW_PART_TICK) return;
+
+    g_eezFlowLvlgMeterTickIndex = draw_part_dsc->id;
+    FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+    const char *label = evalTextProperty(data->page_index, data->component_index, data->output_or_property_index, "Failed to evalute scale label in Meter widget");
+
+    strncpy(draw_part_dsc->text, label, 15);
+    draw_part_dsc->text[15] = 0;
+
+}
+
 void flow_event_callback_delete_user_data(lv_event_t *e) {
     lv_mem_free(e->user_data);
 }
@@ -533,13 +553,14 @@ void flow_event_callback_delete_user_data(lv_event_t *e) {
 
 std::vector<UpdateTask> updateTasks;
 
-void addUpdateTask(UpdateTaskType updateTaskType, lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
+void addUpdateTask(UpdateTaskType updateTaskType, lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index, void *subobj) {
     UpdateTask updateTask;
     updateTask.updateTaskType = updateTaskType;
     updateTask.obj = obj;
     updateTask.page_index = page_index;
     updateTask.component_index = component_index;
     updateTask.property_index = property_index;
+    updateTask.subobj = subobj;
     updateTasks.push_back(updateTask);
 }
 
@@ -611,6 +632,21 @@ void doUpdateTasks() {
                 if (new_val) lv_obj_add_flag(updateTask.obj, LV_OBJ_FLAG_CLICKABLE);
                 else lv_obj_clear_flag(updateTask.obj, LV_OBJ_FLAG_CLICKABLE);
             }
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_METER_INDICATOR_VALUE) {
+            int32_t new_val = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Indicator Value in Meter widget");
+            lv_meter_indicator_t *indicator = (lv_meter_indicator_t *)updateTask.subobj;
+            int32_t cur_val = indicator->start_value;
+            if (new_val != cur_val) lv_meter_set_indicator_value(updateTask.obj, indicator, new_val);
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_METER_INDICATOR_START_VALUE) {
+            int32_t new_val = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Indicator Start Value in Meter widget");
+            lv_meter_indicator_t *indicator = (lv_meter_indicator_t *)updateTask.subobj;
+            int32_t cur_val = indicator->start_value;
+            if (new_val != cur_val) lv_meter_set_indicator_start_value(updateTask.obj, indicator, new_val);
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_METER_INDICATOR_END_VALUE) {
+            int32_t new_val = evalIntegerProperty(updateTask.page_index, updateTask.component_index, updateTask.property_index, "Failed to evaluate Indicator End Value in Meter widget");
+            lv_meter_indicator_t *indicator = (lv_meter_indicator_t *)updateTask.subobj;
+            int32_t cur_val = indicator->end_value;
+            if (new_val != cur_val) lv_meter_set_indicator_end_value(updateTask.obj, indicator, new_val);
         }
         g_updateTask = nullptr;
     }

@@ -20,10 +20,13 @@ import {
     LVGL_REACTIVE_STATES,
     LVGL_REACTIVE_FLAGS,
     MessageType,
-    getClassInfoLvglProperties
+    getClassInfoLvglProperties,
+    EezObject,
+    ClassInfo
 } from "project-editor/core/object";
 
 import {
+    createObject,
     getAncestorOfType,
     getChildOfObject,
     getClassInfo,
@@ -45,6 +48,8 @@ import {
     AutoSize,
     Component,
     ComponentOutput,
+    isFlowProperty,
+    makeExpressionProperty,
     Widget
 } from "project-editor/flow/component";
 import { isTimelineEditorActive } from "project-editor/flow/timeline";
@@ -76,15 +81,24 @@ import {
     LV_EVENT_TEXTAREA_TEXT_CHANGED,
     LV_EVENT_DROPDOWN_SELECTED_CHANGED,
     LV_EVENT_ROLLER_SELECTED_CHANGED,
-    getCode
+    getCode,
+    getExpressionPropertyData,
+    LV_EVENT_METER_TICK_LABEL_EVENT
 } from "project-editor/lvgl/widget-common";
 import {
     expressionPropertyBuildEventHandlerSpecific,
     expressionPropertyBuildTickSpecific,
     LVGLPropertyType,
-    makeExpressionProperty
+    makeLvglExpressionProperty
 } from "project-editor/lvgl/expression-property";
 import { findLvglStyle, LVGLStyle } from "project-editor/lvgl/style";
+import {
+    colorRgbToHexNumStr,
+    colorRgbToNum
+} from "project-editor/lvgl/style-helper";
+import { showGenericDialog } from "eez-studio-ui/generic-dialog";
+import { humanize } from "eez-studio-shared/string";
+import { checkExpression } from "project-editor/flow/expression";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -393,7 +407,7 @@ export class LVGLWidget extends Widget {
                 typeClass: LVGLWidget,
                 hideInPropertyGrid: true
             },
-            ...makeExpressionProperty(
+            ...makeLvglExpressionProperty(
                 "hiddenFlag",
                 "boolean",
                 "input",
@@ -405,7 +419,7 @@ export class LVGLWidget extends Widget {
                         !flagEnabledInWidget(widget, "HIDDEN")
                 }
             ),
-            ...makeExpressionProperty(
+            ...makeLvglExpressionProperty(
                 "clickableFlag",
                 "boolean",
                 "input",
@@ -484,7 +498,7 @@ export class LVGLWidget extends Widget {
                 enumDisallowUndefined: true,
                 propertyGridGroup: flagsGroup
             },
-            ...makeExpressionProperty(
+            ...makeLvglExpressionProperty(
                 "checkedState",
                 "boolean",
                 "assignable",
@@ -496,7 +510,7 @@ export class LVGLWidget extends Widget {
                         !stateEnabledInWidget(widget, "CHECKED")
                 }
             ),
-            ...makeExpressionProperty(
+            ...makeLvglExpressionProperty(
                 "disabledState",
                 "boolean",
                 "input",
@@ -888,38 +902,6 @@ export class LVGLWidget extends Widget {
         ];
     }
 
-    getExpressionPropertyData(runtime: LVGLPageRuntime, propertyName: string) {
-        if (!runtime.wasm.assetsMap) {
-            return undefined;
-        }
-
-        const isExpr = (this as any)[propertyName + "Type"] == "expression";
-
-        if (!isExpr) {
-            return undefined;
-        }
-
-        const pagePath = getObjectPathAsString(runtime.page);
-        const flowIndex = runtime.wasm.assetsMap.flowIndexes[pagePath];
-        if (flowIndex == undefined) {
-            return undefined;
-        }
-        const flow = runtime.wasm.assetsMap.flows[flowIndex];
-        const componentPath = getObjectPathAsString(this);
-        const componentIndex = flow.componentIndexes[componentPath];
-        if (componentIndex == undefined) {
-            return undefined;
-        }
-
-        const component = flow.components[componentIndex];
-        const propertyIndex = component.propertyIndexes[propertyName];
-        if (propertyIndex == undefined) {
-            return undefined;
-        }
-
-        return { flowIndex, componentIndex, propertyIndex };
-    }
-
     get allStates() {
         const states = this.states.split(
             "|"
@@ -1072,8 +1054,9 @@ export class LVGLWidget extends Widget {
                 );
             }
 
-            const hiddenFlagExpr = this.getExpressionPropertyData(
+            const hiddenFlagExpr = getExpressionPropertyData(
                 runtime,
+                this,
                 "hiddenFlag"
             );
             if (hiddenFlagExpr) {
@@ -1085,8 +1068,9 @@ export class LVGLWidget extends Widget {
                 );
             }
 
-            const clickableFlagExpr = this.getExpressionPropertyData(
+            const clickableFlagExpr = getExpressionPropertyData(
                 runtime,
+                this,
                 "clickableFlag"
             );
             if (clickableFlagExpr) {
@@ -1126,8 +1110,9 @@ export class LVGLWidget extends Widget {
                 );
             }
 
-            const checkedStateExpr = this.getExpressionPropertyData(
+            const checkedStateExpr = getExpressionPropertyData(
                 runtime,
+                this,
                 "checkedState"
             );
             if (checkedStateExpr) {
@@ -1139,8 +1124,9 @@ export class LVGLWidget extends Widget {
                 );
             }
 
-            const disabledStateExpr = this.getExpressionPropertyData(
+            const disabledStateExpr = getExpressionPropertyData(
                 runtime,
+                this,
                 "disabledState"
             );
             if (disabledStateExpr) {
@@ -1196,8 +1182,9 @@ export class LVGLWidget extends Widget {
     }
 
     createEventHandler(runtime: LVGLPageRuntime, obj: number) {
-        const checkedStateExpr = this.getExpressionPropertyData(
+        const checkedStateExpr = getExpressionPropertyData(
             runtime,
+            this,
             "checkedState"
         );
         if (checkedStateExpr) {
@@ -1225,6 +1212,8 @@ export class LVGLWidget extends Widget {
         if (build.isLvglObjectAccessible(this)) {
             build.line(`${build.getLvglObjectAccessor(this)} = obj;`);
         }
+
+        this.localStyles.lvglBuildRemoveStyles(build);
 
         build.line(
             `lv_obj_set_pos(obj, ${this.lvglBuildLeft}, ${this.lvglBuildTop});`
@@ -1721,7 +1710,7 @@ export class LVGLLabelWidget extends LVGLWidget {
         },
 
         properties: [
-            ...makeExpressionProperty(
+            ...makeLvglExpressionProperty(
                 "text",
                 "string",
                 "input",
@@ -1829,11 +1818,12 @@ export class LVGLLabelWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
-        const textExpr = this.getExpressionPropertyData(runtime, "text");
+        const textExpr = getExpressionPropertyData(runtime, this, "text");
 
         const obj = runtime.wasm._lvglCreateLabel(
             parentObj,
             runtime.getWidgetIndex(this),
+            this.localStyles.getDisabledPartsCode(),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -1963,6 +1953,7 @@ export class LVGLButtonWidget extends LVGLWidget {
         return runtime.wasm._lvglCreateButton(
             parentObj,
             runtime.getWidgetIndex(this),
+            this.localStyles.getDisabledPartsCode(),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -2049,6 +2040,7 @@ export class LVGLPanelWidget extends LVGLWidget {
         return runtime.wasm._lvglCreatePanel(
             parentObj,
             runtime.getWidgetIndex(this),
+            this.localStyles.getDisabledPartsCode(),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -2209,6 +2201,7 @@ export class LVGLImageWidget extends LVGLWidget {
         const obj = runtime.wasm._lvglCreateImage(
             parentObj,
             runtime.getWidgetIndex(this),
+            this.localStyles.getDisabledPartsCode(),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -2320,7 +2313,7 @@ export class LVGLSliderWidget extends LVGLWidget {
                 enumDisallowUndefined: true,
                 propertyGridGroup: sliderGroup
             },
-            ...makeExpressionProperty(
+            ...makeLvglExpressionProperty(
                 "value",
                 "integer",
                 "assignable",
@@ -2329,7 +2322,7 @@ export class LVGLSliderWidget extends LVGLWidget {
                     propertyGridGroup: sliderGroup
                 }
             ),
-            ...makeExpressionProperty(
+            ...makeLvglExpressionProperty(
                 "valueLeft",
                 "integer",
                 "assignable",
@@ -2428,15 +2421,16 @@ export class LVGLSliderWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
-        const valueExpr = this.getExpressionPropertyData(runtime, "value");
+        const valueExpr = getExpressionPropertyData(runtime, this, "value");
         const valueLeftExpr =
             this.mode == "RANGE"
-                ? this.getExpressionPropertyData(runtime, "valueLeft")
+                ? getExpressionPropertyData(runtime, this, "valueLeft")
                 : undefined;
 
         const obj = runtime.wasm._lvglCreateSlider(
             parentObj,
             runtime.getWidgetIndex(this),
+            this.localStyles.getDisabledPartsCode(),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -2474,7 +2468,7 @@ export class LVGLSliderWidget extends LVGLWidget {
     }
 
     override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
-        const valueExpr = this.getExpressionPropertyData(runtime, "value");
+        const valueExpr = getExpressionPropertyData(runtime, this, "value");
         if (valueExpr) {
             runtime.wasm._lvglAddObjectFlowCallback(
                 obj,
@@ -2487,7 +2481,7 @@ export class LVGLSliderWidget extends LVGLWidget {
 
         const valueLeftExpr =
             this.mode == "RANGE"
-                ? this.getExpressionPropertyData(runtime, "valueLeft")
+                ? getExpressionPropertyData(runtime, this, "valueLeft")
                 : undefined;
         if (valueLeftExpr) {
             runtime.wasm._lvglAddObjectFlowCallback(
@@ -2606,7 +2600,7 @@ export class LVGLRollerWidget extends LVGLWidget {
                 type: PropertyType.MultilineText,
                 propertyGridGroup: rollerGroup
             },
-            ...makeExpressionProperty(
+            ...makeLvglExpressionProperty(
                 "selected",
                 "integer",
                 "assignable",
@@ -2708,14 +2702,16 @@ export class LVGLRollerWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
-        const selectedExpr = this.getExpressionPropertyData(
+        const selectedExpr = getExpressionPropertyData(
             runtime,
+            this,
             "selected"
         );
 
         const obj = runtime.wasm._lvglCreateRoller(
             parentObj,
             runtime.getWidgetIndex(this),
+            this.localStyles.getDisabledPartsCode(),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -2738,8 +2734,9 @@ export class LVGLRollerWidget extends LVGLWidget {
     }
 
     override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
-        const selectedExpr = this.getExpressionPropertyData(
+        const selectedExpr = getExpressionPropertyData(
             runtime,
+            this,
             "selected"
         );
         if (selectedExpr) {
@@ -2864,6 +2861,7 @@ export class LVGLSwitchWidget extends LVGLWidget {
         return runtime.wasm._lvglCreateSwitch(
             parentObj,
             runtime.getWidgetIndex(this),
+            this.localStyles.getDisabledPartsCode(),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -2926,7 +2924,7 @@ export class LVGLBarWidget extends LVGLWidget {
                 enumDisallowUndefined: true,
                 propertyGridGroup: barGroup
             },
-            ...makeExpressionProperty(
+            ...makeLvglExpressionProperty(
                 "value",
                 "integer",
                 "input",
@@ -2935,7 +2933,7 @@ export class LVGLBarWidget extends LVGLWidget {
                     propertyGridGroup: barGroup
                 }
             ),
-            ...makeExpressionProperty(
+            ...makeLvglExpressionProperty(
                 "valueStart",
                 "integer",
                 "input",
@@ -3019,15 +3017,16 @@ export class LVGLBarWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
-        const valueExpr = this.getExpressionPropertyData(runtime, "value");
+        const valueExpr = getExpressionPropertyData(runtime, this, "value");
         const valueStartExpr =
             this.mode == "RANGE"
-                ? this.getExpressionPropertyData(runtime, "valueStart")
+                ? getExpressionPropertyData(runtime, this, "valueStart")
                 : undefined;
 
         const obj = runtime.wasm._lvglCreateBar(
             parentObj,
             runtime.getWidgetIndex(this),
+            this.localStyles.getDisabledPartsCode(),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -3146,7 +3145,7 @@ export class LVGLDropdownWidget extends LVGLWidget {
                 type: PropertyType.MultilineText,
                 propertyGridGroup: dropdownGroup
             },
-            ...makeExpressionProperty(
+            ...makeLvglExpressionProperty(
                 "selected",
                 "integer",
                 "assignable",
@@ -3225,14 +3224,16 @@ export class LVGLDropdownWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
-        const selectedExpr = this.getExpressionPropertyData(
+        const selectedExpr = getExpressionPropertyData(
             runtime,
+            this,
             "selected"
         );
 
         const obj = runtime.wasm._lvglCreateDropdown(
             parentObj,
             runtime.getWidgetIndex(this),
+            this.localStyles.getDisabledPartsCode(),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -3254,8 +3255,9 @@ export class LVGLDropdownWidget extends LVGLWidget {
     }
 
     override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
-        const selectedExpr = this.getExpressionPropertyData(
+        const selectedExpr = getExpressionPropertyData(
             runtime,
+            this,
             "selected"
         );
         if (selectedExpr) {
@@ -3350,7 +3352,7 @@ export class LVGLArcWidget extends LVGLWidget {
                 type: PropertyType.Number,
                 propertyGridGroup: arcGroup
             },
-            ...makeExpressionProperty(
+            ...makeLvglExpressionProperty(
                 "value",
                 "integer",
                 "assignable",
@@ -3472,11 +3474,12 @@ export class LVGLArcWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
-        const valueExpr = this.getExpressionPropertyData(runtime, "value");
+        const valueExpr = getExpressionPropertyData(runtime, this, "value");
 
         const obj = runtime.wasm._lvglCreateArc(
             parentObj,
             runtime.getWidgetIndex(this),
+            this.localStyles.getDisabledPartsCode(),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -3503,7 +3506,7 @@ export class LVGLArcWidget extends LVGLWidget {
     }
 
     override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
-        const valueExpr = this.getExpressionPropertyData(runtime, "value");
+        const valueExpr = getExpressionPropertyData(runtime, this, "value");
         if (valueExpr) {
             runtime.wasm._lvglAddObjectFlowCallback(
                 obj,
@@ -3632,6 +3635,7 @@ export class LVGLSpinnerWidget extends LVGLWidget {
         return runtime.wasm._lvglCreateSpinner(
             parentObj,
             runtime.getWidgetIndex(this),
+            this.localStyles.getDisabledPartsCode(),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -3725,6 +3729,7 @@ export class LVGLCheckboxWidget extends LVGLWidget {
         return runtime.wasm._lvglCreateCheckbox(
             parentObj,
             runtime.getWidgetIndex(this),
+            this.localStyles.getDisabledPartsCode(),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -3768,7 +3773,7 @@ export class LVGLTextareaWidget extends LVGLWidget {
         componentPaletteGroupName: "!1Basic Widgets",
 
         properties: [
-            ...makeExpressionProperty(
+            ...makeLvglExpressionProperty(
                 "text",
                 "string",
                 "input",
@@ -3882,11 +3887,12 @@ export class LVGLTextareaWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
-        const textExpr = this.getExpressionPropertyData(runtime, "text");
+        const textExpr = getExpressionPropertyData(runtime, this, "text");
 
         const obj = runtime.wasm._lvglCreateTextarea(
             parentObj,
             runtime.getWidgetIndex(this),
+            this.localStyles.getDisabledPartsCode(),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -3925,7 +3931,7 @@ export class LVGLTextareaWidget extends LVGLWidget {
     }
 
     override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
-        const valueExpr = this.getExpressionPropertyData(runtime, "text");
+        const valueExpr = getExpressionPropertyData(runtime, this, "text");
         if (valueExpr) {
             runtime.wasm._lvglAddObjectFlowCallback(
                 obj,
@@ -4162,6 +4168,7 @@ export class LVGLCalendarWidget extends LVGLWidget {
         const obj = runtime.wasm._lvglCreateCalendar(
             parentObj,
             runtime.getWidgetIndex(this),
+            this.localStyles.getDisabledPartsCode(),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -4311,6 +4318,7 @@ export class LVGLColorwheelWidget extends LVGLWidget {
         const obj = runtime.wasm._lvglCreateColorwheel(
             parentObj,
             runtime.getWidgetIndex(this),
+            this.localStyles.getDisabledPartsCode(),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -4571,6 +4579,7 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
         const obj = runtime.wasm._lvglCreateImgbutton(
             parentObj,
             runtime.getWidgetIndex(this),
+            this.localStyles.getDisabledPartsCode(),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -4918,6 +4927,7 @@ export class LVGLKeyboardWidget extends LVGLWidget {
         const obj = runtime.wasm._lvglCreateKeyboard(
             parentObj,
             runtime.getWidgetIndex(this),
+            this.localStyles.getDisabledPartsCode(),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -5067,6 +5077,7 @@ export class LVGLChartWidget extends LVGLWidget {
         const obj = runtime.wasm._lvglCreateChart(
             parentObj,
             runtime.getWidgetIndex(this),
+            this.localStyles.getDisabledPartsCode(),
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -5085,6 +5096,1505 @@ export class LVGLChartWidget extends LVGLWidget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const meterGroup: IPropertyGridGroupDefinition = {
+    id: "lvgl-meter",
+    title: "Meter",
+    position: SPECIFIC_GROUP_POSITION
+};
+
+const LVGL_METER_INDICATOR_TYPES = {
+    NEEDLE_IMG: 0,
+    NEEDLE_LINE: 1,
+    SCALE_LINES: 2,
+    ARC: 3
+};
+
+export class LVGLMeterIndicator extends EezObject {
+    type: keyof typeof LVGL_METER_INDICATOR_TYPES;
+
+    static classInfo: ClassInfo = {
+        getClass: function (object: LVGLMeterIndicator) {
+            if (object.type == "NEEDLE_IMG") return LVGLMeterIndicatorNeedleImg;
+            else if (object.type == "NEEDLE_LINE")
+                return LVGLMeterIndicatorNeedleLine;
+            else if (object.type == "SCALE_LINES")
+                return LVGLMeterIndicatorScaleLines;
+            return LVGLMeterIndicatorArc;
+        },
+
+        properties: [
+            {
+                name: "type",
+                type: PropertyType.Enum,
+                enumItems: Object.keys(LVGL_METER_INDICATOR_TYPES).map(id => ({
+                    id
+                })),
+                enumDisallowUndefined: true,
+                hideInPropertyGrid: true
+            }
+        ],
+
+        newItem: async (object: LVGLMeterIndicator[]) => {
+            const project = ProjectEditor.getProject(object);
+
+            const result = await showGenericDialog({
+                dialogDefinition: {
+                    title: "New LVGL Action",
+                    fields: [
+                        {
+                            name: "type",
+                            displayName: "Indicator type",
+                            type: "enum",
+                            enumItems: Object.keys(
+                                LVGL_METER_INDICATOR_TYPES
+                            ).map(id => ({
+                                id,
+                                label: humanize(id)
+                            }))
+                        }
+                    ]
+                },
+                values: {
+                    action: "CHANGE_SCREEN"
+                },
+                dialogContext: project
+            });
+
+            const indicatorTypeProperties = {
+                type: result.values.type
+            };
+
+            let indicatorTypeObject;
+
+            if (result.values.type == "NEEDLE_IMG") {
+                indicatorTypeObject = createObject<LVGLMeterIndicatorNeedleImg>(
+                    project._DocumentStore,
+                    Object.assign(
+                        indicatorTypeProperties,
+                        LVGLMeterIndicatorNeedleImg.classInfo.defaultValue
+                    ),
+                    LVGLMeterIndicatorNeedleImg
+                );
+            } else if (result.values.type == "NEEDLE_LINE") {
+                indicatorTypeObject =
+                    createObject<LVGLMeterIndicatorNeedleLine>(
+                        project._DocumentStore,
+                        Object.assign(
+                            indicatorTypeProperties,
+                            LVGLMeterIndicatorNeedleLine.classInfo.defaultValue
+                        ),
+                        LVGLMeterIndicatorNeedleLine
+                    );
+            } else if (result.values.type == "SCALE_LINES") {
+                indicatorTypeObject =
+                    createObject<LVGLMeterIndicatorScaleLines>(
+                        project._DocumentStore,
+                        Object.assign(
+                            indicatorTypeProperties,
+                            LVGLMeterIndicatorScaleLines.classInfo.defaultValue
+                        ),
+                        LVGLMeterIndicatorScaleLines
+                    );
+            } else {
+                indicatorTypeObject = createObject<LVGLMeterIndicatorArc>(
+                    project._DocumentStore,
+                    Object.assign(
+                        indicatorTypeProperties,
+                        LVGLMeterIndicatorArc.classInfo.defaultValue
+                    ),
+                    LVGLMeterIndicatorArc
+                );
+            }
+
+            return indicatorTypeObject;
+        }
+    };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            type: observable
+        });
+    }
+
+    lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        obj: number,
+        scale: number,
+        scaleIndex: number,
+        indicatorIndex: number
+    ) {}
+
+    lvglBuild(build: LVGLBuild) {}
+    lvglBuildTickSpecific(
+        build: LVGLBuild,
+        scaleIndex: number,
+        indicatorIndex: number
+    ) {}
+
+    expressionPropertyBuildTickSpecific(
+        build: LVGLBuild,
+        propName: string,
+        propFullName: string,
+        indicatorIndex: number,
+        getProp: string,
+        setFunc: string
+    ) {
+        if (getProperty(this, propName + "Type") == "expression") {
+            build.line(`{`);
+            build.indent();
+
+            const widget = getAncestorOfType<LVGLWidget>(
+                this,
+                LVGLWidget.classInfo
+            )!;
+
+            const objectAccessor = build.getLvglObjectAccessor(widget);
+
+            build.line(`lv_meter_indicator_t *indicator;`);
+            build.line("");
+            build.line(
+                `lv_ll_t *indicators = &((lv_meter_t *)${objectAccessor})->indicator_ll;`
+            );
+            build.line(`int index = ${indicatorIndex};`);
+            build.line(
+                `for (indicator = _lv_ll_get_tail(indicators); index > 0 && indicator != NULL; indicator = _lv_ll_get_prev(indicators, indicator), index--);`
+            );
+            build.line("");
+            build.line("if (indicator) {");
+            build.indent();
+            {
+                if (
+                    build.assets.projectEditorStore.projectTypeTraits
+                        .hasFlowSupport
+                ) {
+                    const page = getAncestorOfType(
+                        widget,
+                        ProjectEditor.PageClass.classInfo
+                    ) as Page;
+
+                    let flowIndex = build.assets.getFlowIndex(page);
+                    let componentIndex = build.assets.getComponentIndex(widget);
+                    const propertyIndex =
+                        build.assets.getComponentPropertyIndex(
+                            widget,
+                            propFullName
+                        );
+
+                    build.line(
+                        `int32_t new_val = evalIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate ${humanize(
+                            propName
+                        )} in ${getComponentName(widget.type)} widget");`
+                    );
+                } else {
+                    build.line(
+                        `int32_t new_val = ${build.getVariableGetterFunctionName(
+                            getProperty(this, propName)
+                        )}();`
+                    );
+                }
+
+                build.line(`int32_t cur_val = indicator->${getProp};`);
+
+                build.line("if (new_val != cur_val) {");
+                build.indent();
+                build.line(`tick_value_change_obj = ${objectAccessor};`);
+                build.line(
+                    `${setFunc}(${objectAccessor}, indicator, new_val);`
+                );
+                build.line(`tick_value_change_obj = NULL;`);
+                build.unindent();
+                build.line("}");
+            }
+            build.unindent();
+            build.line("}");
+
+            build.unindent();
+            build.line(`}`);
+        }
+    }
+}
+
+export class LVGLMeterIndicatorNeedleImg extends LVGLMeterIndicator {
+    image: string;
+    pivotX: number;
+    pivotY: number;
+    value: number | string;
+    valueType: LVGLPropertyType;
+
+    constructor() {
+        super();
+        makeObservable(this, {
+            image: observable,
+            pivotX: observable,
+            pivotY: observable,
+            value: observable,
+            valueType: observable
+        });
+    }
+
+    static classInfo = makeDerivedClassInfo(LVGLMeterIndicator.classInfo, {
+        properties: [
+            {
+                name: "image",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "bitmaps",
+                propertyGridGroup: imageGroup
+            },
+            {
+                name: "pivotX",
+                type: PropertyType.Number
+            },
+            {
+                name: "pivotY",
+                type: PropertyType.Number
+            },
+            ...makeLvglExpressionProperty(
+                "value",
+                "integer",
+                "input",
+                ["literal", "expression"],
+                {}
+            )
+        ],
+        defaultValue: {
+            pivotX: 0,
+            pivotY: 0,
+            value: 30,
+            valueType: "literal"
+        },
+
+        check: (indicator: LVGLMeterIndicatorNeedleImg) => {
+            let messages: Message[] = [];
+
+            if (indicator.image) {
+                const bitmap = ProjectEditor.findBitmap(
+                    ProjectEditor.getProject(indicator),
+                    indicator.image
+                );
+
+                if (!bitmap) {
+                    messages.push(propertyNotFoundMessage(indicator, "image"));
+                }
+            }
+
+            if (indicator.valueType == "expression") {
+                try {
+                    const widget = getAncestorOfType<LVGLWidget>(
+                        indicator,
+                        LVGLWidget.classInfo
+                    )!;
+
+                    checkExpression(widget, indicator.value as string);
+                } catch (err) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid expression: ${err}`,
+                            getChildOfObject(indicator, "value")
+                        )
+                    );
+                }
+            }
+
+            return messages;
+        }
+    });
+
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        obj: number,
+        scale: number,
+        scaleIndex: number,
+        indicatorIndex: number
+    ) {
+        const widget = getAncestorOfType<LVGLWidget>(
+            this,
+            LVGLWidget.classInfo
+        )!;
+
+        const valueExpr = getExpressionPropertyData(
+            runtime,
+            widget,
+            `scales[${scaleIndex}].indicators[${indicatorIndex}].value`
+        );
+
+        const bitmap = ProjectEditor.findBitmap(
+            ProjectEditor.getProject(this),
+            this.image
+        );
+
+        const pivotX = this.pivotX;
+        const pivotY = this.pivotY;
+        const value = this.value;
+
+        if (bitmap && bitmap.image) {
+            (async () => {
+                const image = await runtime.loadBitmap(bitmap);
+
+                if (!runtime.isEditor || obj == widget._lvglObj) {
+                    const indicator =
+                        runtime.wasm._lvglMeterAddIndicatorNeedleImg(
+                            obj,
+                            scale,
+                            image,
+                            pivotX,
+                            pivotY,
+                            valueExpr ? 0 : (value as number)
+                        );
+
+                    if (valueExpr) {
+                        runtime.wasm._lvglUpdateMeterIndicatorValue(
+                            obj,
+                            indicator,
+                            valueExpr.flowIndex,
+                            valueExpr.componentIndex,
+                            valueExpr.propertyIndex
+                        );
+                    }
+                }
+            })();
+        }
+    }
+
+    override lvglBuild(build: LVGLBuild) {
+        build.line(
+            `lv_meter_indicator_t *indicator = lv_meter_add_needle_img(obj, scale, ${
+                this.image ? `&img_${this.image}` : 0
+            }, ${this.pivotX}, ${this.pivotY});`
+        );
+
+        if (this.valueType == "literal") {
+            build.line(
+                `lv_meter_set_indicator_value(obj, indicator, ${this.value});`
+            );
+        }
+    }
+
+    override lvglBuildTickSpecific(
+        build: LVGLBuild,
+        scaleIndex: number,
+        indicatorIndex: number
+    ) {
+        this.expressionPropertyBuildTickSpecific(
+            build,
+            "value",
+            `scales[${scaleIndex}].indicators[${indicatorIndex}].value`,
+            indicatorIndex,
+            "start_value",
+            "lv_meter_set_indicator_value"
+        );
+    }
+}
+
+registerClass("LVGLMeterIndicatorNeedleImg", LVGLMeterIndicatorNeedleImg);
+
+export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
+    width: number;
+    color: string;
+    radiusModifier: number;
+    value: number | string;
+    valueType: LVGLPropertyType;
+
+    constructor() {
+        super();
+        makeObservable(this, {
+            width: observable,
+            color: observable,
+            radiusModifier: observable,
+            value: observable,
+            valueType: observable
+        });
+    }
+
+    static classInfo = makeDerivedClassInfo(LVGLMeterIndicator.classInfo, {
+        properties: [
+            {
+                name: "width",
+                type: PropertyType.Number
+            },
+            {
+                name: "color",
+                type: PropertyType.Color
+            },
+            {
+                name: "radiusModifier",
+                type: PropertyType.Number
+            },
+            ...makeLvglExpressionProperty(
+                "value",
+                "integer",
+                "input",
+                ["literal", "expression"],
+                {}
+            )
+        ],
+        defaultValue: {
+            width: 3,
+            color: "#0000FF",
+            radiusModifier: -28,
+            value: 30,
+            valueType: "literal"
+        },
+
+        check: (indicator: LVGLMeterIndicatorNeedleLine) => {
+            let messages: Message[] = [];
+
+            if (indicator.valueType == "expression") {
+                try {
+                    const widget = getAncestorOfType<LVGLWidget>(
+                        indicator,
+                        LVGLWidget.classInfo
+                    )!;
+
+                    checkExpression(widget, indicator.value as string);
+                } catch (err) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid expression: ${err}`,
+                            getChildOfObject(indicator, "value")
+                        )
+                    );
+                }
+            }
+
+            return messages;
+        }
+    });
+
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        obj: number,
+        scale: number,
+        scaleIndex: number,
+        indicatorIndex: number
+    ) {
+        const widget = getAncestorOfType<LVGLWidget>(
+            this,
+            LVGLWidget.classInfo
+        )!;
+
+        const valueExpr = getExpressionPropertyData(
+            runtime,
+            widget,
+            `scales[${scaleIndex}].indicators[${indicatorIndex}].value`
+        );
+
+        const indicator = runtime.wasm._lvglMeterAddIndicatorNeedleLine(
+            obj,
+            scale,
+            this.width,
+            colorRgbToNum(this.color),
+            this.radiusModifier,
+            valueExpr ? 0 : (this.value as number)
+        );
+
+        if (valueExpr) {
+            runtime.wasm._lvglUpdateMeterIndicatorValue(
+                obj,
+                indicator,
+                valueExpr.flowIndex,
+                valueExpr.componentIndex,
+                valueExpr.propertyIndex
+            );
+        }
+    }
+
+    override lvglBuild(build: LVGLBuild) {
+        build.line(
+            `lv_meter_indicator_t *indicator = lv_meter_add_needle_line(obj, scale, ${
+                this.width
+            }, lv_color_hex(${colorRgbToHexNumStr(this.color)}), ${
+                this.radiusModifier
+            });`
+        );
+
+        if (this.valueType == "literal") {
+            build.line(
+                `lv_meter_set_indicator_value(obj, indicator, ${this.value});`
+            );
+        }
+    }
+
+    override lvglBuildTickSpecific(
+        build: LVGLBuild,
+        scaleIndex: number,
+        indicatorIndex: number
+    ) {
+        this.expressionPropertyBuildTickSpecific(
+            build,
+            "value",
+            `scales[${scaleIndex}].indicators[${indicatorIndex}].value`,
+            indicatorIndex,
+            "start_value",
+            "lv_meter_set_indicator_value"
+        );
+    }
+}
+
+registerClass("LVGLMeterIndicatorNeedleLine", LVGLMeterIndicatorNeedleLine);
+
+export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
+    colorStart: string;
+    colorEnd: string;
+    local: boolean;
+    widthModifier: number;
+
+    startValue: number | string;
+    startValueType: LVGLPropertyType;
+
+    endValue: number | string;
+    endValueType: LVGLPropertyType;
+
+    constructor() {
+        super();
+        makeObservable(this, {
+            colorStart: observable,
+            colorEnd: observable,
+            local: observable,
+            widthModifier: observable,
+            startValue: observable,
+            startValueType: observable,
+            endValue: observable,
+            endValueType: observable
+        });
+    }
+
+    static classInfo = makeDerivedClassInfo(LVGLMeterIndicator.classInfo, {
+        properties: [
+            {
+                name: "colorStart",
+                type: PropertyType.Color
+            },
+            {
+                name: "colorEnd",
+                type: PropertyType.Color
+            },
+            {
+                name: "local",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
+            },
+            {
+                name: "widthModifier",
+                type: PropertyType.Number
+            },
+            ...makeLvglExpressionProperty(
+                "startValue",
+                "integer",
+                "input",
+                ["literal", "expression"],
+                {}
+            ),
+            ...makeLvglExpressionProperty(
+                "endValue",
+                "integer",
+                "input",
+                ["literal", "expression"],
+                {}
+            )
+        ],
+        defaultValue: {
+            colorStart: "#000000",
+            colorEnd: "#a0a0a0",
+            local: false,
+            widthModifier: 0,
+            startValue: 0,
+            startValueType: "literal",
+            endValue: 30,
+            endValueType: "literal"
+        },
+
+        check: (indicator: LVGLMeterIndicatorArc) => {
+            let messages: Message[] = [];
+
+            if (indicator.startValueType == "expression") {
+                try {
+                    const widget = getAncestorOfType<LVGLWidget>(
+                        indicator,
+                        LVGLWidget.classInfo
+                    )!;
+
+                    checkExpression(widget, indicator.startValue as string);
+                } catch (err) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid expression: ${err}`,
+                            getChildOfObject(indicator, "startValue")
+                        )
+                    );
+                }
+            }
+
+            if (indicator.endValueType == "expression") {
+                try {
+                    const widget = getAncestorOfType<LVGLWidget>(
+                        indicator,
+                        LVGLWidget.classInfo
+                    )!;
+
+                    checkExpression(widget, indicator.endValue as string);
+                } catch (err) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid expression: ${err}`,
+                            getChildOfObject(indicator, "endValue")
+                        )
+                    );
+                }
+            }
+
+            return messages;
+        }
+    });
+
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        obj: number,
+        scale: number,
+        scaleIndex: number,
+        indicatorIndex: number
+    ) {
+        const widget = getAncestorOfType<LVGLWidget>(
+            this,
+            LVGLWidget.classInfo
+        )!;
+
+        const startValueExpr = getExpressionPropertyData(
+            runtime,
+            widget,
+            `scales[${scaleIndex}].indicators[${indicatorIndex}].startValue`
+        );
+
+        const endValueExpr = getExpressionPropertyData(
+            runtime,
+            widget,
+            `scales[${scaleIndex}].indicators[${indicatorIndex}].endValue`
+        );
+
+        const indicator = runtime.wasm._lvglMeterAddIndicatorScaleLines(
+            obj,
+            scale,
+            colorRgbToNum(this.colorStart),
+            colorRgbToNum(this.colorEnd),
+            this.local,
+            this.widthModifier,
+            startValueExpr ? 0 : (this.startValue as number),
+            endValueExpr ? 0 : (this.endValue as number)
+        );
+
+        if (startValueExpr) {
+            runtime.wasm._lvglUpdateMeterIndicatorStartValue(
+                obj,
+                indicator,
+                startValueExpr.flowIndex,
+                startValueExpr.componentIndex,
+                startValueExpr.propertyIndex
+            );
+        }
+
+        if (endValueExpr) {
+            runtime.wasm._lvglUpdateMeterIndicatorEndValue(
+                obj,
+                indicator,
+                endValueExpr.flowIndex,
+                endValueExpr.componentIndex,
+                endValueExpr.propertyIndex
+            );
+        }
+    }
+
+    override lvglBuild(build: LVGLBuild) {
+        build.line(
+            `lv_meter_indicator_t *indicator = lv_meter_add_scale_lines(obj, scale, lv_color_hex(${colorRgbToHexNumStr(
+                this.colorStart
+            )}), lv_color_hex(${colorRgbToHexNumStr(this.colorEnd)}), ${
+                this.local
+            }, ${this.widthModifier});`
+        );
+
+        if (this.startValueType == "literal") {
+            build.line(
+                `lv_meter_set_indicator_start_value(obj, indicator, ${this.startValue});`
+            );
+        }
+
+        if (this.endValueType == "literal") {
+            build.line(
+                `lv_meter_set_indicator_end_value(obj, indicator, ${this.endValue});`
+            );
+        }
+    }
+
+    override lvglBuildTickSpecific(
+        build: LVGLBuild,
+        scaleIndex: number,
+        indicatorIndex: number
+    ) {
+        this.expressionPropertyBuildTickSpecific(
+            build,
+            "startValue",
+            `scales[${scaleIndex}].indicators[${indicatorIndex}].startValue`,
+            indicatorIndex,
+            "start_value",
+            "lv_meter_set_indicator_start_value"
+        );
+
+        this.expressionPropertyBuildTickSpecific(
+            build,
+            "endValue",
+            `scales[${scaleIndex}].indicators[${indicatorIndex}].endValue`,
+            indicatorIndex,
+            "end_value",
+            "lv_meter_set_indicator_end_value"
+        );
+    }
+}
+
+registerClass("LVGLMeterIndicatorScaleLines", LVGLMeterIndicatorScaleLines);
+
+export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
+    width: number;
+    color: string;
+    radiusModifier: number;
+
+    startValue: number | string;
+    startValueType: LVGLPropertyType;
+
+    endValue: number | string;
+    endValueType: LVGLPropertyType;
+
+    constructor() {
+        super();
+        makeObservable(this, {
+            width: observable,
+            color: observable,
+            radiusModifier: observable,
+            startValue: observable,
+            startValueType: observable,
+            endValue: observable,
+            endValueType: observable
+        });
+    }
+
+    static classInfo = makeDerivedClassInfo(LVGLMeterIndicator.classInfo, {
+        properties: [
+            {
+                name: "width",
+                type: PropertyType.Number
+            },
+            {
+                name: "color",
+                type: PropertyType.Color
+            },
+            {
+                name: "radiusModifier",
+                type: PropertyType.Number
+            },
+            ...makeLvglExpressionProperty(
+                "startValue",
+                "integer",
+                "input",
+                ["literal", "expression"],
+                {}
+            ),
+            ...makeLvglExpressionProperty(
+                "endValue",
+                "integer",
+                "input",
+                ["literal", "expression"],
+                {}
+            )
+        ],
+        defaultValue: {
+            width: 2,
+            color: "#000000",
+            radiusModifier: 0,
+            startValue: 0,
+            startValueType: "literal",
+            endValue: 30,
+            endValueType: "literal"
+        },
+
+        check: (indicator: LVGLMeterIndicatorArc) => {
+            let messages: Message[] = [];
+
+            if (indicator.startValueType == "expression") {
+                try {
+                    const widget = getAncestorOfType<LVGLWidget>(
+                        indicator,
+                        LVGLWidget.classInfo
+                    )!;
+
+                    checkExpression(widget, indicator.startValue as string);
+                } catch (err) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid expression: ${err}`,
+                            getChildOfObject(indicator, "startValue")
+                        )
+                    );
+                }
+            }
+
+            if (indicator.endValueType == "expression") {
+                try {
+                    const widget = getAncestorOfType<LVGLWidget>(
+                        indicator,
+                        LVGLWidget.classInfo
+                    )!;
+
+                    checkExpression(widget, indicator.endValue as string);
+                } catch (err) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid expression: ${err}`,
+                            getChildOfObject(indicator, "endValue")
+                        )
+                    );
+                }
+            }
+
+            return messages;
+        }
+    });
+
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        obj: number,
+        scale: number,
+        scaleIndex: number,
+        indicatorIndex: number
+    ) {
+        const widget = getAncestorOfType<LVGLWidget>(
+            this,
+            LVGLWidget.classInfo
+        )!;
+
+        const startValueExpr = getExpressionPropertyData(
+            runtime,
+            widget,
+            `scales[${scaleIndex}].indicators[${indicatorIndex}].startValue`
+        );
+
+        const endValueExpr = getExpressionPropertyData(
+            runtime,
+            widget,
+            `scales[${scaleIndex}].indicators[${indicatorIndex}].endValue`
+        );
+
+        const indicator = runtime.wasm._lvglMeterAddIndicatorArc(
+            obj,
+            scale,
+            this.width,
+            colorRgbToNum(this.color),
+            this.radiusModifier,
+            startValueExpr ? 0 : (this.startValue as number),
+            endValueExpr ? 0 : (this.endValue as number)
+        );
+
+        if (startValueExpr) {
+            runtime.wasm._lvglUpdateMeterIndicatorStartValue(
+                obj,
+                indicator,
+                startValueExpr.flowIndex,
+                startValueExpr.componentIndex,
+                startValueExpr.propertyIndex
+            );
+        }
+
+        if (endValueExpr) {
+            runtime.wasm._lvglUpdateMeterIndicatorEndValue(
+                obj,
+                indicator,
+                endValueExpr.flowIndex,
+                endValueExpr.componentIndex,
+                endValueExpr.propertyIndex
+            );
+        }
+    }
+
+    override lvglBuild(build: LVGLBuild) {
+        build.line(
+            `lv_meter_indicator_t *indicator = lv_meter_add_arc(obj, scale, ${
+                this.width
+            }, lv_color_hex(${colorRgbToHexNumStr(this.color)}), ${
+                this.radiusModifier
+            });`
+        );
+
+        if (this.startValueType == "literal") {
+            build.line(
+                `lv_meter_set_indicator_start_value(obj, indicator, ${this.startValue});`
+            );
+        }
+
+        if (this.endValueType == "literal") {
+            build.line(
+                `lv_meter_set_indicator_end_value(obj, indicator, ${this.endValue});`
+            );
+        }
+    }
+
+    override lvglBuildTickSpecific(
+        build: LVGLBuild,
+        scaleIndex: number,
+        indicatorIndex: number
+    ) {
+        this.expressionPropertyBuildTickSpecific(
+            build,
+            "startValue",
+            `scales[${scaleIndex}].indicators[${indicatorIndex}].startValue`,
+            indicatorIndex,
+            "start_value",
+            "lv_meter_set_indicator_start_value"
+        );
+
+        this.expressionPropertyBuildTickSpecific(
+            build,
+            "endValue",
+            `scales[${scaleIndex}].indicators[${indicatorIndex}].endValue`,
+            indicatorIndex,
+            "end_value",
+            "lv_meter_set_indicator_end_value"
+        );
+    }
+}
+
+registerClass("LVGLMeterIndicatorArc", LVGLMeterIndicatorArc);
+
+class LVGLMeterScale extends EezObject {
+    minorTickCount: number;
+    minorTickLineWidth: number;
+    minorTickLength: number;
+    minorTickColor: string;
+
+    nthMajor: number;
+    majorTickWidth: number;
+    majorTickLength: number;
+    majorTickColor: string;
+
+    label: string;
+    labelGap: number;
+
+    scaleMin: number;
+    scaleMax: number;
+    scaleAngleRange: number;
+    scaleRotation: number;
+
+    indicators: LVGLMeterIndicator[];
+
+    static classInfo: ClassInfo = {
+        properties: [
+            { name: "minorTickCount", type: PropertyType.Number },
+            { name: "minorTickLineWidth", type: PropertyType.Number },
+            { name: "minorTickLength", type: PropertyType.Number },
+            { name: "minorTickColor", type: PropertyType.Color },
+
+            { name: "nthMajor", type: PropertyType.Number },
+            { name: "majorTickWidth", type: PropertyType.Number },
+            { name: "majorTickLength", type: PropertyType.Number },
+            { name: "majorTickColor", type: PropertyType.Color },
+
+            makeExpressionProperty(
+                {
+                    name: "label",
+                    type: PropertyType.MultilineText
+                },
+                "string"
+            ),
+            { name: "labelGap", type: PropertyType.Number },
+
+            { name: "scaleMin", type: PropertyType.Number },
+            { name: "scaleMax", type: PropertyType.Number },
+            { name: "scaleAngleRange", type: PropertyType.Number },
+            { name: "scaleRotation", type: PropertyType.Number },
+
+            {
+                name: "indicators",
+                type: PropertyType.Array,
+                typeClass: LVGLMeterIndicator,
+                arrayItemOrientation: "vertical",
+                partOfNavigation: false,
+                enumerable: false,
+                defaultValue: []
+            }
+        ],
+
+        defaultValue: {
+            minorTickCount: 41,
+            minorTickLineWidth: 1,
+            minorTickLength: 5,
+            minorTickColor: "#a0a0a0",
+
+            nthMajor: 8,
+            majorTickWidth: 3,
+            majorTickLength: 10,
+            majorTickColor: "#000000",
+
+            labelGap: 10,
+
+            scaleMin: 0,
+            scaleMax: 100,
+            scaleAngleRange: 300,
+            scaleRotation: 120,
+
+            indicators: [
+                Object.assign(
+                    {},
+                    { type: "NEEDLE_LINE" },
+                    LVGLMeterIndicatorNeedleLine.classInfo.defaultValue
+                )
+            ]
+        },
+
+        check: (scale: LVGLMeterScale) => {
+            let messages: Message[] = [];
+
+            if (scale.label) {
+                try {
+                    const widget = getAncestorOfType<LVGLWidget>(
+                        scale,
+                        LVGLWidget.classInfo
+                    )!;
+
+                    checkExpression(widget, scale.label);
+                } catch (err) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid expression: ${err}`,
+                            getChildOfObject(scale, "label")
+                        )
+                    );
+                }
+            }
+
+            return messages;
+        }
+    };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            minorTickCount: observable,
+            minorTickLineWidth: observable,
+            minorTickLength: observable,
+            minorTickColor: observable,
+
+            nthMajor: observable,
+            majorTickWidth: observable,
+            majorTickLength: observable,
+            majorTickColor: observable,
+
+            label: observable,
+            labelGap: observable,
+
+            scaleMin: observable,
+            scaleMax: observable,
+            scaleAngleRange: observable,
+            scaleRotation: observable
+        });
+    }
+}
+
+export class LVGLMeterWidget extends LVGLWidget {
+    scales: LVGLMeterScale[];
+
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        componentPaletteGroupName: "!1Visualiser Widgets",
+
+        properties: [
+            {
+                name: "scales",
+                type: PropertyType.Array,
+                typeClass: LVGLMeterScale,
+                propertyGridGroup: meterGroup,
+                arrayItemOrientation: "vertical",
+                partOfNavigation: false,
+                enumerable: false,
+                defaultValue: []
+            }
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 180,
+            height: 180,
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            clickableFlag: true,
+            scales: [Object.assign({}, LVGLMeterScale.classInfo.defaultValue)]
+        },
+
+        icon: (
+            <svg viewBox="0 0 32 32">
+                <path d="M26 16a9.9283 9.9283 0 0 0-1.1392-4.6182l-1.4961 1.4961A7.9483 7.9483 0 0 1 24 16Zm-2.5859-6L22 8.5859l-4.7147 4.7147A2.9659 2.9659 0 0 0 16 13a3 3 0 1 0 3 3 2.9659 2.9659 0 0 0-.3006-1.2853ZM16 17a1 1 0 1 1 1-1 1.0013 1.0013 0 0 1-1 1Zm0-9a7.9515 7.9515 0 0 1 3.1223.6353l1.4961-1.4961A9.9864 9.9864 0 0 0 6 16h2a8.0092 8.0092 0 0 1 8-8Z" />
+                <path d="M16 30a14 14 0 1 1 14-14 14.0158 14.0158 0 0 1-14 14Zm0-26a12 12 0 1 0 12 12A12.0137 12.0137 0 0 0 16 4Z" />
+                <path
+                    data-name="&lt;Transparent Rectangle&gt;"
+                    fill="none"
+                    d="M0 0h32v32H0z"
+                />
+            </svg>
+        ),
+
+        check: (widget: LVGLLabelWidget) => {
+            let messages: Message[] = [];
+            return messages;
+        },
+
+        lvgl: {
+            parts: ["MAIN", "TICKS", "INDICATOR", "ITEMS"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "CHECKABLE",
+                "PRESS_LOCK",
+                "CLICK_FOCUSABLE",
+                "ADV_HITTEST",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE",
+                "SCROLLABLE",
+                "SCROLL_ELASTIC",
+                "SCROLL_MOMENTUM",
+                "SCROLL_ON_FOCUS",
+                "SCROLL_CHAIN",
+                "SCROLL_ONE"
+            ],
+            defaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        },
+
+        getAdditionalFlowProperties: (widget: LVGLMeterWidget) => {
+            const properties: PropertyInfo[] = [];
+            for (
+                let scaleIndex = 0;
+                scaleIndex < widget.scales.length;
+                scaleIndex++
+            ) {
+                const scale = widget.scales[scaleIndex];
+
+                if (scale.label) {
+                    properties.push(
+                        Object.assign(
+                            {},
+                            findPropertyByNameInClassInfo(
+                                LVGLMeterScale.classInfo,
+                                "label"
+                            ),
+                            {
+                                name: `scales[${scaleIndex}].label`
+                            }
+                        )
+                    );
+                }
+
+                for (
+                    let indicatorIndex = 0;
+                    indicatorIndex < scale.indicators.length;
+                    indicatorIndex++
+                ) {
+                    const indicator = scale.indicators[indicatorIndex];
+                    const classInfo = getClassInfo(indicator);
+                    const flowProperties = classInfo.properties.filter(
+                        propertyInfo =>
+                            isFlowProperty(indicator, propertyInfo, [
+                                "input",
+                                "template-literal",
+                                "assignable"
+                            ])
+                    );
+                    flowProperties.forEach(flowProperty =>
+                        properties.push(
+                            Object.assign({}, flowProperty, {
+                                name: `scales[${scaleIndex}].indicators[${indicatorIndex}].${flowProperty.name}`
+                            })
+                        )
+                    );
+                }
+            }
+            return properties;
+        }
+    });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            scales: observable
+        });
+    }
+
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
+        const obj = runtime.wasm._lvglCreateMeter(
+            parentObj,
+            runtime.getWidgetIndex(this),
+            this.localStyles.getDisabledPartsCode(),
+            this.lvglCreateLeft,
+            this.lvglCreateTop,
+            this.lvglCreateWidth,
+            this.lvglCreateHeight
+        );
+
+        for (
+            let scaleIndex = 0;
+            scaleIndex < this.scales.length;
+            scaleIndex++
+        ) {
+            const scale = this.scales[scaleIndex];
+
+            const scaleObj = runtime.wasm._lvglMeterAddScale(
+                obj,
+
+                Math.max(scale.minorTickCount, 2),
+                scale.minorTickLineWidth,
+                scale.minorTickLength,
+                colorRgbToNum(scale.minorTickColor),
+
+                scale.nthMajor,
+                scale.majorTickWidth,
+                scale.majorTickLength,
+                colorRgbToNum(scale.majorTickColor),
+
+                scale.labelGap,
+
+                scale.scaleMin,
+                scale.scaleMax,
+                scale.scaleAngleRange,
+                scale.scaleRotation
+            );
+
+            for (
+                let indicatorIndex = 0;
+                indicatorIndex < scale.indicators.length;
+                indicatorIndex++
+            ) {
+                const indicator = scale.indicators[indicatorIndex];
+
+                indicator.lvglCreateObj(
+                    runtime,
+                    obj,
+                    scaleObj,
+                    scaleIndex,
+                    indicatorIndex
+                );
+            }
+        }
+
+        return obj;
+    }
+
+    override get hasEventHandler() {
+        if (super.hasEventHandler) {
+            return true;
+        }
+
+        for (
+            let scaleIndex = 0;
+            scaleIndex < this.scales.length;
+            scaleIndex++
+        ) {
+            const scale = this.scales[scaleIndex];
+            if (scale.label) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
+        for (
+            let scaleIndex = 0;
+            scaleIndex < this.scales.length;
+            scaleIndex++
+        ) {
+            const scale = this.scales[scaleIndex];
+
+            if (scale.label) {
+                const labelExpr = getExpressionPropertyData(
+                    runtime,
+                    this,
+                    `scales[${scaleIndex}].label`
+                );
+
+                if (labelExpr) {
+                    runtime.wasm._lvglAddObjectFlowCallback(
+                        obj,
+                        LV_EVENT_METER_TICK_LABEL_EVENT,
+                        labelExpr.flowIndex,
+                        labelExpr.componentIndex,
+                        labelExpr.propertyIndex
+                    );
+                }
+            }
+        }
+    }
+
+    override lvglBuildObj(build: LVGLBuild) {
+        build.line(`lv_obj_t *obj = lv_meter_create(parent_obj);`);
+    }
+
+    override lvglBuildSpecific(build: LVGLBuild) {
+        for (
+            let scaleIndex = 0;
+            scaleIndex < this.scales.length;
+            scaleIndex++
+        ) {
+            const scale = this.scales[scaleIndex];
+
+            build.line("{");
+            build.indent();
+
+            build.line(`lv_meter_scale_t *scale = lv_meter_add_scale(obj);`);
+
+            build.line(
+                `lv_meter_set_scale_ticks(obj, scale, ${Math.max(
+                    scale.minorTickCount,
+                    2
+                )}, ${scale.minorTickLineWidth}, ${
+                    scale.minorTickLength
+                }, lv_color_hex(${colorRgbToHexNumStr(scale.minorTickColor)}));`
+            );
+
+            build.line(
+                `lv_meter_set_scale_major_ticks(obj, scale, ${
+                    scale.nthMajor
+                }, ${scale.majorTickWidth}, ${
+                    scale.majorTickLength
+                }, lv_color_hex(${colorRgbToHexNumStr(
+                    scale.majorTickColor
+                )}), ${scale.labelGap});`
+            );
+
+            build.line(
+                `lv_meter_set_scale_range(obj, scale, ${scale.scaleMin}, ${scale.scaleMax}, ${scale.scaleAngleRange}, ${scale.scaleRotation});`
+            );
+
+            for (
+                let indicatorIndex = 0;
+                indicatorIndex < scale.indicators.length;
+                indicatorIndex++
+            ) {
+                const indicator = scale.indicators[indicatorIndex];
+
+                build.line("{");
+                build.indent();
+
+                indicator.lvglBuild(build);
+
+                build.unindent();
+                build.line("}");
+            }
+
+            build.unindent();
+            build.line("}");
+        }
+    }
+
+    override lvglBuildTickSpecific(build: LVGLBuild) {
+        for (
+            let scaleIndex = 0;
+            scaleIndex < this.scales.length;
+            scaleIndex++
+        ) {
+            const scale = this.scales[scaleIndex];
+            for (
+                let indicatorIndex = 0;
+                indicatorIndex < scale.indicators.length;
+                indicatorIndex++
+            ) {
+                const indicator = scale.indicators[indicatorIndex];
+                indicator.lvglBuildTickSpecific(
+                    build,
+                    scaleIndex,
+                    indicatorIndex
+                );
+            }
+        }
+    }
+
+    override buildEventHandlerSpecific(build: LVGLBuild) {
+        for (
+            let scaleIndex = 0;
+            scaleIndex < this.scales.length;
+            scaleIndex++
+        ) {
+            const scale = this.scales[scaleIndex];
+
+            if (scale.label) {
+                build.line("if (event == LV_EVENT_DRAW_PART_BEGIN) {");
+                build.indent();
+
+                build.line(
+                    `lv_obj_draw_part_dsc_t *draw_part_dsc = lv_event_get_draw_part_dsc(e);`
+                );
+                build.line(
+                    `if (draw_part_dsc->class_p != &lv_meter_class) return;`
+                );
+                build.line(
+                    `if (draw_part_dsc->type != LV_METER_DRAW_PART_TICK) return;`
+                );
+                build.line(`g_eezFlowLvlgMeterTickIndex = draw_part_dsc->id;`);
+
+                build.line(`const char *label;`);
+                if (
+                    build.assets.projectEditorStore.projectTypeTraits
+                        .hasFlowSupport
+                ) {
+                    const page = getAncestorOfType(
+                        this,
+                        ProjectEditor.PageClass.classInfo
+                    ) as Page;
+
+                    const flowIndex = build.assets.getFlowIndex(page);
+                    const componentIndex = build.assets.getComponentIndex(this);
+                    const propertyIndex =
+                        build.assets.getComponentPropertyIndex(
+                            this,
+                            `scales[${scaleIndex}].label`
+                        );
+
+                    build.line(
+                        `label = evalTextProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evalute scale label in Meter widget");`
+                    );
+                } else {
+                    build.line(
+                        `label = ${build.getVariableGetterFunctionName(
+                            getProperty(this, `scales[${scaleIndex}].label`)
+                        )}();`
+                    );
+                }
+                build.line(`strncpy(draw_part_dsc->text, label, 15);`);
+                build.line(`draw_part_dsc->text[15] = 0;`);
+
+                build.unindent();
+                build.line("}");
+            }
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 registerClass("LVGLArcWidget", LVGLArcWidget);
 registerClass("LVGLBarWidget", LVGLBarWidget);
 registerClass("LVGLButtonWidget", LVGLButtonWidget);
@@ -5097,6 +6607,7 @@ registerClass("LVGLImageWidget", LVGLImageWidget);
 registerClass("LVGLImgbuttonWidget", LVGLImgbuttonWidget);
 registerClass("LVGLLabelWidget", LVGLLabelWidget);
 registerClass("LVGLKeyboardWidget", LVGLKeyboardWidget);
+registerClass("LVGLMeterWidget", LVGLMeterWidget);
 registerClass("LVGLPanelWidget", LVGLPanelWidget);
 registerClass("LVGLRollerWidget", LVGLRollerWidget);
 registerClass("LVGLSliderWidget", LVGLSliderWidget);

@@ -40,6 +40,7 @@ void addTimelineKeyframe(
 void setTimelinePosition(float timelinePosition);
 void clearTimeline();
 
+#define LV_EVENT_METER_TICK_LABEL_EVENT 0x76
 #define LV_EVENT_DROPDOWN_SELECTED_CHANGED 0x77
 #define LV_EVENT_ROLLER_SELECTED_CHANGED 0x78
 #define LV_EVENT_TEXTAREA_TEXT_CHANGED 0x79
@@ -68,6 +69,7 @@ void flow_event_slider_value_changed_callback(lv_event_t *e);
 void flow_event_slider_value_left_changed_callback(lv_event_t *e);
 void flow_event_checked_callback(lv_event_t *e);
 void flow_event_unchecked_callback(lv_event_t *e);
+void flow_event_meter_tick_label_event_callback(lv_event_t *e);
 void flow_event_callback_delete_user_data(lv_event_t *e);
 
 enum UpdateTaskType {
@@ -83,9 +85,12 @@ enum UpdateTaskType {
     UPDATE_TASK_TYPE_CHECKED_STATE,
     UPDATE_TASK_TYPE_DISABLED_STATE,
     UPDATE_TASK_TYPE_HIDDEN_FLAG,
-    UPDATE_TASK_TYPE_CLICKABLE_FLAG
+    UPDATE_TASK_TYPE_CLICKABLE_FLAG,
+    UPDATE_TASK_TYPE_METER_INDICATOR_VALUE,
+    UPDATE_TASK_TYPE_METER_INDICATOR_START_VALUE,
+    UPDATE_TASK_TYPE_METER_INDICATOR_END_VALUE,
 };
 
-void addUpdateTask(enum UpdateTaskType updateTaskType, lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index);
+void addUpdateTask(enum UpdateTaskType updateTaskType, lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index, void *subobj);
 
 void setObjectIndex(lv_obj_t *obj, int32_t index);

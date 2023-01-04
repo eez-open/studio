@@ -374,6 +374,8 @@ export interface ClassInfo {
         | ((object: IEezObject) => LVGLClassInfoProperties);
 
     showTreeCollapseIcon?: "always" | "has-children" | "never";
+
+    getAdditionalFlowProperties?: (object: IEezObject) => PropertyInfo[];
 }
 
 export function makeDerivedClassInfo(
@@ -637,7 +639,48 @@ export function isProperAncestor(object: IEezObject, ancestor: IEezObject) {
 export function findPropertyByNameInClassInfo(
     classInfo: ClassInfo,
     propertyName: string
-) {
+): PropertyInfo | undefined {
+    let i = propertyName.indexOf("[");
+    if (i != -1) {
+        // arr[index].{name}
+
+        const propertyInfo = findPropertyByNameInClassInfo(
+            classInfo,
+            propertyName.substring(0, i)
+        );
+        if (!propertyInfo) {
+            return undefined;
+        }
+
+        if (propertyInfo.type != PropertyType.Array) {
+            return undefined;
+        }
+
+        let j = propertyName.indexOf("]", i + 1);
+        return findPropertyByNameInClassInfo(
+            propertyInfo.typeClass!.classInfo,
+            propertyName.substring(j + 2)
+        );
+    }
+
+    i = propertyName.indexOf(".");
+    if (i != -1) {
+        // object.{name}
+
+        const propertyInfo = findPropertyByNameInClassInfo(
+            classInfo,
+            propertyName.substring(0, i)
+        );
+        if (!propertyInfo) {
+            return undefined;
+        }
+
+        return findPropertyByNameInClassInfo(
+            propertyInfo.typeClass!.classInfo,
+            propertyName.substring(i + 1)
+        );
+    }
+
     return classInfo.properties.find(
         propertyInfo => propertyInfo.name == propertyName
     );
@@ -710,7 +753,33 @@ export function isPropertyOptional(
     return propertyInfo.isOptional(object, propertyInfo);
 }
 
-export function getProperty(object: IEezObject, name: string) {
+export function getProperty(object: IEezObject, name: string): any {
+    // This is deep get. Name can be:
+    //    - identifier
+    //    - array[index].{name}
+    //    - object.{name}
+
+    let i = name.indexOf("[");
+    if (i != -1) {
+        // arr[index].{name}
+        let j = name.indexOf("]", i + 1);
+        return getProperty(
+            (object as any)[name.substring(0, i)][
+                Number.parseInt(name.substring(i + 1))
+            ],
+            name.substring(j + 2)
+        );
+    }
+
+    i = name.indexOf(".");
+    if (i != -1) {
+        // object.{name}
+        return getProperty(
+            (object as any)[name.substring(0, i)],
+            name.substring(i + 1)
+        );
+    }
+
     return (object as any)[name];
 }
 

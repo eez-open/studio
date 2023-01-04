@@ -140,6 +140,10 @@ export function colorRgbToNum(color: string): number {
     return result;
 }
 
+export function colorRgbToHexNumStr(color: string) {
+    return "0x" + colorRgbToNum(color).toString(16).padStart(8, "0");
+}
+
 export function getStylePropDefaultValue(
     runtime: LVGLPageRuntime | undefined,
     lvglObj: number | undefined,

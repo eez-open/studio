@@ -49,7 +49,7 @@ import { LeftArrow } from "project-editor/ui-components/icons";
 import { escapeCString } from "project-editor/build/helper";
 import {
     LVGLPropertyType,
-    makeExpressionProperty
+    makeLvglExpressionProperty
 } from "project-editor/lvgl/expression-property";
 import { buildExpression } from "project-editor/flow/expression";
 
@@ -717,7 +717,7 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
                 },
                 enumDisallowUndefined: true
             },
-            ...makeExpressionProperty(
+            ...makeLvglExpressionProperty(
                 "value",
                 "any",
                 "input",

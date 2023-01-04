@@ -1175,12 +1175,12 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  964896: ($0, $1) => { freeComponentExecutionState($0, $1); },  
- 964937: ($0) => { startToDebuggerMessage($0); },  
- 964969: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 965044: ($0) => { finishToDebuggerMessage($0); },  
- 965077: ($0, $1) => { onArrayValueFree($0, $1); },  
- 965107: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
+  965376: ($0, $1) => { freeComponentExecutionState($0, $1); },  
+ 965417: ($0) => { startToDebuggerMessage($0); },  
+ 965449: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 965524: ($0) => { finishToDebuggerMessage($0); },  
+ 965557: ($0, $1) => { onArrayValueFree($0, $1); },  
+ 965587: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
 };
 
 
@@ -4519,6 +4519,9 @@ var _lvglCreateKeyboard = Module["_lvglCreateKeyboard"] = createExportWrapper("l
 var _lvglCreateChart = Module["_lvglCreateChart"] = createExportWrapper("lvglCreateChart");
 
 /** @type {function(...*):?} */
+var _lvglCreateMeter = Module["_lvglCreateMeter"] = createExportWrapper("lvglCreateMeter");
+
+/** @type {function(...*):?} */
 var _lvglScreenLoad = Module["_lvglScreenLoad"] = createExportWrapper("lvglScreenLoad");
 
 /** @type {function(...*):?} */
@@ -4589,6 +4592,30 @@ var _lvglSetImgbuttonImageSrc = Module["_lvglSetImgbuttonImageSrc"] = createExpo
 
 /** @type {function(...*):?} */
 var _lvglSetKeyboardTextarea = Module["_lvglSetKeyboardTextarea"] = createExportWrapper("lvglSetKeyboardTextarea");
+
+/** @type {function(...*):?} */
+var _lvglMeterAddScale = Module["_lvglMeterAddScale"] = createExportWrapper("lvglMeterAddScale");
+
+/** @type {function(...*):?} */
+var _lvglMeterAddIndicatorNeedleImg = Module["_lvglMeterAddIndicatorNeedleImg"] = createExportWrapper("lvglMeterAddIndicatorNeedleImg");
+
+/** @type {function(...*):?} */
+var _lvglMeterAddIndicatorNeedleLine = Module["_lvglMeterAddIndicatorNeedleLine"] = createExportWrapper("lvglMeterAddIndicatorNeedleLine");
+
+/** @type {function(...*):?} */
+var _lvglMeterAddIndicatorScaleLines = Module["_lvglMeterAddIndicatorScaleLines"] = createExportWrapper("lvglMeterAddIndicatorScaleLines");
+
+/** @type {function(...*):?} */
+var _lvglMeterAddIndicatorArc = Module["_lvglMeterAddIndicatorArc"] = createExportWrapper("lvglMeterAddIndicatorArc");
+
+/** @type {function(...*):?} */
+var _lvglUpdateMeterIndicatorValue = Module["_lvglUpdateMeterIndicatorValue"] = createExportWrapper("lvglUpdateMeterIndicatorValue");
+
+/** @type {function(...*):?} */
+var _lvglUpdateMeterIndicatorStartValue = Module["_lvglUpdateMeterIndicatorStartValue"] = createExportWrapper("lvglUpdateMeterIndicatorStartValue");
+
+/** @type {function(...*):?} */
+var _lvglUpdateMeterIndicatorEndValue = Module["_lvglUpdateMeterIndicatorEndValue"] = createExportWrapper("lvglUpdateMeterIndicatorEndValue");
 
 /** @type {function(...*):?} */
 var _lvglUpdateDropdownSelected = Module["_lvglUpdateDropdownSelected"] = createExportWrapper("lvglUpdateDropdownSelected");

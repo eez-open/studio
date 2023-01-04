@@ -22,7 +22,8 @@ import {
     getId,
     isPropertyReadOnly,
     getObjectPropertyDisplayName,
-    EezObject
+    EezObject,
+    PropertyType
 } from "project-editor/core/object";
 import {
     isValue,
@@ -843,11 +844,15 @@ const ArrayElementPropertiesVerticalOrientation = observer(
         }
 
         onShow = (event: any) => {
-            this.props.selectObject(this.props.object, true, false);
+            if (event.target == this.refCollapse.current) {
+                this.props.selectObject(this.props.object, true, false);
+            }
         };
 
-        onHide = () => {
-            this.props.selectObject(this.props.object, false, false);
+        onHide = (event: any) => {
+            if (event.target == this.refCollapse.current) {
+                this.props.selectObject(this.props.object, false, false);
+            }
         };
 
         render() {
@@ -892,7 +897,7 @@ const ArrayElementPropertiesVerticalOrientation = observer(
                         id={idAccordionCollapse}
                         className="accordion-collapse collapse"
                         aria-labelledby={idAccordionHeading}
-                        data-bs-parent={`#${this.props.idAccordion}`}
+                        data-bs-parent={this.props.idAccordion}
                     >
                         <div className="accordion-body">
                             <table>
@@ -946,12 +951,9 @@ const ArrayElementPropertyVerticalOrientation = observer(
             });
 
             if (isArrayElementPropertyVisible(propertyInfo, object)) {
-                return (
-                    <>
-                        <td className={propertyInfo.name}>
-                            {getObjectPropertyDisplayName(object, propertyInfo)}
-                        </td>
-                        <td className={className}>
+                if (propertyInfo.type == PropertyType.Array) {
+                    return (
+                        <td className={className} colSpan={2}>
                             <Property
                                 propertyInfo={propertyInfo}
                                 objects={[object]}
@@ -962,8 +964,30 @@ const ArrayElementPropertyVerticalOrientation = observer(
                                 updateObject={this.updateObject}
                             />
                         </td>
-                    </>
-                );
+                    );
+                } else {
+                    return (
+                        <>
+                            <td className={propertyInfo.name}>
+                                {getObjectPropertyDisplayName(
+                                    object,
+                                    propertyInfo
+                                )}
+                            </td>
+                            <td className={className}>
+                                <Property
+                                    propertyInfo={propertyInfo}
+                                    objects={[object]}
+                                    readOnly={
+                                        readOnly ||
+                                        isPropertyReadOnly(object, propertyInfo)
+                                    }
+                                    updateObject={this.updateObject}
+                                />
+                            </td>
+                        </>
+                    );
+                }
             } else {
                 return <td />;
             }

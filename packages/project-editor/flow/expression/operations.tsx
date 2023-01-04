@@ -1133,6 +1133,19 @@ export const builtInFunctions: {
         getValueType: (...args: ValueType[]) => {
             return args[0];
         }
+    },
+
+    "LVGL.MeterTickIndex": {
+        operationIndex: 69,
+        arity: 0,
+        args: [],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => 0,
+        getValueType: (...args: ValueType[]) => {
+            return "integer";
+        }
     }
 };
 

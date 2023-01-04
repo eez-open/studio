@@ -264,6 +264,8 @@ export abstract class RuntimeBase {
                 action == StateMachineAction.RESUME
             ) {
                 this.setState(State.RUNNING);
+            } else if (action == StateMachineAction.PAUSE) {
+                this.setState(State.PAUSED);
             }
         } else if (this.state == State.STARTING_WITH_DEBUGGER) {
             if (action == StateMachineAction.PAUSE) {

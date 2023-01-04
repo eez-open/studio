@@ -8,8 +8,23 @@
 
 #include "flow.h"
 
-EM_PORT_API(lv_obj_t *) lvglCreateContainer(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+void lvglRemoveParts(lv_obj_t *obj, uint32_t disabledParts) {
+    if (disabledParts != 0) {
+        if (disabledParts & (1 << 0)) lv_obj_remove_style(obj, NULL, LV_PART_MAIN);
+        if (disabledParts & (1 << 1)) lv_obj_remove_style(obj, NULL, LV_PART_SCROLLBAR);
+        if (disabledParts & (1 << 2)) lv_obj_remove_style(obj, NULL, LV_PART_INDICATOR);
+        if (disabledParts & (1 << 3)) lv_obj_remove_style(obj, NULL, LV_PART_KNOB);
+        if (disabledParts & (1 << 4)) lv_obj_remove_style(obj, NULL, LV_PART_SELECTED);
+        if (disabledParts & (1 << 5)) lv_obj_remove_style(obj, NULL, LV_PART_ITEMS);
+        if (disabledParts & (1 << 6)) lv_obj_remove_style(obj, NULL, LV_PART_TICKS);
+        if (disabledParts & (1 << 7)) lv_obj_remove_style(obj, NULL, LV_PART_CURSOR);
+        if (disabledParts & (1 << 8)) lv_obj_remove_style(obj, NULL, LV_PART_CUSTOM_FIRST);
+    }
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateContainer(lv_obj_t *parentObj, int32_t index, uint32_t disabledParts, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
     lv_obj_t *obj = lv_obj_create(parentObj);
+    lvglRemoveParts(obj, disabledParts);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
@@ -17,8 +32,9 @@ EM_PORT_API(lv_obj_t *) lvglCreateContainer(lv_obj_t *parentObj, int32_t index, 
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateLabel(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, char *text, lv_label_long_mode_t long_mode, bool recolor) {
+EM_PORT_API(lv_obj_t *) lvglCreateLabel(lv_obj_t *parentObj, int32_t index, uint32_t disabledParts, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, char *text, lv_label_long_mode_t long_mode, bool recolor) {
     lv_obj_t *obj = lv_label_create(parentObj);
+    lvglRemoveParts(obj, disabledParts);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     if (text != 0) {
@@ -32,8 +48,9 @@ EM_PORT_API(lv_obj_t *) lvglCreateLabel(lv_obj_t *parentObj, int32_t index, lv_c
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateButton(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+EM_PORT_API(lv_obj_t *) lvglCreateButton(lv_obj_t *parentObj, int32_t index, uint32_t disabledParts, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
     lv_obj_t *obj = lv_btn_create(parentObj);
+    lvglRemoveParts(obj, disabledParts);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
@@ -41,8 +58,9 @@ EM_PORT_API(lv_obj_t *) lvglCreateButton(lv_obj_t *parentObj, int32_t index, lv_
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreatePanel(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+EM_PORT_API(lv_obj_t *) lvglCreatePanel(lv_obj_t *parentObj, int32_t index, uint32_t disabledParts, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
     lv_obj_t *obj = lv_obj_create(parentObj);
+    lvglRemoveParts(obj, disabledParts);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
@@ -50,8 +68,9 @@ EM_PORT_API(lv_obj_t *) lvglCreatePanel(lv_obj_t *parentObj, int32_t index, lv_c
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateImage(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, const void *img_src, lv_coord_t pivotX, lv_coord_t pivotY, uint16_t zoom, int16_t angle) {
+EM_PORT_API(lv_obj_t *) lvglCreateImage(lv_obj_t *parentObj, int32_t index, uint32_t disabledParts, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, const void *img_src, lv_coord_t pivotX, lv_coord_t pivotY, uint16_t zoom, int16_t angle) {
     lv_obj_t *obj = lv_img_create(parentObj);
+    lvglRemoveParts(obj, disabledParts);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     if (img_src != 0) {
@@ -65,8 +84,9 @@ EM_PORT_API(lv_obj_t *) lvglCreateImage(lv_obj_t *parentObj, int32_t index, lv_c
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateSlider(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, int32_t min, int32_t max, lv_slider_mode_t mode, int32_t value, int32_t value_left) {
+EM_PORT_API(lv_obj_t *) lvglCreateSlider(lv_obj_t *parentObj, int32_t index, uint32_t disabledParts, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, int32_t min, int32_t max, lv_slider_mode_t mode, int32_t value, int32_t value_left) {
     lv_obj_t *obj = lv_slider_create(parentObj);
+    lvglRemoveParts(obj, disabledParts);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_slider_set_range(obj, min, max);
@@ -80,8 +100,9 @@ EM_PORT_API(lv_obj_t *) lvglCreateSlider(lv_obj_t *parentObj, int32_t index, lv_
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateRoller(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, char *options, uint16_t selected, lv_roller_mode_t mode) {
+EM_PORT_API(lv_obj_t *) lvglCreateRoller(lv_obj_t *parentObj, int32_t index, uint32_t disabledParts, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, char *options, uint16_t selected, lv_roller_mode_t mode) {
     lv_obj_t *obj = lv_roller_create(parentObj);
+    lvglRemoveParts(obj, disabledParts);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_roller_set_selected(obj, selected, LV_ANIM_OFF);
@@ -92,8 +113,9 @@ EM_PORT_API(lv_obj_t *) lvglCreateRoller(lv_obj_t *parentObj, int32_t index, lv_
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateSwitch(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+EM_PORT_API(lv_obj_t *) lvglCreateSwitch(lv_obj_t *parentObj, int32_t index, uint32_t disabledParts, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
     lv_obj_t *obj = lv_switch_create(parentObj);
+    lvglRemoveParts(obj, disabledParts);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
@@ -101,8 +123,9 @@ EM_PORT_API(lv_obj_t *) lvglCreateSwitch(lv_obj_t *parentObj, int32_t index, lv_
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateBar(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, int32_t min, int32_t max, lv_bar_mode_t mode, int32_t value, int32_t value_left) {
+EM_PORT_API(lv_obj_t *) lvglCreateBar(lv_obj_t *parentObj, int32_t index, uint32_t disabledParts, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, int32_t min, int32_t max, lv_bar_mode_t mode, int32_t value, int32_t value_left) {
     lv_obj_t *obj = lv_bar_create(parentObj);
+    lvglRemoveParts(obj, disabledParts);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_bar_set_range(obj, min, max);
@@ -116,8 +139,9 @@ EM_PORT_API(lv_obj_t *) lvglCreateBar(lv_obj_t *parentObj, int32_t index, lv_coo
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateDropdown(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, char *options, uint16_t selected) {
+EM_PORT_API(lv_obj_t *) lvglCreateDropdown(lv_obj_t *parentObj, int32_t index, uint32_t disabledParts, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, char *options, uint16_t selected) {
     lv_obj_t *obj = lv_dropdown_create(parentObj);
+    lvglRemoveParts(obj, disabledParts);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_dropdown_set_options(obj, options);
@@ -128,8 +152,9 @@ EM_PORT_API(lv_obj_t *) lvglCreateDropdown(lv_obj_t *parentObj, int32_t index, l
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateArc(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, int32_t range_min, int32_t range_max, int32_t value, int32_t bg_start_angle, int32_t bg_end_angle, lv_bar_mode_t mode, int32_t rotation) {
+EM_PORT_API(lv_obj_t *) lvglCreateArc(lv_obj_t *parentObj, int32_t index, uint32_t disabledParts, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, int32_t range_min, int32_t range_max, int32_t value, int32_t bg_start_angle, int32_t bg_end_angle, lv_bar_mode_t mode, int32_t rotation) {
     lv_obj_t *obj = lv_arc_create(parentObj);
+    lvglRemoveParts(obj, disabledParts);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_arc_set_range(obj, range_min, range_max);
@@ -142,8 +167,9 @@ EM_PORT_API(lv_obj_t *) lvglCreateArc(lv_obj_t *parentObj, int32_t index, lv_coo
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateSpinner(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+EM_PORT_API(lv_obj_t *) lvglCreateSpinner(lv_obj_t *parentObj, int32_t index, uint32_t disabledParts, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
     lv_obj_t *obj = lv_spinner_create(parentObj, 1000, 60);
+    lvglRemoveParts(obj, disabledParts);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
@@ -154,8 +180,9 @@ EM_PORT_API(lv_obj_t *) lvglCreateSpinner(lv_obj_t *parentObj, int32_t index, lv
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateCheckbox(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, const char *text) {
+EM_PORT_API(lv_obj_t *) lvglCreateCheckbox(lv_obj_t *parentObj, int32_t index, uint32_t disabledParts, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, const char *text) {
     lv_obj_t *obj = lv_checkbox_create(parentObj);
+    lvglRemoveParts(obj, disabledParts);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
@@ -164,8 +191,9 @@ EM_PORT_API(lv_obj_t *) lvglCreateCheckbox(lv_obj_t *parentObj, int32_t index, l
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateTextarea(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, char *text, char *placeholder, bool one_line_mode, bool password_mode, char *accepted_characters, uint32_t max_text_length) {
+EM_PORT_API(lv_obj_t *) lvglCreateTextarea(lv_obj_t *parentObj, int32_t index, uint32_t disabledParts, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, char *text, char *placeholder, bool one_line_mode, bool password_mode, char *accepted_characters, uint32_t max_text_length) {
     lv_obj_t *obj = lv_textarea_create(parentObj);
+    lvglRemoveParts(obj, disabledParts);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     if (accepted_characters) {
@@ -187,8 +215,9 @@ EM_PORT_API(lv_obj_t *) lvglCreateTextarea(lv_obj_t *parentObj, int32_t index, l
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateCalendar(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, uint32_t today_year, uint32_t today_month, uint32_t today_day, uint32_t showed_year, uint32_t showed_month) {
+EM_PORT_API(lv_obj_t *) lvglCreateCalendar(lv_obj_t *parentObj, int32_t index, uint32_t disabledParts, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, uint32_t today_year, uint32_t today_month, uint32_t today_day, uint32_t showed_year, uint32_t showed_month) {
     lv_obj_t *obj = lv_calendar_create(parentObj);
+    lvglRemoveParts(obj, disabledParts);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
@@ -199,8 +228,9 @@ EM_PORT_API(lv_obj_t *) lvglCreateCalendar(lv_obj_t *parentObj, int32_t index, l
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateColorwheel(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_colorwheel_mode_t mode, bool fixed_mode) {
+EM_PORT_API(lv_obj_t *) lvglCreateColorwheel(lv_obj_t *parentObj, int32_t index, uint32_t disabledParts, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_colorwheel_mode_t mode, bool fixed_mode) {
     lv_obj_t *obj = lv_colorwheel_create(parentObj, false);
+    lvglRemoveParts(obj, disabledParts);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_colorwheel_set_mode(obj, mode);
@@ -210,8 +240,9 @@ EM_PORT_API(lv_obj_t *) lvglCreateColorwheel(lv_obj_t *parentObj, int32_t index,
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateImgbutton(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+EM_PORT_API(lv_obj_t *) lvglCreateImgbutton(lv_obj_t *parentObj, int32_t index, uint32_t disabledParts, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
     lv_obj_t *obj = lv_imgbtn_create(parentObj);
+    lvglRemoveParts(obj, disabledParts);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
@@ -219,8 +250,9 @@ EM_PORT_API(lv_obj_t *) lvglCreateImgbutton(lv_obj_t *parentObj, int32_t index, 
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateKeyboard(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_keyboard_mode_t mode) {
+EM_PORT_API(lv_obj_t *) lvglCreateKeyboard(lv_obj_t *parentObj, int32_t index, uint32_t disabledParts, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_keyboard_mode_t mode) {
     lv_obj_t *obj = lv_keyboard_create(parentObj);
+    lvglRemoveParts(obj, disabledParts);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_keyboard_set_mode(obj, mode);
@@ -229,8 +261,19 @@ EM_PORT_API(lv_obj_t *) lvglCreateKeyboard(lv_obj_t *parentObj, int32_t index, l
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateChart(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+EM_PORT_API(lv_obj_t *) lvglCreateChart(lv_obj_t *parentObj, int32_t index, uint32_t disabledParts, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
     lv_obj_t *obj = lv_chart_create(parentObj);
+    lvglRemoveParts(obj, disabledParts);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateMeter(lv_obj_t *parentObj, int32_t index, uint32_t disabledParts, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+    lv_obj_t *obj = lv_meter_create(parentObj);
+    lvglRemoveParts(obj, disabledParts);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
@@ -396,7 +439,9 @@ EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filte
     data->component_index = component_index;
     data->output_or_property_index = output_or_property_index;
 
-    if (filter == LV_EVENT_DROPDOWN_SELECTED_CHANGED) {
+    if (filter == LV_EVENT_METER_TICK_LABEL_EVENT) {
+        lv_obj_add_event_cb(obj, flow_event_meter_tick_label_event_callback, LV_EVENT_DRAW_PART_BEGIN, data);
+    } else if (filter == LV_EVENT_DROPDOWN_SELECTED_CHANGED) {
         lv_obj_add_event_cb(obj, flow_event_dropdown_selected_changed_callback, LV_EVENT_VALUE_CHANGED, data);
     } else if (filter == LV_EVENT_ROLLER_SELECTED_CHANGED) {
         lv_obj_add_event_cb(obj, flow_event_roller_selected_changed_callback, LV_EVENT_VALUE_CHANGED, data);
@@ -422,7 +467,7 @@ EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filte
 }
 
 EM_PORT_API(void) lvglUpdateLabelText(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_LABEL_TEXT, obj, page_index, component_index, property_index);
+    addUpdateTask(UPDATE_TASK_TYPE_LABEL_TEXT, obj, page_index, component_index, property_index, 0);
 }
 
 EM_PORT_API(void) lvglSetImageSrc(lv_obj_t *obj, const void *img_src, lv_coord_t pivotX, lv_coord_t pivotY, uint16_t zoom, int16_t angle) {
@@ -443,52 +488,103 @@ EM_PORT_API(void) lvglSetKeyboardTextarea(lv_obj_t *obj, lv_obj_t *textarea) {
     lv_obj_update_layout(obj);
 }
 
+EM_PORT_API(lv_meter_scale_t *) lvglMeterAddScale(
+    lv_obj_t *obj,
+    uint16_t minorTickCount, uint16_t minorTickLineWidth, uint16_t minorTickLength, uint32_t minorTickColor,
+    uint16_t nthMajor, uint16_t majorTickWidth, uint16_t majorTickLength, uint32_t majorTickColor, int16_t labelGap,
+    int32_t scaleMin, int32_t scaleMax, uint32_t scaleAngleRange, uint32_t scaleRotation
+) {
+    lv_meter_scale_t *scale = lv_meter_add_scale(obj);
+    lv_meter_set_scale_ticks(obj, scale, minorTickCount, minorTickLineWidth, minorTickLength, lv_color_hex(minorTickColor));
+    lv_meter_set_scale_major_ticks(obj, scale, nthMajor, majorTickWidth, majorTickLength, lv_color_hex(majorTickColor), labelGap);
+    lv_meter_set_scale_range(obj, scale, scaleMin, scaleMax, scaleAngleRange, scaleRotation);
+    return scale;
+}
+
+EM_PORT_API(lv_meter_indicator_t *) lvglMeterAddIndicatorNeedleImg(lv_obj_t *obj, lv_meter_scale_t *scale, const void *img_src, lv_coord_t pivotX, lv_coord_t pivotY, int32_t value) {
+    lv_meter_indicator_t *indicator = lv_meter_add_needle_img(obj, scale, img_src, pivotX, pivotY);
+    lv_meter_set_indicator_value(obj, indicator, value);
+    return indicator;
+}
+
+EM_PORT_API(lv_meter_indicator_t *) lvglMeterAddIndicatorNeedleLine(lv_obj_t *obj, lv_meter_scale_t *scale, uint16_t width, uint32_t color, int16_t radiusModifier, int32_t value) {
+    lv_meter_indicator_t *indicator = lv_meter_add_needle_line(obj, scale, width, lv_color_hex(color), radiusModifier);
+    lv_meter_set_indicator_value(obj, indicator, value);
+    return indicator;
+}
+
+EM_PORT_API(lv_meter_indicator_t *) lvglMeterAddIndicatorScaleLines(lv_obj_t *obj, lv_meter_scale_t *scale, uint32_t colorStart, uint32_t colorEnd, bool local, int16_t widthModifier, int32_t startValue, int32_t endValue) {
+    lv_meter_indicator_t *indicator = lv_meter_add_scale_lines(obj, scale, lv_color_hex(colorStart), lv_color_hex(colorEnd), local, widthModifier);
+    lv_meter_set_indicator_start_value(obj, indicator, startValue);
+    lv_meter_set_indicator_end_value(obj, indicator, endValue);
+    return indicator;
+}
+
+EM_PORT_API(lv_meter_indicator_t *) lvglMeterAddIndicatorArc(lv_obj_t *obj, lv_meter_scale_t *scale, uint16_t width, uint32_t color, int16_t radiusModifier, int32_t startValue, int32_t endValue) {
+    lv_meter_indicator_t *indicator = lv_meter_add_arc(obj, scale, width, lv_color_hex(color), radiusModifier);
+    lv_meter_set_indicator_start_value(obj, indicator, startValue);
+    lv_meter_set_indicator_end_value(obj, indicator, endValue);
+    return indicator;
+}
+
+EM_PORT_API(void) lvglUpdateMeterIndicatorValue(lv_obj_t *obj, lv_meter_indicator_t *indicator, unsigned page_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_METER_INDICATOR_VALUE, obj, page_index, component_index, property_index, indicator);
+}
+
+EM_PORT_API(void) lvglUpdateMeterIndicatorStartValue(lv_obj_t *obj, lv_meter_indicator_t *indicator, unsigned page_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_METER_INDICATOR_START_VALUE, obj, page_index, component_index, property_index, indicator);
+}
+
+EM_PORT_API(void) lvglUpdateMeterIndicatorEndValue(lv_obj_t *obj, lv_meter_indicator_t *indicator, unsigned page_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_METER_INDICATOR_END_VALUE, obj, page_index, component_index, property_index, indicator);
+}
+
 EM_PORT_API(void) lvglUpdateDropdownSelected(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_DROPDOWN_SELECTED, obj, page_index, component_index, property_index);
+    addUpdateTask(UPDATE_TASK_TYPE_DROPDOWN_SELECTED, obj, page_index, component_index, property_index, 0);
 }
 
 EM_PORT_API(void) lvglUpdateRollerSelected(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_ROLLER_SELECTED, obj, page_index, component_index, property_index);
+    addUpdateTask(UPDATE_TASK_TYPE_ROLLER_SELECTED, obj, page_index, component_index, property_index, 0);
 }
 
 EM_PORT_API(void) lvglUpdateSliderValue(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_SLIDER_VALUE, obj, page_index, component_index, property_index);
+    addUpdateTask(UPDATE_TASK_TYPE_SLIDER_VALUE, obj, page_index, component_index, property_index, 0);
 }
 
 EM_PORT_API(void) lvglUpdateSliderValueLeft(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_SLIDER_VALUE_LEFT, obj, page_index, component_index, property_index);
+    addUpdateTask(UPDATE_TASK_TYPE_SLIDER_VALUE_LEFT, obj, page_index, component_index, property_index, 0);
 }
 
 EM_PORT_API(void) lvglUpdateBarValue(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_BAR_VALUE, obj, page_index, component_index, property_index);
+    addUpdateTask(UPDATE_TASK_TYPE_BAR_VALUE, obj, page_index, component_index, property_index, 0);
 }
 
 EM_PORT_API(void) lvglUpdateBarValueStart(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_BAR_VALUE_START, obj, page_index, component_index, property_index);
+    addUpdateTask(UPDATE_TASK_TYPE_BAR_VALUE_START, obj, page_index, component_index, property_index, 0);
 }
 
 EM_PORT_API(void) lvglUpdateArcValue(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_ARC_VALUE, obj, page_index, component_index, property_index);
+    addUpdateTask(UPDATE_TASK_TYPE_ARC_VALUE, obj, page_index, component_index, property_index, 0);
 }
 
 EM_PORT_API(void) lvglUpdateTextareaText(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_TEXTAREA_TEXT, obj, page_index, component_index, property_index);
+    addUpdateTask(UPDATE_TASK_TYPE_TEXTAREA_TEXT, obj, page_index, component_index, property_index, 0);
 }
 
 EM_PORT_API(void) lvglUpdateCheckedState(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_CHECKED_STATE, obj, page_index, component_index, property_index);
+    addUpdateTask(UPDATE_TASK_TYPE_CHECKED_STATE, obj, page_index, component_index, property_index, 0);
 }
 
 EM_PORT_API(void) lvglUpdateDisabledState(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_DISABLED_STATE, obj, page_index, component_index, property_index);
+    addUpdateTask(UPDATE_TASK_TYPE_DISABLED_STATE, obj, page_index, component_index, property_index, 0);
 }
 
 EM_PORT_API(void) lvglUpdateHiddenFlag(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_HIDDEN_FLAG, obj, page_index, component_index, property_index);
+    addUpdateTask(UPDATE_TASK_TYPE_HIDDEN_FLAG, obj, page_index, component_index, property_index, 0);
 }
 
 EM_PORT_API(void) lvglUpdateClickableFlag(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_CLICKABLE_FLAG, obj, page_index, component_index, property_index);
+    addUpdateTask(UPDATE_TASK_TYPE_CLICKABLE_FLAG, obj, page_index, component_index, property_index, 0);
 }
 
 EM_PORT_API(void) lvglAddTimelineKeyframe(

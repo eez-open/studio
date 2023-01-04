@@ -5,6 +5,7 @@ import {
     EezObject,
     findPropertyByNameInClassInfo,
     FlowPropertyType,
+    getProperty,
     IEezObject,
     IOnSelectParams,
     PropertyInfo,
@@ -153,7 +154,7 @@ const LVGLProperty = observer(
     }
 );
 
-export function makeExpressionProperty(
+export function makeLvglExpressionProperty(
     name: string,
     expressionType: ValueType,
     flowProperty: FlowPropertyType,
@@ -211,7 +212,7 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
     setFunc: string,
     setFuncOptArgs?: string
 ) {
-    if ((widget as any)[propName + "Type"] == "expression") {
+    if (getProperty(widget, propName + "Type") == "expression") {
         const propertyInfo = findPropertyByNameInClassInfo(
             getClassInfo(widget),
             propName
@@ -318,7 +319,7 @@ export function expressionPropertyBuildEventHandlerSpecific<
     propName: Extract<keyof T, string>,
     getFunc: string
 ) {
-    if ((widget as any)[propName + "Type"] == "expression") {
+    if (getProperty(widget, propName + "Type") == "expression") {
         const propertyInfo = findPropertyByNameInClassInfo(
             getClassInfo(widget),
             propName
@@ -346,8 +347,8 @@ export function expressionPropertyBuildEventHandlerSpecific<
                 widget,
                 ProjectEditor.PageClass.classInfo
             ) as Page;
-            let flowIndex = build.assets.getFlowIndex(page);
-            let componentIndex = build.assets.getComponentIndex(widget);
+            const flowIndex = build.assets.getFlowIndex(page);
+            const componentIndex = build.assets.getComponentIndex(widget);
             const propertyIndex = build.assets.getComponentPropertyIndex(
                 widget,
                 propName

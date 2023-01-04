@@ -32,17 +32,28 @@ function getWasmFlowRuntime(wasmModuleId: number) {
 
 function startToDebuggerMessage(wasmModuleId: number) {}
 
+let messagesToDebugger: WorkerToRenderMessage[] = [];
+let sendMessagesToDebuggerTimeout: any;
+
 function writeDebuggerBuffer(wasmModuleId: number, arr: any) {
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
     if (!WasmFlowRuntime) {
         return;
     }
 
-    const data: WorkerToRenderMessage = {
+    messagesToDebugger.push({
         messageToDebugger: new Uint8Array(arr)
-    };
+    });
 
-    setTimeout(() => WasmFlowRuntime.postWorkerToRendererMessage(data));
+    if (!sendMessagesToDebuggerTimeout) {
+        sendMessagesToDebuggerTimeout = setTimeout(() => {
+            sendMessagesToDebuggerTimeout = undefined;
+            messagesToDebugger.forEach(message =>
+                WasmFlowRuntime.postWorkerToRendererMessage(message)
+            );
+            messagesToDebugger = [];
+        });
+    }
 }
 
 function finishToDebuggerMessage(wasmModuleId: number) {}

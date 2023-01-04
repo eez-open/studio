@@ -148,74 +148,135 @@ export const LVGLStylesDefinitionProperty = observer(
             const part = this.lvglPart;
             const state = this.lvglState;
 
+            let partCheckboxState: boolean | undefined = undefined;
+            let temp = -1;
+            stylesDefinitions.forEach(stylesDefinition => {
+                if (stylesDefinition.isPartEnabled(part)) {
+                    if (temp == -1) {
+                        temp = 1;
+                    } else if (temp == 0) {
+                        temp = 2;
+                    }
+                } else {
+                    if (temp == -1) {
+                        temp = 0;
+                    } else if (temp == 1) {
+                        temp = 2;
+                    }
+                }
+            });
+            partCheckboxState =
+                temp == 0 ? false : temp == 1 ? true : undefined;
+
             return (
                 <div className="EezStudio_LVGLStylesDefinition">
                     <div>
                         <LVGLStylesDefinitionTree {...this.props} />
                     </div>
                     <div>
-                        {lvglProperties.map(propertiesGroup => {
-                            const expanded = this.isExpanded(propertiesGroup);
+                        {state == undefined ? (
+                            <div>
+                                <Checkbox
+                                    state={partCheckboxState}
+                                    onChange={checked => {
+                                        this.context.undoManager.setCombineCommands(
+                                            true
+                                        );
 
-                            const numModifications =
-                                getNumModificationsForPropertiesGroup(
-                                    this.props.objects,
-                                    this.props.propertyInfo,
-                                    part,
-                                    state,
-                                    propertiesGroup
-                                );
+                                        stylesDefinitions.forEach(
+                                            (stylesDefinition, i) => {
+                                                this.context.updateObject(
+                                                    stylesDefinition,
+                                                    {
+                                                        partEnabled:
+                                                            stylesDefinition.enablePart(
+                                                                part,
+                                                                checked
+                                                            )
+                                                    }
+                                                );
+                                            }
+                                        );
 
-                            return (
-                                <div
-                                    key={propertiesGroup.groupName}
-                                    className="EezStudio_LVGLStylesDefinition_GroupContainer"
-                                >
+                                        this.context.undoManager.setCombineCommands(
+                                            false
+                                        );
+                                    }}
+                                    readOnly={this.props.readOnly}
+                                    label="Enabled"
+                                />
+                            </div>
+                        ) : (
+                            partCheckboxState &&
+                            lvglProperties.map(propertiesGroup => {
+                                const expanded =
+                                    this.isExpanded(propertiesGroup);
+
+                                const numModifications =
+                                    getNumModificationsForPropertiesGroup(
+                                        this.props.objects,
+                                        this.props.propertyInfo,
+                                        part,
+                                        state,
+                                        propertiesGroup
+                                    );
+
+                                return (
                                     <div
-                                        className={classNames(
-                                            "EezStudio_LVGLStylesDefinition_GroupName",
-                                            {
-                                                collapsed: !expanded,
-                                                modified: numModifications > 0
-                                            }
-                                        )}
-                                        onClick={() =>
-                                            this.toggleExpanded(propertiesGroup)
-                                        }
+                                        key={propertiesGroup.groupName}
+                                        className="EezStudio_LVGLStylesDefinition_GroupContainer"
                                     >
-                                        <Icon
-                                            icon={
-                                                expanded
-                                                    ? "material:keyboard_arrow_down"
-                                                    : "material:keyboard_arrow_right"
+                                        <div
+                                            className={classNames(
+                                                "EezStudio_LVGLStylesDefinition_GroupName",
+                                                {
+                                                    collapsed: !expanded,
+                                                    modified:
+                                                        numModifications > 0
+                                                }
+                                            )}
+                                            onClick={() =>
+                                                this.toggleExpanded(
+                                                    propertiesGroup
+                                                )
                                             }
-                                            size={18}
-                                            className="triangle"
-                                        />
-                                        {propertiesGroup.groupName}
-                                        {numModifications > 0
-                                            ? ` (${numModifications})`
-                                            : ""}
-                                    </div>
+                                        >
+                                            <Icon
+                                                icon={
+                                                    expanded
+                                                        ? "material:keyboard_arrow_down"
+                                                        : "material:keyboard_arrow_right"
+                                                }
+                                                size={18}
+                                                className="triangle"
+                                            />
+                                            {propertiesGroup.groupName}
+                                            {numModifications > 0
+                                                ? ` (${numModifications})`
+                                                : ""}
+                                        </div>
 
-                                    {expanded && (
-                                        <LVGLStylesDefinitionGroupProperties
-                                            objects={this.props.objects}
-                                            propertiesGroup={propertiesGroup}
-                                            stylesDefinitions={
-                                                stylesDefinitions
-                                            }
-                                            part={part}
-                                            state={state}
-                                            runtime={
-                                                runtime as LVGLStylesEditorRuntime
-                                            }
-                                            readOnly={this.props.readOnly}
-                                        />
-                                    )}
-                                </div>
-                            );
-                        })}
+                                        {expanded && (
+                                            <LVGLStylesDefinitionGroupProperties
+                                                objects={this.props.objects}
+                                                propertiesGroup={
+                                                    propertiesGroup
+                                                }
+                                                stylesDefinitions={
+                                                    stylesDefinitions
+                                                }
+                                                part={part}
+                                                state={state}
+                                                runtime={
+                                                    runtime as LVGLStylesEditorRuntime
+                                                }
+                                                readOnly={this.props.readOnly}
+                                            />
+                                        )}
+                                    </div>
+                                );
+                            })
+                        )}
                     </div>
                 </div>
             );
@@ -292,6 +353,37 @@ export const LVGLStylesDefinitionTree = observer(
             return result;
         }
 
+        isPartEnabled(part: LVGLParts) {
+            const stylesDefinitions = this.props.objects.map(
+                widget =>
+                    (widget as any)[
+                        this.props.propertyInfo.name
+                    ] as LVGLStylesDefinition
+            );
+
+            let partCheckboxState: boolean | undefined = undefined;
+            let temp = -1;
+            stylesDefinitions.forEach(stylesDefinition => {
+                if (stylesDefinition.isPartEnabled(part)) {
+                    if (temp == -1) {
+                        temp = 1;
+                    } else if (temp == 0) {
+                        temp = 2;
+                    }
+                } else {
+                    if (temp == -1) {
+                        temp = 0;
+                    } else if (temp == 1) {
+                        temp = 2;
+                    }
+                }
+            });
+            partCheckboxState =
+                temp == 0 ? false : temp == 1 ? true : undefined;
+
+            return partCheckboxState == true;
+        }
+
         get rootNode(): ITreeNode<TreeNodeData> {
             let parts: LVGLParts[] | undefined;
 
@@ -315,39 +407,47 @@ export const LVGLStylesDefinitionTree = observer(
 
                         const partLabel = humanize(part) + " part";
 
+                        const partEnabled = this.isPartEnabled(part);
+
                         return {
                             id: part,
                             label:
-                                numModifications == 0
+                                !partEnabled || numModifications == 0
                                     ? partLabel
                                     : `${partLabel} (${numModifications})`,
-                            children: LVGL_STYLE_STATES.map(state => {
-                                const numModifications =
-                                    this.getNumModificationsForPartAndState(
-                                        part,
-                                        state
-                                    );
-                                return {
-                                    id: state,
-                                    label:
-                                        numModifications == 0
-                                            ? state
-                                            : `${state} (${numModifications})`,
-                                    children: [],
-                                    selected:
-                                        this.lvglPart == part &&
-                                        this.lvglState == state,
-                                    expanded: false,
-                                    data: { part, state },
-                                    className: classNames("state", {
-                                        modified: numModifications > 0
-                                    })
-                                };
-                            }),
-                            selected: false,
+                            children: partEnabled
+                                ? LVGL_STYLE_STATES.map(state => {
+                                      const numModifications =
+                                          this.getNumModificationsForPartAndState(
+                                              part,
+                                              state
+                                          );
+                                      return {
+                                          id: state,
+                                          label:
+                                              numModifications == 0
+                                                  ? state
+                                                  : `${state} (${numModifications})`,
+                                          children: [],
+                                          selected:
+                                              this.lvglPart == part &&
+                                              this.lvglState == state,
+                                          expanded: false,
+                                          data: { part, state },
+                                          className: classNames("state", {
+                                              modified: numModifications > 0
+                                          })
+                                      };
+                                  })
+                                : [],
+                            selected:
+                                this.lvglPart == part &&
+                                this.lvglState == undefined,
                             expanded: true,
+                            data: { part },
                             className: classNames("part", {
-                                modified: numModifications > 0
+                                modified: partEnabled && numModifications > 0,
+                                disabled: !partEnabled
                             })
                         };
                     }) ?? [],

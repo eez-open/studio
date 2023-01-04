@@ -8,6 +8,7 @@ import {
     EezObject,
     getClassInfoLvglProperties,
     getParent,
+    getProperty,
     IPropertyGridGroupDefinition,
     LVGL_FLAG_CODES,
     LVGL_REACTIVE_FLAGS,
@@ -21,6 +22,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
     createObject,
     getAncestorOfType,
+    getObjectPathAsString,
     Message,
     propertyNotSetMessage
 } from "project-editor/store";
@@ -28,9 +30,11 @@ import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import { ProjectContext } from "project-editor/project/context";
 import { humanize } from "eez-studio-shared/string";
 import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
+import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const LV_EVENT_METER_TICK_LABEL_EVENT = 0x76;
 export const LV_EVENT_DROPDOWN_SELECTED_CHANGED = 0x77;
 export const LV_EVENT_ROLLER_SELECTED_CHANGED = 0x78;
 export const LV_EVENT_TEXTAREA_TEXT_CHANGED = 0x79;
@@ -584,4 +588,40 @@ export function getCode<T extends string>(
     keyToCode: { [key in T]: number }
 ) {
     return arr.reduce((code, el) => code | keyToCode[el], 0) >>> 0;
+}
+
+export function getExpressionPropertyData(
+    runtime: LVGLPageRuntime,
+    widget: LVGLWidget,
+    propertyName: string
+) {
+    if (!runtime.wasm.assetsMap) {
+        return undefined;
+    }
+
+    const isExpr = getProperty(widget, propertyName + "Type") !== "literal";
+
+    if (!isExpr) {
+        return undefined;
+    }
+
+    const pagePath = getObjectPathAsString(runtime.page);
+    const flowIndex = runtime.wasm.assetsMap.flowIndexes[pagePath];
+    if (flowIndex == undefined) {
+        return undefined;
+    }
+    const flow = runtime.wasm.assetsMap.flows[flowIndex];
+    const componentPath = getObjectPathAsString(widget);
+    const componentIndex = flow.componentIndexes[componentPath];
+    if (componentIndex == undefined) {
+        return undefined;
+    }
+
+    const component = flow.components[componentIndex];
+    const propertyIndex = component.propertyIndexes[propertyName];
+    if (propertyIndex == undefined) {
+        return undefined;
+    }
+
+    return { flowIndex, componentIndex, propertyIndex };
 }

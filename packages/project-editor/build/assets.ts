@@ -996,24 +996,28 @@ export class Assets {
     }
 
     getComponentProperties(component: Component) {
-        return getClassInfo(component).properties.filter(propertyInfo =>
+        const classInfo = getClassInfo(component);
+
+        const properties = classInfo.properties.filter(propertyInfo =>
             isFlowProperty(component, propertyInfo, [
                 "input",
                 "template-literal",
                 "assignable"
             ])
         );
+
+        if (classInfo.getAdditionalFlowProperties) {
+            return [
+                ...properties,
+                ...classInfo.getAdditionalFlowProperties(component)
+            ];
+        } else {
+            return properties;
+        }
     }
 
     getComponentPropertyIndex(component: Component, propertyName: string) {
-        const properties = getClassInfo(component).properties.filter(
-            propertyInfo =>
-                isFlowProperty(component, propertyInfo, [
-                    "input",
-                    "template-literal",
-                    "assignable"
-                ])
-        );
+        const properties = this.getComponentProperties(component);
         return properties.findIndex(
             propertyInfo => propertyInfo.name == propertyName
         );

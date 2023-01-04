@@ -903,6 +903,7 @@ export class Page extends Flow {
         const obj = runtime.wasm._lvglCreateContainer(
             parentObj,
             runtime.getWidgetIndex(this),
+            0,
             this.left,
             this.top,
             this.width,
