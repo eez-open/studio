@@ -29,8 +29,7 @@ import {
     colorRgbToHexNumStr,
     colorRgbToNum,
     getSelectorBuildCode,
-    getSelectorCode,
-    LVGLParts
+    getSelectorCode
 } from "project-editor/lvgl/style-helper";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -42,10 +41,6 @@ export class LVGLStylesDefinition extends EezObject {
                 [prop: string]: any;
             };
         };
-    };
-
-    partEnabled: {
-        [part: string]: boolean;
     };
 
     static classInfo: ClassInfo = {
@@ -66,97 +61,8 @@ export class LVGLStylesDefinition extends EezObject {
         super();
 
         makeObservable(this, {
-            definition: observable,
-            partEnabled: observable
+            definition: observable
         });
-    }
-
-    isPartEnabled(part: string) {
-        if (this.partEnabled == undefined) {
-            return true;
-        }
-
-        return this.partEnabled[part] !== false;
-    }
-
-    enablePart(part: string, enable: boolean) {
-        if (enable) {
-            if (!this.isPartEnabled(part)) {
-                return Object.assign({}, this.partEnabled, {
-                    [part]: undefined
-                });
-            }
-        } else {
-            if (this.isPartEnabled(part)) {
-                return Object.assign({}, this.partEnabled, {
-                    [part]: false
-                });
-            }
-        }
-
-        return this.partEnabled;
-    }
-
-    static LVGL_PARTS_DISABLE_CODE = {
-        MAIN: 1 << 0,
-        SCROLLBAR: 1 << 1,
-        INDICATOR: 1 << 2,
-        KNOB: 1 << 3,
-        SELECTED: 1 << 4,
-        ITEMS: 1 << 5,
-        TICKS: 1 << 6,
-        CURSOR: 1 << 7,
-        CUSTOM1: 1 << 8,
-        ANY: 0
-    };
-
-    getDisabledPartsCode() {
-        let code = 0;
-
-        for (const part in this.partEnabled) {
-            if (this.partEnabled[part] === false) {
-                code |=
-                    LVGLStylesDefinition.LVGL_PARTS_DISABLE_CODE[
-                        part as LVGLParts
-                    ];
-            }
-        }
-
-        // signed to unsigned
-        code = code >>> 0;
-
-        return code;
-    }
-
-    lvglBuildRemoveStyles(build: LVGLBuild) {
-        const d = this.getDisabledPartsCode();
-
-        if (d & LVGLStylesDefinition.LVGL_PARTS_DISABLE_CODE["MAIN"])
-            build.line("lv_obj_remove_style(obj, NULL, LV_PART_MAIN);");
-
-        if (d & LVGLStylesDefinition.LVGL_PARTS_DISABLE_CODE["SCROLLBAR"])
-            build.line("lv_obj_remove_style(obj, NULL, LV_PART_SCROLLBAR);");
-
-        if (d & LVGLStylesDefinition.LVGL_PARTS_DISABLE_CODE["INDICATOR"])
-            build.line("lv_obj_remove_style(obj, NULL, LV_PART_INDICATOR);");
-
-        if (d & LVGLStylesDefinition.LVGL_PARTS_DISABLE_CODE["KNOB"])
-            build.line("lv_obj_remove_style(obj, NULL, LV_PART_KNOB);");
-
-        if (d & LVGLStylesDefinition.LVGL_PARTS_DISABLE_CODE["SELECTED"])
-            build.line("lv_obj_remove_style(obj, NULL, LV_PART_SELECTED);");
-
-        if (d & LVGLStylesDefinition.LVGL_PARTS_DISABLE_CODE["ITEMS"])
-            build.line("lv_obj_remove_style(obj, NULL, LV_PART_ITEMS);");
-
-        if (d & LVGLStylesDefinition.LVGL_PARTS_DISABLE_CODE["TICKS"])
-            build.line("lv_obj_remove_style(obj, NULL, LV_PART_TICKS);");
-
-        if (d & LVGLStylesDefinition.LVGL_PARTS_DISABLE_CODE["CURSOR"])
-            build.line("lv_obj_remove_style(obj, NULL, LV_PART_CURSOR);");
-
-        if (d & LVGLStylesDefinition.LVGL_PARTS_DISABLE_CODE["CUSTOM1"])
-            build.line("lv_obj_remove_style(obj, NULL, LV_PART_CUSTOM_FIRST);");
     }
 
     getPropertyValue(
@@ -238,10 +144,6 @@ export class LVGLStylesDefinition extends EezObject {
 
         if (this.definition) {
             Object.keys(this.definition).forEach(part => {
-                if (!this.isPartEnabled(part)) {
-                    return;
-                }
-
                 Object.keys(this.definition[part]).forEach(state => {
                     Object.keys(this.definition[part][state]).forEach(
                         propertyName => {
@@ -322,10 +224,6 @@ export class LVGLStylesDefinition extends EezObject {
         }
 
         Object.keys(this.definition).forEach(part => {
-            if (!this.isPartEnabled(part)) {
-                return;
-            }
-
             Object.keys(this.definition[part]).forEach(state => {
                 const selectorCode = getSelectorCode(part, state);
                 Object.keys(this.definition[part][state]).forEach(
@@ -463,10 +361,6 @@ export class LVGLStylesDefinition extends EezObject {
         }
 
         Object.keys(this.definition).forEach(part => {
-            if (!this.isPartEnabled(part)) {
-                return;
-            }
-
             Object.keys(this.definition[part]).forEach(state => {
                 const selectorCode = getSelectorBuildCode(part, state);
                 Object.keys(this.definition[part][state]).forEach(

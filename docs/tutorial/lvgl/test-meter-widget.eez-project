@@ -222,8 +222,8 @@
         {
           "objID": "c59ff889-52e7-4fdb-a501-e52265a7eeae",
           "type": "EvalExprActionComponent",
-          "left": -232,
-          "top": 97,
+          "left": -297,
+          "top": 95,
           "width": 205,
           "height": 55,
           "customInputs": [
@@ -239,8 +239,8 @@
         {
           "objID": "65334fa0-220f-4483-8ec9-892dd479eb7e",
           "type": "EvalExprActionComponent",
-          "left": -232,
-          "top": 179,
+          "left": -297,
+          "top": 177,
           "width": 217,
           "height": 55,
           "customInputs": [
@@ -297,8 +297,8 @@
         {
           "objID": "ede83d20-c439-4c8b-86e0-2c699580b0bf",
           "type": "EvalExprActionComponent",
-          "left": -232,
-          "top": 258,
+          "left": -297,
+          "top": 256,
           "width": 217,
           "height": 55,
           "customInputs": [
@@ -350,8 +350,8 @@
         {
           "objID": "679705d0-a1fc-4f8d-d017-88c322b50c2d",
           "type": "EvalExprActionComponent",
-          "left": -461,
-          "top": 0,
+          "left": -526,
+          "top": -2,
           "width": 120,
           "height": 55,
           "customInputs": [],
@@ -361,8 +361,8 @@
         {
           "objID": "335711fc-866b-4738-d02e-a51722b99280",
           "type": "DelayActionComponent",
-          "left": -286,
-          "top": 0,
+          "left": -351,
+          "top": -2,
           "width": 87,
           "height": 55,
           "customInputs": [],
@@ -578,11 +578,14 @@
                   "pad_left": 10,
                   "pad_right": 10
                 }
+              },
+              "INDICATOR": {
+                "DEFAULT": {
+                  "opa": 0
+                }
               }
             },
-            "partEnabled": {
-              "INDICATOR": false
-            }
+            "partEnabled": {}
           },
           "eventHandlers": [],
           "scales": [
@@ -694,8 +697,8 @@
         {
           "objID": "1d287725-f63b-43cc-87c4-4669fd14aa3d",
           "type": "LoopActionComponent",
-          "left": 97,
-          "top": -318,
+          "left": 134,
+          "top": -388,
           "width": 291,
           "height": 73,
           "customInputs": [],
@@ -709,8 +712,8 @@
         {
           "objID": "ba7bd532-2f7a-48df-aeda-8a668f4f7702",
           "type": "DelayActionComponent",
-          "left": 473,
-          "top": -363,
+          "left": 510,
+          "top": -433,
           "width": 87,
           "height": 55,
           "customInputs": [],
@@ -720,8 +723,8 @@
         {
           "objID": "d9806b11-fdbb-4e28-97ae-275ae68a9247",
           "type": "LoopActionComponent",
-          "left": 632,
-          "top": -298,
+          "left": 669,
+          "top": -368,
           "width": 340,
           "height": 73,
           "customInputs": [],
@@ -735,8 +738,8 @@
         {
           "objID": "2bb180bd-50cb-4e6e-f4aa-f2cd644249b0",
           "type": "DelayActionComponent",
-          "left": 1102,
-          "top": -336,
+          "left": 1139,
+          "top": -406,
           "width": 87,
           "height": 55,
           "customInputs": [],
@@ -787,14 +790,21 @@
             "definition": {
               "MAIN": {
                 "DEFAULT": {
-                  "border_opa": 0
+                  "border_opa": 0,
+                  "bg_opa": 0,
+                  "pad_top": 0,
+                  "pad_bottom": 0,
+                  "pad_left": 0,
+                  "pad_right": 0
+                }
+              },
+              "INDICATOR": {
+                "DEFAULT": {
+                  "opa": 0
                 }
               }
             },
-            "partEnabled": {
-              "MAIN": false,
-              "INDICATOR": false
-            }
+            "partEnabled": {}
           },
           "eventHandlers": [],
           "scales": [

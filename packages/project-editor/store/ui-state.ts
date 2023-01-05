@@ -29,7 +29,7 @@ export class UIStateStore {
     showComponentDescriptions: boolean = true;
     selectedLanguageID: string;
     lvglPart: LVGLParts = "MAIN";
-    lvglState: string | undefined = "DEFAULT";
+    lvglState: string = "DEFAULT";
     lvglExpandedPropertiesGroup: string[] = [];
 
     objectUIStates = new Map<string, any>();

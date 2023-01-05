@@ -1213,8 +1213,6 @@ export class LVGLWidget extends Widget {
             build.line(`${build.getLvglObjectAccessor(this)} = obj;`);
         }
 
-        this.localStyles.lvglBuildRemoveStyles(build);
-
         build.line(
             `lv_obj_set_pos(obj, ${this.lvglBuildLeft}, ${this.lvglBuildTop});`
         );
@@ -1823,7 +1821,7 @@ export class LVGLLabelWidget extends LVGLWidget {
         const obj = runtime.wasm._lvglCreateLabel(
             parentObj,
             runtime.getWidgetIndex(this),
-            this.localStyles.getDisabledPartsCode(),
+
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -1953,7 +1951,7 @@ export class LVGLButtonWidget extends LVGLWidget {
         return runtime.wasm._lvglCreateButton(
             parentObj,
             runtime.getWidgetIndex(this),
-            this.localStyles.getDisabledPartsCode(),
+
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -2040,7 +2038,7 @@ export class LVGLPanelWidget extends LVGLWidget {
         return runtime.wasm._lvglCreatePanel(
             parentObj,
             runtime.getWidgetIndex(this),
-            this.localStyles.getDisabledPartsCode(),
+
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -2201,7 +2199,7 @@ export class LVGLImageWidget extends LVGLWidget {
         const obj = runtime.wasm._lvglCreateImage(
             parentObj,
             runtime.getWidgetIndex(this),
-            this.localStyles.getDisabledPartsCode(),
+
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -2430,7 +2428,7 @@ export class LVGLSliderWidget extends LVGLWidget {
         const obj = runtime.wasm._lvglCreateSlider(
             parentObj,
             runtime.getWidgetIndex(this),
-            this.localStyles.getDisabledPartsCode(),
+
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -2711,7 +2709,7 @@ export class LVGLRollerWidget extends LVGLWidget {
         const obj = runtime.wasm._lvglCreateRoller(
             parentObj,
             runtime.getWidgetIndex(this),
-            this.localStyles.getDisabledPartsCode(),
+
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -2861,7 +2859,7 @@ export class LVGLSwitchWidget extends LVGLWidget {
         return runtime.wasm._lvglCreateSwitch(
             parentObj,
             runtime.getWidgetIndex(this),
-            this.localStyles.getDisabledPartsCode(),
+
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -3026,7 +3024,7 @@ export class LVGLBarWidget extends LVGLWidget {
         const obj = runtime.wasm._lvglCreateBar(
             parentObj,
             runtime.getWidgetIndex(this),
-            this.localStyles.getDisabledPartsCode(),
+
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -3233,7 +3231,7 @@ export class LVGLDropdownWidget extends LVGLWidget {
         const obj = runtime.wasm._lvglCreateDropdown(
             parentObj,
             runtime.getWidgetIndex(this),
-            this.localStyles.getDisabledPartsCode(),
+
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -3479,7 +3477,7 @@ export class LVGLArcWidget extends LVGLWidget {
         const obj = runtime.wasm._lvglCreateArc(
             parentObj,
             runtime.getWidgetIndex(this),
-            this.localStyles.getDisabledPartsCode(),
+
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -3635,7 +3633,7 @@ export class LVGLSpinnerWidget extends LVGLWidget {
         return runtime.wasm._lvglCreateSpinner(
             parentObj,
             runtime.getWidgetIndex(this),
-            this.localStyles.getDisabledPartsCode(),
+
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -3729,7 +3727,7 @@ export class LVGLCheckboxWidget extends LVGLWidget {
         return runtime.wasm._lvglCreateCheckbox(
             parentObj,
             runtime.getWidgetIndex(this),
-            this.localStyles.getDisabledPartsCode(),
+
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -3892,7 +3890,7 @@ export class LVGLTextareaWidget extends LVGLWidget {
         const obj = runtime.wasm._lvglCreateTextarea(
             parentObj,
             runtime.getWidgetIndex(this),
-            this.localStyles.getDisabledPartsCode(),
+
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -4168,7 +4166,7 @@ export class LVGLCalendarWidget extends LVGLWidget {
         const obj = runtime.wasm._lvglCreateCalendar(
             parentObj,
             runtime.getWidgetIndex(this),
-            this.localStyles.getDisabledPartsCode(),
+
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -4318,7 +4316,7 @@ export class LVGLColorwheelWidget extends LVGLWidget {
         const obj = runtime.wasm._lvglCreateColorwheel(
             parentObj,
             runtime.getWidgetIndex(this),
-            this.localStyles.getDisabledPartsCode(),
+
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -4579,7 +4577,7 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
         const obj = runtime.wasm._lvglCreateImgbutton(
             parentObj,
             runtime.getWidgetIndex(this),
-            this.localStyles.getDisabledPartsCode(),
+
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -4927,7 +4925,7 @@ export class LVGLKeyboardWidget extends LVGLWidget {
         const obj = runtime.wasm._lvglCreateKeyboard(
             parentObj,
             runtime.getWidgetIndex(this),
-            this.localStyles.getDisabledPartsCode(),
+
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -5077,7 +5075,7 @@ export class LVGLChartWidget extends LVGLWidget {
         const obj = runtime.wasm._lvglCreateChart(
             parentObj,
             runtime.getWidgetIndex(this),
-            this.localStyles.getDisabledPartsCode(),
+
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
@@ -5149,7 +5147,10 @@ export class LVGLMeterIndicator extends EezObject {
                                 LVGL_METER_INDICATOR_TYPES
                             ).map(id => ({
                                 id,
-                                label: humanize(id)
+                                label:
+                                    id == "NEEDLE_IMG"
+                                        ? "Needle image"
+                                        : humanize(id)
                             }))
                         }
                     ]
@@ -5358,6 +5359,18 @@ export class LVGLMeterIndicatorNeedleImg extends LVGLMeterIndicator {
                 {}
             )
         ],
+
+        listLabel: (
+            indicator: LVGLMeterIndicatorNeedleImg,
+            collapsed: boolean
+        ) => {
+            return `Needle image at ${
+                indicator.valueType == "literal"
+                    ? indicator.value
+                    : `{${indicator.value}}`
+            }`;
+        },
+
         defaultValue: {
             pivotX: 0,
             pivotY: 0,
@@ -5530,6 +5543,18 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
                 {}
             )
         ],
+
+        listLabel: (
+            indicator: LVGLMeterIndicatorNeedleLine,
+            collapsed: boolean
+        ) => {
+            return `Needle line at ${
+                indicator.valueType == "literal"
+                    ? indicator.value
+                    : `{${indicator.value}}`
+            }`;
+        },
+
         defaultValue: {
             width: 3,
             color: "#0000FF",
@@ -5696,6 +5721,22 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
                 {}
             )
         ],
+
+        listLabel: (
+            indicator: LVGLMeterIndicatorScaleLines,
+            collapsed: boolean
+        ) => {
+            return `Scale lines from ${
+                indicator.startValueType == "literal"
+                    ? indicator.startValue
+                    : `{${indicator.startValue}}`
+            } to ${
+                indicator.endValueType == "literal"
+                    ? indicator.endValue
+                    : `{${indicator.endValue}}`
+            } `;
+        },
+
         defaultValue: {
             colorStart: "#000000",
             colorEnd: "#a0a0a0",
@@ -5910,6 +5951,19 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
                 {}
             )
         ],
+
+        listLabel: (indicator: LVGLMeterIndicatorArc, collapsed: boolean) => {
+            return `Arc from ${
+                indicator.startValueType == "literal"
+                    ? indicator.startValue
+                    : `{${indicator.startValue}}`
+            } to ${
+                indicator.endValueType == "literal"
+                    ? indicator.endValue
+                    : `{${indicator.endValue}}`
+            } `;
+        },
+
         defaultValue: {
             width: 2,
             color: "#000000",
@@ -6098,18 +6152,27 @@ class LVGLMeterScale extends EezObject {
             { name: "minorTickColor", type: PropertyType.Color },
 
             { name: "nthMajor", type: PropertyType.Number },
-            { name: "majorTickWidth", type: PropertyType.Number },
+            {
+                name: "majorTickWidth",
+                displayName: "Major tick line width",
+                type: PropertyType.Number
+            },
             { name: "majorTickLength", type: PropertyType.Number },
             { name: "majorTickColor", type: PropertyType.Color },
 
             makeExpressionProperty(
                 {
                     name: "label",
+                    displayName: "Tick label",
                     type: PropertyType.MultilineText
                 },
                 "string"
             ),
-            { name: "labelGap", type: PropertyType.Number },
+            {
+                name: "labelGap",
+                displayName: "Tick label gap",
+                type: PropertyType.Number
+            },
 
             { name: "scaleMin", type: PropertyType.Number },
             { name: "scaleMax", type: PropertyType.Number },
@@ -6126,6 +6189,10 @@ class LVGLMeterScale extends EezObject {
                 defaultValue: []
             }
         ],
+
+        listLabel: (scale: LVGLMeterScale, collapsed: boolean) => {
+            return "Scale";
+        },
 
         defaultValue: {
             minorTickCount: 41,
@@ -6347,7 +6414,7 @@ export class LVGLMeterWidget extends LVGLWidget {
         const obj = runtime.wasm._lvglCreateMeter(
             parentObj,
             runtime.getWidgetIndex(this),
-            this.localStyles.getDisabledPartsCode(),
+
             this.lvglCreateLeft,
             this.lvglCreateTop,
             this.lvglCreateWidth,
