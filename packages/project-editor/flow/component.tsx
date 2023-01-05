@@ -1757,7 +1757,8 @@ export class Component extends EezObject {
                             style={{
                                 opacity: 0.66,
                                 marginRight: 5,
-                                height: 20
+                                width: 18,
+                                height: 18
                             }}
                         />
                     )}

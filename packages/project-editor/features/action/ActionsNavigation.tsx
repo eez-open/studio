@@ -14,6 +14,7 @@ import { IPanel } from "project-editor/store";
 import { Tree } from "project-editor/ui-components/Tree";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { ActionFlowTabState } from "../action/ActionEditor";
+import { CommentActionComponent } from "project-editor/flow/components/actions";
 
 export const ActionsNavigation = observer(
     class ActionsNavigation extends NavigationComponent {
@@ -110,7 +111,10 @@ export const ActionComponents = observer(
                 this.componentContainerDisplayItem,
                 undefined,
                 (object: IEezObject) => {
-                    return object instanceof ProjectEditor.ActionComponentClass;
+                    return (
+                        object instanceof ProjectEditor.ActionComponentClass &&
+                        !(object instanceof CommentActionComponent)
+                    );
                 },
                 true
             );

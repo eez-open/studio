@@ -2702,6 +2702,7 @@ button.EezStudio_Action {
 
         .tree-row-triangle {
             color: @textColor;
+            padding-top: 2px;
         }
 
         .tree-row-triangle:hover {
@@ -5325,7 +5326,7 @@ button.EezStudio_Action {
     display: flex;
     flex: 1;
     justify-content: space-between;
-    height: 20px;
+    padding: 1px 0;
 
     &.dimmed {
         opacity: 0.5;
@@ -5336,6 +5337,13 @@ button.EezStudio_Action {
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: hidden;
+        display: flex;
+        align-items: center;
+
+        svg,
+        img {
+            flex-shrink: 0;
+        }
     }
 
     .EezStudio_IconAction {
@@ -5401,13 +5409,20 @@ button.EezStudio_Action {
     display: flex;
     flex: 1;
     justify-content: space-between;
-    height: 20px;
+    padding: 1px 0;
 
     span {
         flex: 1;
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: hidden;
+        display: flex;
+        align-items: center;
+
+        svg,
+        img {
+            flex-shrink: 0;
+        }
     }
 }
 

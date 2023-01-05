@@ -31,6 +31,7 @@ import {
 } from "eez-studio-ui/header-with-body";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { visitObjects } from "project-editor/core/search";
+import { CommentActionComponent } from "project-editor/flow/components/actions";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -488,7 +489,10 @@ export const ActionComponents = observer(
                 this.componentContainerDisplayItem,
                 undefined,
                 (object: IEezObject) => {
-                    return object instanceof ProjectEditor.ActionComponentClass;
+                    return (
+                        object instanceof ProjectEditor.ActionComponentClass &&
+                        !(object instanceof CommentActionComponent)
+                    );
                 },
                 true
             );

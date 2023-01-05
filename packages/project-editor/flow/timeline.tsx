@@ -2257,6 +2257,11 @@ const WidgetTimelinePathHandles = observer(
         const CONTROL_POINT_HANDLE_FILL_COLOR_SELECTED = "#337bb7";
         const CONTROL_POINT_RADIUS = 5;
 
+        const FROM_POINT_HANDLE_STROKE_WIDTH = 1.5;
+        const FROM_POINT_HANDLE_STROKE_COLOR = "#d0d0d0";
+        const FROM_POINT_HANDLE_FILL_COLOR = "white";
+        const FROM_POINT_RADIUS = 5;
+
         const TO_POINT_HANDLE_STROKE_WIDTH = 1.5;
         const TO_POINT_HANDLE_STROKE_COLOR = "#ff8c00";
         const TO_POINT_HANDLE_FILL_COLOR = "white";
@@ -2281,8 +2286,14 @@ const WidgetTimelinePathHandles = observer(
                                         <circle
                                             cx={p1.x}
                                             cy={p1.y}
-                                            r={TO_POINT_RADIUS}
-                                            fill={TO_POINT_HANDLE_FILL_COLOR}
+                                            r={FROM_POINT_RADIUS}
+                                            stroke={
+                                                FROM_POINT_HANDLE_STROKE_COLOR
+                                            }
+                                            strokeWidth={
+                                                FROM_POINT_HANDLE_STROKE_WIDTH
+                                            }
+                                            fill={FROM_POINT_HANDLE_FILL_COLOR}
                                             style={{ cursor: "grab" }}
                                             {...editorHandleProps.from}
                                         />
@@ -2350,8 +2361,14 @@ const WidgetTimelinePathHandles = observer(
                                         <circle
                                             cx={p1.x}
                                             cy={p1.y}
-                                            r={TO_POINT_RADIUS}
-                                            fill={TO_POINT_HANDLE_FILL_COLOR}
+                                            r={FROM_POINT_RADIUS}
+                                            stroke={
+                                                FROM_POINT_HANDLE_STROKE_COLOR
+                                            }
+                                            strokeWidth={
+                                                FROM_POINT_HANDLE_STROKE_WIDTH
+                                            }
+                                            fill={FROM_POINT_HANDLE_FILL_COLOR}
                                             style={{ cursor: "grab" }}
                                             {...editorHandleProps.from}
                                         />
@@ -2400,8 +2417,14 @@ const WidgetTimelinePathHandles = observer(
                                         <circle
                                             cx={p1.x}
                                             cy={p1.y}
-                                            r={TO_POINT_RADIUS}
-                                            fill={TO_POINT_HANDLE_FILL_COLOR}
+                                            r={FROM_POINT_RADIUS}
+                                            stroke={
+                                                FROM_POINT_HANDLE_STROKE_COLOR
+                                            }
+                                            strokeWidth={
+                                                FROM_POINT_HANDLE_STROKE_WIDTH
+                                            }
+                                            fill={FROM_POINT_HANDLE_FILL_COLOR}
                                             style={{ cursor: "grab" }}
                                             {...editorHandleProps.from}
                                         />
