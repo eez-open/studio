@@ -427,6 +427,10 @@ const Editors = observer(
             }
 
             if (component === "editor") {
+                const editor = this.context.editorsStore.tabIdToEditorMap.get(
+                    node.getId()
+                );
+
                 node.setEventListener("visibility", (p: any) => {
                     this.context.editorsStore.refresh(true);
                 });
@@ -435,9 +439,6 @@ const Editors = observer(
                     this.context.editorsStore.refresh(true);
                 });
 
-                const editor = this.context.editorsStore.tabIdToEditorMap.get(
-                    node.getId()
-                );
                 if (editor) {
                     let result = getEditorComponent(
                         editor.object,

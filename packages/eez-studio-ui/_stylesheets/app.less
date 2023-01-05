@@ -5376,6 +5376,41 @@ button.EezStudio_Action {
     }
 }
 
+.EezStudio_ActionComponents {
+    height: 100%;
+
+    .EezStudio_ToolbarHeader {
+        min-height: 28px;
+    }
+
+    .EezStudio_Tree {
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    .tree-row {
+        width: 100%;
+    }
+
+    .EezStudio_ActionComponentTreeTrow {
+        width: 100%;
+    }
+}
+
+.EezStudio_ActionComponentTreeTrow {
+    display: flex;
+    flex: 1;
+    justify-content: space-between;
+    height: 20px;
+
+    span {
+        flex: 1;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+    }
+}
+
 .EezStudio_ActionGroups {
     .EezStudio_ActionGroup {
         margin-bottom: 10px;

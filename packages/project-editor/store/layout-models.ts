@@ -49,6 +49,7 @@ export class LayoutModels {
     static TEXTS_STATISTICS_TAB_ID = "TEXTS_STATISTICS";
 
     static PAGE_STRUCTURE_TAB_ID = "page-structure";
+    static ACTION_COMPONENTS_TAB_ID = "action-components";
     static ACTIONS_TAB_ID = "actions";
 
     static BREAKPOINTS_TAB: FlexLayout.IJsonTabNode = {
@@ -80,6 +81,14 @@ export class LayoutModels {
         name: "Page Structure",
         component: "page-structure",
         id: LayoutModels.PAGE_STRUCTURE_TAB_ID
+    };
+
+    static ACTION_COMPONENTS_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Action Components",
+        component: "action-components",
+        id: LayoutModels.ACTION_COMPONENTS_TAB_ID
     };
 
     static LOCAL_VARS_TAB: FlexLayout.IJsonTabNode = {
@@ -613,7 +622,7 @@ export class LayoutModels {
             },
             {
                 name: "pagesEditor",
-                version: 6,
+                version: 7,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: [],
@@ -630,7 +639,8 @@ export class LayoutModels {
                                     {
                                         type: "tabset",
                                         children: [
-                                            LayoutModels.PAGE_STRUCTURE_TAB
+                                            LayoutModels.PAGE_STRUCTURE_TAB,
+                                            LayoutModels.ACTION_COMPONENTS_TAB
                                         ]
                                     },
                                     {
@@ -673,7 +683,7 @@ export class LayoutModels {
             },
             {
                 name: "actionsEditor",
-                version: 6,
+                version: 7,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: [],
@@ -693,6 +703,12 @@ export class LayoutModels {
                                                 component: "actions",
                                                 id: LayoutModels.ACTIONS_TAB_ID
                                             }
+                                        ]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        children: [
+                                            LayoutModels.ACTION_COMPONENTS_TAB
                                         ]
                                     },
                                     {

@@ -83,6 +83,10 @@ export const PagesNavigation = observer(
                 return <PageStructure />;
             }
 
+            if (component === "action-components") {
+                return <ActionComponents />;
+            }
+
             if (component === "locals") {
                 return <LocalVariables />;
             }
@@ -430,6 +434,125 @@ export const PageStructure = observer(
                         />
                     </Body>
                 </VerticalHeaderWithBody>
+            ) : null;
+        }
+    }
+);
+
+export const ActionComponents = observer(
+    class ActionComponents extends React.Component implements IPanel {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                pageTabState: computed,
+                componentContainerDisplayItem: computed,
+                treeAdapter: computed
+            });
+        }
+
+        componentDidMount() {
+            this.context.navigationStore.setInitialSelectedPanel(this);
+        }
+
+        get pageTabState() {
+            const editor = this.context.editorsStore.activeEditor;
+            if (!editor) {
+                return undefined;
+            }
+
+            const object = editor.object;
+            if (!(object instanceof ProjectEditor.PageClass)) {
+                return undefined;
+            }
+
+            return editor.state as PageTabState;
+        }
+
+        get componentContainerDisplayItem() {
+            if (!this.pageTabState) {
+                return undefined;
+            }
+
+            return this.pageTabState.widgetContainer;
+        }
+
+        get treeAdapter() {
+            if (!this.componentContainerDisplayItem) {
+                return null;
+            }
+            return new TreeAdapter(
+                this.componentContainerDisplayItem,
+                undefined,
+                (object: IEezObject) => {
+                    return object instanceof ProjectEditor.ActionComponentClass;
+                },
+                true
+            );
+        }
+
+        // interface IPanel implementation
+        get selectedObject() {
+            return this.selectedObjects[0];
+        }
+
+        get selectedObjects() {
+            const selectedObjects =
+                this.componentContainerDisplayItem &&
+                this.componentContainerDisplayItem.selectedObjects;
+            if (selectedObjects && selectedObjects.length > 0) {
+                return selectedObjects;
+            }
+
+            if (this.pageTabState) {
+                return [this.pageTabState.page];
+            }
+
+            return [];
+        }
+        cutSelection() {
+            this.treeAdapter!.cutSelection();
+        }
+        copySelection() {
+            this.treeAdapter!.copySelection();
+        }
+        pasteSelection() {
+            this.treeAdapter!.pasteSelection();
+        }
+        deleteSelection() {
+            this.treeAdapter!.deleteSelection();
+        }
+        onFocus = () => {
+            this.context.navigationStore.setSelectedPanel(this);
+        };
+
+        renderItem = (itemId: string) => {
+            if (!this.treeAdapter) {
+                return null;
+            }
+            const item = this.treeAdapter.getItemFromId(itemId);
+            if (!item) {
+                return null;
+            }
+
+            return (
+                <span className="EezStudio_ActionComponentTreeTrow">
+                    <span>{this.treeAdapter.itemToString(item)}</span>
+                </span>
+            );
+        };
+
+        render() {
+            return this.treeAdapter ? (
+                <Tree
+                    treeAdapter={this.treeAdapter}
+                    onFocus={this.onFocus}
+                    tabIndex={0}
+                    renderItem={this.renderItem}
+                />
             ) : null;
         }
     }

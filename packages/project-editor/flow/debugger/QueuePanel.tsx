@@ -131,35 +131,6 @@ export const QueuePanel = observer(
                                               this.props.runtime.queue.length >
                                                   0
                                           }
-                                      />,
-                                      <IconAction
-                                          key="restart"
-                                          icon={
-                                              <svg
-                                                  viewBox="0 0 24 24"
-                                                  strokeWidth="2"
-                                                  stroke="currentColor"
-                                                  fill="none"
-                                                  strokeLinecap="round"
-                                                  strokeLinejoin="round"
-                                              >
-                                                  <path d="M4.05 11a8 8 0 1 1 .5 4m-.5 5v-5h5"></path>
-                                              </svg>
-                                          }
-                                          iconSize={18}
-                                          style={{
-                                              marginTop: 4,
-                                              color: this.props.runtime.isPaused
-                                                  ? "green"
-                                                  : ""
-                                          }}
-                                          title="Restart"
-                                          onClick={
-                                              this.props.runtime
-                                                  .projectEditorStore
-                                                  .onRestartRuntimeWithDebuggerActive
-                                          }
-                                          enabled={this.props.runtime.isPaused}
                                       />
                                   ]
                         }

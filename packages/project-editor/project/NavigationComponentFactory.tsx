@@ -1,3 +1,5 @@
+import { action } from "mobx";
+
 import { IEezObject } from "project-editor/core/object";
 
 import { getProject, Settings } from "project-editor/project/project";
@@ -241,7 +243,7 @@ export function getNavigationObject(
     return undefined;
 }
 
-export function navigateTo(object: IEezObject) {
+export const navigateTo = action((object: IEezObject) => {
     const projectEditorStore = getProjectEditorStore(object);
     const project = projectEditorStore.project;
 
@@ -332,7 +334,7 @@ export function navigateTo(object: IEezObject) {
         );
         return;
     }
-}
+});
 
 export function selectObject(object: IEezObject) {
     const projectEditorStore = getProjectEditorStore(object);
