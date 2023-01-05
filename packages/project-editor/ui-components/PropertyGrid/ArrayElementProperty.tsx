@@ -790,7 +790,6 @@ const ArrayElementPropertiesVerticalOrientation = observer(
         refHeader = React.createRef<HTMLHeadingElement>();
 
         bsCollapse: bootstrap.Collapse;
-        show: boolean;
 
         draggable = new ArrayPropertyItemDraggable(
             "accordion-item",
@@ -804,8 +803,7 @@ const ArrayElementPropertiesVerticalOrientation = observer(
                 this.refCollapse.current!,
                 { toggle: false }
             );
-            this.show = this.props.selected;
-            if (this.show) {
+            if (this.props.selected) {
                 this.bsCollapse.show();
             } else {
                 this.bsCollapse.hide();
@@ -822,8 +820,7 @@ const ArrayElementPropertiesVerticalOrientation = observer(
         }
 
         componentDidUpdate() {
-            this.show = this.props.selected;
-            if (this.show) {
+            if (this.props.selected) {
                 this.bsCollapse.show();
             } else {
                 this.bsCollapse.hide();
@@ -874,7 +871,9 @@ const ArrayElementPropertiesVerticalOrientation = observer(
                         id={idAccordionHeading}
                     >
                         <button
-                            className="accordion-button collapsed"
+                            className={classNames("accordion-button", {
+                                collapsed: !this.props.selected
+                            })}
                             type="button"
                             data-bs-toggle="collapse"
                             data-bs-target={`#${idAccordionCollapse}`}

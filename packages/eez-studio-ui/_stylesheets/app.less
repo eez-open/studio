@@ -2779,6 +2779,10 @@ button.EezStudio_Action {
     border: 1px solid @borderColor;
     margin-bottom: 10px;
 
+    input[type="color"] {
+        height: 28px;
+    }
+
     .form-control {
         border: 1px solid @borderColor;
         padding: 0 0.5rem;
@@ -2884,6 +2888,12 @@ button.EezStudio_Action {
 
                 table {
                     width: 100%;
+
+                    tr {
+                        td:first-child {
+                            white-space: nowrap;
+                        }
+                    }
                 }
             }
         }

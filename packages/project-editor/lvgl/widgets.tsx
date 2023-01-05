@@ -6146,12 +6146,21 @@ class LVGLMeterScale extends EezObject {
 
     static classInfo: ClassInfo = {
         properties: [
+            { name: "scaleMin", type: PropertyType.Number },
+            { name: "scaleMax", type: PropertyType.Number },
+            { name: "scaleAngleRange", type: PropertyType.Number },
+            { name: "scaleRotation", type: PropertyType.Number },
+
             { name: "minorTickCount", type: PropertyType.Number },
             { name: "minorTickLineWidth", type: PropertyType.Number },
             { name: "minorTickLength", type: PropertyType.Number },
             { name: "minorTickColor", type: PropertyType.Color },
 
-            { name: "nthMajor", type: PropertyType.Number },
+            {
+                name: "nthMajor",
+                displayName: "Major tick distance",
+                type: PropertyType.Number
+            },
             {
                 name: "majorTickWidth",
                 displayName: "Major tick line width",
@@ -6163,21 +6172,16 @@ class LVGLMeterScale extends EezObject {
             makeExpressionProperty(
                 {
                     name: "label",
-                    displayName: "Tick label",
+                    displayName: "Major tick label",
                     type: PropertyType.MultilineText
                 },
                 "string"
             ),
             {
                 name: "labelGap",
-                displayName: "Tick label gap",
+                displayName: "Major Tick label gap",
                 type: PropertyType.Number
             },
-
-            { name: "scaleMin", type: PropertyType.Number },
-            { name: "scaleMax", type: PropertyType.Number },
-            { name: "scaleAngleRange", type: PropertyType.Number },
-            { name: "scaleRotation", type: PropertyType.Number },
 
             {
                 name: "indicators",
