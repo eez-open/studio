@@ -598,10 +598,10 @@
               },
               "MAIN": {
                 "DEFAULT": {
-                  "pad_top": 10,
-                  "pad_bottom": 10,
-                  "pad_left": 10,
-                  "pad_right": 10,
+                  "pad_top": 5,
+                  "pad_bottom": 5,
+                  "pad_left": 5,
+                  "pad_right": 5,
                   "bg_color": "#e0ecff"
                 }
               }
