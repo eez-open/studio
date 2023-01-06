@@ -305,12 +305,21 @@ export class WasmRuntime extends RemoteRuntime {
                 return;
             }
 
-            if (workerToRenderMessage.messageToDebugger) {
-                this.debuggerConnection.onMessageToDebugger(
-                    arrayBufferToBinaryString(
-                        workerToRenderMessage.messageToDebugger
-                    )
-                );
+            if (workerToRenderMessage.freeArrayValue) {
+                const valueType =
+                    workerToRenderMessage.freeArrayValue.valueType;
+
+                const objectVariableType =
+                    getObjectVariableTypeFromType(valueType);
+                if (objectVariableType) {
+                    const value = objectVariableType.createValue(
+                        workerToRenderMessage.freeArrayValue
+                            .value as IObjectVariableValueConstructorParams,
+                        true
+                    );
+                    objectVariableType.destroyValue(value);
+                }
+
                 return;
             }
 
@@ -349,25 +358,16 @@ export class WasmRuntime extends RemoteRuntime {
                 }
             }
 
-            if (workerToRenderMessage.freeArrayValue) {
-                const valueType =
-                    workerToRenderMessage.freeArrayValue.valueType;
-
-                const objectVariableType =
-                    getObjectVariableTypeFromType(valueType);
-                if (objectVariableType) {
-                    const value = objectVariableType.createValue(
-                        workerToRenderMessage.freeArrayValue
-                            .value as IObjectVariableValueConstructorParams,
-                        true
-                    );
-                    objectVariableType.destroyValue(value);
-                }
-
-                return;
+            if (workerToRenderMessage.messageToDebugger) {
+                this.debuggerConnection.onMessageToDebugger(
+                    arrayBufferToBinaryString(
+                        workerToRenderMessage.messageToDebugger
+                    )
+                );
             }
 
             this.screen = workerToRenderMessage.screen;
+
             runInAction(() => {
                 if (
                     workerToRenderMessage.isRTL != undefined &&

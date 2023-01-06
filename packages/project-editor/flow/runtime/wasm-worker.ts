@@ -30,30 +30,40 @@ function getWasmFlowRuntime(wasmModuleId: number) {
     return wasmFlowRuntimes.get(wasmModuleId)!;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+let wasmModuleToMessageToDebugger = new Map<number, Uint8Array>();
+
 function startToDebuggerMessage(wasmModuleId: number) {}
 
-let messagesToDebugger: WorkerToRenderMessage[] = [];
-let sendMessagesToDebuggerTimeout: any;
-
-function writeDebuggerBuffer(wasmModuleId: number, arr: any) {
+function writeDebuggerBuffer(wasmModuleId: number, buffer: any) {
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
     if (!WasmFlowRuntime) {
         return;
     }
 
-    messagesToDebugger.push({
-        messageToDebugger: new Uint8Array(arr)
-    });
+    let newMessageToDebugger = new Uint8Array(buffer);
 
-    if (!sendMessagesToDebuggerTimeout) {
-        sendMessagesToDebuggerTimeout = setTimeout(() => {
-            sendMessagesToDebuggerTimeout = undefined;
-            messagesToDebugger.forEach(message =>
-                WasmFlowRuntime.postWorkerToRendererMessage(message)
-            );
-            messagesToDebugger = [];
-        });
+    let currentMessagesToDebugger =
+        wasmModuleToMessageToDebugger.get(wasmModuleId);
+
+    let messageToDebugger;
+
+    if (currentMessagesToDebugger) {
+        // merge
+        messageToDebugger = new Uint8Array(
+            currentMessagesToDebugger.length + newMessageToDebugger.length
+        );
+        messageToDebugger.set(currentMessagesToDebugger);
+        messageToDebugger.set(
+            newMessageToDebugger,
+            currentMessagesToDebugger.length
+        );
+    } else {
+        messageToDebugger = newMessageToDebugger;
     }
+
+    wasmModuleToMessageToDebugger.set(wasmModuleId, messageToDebugger);
 }
 
 function finishToDebuggerMessage(wasmModuleId: number) {}
@@ -552,6 +562,12 @@ export function createWasmWorker(
         }
 
         workerToRenderMessage.isRTL = WasmFlowRuntime._isRTL();
+
+        let messageToDebugger = wasmModuleToMessageToDebugger.get(wasmModuleId);
+        if (messageToDebugger != undefined) {
+            workerToRenderMessage.messageToDebugger = messageToDebugger;
+            wasmModuleToMessageToDebugger.delete(wasmModuleId);
+        }
 
         postWorkerToRenderMessage(workerToRenderMessage);
     };
