@@ -17,10 +17,12 @@ import {
     isPropertyOptional
 } from "project-editor/core/object";
 import { visitObjects } from "project-editor/core/search";
+import type { Flow } from "project-editor/flow/flow";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Project } from "project-editor/project/project";
 
 import {
+    getAncestorOfType,
     getClassInfo,
     isArray,
     ProjectEditorStore
@@ -118,6 +120,11 @@ let currentDocumentStore: ProjectEditorStore | undefined;
 let currentProject: Project | undefined;
 let isLoadProject: boolean;
 let createNewObjectobjIDs: boolean;
+let flowsWireIDToObjID: Map<Flow, Map<string, string>> = new Map<
+    Flow,
+    Map<string, string>
+>();
+let currentFlowWireIDToObjID: Map<string, string>;
 let wireIDToObjID: Map<string, string> = new Map<string, string>();
 let oldObjID_to_newObjID: Map<string, string> = new Map<string, string>();
 
@@ -204,6 +211,15 @@ function loadObjectInternal(
             jsObject,
             isLoadProject ? currentProject! : currentDocumentStore!.project
         );
+    }
+
+    if (
+        isLoadProject &&
+        (object instanceof ProjectEditor.PageClass ||
+            object instanceof ProjectEditor.ActionClass)
+    ) {
+        currentFlowWireIDToObjID = new Map<string, string>();
+        flowsWireIDToObjID.set(object, currentFlowWireIDToObjID);
     }
 
     for (const propertyInfo of classInfo.properties) {
@@ -354,15 +370,17 @@ function getObjIdFromWireId(
     jsObject: any,
     key: string | undefined
 ) {
-    let objID = wireIDToObjID.get(jsObject.wireID);
+    let objID = currentFlowWireIDToObjID.get(jsObject.wireID);
     if (objID == undefined) {
         objID = generateObjId(object, jsObject, key);
+        currentFlowWireIDToObjID.set(jsObject.wireID, objID);
         wireIDToObjID.set(jsObject.wireID, objID);
     }
     return objID;
 }
 
 export function rewireBegin() {
+    flowsWireIDToObjID.clear();
     wireIDToObjID.clear();
     oldObjID_to_newObjID.clear();
 }
@@ -370,9 +388,14 @@ export function rewireBegin() {
 export function rewireEnd(object: IEezObject) {
     for (const connectionLine of visitObjects(object)) {
         if (connectionLine instanceof ProjectEditor.ConnectionLineClass) {
+            const flow = getAncestorOfType<Flow>(
+                connectionLine,
+                ProjectEditor.FlowClass.classInfo
+            )!;
+
             if (connectionLine.source) {
                 const newSource =
-                    wireIDToObjID.get(connectionLine.source) ||
+                    flowsWireIDToObjID.get(flow)!.get(connectionLine.source) ||
                     oldObjID_to_newObjID.get(connectionLine.source);
                 if (newSource != undefined) {
                     connectionLine.source = newSource;
@@ -390,7 +413,7 @@ export function rewireEnd(object: IEezObject) {
 
             if (connectionLine.target) {
                 const newTarget =
-                    wireIDToObjID.get(connectionLine.target) ||
+                    flowsWireIDToObjID.get(flow)!.get(connectionLine.target) ||
                     oldObjID_to_newObjID.get(connectionLine.target);
                 if (newTarget != undefined) {
                     connectionLine.target = newTarget;

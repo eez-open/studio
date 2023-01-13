@@ -45,7 +45,11 @@ import { ProjectContext } from "project-editor/project/context";
 import { BootstrapButton } from "project-editor/ui-components/BootstrapButton";
 import { easingFunctions } from "project-editor/flow/easing-functions";
 
-import type { Component, Widget } from "project-editor/flow/component";
+import {
+    Component,
+    getWidgetParent,
+    Widget
+} from "project-editor/flow/component";
 import type { PageTabState } from "project-editor/features/page/PageEditor";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { DataBuffer } from "project-editor/build/data-buffer";
@@ -66,6 +70,7 @@ import {
     MouseHandlerWithSnapLines
 } from "project-editor/flow/editor/mouse-handler";
 import { addAlphaToColor } from "eez-studio-shared/color";
+import { visitObjects } from "project-editor/core/search";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1612,6 +1617,15 @@ class WidgetTimelinePath {
             y = height / 2;
         }
 
+        const parent = getWidgetParent(this.widget);
+        if (parent instanceof ProjectEditor.PageClass) {
+            x += parent.left;
+            y += parent.top;
+        } else {
+            x += parent.absolutePositionPoint.x;
+            y += parent.absolutePositionPoint.y;
+        }
+
         return { x, y };
     }
 
@@ -2075,7 +2089,14 @@ export const TimelinePathEditor = observer(
             return null;
         }
 
-        const widgetTimelinePaths = flowContext.flow.components
+        const widgets: Component[] = [];
+        for (const component of visitObjects(flowContext.flow)) {
+            if (component instanceof ProjectEditor.WidgetClass) {
+                widgets.push(component);
+            }
+        }
+
+        const widgetTimelinePaths = widgets
             .map(object =>
                 object instanceof ProjectEditor.WidgetClass
                     ? new WidgetTimelinePath(object)

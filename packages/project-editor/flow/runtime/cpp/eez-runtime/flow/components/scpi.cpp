@@ -263,9 +263,7 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 
             auto scpiResultStatus = scpiComponentExecutionState->scpiQuery(instrumentArrayValue);
 			if (scpiResultStatus != SCPI_RESULT_STATUS_READY) {
-				if (!addToQueue(flowState, componentIndex, -1, -1, -1, scpiResultStatus == SCPI_RESULT_STATUS_NOT_READY)) {
-					throwError(flowState, componentIndex, "Execution queue is full\n");
-				}
+				addToQueue(flowState, componentIndex, -1, -1, -1, scpiResultStatus == SCPI_RESULT_STATUS_NOT_READY);
 				return;
 			}
 
@@ -316,9 +314,7 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 
             auto scpiResultStatus = scpiComponentExecutionState->scpiQuery(instrumentArrayValue);
 			if (scpiResultStatus != SCPI_RESULT_STATUS_READY) {
-				if (!addToQueue(flowState, componentIndex, -1, -1, -1, scpiResultStatus == SCPI_RESULT_STATUS_NOT_READY)) {
-					throwError(flowState, componentIndex, "Execution queue is full\n");
-				}
+				addToQueue(flowState, componentIndex, -1, -1, -1, scpiResultStatus == SCPI_RESULT_STATUS_NOT_READY);
 				return;
 			}
 
@@ -337,9 +333,7 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 
             auto scpiResultStatus = scpiComponentExecutionState->scpiCommand(instrumentArrayValue);
 			if (scpiResultStatus != SCPI_RESULT_STATUS_READY) {
-				if (!addToQueue(flowState, componentIndex, -1, -1, -1, scpiResultStatus == SCPI_RESULT_STATUS_NOT_READY)) {
-					throwError(flowState, componentIndex, "Execution queue is full\n");
-				}
+				addToQueue(flowState, componentIndex, -1, -1, -1, scpiResultStatus == SCPI_RESULT_STATUS_NOT_READY);
 				return;
 			}
 
