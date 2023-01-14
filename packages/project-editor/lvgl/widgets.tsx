@@ -542,7 +542,7 @@ export class LVGLWidget extends Widget {
                     lvglStyle.forWidgetType == objects[0].type &&
                     ProjectEditor.getProject(lvglStyle).lvglStyles
                         .defaultStyles[lvglStyle.forWidgetType] !=
-                        lvglStyle.name,
+                    lvglStyle.name,
                 propertyGridGroup: styleGroup,
                 inputPlaceholder: (widget: LVGLWidget) => {
                     return (
@@ -1200,7 +1200,7 @@ export class LVGLWidget extends Widget {
         this.createEventHandlerSpecific(runtime, obj);
     }
 
-    createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {}
+    createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) { }
 
     lvglBuild(build: LVGLBuild): void {
         if (this.identifier) {
@@ -1304,7 +1304,7 @@ export class LVGLWidget extends Widget {
         }
     }
 
-    lvglPostBuild(build: LVGLBuild): void {}
+    lvglPostBuild(build: LVGLBuild): void { }
 
     lvglBuildTick(build: LVGLBuild): void {
         if (this.checkedStateType == "expression") {
@@ -1524,7 +1524,7 @@ export class LVGLWidget extends Widget {
         }
     }
 
-    lvglBuildTickSpecific(build: LVGLBuild): void {}
+    lvglBuildTickSpecific(build: LVGLBuild): void { }
 
     get lvglCreateLeft() {
         if (this.leftUnit == "%") {
@@ -1594,7 +1594,7 @@ export class LVGLWidget extends Widget {
         console.error("UNEXPECTED!");
     }
 
-    lvglBuildSpecific(build: LVGLBuild): void {}
+    lvglBuildSpecific(build: LVGLBuild): void { }
 
     get hasEventHandler() {
         return (
@@ -1647,7 +1647,7 @@ export class LVGLWidget extends Widget {
         this.buildEventHandlerSpecific(build);
     }
 
-    buildEventHandlerSpecific(build: LVGLBuild) {}
+    buildEventHandlerSpecific(build: LVGLBuild) { }
 
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
@@ -1829,10 +1829,10 @@ export class LVGLLabelWidget extends LVGLWidget {
             textExpr
                 ? 0
                 : runtime.wasm.allocateUTF8(
-                      this.textType == "expression"
-                          ? `{${this.text}}`
-                          : this.text
-                  ),
+                    this.textType == "expression"
+                        ? `{${this.text}}`
+                        : this.text
+                ),
             LONG_MODE_CODES[this.longMode],
             this.recolor ? 1 : 0
         );
@@ -3283,7 +3283,7 @@ export class LVGLDropdownWidget extends LVGLWidget {
         if (this.selectedType == "literal") {
             if (this.selected != 0) {
                 build.line(
-                    `lv_dropdown_set_selected(obj, ${this.selected}, LV_ANIM_OFF);`
+                    `lv_dropdown_set_selected(obj, ${this.selected});`
                 );
             }
         }
@@ -3898,10 +3898,10 @@ export class LVGLTextareaWidget extends LVGLWidget {
             textExpr || !this.text
                 ? 0
                 : runtime.wasm.allocateUTF8(
-                      this.textType == "expression"
-                          ? `{${this.text}}`
-                          : this.text
-                  ),
+                    this.textType == "expression"
+                        ? `{${this.text}}`
+                        : this.text
+                ),
             !this.placeholder ? 0 : runtime.wasm.allocateUTF8(this.placeholder),
             this.oneLineMode,
             this.passwordMode,
@@ -3973,14 +3973,12 @@ export class LVGLTextareaWidget extends LVGLWidget {
         }
 
         build.line(
-            `lv_textarea_set_one_line(obj, ${
-                this.oneLineMode ? "true" : "false"
+            `lv_textarea_set_one_line(obj, ${this.oneLineMode ? "true" : "false"
             });`
         );
 
         build.line(
-            `lv_textarea_set_password_mode(obj, ${
-                this.passwordMode ? "true" : "false"
+            `lv_textarea_set_password_mode(obj, ${this.passwordMode ? "true" : "false"
             });`
         );
     }
@@ -5089,7 +5087,7 @@ export class LVGLChartWidget extends LVGLWidget {
         build.line(`lv_obj_t *obj = lv_chart_create(parent_obj);`);
     }
 
-    override lvglBuildSpecific(build: LVGLBuild) {}
+    override lvglBuildSpecific(build: LVGLBuild) { }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5225,14 +5223,14 @@ export class LVGLMeterIndicator extends EezObject {
         scale: number,
         scaleIndex: number,
         indicatorIndex: number
-    ) {}
+    ) { }
 
-    lvglBuild(build: LVGLBuild) {}
+    lvglBuild(build: LVGLBuild) { }
     lvglBuildTickSpecific(
         build: LVGLBuild,
         scaleIndex: number,
         indicatorIndex: number
-    ) {}
+    ) { }
 
     expressionPropertyBuildTickSpecific(
         build: LVGLBuild,
@@ -5364,11 +5362,10 @@ export class LVGLMeterIndicatorNeedleImg extends LVGLMeterIndicator {
             indicator: LVGLMeterIndicatorNeedleImg,
             collapsed: boolean
         ) => {
-            return `Needle image at ${
-                indicator.valueType == "literal"
+            return `Needle image at ${indicator.valueType == "literal"
                     ? indicator.value
                     : `{${indicator.value}}`
-            }`;
+                }`;
         },
 
         defaultValue: {
@@ -5473,8 +5470,7 @@ export class LVGLMeterIndicatorNeedleImg extends LVGLMeterIndicator {
 
     override lvglBuild(build: LVGLBuild) {
         build.line(
-            `lv_meter_indicator_t *indicator = lv_meter_add_needle_img(obj, scale, ${
-                this.image ? `&img_${this.image}` : 0
+            `lv_meter_indicator_t *indicator = lv_meter_add_needle_img(obj, scale, ${this.image ? `&img_${this.image}` : 0
             }, ${this.pivotX}, ${this.pivotY});`
         );
 
@@ -5548,11 +5544,10 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
             indicator: LVGLMeterIndicatorNeedleLine,
             collapsed: boolean
         ) => {
-            return `Needle line at ${
-                indicator.valueType == "literal"
+            return `Needle line at ${indicator.valueType == "literal"
                     ? indicator.value
                     : `{${indicator.value}}`
-            }`;
+                }`;
         },
 
         defaultValue: {
@@ -5629,10 +5624,8 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
 
     override lvglBuild(build: LVGLBuild) {
         build.line(
-            `lv_meter_indicator_t *indicator = lv_meter_add_needle_line(obj, scale, ${
-                this.width
-            }, lv_color_hex(${colorRgbToHexNumStr(this.color)}), ${
-                this.radiusModifier
+            `lv_meter_indicator_t *indicator = lv_meter_add_needle_line(obj, scale, ${this.width
+            }, lv_color_hex(${colorRgbToHexNumStr(this.color)}), ${this.radiusModifier
             });`
         );
 
@@ -5726,15 +5719,13 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
             indicator: LVGLMeterIndicatorScaleLines,
             collapsed: boolean
         ) => {
-            return `Scale lines from ${
-                indicator.startValueType == "literal"
+            return `Scale lines from ${indicator.startValueType == "literal"
                     ? indicator.startValue
                     : `{${indicator.startValue}}`
-            } to ${
-                indicator.endValueType == "literal"
+                } to ${indicator.endValueType == "literal"
                     ? indicator.endValue
                     : `{${indicator.endValue}}`
-            } `;
+                } `;
         },
 
         defaultValue: {
@@ -5853,8 +5844,7 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
         build.line(
             `lv_meter_indicator_t *indicator = lv_meter_add_scale_lines(obj, scale, lv_color_hex(${colorRgbToHexNumStr(
                 this.colorStart
-            )}), lv_color_hex(${colorRgbToHexNumStr(this.colorEnd)}), ${
-                this.local
+            )}), lv_color_hex(${colorRgbToHexNumStr(this.colorEnd)}), ${this.local
             }, ${this.widthModifier});`
         );
 
@@ -5953,15 +5943,13 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
         ],
 
         listLabel: (indicator: LVGLMeterIndicatorArc, collapsed: boolean) => {
-            return `Arc from ${
-                indicator.startValueType == "literal"
+            return `Arc from ${indicator.startValueType == "literal"
                     ? indicator.startValue
                     : `{${indicator.startValue}}`
-            } to ${
-                indicator.endValueType == "literal"
+                } to ${indicator.endValueType == "literal"
                     ? indicator.endValue
                     : `{${indicator.endValue}}`
-            } `;
+                } `;
         },
 
         defaultValue: {
@@ -6076,10 +6064,8 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
 
     override lvglBuild(build: LVGLBuild) {
         build.line(
-            `lv_meter_indicator_t *indicator = lv_meter_add_arc(obj, scale, ${
-                this.width
-            }, lv_color_hex(${colorRgbToHexNumStr(this.color)}), ${
-                this.radiusModifier
+            `lv_meter_indicator_t *indicator = lv_meter_add_arc(obj, scale, ${this.width
+            }, lv_color_hex(${colorRgbToHexNumStr(this.color)}), ${this.radiusModifier
             });`
         );
 
@@ -6541,16 +6527,13 @@ export class LVGLMeterWidget extends LVGLWidget {
                 `lv_meter_set_scale_ticks(obj, scale, ${Math.max(
                     scale.minorTickCount,
                     2
-                )}, ${scale.minorTickLineWidth}, ${
-                    scale.minorTickLength
+                )}, ${scale.minorTickLineWidth}, ${scale.minorTickLength
                 }, lv_color_hex(${colorRgbToHexNumStr(scale.minorTickColor)}));`
             );
 
             build.line(
-                `lv_meter_set_scale_major_ticks(obj, scale, ${
-                    scale.nthMajor
-                }, ${scale.majorTickWidth}, ${
-                    scale.majorTickLength
+                `lv_meter_set_scale_major_ticks(obj, scale, ${scale.nthMajor
+                }, ${scale.majorTickWidth}, ${scale.majorTickLength
                 }, lv_color_hex(${colorRgbToHexNumStr(
                     scale.majorTickColor
                 )}), ${scale.labelGap});`
