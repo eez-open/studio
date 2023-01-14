@@ -3282,9 +3282,7 @@ export class LVGLDropdownWidget extends LVGLWidget {
 
         if (this.selectedType == "literal") {
             if (this.selected != 0) {
-                build.line(
-                    `lv_dropdown_set_selected(obj, ${this.selected}, LV_ANIM_OFF);`
-                );
+                build.line(`lv_dropdown_set_selected(obj, ${this.selected});`);
             }
         }
     }
