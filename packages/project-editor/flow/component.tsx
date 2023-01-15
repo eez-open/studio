@@ -1513,34 +1513,34 @@ const AlignAndDistributePropertyGridUI = observer(
                         <div className="EezStudio_ActionGroup_Actions">
                             <div className="EezStudio_ActionGroup_Actions_Group">
                                 <IconAction
-                                    icon={ALIGN_HORIZONTAL_LEFT_ICON}
+                                    icon={ALIGN_HORIZONTAL_LEFT_ICON()}
                                     title="Align left edges"
                                     onClick={this.onAlignHorizontalLeft}
                                 />
                                 <IconAction
-                                    icon={ALIGN_HORIZONTAL_CENTER_ICON}
+                                    icon={ALIGN_HORIZONTAL_CENTER_ICON()}
                                     title="Center on vertical axis"
                                     onClick={this.onAlignHorizontalCenter}
                                 />
                                 <IconAction
-                                    icon={ALIGN_HORIZONTAL_RIGHT_ICON}
+                                    icon={ALIGN_HORIZONTAL_RIGHT_ICON()}
                                     title="Align right edges"
                                     onClick={this.onAlignHorizontalRight}
                                 />
                             </div>
                             <div className="EezStudio_ActionGroup_Actions_Group">
                                 <IconAction
-                                    icon={ALIGN_VERTICAL_TOP_ICON}
+                                    icon={ALIGN_VERTICAL_TOP_ICON()}
                                     title="Align top edges"
                                     onClick={this.onAlignVerticalTop}
                                 />
                                 <IconAction
-                                    icon={ALIGN_VERTICAL_CENTER_ICON}
+                                    icon={ALIGN_VERTICAL_CENTER_ICON()}
                                     title="Center on horizontal axis"
                                     onClick={this.onAlignVerticalCenter}
                                 />
                                 <IconAction
-                                    icon={ALIGN_VERTICAL_BOTTOM_ICON}
+                                    icon={ALIGN_VERTICAL_BOTTOM_ICON()}
                                     title="Align bottom edges"
                                     onClick={this.onAlignVerticalBottom}
                                 />
@@ -1555,28 +1555,28 @@ const AlignAndDistributePropertyGridUI = observer(
                             <div className="EezStudio_ActionGroup_Actions">
                                 <div className="EezStudio_ActionGroup_Actions_Group">
                                     <IconAction
-                                        icon={DISTRIBUTE_HORIZONTAL_LEFT_ICON}
+                                        icon={DISTRIBUTE_HORIZONTAL_LEFT_ICON()}
                                         title="Distribute left edges equidistantly"
                                         onClick={
                                             this.onDistributeHorizontalLeft
                                         }
                                     />
                                     <IconAction
-                                        icon={DISTRIBUTE_HORIZONTAL_CENTER_ICON}
+                                        icon={DISTRIBUTE_HORIZONTAL_CENTER_ICON()}
                                         title="Distribute centers equidistantly horizontally"
                                         onClick={
                                             this.onDistributeHorizontalCenter
                                         }
                                     />
                                     <IconAction
-                                        icon={DISTRIBUTE_HORIZONTAL_RIGHT_ICON}
+                                        icon={DISTRIBUTE_HORIZONTAL_RIGHT_ICON()}
                                         title="Distribute right edges equidistantly"
                                         onClick={
                                             this.onDistributeHorizontalRight
                                         }
                                     />
                                     <IconAction
-                                        icon={DISTRIBUTE_HORIZONTAL_GAPS_ICON}
+                                        icon={DISTRIBUTE_HORIZONTAL_GAPS_ICON()}
                                         title="Make horizontal gaps equal"
                                         onClick={
                                             this.onDistributeHorizontalGaps
@@ -1585,26 +1585,26 @@ const AlignAndDistributePropertyGridUI = observer(
                                 </div>
                                 <div className="EezStudio_ActionGroup_Actions_Group">
                                     <IconAction
-                                        icon={DISTRIBUTE_VERTICAL_TOP_ICON}
+                                        icon={DISTRIBUTE_VERTICAL_TOP_ICON()}
                                         title="Distribute top edges equidistantly"
                                         onClick={this.onDistributeVerticalTop}
                                     />
                                     <IconAction
-                                        icon={DISTRIBUTE_VERTICAL_CENTER_ICON}
+                                        icon={DISTRIBUTE_VERTICAL_CENTER_ICON()}
                                         title="Distribute centers equidistantly vertically"
                                         onClick={
                                             this.onDistributeVerticalCenter
                                         }
                                     />
                                     <IconAction
-                                        icon={DISTRIBUTE_VERTICAL_BOTTOM_ICON}
+                                        icon={DISTRIBUTE_VERTICAL_BOTTOM_ICON()}
                                         title="Distribute bottom edges equidistantly"
                                         onClick={
                                             this.onDistributeVerticalBottom
                                         }
                                     />
                                     <IconAction
-                                        icon={DISTRIBUTE_VERTICAL_GAPS_ICON}
+                                        icon={DISTRIBUTE_VERTICAL_GAPS_ICON()}
                                         title="Make vertical gaps equal"
                                         onClick={this.onDistributeVerticalGaps}
                                     />
@@ -1659,12 +1659,12 @@ const CenterWidgetUI = observer(
             return (
                 <div className="EezStudio_WidgetCenter">
                     <IconAction
-                        icon={ALIGN_HORIZONTAL_CENTER_ICON}
+                        icon={ALIGN_HORIZONTAL_CENTER_ICON()}
                         title="Center horizontally relative to parent"
                         onClick={this.onCenterHorizontally}
                     />
                     <IconAction
-                        icon={ALIGN_VERTICAL_CENTER_ICON}
+                        icon={ALIGN_VERTICAL_CENTER_ICON()}
                         title="Center vertically relative to parent"
                         onClick={this.onCenterVertically}
                     />
