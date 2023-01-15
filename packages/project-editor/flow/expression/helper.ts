@@ -1,5 +1,5 @@
 import { ExpressionNode } from "project-editor/flow/expression/node";
-import { identifierParser } from "project-editor/flow/expression/grammar";
+import { identifierParser } from "project-editor/flow/expression/parser";
 
 export function parseIdentifier(identifier: string) {
     try {

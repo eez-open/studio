@@ -13,7 +13,7 @@ import {
     operationIndexes,
     unaryOperators
 } from "./operations";
-import { expressionParser } from "./grammar";
+import { expressionParser } from "project-editor/flow/expression/parser";
 import {
     makePushConstantInstruction,
     makePushInputInstruction,

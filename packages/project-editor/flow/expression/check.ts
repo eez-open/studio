@@ -7,7 +7,7 @@ import {
     logicalOperators,
     unaryOperators
 } from "./operations";
-import { expressionParser } from "./grammar";
+import { expressionParser } from "project-editor/flow/expression/parser";
 import {
     FLOW_ITERATOR_INDEXES_VARIABLE,
     FLOW_ITERATOR_INDEX_VARIABLE

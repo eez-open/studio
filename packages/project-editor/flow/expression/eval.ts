@@ -11,7 +11,7 @@ import {
     logicalOperators,
     unaryOperators
 } from "./operations";
-import { expressionParser } from "./grammar";
+import { expressionParser } from "project-editor/flow/expression/parser";
 import { ValueType } from "project-editor/features/variable/value-type";
 import type { IDataContext, IFlowState } from "../flow-interfaces";
 import type { ProjectEditorStore } from "project-editor/store";

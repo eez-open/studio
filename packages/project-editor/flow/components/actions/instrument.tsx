@@ -63,6 +63,7 @@ import {
 } from "eez-studio-shared/scpi-parser";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { COMPONENT_TYPE_SCPIACTION } from "project-editor/flow/components/component_types";
+import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -529,11 +530,11 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
             )
         ],
         label: (component: SCPIActionComponent) => {
-            const label = ActionComponent.classInfo.label!(component);
+            let name = getComponentName(component.type);
             if (!component.isInputProperty("instrument")) {
-                return `${label} ${component.instrument}`;
+                return `${name} ${component.instrument}`;
             }
-            return label;
+            return name;
         },
         icon: (
             <svg

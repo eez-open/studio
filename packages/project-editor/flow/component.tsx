@@ -1677,12 +1677,12 @@ const CenterWidgetUI = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 function getComponentLabel(component: Component) {
-    let name = getComponentName(component.type);
-
     const classInfo = getClassInfo(component);
     if (classInfo.label && classInfo.label != getComponentLabel) {
         return classInfo.label(component);
     }
+
+    let name = getComponentName(component.type);
 
     if (component instanceof Widget) {
         if (component.data) {
