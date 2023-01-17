@@ -2188,16 +2188,21 @@ export class CallActionActionComponent extends ActionComponent {
                 assets.option == "buildFiles" &&
                 action.implementationType == "native"
             ) {
+                // flowIndex
                 dataBuffer.writeInt16(
                     assets.flows.length +
                         assets.getWidgetActionIndex(this, "action")
                 );
+                // inputsStartIndex
                 dataBuffer.writeUint8(0);
+                // outputsStartIndex
                 dataBuffer.writeUint8(0);
             } else {
+                // flowIndex
                 const flowIndex = assets.flows.indexOf(action);
                 dataBuffer.writeInt16(flowIndex);
 
+                // inputsStartIndex
                 if (action.inputComponents.length > 0) {
                     dataBuffer.writeUint8(
                         this.buildInputs.findIndex(
@@ -2209,6 +2214,7 @@ export class CallActionActionComponent extends ActionComponent {
                     dataBuffer.writeUint8(0);
                 }
 
+                // outputsStartIndex
                 if (action.outputComponents.length > 0) {
                     dataBuffer.writeUint8(
                         this.buildOutputs.findIndex(
@@ -2221,8 +2227,11 @@ export class CallActionActionComponent extends ActionComponent {
                 }
             }
         } else {
+            // flowIndex
             dataBuffer.writeInt16(-1);
+            // inputsStartIndex
             dataBuffer.writeUint8(0);
+            // outputsStartIndex
             dataBuffer.writeUint8(0);
         }
     }

@@ -395,7 +395,7 @@ export function rewireEnd(object: IEezObject) {
 
             if (connectionLine.source) {
                 const newSource =
-                    flowsWireIDToObjID.get(flow)!.get(connectionLine.source) ||
+                    flowsWireIDToObjID.get(flow)?.get(connectionLine.source) ||
                     oldObjID_to_newObjID.get(connectionLine.source);
                 if (newSource != undefined) {
                     connectionLine.source = newSource;
@@ -413,7 +413,7 @@ export function rewireEnd(object: IEezObject) {
 
             if (connectionLine.target) {
                 const newTarget =
-                    flowsWireIDToObjID.get(flow)!.get(connectionLine.target) ||
+                    flowsWireIDToObjID.get(flow)?.get(connectionLine.target) ||
                     oldObjID_to_newObjID.get(connectionLine.target);
                 if (newTarget != undefined) {
                     connectionLine.target = newTarget;

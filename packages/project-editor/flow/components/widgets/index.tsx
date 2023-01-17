@@ -1607,9 +1607,11 @@ export class LayoutViewWidget extends Widget {
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
         const layoutPage = this.layoutPage;
         if (layoutPage) {
+            // flowIndex
             const flowIndex = assets.flows.indexOf(layoutPage);
             dataBuffer.writeInt16(flowIndex);
 
+            // inputsStartIndex
             if (layoutPage.inputComponents.length > 0) {
                 dataBuffer.writeUint8(
                     this.buildInputs.findIndex(
@@ -1621,6 +1623,7 @@ export class LayoutViewWidget extends Widget {
                 dataBuffer.writeUint8(0);
             }
 
+            // outputsStartIndex
             if (layoutPage.outputComponents.length > 0) {
                 dataBuffer.writeUint8(
                     this.buildOutputs.findIndex(
@@ -1632,8 +1635,11 @@ export class LayoutViewWidget extends Widget {
                 dataBuffer.writeUint8(0);
             }
         } else {
+            // flowIndex
             dataBuffer.writeInt16(-1);
+            // inputsStartIndex
             dataBuffer.writeUint8(0);
+            // outputsStartIndex
             dataBuffer.writeUint8(0);
         }
     }
@@ -6775,6 +6781,21 @@ function TextInputWidgetInput({
         if (input) input.setSelectionRange(cursor, cursor);
     }, [ref, cursor, value]);
 
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === "Enter") {
+            const flowState = flowContext.flowState as FlowState;
+            if (flowState && flowState.runtime) {
+                flowState.runtime.executeWidgetAction(
+                    flowContext,
+                    textInputWidget,
+                    "onChange",
+                    makeTextInputActionParamsValue(flowContext, value),
+                    `struct:${TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME}`
+                );
+            }
+        }
+    };
+
     return (
         <>
             <input
@@ -6811,6 +6832,7 @@ function TextInputWidgetInput({
                         }
                     }
                 }}
+                onKeyDown={handleKeyDown}
             ></input>
         </>
     );
@@ -6826,7 +6848,11 @@ export class TextInputWidget extends Widget {
                 displayName: "Value"
             }),
             makeActionPropertyInfo("action", {
-                displayName: "onChange",
+                displayName: "On input",
+                expressionType: `struct:${TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME}`
+            }),
+            makeActionPropertyInfo("onChange", {
+                displayName: "On change",
                 expressionType: `struct:${TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME}`
             }),
             {
@@ -6874,13 +6900,15 @@ export class TextInputWidget extends Widget {
         )
     });
 
+    onChange?: string;
     password: boolean;
 
     constructor() {
         super();
 
         makeObservable(this, {
-            password: observable
+            password: observable,
+            onChange: observable
         });
     }
 

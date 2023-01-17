@@ -357,6 +357,10 @@ export function isImplicitConversionPossible(
     fromType: ValueType,
     toType: ValueType
 ) {
+    if (toType == "null") {
+        return true;
+    }
+
     if (toType == "any" || fromType == "any") {
         return true;
     }

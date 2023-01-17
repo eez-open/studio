@@ -29,7 +29,8 @@ import {
     PropertyInfo,
     getParent,
     getId,
-    EezObject
+    EezObject,
+    setKey
 } from "project-editor/core/object";
 
 import {
@@ -1329,6 +1330,10 @@ export class TreeAdapter implements ITreeAdapter {
                         projectEditorStore.updateObject(dropItem.object, {
                             [(dropPlace as PropertyInfo).name]: dragObjectClone
                         });
+                        setKey(
+                            dragObjectClone,
+                            (dropPlace as PropertyInfo).name
+                        );
                     }
                 }
             }

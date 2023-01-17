@@ -9,7 +9,8 @@ import {
     isSubclassOf,
     ClassInfo,
     findClass,
-    SerializedData
+    SerializedData,
+    PropertyInfo
 } from "project-editor/core/object";
 
 import {
@@ -180,7 +181,7 @@ export function findPastePlaceInside(
 export function findPastePlaceInsideAndOutside(
     object: IEezObject,
     serializedData: SerializedData
-): EezObject | undefined {
+): IEezObject | PropertyInfo | undefined {
     if (!serializedData.classInfo) {
         return undefined;
     }
@@ -191,7 +192,7 @@ export function findPastePlaceInsideAndOutside(
         !!serializedData.object
     );
     if (place) {
-        return place as EezObject;
+        return place;
     }
 
     let parent = getParent(object);

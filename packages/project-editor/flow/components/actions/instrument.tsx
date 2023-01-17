@@ -591,6 +591,10 @@ registerClass(
 ////////////////////////////////////////////////////////////////////////////////
 
 async function connectToInstrument(instrument: InstrumentObject) {
+    if (!instrument.lastConnection) {
+        return;
+    }
+
     const connection = instrument.connection;
     connection.connect();
     for (let i = 0; i < 100; i++) {
@@ -622,10 +626,16 @@ registerObjectVariableType("Instrument", {
         variable: IVariable,
         constructorParams?: InstrumentConstructorParams
     ): Promise<IObjectVariableValueConstructorParams | undefined> => {
-        const instrument = await showSelectInstrumentDialog(
+        let instrument = await showSelectInstrumentDialog(
             variable.description || humanize(variable.name),
             getInstrumentIdFromConstructorParams(constructorParams)
         );
+
+        if (instrument) {
+            if (!instrument.lastConnection) {
+                instrument.openConnectDialog();
+            }
+        }
 
         return instrument
             ? {

@@ -44,7 +44,9 @@ import { LogsPanel } from "project-editor/flow/debugger/LogsPanel";
 ////////////////////////////////////////////////////////////////////////////////
 
 export const ProjectEditorView = observer(
-    class ProjectEditorView extends React.Component {
+    class ProjectEditorView extends React.Component<{
+        onlyRuntime: boolean;
+    }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -93,7 +95,7 @@ export const ProjectEditorView = observer(
             return (
                 <div className="EezStudio_ProjectEditorWrapper">
                     <div className="EezStudio_ProjectEditorMainContentWrapper">
-                        <Toolbar />
+                        {!this.props.onlyRuntime && <Toolbar />}
                         <Content />
                     </div>
                     {this.context.uiStateStore.showCommandPalette &&

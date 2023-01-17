@@ -122,7 +122,7 @@ const SelectItemDialog = observer(
                 getProperty(
                     this.props.object,
                     this.props.propertyInfo.name
-                ).toString() || "";
+                )?.toString() || "";
 
             makeObservable(this, {
                 value: observable,

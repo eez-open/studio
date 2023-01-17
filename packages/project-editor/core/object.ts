@@ -596,6 +596,9 @@ export function setParent(object: IEezObject, parentObject: IEezObject) {
 }
 
 export function getKey(object: IEezObject): string {
+    if (!(object as any)._eez_key) {
+        console.log(object);
+    }
     return (object as any)._eez_key;
 }
 

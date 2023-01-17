@@ -76,7 +76,7 @@ registerClass("EezValueObject", EezValueObject);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function isValue(object: IEezObject | undefined) {
+export function isValue(object: IEezObject | PropertyInfo | undefined) {
     return !!object && object instanceof EezValueObject;
 }
 
@@ -246,7 +246,9 @@ export function isObject(object: IEezObject | undefined) {
     return !!object && !isValue(object) && !isArray(object);
 }
 
-export function isArray(object: IEezObject | undefined): object is EezObject[] {
+export function isArray(
+    object: IEezObject | PropertyInfo | undefined
+): object is EezObject[] {
     return !!object && !isValue(object) && Array.isArray(object);
 }
 
@@ -698,15 +700,12 @@ export function pasteItem(object: IEezObject) {
 
         const c = checkClipboard(projectEditorStore, object);
         if (c) {
-            if (typeof c.pastePlace === "string") {
-                projectEditorStore.updateObject(object, {
-                    [c.pastePlace]: c.serializedData.object
-                });
-            } else {
+            const pastePlace = c.pastePlace;
+            if (isArray(pastePlace) || pastePlace instanceof EezObject) {
                 if (c.serializedData.object) {
                     if (
-                        isArray(c.pastePlace as IEezObject) &&
-                        getParent(object) === (c.pastePlace as IEezObject)
+                        isArray(pastePlace) &&
+                        getParent(object) === pastePlace
                     ) {
                         const pasteObject = createObject(
                             projectEditorStore,
@@ -717,8 +716,8 @@ export function pasteItem(object: IEezObject) {
                         );
 
                         return projectEditorStore.insertObject(
-                            c.pastePlace as IEezObject,
-                            (c.pastePlace as any).indexOf(object) + 1,
+                            pastePlace,
+                            pastePlace.indexOf(object as EezObject) + 1,
                             pasteObject
                         );
                     } else {
@@ -727,7 +726,10 @@ export function pasteItem(object: IEezObject) {
                         );
 
                         if (aClass && aClass.classInfo.pasteItemHook) {
-                            return aClass.classInfo.pasteItemHook(object, c);
+                            return aClass.classInfo.pasteItemHook(
+                                object,
+                                c as any
+                            );
                         }
 
                         const pasteObject = createObject(
@@ -739,7 +741,7 @@ export function pasteItem(object: IEezObject) {
                         );
 
                         return projectEditorStore.addObject(
-                            c.pastePlace as IEezObject,
+                            pastePlace,
                             pasteObject
                         );
                     }
@@ -755,9 +757,19 @@ export function pasteItem(object: IEezObject) {
                     );
 
                     return projectEditorStore.addObjects(
-                        c.pastePlace as IEezObject,
+                        pastePlace,
                         pasteObjects
                     );
+                }
+            } else {
+                const key = pastePlace.name;
+
+                projectEditorStore.updateObject(object, {
+                    [key]: c.serializedData.object
+                });
+
+                if (c.serializedData.object) {
+                    setKey(c.serializedData.object, key);
                 }
             }
         }

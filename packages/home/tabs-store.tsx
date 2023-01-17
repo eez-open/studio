@@ -694,7 +694,7 @@ export class ProjectEditorTab implements IHomeTab {
 
         return (
             <this.ProjectContext.Provider value={this.projectEditorStore}>
-                <this.ProjectEditor />
+                <this.ProjectEditor onlyRuntime={false} />
             </this.ProjectContext.Provider>
         );
     }

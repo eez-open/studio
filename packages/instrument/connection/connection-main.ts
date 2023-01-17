@@ -171,6 +171,15 @@ export class Connection
         this.connectionParameters = this.instrument
             .lastConnection as ConnectionParameters;
 
+        if (!this.connectionParameters) {
+            this.setError(
+                ConnectionErrorCode.NOT_FOUND,
+                "No connection interface defined"
+            );
+            this.disconnected();
+            return;
+        }
+
         if (this.connectionParameters.type === "ethernet") {
             this.communicationInterface = new EthernetInterface(this);
         } else if (this.connectionParameters.type === "serial") {
