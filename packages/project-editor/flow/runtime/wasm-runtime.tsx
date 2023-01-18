@@ -834,27 +834,6 @@ export class WasmRuntime extends RemoteRuntime {
         this.worker.postMessage(message);
     }
 
-    createObjectValue(valueType: ValueType, value: any): any {
-        const objectValueType = getObjectVariableTypeFromType(valueType);
-
-        if (!objectValueType) {
-            return null;
-        }
-
-        const result: any = {};
-
-        for (
-            let i = 0;
-            i < objectValueType.valueFieldDescriptions.length;
-            i++
-        ) {
-            const field = objectValueType.valueFieldDescriptions[i];
-            result[field.name] = field.getFieldValue(value);
-        }
-
-        return result;
-    }
-
     sendResultToWorker(messageId: number, result: any, finalResult: boolean) {
         const message: RendererToWorkerMessage = {};
         message.resultToWorker = {

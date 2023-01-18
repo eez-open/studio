@@ -18,11 +18,15 @@ export function evalProperty(
     }
 
     if (flowContext.flowState) {
-        return flowContext.projectEditorStore.runtime!.evalProperty(
-            flowContext,
-            widget,
-            propertyName
-        );
+        if (flowContext.projectEditorStore.runtime) {
+            return flowContext.projectEditorStore.runtime.evalProperty(
+                flowContext,
+                widget,
+                propertyName
+            );
+        } else {
+            return undefined;
+        }
     } else {
         try {
             return evalConstantExpression(

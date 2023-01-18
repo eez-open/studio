@@ -515,10 +515,6 @@ export abstract class RuntimeBase {
         );
     }
 
-    createObjectValue(valueType: ValueType, value: any): any {
-        return undefined;
-    }
-
     sendResultToWorker(messageId: number, result: any, finalResult?: boolean) {}
 
     onBreakpointAdded(component: Component) {}

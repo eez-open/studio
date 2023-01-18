@@ -110,7 +110,6 @@ export interface IComponentFlowState {
     evalTemplateLiteral(expression: string): any;
     assignValue(assignableExpression: string, value: any): any;
     propagateValue(output: string, value: any): void;
-    createObjectValue(valueType: ValueType, value: any): any;
     sendResultToWorker(
         messageId: number,
         result: any,

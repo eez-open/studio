@@ -484,7 +484,9 @@ export class LineChartWidget extends Widget {
             ]
         },
 
-        icon: LINE_CHART_ICON
+        icon: LINE_CHART_ICON,
+
+        showTreeCollapseIcon: "never"
     });
 
     xValue: string;
@@ -808,7 +810,9 @@ export class GaugeWidget extends Widget {
             }
         },
 
-        icon: GAUGE_ICON
+        icon: GAUGE_ICON,
+
+        showTreeCollapseIcon: "never"
     });
 
     title: string;

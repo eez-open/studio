@@ -92,6 +92,8 @@ struct ScpiComponentExecutionState : public ComponenentExecutionState {
 	bool resultIsReady;
 
 	ScpiComponentExecutionState() {
+        errorMessage = 0;
+        result = 0;
 		instructionIndex = 0;
 		commandOrQueryText[0] = 0;
 	}
@@ -180,7 +182,7 @@ ScpiComponentExecutionState *ScpiComponentExecutionState::g_waitingForScpiResult
 ////////////////////////////////////////////////////////////////////////////////
 
 EM_PORT_API(void) onScpiResult(char *errorMessage, char *result, int resultLen, int resultIsBlob) {
-	if (!isFlowRunningHook()) {
+	if (isFlowStopped()) {
 		return;
 	}
 
