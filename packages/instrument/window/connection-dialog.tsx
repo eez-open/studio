@@ -109,7 +109,7 @@ export const ConnectionProperties = observer(
 
         serialParameters: SerialConnectionParameters;
 
-        selectedUsbDeviceIndex: number | undefined;
+        selectedUsbDeviceIndex: number = -1;
         idVendor: number;
         idProduct: number;
 
@@ -196,14 +196,10 @@ export const ConnectionProperties = observer(
                     );
                 } else if (this.iface === "usbtmc") {
                     connectionParameters.type = "usbtmc";
-                    connectionParameters.usbtmcParameters.idVendor = this
-                        .selectedUsbDeviceIndex
-                        ? this.idVendor
-                        : 0;
-                    connectionParameters.usbtmcParameters.idProduct = this
-                        .selectedUsbDeviceIndex
-                        ? this.idProduct
-                        : 0;
+                    connectionParameters.usbtmcParameters.idVendor =
+                        this.selectedUsbDeviceIndex != -1 ? this.idVendor : 0;
+                    connectionParameters.usbtmcParameters.idProduct =
+                        this.selectedUsbDeviceIndex != -1 ? this.idProduct : 0;
                 } else if (this.iface === "web-simulator") {
                     connectionParameters.type = "web-simulator";
                     connectionParameters.webSimulatorParameters.id = guid();
@@ -479,7 +475,7 @@ export const ConnectionProperties = observer(
                     <SelectProperty
                         key="usbDevice"
                         name="Device"
-                        value={(this.selectedUsbDeviceIndex ?? -1).toString()}
+                        value={this.selectedUsbDeviceIndex.toString()}
                         onChange={optionValue =>
                             this.onUsbDeviceChange(parseInt(optionValue))
                         }
@@ -507,10 +503,7 @@ export const ConnectionProperties = observer(
                                 )
                             );
 
-                            if (
-                                this.selectedUsbDeviceIndex == undefined ||
-                                this.selectedUsbDeviceIndex == -1
-                            ) {
+                            if (this.selectedUsbDeviceIndex == -1) {
                                 options.unshift(
                                     <option key="not-found" value="-1"></option>
                                 );
