@@ -12,6 +12,8 @@ import { to16bitsColor } from "eez-studio-shared/color";
 import { remap } from "eez-studio-shared/util";
 import { roundNumber } from "eez-studio-shared/roundNumber";
 
+import { Button } from "eez-studio-ui/button";
+
 import { detectFileType } from "instrument/connection/file-type";
 
 import {
@@ -98,8 +100,6 @@ import {
 } from "project-editor/flow/editor/draw";
 import * as draw from "project-editor/flow/editor/draw";
 import { Font } from "project-editor/features/font/font";
-
-import { BootstrapButton } from "project-editor/ui-components/BootstrapButton";
 
 import {
     Widget,
@@ -1211,13 +1211,9 @@ const LayoutViewPropertyGridUI = observer(
                 return null;
             }
             return (
-                <BootstrapButton
-                    color="primary"
-                    size="small"
-                    onClick={this.showLayout}
-                >
+                <Button color="primary" size="small" onClick={this.showLayout}>
                     Show Layout
-                </BootstrapButton>
+                </Button>
             );
         }
     }
@@ -2789,13 +2785,13 @@ const BitmapWidgetPropertyGridUI = observer(
             }
 
             return (
-                <BootstrapButton
+                <Button
                     color="primary"
                     size="small"
                     onClick={this.resizeToFitBitmap}
                 >
                     Resize to Fit Bitmap
-                </BootstrapButton>
+                </Button>
             );
         }
     }

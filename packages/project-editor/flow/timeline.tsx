@@ -6,6 +6,7 @@ import {
     action,
     runInAction
 } from "mobx";
+import { observer } from "mobx-react";
 
 import { _each, _find, _range } from "eez-studio-shared/algorithm";
 import {
@@ -15,6 +16,7 @@ import {
 } from "eez-studio-shared/validation";
 import { humanize } from "eez-studio-shared/string";
 import { Icon } from "eez-studio-ui/icon";
+import { Button } from "eez-studio-ui/button";
 import {
     Point,
     pointDistance,
@@ -40,9 +42,7 @@ import {
 } from "project-editor/store";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { observer } from "mobx-react";
 import { ProjectContext } from "project-editor/project/context";
-import { BootstrapButton } from "project-editor/ui-components/BootstrapButton";
 import { easingFunctions } from "project-editor/flow/easing-functions";
 
 import type { Component, Widget } from "project-editor/flow/component";
@@ -1508,7 +1508,7 @@ export const TimelineKeyframePropertyUI = observer(
                                 marginBottom: 10
                             }}
                         >
-                            <BootstrapButton
+                            <Button
                                 color="primary"
                                 size="small"
                                 onClick={this.onDeleteKeyframes}
@@ -1516,7 +1516,7 @@ export const TimelineKeyframePropertyUI = observer(
                                 {keyframes.length > 1
                                     ? "Delete Keyframes"
                                     : "Delete Keyframe"}
-                            </BootstrapButton>
+                            </Button>
                         </div>
                     )}
                     {keyframes.length < this.keyframes.length && (
@@ -1525,7 +1525,7 @@ export const TimelineKeyframePropertyUI = observer(
                                 marginBottom: 10
                             }}
                         >
-                            <BootstrapButton
+                            <Button
                                 color="primary"
                                 size="small"
                                 onClick={this.onInsertKeyframes}
@@ -1533,7 +1533,7 @@ export const TimelineKeyframePropertyUI = observer(
                                 {this.keyframes.length > 1
                                     ? "Insert Keyframes"
                                     : "Insert Keyframe"}
-                            </BootstrapButton>
+                            </Button>
                         </div>
                     )}
                 </div>

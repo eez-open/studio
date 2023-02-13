@@ -14,6 +14,7 @@ import {
 } from "eez-studio-shared/validation";
 
 import * as notification from "eez-studio-ui/notification";
+import { Button } from "eez-studio-ui/button";
 
 import { AbsoluteFileInput } from "project-editor/ui-components/FileInput";
 
@@ -65,7 +66,6 @@ import {
     serializePixelArray
 } from "project-editor/features/font/utils";
 import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
-import { BootstrapButton } from "project-editor/ui-components/BootstrapButton";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -934,13 +934,9 @@ const ExportFontFilePropertyGridUI = observer(
             }
             return (
                 <div style={{ marginTop: 10 }}>
-                    <BootstrapButton
-                        color="primary"
-                        size="small"
-                        onClick={this.export}
-                    >
+                    <Button color="primary" size="small" onClick={this.export}>
                         Export font file...
-                    </BootstrapButton>
+                    </Button>
                 </div>
             );
         }

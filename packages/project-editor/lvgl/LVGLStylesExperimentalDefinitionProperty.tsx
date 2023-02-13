@@ -4,8 +4,9 @@ import { observer } from "mobx-react";
 import { IEezObject, PropertyProps } from "project-editor/core/object";
 import { ProjectContext } from "project-editor/project/context";
 
-import { BootstrapButton } from "project-editor/ui-components/BootstrapButton";
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
+import { Button } from "eez-studio-ui/button";
+
 import { getProjectEditorStore } from "project-editor/store";
 import {
     LVGLPropertyInfo,
@@ -29,13 +30,13 @@ export const LVGLStylesExperimentalDefinitionProperty = observer(
 
         render() {
             return (
-                <BootstrapButton
+                <Button
                     color="primary"
                     size="small"
                     onClick={this.showProperties}
                 >
                     Show Properties
-                </BootstrapButton>
+                </Button>
             );
         }
     }

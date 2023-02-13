@@ -3,7 +3,7 @@ import classNames from "classnames";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class BootstrapButton extends React.Component<{
+export class Button extends React.Component<{
     children?: React.ReactNode;
     color: "primary" | "secondary";
     size: "small" | "medium" | "large";

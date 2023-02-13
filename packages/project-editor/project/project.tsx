@@ -23,8 +23,9 @@ import {
     FieldComponent
 } from "eez-studio-ui/generic-dialog";
 import { Tree } from "eez-studio-ui/tree";
-import { BootstrapButton } from "project-editor/ui-components/BootstrapButton";
+
 import * as notification from "eez-studio-ui/notification";
+import { Button } from "eez-studio-ui/button";
 
 import {
     ClassInfo,
@@ -558,21 +559,21 @@ function openProject(importDirective: ImportDirective) {
 const ImportDirectiveCustomUI = observer((props: PropertyProps) => {
     return (
         <div className="EezStudio_ImportDirectiveCustomUIContainer">
-            <BootstrapButton
+            <Button
                 color="primary"
                 size="small"
                 onClick={() => showUsage(props.objects[0] as ImportDirective)}
             >
                 Usage
-            </BootstrapButton>
+            </Button>
 
-            <BootstrapButton
+            <Button
                 color="primary"
                 size="small"
                 onClick={() => openProject(props.objects[0] as ImportDirective)}
             >
                 Open
-            </BootstrapButton>
+            </Button>
         </div>
     );
 });

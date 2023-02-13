@@ -12,6 +12,7 @@ import { observer } from "mobx-react";
 import { dialog, getCurrentWindow } from "@electron/remote";
 
 import * as notification from "eez-studio-ui/notification";
+import { Button } from "eez-studio-ui/button";
 
 import {
     ClassInfo,
@@ -48,7 +49,6 @@ import {
     isLVGLProject
 } from "project-editor/project/project-type-traits";
 import { IFieldProperties } from "eez-studio-types";
-import { BootstrapButton } from "project-editor/ui-components/BootstrapButton";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -92,13 +92,9 @@ const ExportBitmapFilePropertyGridUI = observer(
             }
             return (
                 <div style={{ marginTop: 10 }}>
-                    <BootstrapButton
-                        color="primary"
-                        size="small"
-                        onClick={this.export}
-                    >
+                    <Button color="primary" size="small" onClick={this.export}>
                         Export bitmap file...
-                    </BootstrapButton>
+                    </Button>
                 </div>
             );
         }
