@@ -9,8 +9,6 @@ import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import type { ConnectionLine } from "project-editor/flow/flow";
 
-import { OutputActionComponent } from "project-editor/flow/components/actions";
-
 import { getValueLabel } from "project-editor/features/variable/value-type";
 import type { ComponentInput } from "project-editor/flow/component";
 
@@ -19,6 +17,7 @@ import {
     registerPath,
     unregisterPath
 } from "project-editor/flow/editor/real-time-traffic-visualizer";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -232,7 +231,10 @@ class VisiblePath extends React.Component<{
 
         const seq =
             targetInput?.isSequenceInput &&
-            !(connectionLine.targetComponent instanceof OutputActionComponent);
+            !(
+                connectionLine.targetComponent instanceof
+                ProjectEditor.OutputActionComponentClass
+            );
 
         return (
             <path

@@ -101,7 +101,10 @@ import {
 } from "project-editor/project/EditorComponentFactory";
 import { browseGlyph } from "project-editor/features/font/FontEditor";
 import { Variable } from "project-editor/features/variable/variable";
-import { CallActionActionComponent } from "project-editor/flow/components/actions";
+import {
+    OutputActionComponent,
+    CallActionActionComponent
+} from "project-editor/flow/components/actions";
 import {
     ContainerWidget,
     LayoutViewWidget,
@@ -199,6 +202,7 @@ export async function initProjectEditor(
         SelectWidgetClass: SelectWidget,
         ContainerWidgetClass: ContainerWidget,
         ListWidgetClass: ListWidget,
+        OutputActionComponentClass: OutputActionComponent,
         CallActionActionComponentClass: CallActionActionComponent,
         VariableClass: Variable,
         GlyphClass: Glyph,

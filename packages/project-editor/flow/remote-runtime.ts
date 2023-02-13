@@ -21,7 +21,7 @@ import {
     IFlowState,
     LogItemType
 } from "project-editor/flow/flow-interfaces";
-import { getFlow, getProject } from "project-editor/project/project";
+import { getProject } from "project-editor/project/project";
 import {
     StateMachineAction,
     ComponentState,
@@ -425,7 +425,7 @@ export class RemoteRuntime extends RuntimeBase {
         let flowIndex = -1;
         let componentIndex = -1;
 
-        const flow = getFlow(component);
+        const flow = ProjectEditor.getFlow(component);
         const project = getProject(flow);
 
         const flowInAssetsMap = this.assetsMap.flows.find(

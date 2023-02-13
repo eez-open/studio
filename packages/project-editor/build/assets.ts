@@ -9,8 +9,7 @@ import {
 import {
     Project,
     BuildConfiguration,
-    getProject,
-    getFlow
+    getProject
 } from "project-editor/project/project";
 
 import {
@@ -83,6 +82,7 @@ import { FIRST_DASHBOARD_COMPONENT_TYPE } from "project-editor/flow/components/c
 import { DummyDataBuffer, DataBuffer } from "project-editor/build/data-buffer";
 
 import { LVGLBuild } from "project-editor/lvgl/build";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export { DummyDataBuffer, DataBuffer } from "project-editor/build/data-buffer";
 
@@ -944,7 +944,7 @@ export class Assets {
     }
 
     getComponentIndex(component: Component) {
-        const flowState = this.getFlowState(getFlow(component));
+        const flowState = this.getFlowState(ProjectEditor.getFlow(component));
         let index = flowState.componentIndexes.get(component);
         if (index == undefined) {
             index = flowState.componentIndexes.size;
@@ -954,7 +954,7 @@ export class Assets {
     }
 
     getComponentInputIndex(component: Component, inputName: string) {
-        const flowState = this.getFlowState(getFlow(component));
+        const flowState = this.getFlowState(ProjectEditor.getFlow(component));
         const path =
             getObjectPathAsString(component) + PATH_SEPARATOR + inputName;
         let index = flowState.componentInputIndexes.get(path);
@@ -969,7 +969,7 @@ export class Assets {
     }
 
     findComponentInputIndex(component: Component, inputName: string) {
-        const flowState = this.getFlowState(getFlow(component));
+        const flowState = this.getFlowState(ProjectEditor.getFlow(component));
         const path =
             getObjectPathAsString(component) + PATH_SEPARATOR + inputName;
         const inputIndex = flowState.componentInputIndexes.get(path);
@@ -983,7 +983,7 @@ export class Assets {
         if (!getProperty(widget, propertyName)) {
             return 0;
         }
-        const flowState = this.getFlowState(getFlow(widget));
+        const flowState = this.getFlowState(ProjectEditor.getFlow(widget));
         const path =
             getObjectPathAsString(widget) + PATH_SEPARATOR + propertyName;
         let index = flowState.flowWidgetDataIndexes.get(path);
@@ -1058,7 +1058,7 @@ export class Assets {
             }
         }
 
-        const flowState = this.getFlowState(getFlow(widget));
+        const flowState = this.getFlowState(ProjectEditor.getFlow(widget));
         const path =
             getObjectPathAsString(widget) + PATH_SEPARATOR + propertyName;
         let index = flowState.flowWidgetActionIndexes.get(path);
@@ -1076,7 +1076,7 @@ export class Assets {
         componentIndex: number,
         propertyValueIndex: number
     ) {
-        const flowState = this.getFlowState(getFlow(component));
+        const flowState = this.getFlowState(ProjectEditor.getFlow(component));
         const path =
             getObjectPathAsString(component) + PATH_SEPARATOR + propertyName;
         let index = flowState.flowWidgetDataIndexes.get(path);
@@ -1094,7 +1094,7 @@ export class Assets {
         componentIndex: number,
         componentOutputIndex: number
     ) {
-        const flowState = this.getFlowState(getFlow(component));
+        const flowState = this.getFlowState(ProjectEditor.getFlow(component));
         const path =
             getObjectPathAsString(component) + PATH_SEPARATOR + outputName;
         let index = flowState.flowWidgetActionIndexes.get(path);

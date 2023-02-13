@@ -66,7 +66,7 @@ import {
     ComponentCanvas
 } from "project-editor/flow/editor/render";
 
-import { Page, findPage } from "project-editor/features/page/page";
+import type { Page } from "project-editor/features/page/page";
 import { Bitmap, findBitmap } from "project-editor/features/bitmap/bitmap";
 import { Style } from "project-editor/features/style/style";
 import { findVariable } from "project-editor/features/variable/variable";
@@ -1256,7 +1256,10 @@ export class LayoutViewWidget extends Widget {
 
                     const project = getProject(widget);
 
-                    const layout = findPage(project, widget.layout);
+                    const layout = ProjectEditor.findPage(
+                        project,
+                        widget.layout
+                    );
                     if (!layout) {
                         return true;
                     }
@@ -1321,7 +1324,10 @@ export class LayoutViewWidget extends Widget {
                 }
 
                 if (object.layout) {
-                    let layout = findPage(getProject(object), object.layout);
+                    let layout = ProjectEditor.findPage(
+                        getProject(object),
+                        object.layout
+                    );
                     if (!layout) {
                         messages.push(
                             propertyNotFoundMessage(object, "layout")
@@ -1394,12 +1400,12 @@ export class LayoutViewWidget extends Widget {
         if (this.data) {
             const layoutName = dataContext.get(this.data);
             if (layoutName) {
-                layout = findPage(project, layoutName);
+                layout = ProjectEditor.findPage(project, layoutName);
             }
         }
 
         if (!layout) {
-            layout = findPage(project, this.layout);
+            layout = ProjectEditor.findPage(project, this.layout);
         }
 
         if (!layout) {
@@ -1415,7 +1421,7 @@ export class LayoutViewWidget extends Widget {
     }
 
     getInputs() {
-        const page = findPage(getProject(this), this.layout);
+        const page = ProjectEditor.findPage(getProject(this), this.layout);
         if (!page) {
             return super.getInputs();
         }
@@ -1444,7 +1450,7 @@ export class LayoutViewWidget extends Widget {
     }
 
     getOutputs() {
-        const page = findPage(getProject(this), this.layout);
+        const page = ProjectEditor.findPage(getProject(this), this.layout);
         if (!page) {
             return super.getOutputs();
         }
@@ -4450,7 +4456,7 @@ export class AppViewWidget extends Widget {
         if (this.data) {
             const pageName = flowContext.dataContext.get(this.data);
             if (pageName) {
-                const page = findPage(getProject(this), pageName);
+                const page = ProjectEditor.findPage(getProject(this), pageName);
                 if (page) {
                     element = (
                         <ComponentEnclosure

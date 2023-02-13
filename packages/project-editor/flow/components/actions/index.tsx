@@ -45,13 +45,7 @@ import {
     makeExpressionProperty,
     outputIsOptionalIfAtLeastOneOutputExists
 } from "project-editor/flow/component";
-import { findAction } from "project-editor/features/action/action";
-import {
-    getFlow,
-    getProject,
-    ProjectType
-} from "project-editor/project/project";
-import { findPage } from "project-editor/features/page/page";
+import { getProject, ProjectType } from "project-editor/project/project";
 import { Assets, DataBuffer } from "project-editor/build/assets";
 import {
     buildAssignableExpression,
@@ -245,7 +239,7 @@ export class InputActionComponent extends ActionComponent {
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        const flow = getFlow(this);
+        const flow = ProjectEditor.getFlow(this);
         dataBuffer.writeUint8(flow.inputComponents.indexOf(this));
     }
 }
@@ -333,7 +327,7 @@ export class OutputActionComponent extends ActionComponent {
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        const flow = getFlow(this);
+        const flow = ProjectEditor.getFlow(this);
         dataBuffer.writeUint8(flow.outputComponents.indexOf(this));
     }
 }
@@ -2055,7 +2049,7 @@ export class CallActionActionComponent extends ActionComponent {
             if (!component.action) {
                 messages.push(propertyNotSetMessage(component, "action"));
             } else {
-                const action = findAction(
+                const action = ProjectEditor.findAction(
                     getProject(component),
                     component.action
                 );
@@ -2087,7 +2081,7 @@ export class CallActionActionComponent extends ActionComponent {
     getInputs(): ComponentInput[] {
         let inputs: ComponentInput[];
 
-        const action = findAction(getProject(this), this.action);
+        const action = ProjectEditor.findAction(getProject(this), this.action);
         if (action) {
             if (action.implementationType == "native") {
                 inputs = [
@@ -2129,7 +2123,7 @@ export class CallActionActionComponent extends ActionComponent {
     getOutputs() {
         let outputs: ComponentOutput[];
 
-        const action = findAction(getProject(this), this.action);
+        const action = ProjectEditor.findAction(getProject(this), this.action);
         if (action) {
             if (action.implementationType == "native") {
                 outputs = [
@@ -2169,7 +2163,7 @@ export class CallActionActionComponent extends ActionComponent {
     }
 
     open() {
-        const action = findAction(getProject(this), this.action);
+        const action = ProjectEditor.findAction(getProject(this), this.action);
         if (action) {
             getProjectEditorStore(this).navigationStore.showObjects(
                 [action],
@@ -2181,7 +2175,7 @@ export class CallActionActionComponent extends ActionComponent {
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        const action = findAction(getProject(this), this.action);
+        const action = ProjectEditor.findAction(getProject(this), this.action);
         if (action) {
             if (
                 assets.option == "buildFiles" &&
@@ -2787,7 +2781,10 @@ export class ShowPageActionComponent extends ActionComponent {
             if (!object.page) {
                 messages.push(propertyNotSetMessage(object, "page"));
             } else {
-                let page = findPage(getProject(object), object.page);
+                let page = ProjectEditor.findPage(
+                    getProject(object),
+                    object.page
+                );
                 if (!page) {
                     messages.push(propertyNotFoundMessage(object, "page"));
                 }

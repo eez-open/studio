@@ -509,23 +509,6 @@ function buildEditMenu(win: IWindow | undefined) {
 function buildViewMenu(win: IWindow | undefined) {
     let viewSubmenu: Electron.MenuItemConstructorOptions[] = [];
 
-    // if (win?.activeTabType === "project") {
-    //     viewSubmenu.push(
-    //         {
-    //             label: "Command Palette...",
-    //             accelerator: "CmdOrCtrl+Shift+P",
-    //             click: function (item, focusedWindow) {
-    //                 if (focusedWindow) {
-    //                     focusedWindow.webContents.send("command-palette");
-    //                 }
-    //             }
-    //         },
-    //         {
-    //             type: "separator"
-    //         }
-    //     );
-    // }
-
     viewSubmenu.push(
         {
             label: "Home",
@@ -688,10 +671,8 @@ function buildViewMenu(win: IWindow | undefined) {
         click: function (item, focusedWindow) {
             if (focusedWindow) {
                 focusedWindow.webContents.send("reload");
-
-                // focusedWindow.webContents.reload();
-
-                // focusedWindow.webContents.clearHistory();
+                //focusedWindow.webContents.reload();
+                //focusedWindow.webContents.clearHistory();
             }
         }
     });
