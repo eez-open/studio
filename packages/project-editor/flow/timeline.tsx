@@ -45,11 +45,8 @@ import { ProjectContext } from "project-editor/project/context";
 import { BootstrapButton } from "project-editor/ui-components/BootstrapButton";
 import { easingFunctions } from "project-editor/flow/easing-functions";
 
-import {
-    Component,
-    getWidgetParent,
-    Widget
-} from "project-editor/flow/component";
+import type { Component, Widget } from "project-editor/flow/component";
+
 import type { PageTabState } from "project-editor/features/page/PageEditor";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { DataBuffer } from "project-editor/build/data-buffer";
@@ -1617,7 +1614,7 @@ class WidgetTimelinePath {
             y = height / 2;
         }
 
-        const parent = getWidgetParent(this.widget);
+        const parent = ProjectEditor.getWidgetParent(this.widget);
         if (parent instanceof ProjectEditor.PageClass) {
             x += parent.left;
             y += parent.top;

@@ -20,7 +20,6 @@ import {
     loadExtensionById,
     extensions
 } from "eez-studio-shared/extensions/extensions";
-import { activityLogStore, log } from "eez-studio-shared/activity-log";
 import { objectEqual } from "eez-studio-shared/util";
 import { isRenderer } from "eez-studio-shared/util-electron";
 import type { IUnit } from "eez-studio-shared/units";
@@ -28,6 +27,8 @@ import { db } from "eez-studio-shared/db-path";
 import { _defer } from "eez-studio-shared/algorithm";
 
 import type * as MainWindowModule from "main/window";
+
+import { activityLogStore, log } from "instrument/window/history/activity-log";
 
 import type { IInstrumentExtensionProperties } from "instrument/instrument-extension";
 import { DEFAULT_INSTRUMENT_PROPERTIES } from "instrument/DEFAULT_INSTRUMENT_PROPERTIES";

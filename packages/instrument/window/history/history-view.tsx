@@ -6,7 +6,6 @@ import { observer } from "mobx-react";
 
 import { readBinaryFile } from "eez-studio-shared/util-electron";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
-import { log } from "eez-studio-shared/activity-log";
 
 import { IconAction, ButtonAction } from "eez-studio-ui/action";
 import { Toolbar } from "eez-studio-ui/toolbar";
@@ -18,6 +17,8 @@ import {
 import { SearchInput } from "eez-studio-ui/search-input";
 
 import { extensions } from "eez-studio-shared/extensions/extensions";
+
+import { log } from "instrument/window/history/activity-log";
 
 import type {
     IAppStore,

@@ -22,14 +22,13 @@ import {
 
 import { Loader } from "eez-studio-ui/loader";
 
+import type { IParameter, IParameterType, IEnum } from "instrument/scpi";
+
 import {
     createObject,
     objectToJS,
     ProjectEditorStore
 } from "project-editor/store";
-
-import type { IParameter, IParameterType, IEnum } from "instrument/scpi";
-
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import { ScpiEnum } from "project-editor/features/scpi/enum";
 import { ProjectContext } from "project-editor/project/context";

@@ -16,12 +16,6 @@ import {
     commitTransaction,
     IStore
 } from "eez-studio-shared/store";
-import {
-    logUpdate,
-    IActivityLogEntry,
-    activityLogStore,
-    getHistoryItemById
-} from "eez-studio-shared/activity-log";
 import { TIME_UNIT } from "eez-studio-shared/units";
 
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
@@ -42,6 +36,13 @@ import {
     IChartsController
 } from "eez-studio-ui/chart/chart";
 import { RulersModel, IRulersModel } from "eez-studio-ui/chart/rulers";
+
+import {
+    logUpdate,
+    IActivityLogEntry,
+    activityLogStore,
+    getHistoryItemById
+} from "instrument/window/history/activity-log";
 
 import { ChartPreview } from "instrument/window/chart-preview";
 

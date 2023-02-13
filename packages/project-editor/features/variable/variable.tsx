@@ -8,6 +8,7 @@ import {
     makeObservable
 } from "mobx";
 import { observer } from "mobx-react";
+import classNames from "classnames";
 
 import { validators } from "eez-studio-shared/validation";
 
@@ -68,8 +69,8 @@ import {
     FLOW_ITERATOR_INDEX_VARIABLE
 } from "project-editor/features/variable/defs";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import classNames from "classnames";
 import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
+import { parseIdentifier } from "project-editor/flow/expression/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -437,7 +438,7 @@ export class Variable extends EezObject {
                             type: "string",
                             validators: [
                                 validators.required,
-                                validators.identifier,
+                                identifierValidator,
                                 validators.unique({}, parent)
                             ]
                         },
@@ -1036,7 +1037,7 @@ export class StructureField extends EezObject implements IStructureField {
                             type: "string",
                             validators: [
                                 validators.required,
-                                validators.identifier,
+                                identifierValidator,
                                 validators.unique({}, parent)
                             ]
                         },
@@ -1115,7 +1116,7 @@ export class Structure extends EezObject implements IStructure {
                             type: "string",
                             validators: [
                                 validators.required,
-                                validators.identifier,
+                                identifierValidator,
                                 validators.unique({}, parent)
                             ]
                         }
@@ -1201,7 +1202,7 @@ export class EnumMember extends EezObject {
                             type: "string",
                             validators: [
                                 validators.required,
-                                validators.identifier,
+                                identifierValidator,
                                 validators.unique({}, parent)
                             ]
                         }
@@ -1267,7 +1268,7 @@ export class Enum extends EezObject {
                             type: "string",
                             validators: [
                                 validators.required,
-                                validators.identifier,
+                                identifierValidator,
                                 validators.unique({}, parent)
                             ]
                         }
@@ -1429,4 +1430,17 @@ export default {
         return messages;
     },
     metrics: metrics
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+const VALIDATION_MESSAGE_INVALID_IDENTIFIER =
+    "Not a valid identifier. Identifier starts with a letter or an underscore (_), followed by zero or more letters, digits, or underscores. Spaces are not allowed.";
+
+const identifierValidator = (object: any, ruleName: string) => {
+    const value = object[ruleName];
+    if (!parseIdentifier(value) || value.startsWith("$")) {
+        return VALIDATION_MESSAGE_INVALID_IDENTIFIER;
+    }
+    return null;
 };

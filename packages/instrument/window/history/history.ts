@@ -11,13 +11,6 @@ import { formatTransferSpeed, formatDate } from "eez-studio-shared/util";
 import { db } from "eez-studio-shared/db-path";
 import { dbQuery } from "eez-studio-shared/db-query";
 import {
-    IActivityLogEntry,
-    activityLogStore,
-    IActivityLogFilterSpecification,
-    logDelete,
-    logUndelete
-} from "eez-studio-shared/activity-log";
-import {
     IStore,
     StoreOperation,
     IStoreOperationOptions,
@@ -27,6 +20,14 @@ import {
 import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
 
 import { confirm } from "eez-studio-ui/dialog-electron";
+
+import {
+    IActivityLogEntry,
+    activityLogStore,
+    IActivityLogFilterSpecification,
+    logDelete,
+    logUndelete
+} from "instrument/window/history/activity-log";
 
 import { Filters, FilterStats } from "instrument/window/history/filters";
 
@@ -323,7 +324,7 @@ class HistoryCalendar {
                 return this.lastSelectedDay;
             }
 
-            return this.history.items[Math.round(this.history.items.length / 2)]
+            return this.history.items[Math.floor(this.history.items.length / 2)]
                 .date;
         }
 

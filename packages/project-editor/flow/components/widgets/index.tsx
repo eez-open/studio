@@ -8,6 +8,11 @@ import classNames from "classnames";
 import QRC from "./qrcodegen";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
+import { to16bitsColor } from "eez-studio-shared/color";
+import { remap } from "eez-studio-shared/util";
+import { roundNumber } from "eez-studio-shared/roundNumber";
+
+import { detectFileType } from "instrument/connection/file-type";
 
 import {
     IEezObject,
@@ -155,10 +160,7 @@ import {
     checkExpression,
     evalConstantExpression
 } from "project-editor/flow/expression";
-import { remap } from "eez-studio-shared/util";
-import { roundNumber } from "eez-studio-shared/roundNumber";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { detectFileType } from "instrument/connection/file-type";
 import {
     generalGroup,
     indentationGroup,
@@ -172,8 +174,10 @@ import {
     getNumberValue,
     getAnyValue
 } from "project-editor/flow/helper";
-import { GAUGE_ICON, LINE_CHART_ICON } from "./icons";
-import { to16bitsColor } from "eez-studio-shared/color";
+import {
+    GAUGE_ICON,
+    LINE_CHART_ICON
+} from "project-editor/flow/components/widgets/icons";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 
 const LIST_TYPE_VERTICAL = 1;

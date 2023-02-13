@@ -54,7 +54,6 @@ export interface IHomeTab extends ITab {
     render(): React.ReactNode;
     attention?: boolean;
     beforeAppClose?(): Promise<boolean>;
-    showCommandPalette?(): void;
     titleStr: string;
 }
 
@@ -334,7 +333,7 @@ class HomeSectionTab implements IHomeTab {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class InstrumentTab implements IHomeTab {
+export class InstrumentTab implements IHomeTab {
     constructor(public tabs: Tabs, public object: InstrumentObject) {
         makeObservable(this, {
             _active: observable,
@@ -440,7 +439,6 @@ export class ProjectEditorTab implements IHomeTab {
             projectEditorStore: observable,
             error: observable,
             makeActive: action,
-            showCommandPalette: action,
             _icon: observable
         });
     }
@@ -724,12 +722,6 @@ export class ProjectEditorTab implements IHomeTab {
         }
 
         return true;
-    }
-
-    showCommandPalette() {
-        if (this.projectEditorStore) {
-            this.projectEditorStore.uiStateStore.showCommandPalette = true;
-        }
     }
 
     loadDebugInfo(filePath: string) {

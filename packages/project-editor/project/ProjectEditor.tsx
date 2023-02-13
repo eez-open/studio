@@ -7,7 +7,6 @@ import classNames from "classnames";
 import { Messages } from "project-editor/ui-components/Output";
 
 import { ProjectContext } from "project-editor/project/context";
-import { CommandPalette } from "project-editor/project/command-palette";
 import { Toolbar } from "project-editor/project/Toolbar";
 import {
     PageEditor,
@@ -98,8 +97,6 @@ export const ProjectEditorView = observer(
                         {!this.props.onlyRuntime && <Toolbar />}
                         <Content />
                     </div>
-                    {this.context.uiStateStore.showCommandPalette &&
-                        !this.context.runtime && <CommandPalette />}
                 </div>
             );
         }

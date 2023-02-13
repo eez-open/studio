@@ -2,6 +2,14 @@ import { observable, runInAction } from "mobx";
 
 import { UNITS } from "eez-studio-shared/units";
 
+import { filterInteger } from "eez-studio-shared/validation-filters";
+
+export {
+    filterInteger,
+    filterFloat,
+    filterNumber
+} from "eez-studio-shared/validation-filters";
+
 const VALIDATION_MESSAGE_INVALID_VALUE = "Invalid value.";
 export const VALIDATION_MESSAGE_REQUIRED = "Please fill out this field.";
 export const VALIDATION_MESSAGE_RANGE_INCLUSIVE =
@@ -13,17 +21,6 @@ const VALIDATION_MESSAGE_RANGE_EXCLUSIVE =
 const VALIDATION_MESSAGE_RANGE_EXCLUSIVE_WITHOUT_MAX =
     "Please enter value greater than ${min}.";
 const VALIDATION_MESSAGE_NOT_UNIQUE = "This field has no unique value.";
-const VALIDATION_MESSAGE_INVALID_IDENTIFIER =
-    "Not a valid identifier. Identifier starts with a letter or an underscore (_), followed by zero or more letters, digits, or underscores. Spaces are not allowed.";
-
-import { filterInteger } from "eez-studio-shared/validation-filters";
-import { parseIdentifier } from "project-editor/flow/expression/helper";
-
-export {
-    filterInteger,
-    filterFloat,
-    filterNumber
-} from "eez-studio-shared/validation-filters";
 
 export type Rule = (
     object: any,
@@ -134,14 +131,6 @@ export const validators = {
             }
             return null;
         };
-    },
-
-    identifier: (object: any, ruleName: string) => {
-        const value = object[ruleName];
-        if (!parseIdentifier(value) || value.startsWith("$")) {
-            return VALIDATION_MESSAGE_INVALID_IDENTIFIER;
-        }
-        return null;
     }
 };
 

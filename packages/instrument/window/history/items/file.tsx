@@ -31,11 +31,6 @@ import {
     IStore
 } from "eez-studio-shared/store";
 import { SAMPLING_RATE_UNIT } from "eez-studio-shared/units";
-import {
-    activityLogStore,
-    IActivityLogEntry,
-    logUpdate
-} from "eez-studio-shared/activity-log";
 
 import type * as UiPropertiesModule from "eez-studio-ui/properties";
 import { Balloon } from "eez-studio-ui/balloon";
@@ -46,6 +41,12 @@ import { Icon } from "eez-studio-ui/icon";
 import type * as UiBalloonModule from "eez-studio-ui/balloon";
 
 import pdfToPng from "pdf-services/pdf-to-png";
+
+import {
+    activityLogStore,
+    IActivityLogEntry,
+    logUpdate
+} from "instrument/window/history/activity-log";
 
 import { FileState } from "instrument/connection/file-state";
 

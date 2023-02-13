@@ -3,11 +3,12 @@ import { computed, action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
-import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
 import { Icon } from "eez-studio-ui/icon";
+
+import { IActivityLogEntry } from "instrument/window/history/activity-log";
 
 import { checkMime, MIME_EEZ_LIST } from "instrument/connection/file-type";
 

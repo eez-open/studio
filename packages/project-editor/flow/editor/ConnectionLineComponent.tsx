@@ -3,15 +3,22 @@ import React from "react";
 import classNames from "classnames";
 
 import { theme } from "eez-studio-ui/theme";
+import { SvgLabel } from "eez-studio-ui/svg-label";
+
+import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import type { ConnectionLine } from "project-editor/flow/flow";
-import { getConnectionLineShape } from "project-editor/flow/editor/connection-line-shape";
-import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+
 import { OutputActionComponent } from "project-editor/flow/components/actions";
-import { SvgLabel } from "eez-studio-ui/svg-label";
+
 import { getValueLabel } from "project-editor/features/variable/value-type";
 import type { ComponentInput } from "project-editor/flow/component";
-import { registerPath, unregisterPath } from "./real-time-traffic-visualizer";
+
+import { getConnectionLineShape } from "project-editor/flow/editor/connection-line-shape";
+import {
+    registerPath,
+    unregisterPath
+} from "project-editor/flow/editor/real-time-traffic-visualizer";
 
 ////////////////////////////////////////////////////////////////////////////////
 

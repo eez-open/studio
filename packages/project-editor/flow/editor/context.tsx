@@ -2,12 +2,12 @@ import { observable, computed, action, makeObservable } from "mobx";
 
 import { BoundingRectBuilder } from "eez-studio-shared/geometry";
 
-import { getClassInfo, getProjectEditorStore } from "project-editor/store";
-
 import {
     ITreeObjectAdapter,
     TreeObjectAdapter
 } from "project-editor/core/objectAdapter";
+
+import { getClassInfo, getProjectEditorStore } from "project-editor/store";
 
 import type {
     IViewState,
@@ -20,6 +20,7 @@ import type {
 
 import { Component, getWidgetParent } from "project-editor/flow/component";
 import type { ConnectionLine, FlowTabState } from "project-editor/flow/flow";
+
 import { FlowDocument } from "project-editor/flow/editor/flow-document";
 import { Transform } from "project-editor/flow/editor/transform";
 

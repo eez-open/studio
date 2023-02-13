@@ -3,7 +3,13 @@ import { observer } from "mobx-react";
 
 import * as notification from "eez-studio-ui/notification";
 
+import { getNodeModuleFolders } from "eez-studio-shared/extensions/yarn";
+
+import { InstrumentObject } from "instrument/instrument-object";
+import { FileHistoryItem } from "instrument/window/history/items/file";
+
 import { ProjectContext } from "project-editor/project/context";
+
 import {
     ProjectEditorStore,
     getClassInfo,
@@ -28,23 +34,26 @@ import type {
     ValueWithType,
     WorkerToRenderMessage
 } from "project-editor/flow/runtime/wasm-worker-interfaces";
+
 import {
     getObjectVariableTypeFromType,
     IObjectVariableValue,
     isArrayType,
     isStructType
 } from "project-editor/features/variable/value-type";
-import { InstrumentObject } from "instrument/instrument-object";
+
 import {
     ArrayValue,
     clarStremIDs,
     createJsArrayValue
 } from "project-editor/flow/runtime/wasm-value";
+
 import {
     isFlowProperty,
     Widget as Component,
     Widget
 } from "project-editor/flow/component";
+
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { makeObservable, observable, runInAction } from "mobx";
@@ -55,9 +64,7 @@ import type {
     IVariable,
     ValueType
 } from "eez-studio-types";
-import { getNodeModuleFolders } from "eez-studio-shared/extensions/yarn";
 import { IExpressionContext } from "project-editor/flow/expression";
-import { FileHistoryItem } from "instrument/window/history/items/file";
 import type { Page } from "project-editor/features/page/page";
 import { createWasmWorker } from "project-editor/flow/runtime/wasm-worker";
 import { LVGLPageViewerRuntime } from "project-editor/lvgl/page-runtime";

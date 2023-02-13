@@ -12,7 +12,7 @@ import { Loader } from "eez-studio-ui/loader";
 import { ButtonAction } from "eez-studio-ui/action";
 
 import type { History, SearchResult } from "instrument/window/history/history";
-import type { IActivityLogEntry } from "eez-studio-shared/activity-log-interfaces";
+import type { IActivityLogEntry } from "instrument/window/history/activity-log-interfaces";
 import { createHistoryItem } from "instrument/window/history/item-factory";
 
 export const SearchResultComponent = observer(

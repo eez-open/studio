@@ -17,11 +17,6 @@ import {
     commitTransaction,
     IStore
 } from "eez-studio-shared/store";
-import {
-    logUpdate,
-    IActivityLogEntry,
-    activityLogStore
-} from "eez-studio-shared/activity-log";
 import { UNITS, TIME_UNIT } from "eez-studio-shared/units";
 import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
 import { Point } from "eez-studio-shared/geometry";
@@ -47,6 +42,12 @@ import { WaveformLineView } from "eez-studio-ui/chart/WaveformLineView";
 import { WaveformFormat } from "eez-studio-ui/chart/WaveformFormat";
 import { initValuesAccesor } from "eez-studio-ui/chart/value-accesor";
 import * as notification from "eez-studio-ui/notification";
+
+import {
+    logUpdate,
+    IActivityLogEntry,
+    activityLogStore
+} from "instrument/window/history/activity-log";
 
 import { checkMime } from "instrument/connection/file-type";
 

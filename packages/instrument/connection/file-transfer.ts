@@ -1,4 +1,4 @@
-import { IActivityLogEntry } from "eez-studio-shared/activity-log";
+import { IActivityLogEntry } from "instrument/window/history/activity-log";
 
 import type { Connection } from "instrument/connection/connection-main";
 import type {

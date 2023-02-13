@@ -1,11 +1,11 @@
 import type { UNITS } from "eez-studio-shared/units";
 import type { IStore } from "eez-studio-shared/store";
-import type { IActivityLogEntry } from "eez-studio-shared/activity-log-interfaces";
+
+import type { IActivityLogEntry } from "instrument/window/history/activity-log-interfaces";
 
 import type { IShortcut } from "shortcuts/interfaces";
 
 import type { IFieldProperties } from "eez-studio-ui/generic-dialog";
-
 export type { IFieldProperties } from "eez-studio-ui/generic-dialog";
 
 import type { IEezFlowEditor } from "eez-studio-types";

@@ -3,16 +3,18 @@ import { makeObservable, observable } from "mobx";
 import { observer } from "mobx-react";
 
 import { Point, Rect } from "eez-studio-shared/geometry";
+import { _each } from "eez-studio-shared/algorithm";
+
+import { IEezObject, isAncestor } from "project-editor/core/object";
+import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
-import { getObjectBoundingRect } from "project-editor/flow/editor/bounding-rects";
-import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
-import { _each } from "eez-studio-shared/algorithm";
-import type { EditorFlowContext } from "project-editor/flow/editor/context";
 import type { Component } from "project-editor/flow/component";
 import type { Flow } from "project-editor/flow/flow";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { IEezObject, isAncestor } from "project-editor/core/object";
+
+import { getObjectBoundingRect } from "project-editor/flow/editor/bounding-rects";
+import type { EditorFlowContext } from "project-editor/flow/editor/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 

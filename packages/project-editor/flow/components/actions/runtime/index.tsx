@@ -4,19 +4,19 @@ import { writeFileSync, unlinkSync } from "fs";
 import { PythonShell, Options } from "python-shell";
 import { PassThrough } from "stream";
 import { spawn } from "child_process";
+import { Duplex, Readable, Stream, Writable } from "stream";
+import { toJS } from "mobx";
 
 import type {
     IDashboardComponentContext,
     IWasmFlowRuntime
 } from "eez-studio-types";
-import type { WorkerToRenderMessage } from "project-editor/flow/runtime/wasm-worker-interfaces";
 
+import type { WorkerToRenderMessage } from "project-editor/flow/runtime/wasm-worker-interfaces";
 import {
     registerExecuteFunction,
     onWasmFlowRuntimeTerminate
 } from "project-editor/flow/runtime/wasm-execute-functions";
-import { Duplex, Readable, Stream, Writable } from "stream";
-import { toJS } from "mobx";
 
 ////////////////////////////////////////////////////////////////////////////////
 

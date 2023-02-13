@@ -40,7 +40,8 @@ import { extensions } from "eez-studio-shared/extensions/extensions";
 import {
     ActionComponent,
     Component,
-    registerActionComponent
+    registerActionComponent,
+    getWidgetParent
 } from "project-editor/flow/component";
 
 import { findPage, Page } from "project-editor/features/page/page";
@@ -210,6 +211,7 @@ export async function initProjectEditor(
         getFlow,
         getNameProperty,
         getObjectVariableTypeFromType,
+        getWidgetParent,
         findPage,
         findAction,
         findBitmap,

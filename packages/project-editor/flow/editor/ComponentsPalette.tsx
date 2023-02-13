@@ -5,24 +5,22 @@ import classNames from "classnames";
 import tinycolor from "tinycolor2";
 
 import { objectClone } from "eez-studio-shared/util";
+import { SearchInput } from "eez-studio-ui/search-input";
 
 import {
     getClassesDerivedFrom,
     IObjectClassInfo,
     isProperSubclassOf
 } from "project-editor/core/object";
-import { createObject } from "project-editor/store";
 import { DragAndDropManager } from "project-editor/core/dd";
-
-import type { Component } from "project-editor/flow/component";
-
-import { ProjectContext } from "project-editor/project/context";
-import { SearchInput } from "eez-studio-ui/search-input";
 import {
+    createObject,
     getClass,
     objectToClipboardData,
     setClipboardData
 } from "project-editor/store";
+import type { Component } from "project-editor/flow/component";
+import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////

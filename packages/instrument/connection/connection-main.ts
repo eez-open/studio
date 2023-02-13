@@ -7,7 +7,7 @@ import {
     makeObservable
 } from "mobx";
 
-import { activityLogStore, log } from "eez-studio-shared/activity-log";
+import { activityLogStore, log } from "instrument/window/history/activity-log";
 import {
     registerSource,
     unregisterSource,

@@ -3,12 +3,13 @@ import { observer } from "mobx-react";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
-import { logUpdate } from "eez-studio-shared/activity-log";
 
 import { Balloon } from "eez-studio-ui/balloon";
 import { PropertyList, StaticRichTextProperty } from "eez-studio-ui/properties";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
+
+import { logUpdate } from "instrument/window/history/activity-log";
 
 import { showEditNoteDialog } from "instrument/window/note-dialog";
 

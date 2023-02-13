@@ -3,7 +3,6 @@ import React from "react";
 import { observable, computed, action, toJS, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
-import { logGet, logUpdate } from "eez-studio-shared/activity-log";
 import {
     readCsvFile,
     writeCsvFile,
@@ -30,6 +29,8 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import * as notification from "eez-studio-ui/notification";
 import { PropertyList, NumberInputProperty } from "eez-studio-ui/properties";
 import { Header } from "eez-studio-ui/header-with-body";
+
+import { logGet, logUpdate } from "instrument/window/history/activity-log";
 
 import { DEFAULT_INSTRUMENT_PROPERTIES } from "instrument/DEFAULT_INSTRUMENT_PROPERTIES";
 

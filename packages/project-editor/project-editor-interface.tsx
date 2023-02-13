@@ -22,7 +22,8 @@ import type { findPage, Page } from "project-editor/features/page/page";
 import type {
     ActionComponent,
     Component,
-    Widget
+    Widget,
+    getWidgetParent
 } from "project-editor/flow/component";
 import type {
     findFont,
@@ -114,6 +115,7 @@ export interface IProjectEditor {
     getFlow: typeof getFlow;
     getNameProperty: typeof getNameProperty;
     getObjectVariableTypeFromType: typeof getObjectVariableTypeFromType;
+    getWidgetParent: typeof getWidgetParent;
     findPage: typeof findPage;
     findAction: typeof findAction;
     findBitmap: typeof findBitmap;

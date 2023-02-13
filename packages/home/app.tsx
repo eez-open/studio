@@ -16,7 +16,8 @@ import { getAppStore } from "home/history";
 import "home/home-tab";
 
 import { SessionInfo } from "instrument/window/history/session/info-view";
-import { InstrumentObject, instruments } from "instrument/instrument-object";
+import type { InstrumentObject } from "instrument/instrument-object";
+import { instruments } from "instrument/instrument-object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -26,8 +27,7 @@ const AppComponent = observer(
             super(props);
 
             makeObservable(this, {
-                addTabAttention: computed,
-                webSimulators: computed
+                addTabAttention: computed
             });
         }
 
@@ -39,20 +39,6 @@ const AppComponent = observer(
                         tab.instance.attention
                 ).length > 0
             );
-        }
-
-        get webSimulators() {
-            const webSimulators: InstrumentObject[] = [];
-            instruments.forEach(instrument => {
-                if (
-                    !instrument.connection.isIdle &&
-                    instrument.extension &&
-                    instrument.lastConnection?.type == "web-simulator"
-                ) {
-                    webSimulators.push(instrument);
-                }
-            });
-            return webSimulators;
         }
 
         render() {
@@ -76,11 +62,12 @@ const AppComponent = observer(
                                 }
                             )}
                         />
-                        {appStore.history.sessions.activeSession && (
-                            <div className="EezStudio_SessionInfoContainer">
-                                <SessionInfo appStore={appStore} />
-                            </div>
-                        )}
+                        {tabs.instrumentsVisible &&
+                            appStore.history.sessions.activeSession && (
+                                <div className="EezStudio_SessionInfoContainer">
+                                    <SessionInfo appStore={appStore} />
+                                </div>
+                            )}
                     </Header>
                     <Body>
                         <Tabs />
@@ -88,22 +75,10 @@ const AppComponent = observer(
                 </VerticalHeaderWithBody>
             );
 
-            const webSimulatorConnections = this.webSimulators;
-            if (webSimulatorConnections.length == 0) {
-                return content;
-            }
-
-            const simulators = webSimulatorConnections.map(instrument => (
-                <WebSimulatorPanel
-                    key={instrument.id}
-                    instrument={instrument}
-                />
-            ));
-
             return (
                 <>
                     {content}
-                    {simulators}
+                    <WebSimulators />
                 </>
             );
         }
@@ -141,6 +116,48 @@ const Tabs = observer(
                         ? this.renderContent(tab)
                         : this.renderContentIfRenderedBefore(tab)}
                 </div>
+            ));
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+const WebSimulators = observer(
+    class WebSimulators extends React.Component {
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                webSimulators: computed
+            });
+        }
+
+        get webSimulators() {
+            const webSimulators: InstrumentObject[] = [];
+            instruments.forEach(instrument => {
+                if (
+                    !instrument.connection.isIdle &&
+                    instrument.extension &&
+                    instrument.lastConnection?.type == "web-simulator"
+                ) {
+                    webSimulators.push(instrument);
+                }
+            });
+            return webSimulators;
+        }
+
+        render() {
+            const webSimulatorConnections = this.webSimulators;
+            if (webSimulatorConnections.length == 0) {
+                return null;
+            }
+
+            return webSimulatorConnections.map(instrument => (
+                <WebSimulatorPanel
+                    key={instrument.id}
+                    instrument={instrument}
+                />
             ));
         }
     }

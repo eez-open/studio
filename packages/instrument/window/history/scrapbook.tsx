@@ -3,15 +3,15 @@ import { observable, action, reaction, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
 import {
-    activityLogStore,
-    IActivityLogEntry
-} from "eez-studio-shared/activity-log";
-
-import {
     VerticalHeaderWithBody,
     ToolbarHeader,
     Body
 } from "eez-studio-ui/header-with-body";
+
+import {
+    activityLogStore,
+    IActivityLogEntry
+} from "instrument/window/history/activity-log";
 
 import type { IHistoryItem } from "instrument/window/history/item";
 import {

@@ -2,11 +2,12 @@ import React from "react";
 import { observable, action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
-import type { IActivityLogEntry } from "eez-studio-shared/activity-log";
 import { dbQuery } from "eez-studio-shared/db-query";
 import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
 
 import { PropertyList, BooleanProperty } from "eez-studio-ui/properties";
+
+import type { IActivityLogEntry } from "instrument/window/history/activity-log";
 
 import type { IAppStore, History } from "instrument/window/history/history";
 import type { IHistoryItem } from "instrument/window/history/item";

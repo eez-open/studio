@@ -1,5 +1,6 @@
 import type { IStore } from "eez-studio-shared/store";
-import type { IActivityLogEntry } from "eez-studio-shared/activity-log";
+
+import type { IActivityLogEntry } from "instrument/window/history/activity-log";
 
 import type * as FileTypeModule from "instrument/connection/file-type";
 

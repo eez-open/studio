@@ -2,14 +2,15 @@ import React from "react";
 import { observable, makeObservable } from "mobx";
 
 import { formatDuration } from "eez-studio-shared/util";
+import type { IStore } from "eez-studio-shared/store";
+
 import {
     activityLogStore,
     IActivityLogEntry,
     loadData,
     logDelete
-} from "eez-studio-shared/activity-log";
+} from "instrument/window/history/activity-log";
 import type { IAppStore } from "instrument/window/history/history";
-import type { IStore } from "eez-studio-shared/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -2,15 +2,16 @@ import { observable, action, runInAction, autorun, makeObservable } from "mobx";
 
 import { dbQuery } from "eez-studio-shared/db-query";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
+
+import { error } from "eez-studio-ui/notification";
+
 import {
     IActivityLogEntry,
     activityLogStore,
     log,
     logUpdate,
     activeSession
-} from "eez-studio-shared/activity-log";
-
-import { error } from "eez-studio-ui/notification";
+} from "instrument/window/history/activity-log";
 
 import type { History } from "instrument/window/history/history";
 import { CONF_ITEMS_BLOCK_SIZE } from "instrument/window/history/CONF_ITEMS_BLOCK_SIZE";

@@ -5,7 +5,6 @@ import classNames from "classnames";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
-import { log, logUpdate, logDelete } from "eez-studio-shared/activity-log";
 
 import { validators } from "eez-studio-shared/validation";
 
@@ -13,6 +12,12 @@ import { IconAction } from "eez-studio-ui/action";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { Body } from "eez-studio-ui/header-with-body";
 import { confirm } from "eez-studio-ui/dialog-electron";
+
+import {
+    log,
+    logUpdate,
+    logDelete
+} from "instrument/window/history/activity-log";
 
 import type { IAppStore, History } from "instrument/window/history/history";
 import type { ISession } from "instrument/window/history/session/store";

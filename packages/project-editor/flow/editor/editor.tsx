@@ -20,26 +20,33 @@ import {
 } from "eez-studio-shared/geometry";
 import { closestByClass, closestBySelector } from "eez-studio-shared/dom";
 
-import type { IEditorOptions } from "project-editor/flow/flow-interfaces";
-import { EditorFlowContext } from "project-editor/flow/editor/context";
+import { Draggable } from "eez-studio-ui/draggable";
 
+import { settingsController } from "home/settings";
+
+import { setParent, getId } from "project-editor/core/object";
+import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import { DragAndDropManager } from "project-editor/core/dd";
+
+import { IPanel, isObjectInstanceOf } from "project-editor/store";
+
+import type { IEditorOptions } from "project-editor/flow/flow-interfaces";
+import type { Flow, FlowTabState } from "project-editor/flow/flow";
+import type { Component } from "project-editor/flow/component";
+
+import { ProjectContext } from "project-editor/project/context";
+import { ProjectEditor } from "project-editor/project-editor-interface";
+import {
+    TimelinePathEditor,
+    WidgetTimelinePathEditorHandler
+} from "project-editor/flow/timeline";
+
+import { EditorFlowContext } from "project-editor/flow/editor/context";
 import {
     getObjectBoundingRect,
     getObjectIdFromPoint,
     getSelectedObjectsBoundingRect
 } from "project-editor/flow/editor/bounding-rects";
-
-import { setParent, getId } from "project-editor/core/object";
-import { IPanel, isObjectInstanceOf } from "project-editor/store";
-import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
-import { DragAndDropManager } from "project-editor/core/dd";
-
-import type { Flow, FlowTabState } from "project-editor/flow/flow";
-import type { Component } from "project-editor/flow/component";
-import { Svg, ComponentEnclosure } from "project-editor/flow/editor/render";
-import { ProjectContext } from "project-editor/project/context";
-import { ConnectionLines } from "project-editor/flow/editor/ConnectionLineComponent";
-import { Draggable } from "eez-studio-ui/draggable";
 import {
     IMouseHandler,
     PanMouseHandler,
@@ -52,18 +59,14 @@ import {
     ResizeMouseHandler,
     RubberBandSelectionMouseHandler
 } from "project-editor/flow/editor/mouse-handler";
+import { Svg, ComponentEnclosure } from "project-editor/flow/editor/render";
+import { ConnectionLines } from "project-editor/flow/editor/ConnectionLineComponent";
 import { Selection } from "project-editor/flow/editor/selection";
 import { setupDragScroll } from "project-editor/flow/editor/drag-scroll";
-import { settingsController } from "home/settings";
-import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
     DragSnapLines,
     DragSnapLinesOverlay
 } from "project-editor/flow/editor/snap-lines";
-import {
-    TimelinePathEditor,
-    WidgetTimelinePathEditorHandler
-} from "project-editor/flow/timeline";
 
 const CONF_DOUBLE_CLICK_TIME = 350; // ms
 const CONF_DOUBLE_CLICK_DISTANCE = 5; // px

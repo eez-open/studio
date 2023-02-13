@@ -5,13 +5,13 @@ import {
     isRectInsideRect
 } from "eez-studio-shared/geometry";
 
+import { DRAGGABLE_OVERLAY_ELEMENT_ID } from "eez-studio-ui/draggable";
+
 import type {
     IDocument,
     IViewState,
     ObjectIdUnderPointer
 } from "project-editor/flow/flow-interfaces";
-
-import { DRAGGABLE_OVERLAY_ELEMENT_ID } from "eez-studio-ui/draggable";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 

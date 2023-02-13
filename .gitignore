@@ -40,3 +40,7 @@ packages/project-editor/flow/runtime/cpp/lvgl-runtime/build
 !packages/project-editor/flow/runtime/lvgl_runtime.js
 !packages/project-editor/flow/runtime/cpp/lvgl-runtime/pre.js
 !packages/project-editor/flow/runtime/cpp/lvgl-runtime/post.js
+
+npm-module/packages
+npm-module/libs
+npm-module/resources

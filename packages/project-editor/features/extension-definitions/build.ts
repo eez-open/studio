@@ -3,10 +3,10 @@ import { toJS } from "mobx";
 import { makeFolder } from "eez-studio-shared/util-electron";
 
 import type { IdfProperties as InstrumentIdfProperties } from "instrument/export";
+
 import { getProperty, MessageType } from "project-editor/core/object";
 import { objectToJS, Section } from "project-editor/store";
 import type { ProjectEditorStore } from "project-editor/store";
-
 import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 

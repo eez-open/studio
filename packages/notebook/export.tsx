@@ -11,12 +11,6 @@ import { stringCompare } from "eez-studio-shared/string";
 import { _flatten } from "eez-studio-shared/algorithm";
 import { db } from "eez-studio-shared/db-path";
 import { IStore } from "eez-studio-shared/store";
-import {
-    IActivityLogEntry,
-    activityLogStore,
-    logGet,
-    loadData
-} from "eez-studio-shared/activity-log";
 
 import { DropdownIconAction, DropdownItem } from "eez-studio-ui/action";
 import * as notification from "eez-studio-ui/notification";
@@ -25,6 +19,13 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 
 import type { IActivityLogController } from "eez-studio-shared/extensions/extension";
+
+import {
+    IActivityLogEntry,
+    activityLogStore,
+    logGet,
+    loadData
+} from "instrument/window/history/activity-log";
 
 import {
     getReferencedItemIds,

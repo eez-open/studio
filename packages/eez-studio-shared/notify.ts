@@ -2,6 +2,7 @@
 import type * as ElectronModule from "electron";
 import type * as ElectronRemoteModule from "@electron/remote";
 import { ipcMain, ipcRenderer } from "electron";
+
 import { isRenderer } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
 

@@ -1,4 +1,4 @@
-import { ipcRenderer } from "electron";
+import { ipcRenderer, shell } from "electron";
 import { dialog, getCurrentWindow } from "@electron/remote";
 import React from "react";
 import {
@@ -13,7 +13,6 @@ import { observer } from "mobx-react";
 import moment from "moment";
 import classNames from "classnames";
 
-const shell = require("electron").shell;
 import { app, createEmptyFile } from "eez-studio-shared/util-electron";
 import { stringCompare } from "eez-studio-shared/string";
 import { getDbPath, setDbPath } from "eez-studio-shared/db-path";
@@ -32,7 +31,6 @@ import { formatBytes } from "eez-studio-shared/formatBytes";
 
 import { showDialog, Dialog } from "eez-studio-ui/dialog";
 import { Loader } from "eez-studio-ui/loader";
-
 import {
     BooleanProperty,
     PropertyList,
@@ -40,9 +38,9 @@ import {
 } from "eez-studio-ui/properties";
 import { FileInputProperty } from "eez-studio-ui/properties-electron";
 import * as notification from "eez-studio-ui/notification";
+import { Header } from "eez-studio-ui/header-with-body";
 
 import dbVacuum from "db-services/vacuum";
-import { Header } from "eez-studio-ui/header-with-body";
 
 ////////////////////////////////////////////////////////////////////////////////
 

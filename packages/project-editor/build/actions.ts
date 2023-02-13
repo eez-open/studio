@@ -1,7 +1,6 @@
 import type { BuildResult } from "project-editor/store/features";
 
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
-
 import type { Action } from "project-editor/features/action/action";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
 import type { ProjectEditorStore } from "project-editor/store";

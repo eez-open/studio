@@ -11,11 +11,6 @@ import {
 import { objectEqual, formatDateTimeLong } from "eez-studio-shared/util";
 import { capitalize } from "eez-studio-shared/string";
 import {
-    logUpdate,
-    IActivityLogEntry,
-    activityLogStore
-} from "eez-studio-shared/activity-log";
-import {
     TIME_UNIT,
     FREQUENCY_UNIT,
     UNKNOWN_UNIT,
@@ -28,7 +23,6 @@ import {
     commitTransaction,
     IStore
 } from "eez-studio-shared/store";
-import { log } from "eez-studio-shared/activity-log";
 import { readBinaryFile } from "eez-studio-shared/util-electron";
 
 import {
@@ -54,6 +48,13 @@ import { WaveformLineView } from "eez-studio-ui/chart/WaveformLineView";
 import { DataType } from "eez-studio-ui/chart/DataType";
 import { WaveformFormat } from "eez-studio-ui/chart/WaveformFormat";
 import { initValuesAccesor } from "eez-studio-ui/chart/value-accesor";
+
+import {
+    logUpdate,
+    IActivityLogEntry,
+    activityLogStore,
+    log
+} from "instrument/window/history/activity-log";
 
 import type { InstrumentAppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";

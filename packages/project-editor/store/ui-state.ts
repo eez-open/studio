@@ -25,7 +25,6 @@ export class UIStateStore {
     activeOutputSection = Section.CHECKS;
     _pageEditorFrontFace: boolean = false;
     _pageRuntimeFrontFace: boolean = true;
-    showCommandPalette: boolean = false;
     showComponentDescriptions: boolean = true;
     selectedLanguageID: string;
     lvglPart: LVGLParts = "MAIN";
@@ -66,7 +65,6 @@ export class UIStateStore {
             activeOutputSection: observable,
             _pageEditorFrontFace: observable,
             _pageRuntimeFrontFace: observable,
-            showCommandPalette: observable,
             showComponentDescriptions: observable,
             selectedLanguageID: observable,
             getFeatureParam: action,

@@ -3,6 +3,7 @@ import { ipcRenderer } from "electron";
 import { getCurrentWindow } from "@electron/remote";
 
 import { watch } from "eez-studio-shared/notify";
+import { guid } from "eez-studio-shared/guid";
 
 import type { IInstrumentObjectProps } from "instrument/instrument-object";
 import type { ConnectionParameters } from "instrument/connection/interface";
@@ -16,8 +17,7 @@ import {
     ISendOptions
 } from "instrument/connection/connection-base";
 import { createHistoryItem } from "instrument/window/history/item-factory";
-import { activityLogStore } from "eez-studio-shared/activity-log";
-import { guid } from "eez-studio-shared/guid";
+import { activityLogStore } from "instrument/window/history/activity-log";
 
 export class IpcConnection extends ConnectionBase {
     static ipcConnections = new Map<string, IpcConnection>();
@@ -391,7 +391,7 @@ interface IWebSimulatorDebugger {
     stop(): void;
 }
 
-class WebSimulatorMessageDispatcher {
+export class WebSimulatorMessageDispatcher {
     iframes = new Map<string, MessageEventSource>();
     writeMessages = new Map<string, ArrayBuffer[]>();
     webSimulatorDebuggers = new Map<string, IWebSimulatorDebugger>();

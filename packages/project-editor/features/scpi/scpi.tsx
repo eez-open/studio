@@ -1,10 +1,16 @@
 import { observable, computed, makeObservable } from "mobx";
 
 import { humanize } from "eez-studio-shared/string";
-
 import { validators } from "eez-studio-shared/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
+
+import type {
+    IParameterType,
+    IParameterTypeType,
+    IResponseType,
+    IResponseTypeType
+} from "instrument/scpi";
 
 import {
     ClassInfo,
@@ -25,13 +31,6 @@ import {
     createObject,
     getLabel
 } from "project-editor/store";
-
-import type {
-    IParameterType,
-    IParameterTypeType,
-    IResponseType,
-    IResponseTypeType
-} from "instrument/scpi";
 
 import { metrics } from "project-editor/features/scpi/metrics";
 import {

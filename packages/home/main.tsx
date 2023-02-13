@@ -109,12 +109,6 @@ ipcRenderer.on("new-project", async (sender: any, filePath: any) => {
     showNewProjectWizard();
 });
 
-ipcRenderer.on("command-palette", () => {
-    if (tabs.activeTab && tabs.activeTab.showCommandPalette) {
-        tabs.activeTab.showCommandPalette();
-    }
-});
-
 const Main = observer(
     class Main extends React.Component<{ children: React.ReactNode }> {
         render() {

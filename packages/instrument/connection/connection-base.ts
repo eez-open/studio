@@ -1,6 +1,6 @@
 import { computed, makeObservable } from "mobx";
 
-import type { IActivityLogEntry } from "eez-studio-shared/activity-log";
+import type { IActivityLogEntry } from "instrument/window/history/activity-log";
 
 import type { IInstrumentObjectProps } from "instrument/instrument-object";
 import type { ConnectionParameters } from "instrument/connection/interface";

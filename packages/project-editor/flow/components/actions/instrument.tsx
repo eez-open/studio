@@ -11,6 +11,21 @@ import { observer } from "mobx-react";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
 
+import { Dialog, showDialog } from "eez-studio-ui/dialog";
+import { IListNode, ListItem } from "eez-studio-ui/list";
+import { PropertyList, SelectFromListProperty } from "eez-studio-ui/properties";
+import * as notification from "eez-studio-ui/notification";
+import { humanize } from "eez-studio-shared/string";
+
+import {
+    parseScpi,
+    SCPI_PART_EXPR,
+    SCPI_PART_QUERY_WITH_ASSIGNMENT,
+    SCPI_PART_STRING
+} from "eez-studio-shared/scpi-parser";
+
+import { InstrumentObject, instruments } from "instrument/instrument-object";
+
 import {
     registerClass,
     PropertyType,
@@ -18,13 +33,6 @@ import {
     MessageType,
     ProjectType
 } from "project-editor/core/object";
-
-import { Dialog, showDialog } from "eez-studio-ui/dialog";
-import { IListNode, ListItem } from "eez-studio-ui/list";
-import { PropertyList, SelectFromListProperty } from "eez-studio-ui/properties";
-import * as notification from "eez-studio-ui/notification";
-
-import { InstrumentObject, instruments } from "instrument/instrument-object";
 
 import {
     ActionComponent,
@@ -53,14 +61,6 @@ import {
 } from "project-editor/features/variable/value-type";
 import type { IVariable } from "project-editor/flow/flow-interfaces";
 
-import { humanize } from "eez-studio-shared/string";
-
-import {
-    parseScpi,
-    SCPI_PART_EXPR,
-    SCPI_PART_QUERY_WITH_ASSIGNMENT,
-    SCPI_PART_STRING
-} from "eez-studio-shared/scpi-parser";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { COMPONENT_TYPE_SCPIACTION } from "project-editor/flow/components/component_types";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";

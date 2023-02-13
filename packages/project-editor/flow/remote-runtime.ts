@@ -1,13 +1,19 @@
 import path from "path";
 import type { Socket } from "net";
+import { action, observable, runInAction, makeObservable } from "mobx";
+import net from "net";
+import _ from "lodash";
 
-import { showSelectInstrumentDialog } from "project-editor/flow/components/actions/instrument";
 import * as notification from "eez-studio-ui/notification";
 
 import type { InstrumentObject } from "instrument/instrument-object";
 import type { ConnectionParameters } from "instrument/connection/interface";
+import type { WebSimulatorMessageDispatcher } from "instrument/connection/connection-renderer";
+import type { ConnectionBase } from "instrument/connection/connection-base";
 
-import { action, observable, runInAction, makeObservable } from "mobx";
+import type { ValueType } from "eez-studio-types";
+
+import { showSelectInstrumentDialog } from "project-editor/flow/components/actions/instrument";
 import { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { Component, Widget } from "project-editor/flow/component";
 import {
@@ -25,19 +31,14 @@ import {
 } from "project-editor/flow/runtime";
 import { ProjectEditorStore } from "project-editor/store";
 
-import net from "net";
 import { getObjectFromStringPath } from "project-editor/store";
-import { ConnectionBase } from "instrument/connection/connection-base";
 import {
     evalExpression,
     IExpressionContext
 } from "project-editor/flow/expression";
-import { webSimulatorMessageDispatcher } from "instrument/connection/connection-renderer";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { ExecuteComponentLogItem } from "project-editor/flow/debugger/logs";
-import type { ValueType } from "eez-studio-types";
 import { InputActionComponent } from "project-editor/flow/components/actions";
-import _ from "lodash";
 
 const DEBUGGER_TCP_PORT = 3333;
 
@@ -1657,14 +1658,24 @@ class SocketDebuggerConnection extends DebuggerConnectionBase {
 class WebSimulatorDebuggerConnection extends DebuggerConnectionBase {
     simulatorID: string;
     connected: boolean;
+    webSimulatorMessageDispatcher: WebSimulatorMessageDispatcher;
 
     constructor(runtime: RemoteRuntime) {
         super(runtime);
     }
 
     async start(connectionParameters: ConnectionParameters) {
+        const { webSimulatorMessageDispatcher } = await import(
+            "instrument/connection/connection-renderer"
+        );
+        this.webSimulatorMessageDispatcher = webSimulatorMessageDispatcher;
+
         this.simulatorID = connectionParameters.webSimulatorParameters.id;
-        webSimulatorMessageDispatcher.connectDebugger(this.simulatorID, this);
+
+        this.webSimulatorMessageDispatcher.connectDebugger(
+            this.simulatorID,
+            this
+        );
         this.connected = true;
         if (!this.runtime.isDebuggerActive) {
             this.runtime.resume();
@@ -1673,13 +1684,13 @@ class WebSimulatorDebuggerConnection extends DebuggerConnectionBase {
     }
 
     async stop() {
-        webSimulatorMessageDispatcher.disconnectDebugger(this.simulatorID);
+        this.webSimulatorMessageDispatcher.disconnectDebugger(this.simulatorID);
         this.connected = false;
     }
 
     sendMessageFromDebugger(data: string) {
         if (this.connected) {
-            webSimulatorMessageDispatcher.sendMessageFromDebugger(
+            this.webSimulatorMessageDispatcher.sendMessageFromDebugger(
                 this.simulatorID,
                 data
             );

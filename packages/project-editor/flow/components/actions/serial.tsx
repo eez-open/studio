@@ -1,14 +1,6 @@
 import React from "react";
 import { action, observable, runInAction, makeObservable, toJS } from "mobx";
 
-import { registerActionComponents } from "project-editor/flow/component";
-import {
-    IObjectVariableValue,
-    registerObjectVariableType,
-    registerSystemStructure,
-    ValueType
-} from "project-editor/features/variable/value-type";
-import type { IVariable } from "project-editor/flow/flow-interfaces";
 import {
     GenericDialogResult,
     showGenericDialog
@@ -22,6 +14,15 @@ import {
     SerialConnectionConstructorParams,
     write
 } from "instrument/connection/interfaces/serial-ports-renderer";
+
+import { registerActionComponents } from "project-editor/flow/component";
+import {
+    IObjectVariableValue,
+    registerObjectVariableType,
+    registerSystemStructure,
+    ValueType
+} from "project-editor/features/variable/value-type";
+import type { IVariable } from "project-editor/flow/flow-interfaces";
 
 ////////////////////////////////////////////////////////////////////////////////
 
