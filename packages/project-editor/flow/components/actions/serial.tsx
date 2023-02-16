@@ -1,11 +1,13 @@
 import React from "react";
 import { action, observable, runInAction, makeObservable, toJS } from "mobx";
+import { Stream } from "stream";
 
 import {
     GenericDialogResult,
     showGenericDialog
 } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
+
 import {
     connect,
     disconnect,
@@ -14,6 +16,8 @@ import {
     SerialConnectionConstructorParams,
     write
 } from "instrument/connection/interfaces/serial-ports-renderer";
+
+import type { IDashboardComponentContext } from "eez-studio-types";
 
 import { registerActionComponents } from "project-editor/flow/component";
 import {
@@ -268,6 +272,35 @@ registerActionComponents("Serial Port", [
                 valueType: "object:SerialConnection"
             }
         ],
+        execute: (context: IDashboardComponentContext) => {
+            const serialConnection = context.evalProperty("connection");
+            if (!serialConnection) {
+                context.throwError(`invalid connection`);
+                return;
+            }
+
+            context = context.startAsyncExecution();
+
+            context.sendMessageToComponent(serialConnection, result => {
+                if (result.serialConnectionId != undefined) {
+                    if (result.serialConnectionId != serialConnection.id) {
+                        try {
+                            context.setPropertyField(
+                                "connection",
+                                "id",
+                                result.serialConnectionId
+                            );
+                            context.propagateValueThroughSeqout();
+                        } catch (err) {
+                            context.throwError(err.toString());
+                        }
+                    }
+                } else {
+                    context.throwError(result.error);
+                }
+                context.endAsyncExecution();
+            });
+        },
         onWasmWorkerMessage: async (flowState, message, messageId) => {
             let serialConnection = serialConnections.get(message.id);
             if (message.id == undefined) {
@@ -308,6 +341,24 @@ registerActionComponents("Serial Port", [
                 valueType: "object:SerialConnection"
             }
         ],
+        execute: (context: IDashboardComponentContext) => {
+            const serialConnection = context.evalProperty("connection");
+            if (!serialConnection) {
+                context.throwError(`invalid connection`);
+                return;
+            }
+
+            context = context.startAsyncExecution();
+
+            context.sendMessageToComponent(serialConnection, result => {
+                if (result) {
+                    context.throwError(result);
+                } else {
+                    context.propagateValueThroughSeqout();
+                }
+                context.endAsyncExecution();
+            });
+        },
         onWasmWorkerMessage: async (flowState, message, messageId) => {
             const serialConnection = serialConnections.get(message.id);
             if (serialConnection) {
@@ -341,6 +392,34 @@ registerActionComponents("Serial Port", [
                 valueType: "object:SerialConnection"
             }
         ],
+        execute: (context: IDashboardComponentContext) => {
+            const serialConnection = context.evalProperty("connection");
+            if (!serialConnection) {
+                context.throwError(`invalid connection`);
+                return;
+            }
+
+            context = context.startAsyncExecution();
+
+            const readableStream = new Stream.Readable();
+            readableStream._read = () => {};
+
+            context.propagateValue("data", readableStream);
+
+            context.sendMessageToComponent(serialConnection, result => {
+                if (result && result.error) {
+                    context.throwError(result.error);
+                    context.endAsyncExecution();
+                } else {
+                    if (result.data) {
+                        readableStream.push(result.data);
+                    } else {
+                        readableStream.destroy();
+                        context.endAsyncExecution();
+                    }
+                }
+            });
+        },
         onWasmWorkerMessage: async (flowState, message, messageId) => {
             const serialConnection = serialConnections.get(message.id);
             if (serialConnection) {
@@ -385,6 +464,32 @@ registerActionComponents("Serial Port", [
                 valueType: "string"
             }
         ],
+        execute: (context: IDashboardComponentContext) => {
+            const serialConnection = context.evalProperty("connection");
+            if (!serialConnection) {
+                context.throwError(`invalid connection`);
+                return;
+            }
+
+            const data = context.evalProperty("data");
+
+            context = context.startAsyncExecution();
+
+            context.sendMessageToComponent(
+                {
+                    serialConnection,
+                    data
+                },
+                result => {
+                    if (result) {
+                        context.throwError(result);
+                    } else {
+                        context.propagateValueThroughSeqout();
+                    }
+                    context.endAsyncExecution();
+                }
+            );
+        },
         onWasmWorkerMessage: async (flowState, message, messageId) => {
             const serialConnection = serialConnections.get(
                 message.serialConnection.id
@@ -418,6 +523,19 @@ registerActionComponents("Serial Port", [
             }
         ],
         properties: [],
+        execute: (context: IDashboardComponentContext) => {
+            context = context.startAsyncExecution();
+
+            context.sendMessageToComponent(undefined, result => {
+                if (result.ports) {
+                    context.propagateValue("ports", result.ports);
+                    context.propagateValueThroughSeqout();
+                } else {
+                    context.throwError(result.error);
+                }
+                context.endAsyncExecution();
+            });
+        },
         onWasmWorkerMessage: async (flowState, message, messageId) => {
             try {
                 const ports = await SerialConnection.listPorts();

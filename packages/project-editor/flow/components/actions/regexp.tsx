@@ -1,6 +1,9 @@
 import React from "react";
+import { Readable, Writable } from "stream";
 
 import { registerActionComponents } from "project-editor/flow/component";
+
+import type { IDashboardComponentContext } from "eez-studio-types";
 
 import {
     registerSystemStructure,
@@ -96,6 +99,221 @@ registerActionComponents("Dashboard Specific", [
             if (component.text == undefined) {
                 component.text = component.data;
             }
+        },
+        execute: (context: IDashboardComponentContext) => {
+            let runningState: RegexpExecutionState | undefined;
+            if (context.getInputValue("@seqin") !== undefined) {
+                context.setComponentExecutionState(undefined);
+                runningState = undefined;
+            } else {
+                runningState =
+                    context.getComponentExecutionState<RegexpExecutionState>();
+                if (!runningState) {
+                    context.throwError("Never started");
+                }
+            }
+
+            if (!runningState) {
+                const patternValue: any = context.evalProperty("pattern");
+                if (typeof patternValue != "string") {
+                    context.throwError("pattern is not a string");
+                    return;
+                }
+
+                const global: any = context.evalProperty("global");
+                if (typeof global != "boolean") {
+                    context.throwError("Global is not a boolean");
+                    return;
+                }
+
+                const caseInsensitive: any =
+                    context.evalProperty("caseInsensitive");
+                if (typeof caseInsensitive != "boolean") {
+                    context.throwError("Case insensitive is not a boolean");
+                    return;
+                }
+
+                const re = new RegExp(
+                    patternValue,
+                    "md" + (global ? "g" : "") + (caseInsensitive ? "i" : "")
+                );
+
+                const textValue: any = context.evalProperty("text");
+                if (typeof textValue == "string") {
+                    context.setComponentExecutionState(
+                        new RegexpExecutionStateForString(
+                            context,
+                            re,
+                            textValue
+                        )
+                    );
+                } else if (textValue instanceof Readable) {
+                    context.setComponentExecutionState(
+                        new RegexpExecutionStateForStream(
+                            context,
+                            re,
+                            textValue
+                        )
+                    );
+                } else {
+                    context.throwError(
+                        "text is not a string or readable stream"
+                    );
+                }
+            } else {
+                runningState.getNext();
+            }
         }
     }
 ]);
+
+////////////////////////////////////////////////////////////////////////////////
+
+abstract class RegexpExecutionState {
+    abstract getNext(): void;
+}
+
+function getMatchStruct(m: RegExpExecArray) {
+    return {
+        index: m.index,
+        texts: m.map(x => x),
+        indices: (m as any).indices.map((a: any) => a.map((x: any) => x))
+    };
+}
+
+class RegexpExecutionStateForString extends RegexpExecutionState {
+    done: boolean = false;
+
+    constructor(
+        private context: IDashboardComponentContext,
+        private re: RegExp,
+        private text: string
+    ) {
+        super();
+
+        this.getNext();
+    }
+
+    getNext() {
+        let m: RegExpExecArray | null;
+
+        if (!this.done && (m = this.re.exec(this.text)) !== null) {
+            // This is necessary to avoid infinite loops with zero-width matches
+            if (m.index === this.re.lastIndex) {
+                this.re.lastIndex++;
+            }
+
+            this.context.propagateValue("match", getMatchStruct(m));
+
+            if (!this.re.global) {
+                this.done = true;
+            }
+        } else {
+            this.context.propagateValue("done", null);
+            this.context.setComponentExecutionState(undefined);
+        }
+    }
+}
+
+class RegexpExecutionStateForStream extends RegexpExecutionState {
+    private propagate = true;
+    private isDone = false;
+    private matches: RegExpExecArray[] = [];
+
+    constructor(
+        private context: IDashboardComponentContext,
+        re: RegExp,
+        stream: Readable
+    ) {
+        super();
+
+        const streamSnitch = new StreamSnitch(
+            re,
+            (m: RegExpExecArray) => {
+                if (this.propagate) {
+                    this.context.propagateValue("match", getMatchStruct(m));
+                    this.propagate = false;
+                } else {
+                    this.matches.push(m);
+                }
+            },
+            () => {
+                if (this.propagate) {
+                    context.propagateValue("done", null);
+                    this.context.setComponentExecutionState(undefined);
+                    this.propagate = false;
+                }
+                this.isDone = true;
+            }
+        );
+        stream.pipe(streamSnitch);
+        stream.on("close", () => {
+            streamSnitch.destroy();
+        });
+    }
+
+    getNext() {
+        if (this.matches.length > 0) {
+            const m = this.matches.shift();
+            this.context.propagateValue("match", getMatchStruct(m!));
+        } else if (this.isDone) {
+            this.context.propagateValue("done", null);
+            this.context.setComponentExecutionState(undefined);
+        } else {
+            this.propagate = true;
+        }
+    }
+}
+
+class StreamSnitch extends Writable {
+    _buffer = "";
+    bufferCap = 1048576;
+
+    constructor(
+        public regex: RegExp,
+        private onDataCallback: (m: RegExpMatchArray) => void,
+        onCloseCallback: () => void
+    ) {
+        super({
+            decodeStrings: false
+        });
+
+        this.on("close", onCloseCallback);
+    }
+
+    async _write(chunk: any, encoding: any, cb: any) {
+        let match;
+        let lastMatch;
+
+        if (Buffer.byteLength(this._buffer) > this.bufferCap)
+            this.clearBuffer();
+
+        this._buffer += chunk;
+
+        while ((match = this.regex.exec(this._buffer))) {
+            this.onDataCallback(match);
+
+            lastMatch = match;
+
+            if (!this.regex.global) {
+                break;
+            }
+        }
+
+        if (lastMatch) {
+            this._buffer = this._buffer.slice(
+                lastMatch.index + lastMatch[0].length
+            );
+        }
+
+        // if (this.regex.multiline) {
+        //     this._buffer = this._buffer.slice(this._buffer.lastIndexOf("\n"));
+        // }
+
+        cb();
+    }
+
+    clearBuffer() {
+        this._buffer = "";
+    }
+}

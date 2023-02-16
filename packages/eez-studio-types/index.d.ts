@@ -1,6 +1,6 @@
-////////////////////////////////////////////////////////////////////////////////
+import type { Stream } from "stream";
 
-import { WorkerToRenderMessage } from "project-editor/flow/runtime/wasm-worker-interfaces";
+////////////////////////////////////////////////////////////////////////////////
 
 export type BasicType =
     | "integer"
@@ -38,6 +38,37 @@ export interface IVariable {
     defaultValueList: any;
     persistent: boolean;
 }
+
+export interface IPropertyValue {
+    propertyValueIndex: number;
+    valueWithType: ValueWithType;
+}
+
+export type ValueWithType = {
+    value: Value;
+    valueType: ValueType;
+};
+
+export type Value =
+    | null
+    | undefined
+    | boolean
+    | number
+    | string
+    | Uint8Array
+    | Stream
+    | Date
+    | ObjectOrArrayValue;
+
+export type ObjectOrArrayValueWithType = {
+    value: ObjectOrArrayValue;
+    valueType: ValueType;
+};
+
+export type ObjectOrArrayValue =
+    | undefined
+    | Value[]
+    | { [fieldName: string]: Value };
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -270,11 +301,161 @@ export interface IActionComponentDefinition {
 
     migrateProperties?: (component: IActionComponent) => void;
 
-    onWasmWorkerMessage?(
+    execute?: (context: IDashboardComponentContext) => void;
+
+    onWasmWorkerMessage?: (
         flowState: IComponentFlowState,
         message: any,
         messageId: number
-    ): void;
+    ) => void;
+}
+
+interface IMessageFromWorker {
+    id: number;
+    flowStateIndex: number;
+    componentIndex: number;
+    message: any;
+    callback?: (result: any) => void;
+}
+
+// message data sent from WASM worker to renderer
+export interface WorkerToRenderMessage {
+    // sent from worker once at the start
+    init?: any;
+
+    // screen data (to be displayed in Canvas), sent from worker at each tick
+    screen?: Uint8ClampedArray;
+
+    isRTL?: boolean;
+
+    // message from worker to Studio debugger
+    messageToDebugger?: Uint8Array;
+
+    // SCPI command to execute (only renderer is able to execute SCPI commands)
+    scpiCommand?: ScpiCommand;
+
+    // connect to instrument ID
+    connectToInstrumentId?: string;
+
+    // evaluated property values
+    propertyValues?: IPropertyValue[];
+
+    componentMessages?: IMessageFromWorker[];
+
+    freeArrayValue?: ObjectOrArrayValueWithType;
+
+    getLvglImageByName?: {
+        name: string;
+    };
+}
+
+interface IField {
+    name: string;
+    valueType: ValueType;
+}
+
+interface ITypeBase {
+    kind: "object" | "array";
+    valueType: ValueType;
+}
+
+interface IObjectType {
+    kind: "object";
+    valueType: ValueType;
+    fields: IField[];
+    fieldIndexes: IIndexes;
+    open: boolean;
+}
+
+interface IArrayType {
+    kind: "array";
+    valueType: ValueType;
+    elementType: IType;
+}
+
+interface IBasicType {
+    kind: "basic";
+    valueType: ValueType;
+}
+
+type IType = IArrayType | IObjectType | IBasicType;
+
+type IIndexes = { [key: string]: number };
+
+interface AssetsMap {
+    flows: {
+        flowIndex: number;
+        path: string;
+        readablePath: string;
+        components: {
+            componentIndex: number;
+            path: string;
+            readablePath: string;
+            inputIndexes: {
+                [inputName: string]: number;
+            };
+            outputs: {
+                outputName: string;
+                valueTypeIndex: number;
+                connectionLines: {
+                    targetComponentIndex: number;
+                    targetInputIndex: number;
+                }[];
+            }[];
+            outputIndexes: {
+                [outputName: string]: number;
+            };
+            properties: {
+                valueTypeIndex: number;
+            }[];
+            propertyIndexes: {
+                [propertyName: string]: number;
+            };
+        }[];
+        componentIndexes: { [path: string]: number };
+        componentInputs: {
+            inputIndex: number;
+            componentIndex: number;
+            inputName: string;
+            inputType: string;
+        }[];
+        localVariables: {
+            index: number;
+            name: string;
+        }[];
+        widgetDataItems: {
+            widgetDataItemIndex: number;
+            flowIndex: number;
+            componentIndex: number;
+            propertyValueIndex: number;
+        }[];
+        widgetActions: {
+            widgetActionIndex: number;
+            flowIndex: number;
+            componentIndex: number;
+            outputIndex: number;
+        }[];
+    }[];
+    flowIndexes: { [path: string]: number };
+    actionFlowIndexes: { [actionName: string]: number };
+    constants: any[];
+    globalVariables: {
+        index: number;
+        name: string;
+    }[];
+    dashboardComponentTypeToNameMap: {
+        [componentType: number]: string;
+    };
+    types: IType[];
+    typeIndexes: IIndexes;
+    displayWidth: number;
+    displayHeight: number;
+}
+
+export interface ScpiCommand {
+    instrumentId: string;
+    command: Uint8Array;
+    isQuery: boolean;
 }
 
 // prettier-ignore
@@ -300,16 +481,15 @@ export interface IWasmFlowRuntime {
     //
     assetsMap: AssetsMap;
     componentMessages: IMessageFromWorker[] | undefined;
-
     postWorkerToRendererMessage: (workerToRenderMessage: WorkerToRenderMessage) => any;
 
     // eez framework API
-    _init(wasmModuleId: number, assets: number, assetsSize: number, displayWidth: number, displayHeight: number);
-    _mainLoop();
+    _init(wasmModuleId: number, assets: number, assetsSize: number, displayWidth: number, displayHeight: number): void;
+    _mainLoop(): boolean;
     _getSyncedBuffer(): number;
-    _onMouseWheelEvent(wheelDeltaY: number, wheelClicked: number);
-    _onPointerEvent(x: number, y: number, pressed: number);
-    _onMessageFromDebugger(messageData: number, messageDataSize: number);
+    _onMouseWheelEvent(wheelDeltaY: number, wheelClicked: number): void;
+    _onPointerEvent(x: number, y: number, pressed: number): void;
+    _onMessageFromDebugger(messageData: number, messageDataSize: number): void;
 
     // eez flow API for Dashboard projects
 
@@ -327,8 +507,8 @@ export interface IWasmFlowRuntime {
 
     _valueFree(valuePtr: number): void;
 
-    _setGlobalVariable(globalVariableIndex: number, valuePtr: number);
-    _updateGlobalVariable(globalVariableIndex: number, valuePtr: number);
+    _setGlobalVariable(globalVariableIndex: number, valuePtr: number): void;
+    _updateGlobalVariable(globalVariableIndex: number, valuePtr: number): void;
 
     _getFlowIndex(flowStateIndex: number): number;
 
@@ -338,31 +518,31 @@ export interface IWasmFlowRuntime {
     _getUint32Param(flowStateIndex: number, componentIndex: number, offset: number): number;
     _getStringParam(flowStateIndex: number, componentIndex: number, offset: number): number;
     _getExpressionListParam(flowStateIndex: number, componentIndex: number, offset: number): number;
-    _freeExpressionListParam(ptr: number);
+    _freeExpressionListParam(ptr: number): void;
 
     _getListParamSize(flowStateIndex: number, componentIndex: number, offset: number): number;
     _evalListParamElementExpression(flowStateIndex: number, componentIndex: number, listOffset: number, elementIndex: number, expressionOffset: number, errorMessage: number): number;
 
     _getInputValue(flowStateIndex: number, inputIndex: number): number;
-    _clearInputValue(flowStateIndex: number, inputIndex: number);
+    _clearInputValue(flowStateIndex: number, inputIndex: number): void;
 
     _evalProperty(flowStateIndex: number, componentIndex: number, propertyIndex: number, iteratorsPtr: number, disableThrowError: boolean): number;
     _assignProperty(flowStateIndex: number, componentIndex: number, propertyIndex: number, iteratorsPtr: number, valuePtr: number): number;
 
-    _setPropertyField(flowStateIndex: number, componentIndex: number, propertyIndex: number, fieldIndex: number, valuePtr: number);
+    _setPropertyField(flowStateIndex: number, componentIndex: number, propertyIndex: number, fieldIndex: number, valuePtr: number): void;
 
-    _propagateValue(flowStateIndex: number, componentIndex: number, outputIndex: number, valuePtr: number);
-    _propagateValueThroughSeqout(flowStateIndex: number, componentIndex: number);
+    _propagateValue(flowStateIndex: number, componentIndex: number, outputIndex: number, valuePtr: number): void;
+    _propagateValueThroughSeqout(flowStateIndex: number, componentIndex: number): void;
 
     _startAsyncExecution(flowStateIndex: number, componentIndex: number): number;
-    _endAsyncExecution(flowStateIndex: number, componentIndex: number);
+    _endAsyncExecution(flowStateIndex: number, componentIndex: number): void;
 
-    _executeCallAction(flowStateIndex: number, componentIndex: number, flowIndex: number);
+    _executeCallAction(flowStateIndex: number, componentIndex: number, flowIndex: number): void;
 
-    _logInfo(flowStateIndex: number, componentIndex: number, infoMessage: number);
-    _throwError(flowStateIndex: number, componentIndex: number, errorMessage: number);
+    _logInfo(flowStateIndex: number, componentIndex: number, infoMessage: number): void;
+    _throwError(flowStateIndex: number, componentIndex: number, errorMessage: number): void;
 
-    _onScpiResult(errorMessage: number, result: number, resultLen: number, resultIsBlob: number);
+    _onScpiResult(errorMessage: number, result: number, resultLen: number, resultIsBlob: number): void;
 
     _getFirstRootFlowState(): number;
     _getFirstChildFlowState(flowStateIndex: number): number;
@@ -395,7 +575,7 @@ export interface IWasmFlowRuntime {
     _lvglCreateKeyboard(parentObj: number, index: number, x: number, y: number, w: number, h: number, mode: number): number;
     _lvglCreateChart(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateMeter(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
-    _lvglScreenLoad(page_index: number, obj: number);
+    _lvglScreenLoad(page_index: number, obj: number): void;
     _lvglDeleteObject(obj: number): void;
     _lvglObjAddFlag(obj: number, f: number): void;
     _lvglObjClearFlag(obj: number, f: number): void;
@@ -430,8 +610,8 @@ export interface IWasmFlowRuntime {
     _lvglUpdateMeterIndicatorStartValue(obj: number, indicator: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateMeterIndicatorEndValue(obj: number, indicator: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateLabelText(obj: number, page_index: number, component_index: number, property_index: number): void;
-    _lvglUpdateRollerSelected(obj: number, page_index: number, component_index: number, property_index: number);
-    _lvglUpdateDropdownSelected(obj: number, page_index: number, component_index: number, property_index: number);
+    _lvglUpdateRollerSelected(obj: number, page_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateDropdownSelected(obj: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateSliderValue(obj: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateSliderValueLeft(obj: number, page_index: number, component_index: number, property_index: number): void;
     _lvglUpdateBarValue(obj: number, page_index: number, component_index: number, property_index: number): void;
@@ -456,7 +636,7 @@ export interface IWasmFlowRuntime {
         rotate: number, rotateEasingFunc: number,
         cp1x: number, cp1y: number, cp2x: number, cp2y: number
     ): void;
-    _lvglSetTimelinePosition(timelinePosition: number);
+    _lvglSetTimelinePosition(timelinePosition: number): void;
     _lvglClearTimeline(): void;
 }
 
@@ -536,11 +716,4 @@ export interface IEezFlowEditor {
         required: Rule;
         rangeInclusive: (min: number, max?: number) => Rule;
     };
-}
-
-export interface IEezFlowRuntime {
-    registerExecuteFunction(
-        name: string,
-        func: (context: IDashboardComponentContext) => void
-    ): void;
 }

@@ -99,6 +99,7 @@ import { LANGUAGE_ICON } from "project-editor/features/texts";
 import { humanize } from "eez-studio-shared/string";
 import { LeftArrow, RightArrow } from "project-editor/ui-components/icons";
 import { Icon } from "eez-studio-ui/icon";
+import type { IDashboardComponentContext } from "eez-studio-types";
 
 const NOT_NAMED_LABEL = "<not named>";
 
@@ -556,6 +557,30 @@ export class EvalJSExprActionComponent extends ActionComponent {
                     type: "any"
                 }
             ]
+        },
+
+        execute: (context: IDashboardComponentContext) => {
+            const expression = context.getStringParam(0);
+            const expressionValues = context.getExpressionListParam(4);
+
+            const values: any = {};
+            for (let i = 0; i < expressionValues.length; i++) {
+                const name = `_val${i}`;
+                values[name] = expressionValues[i];
+            }
+
+            try {
+                let result = eval(expression);
+
+                context.propagateValue("result", result);
+                context.propagateValueThroughSeqout();
+            } catch (err) {
+                console.info(
+                    "Error in EvalJSExprActionComponent_execute",
+                    err.toString()
+                );
+                context.throwError(err.toString());
+            }
         }
     });
 
@@ -1507,7 +1532,11 @@ export class DateNowActionComponent extends ActionComponent {
                 <path d="M12 18H8v4h4v-4zm8 0h-4v4h4v-4zm8 0h-4v4h4v-4zm4-14h-2V0h-4v4H10V0H6v4H4C1.78 4 .02 5.8.02 8L0 36c0 2.2 1.78 4 4 4h28c2.2 0 4-1.8 4-4V8c0-2.2-1.8-4-4-4zm0 32H4V14h28v22z" />
             </svg>
         ),
-        componentHeaderColor: "#C0C0C0"
+        componentHeaderColor: "#C0C0C0",
+        execute: (context: IDashboardComponentContext) => {
+            context.propagateValue("value", Date.now());
+            context.propagateValueThroughSeqout();
+        }
     });
 
     getInputs() {
@@ -2259,7 +2288,24 @@ export class DynamicCallActionActionComponent extends ActionComponent {
             </svg>
         ),
         componentHeaderColor: "#C7E9C0",
-        componentPaletteGroupName: "Dashboard Specific"
+        componentPaletteGroupName: "Dashboard Specific",
+        execute: (context: IDashboardComponentContext) => {
+            const actionName = context.evalProperty<string>("action");
+
+            if (actionName == undefined || typeof actionName != "string") {
+                context.throwError(`Invalid action name property`);
+                return;
+            }
+
+            const flowIndex =
+                context.WasmFlowRuntime.assetsMap.actionFlowIndexes[actionName];
+            if (flowIndex == undefined) {
+                context.throwError(`Invalid action name: ${actionName}`);
+                return;
+            }
+
+            context.executeCallAction(flowIndex);
+        }
     });
 
     action: string;

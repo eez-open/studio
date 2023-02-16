@@ -1,6 +1,9 @@
 import type {
     BasicType,
+    IField,
+    IIndexes,
     IObjectVariableValueFieldDescription,
+    IType,
     ValueType
 } from "eez-studio-types";
 

@@ -5,6 +5,8 @@ import { _uniqWith } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
 import { Rect } from "eez-studio-shared/geometry";
 
+import type { IDashboardComponentContext } from "eez-studio-types";
+
 import {
     ProjectEditorStore,
     IContextMenuContext,
@@ -376,6 +378,8 @@ export interface ClassInfo {
     showTreeCollapseIcon?: "always" | "has-children" | "never";
 
     getAdditionalFlowProperties?: (object: IEezObject) => PropertyInfo[];
+
+    execute?: (context: IDashboardComponentContext) => void;
 }
 
 export function makeDerivedClassInfo(

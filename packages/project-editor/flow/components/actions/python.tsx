@@ -1,5 +1,17 @@
 import React from "react";
 
+import { tmpdir } from "os";
+import { sep } from "path";
+import { writeFileSync, unlinkSync } from "fs";
+import { PythonShell, Options } from "python-shell";
+
+import type {
+    IDashboardComponentContext,
+    IWasmFlowRuntime
+} from "eez-studio-types";
+
+import { onWasmFlowRuntimeTerminate } from "project-editor/flow/runtime/wasm-worker";
+
 import { registerActionComponents } from "project-editor/flow/component";
 import { RightArrow } from "project-editor/ui-components/icons";
 
@@ -113,6 +125,100 @@ registerActionComponents("Python", [
             } else {
                 return props[3];
             }
+        },
+        execute: (context: IDashboardComponentContext) => {
+            const scriptSourceOption = context.getStringParam(0);
+
+            let scriptSource;
+            let isInlineScript: boolean;
+            if (scriptSourceOption == "inline-script") {
+                scriptSource = context.getStringParam(4);
+                isInlineScript = true;
+            } else if (scriptSourceOption == "inline-script-as-expression") {
+                scriptSource = context.evalProperty<string>(
+                    "scriptSourceInlineFromExpression"
+                );
+                isInlineScript = true;
+            } else {
+                scriptSource = context.evalProperty<string>("scriptSourceFile");
+                isInlineScript = false;
+            }
+
+            if (scriptSource == undefined) {
+                context.throwError(`Invalid script source`);
+                return;
+            }
+
+            const handle = getNextPythonShellHandle();
+
+            let scriptFilePath: string;
+            if (isInlineScript) {
+                scriptFilePath =
+                    tmpdir() + sep + `eez-runtime-python-script-${handle}.py`;
+                writeFileSync(scriptFilePath, scriptSource);
+            } else {
+                scriptFilePath = scriptSource;
+            }
+
+            const options: Options = {
+                pythonPath: context.evalProperty<string>("pythonPath")
+            };
+            const pythonShell = new PythonShell(scriptFilePath, options);
+            addPythonShell(context.WasmFlowRuntime, pythonShell);
+
+            pythonShell.on("message", message => {
+                const { wasmFlowRuntimeTerminated } = getPythonShell(handle);
+                if (!wasmFlowRuntimeTerminated) {
+                    context.propagateValue("message", message);
+                }
+            });
+
+            let wasError = false;
+
+            function cleanup() {
+                removePythonShell(handle);
+
+                if (isInlineScript) {
+                    unlinkSync(scriptFilePath);
+                }
+            }
+
+            pythonShell.on("close", () => {
+                if (!wasError) {
+                    const { wasmFlowRuntimeTerminated } =
+                        getPythonShell(handle);
+
+                    if (!wasmFlowRuntimeTerminated) {
+                        context.propagateValueThroughSeqout();
+                    }
+
+                    cleanup();
+                }
+            });
+
+            pythonShell.on("pythonError", err => {
+                wasError = true;
+
+                const { wasmFlowRuntimeTerminated } = getPythonShell(handle);
+                if (!wasmFlowRuntimeTerminated) {
+                    context.throwError(err.toString());
+                }
+
+                cleanup();
+            });
+
+            pythonShell.on("error", err => {
+                wasError = true;
+
+                const { wasmFlowRuntimeTerminated } = getPythonShell(handle);
+                if (!wasmFlowRuntimeTerminated) {
+                    context.throwError(err.toString());
+                }
+
+                cleanup();
+            });
+
+            context.propagateValue("handle", handle);
         }
     },
     {
@@ -154,6 +260,28 @@ registerActionComponents("Python", [
                     type: "integer"
                 }
             ]
+        },
+        execute: (context: IDashboardComponentContext) => {
+            const handle = context.evalProperty<number>("handle");
+            if (!handle) {
+                context.throwError(`Handle not defined`);
+                return;
+            }
+            const { pythonShell } = getPythonShell(handle);
+            if (!pythonShell) {
+                context.throwError(`Invalid handle ` + handle);
+                return;
+            }
+
+            const message = context.evalProperty<string>("message");
+            if (!message) {
+                context.throwError(`Message not defined`);
+                return;
+            }
+
+            pythonShell.send(message.toString());
+
+            context.propagateValueThroughSeqout();
         }
     },
     {
@@ -178,6 +306,76 @@ registerActionComponents("Python", [
                 }
             ]
         },
-        bodyPropertyName: "handle"
+        bodyPropertyName: "handle",
+        execute: (context: IDashboardComponentContext) => {
+            const handle = context.evalProperty<number>("handle");
+            if (!handle) {
+                context.throwError(`Handle not defined`);
+                return;
+            }
+            const { pythonShell } = getPythonShell(handle);
+            if (!pythonShell) {
+                context.throwError(`Invalid handle ` + handle);
+                return;
+            }
+
+            pythonShell.end(() => {
+                context.propagateValueThroughSeqout();
+            });
+        }
     }
 ]);
+
+////////////////////////////////////////////////////////////////////////////////
+
+const handleToPythonShell = new Map<
+    number,
+    {
+        wasmFlowRuntime: IWasmFlowRuntime;
+        wasmFlowRuntimeTerminated: boolean;
+        pythonShell: PythonShell;
+    }
+>();
+let lastPythonShellHandle = 0;
+
+function getNextPythonShellHandle() {
+    return lastPythonShellHandle + 1;
+}
+
+function addPythonShell(
+    wasmFlowRuntime: IWasmFlowRuntime,
+    pythonShell: PythonShell
+) {
+    lastPythonShellHandle = getNextPythonShellHandle();
+
+    handleToPythonShell.set(lastPythonShellHandle, {
+        wasmFlowRuntime,
+        wasmFlowRuntimeTerminated: false,
+        pythonShell
+    });
+
+    return lastPythonShellHandle;
+}
+
+function getPythonShell(handle: number) {
+    return (
+        handleToPythonShell.get(handle) || {
+            pythonShell: undefined,
+            wasmFlowRuntime: undefined,
+            wasmFlowRuntimeTerminated: true
+        }
+    );
+}
+
+function removePythonShell(handle: number) {
+    handleToPythonShell.delete(handle);
+}
+
+onWasmFlowRuntimeTerminate((wasmFlowRuntime: IWasmFlowRuntime) => {
+    for (const item of handleToPythonShell) {
+        if (item[1].wasmFlowRuntime == wasmFlowRuntime) {
+            item[1].wasmFlowRuntimeTerminated = true;
+            item[1].pythonShell.end(() => {});
+        }
+    }
+});

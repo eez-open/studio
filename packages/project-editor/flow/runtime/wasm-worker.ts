@@ -2,22 +2,17 @@ import deepEqual from "deep-equal";
 
 import type {
     RendererToWorkerMessage,
-    WorkerToRenderMessage,
-    IPropertyValue,
     IGlobalVariable
 } from "project-editor/flow/runtime/wasm-worker-interfaces";
-import { init as initExecuteFunctions } from "project-editor/flow/runtime/wasm-execute-functions-init";
-import {
-    actionConmponentExecuteFunctions,
-    wasmFlowRuntimeTerminateCallbacks
-} from "project-editor/flow/runtime/wasm-execute-functions";
+import type { WorkerToRenderMessage, IPropertyValue } from "eez-studio-types";
 import {
     getValue,
     getArrayValue,
     createWasmValue
 } from "project-editor/flow/runtime/wasm-value";
 import { DashboardComponentContext } from "project-editor/flow/runtime/worker-dashboard-component-context";
-import { IWasmFlowRuntime } from "eez-studio-types";
+import type { IMessageFromWorker, IWasmFlowRuntime } from "eez-studio-types";
+import { getClassByName } from "project-editor/core/object";
 
 const eez_flow_runtime_constructor = require("project-editor/flow/runtime/eez_runtime.js");
 const lvgl_flow_runtime_constructor = require("project-editor/flow/runtime/lvgl_runtime.js");
@@ -123,9 +118,9 @@ function executeDashboardComponent(
             componentType
         ];
 
-    const executeFunction = actionConmponentExecuteFunctions[componentName];
-    if (executeFunction) {
-        executeFunction(dashboardComponentContext);
+    const aClass = getClassByName(componentName);
+    if (aClass && aClass.classInfo.execute) {
+        aClass.classInfo.execute(dashboardComponentContext);
     } else {
         dashboardComponentContext.throwError(
             `Unknown component ${componentName}`
@@ -348,10 +343,6 @@ export function createWasmWorker(
 
         if (rendererToWorkerMessage.init) {
             console.log(rendererToWorkerMessage.init);
-
-            await initExecuteFunctions(
-                rendererToWorkerMessage.init.nodeModuleFolders
-            );
 
             WasmFlowRuntime.assetsMap = rendererToWorkerMessage.init.assetsMap;
 
@@ -583,6 +574,19 @@ export function createWasmWorker(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+type WasmFlowRuntimeTerminateCallback = (
+    WasmFlowRuntime: IWasmFlowRuntime
+) => void;
+
+const wasmFlowRuntimeTerminateCallbacks: WasmFlowRuntimeTerminateCallback[] =
+    [];
+
+export function onWasmFlowRuntimeTerminate(
+    callback: WasmFlowRuntimeTerminateCallback
+) {
+    wasmFlowRuntimeTerminateCallbacks.push(callback);
+}
 
 function fireTerminateEvent(WasmFlowRuntime: IWasmFlowRuntime) {
     for (const callback of wasmFlowRuntimeTerminateCallbacks) {

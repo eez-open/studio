@@ -1,39 +1,7 @@
-import type { Stream } from "stream";
+import type { AssetsMap } from "eez-studio-types";
 import type { ArrayValue } from "project-editor/flow/runtime/wasm-value";
-import type { ValueType } from "project-editor/features/variable/value-type";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// message data sent from WASM worker to renderer
-export interface WorkerToRenderMessage {
-    // sent from worker once at the start
-    init?: any;
-
-    // screen data (to be displayed in Canvas), sent from worker at each tick
-    screen?: Uint8ClampedArray;
-
-    isRTL?: boolean;
-
-    // message from worker to Studio debugger
-    messageToDebugger?: Uint8Array;
-
-    // SCPI command to execute (only renderer is able to execute SCPI commands)
-    scpiCommand?: ScpiCommand;
-
-    // connect to instrument ID
-    connectToInstrumentId?: string;
-
-    // evaluated property values
-    propertyValues?: IPropertyValue[];
-
-    componentMessages?: IMessageFromWorker[];
-
-    freeArrayValue?: ObjectOrArrayValueWithType;
-
-    getLvglImageByName?: {
-        name: string;
-    };
-}
 
 // message data sent from renderer to WASM worker
 export interface RendererToWorkerMessage {
@@ -119,37 +87,6 @@ export interface IEvalProperty {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IPropertyValue {
-    propertyValueIndex: number;
-    valueWithType: ValueWithType;
-}
-
-export type ValueWithType = {
-    value: Value;
-    valueType: ValueType;
-};
-
-export type Value =
-    | null
-    | undefined
-    | boolean
-    | number
-    | string
-    | Uint8Array
-    | Stream
-    | Date
-    | ObjectOrArrayValue;
-
-export type ObjectOrArrayValueWithType = {
-    value: ObjectOrArrayValue;
-    valueType: ValueType;
-};
-
-export type ObjectOrArrayValue =
-    | undefined
-    | Value[]
-    | { [fieldName: string]: Value };
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface IAssignProperty {
@@ -161,12 +98,6 @@ export interface IAssignProperty {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-export interface ScpiCommand {
-    instrumentId: string;
-    command: Uint8Array;
-    isQuery: boolean;
-}
 
 export interface ScpiResult {
     errorMessage?: string;

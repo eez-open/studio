@@ -26,6 +26,8 @@ import {
 
 import { InstrumentObject, instruments } from "instrument/instrument-object";
 
+import type { IDashboardComponentContext } from "eez-studio-types";
+
 import {
     registerClass,
     PropertyType,
@@ -64,6 +66,7 @@ import type { IVariable } from "project-editor/flow/flow-interfaces";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { COMPONENT_TYPE_SCPIACTION } from "project-editor/flow/components/component_types";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
+import type { WorkerToRenderMessage } from "eez-studio-types";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -545,7 +548,30 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
             </svg>
         ),
         componentHeaderColor: "#FDD0A2",
-        componentPaletteGroupName: "Instrument"
+        componentPaletteGroupName: "Instrument",
+        execute: (context: IDashboardComponentContext) => {
+            interface InstrumentVariableTypeConstructorParams {
+                id: string;
+            }
+
+            const instrument =
+                context.evalProperty<InstrumentVariableTypeConstructorParams>(
+                    "instrument"
+                );
+
+            if (instrument == undefined || typeof instrument.id != "string") {
+                context.throwError(`Invalid instrument property`);
+                return;
+            }
+
+            const data: WorkerToRenderMessage = {
+                connectToInstrumentId: instrument.id
+            };
+
+            context.WasmFlowRuntime.postWorkerToRendererMessage(data);
+
+            context.propagateValueThroughSeqout();
+        }
     });
 
     instrument: string;

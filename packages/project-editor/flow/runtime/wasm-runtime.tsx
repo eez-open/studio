@@ -28,12 +28,16 @@ import type {
     IAssignProperty,
     IEvalProperty,
     IGlobalVariable,
-    IPropertyValue,
-    RendererToWorkerMessage,
-    ScpiCommand,
-    ValueWithType,
-    WorkerToRenderMessage
+    RendererToWorkerMessage
 } from "project-editor/flow/runtime/wasm-worker-interfaces";
+
+import type {
+    ScpiCommand,
+    WorkerToRenderMessage,
+    IPropertyValue,
+    ValueWithType,
+    AssetsMap
+} from "eez-studio-types";
 
 import {
     getObjectVariableTypeFromType,

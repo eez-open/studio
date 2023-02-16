@@ -1,4 +1,7 @@
 import React from "react";
+import { Duplex, Readable } from "stream";
+
+import type { IDashboardComponentContext } from "eez-studio-types";
 
 import { registerActionComponents } from "project-editor/flow/component";
 
@@ -33,7 +36,35 @@ registerActionComponents("Dashboard Specific", [
                 type: "expression",
                 valueType: "any"
             }
-        ]
+        ],
+        execute: (context: IDashboardComponentContext) => {
+            const streamValue = context.evalProperty("stream");
+
+            if (streamValue) {
+                if (
+                    streamValue instanceof Readable ||
+                    streamValue instanceof Duplex
+                ) {
+                    let accData = "";
+
+                    context.startAsyncExecution();
+
+                    streamValue.on("data", (data: Buffer) => {
+                        accData += data.toString();
+                        context.propagateValue("data", accData);
+                    });
+
+                    streamValue.on("end", (data: Buffer) => {
+                        context.propagateValueThroughSeqout();
+                        context.endAsyncExecution();
+                    });
+                } else {
+                    //context.throwError("not a readable stream");
+                }
+            }
+
+            return undefined;
+        }
     }
 ]);
 

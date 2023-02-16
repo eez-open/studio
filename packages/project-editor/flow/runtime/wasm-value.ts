@@ -1,6 +1,7 @@
 import { Stream } from "stream";
 
 import type {
+    AssetsMap,
     IObjectVariableType,
     IObjectVariableValueFieldDescription,
     IWasmFlowRuntime,
@@ -34,7 +35,7 @@ import type {
     ObjectOrArrayValueWithType,
     Value,
     ValueWithType
-} from "project-editor/flow/runtime/wasm-worker-interfaces";
+} from "eez-studio-types";
 
 type Values = (null | boolean | number | string | ArrayValue)[];
 

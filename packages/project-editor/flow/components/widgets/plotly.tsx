@@ -34,7 +34,7 @@ import {
 import { humanize } from "eez-studio-shared/string";
 import { Assets, DataBuffer } from "project-editor/build/assets";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
-import { ValueType } from "eez-studio-types";
+import type { IDashboardComponentContext, ValueType } from "eez-studio-types";
 import { GAUGE_ICON, LINE_CHART_ICON } from "./icons";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -486,7 +486,27 @@ export class LineChartWidget extends Widget {
 
         icon: LINE_CHART_ICON,
 
-        showTreeCollapseIcon: "never"
+        showTreeCollapseIcon: "never",
+
+        execute: (context: IDashboardComponentContext) => {
+            const value = context.getInputValue("reset");
+            const labels = context.getExpressionListParam(0);
+            if (value !== undefined) {
+                context.clearInputValue("reset");
+                context.sendMessageToComponent({
+                    reset: true,
+                    labels
+                });
+            } else {
+                const xValue = context.evalProperty("xValue");
+                const values = context.getExpressionListParam(8);
+                context.sendMessageToComponent({
+                    xValue,
+                    labels,
+                    values
+                });
+            }
+        }
     });
 
     xValue: string;
@@ -812,7 +832,9 @@ export class GaugeWidget extends Widget {
 
         icon: GAUGE_ICON,
 
-        showTreeCollapseIcon: "never"
+        showTreeCollapseIcon: "never",
+
+        execute: (context: IDashboardComponentContext) => {}
     });
 
     title: string;

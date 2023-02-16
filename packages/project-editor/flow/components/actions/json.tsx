@@ -1,6 +1,9 @@
 import React from "react";
 
+import type { IDashboardComponentContext } from "eez-studio-types";
+
 import { registerActionComponents } from "project-editor/flow/component";
+import { toJS } from "mobx";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -44,7 +47,22 @@ registerActionComponents("Dashboard Specific", [
                 type: "expression",
                 valueType: "string"
             }
-        ]
+        ],
+        execute: (context: IDashboardComponentContext) => {
+            const value = context.evalProperty<string>("value");
+            if (value == undefined || typeof value != "string") {
+                context.throwError(`Invalid value property`);
+                return;
+            }
+
+            try {
+                const result = JSON.parse(value);
+                context.propagateValue("result", result);
+                context.propagateValueThroughSeqout();
+            } catch (err) {
+                context.throwError(err.toString());
+            }
+        }
     },
     {
         name: "JSONStringify",
@@ -68,6 +86,21 @@ registerActionComponents("Dashboard Specific", [
                 valueType: "any"
             }
         ],
-        bodyPropertyName: "value"
+        bodyPropertyName: "value",
+        execute: (context: IDashboardComponentContext) => {
+            const value = context.evalProperty("value");
+            if (value == undefined) {
+                context.throwError(`Invalid value property`);
+                return;
+            }
+
+            try {
+                const result = JSON.stringify(toJS(value));
+                context.propagateValue("result", result);
+                context.propagateValueThroughSeqout();
+            } catch (err) {
+                context.throwError(err.toString());
+            }
+        }
     }
 ]);

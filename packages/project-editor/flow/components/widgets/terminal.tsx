@@ -1,4 +1,7 @@
 import React from "react";
+import { Duplex, Readable } from "stream";
+
+import type { IDashboardComponentContext } from "eez-studio-types";
 
 import {
     registerClass,
@@ -45,7 +48,19 @@ export class TerminalWidget extends Widget {
                 <line x1="13" y1="15" x2="16" y2="15"></line>
                 <rect x="3" y="4" width="18" height="16" rx="2"></rect>
             </svg>
-        )
+        ),
+
+        execute: (context: IDashboardComponentContext) => {
+            const data = context.evalProperty("data");
+
+            if (typeof data === "string" && data.length > 0) {
+                context.sendMessageToComponent(data);
+            } else if (data instanceof Readable || data instanceof Duplex) {
+                data.on("data", (chunk: Buffer) => {
+                    context.sendMessageToComponent(chunk.toString());
+                });
+            }
+        }
     });
 
     getOutputs(): ComponentOutput[] {

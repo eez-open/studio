@@ -11,7 +11,7 @@ import type { ConnectionParameters } from "instrument/connection/interface";
 import type { WebSimulatorMessageDispatcher } from "instrument/connection/connection-renderer";
 import type { ConnectionBase } from "instrument/connection/connection-base";
 
-import type { ValueType } from "eez-studio-types";
+import type { AssetsMap, ValueType } from "eez-studio-types";
 
 import { showSelectInstrumentDialog } from "project-editor/flow/components/actions/instrument";
 import { ConnectionLine, Flow } from "project-editor/flow/flow";

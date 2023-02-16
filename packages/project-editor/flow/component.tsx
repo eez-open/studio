@@ -129,7 +129,7 @@ import {
     DISTRIBUTE_VERTICAL_CENTER_ICON,
     DISTRIBUTE_VERTICAL_BOTTOM_ICON,
     DISTRIBUTE_VERTICAL_GAPS_ICON
-} from "./align_and_distribute_icons";
+} from "project-editor/ui-components/icons";
 import { ProjectContext } from "project-editor/project/context";
 import { Icon } from "eez-studio-ui/icon";
 import type { LVGLCreateResultType } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
@@ -4018,7 +4018,8 @@ export function registerActionComponent(
                 ),
             componentHeaderColor:
                 actionComponentDefinition.componentHeaderColor,
-            componentPaletteGroupName
+            componentPaletteGroupName,
+            execute: actionComponentDefinition.execute
         });
 
         constructor() {

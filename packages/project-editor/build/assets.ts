@@ -83,6 +83,7 @@ import { DummyDataBuffer, DataBuffer } from "project-editor/build/data-buffer";
 
 import { LVGLBuild } from "project-editor/lvgl/build";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import type { AssetsMap } from "eez-studio-types";
 
 export { DummyDataBuffer, DataBuffer } from "project-editor/build/data-buffer";
 
