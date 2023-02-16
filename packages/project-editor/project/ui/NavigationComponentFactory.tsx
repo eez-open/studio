@@ -17,7 +17,7 @@ import { StylesNavigation } from "project-editor/features/style/StylesNavigation
 import { ProjectVariablesNavigation } from "project-editor/features/variable/VariablesNavigation";
 import { SettingsNavigation } from "./SettingsNavigation";
 
-import { NavigationComponent } from "project-editor/project/NavigationComponent";
+import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
 import { Action } from "project-editor/features/action/action";
 import {
     getAncestorOfType,
@@ -40,7 +40,7 @@ import {
 } from "project-editor/features/variable/variable";
 import { Component } from "project-editor/flow/component";
 import { ScpiEnum } from "project-editor/features/scpi/enum";
-import { ConnectionLine } from "project-editor/flow/flow";
+import { ConnectionLine } from "project-editor/flow/connection-line";
 import { TextsNavigation } from "project-editor/features/texts/navigation";
 import { Language, TextResource } from "project-editor/features/texts";
 import { ReadmeNavigation } from "project-editor/features/readme/navigation";

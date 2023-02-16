@@ -14,7 +14,7 @@ import * as notification from "eez-studio-ui/notification";
 import { updateObject } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { showSelectInstrumentDialog } from "project-editor/flow/components/actions/instrument";
-import { EditorComponent } from "project-editor/project/EditorComponent";
+import { EditorComponent } from "project-editor/project/ui/EditorComponent";
 
 const ICON = (
     <svg

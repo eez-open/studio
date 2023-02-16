@@ -5,7 +5,10 @@ import * as FlexLayout from "flexlayout-react";
 
 import { getParent, IEezObject } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { IEditor, IEditorState } from "project-editor/project/EditorComponent";
+import {
+    IEditor,
+    IEditorState
+} from "project-editor/project/ui/EditorComponent";
 import {
     getObjectFromStringPath,
     getObjectPathAsString,

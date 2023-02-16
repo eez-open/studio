@@ -63,7 +63,7 @@ import {
 import { DragAndDropManager } from "project-editor/core/dd";
 
 import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
-import { IEditorState } from "project-editor/project/EditorComponent";
+import { IEditorState } from "project-editor/project/ui/EditorComponent";
 import { onAfterPaste } from "project-editor/core/util";
 
 ////////////////////////////////////////////////////////////////////////////////

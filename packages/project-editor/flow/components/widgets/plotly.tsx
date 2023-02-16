@@ -35,7 +35,10 @@ import { humanize } from "eez-studio-shared/string";
 import { Assets, DataBuffer } from "project-editor/build/assets";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 import type { IDashboardComponentContext, ValueType } from "eez-studio-types";
-import { GAUGE_ICON, LINE_CHART_ICON } from "./icons";
+import {
+    GAUGE_ICON,
+    LINE_CHART_ICON
+} from "project-editor/ui-components/icons";
 
 ////////////////////////////////////////////////////////////////////////////////
 

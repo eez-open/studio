@@ -649,22 +649,6 @@ function buildViewMenu(win: IWindow | undefined) {
         }
     );
 
-    if (win?.activeTabType === "project") {
-        viewSubmenu.push(
-            {
-                label: "Project Metrics...",
-                click: function (item, focusedWindow) {
-                    if (focusedWindow) {
-                        focusedWindow.webContents.send("showProjectMetrics");
-                    }
-                }
-            },
-            {
-                type: "separator"
-            }
-        );
-    }
-
     viewSubmenu.push({
         label: "Reload",
         accelerator: "CmdOrCtrl+R",

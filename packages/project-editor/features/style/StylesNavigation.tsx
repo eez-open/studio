@@ -7,7 +7,7 @@ import * as FlexLayout from "flexlayout-react";
 import { LayoutModels } from "project-editor/store";
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { ProjectContext } from "project-editor/project/context";
-import { NavigationComponent } from "project-editor/project/NavigationComponent";
+import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
 import { Style } from "./style";
 import { drawText } from "project-editor/flow/editor/draw";
 

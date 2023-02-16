@@ -7,18 +7,17 @@ import {
     getObjectFromStringPath,
     getObjectPathAsString
 } from "project-editor/store";
-import type { ConnectionLine } from "project-editor/flow/flow";
+import { ConnectionLine } from "project-editor/flow/connection-line";
 import type {
     FlowState,
     QueueTask,
     RuntimeBase
-} from "project-editor/flow/runtime";
+} from "project-editor/flow/runtime/runtime";
+import type { Component, Widget } from "project-editor/flow/component";
 import {
-    Component,
     getInputDisplayName,
-    getOutputDisplayName,
-    Widget
-} from "project-editor/flow/component";
+    getOutputDisplayName
+} from "project-editor/flow/helper";
 import type { LogItemType } from "project-editor/flow/flow-interfaces";
 
 ////////////////////////////////////////////////////////////////////////////////

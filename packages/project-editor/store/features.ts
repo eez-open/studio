@@ -46,7 +46,6 @@ export interface ProjectEditorFeature {
         extensionDefinition: ExtensionDefinition,
         properties: any
     ) => void;
-    metrics?: (project: Project) => { [key: string]: string | number };
     toJsHook?: (jsObject: any, object: IEezObject) => void;
     afterLoadProject?: (project: Project) => void;
     enumerable?:

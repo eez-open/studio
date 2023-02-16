@@ -13,9 +13,10 @@ import type {
 import { Transform } from "project-editor/flow/editor/transform";
 
 import type { Component } from "project-editor/flow/component";
-import type { ConnectionLine, FlowTabState } from "project-editor/flow/flow";
+import type { FlowTabState } from "project-editor/flow/flow-tab-state";
+import { ConnectionLine } from "project-editor/flow/connection-line";
 import { FlowDocument } from "project-editor/flow/runtime-viewer/flow-document";
-import type { FlowState } from "project-editor/flow/runtime";
+import type { FlowState } from "project-editor/flow/runtime/runtime";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////

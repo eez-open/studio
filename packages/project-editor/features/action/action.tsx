@@ -20,7 +20,6 @@ import {
 } from "project-editor/project/project-type-traits";
 import type { Project } from "project-editor/project/project";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
-import { metrics } from "project-editor/features/action/metrics";
 import { getProjectEditorStore } from "project-editor/store";
 
 import { Flow } from "project-editor/flow/flow";
@@ -237,6 +236,5 @@ export default {
         }
 
         return messages;
-    },
-    metrics: metrics
+    }
 };

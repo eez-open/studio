@@ -16,15 +16,14 @@ import {
     ProjectEditor,
     IProjectEditor
 } from "project-editor/project-editor-interface";
-import { RemoteRuntime } from "project-editor/flow/remote-runtime";
+import { RemoteRuntime } from "project-editor/flow/runtime/remote-runtime";
 import { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
-import { DebugInfoRuntime } from "project-editor/flow/debug-info-runtime";
+import { DebugInfoRuntime } from "project-editor/flow/runtime/debug-info-runtime";
 import {
     build as buildProject,
     backgroundCheck,
     buildExtensions
 } from "project-editor/build/build";
-import { getAllMetrics } from "project-editor/project/metrics";
 import {
     getProject,
     getFlow,
@@ -51,7 +50,8 @@ import {
     Glyph,
     rebuildLvglFonts
 } from "project-editor/features/font/font";
-import { ConnectionLine, Flow, FlowFragment } from "project-editor/flow/flow";
+import { Flow, FlowFragment } from "project-editor/flow/flow";
+import { ConnectionLine } from "project-editor/flow/connection-line";
 import { Action, findAction } from "project-editor/features/action/action";
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import {
@@ -93,12 +93,12 @@ import {
     getNavigationObject,
     navigateTo,
     selectObject
-} from "project-editor/project/NavigationComponentFactory";
+} from "project-editor/project/ui/NavigationComponentFactory";
 import {
     createEditorState,
     getEditorComponent,
     getAncestorWithEditorComponent
-} from "project-editor/project/EditorComponentFactory";
+} from "project-editor/project/ui/EditorComponentFactory";
 import { browseGlyph } from "project-editor/features/font/FontEditor";
 import { Variable } from "project-editor/features/variable/variable";
 import {
@@ -188,7 +188,6 @@ export async function initProjectEditor(
             backgroundCheck,
             buildExtensions
         },
-        getAllMetrics,
         ProjectClass: Project,
         FlowClass: Flow,
         FlowFragmentClass: FlowFragment,

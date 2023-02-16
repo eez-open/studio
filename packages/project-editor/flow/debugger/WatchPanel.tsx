@@ -18,9 +18,13 @@ import {
     getArrayElementTypeFromType,
     getStructureFromType
 } from "project-editor/features/variable/value-type";
-import { ConnectionLine, FlowTabState } from "project-editor/flow/flow";
-import type { ComponentState, RuntimeBase } from "project-editor/flow/runtime";
-import { getInputDisplayName } from "project-editor/flow/component";
+import { FlowTabState } from "project-editor/flow/flow-tab-state";
+import { ConnectionLine } from "project-editor/flow/connection-line";
+import type {
+    ComponentState,
+    RuntimeBase
+} from "project-editor/flow/runtime/runtime";
+import { getInputDisplayName } from "project-editor/flow/helper";
 import { evalExpressionGetValueType } from "project-editor/flow/expression";
 import { IconAction } from "eez-studio-ui/action";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";

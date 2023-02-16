@@ -25,7 +25,7 @@ import { settingsController } from "home/settings";
 import { App } from "home/app";
 import { openProject } from "home/open-project";
 
-import { LineMarkers } from "project-editor/flow/editor/ConnectionLineComponent";
+import { LineMarkers } from "project-editor/flow/connection-line/ConnectionLineComponent";
 
 import "home/settings";
 
@@ -104,7 +104,7 @@ ipcRenderer.on("load-debug-info", async (sender: any, filePath: any) => {
 
 ipcRenderer.on("new-project", async (sender: any, filePath: any) => {
     const { showNewProjectWizard } = await import(
-        "project-editor/project/Wizard"
+        "project-editor/project/ui/Wizard"
     );
     showNewProjectWizard();
 });

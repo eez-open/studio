@@ -12,7 +12,7 @@ import type { Action } from "project-editor/features/action/action";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import type { Component } from "project-editor/flow/component";
-import { strokeWidth } from "project-editor/flow/editor/ConnectionLineComponent";
+import { strokeWidth } from "project-editor/flow/connection-line/ConnectionLineComponent";
 import { DragAndDropManager } from "project-editor/core/dd";
 import { resizeWidget } from "./resizing-widget-property";
 import { getBooleanValue } from "project-editor/flow/helper";

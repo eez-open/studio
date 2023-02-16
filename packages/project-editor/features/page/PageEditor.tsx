@@ -11,10 +11,11 @@ import { FlowEditor } from "project-editor/flow/editor/editor";
 import { FlowViewer } from "project-editor/flow/runtime-viewer/viewer";
 import { ProjectContext } from "project-editor/project/context";
 import type { Page } from "project-editor/features/page/page";
-import { Flow, FlowTabState } from "project-editor/flow/flow";
+import { Flow } from "project-editor/flow/flow";
+import { FlowTabState } from "project-editor/flow/flow-tab-state";
 import { Transform } from "project-editor/flow/editor/transform";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { EditorComponent } from "project-editor/project/EditorComponent";
+import { EditorComponent } from "project-editor/project/ui/EditorComponent";
 import { Splitter } from "eez-studio-ui/splitter";
 import { PageTimelineEditorState, PageTimelineEditor } from "./PageTimeline";
 

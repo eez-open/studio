@@ -27,8 +27,8 @@ import { IconAction } from "eez-studio-ui/action";
 import { Tree } from "project-editor/ui-components/Tree";
 import { computed, makeObservable } from "mobx";
 import { CodeEditor } from "eez-studio-ui/code-editor";
-import { EditorComponent } from "project-editor/project/EditorComponent";
-import { NavigationComponent } from "project-editor/project/NavigationComponent";
+import { EditorComponent } from "project-editor/project/ui/EditorComponent";
+import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
 
 ////////////////////////////////////////////////////////////////////////////////
 

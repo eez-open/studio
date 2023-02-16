@@ -54,7 +54,6 @@ import {
 
 import { showGenericDialog } from "project-editor/core/util";
 
-import { metrics } from "project-editor/features/page/metrics";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
     deserializePixelArray,
@@ -1611,7 +1610,6 @@ export default {
 
         return messages;
     },
-    metrics: metrics,
     toJsHook: (jsObject: Project, project: Project) => {
         jsObject.fonts?.forEach(font => {
             if (font.lvglGlyphs) {

@@ -11,8 +11,8 @@ import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { ScpiSubsystem, ScpiCommand } from "project-editor/features/scpi/scpi";
 import { showImportScpiDocDialog } from "project-editor/features/scpi/importScpiDoc";
 import { computed, makeObservable } from "mobx";
-import { NavigationComponent } from "project-editor/project/NavigationComponent";
-import { EditorComponent } from "project-editor/project/EditorComponent";
+import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
+import { EditorComponent } from "project-editor/project/ui/EditorComponent";
 
 ////////////////////////////////////////////////////////////////////////////////
 

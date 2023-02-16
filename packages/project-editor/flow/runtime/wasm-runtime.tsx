@@ -22,7 +22,7 @@ import {
 import {
     RemoteRuntime,
     DebuggerConnectionBase
-} from "project-editor/flow/remote-runtime";
+} from "project-editor/flow//runtime/remote-runtime";
 
 import type {
     IAssignProperty,

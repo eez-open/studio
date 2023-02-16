@@ -1,5 +1,5 @@
 import { settingsController } from "home/settings";
-import type { ConnectionLine } from "project-editor/flow/flow";
+import type { ConnectionLine } from "project-editor/flow/connection-line";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 const MAX_ACTIVE_CONNECTION_LINES = 20;

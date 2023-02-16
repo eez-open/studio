@@ -56,7 +56,6 @@ import {
 import { findStyle } from "project-editor/features/style/style";
 import { getThemedColor } from "project-editor/features/style/theme";
 import { Flow } from "project-editor/flow/flow";
-import { metrics } from "project-editor/features/page/metrics";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
 import { buildWidget } from "project-editor/build/widgets";
 import { WIDGET_TYPE_CONTAINER } from "project-editor/flow/components/component_types";
@@ -1022,6 +1021,5 @@ export default {
     type: PropertyType.Array,
     typeClass: Page,
     icon: "filter",
-    create: () => [],
-    metrics
+    create: () => []
 };

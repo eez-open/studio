@@ -15,6 +15,7 @@ import {
     VALIDATION_MESSAGE_REQUIRED
 } from "eez-studio-shared/validation";
 import { humanize } from "eez-studio-shared/string";
+import { easingFunctions } from "eez-studio-shared/easing-functions";
 import { Icon } from "eez-studio-ui/icon";
 import { Button } from "eez-studio-ui/button";
 import {
@@ -43,7 +44,6 @@ import {
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { ProjectContext } from "project-editor/project/context";
-import { easingFunctions } from "project-editor/flow/easing-functions";
 
 import type { Component, Widget } from "project-editor/flow/component";
 

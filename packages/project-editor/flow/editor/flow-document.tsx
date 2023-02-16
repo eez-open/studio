@@ -10,7 +10,8 @@ import {
 import { IEezObject, getParent } from "project-editor/core/object";
 import { createObject, getProjectEditorStore } from "project-editor/store";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
-import { ConnectionLine, Flow } from "project-editor/flow/flow";
+import { Flow } from "project-editor/flow/flow";
+import { ConnectionLine } from "project-editor/flow/connection-line";
 import { Component } from "project-editor/flow/component";
 import { _intersection } from "eez-studio-shared/algorithm";
 import { ProjectEditor } from "project-editor/project-editor-interface";

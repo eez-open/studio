@@ -5,8 +5,8 @@ import {
     QueueTask,
     RuntimeBase,
     SingleStepMode
-} from "project-editor/flow/runtime";
-import type { ConnectionLine } from "project-editor/flow/flow";
+} from "project-editor/flow/runtime/runtime";
+import { ConnectionLine } from "project-editor/flow/connection-line";
 import {
     evalExpression,
     IExpressionContext

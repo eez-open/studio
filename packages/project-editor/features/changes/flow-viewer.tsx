@@ -17,11 +17,12 @@ import { IPanel } from "project-editor/store";
 
 import { ProjectContext } from "project-editor/project/context";
 
-import { ConnectionLine, Flow } from "project-editor/flow/flow";
+import { Flow } from "project-editor/flow/flow";
+import { ConnectionLine } from "project-editor/flow/connection-line";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
 import { Svg } from "project-editor/flow/editor/render";
-import { ConnectionLineShape } from "project-editor/flow/editor/ConnectionLineComponent";
+import { ConnectionLineShape } from "project-editor/flow/connection-line/ConnectionLineComponent";
 import {
     IMouseHandler,
     PanMouseHandler

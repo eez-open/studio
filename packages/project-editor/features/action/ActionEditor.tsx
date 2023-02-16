@@ -9,8 +9,9 @@ import {
     TreeAdapter,
     TreeObjectAdapter
 } from "project-editor/core/objectAdapter";
-import { EditorComponent } from "project-editor/project/EditorComponent";
-import { Flow, FlowTabState } from "project-editor/flow/flow";
+import { EditorComponent } from "project-editor/project/ui/EditorComponent";
+import { Flow } from "project-editor/flow/flow";
+import { FlowTabState } from "project-editor/flow/flow-tab-state";
 import { Transform } from "project-editor/flow/editor/transform";
 import { IEezObject } from "project-editor/core/object";
 

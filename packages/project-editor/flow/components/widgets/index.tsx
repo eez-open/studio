@@ -120,7 +120,7 @@ import {
     StartActionComponent
 } from "project-editor/flow/components/actions";
 
-import { FlowState } from "project-editor/flow/runtime";
+import type { FlowState } from "project-editor/flow/runtime/runtime";
 
 import { Assets, DataBuffer } from "project-editor/build/assets";
 import { buildWidget } from "project-editor/build/widgets";
@@ -177,7 +177,7 @@ import {
 import {
     GAUGE_ICON,
     LINE_CHART_ICON
-} from "project-editor/flow/components/widgets/icons";
+} from "project-editor/ui-components/icons";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 import type { IDashboardComponentContext } from "eez-studio-types";
 

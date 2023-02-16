@@ -5,7 +5,7 @@ import { getProject } from "project-editor/project/project";
 import {
     EditorComponent,
     IEditorState
-} from "project-editor/project/EditorComponent";
+} from "project-editor/project/ui/EditorComponent";
 import { Action } from "project-editor/features/action/action";
 import {
     ActionEditor,

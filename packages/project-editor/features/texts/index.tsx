@@ -12,7 +12,6 @@ import {
     PropertyType,
     registerClass
 } from "project-editor/core/object";
-import { Project } from "project-editor/project/project";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -457,14 +456,5 @@ export default {
     create: () => ({
         languages: [],
         texts: []
-    }),
-    metrics: (
-        project: Project
-    ): {
-        [key: string]: string | number;
-    } => {
-        return {
-            Texts: 0
-        };
-    }
+    })
 };

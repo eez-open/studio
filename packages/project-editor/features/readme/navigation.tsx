@@ -3,8 +3,8 @@ import { makeObservable, observable, runInAction } from "mobx";
 import { observer } from "mobx-react";
 
 import { ProjectContext } from "project-editor/project/context";
-import { EditorComponent } from "project-editor/project/EditorComponent";
-import { NavigationComponent } from "project-editor/project/NavigationComponent";
+import { EditorComponent } from "project-editor/project/ui/EditorComponent";
+import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
 import { IPanel } from "project-editor/store";
 import { readTextFile } from "eez-studio-shared/util-electron";
 

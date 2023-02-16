@@ -7,16 +7,16 @@ import { SvgLabel } from "eez-studio-ui/svg-label";
 
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
-import type { ConnectionLine } from "project-editor/flow/flow";
+import { ConnectionLine } from "project-editor/flow/connection-line";
 
 import { getValueLabel } from "project-editor/features/variable/value-type";
 import type { ComponentInput } from "project-editor/flow/component";
 
-import { getConnectionLineShape } from "project-editor/flow/editor/connection-line-shape";
+import { getConnectionLineShape } from "project-editor/flow/connection-line/connection-line-shape";
 import {
     registerPath,
     unregisterPath
-} from "project-editor/flow/editor/real-time-traffic-visualizer";
+} from "project-editor/flow/connection-line/real-time-traffic-visualizer";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////

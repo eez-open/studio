@@ -1,18 +1,26 @@
 import deepEqual from "deep-equal";
 
 import type {
+    WorkerToRenderMessage,
+    IPropertyValue,
+    IMessageFromWorker,
+    IWasmFlowRuntime
+} from "eez-studio-types";
+
+import { getClassByName } from "project-editor/core/object";
+
+import type {
     RendererToWorkerMessage,
     IGlobalVariable
 } from "project-editor/flow/runtime/wasm-worker-interfaces";
-import type { WorkerToRenderMessage, IPropertyValue } from "eez-studio-types";
+
 import {
     getValue,
     getArrayValue,
     createWasmValue
 } from "project-editor/flow/runtime/wasm-value";
+
 import { DashboardComponentContext } from "project-editor/flow/runtime/worker-dashboard-component-context";
-import type { IMessageFromWorker, IWasmFlowRuntime } from "eez-studio-types";
-import { getClassByName } from "project-editor/core/object";
 
 const eez_flow_runtime_constructor = require("project-editor/flow/runtime/eez_runtime.js");
 const lvgl_flow_runtime_constructor = require("project-editor/flow/runtime/lvgl_runtime.js");
@@ -62,6 +70,8 @@ function writeDebuggerBuffer(wasmModuleId: number, buffer: any) {
 }
 
 function finishToDebuggerMessage(wasmModuleId: number) {}
+
+////////////////////////////////////////////////////////////////////////////////
 
 function executeScpi(
     wasmModuleId: number,
@@ -147,6 +157,8 @@ function getLvglImageByName(wasmModuleId: number, name: string) {
     });
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 (global as any).startToDebuggerMessage = startToDebuggerMessage;
 (global as any).writeDebuggerBuffer = writeDebuggerBuffer;
 (global as any).finishToDebuggerMessage = finishToDebuggerMessage;
@@ -175,6 +187,7 @@ export function createWasmWorker(
             postWorkerToRenderMessage
         );
     }
+
     wasmFlowRuntimes.set(wasmModuleId, WasmFlowRuntime);
 
     function initObjectGlobalVariableValues(

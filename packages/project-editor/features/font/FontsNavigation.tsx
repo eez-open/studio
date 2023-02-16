@@ -4,7 +4,7 @@ import { observer } from "mobx-react";
 import { IEezObject, getParent } from "project-editor/core/object";
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { ProjectContext } from "project-editor/project/context";
-import { NavigationComponent } from "project-editor/project/NavigationComponent";
+import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
 import { Font } from "./font";
 
 ////////////////////////////////////////////////////////////////////////////////

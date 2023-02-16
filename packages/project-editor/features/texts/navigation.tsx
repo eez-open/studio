@@ -4,7 +4,7 @@ import xliff from "xliff";
 
 import * as notification from "eez-studio-ui/notification";
 import { ProjectContext } from "project-editor/project/context";
-import { NavigationComponent } from "project-editor/project/NavigationComponent";
+import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
 import { LayoutModels } from "project-editor/store";
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { observer } from "mobx-react";

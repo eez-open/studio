@@ -14,7 +14,8 @@ import type { ConnectionBase } from "instrument/connection/connection-base";
 import type { AssetsMap, ValueType } from "eez-studio-types";
 
 import { showSelectInstrumentDialog } from "project-editor/flow/components/actions/instrument";
-import { ConnectionLine, Flow } from "project-editor/flow/flow";
+import { Flow } from "project-editor/flow/flow";
+import { ConnectionLine } from "project-editor/flow/connection-line";
 import { Component, Widget } from "project-editor/flow/component";
 import {
     IFlowContext,
@@ -28,7 +29,7 @@ import {
     FlowState,
     RuntimeBase,
     SingleStepMode
-} from "project-editor/flow/runtime";
+} from "project-editor/flow/runtime/runtime";
 import { ProjectEditorStore } from "project-editor/store";
 
 import { getObjectFromStringPath } from "project-editor/store";

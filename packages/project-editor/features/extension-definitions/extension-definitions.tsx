@@ -21,10 +21,9 @@ import {
     propertyNotUniqueMessage
 } from "project-editor/store";
 
-import { metrics } from "project-editor/features/extension-definitions/metrics";
 import { ProjectContext } from "project-editor/project/context";
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
-import { NavigationComponent } from "project-editor/project/NavigationComponent";
+import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -323,6 +322,5 @@ export default {
     },
     check: (object: IEezObject) => {
         return [];
-    },
-    metrics: metrics
+    }
 };

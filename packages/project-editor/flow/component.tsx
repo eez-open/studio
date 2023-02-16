@@ -145,6 +145,10 @@ import {
     TimelineKeyframePropertyUI,
     timelineStyleHook
 } from "project-editor/flow/timeline";
+import {
+    getInputDisplayName,
+    getOutputDisplayName
+} from "project-editor/flow/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -957,70 +961,6 @@ export class CustomOutput extends EezObject implements ComponentOutput {
             displayName: this.name
         };
     }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function getInputDisplayName(
-    component: Component | undefined,
-    componentInput: ComponentInput | string
-): string {
-    if (typeof componentInput == "string") {
-        if (componentInput == "@seqin") {
-            return "seqin";
-        }
-        if (component) {
-            const input = component.inputs.find(
-                input => input.name == componentInput
-            );
-            if (input) {
-                return getInputDisplayName(component, input);
-            }
-        }
-        return componentInput;
-    } else if (componentInput.displayName) {
-        if (typeof componentInput.displayName === "string") {
-            return componentInput.displayName;
-        }
-        if (component) {
-            return componentInput.displayName(component, componentInput);
-        }
-    }
-    if (componentInput.name == "@seqin") {
-        return "seqin";
-    }
-    return componentInput.name;
-}
-
-export function getOutputDisplayName(
-    component: Component | undefined,
-    componentOutput: ComponentOutput | string
-): string {
-    if (typeof componentOutput == "string") {
-        if (componentOutput == "@seqout") {
-            return "seqout";
-        }
-        if (component) {
-            const output = component.outputs.find(
-                output => output.name == componentOutput
-            );
-            if (output) {
-                return getOutputDisplayName(component, output);
-            }
-        }
-        return componentOutput;
-    } else if (componentOutput.displayName) {
-        if (typeof componentOutput.displayName === "string") {
-            return componentOutput.displayName;
-        }
-        if (component) {
-            return componentOutput.displayName(component, componentOutput);
-        }
-    }
-    if (componentOutput.name == "@seqout") {
-        return "seqout";
-    }
-    return componentOutput.name;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

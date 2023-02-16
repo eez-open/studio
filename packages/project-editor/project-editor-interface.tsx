@@ -2,15 +2,14 @@ import type { ProjectEditorTab, Tabs } from "home/tabs-store";
 import type { ProjectEditorFeature } from "project-editor/store/features";
 import type { IDocumentSearch } from "project-editor/core/search";
 import type { DataContext } from "project-editor/features/variable/variable";
-import type { RemoteRuntime } from "project-editor/flow/remote-runtime";
+import type { RemoteRuntime } from "project-editor/flow/runtime/remote-runtime";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
-import type { DebugInfoRuntime } from "project-editor/flow/debug-info-runtime";
+import type { DebugInfoRuntime } from "project-editor/flow/runtime/debug-info-runtime";
 import type {
     build,
     backgroundCheck,
     buildExtensions
 } from "project-editor/build/build";
-import type { getAllMetrics } from "project-editor/project/metrics";
 import type {
     checkAssetId,
     getFlow,
@@ -30,11 +29,8 @@ import type {
     Glyph,
     rebuildLvglFonts
 } from "project-editor/features/font/font";
-import type {
-    ConnectionLine,
-    Flow,
-    FlowFragment
-} from "project-editor/flow/flow";
+import type { Flow, FlowFragment } from "project-editor/flow/flow";
+import type { ConnectionLine } from "project-editor/flow/connection-line";
 import type { Action, findAction } from "project-editor/features/action/action";
 import type {
     ScpiCommand,
@@ -54,12 +50,12 @@ import type {
     getNavigationObject,
     navigateTo,
     selectObject
-} from "project-editor/project/NavigationComponentFactory";
+} from "project-editor/project/ui/NavigationComponentFactory";
 import type {
     createEditorState,
     getEditorComponent,
     getAncestorWithEditorComponent
-} from "project-editor/project/EditorComponentFactory";
+} from "project-editor/project/ui/EditorComponentFactory";
 import type { browseGlyph } from "project-editor/features/font/FontEditor";
 import type { Variable } from "project-editor/features/variable/variable";
 import type {
@@ -92,7 +88,6 @@ export interface IProjectEditor {
         backgroundCheck: typeof backgroundCheck;
         buildExtensions: typeof buildExtensions;
     };
-    getAllMetrics: typeof getAllMetrics;
     ProjectClass: typeof Project;
     FlowClass: typeof Flow;
     FlowFragmentClass: typeof FlowFragment;

@@ -13,7 +13,7 @@ import { observer } from "mobx-react";
 import { Loader } from "eez-studio-ui/loader";
 
 import { ProjectContext } from "project-editor/project/context";
-import { EditorComponent } from "project-editor/project/EditorComponent";
+import { EditorComponent } from "project-editor/project/ui/EditorComponent";
 import {
     getAncestorOfType,
     getClassInfo,
@@ -44,7 +44,8 @@ import {
     FlowViewer
 } from "project-editor/features/changes/flow-viewer";
 import { Transform } from "project-editor/flow/editor/transform";
-import { ConnectionLine, Flow } from "project-editor/flow/flow";
+import { Flow } from "project-editor/flow/flow";
+import { ConnectionLine } from "project-editor/flow/connection-line";
 
 import {
     MEMORY_HASH,

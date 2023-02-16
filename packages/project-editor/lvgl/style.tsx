@@ -13,7 +13,8 @@ import {
 } from "project-editor/core/object";
 import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import { ProjectContext } from "project-editor/project/context";
-import { NavigationComponent } from "project-editor/project/NavigationComponent";
+import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
+import { EditorComponent } from "project-editor/project/ui/EditorComponent";
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
@@ -23,7 +24,6 @@ import { createObject } from "project-editor/store";
 import type { Project } from "project-editor/project/project";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 import { LVGLStylesEditorRuntime } from "project-editor/lvgl/page-runtime";
-import { EditorComponent } from "project-editor/project/EditorComponent";
 import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
 import { Icon } from "eez-studio-ui/icon";
 

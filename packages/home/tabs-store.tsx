@@ -41,7 +41,7 @@ import { Loader } from "eez-studio-ui/loader";
 import { ProjectEditorStore } from "project-editor/store";
 
 import { ProjectContext } from "project-editor/project/context";
-import { ProjectEditorView } from "project-editor/project/ProjectEditor";
+import { ProjectEditorView } from "project-editor/project/ui/ProjectEditor";
 import { firstTime } from "./first-time";
 import { initProjectEditor } from "project-editor/project-editor-bootstrap";
 import { PROJECT_TAB_ID_PREFIX } from "home/tabs-store-conf";
@@ -568,7 +568,6 @@ export class ProjectEditorTab implements IHomeTab {
             if (projectEditorStore.navigationStore.selectedPanel)
                 projectEditorStore.navigationStore.selectedPanel.deleteSelection();
         };
-        const showMetrics = () => projectEditorStore.showMetrics();
 
         ipcRenderer.on("save", save);
         ipcRenderer.on("saveAs", saveAs);
@@ -581,7 +580,6 @@ export class ProjectEditorTab implements IHomeTab {
         ipcRenderer.on("copy", copy);
         ipcRenderer.on("paste", paste);
         ipcRenderer.on("delete", deleteSelection);
-        ipcRenderer.on("showProjectMetrics", showMetrics);
 
         this.removeListeners = () => {
             ipcRenderer.removeListener("save", save);
@@ -595,7 +593,6 @@ export class ProjectEditorTab implements IHomeTab {
             ipcRenderer.removeListener("copy", copy);
             ipcRenderer.removeListener("paste", paste);
             ipcRenderer.removeListener("delete", deleteSelection);
-            ipcRenderer.removeListener("showProjectMetrics", showMetrics);
         };
     }
 

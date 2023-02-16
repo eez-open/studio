@@ -41,7 +41,6 @@ import { showGenericDialog } from "project-editor/core/util";
 import { AbsoluteFileInput } from "project-editor/ui-components/FileInput";
 import { getProject, Project } from "project-editor/project/project";
 
-import { metrics } from "project-editor/features/bitmap/metrics";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import {
@@ -638,6 +637,5 @@ export default {
         }
 
         return messages;
-    },
-    metrics
+    }
 };

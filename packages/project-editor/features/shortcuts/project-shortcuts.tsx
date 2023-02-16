@@ -31,8 +31,7 @@ import type { ExtensionDefinition } from "project-editor/features/extension-defi
 
 import { ProjectContext } from "project-editor/project/context";
 
-import { metrics } from "project-editor/features/shortcuts/metrics";
-import { EditorComponent } from "project-editor/project/EditorComponent";
+import { EditorComponent } from "project-editor/project/ui/EditorComponent";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -286,7 +285,6 @@ export default {
             shortcuts: []
         };
     },
-    metrics: metrics,
     collectExtensionDefinitions: (
         project: Project,
         extensionDefinition: ExtensionDefinition,

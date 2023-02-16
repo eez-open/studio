@@ -32,7 +32,6 @@ import {
     getLabel
 } from "project-editor/store";
 
-import { metrics } from "project-editor/features/scpi/metrics";
 import {
     ScpiEnum,
     findScpiEnum,
@@ -954,6 +953,5 @@ export default {
             subsystems: [],
             enums: []
         };
-    },
-    metrics: metrics
+    }
 };

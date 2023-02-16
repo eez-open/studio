@@ -13,8 +13,8 @@ import {
 import { PageTabState } from "project-editor/features/page/PageEditor";
 import { LayoutModels, objectToString } from "project-editor/store";
 import { RenderVariableStatus } from "project-editor/features/variable/variable";
-import { FlowTabState } from "project-editor/flow/flow";
-import { RuntimeType } from "./project-type-traits";
+import { FlowTabState } from "project-editor/flow/flow-tab-state";
+import { RuntimeType } from "project-editor/project/project-type-traits";
 
 const RUN_ICON = (
     <svg

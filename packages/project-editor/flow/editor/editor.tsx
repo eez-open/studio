@@ -31,7 +31,8 @@ import { DragAndDropManager } from "project-editor/core/dd";
 import { IPanel, isObjectInstanceOf } from "project-editor/store";
 
 import type { IEditorOptions } from "project-editor/flow/flow-interfaces";
-import type { Flow, FlowTabState } from "project-editor/flow/flow";
+import type { Flow } from "project-editor/flow/flow";
+import type { FlowTabState } from "project-editor/flow/flow-tab-state";
 import type { Component } from "project-editor/flow/component";
 
 import { ProjectContext } from "project-editor/project/context";
@@ -60,7 +61,7 @@ import {
     RubberBandSelectionMouseHandler
 } from "project-editor/flow/editor/mouse-handler";
 import { Svg, ComponentEnclosure } from "project-editor/flow/editor/render";
-import { ConnectionLines } from "project-editor/flow/editor/ConnectionLineComponent";
+import { ConnectionLines } from "project-editor/flow/connection-line/ConnectionLineComponent";
 import { Selection } from "project-editor/flow/editor/selection";
 import { setupDragScroll } from "project-editor/flow/editor/drag-scroll";
 import {

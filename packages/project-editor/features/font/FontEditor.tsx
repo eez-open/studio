@@ -22,7 +22,7 @@ import { validators } from "eez-studio-shared/validation";
 import * as notification from "eez-studio-ui/notification";
 
 import { ProjectContext } from "project-editor/project/context";
-import { EditorComponent } from "project-editor/project/EditorComponent";
+import { EditorComponent } from "project-editor/project/ui/EditorComponent";
 
 import {
     EditorImageHitTestResult,

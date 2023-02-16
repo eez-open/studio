@@ -7,7 +7,7 @@ import {
     PropertyType
 } from "project-editor/core/object";
 import { Component } from "project-editor/flow/component";
-import { ConnectionLine } from "project-editor/flow/flow";
+import { ConnectionLine } from "project-editor/flow/connection-line";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Project } from "project-editor/project/project";
 import {

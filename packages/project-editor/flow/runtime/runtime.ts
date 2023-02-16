@@ -19,7 +19,9 @@ import {
     getObjectPathAsString,
     LayoutModels
 } from "project-editor/store";
-import { ConnectionLine, Flow, FlowTabState } from "project-editor/flow/flow";
+import { Flow } from "project-editor/flow/flow";
+import { FlowTabState } from "project-editor/flow/flow-tab-state";
+import { ConnectionLine } from "project-editor/flow/connection-line";
 import { CatchErrorActionComponent } from "project-editor/flow/components/actions";
 import { Component, Widget } from "project-editor/flow/component";
 import { IEezObject } from "project-editor/core/object";

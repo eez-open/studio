@@ -7,7 +7,7 @@ import classNames from "classnames";
 import { Messages } from "project-editor/ui-components/Output";
 
 import { ProjectContext } from "project-editor/project/context";
-import { Toolbar } from "project-editor/project/Toolbar";
+import { Toolbar } from "project-editor/project/ui/Toolbar";
 import {
     PageEditor,
     PageTabState
@@ -29,11 +29,11 @@ import { getId, IEezObject } from "project-editor/core/object";
 import {
     getNavigationComponent,
     getNavigationComponentId
-} from "project-editor/project/NavigationComponentFactory";
-import { getEditorComponent } from "project-editor/project/EditorComponentFactory";
+} from "project-editor/project/ui/NavigationComponentFactory";
+import { getEditorComponent } from "project-editor/project/ui/EditorComponentFactory";
 import { Icon } from "eez-studio-ui/icon";
 import { Loader } from "eez-studio-ui/loader";
-import { SingleStepMode } from "project-editor/flow/runtime";
+import { SingleStepMode } from "project-editor/flow/runtime/runtime";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { QueuePanel } from "project-editor/flow/debugger/QueuePanel";
 import { WatchPanel } from "project-editor/flow/debugger/WatchPanel";

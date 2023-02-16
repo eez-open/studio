@@ -17,7 +17,6 @@ import type { FSWatcher } from "chokidar";
 import { confirmSave } from "eez-studio-shared/util-renderer";
 
 import * as notification from "eez-studio-ui/notification";
-import { showGenericDialog, TableField } from "eez-studio-ui/generic-dialog";
 
 import {
     IEezObject,
@@ -33,7 +32,7 @@ import type { CurrentSearch } from "project-editor/core/search";
 
 import type { DataContext } from "project-editor/features/variable/variable";
 
-import type { RuntimeBase } from "project-editor/flow/runtime";
+import type { RuntimeBase } from "project-editor/flow/runtime/runtime";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
@@ -588,29 +587,6 @@ export class ProjectEditorStore {
         }
 
         return true;
-    }
-
-    showMetrics() {
-        const ID = "eez-project-editor-project-metrics";
-        if (!document.getElementById(ID)) {
-            showGenericDialog({
-                dialogDefinition: {
-                    id: ID,
-                    title: "Project Metrics",
-                    fields: [
-                        {
-                            name: "metrics",
-                            fullLine: true,
-                            type: TableField
-                        }
-                    ]
-                },
-                values: {
-                    metrics: ProjectEditor.getAllMetrics(this)
-                },
-                showOkButton: false
-            }).catch(() => {});
-        }
     }
 
     get masterProjectEnabled() {

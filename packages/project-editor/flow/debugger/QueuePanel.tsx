@@ -3,9 +3,9 @@ import { observer } from "mobx-react";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
 import { Panel } from "project-editor/ui-components/Panel";
 import { action, computed, makeObservable } from "mobx";
-import { QueueTask, RuntimeBase } from "project-editor/flow/runtime";
+import { QueueTask, RuntimeBase } from "project-editor/flow/runtime/runtime";
 import { IconAction } from "eez-studio-ui/action";
-import { DebugInfoRuntime } from "project-editor/flow/debug-info-runtime";
+import { DebugInfoRuntime } from "project-editor/flow//runtime/debug-info-runtime";
 import { getQueueTaskLabel } from "project-editor/flow/debugger/logs";
 
 ////////////////////////////////////////////////////////////////////////////////

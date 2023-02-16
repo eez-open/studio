@@ -6,7 +6,7 @@ import {
     Rect
 } from "eez-studio-shared/geometry";
 import { getId, getParent, IEezObject } from "project-editor/core/object";
-import type { ConnectionLine } from "project-editor/flow/flow";
+import { ConnectionLine } from "project-editor/flow/connection-line";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getClassInfo } from "project-editor/store";

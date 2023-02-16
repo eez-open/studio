@@ -23,7 +23,8 @@ import { IPanel } from "project-editor/store";
 
 import { ProjectContext } from "project-editor/project/context";
 
-import type { Flow, FlowTabState } from "project-editor/flow/flow";
+import type { Flow } from "project-editor/flow/flow";
+import type { FlowTabState } from "project-editor/flow/flow-tab-state";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { RuntimeFlowContext } from "project-editor/flow/runtime-viewer/context";
 
@@ -31,7 +32,7 @@ import { Svg } from "project-editor/flow/editor/render";
 import {
     ConnectionLineDebugValues,
     ConnectionLines
-} from "project-editor/flow/editor/ConnectionLineComponent";
+} from "project-editor/flow/connection-line/ConnectionLineComponent";
 import { getObjectBoundingRect } from "project-editor/flow/editor/bounding-rects";
 import {
     IMouseHandler,

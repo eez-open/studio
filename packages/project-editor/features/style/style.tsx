@@ -40,7 +40,6 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { findFont } from "project-editor/features/font/font";
 import { getThemedColor, ITheme } from "project-editor/features/style/theme";
 import type { Font } from "project-editor/features/font/font";
-import { metrics } from "project-editor/features/style/metrics";
 import type { Project } from "project-editor/project/project";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
@@ -2066,7 +2065,6 @@ export default {
     typeClass: Style,
     icon: "format_color_fill",
     create: () => [],
-    metrics,
     afterLoadProject: (project: Project) => {
         if (project.themes) {
             const themes = project.themes;

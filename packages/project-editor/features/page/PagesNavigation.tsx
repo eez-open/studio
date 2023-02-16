@@ -18,7 +18,7 @@ import { Tree } from "project-editor/ui-components/Tree";
 import { ProjectContext } from "project-editor/project/context";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { NavigationComponent } from "project-editor/project/NavigationComponent";
+import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
 import type { PageTabState } from "project-editor/features/page/PageEditor";
 import { LocalVariables } from "../variable/VariablesNavigation";
 import type { Widget } from "project-editor/flow/component";

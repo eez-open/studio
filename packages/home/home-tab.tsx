@@ -640,7 +640,7 @@ const Projects = observer(
                                     onClick={async () => {
                                         const { showNewProjectWizard } =
                                             await import(
-                                                "project-editor/project/Wizard"
+                                                "project-editor/project/ui/Wizard"
                                             );
                                         showNewProjectWizard();
                                     }}

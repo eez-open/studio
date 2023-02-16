@@ -37,7 +37,6 @@ import {
     isAppletProject
 } from "project-editor/project/project-type-traits";
 import type { Project } from "project-editor/project/project";
-import { metrics } from "project-editor/features/variable/metrics";
 import type {
     IDataContext,
     IVariable
@@ -1428,8 +1427,7 @@ export default {
         }
 
         return messages;
-    },
-    metrics: metrics
+    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
