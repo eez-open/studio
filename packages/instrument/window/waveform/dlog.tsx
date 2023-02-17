@@ -433,6 +433,7 @@ export class DlogWaveform extends FileHistoryItem {
             viewOptions => {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.viewOptions, viewOptions)) {
+                    console.log(this);
                     logUpdate(
                         activityLogStore,
                         {
@@ -498,6 +499,7 @@ export class DlogWaveform extends FileHistoryItem {
                         })
                     );
                     runInAction(() => (this.message = messageStr));
+                    console.log(this);
                     logUpdate(
                         activityLogStore,
                         {

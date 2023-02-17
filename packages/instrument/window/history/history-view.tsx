@@ -1,8 +1,8 @@
 import { dialog } from "@electron/remote";
 import React from "react";
-import { createRoot } from "react-dom/client";
-import { observable, computed, action, keys, makeObservable } from "mobx";
+import { observable, action, keys, makeObservable } from "mobx";
 import { observer } from "mobx-react";
+import * as FlexLayout from "flexlayout-react";
 
 import { readBinaryFile } from "eez-studio-shared/util-electron";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
@@ -10,9 +10,10 @@ import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { IconAction, ButtonAction } from "eez-studio-ui/action";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import {
-    SideDock,
-    DockablePanels,
-    SideDockComponent
+    SideDock2,
+    SideDockComponent2,
+    layoutModels,
+    LayoutModels
 } from "eez-studio-ui/side-dock";
 import { SearchInput } from "eez-studio-ui/search-input";
 
@@ -355,21 +356,10 @@ export class HistoryViewComponent extends React.Component<{
     persistId: string;
     simple?: boolean;
 }> {
-    animationFrameRequestId: any;
     history: HistoryListComponentClass | null;
-    sideDock: SideDockComponent | null;
+    sideDock: SideDockComponent2 | null;
 
     searchText: string = "";
-
-    frameAnimation = () => {
-        if (this.sideDock) {
-            this.sideDock.updateSize();
-        }
-
-        this.animationFrameRequestId = window.requestAnimationFrame(
-            this.frameAnimation
-        );
-    };
 
     constructor(props: {
         appStore: IAppStore;
@@ -380,22 +370,17 @@ export class HistoryViewComponent extends React.Component<{
 
         makeObservable(this, {
             searchText: observable,
-            onSearchChange: action.bound,
-            defaultLayoutConfig: computed
+            onSearchChange: action.bound
         });
     }
 
     componentDidMount() {
-        this.frameAnimation();
-
         if (!this.props.simple) {
             this.props.appStore.navigationStore.mainHistoryView = this;
         }
     }
 
     componentWillUnmount() {
-        window.cancelAnimationFrame(this.animationFrameRequestId);
-
         if (!this.props.simple) {
             this.props.appStore.navigationStore.mainHistoryView = undefined;
         }
@@ -414,205 +399,59 @@ export class HistoryViewComponent extends React.Component<{
         this.props.appStore.history.search.search(this.searchText);
     }
 
-    registerComponents = (factory: any) => {
+    factory = (node: FlexLayout.TabNode) => {
+        var component = node.getComponent();
+
         const appStore = this.props.appStore;
 
-        factory.registerComponent(
-            "SearchResults",
-            function (container: any, props: any) {
-                const root = createRoot(container.getElement()[0]);
-                root.render(
-                    <div
-                        style={{
-                            position: "absolute",
-                            width: "100%",
-                            height: "100%",
-                            display: "flex"
-                        }}
-                    >
-                        <SearchResults history={appStore.history} />
-                    </div>
-                );
-            }
-        );
-
-        factory.registerComponent(
-            "Filters",
-            function (container: any, props: any) {
-                const root = createRoot(container.getElement()[0]);
-                root.render(<FiltersComponent appStore={appStore} />);
-            }
-        );
-
-        factory.registerComponent(
-            "Calendar",
-            function (container: any, props: any) {
-                const root = createRoot(container.getElement()[0]);
-                root.render(
-                    <div
-                        style={{
-                            height: "100%",
-                            overflow: "auto"
-                        }}
-                    >
-                        <Calendar history={appStore.history} />
-                    </div>
-                );
-            }
-        );
-
-        factory.registerComponent(
-            "Sessions",
-            function (container: any, props: any) {
-                const root = createRoot(container.getElement()[0]);
-                root.render(
-                    <div
-                        style={{
-                            position: "absolute",
-                            width: "100%",
-                            height: "100%",
-                            display: "flex"
-                        }}
-                    >
-                        <SessionList
-                            appStore={appStore}
-                            history={appStore.history}
-                        />
-                    </div>
-                );
-            }
-        );
-
-        factory.registerComponent(
-            "Scrapbook",
-            function (container: any, props: any) {
-                const root = createRoot(container.getElement()[0]);
-                root.render(
-                    <Scrapbook appStore={appStore} history={appStore.history} />
-                );
-            }
-        );
-    };
-
-    get searchResultsItem() {
-        return {
-            id: "searchResults",
-            type: "component",
-            componentName: "SearchResults",
-            componentState: {},
-            title: "Search results",
-            isClosable: false
-        };
-    }
-
-    get filtersItem() {
-        return {
-            id: "filters",
-            type: "component",
-            componentName: "Filters",
-            componentState: {},
-            title: "Filters",
-            isClosable: false
-        };
-    }
-
-    get calendarItem() {
-        return {
-            id: "calendar",
-            type: "component",
-            componentName: "Calendar",
-            componentState: {},
-            title: "Calendar",
-            isClosable: false
-        };
-    }
-
-    get sessionsItem() {
-        return {
-            id: "sessions",
-            type: "component",
-            componentName: "Sessions",
-            componentState: {},
-            title: "Sessions",
-            isClosable: false
-        };
-    }
-
-    get scrapbookItem() {
-        return {
-            id: "scrapbook",
-            type: "component",
-            componentName: "Scrapbook",
-            componentState: {},
-            title: "Scrapbook",
-            isClosable: false
-        };
-    }
-
-    get defaultLayoutConfig() {
-        let content;
-        if (this.props.appStore.history.search.searchActive) {
-            if (this.props.appStore.history.isSessionsSupported) {
-                content = [
-                    {
-                        type: "stack",
-                        content: [
-                            this.searchResultsItem,
-                            this.calendarItem,
-                            this.sessionsItem,
-                            this.filtersItem,
-                            this.scrapbookItem
-                        ]
-                    }
-                ];
-            } else {
-                content = [
-                    {
-                        type: "stack",
-                        content: [
-                            this.searchResultsItem,
-                            this.calendarItem,
-                            this.filtersItem,
-                            this.scrapbookItem
-                        ]
-                    }
-                ];
-            }
-        } else {
-            if (this.props.appStore.history.isSessionsSupported) {
-                content = [
-                    {
-                        type: "stack",
-                        content: [
-                            this.calendarItem,
-                            this.sessionsItem,
-                            this.filtersItem,
-                            this.scrapbookItem
-                        ]
-                    }
-                ];
-            } else {
-                content = [
-                    {
-                        type: "stack",
-                        content: [
-                            this.calendarItem,
-                            this.filtersItem,
-                            this.scrapbookItem
-                        ]
-                    }
-                ];
-            }
+        if (component === "SearchResults") {
+            return (
+                <div
+                    style={{
+                        position: "absolute",
+                        width: "100%",
+                        height: "100%",
+                        display: "flex"
+                    }}
+                >
+                    <SearchResults history={appStore.history} />
+                </div>
+            );
+        } else if (component === "Filters") {
+            return <FiltersComponent appStore={appStore} />;
+        } else if (component === "Calendar") {
+            return (
+                <div
+                    style={{
+                        height: "100%",
+                        overflow: "auto"
+                    }}
+                >
+                    <Calendar history={appStore.history} />
+                </div>
+            );
+        } else if (component === "Sessions") {
+            return (
+                <div
+                    style={{
+                        position: "absolute",
+                        width: "100%",
+                        height: "100%",
+                        display: "flex"
+                    }}
+                >
+                    <SessionList
+                        appStore={appStore}
+                        history={appStore.history}
+                    />
+                </div>
+            );
+        } else if (component === "Scrapbook") {
+            return <Scrapbook appStore={appStore} history={appStore.history} />;
         }
 
-        const defaultLayoutConfig = {
-            settings: DockablePanels.DEFAULT_SETTINGS,
-            dimensions: DockablePanels.DEFAULT_DIMENSIONS,
-            content
-        };
-
-        return defaultLayoutConfig;
-    }
+        return null;
+    };
 
     renderHistoryComponentWithTools(historyComponent: JSX.Element) {
         const appStore = this.props.appStore;
@@ -702,26 +541,20 @@ export class HistoryViewComponent extends React.Component<{
             />
         );
 
-        let layoutId = "layout/3";
-        if (this.props.appStore.history.search.searchActive) {
-            layoutId += "/with-search-results";
-        }
-        if (!this.props.appStore.history.isSessionsSupported) {
-            layoutId += "/without-sessions";
-        }
-
         return (
-            <SideDock
+            <SideDock2
                 ref={ref => (this.sideDock = ref)}
                 persistId={this.props.persistId + "/side-dock-1"}
-                layoutId={layoutId}
-                defaultLayoutConfig={this.defaultLayoutConfig}
-                registerComponents={this.registerComponents}
+                flexLayoutModel={layoutModels.getHistoryViewModel(
+                    this.props.appStore.history.search.searchActive,
+                    this.props.appStore.history.isSessionsSupported
+                )}
+                factory={this.factory}
                 header={input}
                 width={420}
             >
                 {historyComponentWithTools}
-            </SideDock>
+            </SideDock2>
         );
     }
 }
@@ -761,14 +594,11 @@ export function showSessionsList(navigationStore: INavigationStore) {
         if (!sideDock.isOpen) {
             sideDock.toggleIsOpen();
         } else {
-            if (sideDock.dockablePanels) {
-                const items =
-                    sideDock.dockablePanels.goldenLayout.root.getItemsById(
-                        "sessions"
-                    );
-                if (items.length === 1) {
-                    items[0].parent.setActiveContentItem(items[0]);
-                }
+            if (sideDock.props.flexLayoutModel) {
+                layoutModels.selectTab(
+                    sideDock.props.flexLayoutModel,
+                    LayoutModels.HISTORY_VIEW_SESSIONS_TAB_ID
+                );
             }
             return;
         }

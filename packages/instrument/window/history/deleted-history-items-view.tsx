@@ -1,14 +1,10 @@
 import React from "react";
-import { createRoot } from "react-dom/client";
-import { observable, computed, action, makeObservable } from "mobx";
+import { observable, action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
+import * as FlexLayout from "flexlayout-react";
 
 import { IconAction, ButtonAction } from "eez-studio-ui/action";
-import {
-    SideDock,
-    DockablePanels,
-    SideDockComponent
-} from "eez-studio-ui/side-dock";
+import { layoutModels, SideDock2 } from "eez-studio-ui/side-dock";
 import { SearchInput } from "eez-studio-ui/search-input";
 
 import { IAppStore } from "instrument/window/history/history";
@@ -107,37 +103,16 @@ export const DeletedHistoryItemsView = observer(
         appStore: IAppStore;
         persistId: string;
     }> {
-        animationFrameRequestId: any;
         history: HistoryListComponentClass | null;
-        sideDock: SideDockComponent | null;
         searchText: string = "";
-
-        frameAnimation = () => {
-            if (this.sideDock) {
-                this.sideDock.updateSize();
-            }
-
-            this.animationFrameRequestId = window.requestAnimationFrame(
-                this.frameAnimation
-            );
-        };
 
         constructor(props: any) {
             super(props);
 
             makeObservable(this, {
                 searchText: observable,
-                onSearchChange: action.bound,
-                defaultLayoutConfig: computed
+                onSearchChange: action.bound
             });
-        }
-
-        componentDidMount() {
-            this.frameAnimation();
-        }
-
-        componentWillUnmount() {
-            window.cancelAnimationFrame(this.animationFrameRequestId);
         }
 
         onSelectHistoryItemsCancel = () => {
@@ -151,98 +126,39 @@ export const DeletedHistoryItemsView = observer(
             );
         }
 
-        registerComponents = (factory: any) => {
+        factory = (node: FlexLayout.TabNode) => {
+            var component = node.getComponent();
+
             const appStore = this.props.appStore;
 
-            factory.registerComponent(
-                "SearchResults",
-                function (container: any, props: any) {
-                    const root = createRoot(container.getElement()[0]);
-                    root.render(
-                        <div
-                            style={{
-                                position: "absolute",
-                                width: "100%",
-                                height: "100%",
-                                display: "flex"
-                            }}
-                        >
-                            <SearchResults
-                                history={appStore.deletedItemsHistory}
-                            />
-                        </div>
-                    );
-                }
-            );
-
-            factory.registerComponent(
-                "Calendar",
-                function (container: any, props: any) {
-                    const root = createRoot(container.getElement()[0]);
-                    root.render(
-                        <div
-                            style={{
-                                height: "100%",
-                                overflow: "auto"
-                            }}
-                        >
-                            <Calendar history={appStore.deletedItemsHistory} />
-                        </div>
-                    );
-                }
-            );
-        };
-
-        get searchResultsComponent() {
-            return {
-                type: "component",
-                componentName: "SearchResults",
-                componentState: {},
-                title: "Search results",
-                isClosable: false
-            };
-        }
-
-        get calendarComponent() {
-            return {
-                type: "component",
-                componentName: "Calendar",
-                componentState: {},
-                title: "Calendar",
-                isClosable: false
-            };
-        }
-
-        get defaultLayoutConfig() {
-            let content;
-
-            if (this.props.appStore.deletedItemsHistory.search.searchActive) {
-                content = [
-                    {
-                        type: "stack",
-                        content: [
-                            this.searchResultsComponent,
-                            this.calendarComponent
-                        ]
-                    }
-                ];
-            } else {
-                content = [
-                    {
-                        type: "stack",
-                        content: [this.calendarComponent]
-                    }
-                ];
+            if (component === "SearchResults") {
+                return (
+                    <div
+                        style={{
+                            position: "absolute",
+                            width: "100%",
+                            height: "100%",
+                            display: "flex"
+                        }}
+                    >
+                        <SearchResults history={appStore.deletedItemsHistory} />
+                    </div>
+                );
+            } else if (component === "Calendar") {
+                return (
+                    <div
+                        style={{
+                            height: "100%",
+                            overflow: "auto"
+                        }}
+                    >
+                        <Calendar history={appStore.deletedItemsHistory} />
+                    </div>
+                );
             }
 
-            const defaultLayoutConfig = {
-                settings: DockablePanels.DEFAULT_SETTINGS,
-                dimensions: DockablePanels.DEFAULT_DIMENSIONS,
-                content
-            };
-
-            return defaultLayoutConfig;
-        }
+            return null;
+        };
 
         render() {
             const historyComponent = (
@@ -283,24 +199,19 @@ export const DeletedHistoryItemsView = observer(
                 />
             );
 
-            let layoutId =
-                "layout/2" +
-                (this.props.appStore.deletedItemsHistory.search.searchActive
-                    ? "/with-search-results"
-                    : "");
-
             return (
-                <SideDock
-                    ref={ref => (this.sideDock = ref)}
+                <SideDock2
                     persistId={this.props.persistId + "/side-dock"}
-                    layoutId={layoutId}
-                    defaultLayoutConfig={this.defaultLayoutConfig}
-                    registerComponents={this.registerComponents}
+                    flexLayoutModel={layoutModels.getDeletedHistoryViewModel(
+                        this.props.appStore.deletedItemsHistory.search
+                            .searchActive
+                    )}
+                    factory={this.factory}
                     header={input}
                     width={420}
                 >
                     {historyComponentWithTools}
-                </SideDock>
+                </SideDock2>
             );
         }
     }

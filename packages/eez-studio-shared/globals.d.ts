@@ -19,8 +19,4 @@ interface CanvasRenderingContext2D {
 }
 
 //
-declare class GoldenLayout {
-    constructor(config: any, layout: any);
-}
-
 declare module "xml-formatter";

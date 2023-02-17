@@ -387,17 +387,4 @@ export class Measurement implements IMeasurement {
 
         return this.name;
     }
-
-    get chartPanelConfiguration() {
-        return {
-            type: "component",
-            componentName: "MeasurementValue",
-            id: this.measurementId,
-            componentState: {
-                measurementId: this.measurementId
-            },
-            title: this.chartPanelTitle,
-            isClosable: false
-        };
-    }
 }

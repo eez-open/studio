@@ -232,10 +232,6 @@ class SettingsController {
             "main-css"
         ) as HTMLLinkElement;
 
-        const goldenlayoutLinkElement = document.getElementById(
-            "goldenlayout-css"
-        ) as HTMLLinkElement;
-
         const flexlayoutLinkElement = document.getElementById(
             "flexlayout-css"
         ) as HTMLLinkElement;
@@ -247,9 +243,6 @@ class SettingsController {
             mainLinkElement.href =
                 "../eez-studio-ui/_stylesheets/main-dark.css";
 
-            goldenlayoutLinkElement.href =
-                "../../node_modules/golden-layout/src/css/goldenlayout-dark-theme.css";
-
             flexlayoutLinkElement.href =
                 "../../node_modules/flexlayout-react/style/dark.css";
         } else {
@@ -257,9 +250,6 @@ class SettingsController {
                 "../../node_modules/bootstrap/dist/css/bootstrap.min.css";
 
             mainLinkElement.href = "../eez-studio-ui/_stylesheets/main.css";
-
-            goldenlayoutLinkElement.href =
-                "../../node_modules/golden-layout/src/css/goldenlayout-light-theme.css";
 
             flexlayoutLinkElement.href =
                 "../../node_modules/flexlayout-react/style/light.css";

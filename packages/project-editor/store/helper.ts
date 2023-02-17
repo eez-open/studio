@@ -1,6 +1,3 @@
-import { toJS } from "mobx";
-import { Menu, MenuItem } from "@electron/remote";
-
 import { humanize } from "eez-studio-shared/string";
 import * as notification from "eez-studio-ui/notification";
 
@@ -42,7 +39,7 @@ import {
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { createObject, objectToJson } from "project-editor/store/serialization";
-import { confirm, onAfterPaste } from "project-editor/core/util";
+import { confirm } from "project-editor/core/util";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -800,175 +797,9 @@ export function copyItem(object: IEezObject) {
     );
 }
 
-function duplicateItem(object: IEezObject) {
-    let parent = getParent(object) as IEezObject;
-
-    const project = getProject(object);
-
-    const duplicateObject = createObject(
-        project._DocumentStore,
-        toJS(object) as any,
-        getClass(object)
-    );
-
-    return getProjectEditorStore(object).addObject(parent, duplicateObject);
-}
-
 export interface IContextMenuContext {
     selectObject(object: IEezObject): void;
     selectObjects(objects: IEezObject[]): void;
-}
-
-export function createContextMenu(
-    context: IContextMenuContext,
-    object: IEezObject,
-    editable: boolean
-) {
-    let menuItems: Electron.MenuItem[] = [];
-
-    const projectEditorStore = getProjectEditorStore(object);
-
-    if (editable && canAdd(object)) {
-        menuItems.push(
-            new MenuItem({
-                label: "Add",
-                click: async () => {
-                    const aNewObject = await addItem(object);
-                    if (aNewObject) {
-                        context.selectObject(aNewObject);
-                    }
-                }
-            })
-        );
-    }
-
-    if (editable && canDuplicate(object)) {
-        menuItems.push(
-            new MenuItem({
-                label: "Duplicate",
-                click: () => {
-                    const aNewObject = duplicateItem(object);
-                    if (aNewObject) {
-                        context.selectObject(aNewObject);
-                    }
-                }
-            })
-        );
-    }
-
-    if (isArrayElement(object)) {
-        if (menuItems.length > 0) {
-            menuItems.push(
-                new MenuItem({
-                    type: "separator"
-                })
-            );
-        }
-
-        menuItems.push(
-            new MenuItem({
-                label: "Find All References",
-                click: () => {
-                    ProjectEditor.documentSearch.findAllReferences(object);
-                }
-            })
-        );
-    }
-
-    let clipboardMenuItems: Electron.MenuItem[] = [];
-
-    if (editable && canCut(object)) {
-        clipboardMenuItems.push(
-            new MenuItem({
-                label: "Cut",
-                click: () => {
-                    cutItem(object);
-                }
-            })
-        );
-    }
-
-    if (editable && canCopy(object)) {
-        clipboardMenuItems.push(
-            new MenuItem({
-                label: "Copy",
-                click: () => {
-                    copyItem(object);
-                }
-            })
-        );
-    }
-
-    if (editable && canPaste(projectEditorStore, object)) {
-        clipboardMenuItems.push(
-            new MenuItem({
-                label: "Paste",
-                click: () => {
-                    const aNewObject = pasteItem(object);
-                    if (aNewObject) {
-                        onAfterPaste(aNewObject, object);
-                        if (Array.isArray(aNewObject)) {
-                            context.selectObjects(aNewObject);
-                        } else {
-                            context.selectObject(aNewObject);
-                        }
-                    }
-                }
-            })
-        );
-    }
-
-    if (clipboardMenuItems.length > 0) {
-        if (menuItems.length > 0) {
-            menuItems.push(
-                new MenuItem({
-                    type: "separator"
-                })
-            );
-        }
-        menuItems = menuItems.concat(clipboardMenuItems);
-    }
-
-    if (editable && canDelete(object)) {
-        if (menuItems.length > 0) {
-            menuItems.push(
-                new MenuItem({
-                    type: "separator"
-                })
-            );
-        }
-
-        menuItems.push(
-            new MenuItem({
-                label: "Delete",
-                click: () => {
-                    deleteItems([object]);
-                }
-            })
-        );
-    }
-
-    extendContextMenu(context, object, [object], menuItems, editable);
-
-    if (menuItems.length > 0) {
-        const menu = new Menu();
-        menuItems.forEach(menuItem => menu.append(menuItem));
-        return menu;
-    }
-
-    return undefined;
-}
-
-export function showContextMenu(
-    context: IContextMenuContext,
-    object: IEezObject,
-    editable: boolean
-) {
-    const menu = createContextMenu(context, object, editable);
-
-    if (menu) {
-        menu.popup();
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
