@@ -153,7 +153,7 @@
         "serialport": "^10.4.0",
         "sha256": "^0.2.0",
         "showdown": "^1.9.1",
-        "simple-git": "^3.10.0",
+        "simple-git": "^3.16.0",
         "tinycolor2": "^1.4.1",
         "tmp": "0.1.0",
         "usb": "^1.8.0",
