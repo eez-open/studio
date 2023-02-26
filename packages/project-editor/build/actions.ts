@@ -3,7 +3,7 @@ import type { BuildResult } from "project-editor/store/features";
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 import type { Action } from "project-editor/features/action/action";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
-import type { ProjectEditorStore } from "project-editor/store";
+import type { ProjectStore } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -23,7 +23,7 @@ function buildActionsEnum(projectActions: Action[]) {
 }
 
 function buildActionsFuncsDecl(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     projectActions: Action[]
 ) {
     let actions = projectActions.map(action => {
@@ -31,9 +31,7 @@ function buildActionsFuncsDecl(
             "action_",
             action,
             NamingConvention.UnderscoreLowerCase
-        )}(${
-            projectEditorStore.projectTypeTraits.isLVGL ? "lv_event_t * e" : ""
-        });`;
+        )}(${projectStore.projectTypeTraits.isLVGL ? "lv_event_t * e" : ""});`;
     });
 
     return actions.join("\n");
@@ -93,7 +91,7 @@ export function buildActions(
 
         if (
             assets.option == "buildFiles" &&
-            assets.projectEditorStore.projectTypeTraits.hasFlowSupport
+            assets.projectStore.projectTypeTraits.hasFlowSupport
         ) {
             // only native
             projectActions = projectActions.filter(
@@ -110,7 +108,7 @@ export function buildActions(
             sectionNames.indexOf("ACTIONS_FUNCS_DECL") !== -1
         ) {
             result.ACTIONS_FUNCS_DECL = buildActionsFuncsDecl(
-                assets.projectEditorStore,
+                assets.projectStore,
                 projectActions
             );
         }
@@ -136,7 +134,7 @@ export function buildActions(
 
 export function buildActionNames(assets: Assets, dataBuffer: DataBuffer) {
     dataBuffer.writeArray(
-        assets.projectEditorStore.masterProject ? assets.actions : [],
+        assets.projectStore.masterProject ? assets.actions : [],
         action => {
             dataBuffer.writeString(action.name);
         }

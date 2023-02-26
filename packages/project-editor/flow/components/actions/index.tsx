@@ -20,7 +20,7 @@ import {
     getAncestorOfType,
     getChildOfObject,
     getListLabel,
-    getProjectEditorStore,
+    getProjectStore,
     Message,
     propertyNotFoundMessage,
     propertyNotSetMessage,
@@ -679,7 +679,7 @@ export class EvalJSExprActionComponent extends ActionComponent {
                 // as property
                 buildExpression(assets, dataBuffer, this, valueExpression);
             } catch (err) {
-                assets.projectEditorStore.outputSectionsStore.write(
+                assets.projectStore.outputSectionsStore.write(
                     Section.OUTPUT,
                     MessageType.ERROR,
                     err,
@@ -1512,7 +1512,7 @@ export class ConstantActionComponent extends ActionComponent {
             );
             dataBuffer.writeUint16(assets.getConstantIndex(value, valueType));
         } catch (err) {
-            assets.projectEditorStore.outputSectionsStore.write(
+            assets.projectStore.outputSectionsStore.write(
                 Section.OUTPUT,
                 MessageType.ERROR,
                 err.toString(),
@@ -1770,7 +1770,7 @@ export class SortArrayActionComponent extends ActionComponent {
 
         // structFieldIndex
         dataBuffer.writeInt32(
-            assets.projectEditorStore.typesStore.getFieldIndex(
+            assets.projectStore.typesStore.getFieldIndex(
                 `struct:${this.structureName}`,
                 this.structureFieldName
             ) ?? -1
@@ -2194,7 +2194,7 @@ export class CallActionActionComponent extends ActionComponent {
     open() {
         const action = ProjectEditor.findAction(getProject(this), this.action);
         if (action) {
-            getProjectEditorStore(this).navigationStore.showObjects(
+            getProjectStore(this).navigationStore.showObjects(
                 [action],
                 true,
                 false,
@@ -3887,8 +3887,8 @@ export class CommentActionComponent extends ActionComponent {
                 flowContext={flowContext}
                 value={this.text}
                 setValue={action((value: string) => {
-                    const projectEditorStore = getProjectEditorStore(this);
-                    projectEditorStore.updateObject(this, {
+                    const projectStore = getProjectStore(this);
+                    projectStore.updateObject(this, {
                         text: value
                     });
                 })}

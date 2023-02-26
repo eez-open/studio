@@ -7,7 +7,7 @@ import { ProjectContext } from "project-editor/project/context";
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import { Button } from "eez-studio-ui/button";
 
-import { getProjectEditorStore } from "project-editor/store";
+import { getProjectStore } from "project-editor/store";
 import {
     LVGLPropertyInfo,
     lvglProperties,
@@ -63,7 +63,7 @@ async function selectLVGLStyleProperty(object: IEezObject) {
         };
 
         const [modalDialog] = showDialog(
-            <ProjectContext.Provider value={getProjectEditorStore(object)}>
+            <ProjectContext.Provider value={getProjectStore(object)}>
                 <LVGLStylePropertiesDialog onOk={onOk} onCancel={onDispose} />
             </ProjectContext.Provider>,
             {

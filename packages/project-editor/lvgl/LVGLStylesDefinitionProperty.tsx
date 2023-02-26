@@ -120,9 +120,9 @@ export const LVGLStylesDefinitionProperty = observer(
         };
 
         render() {
-            const projectEditorStore = ProjectEditor.getProject(
+            const projectStore = ProjectEditor.getProject(
                 this.props.objects[0]
-            )._DocumentStore;
+            )._store;
 
             const stylesDefinitions = this.props.objects.map(
                 widget =>
@@ -141,7 +141,7 @@ export const LVGLStylesDefinitionProperty = observer(
                     ) as Page;
                     runtime = page && page._lvglRuntime;
                 } else if (object instanceof ProjectEditor.LVGLStyleClass) {
-                    runtime = projectEditorStore.project.lvglStyles.lvglRuntime;
+                    runtime = projectStore.project.lvglStyles.lvglRuntime;
                 }
             }
 

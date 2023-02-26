@@ -5,7 +5,7 @@ import type {
     IEezObject,
     PropertyInfo
 } from "project-editor/core/object";
-import type { ProjectEditorStore, UndoManager } from "project-editor/store";
+import type { ProjectStore, UndoManager } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -16,7 +16,7 @@ interface IDropObject {}
 export class DragAndDropManagerClass {
     dragObject: EezObject | undefined;
     dropObject: IDropObject | undefined;
-    projectEditorStore: ProjectEditorStore;
+    projectStore: ProjectStore;
     dragItemDeleted: boolean;
     dropEffect: string | undefined;
     blankDragImage: HTMLImageElement;
@@ -39,15 +39,11 @@ export class DragAndDropManagerClass {
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAYdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuOWwzfk4AAAANSURBVBhXY/j//z8DAAj8Av6IXwbgAAAAAElFTkSuQmCC";
     }
 
-    start(
-        event: any,
-        dragObject: EezObject,
-        projectEditorStore: ProjectEditorStore
-    ) {
+    start(event: any, dragObject: EezObject, projectStore: ProjectStore) {
         this.dragObject = dragObject;
         this.dragItemDeleted = false;
 
-        this.undoManager = projectEditorStore.undoManager;
+        this.undoManager = projectStore.undoManager;
         this.undoManager.setCombineCommands(true);
     }
 
@@ -72,7 +68,7 @@ export class DragAndDropManagerClass {
     deleteDragItem(options?: { dropPlace?: IEezObject | PropertyInfo }) {
         if (this.dropObject && this.dropEffect == "move") {
             if (this.dragObject) {
-                this.undoManager?.projectEditorStore.deleteObject(
+                this.undoManager?.projectStore.deleteObject(
                     this.dragObject,
                     options
                 );

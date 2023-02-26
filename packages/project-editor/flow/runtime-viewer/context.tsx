@@ -179,8 +179,8 @@ export class RuntimeFlowContext implements IFlowContext {
         });
     }
 
-    get projectEditorStore() {
-        return this.document.projectEditorStore;
+    get projectStore() {
+        return this.document.projectStore;
     }
 
     get containerId() {
@@ -199,7 +199,7 @@ export class RuntimeFlowContext implements IFlowContext {
         return (
             this._dataContext ||
             this.flowState?.dataContext ||
-            this.document.projectEditorStore.dataContext
+            this.document.projectStore.dataContext
         );
     }
 

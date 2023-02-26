@@ -8,7 +8,7 @@ import {
     GenericDialogResult
 } from "eez-studio-ui/generic-dialog";
 
-import { ProjectEditorStore, getClassInfo } from "project-editor/store";
+import { ProjectStore, getClassInfo } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
 import type { IEezObject } from "./object";
 
@@ -45,7 +45,7 @@ export function info(message: string, detail?: string) {
 }
 
 export function showGenericDialog(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     conf: {
         dialogDefinition: DialogDefinition;
         values: any;
@@ -57,7 +57,7 @@ export function showGenericDialog(
 ) {
     return new Promise<GenericDialogResult>((resolve, reject) => {
         const [modalDialog] = showDialog(
-            <ProjectContext.Provider value={projectEditorStore}>
+            <ProjectContext.Provider value={projectStore}>
                 <GenericDialog
                     dialogDefinition={conf.dialogDefinition}
                     dialogContext={undefined}

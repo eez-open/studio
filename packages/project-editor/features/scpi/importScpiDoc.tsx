@@ -24,11 +24,7 @@ import { Loader } from "eez-studio-ui/loader";
 
 import type { IParameter, IParameterType, IEnum } from "instrument/scpi";
 
-import {
-    createObject,
-    objectToJS,
-    ProjectEditorStore
-} from "project-editor/store";
+import { createObject, objectToJS, ProjectStore } from "project-editor/store";
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import { ScpiEnum } from "project-editor/features/scpi/enum";
 import { ProjectContext } from "project-editor/project/context";
@@ -67,7 +63,7 @@ interface Changes {
 
 class FindChanges {
     constructor(
-        private projectEditorStore: ProjectEditorStore,
+        private projectStore: ProjectStore,
         private existingEnums: ScpiEnum[]
     ) {}
 
@@ -638,18 +634,16 @@ class FindChanges {
     getCommandsFromScpiDoc() {
         return new Promise<Subsystem[]>((resolve, reject) => {
             if (
-                this.projectEditorStore.project.settings.general
-                    .scpiDocFolder === undefined
+                this.projectStore.project.settings.general.scpiDocFolder ===
+                undefined
             ) {
                 reject("SCPI help folder is not defined");
                 return;
             }
 
-            let scpiHelpFolderPath =
-                this.projectEditorStore.getAbsoluteFilePath(
-                    this.projectEditorStore.project.settings.general
-                        .scpiDocFolder
-                );
+            let scpiHelpFolderPath = this.projectStore.getAbsoluteFilePath(
+                this.projectStore.project.settings.general.scpiDocFolder
+            );
 
             fs.exists(scpiHelpFolderPath, (exists: boolean) => {
                 if (!exists) {
@@ -851,7 +845,7 @@ class FindChanges {
             this.getCommandsFromScpiDoc()
                 .then(subsystems => {
                     let existingSubsystems = objectToJS(
-                        this.projectEditorStore.project.scpi.subsystems
+                        this.projectStore.project.scpi.subsystems
                     );
 
                     // added
@@ -1668,14 +1662,12 @@ export const ImportScpiDocDialog = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function showImportScpiDocDialog(
-    projectEditorStore: ProjectEditorStore
-) {
+export function showImportScpiDocDialog(projectStore: ProjectStore) {
     let el = document.createElement("div");
     document.body.appendChild(el);
     const root = createRoot(el);
     root.render(
-        <ProjectContext.Provider value={projectEditorStore}>
+        <ProjectContext.Provider value={projectStore}>
             <ImportScpiDocDialog
                 onHidden={() => {
                     el.remove();

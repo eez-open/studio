@@ -14,7 +14,7 @@ import {
 } from "project-editor/core/object";
 import {
     createObject,
-    getProjectEditorStore,
+    getProjectStore,
     Message,
     propertyInvalidValueMessage,
     propertyNotSetMessage,
@@ -207,7 +207,7 @@ export class ExtensionDefinition extends EezObject {
                 values: {}
             });
 
-            const projectEditorStore = getProjectEditorStore(parent);
+            const projectStore = getProjectStore(parent);
 
             const extensionDefinitionProperties: Partial<ExtensionDefinition> =
                 {
@@ -215,7 +215,7 @@ export class ExtensionDefinition extends EezObject {
                 };
 
             const extensionDefinition = createObject<ExtensionDefinition>(
-                projectEditorStore,
+                projectStore,
                 extensionDefinitionProperties,
                 ExtensionDefinition
             );
@@ -245,10 +245,10 @@ export class ExtensionDefinition extends EezObject {
                 );
             }
 
-            const projectEditorStore = getProjectEditorStore(object);
+            const projectStore = getProjectStore(object);
 
             let extensionDefinitions =
-                projectEditorStore.project.extensionDefinitions;
+                projectStore.project.extensionDefinitions;
             if (
                 extensionDefinitions.find(
                     extensionDefinition =>

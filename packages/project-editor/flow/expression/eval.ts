@@ -14,7 +14,7 @@ import {
 import { expressionParser } from "project-editor/flow/expression/parser";
 import { ValueType } from "project-editor/features/variable/value-type";
 import type { IDataContext, IFlowState } from "../flow-interfaces";
-import type { ProjectEditorStore } from "project-editor/store";
+import type { ProjectStore } from "project-editor/store";
 import {
     findValueTypeInExpressionNode,
     checkArity
@@ -47,7 +47,7 @@ export function evalConstantExpression(project: Project, expression: string) {
 export interface IExpressionContext {
     dataContext: IDataContext;
     flowState?: IFlowState;
-    projectEditorStore: ProjectEditorStore;
+    projectStore: ProjectStore;
 }
 
 export function evalExpression(
@@ -190,7 +190,7 @@ export function evalConstantExpressionNode(
             }
 
             const languageID =
-                project._DocumentStore.uiStateStore.selectedLanguage.languageID;
+                project._store.uiStateStore.selectedLanguage.languageID;
 
             const translation = textResource.translations.find(
                 translation => translation.languageID == languageID
@@ -293,11 +293,11 @@ export function evalConstantExpressionNode(
                 }
 
                 const builtInConstantName = `${node.object.name}.${node.property.name}`;
-                const buildInConstantValue = builtInConstants(
-                    project._DocumentStore
-                )[builtInConstantName];
+                const buildInConstantValue = builtInConstants(project._store)[
+                    builtInConstantName
+                ];
                 if (buildInConstantValue != undefined) {
-                    return buildInConstantValue.value(project._DocumentStore);
+                    return buildInConstantValue.value(project._store);
                 }
 
                 throw `Unknown constant '${builtInConstantName}'`;
@@ -439,7 +439,7 @@ function evalExpressionWithContext(
                 node.property.type == "Identifier"
             ) {
                 const enumDef =
-                    expressionContext.projectEditorStore.project.variables.enumsMap.get(
+                    expressionContext.projectStore.project.variables.enumsMap.get(
                         node.object.name
                     );
                 if (enumDef) {
@@ -454,11 +454,11 @@ function evalExpressionWithContext(
 
                 const builtInConstantName = `${node.object.name}.${node.property.name}`;
                 const buildInConstantValue = builtInConstants(
-                    expressionContext.projectEditorStore
+                    expressionContext.projectStore
                 )[builtInConstantName];
                 if (buildInConstantValue != undefined) {
                     return buildInConstantValue.value(
-                        expressionContext.projectEditorStore
+                        expressionContext.projectStore
                     );
                 }
             }
@@ -599,7 +599,7 @@ function evalAssignableExpressionWithContext(
             }
 
             let globalVariable =
-                expressionContext.projectEditorStore.project.allGlobalVariables.find(
+                expressionContext.projectStore.project.allGlobalVariables.find(
                     globalVariable => globalVariable.name == node.name
                 );
             if (globalVariable) {

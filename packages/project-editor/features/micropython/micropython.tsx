@@ -84,10 +84,9 @@ export class MicroPython extends EezObject {
     }
 
     async runScript() {
-        const projectEditorStore =
-            ProjectEditor.getProject(this)._DocumentStore;
+        const projectStore = ProjectEditor.getProject(this)._store;
 
-        const partsPromise = projectEditorStore.build();
+        const partsPromise = projectStore.build();
 
         const instrument = await showSelectInstrumentDialog();
 
@@ -149,20 +148,18 @@ export class MicroPython extends EezObject {
         }
 
         try {
-            const destinationFolderPath =
-                projectEditorStore.getAbsoluteFilePath(
-                    projectEditorStore.project.settings.build
-                        .destinationFolder || "."
-                );
+            const destinationFolderPath = projectStore.getAbsoluteFilePath(
+                projectStore.project.settings.build.destinationFolder || "."
+            );
 
             const resDestinationFileName = `${path.basename(
-                projectEditorStore.filePath || "",
+                projectStore.filePath || "",
                 ".eez-project"
             )}.res`;
             const resSourceFilePath = `${destinationFolderPath}/${resDestinationFileName}`;
 
             const pyDestinationFileName = `${path.basename(
-                projectEditorStore.filePath || "",
+                projectStore.filePath || "",
                 ".eez-project"
             )}.py`;
             const pySourceFilePath = `${destinationFolderPath}/${pyDestinationFileName}`;

@@ -666,7 +666,7 @@ export const ChangesEditor = observer(
                                         value={
                                             ProjectEditor.getProject(
                                                 this.flowChange.flowBefore
-                                            )._DocumentStore
+                                            )._store
                                         }
                                     >
                                         <FlowViewer
@@ -690,7 +690,7 @@ export const ChangesEditor = observer(
                                         value={
                                             ProjectEditor.getProject(
                                                 this.flowChange.flowAfter
-                                            )._DocumentStore
+                                            )._store
                                         }
                                     >
                                         <FlowViewer

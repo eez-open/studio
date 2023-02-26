@@ -49,8 +49,8 @@ import {
     propertyNotSetMessage,
     propertyNotFoundMessage,
     propertyInvalidValueMessage,
-    ProjectEditorStore,
-    getProjectEditorStore,
+    ProjectStore,
+    getProjectStore,
     LayoutModels,
     propertyNotUniqueMessage,
     createObject
@@ -160,7 +160,7 @@ export class BuildConfiguration extends EezObject {
             const project = ProjectEditor.getProject(parent);
 
             const buildConfiguration = createObject<BuildConfiguration>(
-                project._DocumentStore,
+                project._store,
                 buildConfigurationProperties,
                 BuildConfiguration
             );
@@ -234,7 +234,7 @@ export class BuildFile extends EezObject {
             const project = ProjectEditor.getProject(parent);
 
             const buildFile = createObject<BuildFile>(
-                project._DocumentStore,
+                project._store,
                 buildFileProperties,
                 BuildFile
             );
@@ -311,14 +311,14 @@ export class Build extends EezObject {
         },
 
         updateObjectValueHook: (build: Build, values: Partial<Build>) => {
-            const projectEditorStore = getProjectEditorStore(build);
+            const projectStore = getProjectStore(build);
             if (
-                projectEditorStore.projectTypeTraits.isLVGL &&
+                projectStore.projectTypeTraits.isLVGL &&
                 values.lvglInclude != undefined &&
                 build.lvglInclude != values.lvglInclude
             ) {
                 ProjectEditor.rebuildLvglFonts(
-                    projectEditorStore,
+                    projectStore,
                     values.lvglInclude
                 );
             }
@@ -504,9 +504,9 @@ class BuildAssetsUssage {
 function showUsage(importDirective: ImportDirective) {
     const buildAssetsUsage = new BuildAssetsUssage(importDirective);
 
-    const projectEditorStore = getProjectEditorStore(importDirective);
+    const projectStore = getProjectStore(importDirective);
 
-    usage(projectEditorStore, message => buildAssetsUsage.onMessage(message));
+    usage(projectStore, message => buildAssetsUsage.onMessage(message));
 
     showGenericDialog({
         dialogDefinition: {
@@ -532,12 +532,12 @@ function showUsage(importDirective: ImportDirective) {
             action(result => {
                 const assetsUsage: IAssetsUsage = result.values.assetsUsage;
                 if (assetsUsage.selectedAsset) {
-                    projectEditorStore.uiStateStore.searchPattern =
+                    projectStore.uiStateStore.searchPattern =
                         assetsUsage.selectedAsset;
-                    projectEditorStore.uiStateStore.searchMatchCase = true;
-                    projectEditorStore.uiStateStore.searchMatchWholeWord = true;
+                    projectStore.uiStateStore.searchMatchCase = true;
+                    projectStore.uiStateStore.searchMatchWholeWord = true;
                     startSearch(
-                        projectEditorStore,
+                        projectStore,
                         assetsUsage.selectedAsset,
                         true,
                         true
@@ -549,10 +549,10 @@ function showUsage(importDirective: ImportDirective) {
 }
 
 function openProject(importDirective: ImportDirective) {
-    const projectEditorStore = getProjectEditorStore(importDirective);
+    const projectStore = getProjectStore(importDirective);
     ipcRenderer.send(
         "open-file",
-        projectEditorStore.getAbsoluteFilePath(importDirective.projectFilePath)
+        projectStore.getAbsoluteFilePath(importDirective.projectFilePath)
     );
 }
 
@@ -614,7 +614,7 @@ export class ImportDirective extends EezObject {
             if (object.projectFilePath) {
                 if (
                     !fileExistsSync(
-                        getProjectEditorStore(object).getAbsoluteFilePath(
+                        getProjectStore(object).getAbsoluteFilePath(
                             object.projectFilePath
                         )
                     )
@@ -664,31 +664,27 @@ export class ImportDirective extends EezObject {
     }
 
     get projectAbsoluteFilePath() {
-        const projectEditorStore = getProjectEditorStore(this);
-        return projectEditorStore.getAbsoluteFilePath(
+        const projectStore = getProjectStore(this);
+        return projectStore.getAbsoluteFilePath(
             this.projectFilePath,
             getProject(this)
         );
     }
 
     async loadProject() {
-        const projectEditorStore = getProjectEditorStore(this);
-        await projectEditorStore.loadExternalProject(
-            this.projectAbsoluteFilePath
-        );
+        const projectStore = getProjectStore(this);
+        await projectStore.loadExternalProject(this.projectAbsoluteFilePath);
     }
 
     get project(): Project | undefined {
-        const projectEditorStore = getProjectEditorStore(this);
+        const projectStore = getProjectStore(this);
 
-        if (this.projectAbsoluteFilePath == projectEditorStore.filePath) {
-            return projectEditorStore.project;
+        if (this.projectAbsoluteFilePath == projectStore.filePath) {
+            return projectStore.project;
         }
 
         return this.projectFilePath
-            ? projectEditorStore.externalProjects.get(
-                  this.projectAbsoluteFilePath
-              )
+            ? projectStore.externalProjects.get(this.projectAbsoluteFilePath)
             : undefined;
     }
 
@@ -779,12 +775,12 @@ export class General extends EezObject {
                 typeClass: ImportDirective,
                 defaultValue: [],
                 hideInPropertyGrid: (general: General) => {
-                    const projectEditorStore = getProjectEditorStore(general);
+                    const projectStore = getProjectStore(general);
                     return (
                         !!getProject(general).masterProject ||
-                        projectEditorStore.projectTypeTraits.isDashboard ||
-                        projectEditorStore.projectTypeTraits.isApplet ||
-                        projectEditorStore.projectTypeTraits.isLVGL
+                        projectStore.projectTypeTraits.isDashboard ||
+                        projectStore.projectTypeTraits.isApplet ||
+                        projectStore.projectTypeTraits.isLVGL
                     );
                 }
             },
@@ -825,12 +821,10 @@ export class General extends EezObject {
             let messages: Message[] = [];
 
             if (general.masterProject) {
-                const projectEditorStore = getProjectEditorStore(general);
+                const projectStore = getProjectStore(general);
                 if (
                     !fileExistsSync(
-                        projectEditorStore.getAbsoluteFilePath(
-                            general.masterProject
-                        )
+                        projectStore.getAbsoluteFilePath(general.masterProject)
                     )
                 ) {
                     messages.push(
@@ -843,11 +837,11 @@ export class General extends EezObject {
                 }
             }
 
-            const projectEditorStore = getProjectEditorStore(general);
+            const projectStore = getProjectStore(general);
 
             if (
-                projectEditorStore.projectTypeTraits.isFirmware &&
-                projectEditorStore.projectTypeTraits.hasFlowSupport
+                projectStore.projectTypeTraits.isFirmware &&
+                projectStore.projectTypeTraits.hasFlowSupport
             ) {
                 if (general.displayWidth < 1 || general.displayWidth > 1280) {
                     messages.push(
@@ -951,10 +945,10 @@ export class Settings extends EezObject {
                     object: IEezObject,
                     propertyInfo: PropertyInfo
                 ) => {
-                    const projectEditorStore = getProjectEditorStore(object);
+                    const projectStore = getProjectStore(object);
                     return (
-                        !projectEditorStore.projectTypeTraits.isDashboard &&
-                        !projectEditorStore.masterProjectEnabled
+                        !projectStore.projectTypeTraits.isDashboard &&
+                        !projectStore.masterProjectEnabled
                     );
                 }
             }
@@ -1488,7 +1482,7 @@ class AssetsMap {
                 .map(assets => assets[0]);
         } else {
             return (
-                (this.project._DocumentStore.getObjectFromPath(
+                (this.project._store.getObjectFromPath(
                     referencedObjectCollectionPath.split("/")
                 ) as IEezObject[]) || []
             );
@@ -1497,7 +1491,7 @@ class AssetsMap {
 }
 
 export class Project extends EezObject {
-    _DocumentStore!: ProjectEditorStore;
+    _store!: ProjectStore;
     _isReadOnly: boolean = false;
     _isDashboardBuild: boolean = false;
 
@@ -1618,23 +1612,23 @@ export class Project extends EezObject {
     }
 
     get projectName() {
-        if (this._DocumentStore.project === this) {
-            return this._DocumentStore.filePath
-                ? getFileNameWithoutExtension(this._DocumentStore.filePath)
+        if (this._store.project === this) {
+            return this._store.filePath
+                ? getFileNameWithoutExtension(this._store.filePath)
                 : "<current project>";
         }
 
         if (this.importDirective) {
             return getFileNameWithoutExtension(
-                this._DocumentStore.getAbsoluteFilePath(
+                this._store.getAbsoluteFilePath(
                     this.importDirective.projectFilePath
                 )
             );
         }
 
-        if (this._DocumentStore.project.masterProject == this) {
+        if (this._store.project.masterProject == this) {
             return getFileNameWithoutExtension(
-                this._DocumentStore.project.settings.general.masterProject
+                this._store.project.settings.general.masterProject
             );
         }
 
@@ -1642,7 +1636,7 @@ export class Project extends EezObject {
     }
 
     get importDirective() {
-        return this._DocumentStore.project.settings.general.imports.find(
+        return this._store.project.settings.general.imports.find(
             importDirective => importDirective.project === this
         );
     }
@@ -1656,20 +1650,20 @@ export class Project extends EezObject {
     }
 
     get masterProjectAbsoluteFilePath() {
-        return this._DocumentStore.getAbsoluteFilePath(
+        return this._store.getAbsoluteFilePath(
             this.settings.general.masterProject
         );
     }
 
     async loadMasterProject() {
-        await this._DocumentStore.loadExternalProject(
+        await this._store.loadExternalProject(
             this.masterProjectAbsoluteFilePath
         );
     }
 
     get masterProject(): Project | undefined {
         return this.settings.general.masterProject
-            ? this._DocumentStore.externalProjects.get(
+            ? this._store.externalProjects.get(
                   this.masterProjectAbsoluteFilePath
               )
             : undefined;
@@ -1795,7 +1789,7 @@ export class Project extends EezObject {
         }
 
         enableTab(
-            this._DocumentStore.layoutModels.rootEditor,
+            this._store.layoutModels.rootEditor,
             LayoutModels.BREAKPOINTS_TAB_ID,
             LayoutModels.BREAKPOINTS_TAB,
             LayoutModels.COMPONENTS_PALETTE_TAB_ID,
@@ -1803,7 +1797,7 @@ export class Project extends EezObject {
         );
 
         enableTab(
-            this._DocumentStore.layoutModels.variables,
+            this._store.layoutModels.variables,
             LayoutModels.LOCAL_VARS_TAB_ID,
             LayoutModels.LOCAL_VARS_TAB,
             LayoutModels.GLOBAL_VARS_TAB_ID,
@@ -1811,7 +1805,7 @@ export class Project extends EezObject {
         );
 
         enableTab(
-            this._DocumentStore.layoutModels.variables,
+            this._store.layoutModels.variables,
             LayoutModels.ENUMS_TAB_ID,
             LayoutModels.ENUMS_TAB,
             LayoutModels.GLOBAL_VARS_TAB_ID,
@@ -1819,7 +1813,7 @@ export class Project extends EezObject {
         );
 
         enableTab(
-            this._DocumentStore.layoutModels.variables,
+            this._store.layoutModels.variables,
             LayoutModels.STRUCTS_TAB_ID,
             LayoutModels.STRUCTS_TAB,
             LayoutModels.GLOBAL_VARS_TAB_ID,
@@ -1827,7 +1821,7 @@ export class Project extends EezObject {
         );
 
         enableTab(
-            this._DocumentStore.layoutModels.pagesEditor,
+            this._store.layoutModels.pagesEditor,
             LayoutModels.LOCAL_VARS_TAB_ID,
             LayoutModels.LOCAL_VARS_TAB,
             LayoutModels.PAGE_STRUCTURE_TAB_ID,
@@ -1835,7 +1829,7 @@ export class Project extends EezObject {
         );
 
         enableTab(
-            this._DocumentStore.layoutModels.actionsEditor,
+            this._store.layoutModels.actionsEditor,
             LayoutModels.LOCAL_VARS_TAB_ID,
             LayoutModels.LOCAL_VARS_TAB,
             LayoutModels.ACTIONS_TAB_ID,
@@ -1940,7 +1934,7 @@ export function getNameProperty(object: IEezObject) {
 }
 
 export function checkAssetId(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     assetType: AssetType,
     asset: EezObject & {
         id: number | undefined;
@@ -1960,7 +1954,7 @@ export function checkAssetId(
             );
         } else {
             if (
-                projectEditorStore.project._assetsMap["id"].allAssets.get(
+                projectStore.project._assetsMap["id"].allAssets.get(
                     `${assetType}/${asset.id}`
                 )!.length > 1
             ) {

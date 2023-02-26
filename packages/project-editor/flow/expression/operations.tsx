@@ -5,7 +5,7 @@ import * as os from "os";
 import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
 import type { ValueType } from "project-editor/features/variable/value-type";
 import type { IExpressionContext } from "project-editor/flow/expression";
-import type { ProjectEditorStore } from "project-editor/store";
+import type { ProjectStore } from "project-editor/store";
 
 function roundN(value: number, decimals: number) {
     return Number(Math.round(Number(value + "e" + decimals)) + "e-" + decimals);
@@ -487,7 +487,7 @@ export const builtInFunctions: {
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
         ) => {
-            const texts = expressionContext?.projectEditorStore.project.texts;
+            const texts = expressionContext?.projectStore.project.texts;
             if (texts) {
                 return texts.languages.map(language => language.languageID);
             }
@@ -505,7 +505,7 @@ export const builtInFunctions: {
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
         ) => {
-            const texts = expressionContext?.projectEditorStore.project.texts;
+            const texts = expressionContext?.projectStore.project.texts;
             if (texts) {
                 const textResource = texts.resources[args[0]];
                 if (textResource) {
@@ -1151,7 +1151,7 @@ export const builtInFunctions: {
 
 type BuiltInConstantsType = {
     [name: string]: {
-        value: (projectEditorStore: ProjectEditorStore) => any;
+        value: (projectStore: ProjectStore) => any;
         valueType: ValueType;
         label?: (name: string) => React.ReactNode;
     };
@@ -1159,7 +1159,7 @@ type BuiltInConstantsType = {
 
 const commonConstants: BuiltInConstantsType = {
     "System.Platform": {
-        value: (projectEditorStore: ProjectEditorStore) => {
+        value: (projectStore: ProjectStore) => {
             const platform = os.platform();
             if (platform == "darwin") return "macos";
             return platform;
@@ -1168,18 +1168,17 @@ const commonConstants: BuiltInConstantsType = {
     },
 
     "System.Architecture": {
-        value: (projectEditorStore: ProjectEditorStore) => os.arch(),
+        value: (projectStore: ProjectStore) => os.arch(),
         valueType: "string"
     },
 
     "System.ProjectFolder": {
-        value: (projectEditorStore: ProjectEditorStore) =>
-            projectEditorStore.getAbsoluteProjectFolderPath(),
+        value: (projectStore: ProjectStore) =>
+            projectStore.getAbsoluteProjectFolderPath(),
         valueType: "string"
     },
     "System.ProjectFile": {
-        value: (projectEditorStore: ProjectEditorStore) =>
-            projectEditorStore.filePath,
+        value: (projectStore: ProjectStore) => projectStore.filePath,
         valueType: "string"
     },
 
@@ -1194,12 +1193,12 @@ const commonConstants: BuiltInConstantsType = {
 };
 
 function LVGL_SYMBOL(value: string): {
-    value: (projectEditorStore: ProjectEditorStore) => string;
+    value: (projectStore: ProjectStore) => string;
     valueType: ValueType;
     label: (name: string) => React.ReactNode;
 } {
     return {
-        value: (projectEditorStore: ProjectEditorStore) => value,
+        value: (projectStore: ProjectStore) => value,
         valueType: "string",
         label: name => (
             <>
@@ -1277,11 +1276,9 @@ const lvglConstants: BuiltInConstantsType = {
 };
 
 export const builtInConstants: (
-    projectEditorStore: ProjectEditorStore
-) => BuiltInConstantsType = (projectEditorStore: ProjectEditorStore) =>
-    projectEditorStore.projectTypeTraits.isLVGL
-        ? lvglConstants
-        : commonConstants;
+    projectStore: ProjectStore
+) => BuiltInConstantsType = (projectStore: ProjectStore) =>
+    projectStore.projectTypeTraits.isLVGL ? lvglConstants : commonConstants;
 
 export const operationIndexes: { [key: string]: number } = {};
 

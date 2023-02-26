@@ -44,7 +44,7 @@ import {
     pasteItem,
     deleteItems,
     canContainChildren,
-    getProjectEditorStore,
+    getProjectStore,
     copyToClipboard,
     setClipboardData,
     objectToClipboardData,
@@ -440,11 +440,11 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             return;
         }
 
-        const projectEditorStore = getProjectEditorStore(this.object);
+        const projectStore = getProjectStore(this.object);
 
         const objects: IEezObject[] = [];
         for (const objectId of objectIds) {
-            const object = projectEditorStore.getObjectFromObjectId(objectId);
+            const object = projectStore.getObjectFromObjectId(objectId);
             if (object) {
                 objects.push(object);
             }
@@ -625,7 +625,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             if (objects.length == 1) {
                 cutItem(objects[0]);
             } else {
-                let cliboardText = getProjectEditorStore(
+                let cliboardText = getProjectStore(
                     this.object
                 ).objectsToClipboardData(objects);
 
@@ -656,25 +656,23 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
                 item => item.object as EezObject
             );
             copyToClipboard(
-                getProjectEditorStore(this.object).objectsToClipboardData(
-                    objects
-                )
+                getProjectStore(this.object).objectsToClipboardData(objects)
             );
         }
     }
 
     canPaste() {
-        const projectEditorStore = getProjectEditorStore(this.object);
+        const projectStore = getProjectStore(this.object);
 
         if (this.selectedItems.length == 0) {
-            if (canPaste(projectEditorStore, this.object)) {
+            if (canPaste(projectStore, this.object)) {
                 return true;
             }
             return false;
         }
 
         if (this.selectedItems.length == 1) {
-            if (canPaste(projectEditorStore, this.selectedItems[0].object)) {
+            if (canPaste(projectStore, this.selectedItems[0].object)) {
                 return true;
             }
             return false;
@@ -686,7 +684,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
                 getParent(this.selectedItems[0].object)
         );
         if (allObjectsAreFromTheSameParent) {
-            if (canPaste(projectEditorStore, this.selectedItems[0].object)) {
+            if (canPaste(projectStore, this.selectedItems[0].object)) {
                 return true;
             }
         }
@@ -1221,12 +1219,12 @@ export class TreeAdapter implements ITreeAdapter {
     }
 
     onDragStart(item: ITreeObjectAdapter, event: any) {
-        const projectEditorStore = getProjectEditorStore(this.rootItem.object);
+        const projectStore = getProjectStore(this.rootItem.object);
 
         event.dataTransfer.effectAllowed = "copyMove";
         setClipboardData(
             event,
-            objectToClipboardData(projectEditorStore, item.object)
+            objectToClipboardData(projectStore, item.object)
         );
         event.dataTransfer.setDragImage(
             DragAndDropManager.blankDragImage,
@@ -1236,11 +1234,7 @@ export class TreeAdapter implements ITreeAdapter {
 
         // postpone render, otherwise we can receive onDragEnd immediatelly
         setTimeout(() => {
-            DragAndDropManager.start(
-                event,
-                item.object as any,
-                projectEditorStore
-            );
+            DragAndDropManager.start(event, item.object as any, projectStore);
         });
     }
 
@@ -1275,14 +1269,12 @@ export class TreeAdapter implements ITreeAdapter {
         event.preventDefault();
 
         if (DragAndDropManager.dragObject) {
-            const projectEditorStore = getProjectEditorStore(
-                this.rootItem.object
-            );
+            const projectStore = getProjectStore(this.rootItem.object);
 
             const dragObjectClone =
                 DragAndDropManager.dropEffect == "copy"
                     ? (createObject(
-                          projectEditorStore,
+                          projectStore,
                           toJS(DragAndDropManager.dragObject) as any,
                           getClass(DragAndDropManager.dragObject),
                           undefined,
@@ -1298,7 +1290,7 @@ export class TreeAdapter implements ITreeAdapter {
                 DragAndDropManager.deleteDragItem({
                     dropPlace: getParent(dropItem.object)
                 });
-                aNewObject = projectEditorStore.insertObjectBefore(
+                aNewObject = projectStore.insertObjectBefore(
                     dropItem.object,
                     dragObjectClone
                 );
@@ -1306,7 +1298,7 @@ export class TreeAdapter implements ITreeAdapter {
                 DragAndDropManager.deleteDragItem({
                     dropPlace: getParent(dropItem.object)
                 });
-                aNewObject = projectEditorStore.insertObjectAfter(
+                aNewObject = projectStore.insertObjectAfter(
                     dropItem.object,
                     dragObjectClone
                 );
@@ -1322,12 +1314,12 @@ export class TreeAdapter implements ITreeAdapter {
                     });
 
                     if (isArray(dropPlace as any)) {
-                        aNewObject = projectEditorStore.addObject(
+                        aNewObject = projectStore.addObject(
                             dropPlace as any,
                             dragObjectClone
                         );
                     } else {
-                        projectEditorStore.updateObject(dropItem.object, {
+                        projectStore.updateObject(dropItem.object, {
                             [(dropPlace as PropertyInfo).name]: dragObjectClone
                         });
                         setKey(

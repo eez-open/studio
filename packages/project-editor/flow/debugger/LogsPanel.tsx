@@ -22,7 +22,7 @@ export const LogsPanel = observer(
     }> {
         onChangeFilter = action(
             (event: React.ChangeEvent<HTMLSelectElement>) => {
-                this.props.runtime.projectEditorStore.uiStateStore.logsPanelFilter =
+                this.props.runtime.projectStore.uiStateStore.logsPanelFilter =
                     event.currentTarget.value as LogPanelFilter;
             }
         );
@@ -39,7 +39,7 @@ export const LogsPanel = observer(
                                 <select
                                     className="form-select"
                                     value={
-                                        this.props.runtime.projectEditorStore
+                                        this.props.runtime.projectStore
                                             .uiStateStore.logsPanelFilter
                                     }
                                     onChange={this.onChangeFilter}
@@ -65,8 +65,8 @@ export const LogsPanel = observer(
                             <LogList
                                 runtime={this.props.runtime}
                                 filter={
-                                    this.props.runtime.projectEditorStore
-                                        .uiStateStore.logsPanelFilter
+                                    this.props.runtime.projectStore.uiStateStore
+                                        .logsPanelFilter
                                 }
                             />
                         }

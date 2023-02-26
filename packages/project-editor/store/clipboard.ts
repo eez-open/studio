@@ -21,7 +21,7 @@ import {
     isArray,
     isObject,
     objectToJson,
-    ProjectEditorStore,
+    ProjectStore,
     rewireBegin,
     rewireEnd
 } from "project-editor/store";
@@ -31,11 +31,11 @@ import {
 const CLIPOARD_DATA_ID = "application/eez-studio-project-editor-data";
 
 function cloneObjectWithNewObjIds(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     object: IEezObject
 ) {
     return createObject(
-        projectEditorStore,
+        projectStore,
         toJS(object) as any,
         getClass(object),
         undefined,
@@ -44,11 +44,11 @@ function cloneObjectWithNewObjIds(
 }
 
 export function objectToClipboardData(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     object: IEezObject
 ): string {
     rewireBegin();
-    const clonedObject = cloneObjectWithNewObjIds(projectEditorStore, object);
+    const clonedObject = cloneObjectWithNewObjIds(projectStore, object);
     rewireEnd(clonedObject);
 
     return JSON.stringify({
@@ -58,12 +58,12 @@ export function objectToClipboardData(
 }
 
 export function objectsToClipboardData(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     objects: IEezObject[]
 ): string {
     rewireBegin();
     const clonedObjects = objects.map(object =>
-        cloneObjectWithNewObjIds(projectEditorStore, object)
+        cloneObjectWithNewObjIds(projectStore, object)
     );
     rewireEnd(clonedObjects);
 
@@ -73,10 +73,7 @@ export function objectsToClipboardData(
     });
 }
 
-function clipboardDataToObject(
-    projectEditorStore: ProjectEditorStore,
-    data: string
-) {
+function clipboardDataToObject(projectStore: ProjectStore, data: string) {
     let serializedData: SerializedData = JSON.parse(data);
 
     const aClass = findClass(serializedData.objectClassName);
@@ -85,7 +82,7 @@ function clipboardDataToObject(
         if (serializedData.object) {
             rewireBegin();
             serializedData.object = createObject(
-                projectEditorStore,
+                projectStore,
                 serializedData.object,
                 aClass,
                 undefined,
@@ -97,7 +94,7 @@ function clipboardDataToObject(
             serializedData.objects = serializedData.objects.map(
                 object =>
                     createObject(
-                        projectEditorStore,
+                        projectStore,
                         object,
                         aClass,
                         undefined,
@@ -119,7 +116,7 @@ export function setClipboardData(event: any, value: string) {
 }
 
 export function getEezStudioDataFromDragEvent(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     event: any
 ) {
     let data = event.dataTransfer.getData(CLIPOARD_DATA_ID);
@@ -127,7 +124,7 @@ export function getEezStudioDataFromDragEvent(
         data = clipboardData;
     }
     if (data) {
-        return clipboardDataToObject(projectEditorStore, data);
+        return clipboardDataToObject(projectStore, data);
     }
     return undefined;
 }
@@ -199,13 +196,10 @@ export function findPastePlaceInsideAndOutside(
     return parent && findPastePlaceInsideAndOutside(parent, serializedData);
 }
 
-export function checkClipboard(
-    projectEditorStore: ProjectEditorStore,
-    object: IEezObject
-) {
+export function checkClipboard(projectStore: ProjectStore, object: IEezObject) {
     let text = pasteFromClipboard();
     if (text) {
-        let serializedData = clipboardDataToObject(projectEditorStore, text);
+        let serializedData = clipboardDataToObject(projectStore, text);
         if (serializedData) {
             let pastePlace = findPastePlaceInsideAndOutside(
                 object,

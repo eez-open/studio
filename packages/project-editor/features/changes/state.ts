@@ -18,7 +18,7 @@ import {
     getObjectFromStringPath,
     getObjectPathAsString,
     loadProject,
-    ProjectEditorStore,
+    ProjectStore,
     replaceObject,
     updateObject
 } from "project-editor/store";
@@ -134,7 +134,7 @@ export class ChangesState {
     }
 
     async _getRevisions(
-        projectEditorStore: ProjectEditorStore,
+        projectStore: ProjectStore,
         forceGitRefresh: boolean
     ): Promise<Revision[]> {
         if (!forceGitRefresh && this.revisionsGitRefreshed) {
@@ -144,7 +144,7 @@ export class ChangesState {
         let revisions: Revision[] = [];
 
         try {
-            const projectFilePath = projectEditorStore.filePath!;
+            const projectFilePath = projectStore.filePath!;
             const projectTopLevelDirPath = await getProjectTopLevelDirPath(
                 projectFilePath
             );
@@ -186,7 +186,7 @@ export class ChangesState {
     }
 
     async refreshRevisions(
-        projectEditorStore: ProjectEditorStore,
+        projectStore: ProjectStore,
         forceGitRefresh: boolean = true
     ) {
         runInAction(() => {
@@ -194,7 +194,7 @@ export class ChangesState {
         });
 
         let revisions: Revision[] = await this._getRevisions(
-            projectEditorStore,
+            projectStore,
             forceGitRefresh
         );
 
@@ -285,7 +285,7 @@ export class PropertyValueRemoved extends ObjectPropertyChange {
             this.propertyInfo.type == PropertyType.Array
         ) {
             value = createObject(
-                project._DocumentStore,
+                project._store,
                 toJS(valueBefore),
                 this.propertyInfo.typeClass!,
                 undefined,
@@ -315,7 +315,7 @@ export class PropertyValueUpdated extends ObjectPropertyChange {
             this.propertyInfo.type == PropertyType.Array
         ) {
             value = createObject(
-                project._DocumentStore,
+                project._store,
                 toJS(valueBefore),
                 this.propertyInfo.typeClass!,
                 undefined,
@@ -350,7 +350,7 @@ export class ObjectPropertyValueUpdated extends ObjectPropertyChange {
 
         let valueBefore = (this.objectBefore as any)[this.propertyInfo.name];
         let value = createObject(
-            project._DocumentStore,
+            project._store,
             toJS(valueBefore),
             this.propertyInfo.typeClass!,
             undefined,
@@ -382,7 +382,7 @@ export class ArrayPropertyValueUpdated extends ObjectPropertyChange {
 
         let valueBefore = (this.objectBefore as any)[this.propertyInfo.name];
         let value = createObject(
-            project._DocumentStore,
+            project._store,
             toJS(valueBefore),
             this.propertyInfo.typeClass!,
             undefined,
@@ -426,7 +426,7 @@ export class ArrayElementRemoved extends ArrayPropertyChange {
         );
 
         const value = createObject(
-            project._DocumentStore,
+            project._store,
             toJS(this.arrayBefore[this.elementIndexBefore]),
             this.propertyInfo.typeClass!,
             undefined,
@@ -462,7 +462,7 @@ export class ArrayElementUpdated extends ArrayPropertyChange {
         );
 
         const value = createObject(
-            project._DocumentStore,
+            project._store,
             toJS(this.arrayBefore[this.elementIndexBefore]),
             this.propertyInfo.typeClass!,
             undefined,
@@ -716,13 +716,13 @@ async function getProjectTopLevelDirPath(
 }
 
 async function getRevisionProject(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     revision: Revision,
     progressCallback: (percent: number) => void
 ): Promise<Project> {
     if (revision.hash == MEMORY_HASH) {
         progressCallback(100);
-        return projectEditorStore.project;
+        return projectStore.project;
     }
 
     let content: string;
@@ -731,7 +731,7 @@ async function getRevisionProject(
     if (filePath) {
         content = await readTextFile(filePath);
     } else {
-        const projectFilePath = projectEditorStore.filePath!;
+        const projectFilePath = projectStore.filePath!;
 
         if (revision.hash == UNSTAGED_HASH) {
             content = await readTextFile(projectFilePath);
@@ -758,18 +758,18 @@ async function getRevisionProject(
 
     progressCallback(50);
 
-    const revisionProjectEditorStore = new ProjectEditorStore();
+    const revisionProjectStore = new ProjectStore();
 
     runInAction(() => {
-        revisionProjectEditorStore.setProject(
-            loadProject(revisionProjectEditorStore, content) as Project,
+        revisionProjectStore.setProject(
+            loadProject(revisionProjectStore, content) as Project,
             undefined
         );
     });
 
     progressCallback(100);
 
-    return revisionProjectEditorStore.project;
+    return revisionProjectStore.project;
 }
 
 export interface BeforeAfterProject {
@@ -778,7 +778,7 @@ export interface BeforeAfterProject {
 }
 
 export async function getBeforeAndAfterProject(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     revisionBefore: Revision | undefined,
     revisionAfter: Revision,
     progressCallback: (percent: number) => void
@@ -787,16 +787,13 @@ export async function getBeforeAndAfterProject(
         const SUBTASK_PERCENT = 45;
 
         const projectBefore: Project = revisionBefore
-            ? await getRevisionProject(
-                  projectEditorStore,
-                  revisionBefore,
-                  percent =>
-                      progressCallback(SUBTASK_PERCENT * (1 + percent / 100))
+            ? await getRevisionProject(projectStore, revisionBefore, percent =>
+                  progressCallback(SUBTASK_PERCENT * (1 + percent / 100))
               )
             : ({} as any);
 
         const projectAfter = await getRevisionProject(
-            projectEditorStore,
+            projectStore,
             revisionAfter,
             percent => progressCallback(SUBTASK_PERCENT * (percent / 100))
         );

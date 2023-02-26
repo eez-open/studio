@@ -8,7 +8,7 @@ import { Rect } from "eez-studio-shared/geometry";
 import type { IDashboardComponentContext } from "eez-studio-types";
 
 import {
-    ProjectEditorStore,
+    ProjectStore,
     IContextMenuContext,
     getClassInfo
 } from "project-editor/store";
@@ -184,9 +184,7 @@ export interface PropertyInfo {
         object: IEezObject,
         propertyInfo: PropertyInfo
     ) => string;
-    defaultImagesPath?: (
-        projectEditorStore: ProjectEditorStore
-    ) => string | undefined;
+    defaultImagesPath?: (projectStore: ProjectStore) => string | undefined;
     partOfNavigation?: boolean;
     fileFilters?: any;
 
@@ -298,7 +296,7 @@ export interface ClassInfo {
         propertyName: string
     ) => InheritedValue;
     defaultValue?: any;
-    componentDefaultValue?: (projectEditorStore: ProjectEditorStore) => any;
+    componentDefaultValue?: (projectStore: ProjectStore) => any;
     findPastePlaceInside?: (
         object: IEezObject,
         classInfo: ClassInfo,
@@ -583,12 +581,12 @@ export function getId(object: IEezObject) {
 }
 
 export function setId(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     object: IEezObject,
     id: string
 ) {
     (object as any)._eez_id = id;
-    projectEditorStore.objects.set(id, object);
+    projectStore.objects.set(id, object);
 }
 
 export function getParent(object: IEezObject): IEezObject {

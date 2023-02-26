@@ -69,11 +69,11 @@ export const WatchPanel = observer(
                     ]
                 },
                 values: {},
-                dialogContext: this.props.runtime.projectEditorStore.project
+                dialogContext: this.props.runtime.projectStore.project
             });
 
             runInAction(() =>
-                this.props.runtime.projectEditorStore.uiStateStore.watchExpressions.push(
+                this.props.runtime.projectStore.uiStateStore.watchExpressions.push(
                     result.values.expression
                 )
             );
@@ -98,15 +98,15 @@ export const WatchPanel = observer(
                 },
                 values: {
                     expression:
-                        this.props.runtime.projectEditorStore.uiStateStore
+                        this.props.runtime.projectStore.uiStateStore
                             .watchExpressions[i]
                 },
-                dialogContext: this.props.runtime.projectEditorStore.project
+                dialogContext: this.props.runtime.projectStore.project
             });
 
             runInAction(
                 () =>
-                    (this.props.runtime.projectEditorStore.uiStateStore.watchExpressions[
+                    (this.props.runtime.projectStore.uiStateStore.watchExpressions[
                         i
                     ] = result.values.expression)
             );
@@ -119,7 +119,7 @@ export const WatchPanel = observer(
             }
 
             runInAction(() =>
-                this.props.runtime.projectEditorStore.uiStateStore.watchExpressions.splice(
+                this.props.runtime.projectStore.uiStateStore.watchExpressions.splice(
                     i,
                     1
                 )
@@ -239,7 +239,7 @@ const WatchTable = observer(
                             const name = `[${i}]`;
                             const type = elementType ?? typeof elementValue;
                             const valueLabel = getValueLabel(
-                                this.props.runtime.projectEditorStore.project,
+                                this.props.runtime.projectStore.project,
                                 elementValue,
                                 type
                             );
@@ -271,7 +271,7 @@ const WatchTable = observer(
                         let structure;
                         if (type) {
                             structure = getStructureFromType(
-                                this.props.runtime.projectEditorStore.project,
+                                this.props.runtime.projectStore.project,
                                 type
                             );
                         }
@@ -291,7 +291,7 @@ const WatchTable = observer(
                             }
 
                             const valueLabel = getValueLabel(
-                                this.props.runtime.projectEditorStore.project,
+                                this.props.runtime.projectStore.project,
                                 propertyValue,
                                 fieldType
                             );
@@ -334,7 +334,7 @@ const WatchTable = observer(
                 value: undefined,
                 type: "",
                 children: () =>
-                    this.props.runtime.projectEditorStore.uiStateStore.watchExpressions.map(
+                    this.props.runtime.projectStore.uiStateStore.watchExpressions.map(
                         (expression, i) => {
                             let watchExpressionLabel;
                             let value;
@@ -350,8 +350,7 @@ const WatchTable = observer(
                                         ));
 
                                     watchExpressionLabel = getValueLabel(
-                                        this.props.runtime.projectEditorStore
-                                            .project,
+                                        this.props.runtime.projectStore.project,
                                         value,
                                         type
                                     );
@@ -396,13 +395,12 @@ const WatchTable = observer(
                 if (flowState) {
                     dataContext = flowState.dataContext;
                 } else {
-                    dataContext =
-                        this.props.runtime.projectEditorStore.dataContext;
+                    dataContext = this.props.runtime.projectStore.dataContext;
                 }
 
                 const value = dataContext.get(variable.name);
                 const valueLabel = getValueLabel(
-                    this.props.runtime.projectEditorStore.project,
+                    this.props.runtime.projectStore.project,
                     value,
                     variable.type
                 );
@@ -430,7 +428,7 @@ const WatchTable = observer(
                 type: "",
                 children: () =>
                     this.getVariableTreeNodes(
-                        this.props.runtime.projectEditorStore.project
+                        this.props.runtime.projectStore.project
                             .allGlobalVariables
                     ),
                 selected: false,
@@ -464,7 +462,7 @@ const WatchTable = observer(
                 let value = componentState.getInputValue(input.name);
 
                 let valueLabel = getValueLabel(
-                    this.props.runtime.projectEditorStore.project,
+                    this.props.runtime.projectStore.project,
                     value,
                     null
                 );
@@ -494,7 +492,7 @@ const WatchTable = observer(
             }
 
             const editorState =
-                this.props.runtime.projectEditorStore.editorsStore.activeEditor
+                this.props.runtime.projectStore.editorsStore.activeEditor
                     ?.state;
             if (!(editorState instanceof FlowTabState)) {
                 return undefined;
@@ -564,7 +562,7 @@ const WatchTable = observer(
                     const children: ITreeNode[] = [];
 
                     if (
-                        this.props.runtime.projectEditorStore.uiStateStore
+                        this.props.runtime.projectStore.uiStateStore
                             .watchExpressions.length > 0
                     ) {
                         children.push(this.watchExpressions);

@@ -208,24 +208,6 @@ function buildFileMenu(win: IWindow | undefined) {
         }
     );
 
-    fileMenuSubmenu.push(
-        {
-            type: "separator"
-        },
-        {
-            label: "Compare Projects...",
-            click: async function (item: any, focusedWindow: any) {
-                if (!focusedWindow) {
-                    focusedWindow = BrowserWindow.getFocusedWindow();
-                }
-
-                if (focusedWindow) {
-                    focusedWindow.webContents.send("compare-projects");
-                }
-            }
-        }
-    );
-
     if (win?.activeTabType === "project") {
         fileMenuSubmenu.push(
             {

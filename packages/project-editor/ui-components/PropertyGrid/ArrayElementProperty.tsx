@@ -950,7 +950,10 @@ const ArrayElementPropertyVerticalOrientation = observer(
             });
 
             if (isArrayElementPropertyVisible(propertyInfo, object)) {
-                if (propertyInfo.type == PropertyType.Array) {
+                if (
+                    propertyInfo.type == PropertyType.Array &&
+                    !propertyInfo.onSelect
+                ) {
                     return (
                         <td className={className} colSpan={2}>
                             <Property

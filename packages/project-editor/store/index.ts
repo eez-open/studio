@@ -90,7 +90,7 @@ export * from "project-editor/store/clipboard";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ProjectEditorStore {
+export class ProjectStore {
     project: Project;
 
     undoManager = new UndoManager(this);
@@ -149,11 +149,11 @@ export class ProjectEditorStore {
     }
 
     static async create() {
-        return new ProjectEditorStore();
+        return new ProjectStore();
     }
 
     constructor() {
-        makeObservable<ProjectEditorStore>(this, {
+        makeObservable<ProjectStore>(this, {
             runtime: observable,
             project: observable,
             modified: observable,
@@ -238,7 +238,7 @@ export class ProjectEditorStore {
     unmount() {
         this.project.settings.general.imports.forEach(importDirective => {
             if (importDirective.project) {
-                importDirective.project._DocumentStore.unmount();
+                importDirective.project._store.unmount();
             }
         });
 
@@ -311,7 +311,7 @@ export class ProjectEditorStore {
                 // check the project in the background
                 if (
                     this.project &&
-                    this.project._DocumentStore.backgroundCheckEnabled
+                    this.project._store.backgroundCheckEnabled
                 ) {
                     ProjectEditor.build.backgroundCheck(this);
                 }
@@ -612,7 +612,7 @@ export class ProjectEditorStore {
         const project = await load(this, filePath);
 
         project._isReadOnly = true;
-        project._DocumentStore = this;
+        project._store = this;
 
         runInAction(() => {
             this.externalProjects.set(filePath, project);
@@ -650,7 +650,7 @@ export class ProjectEditorStore {
         this.project = project;
         this.filePath = projectFilePath;
 
-        project._DocumentStore = this;
+        project._store = this;
 
         this.dataContext = new ProjectEditor.DataContextClass(project);
 
@@ -958,10 +958,7 @@ export class ProjectEditorStore {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export async function load(
-    projectEditorStore: ProjectEditorStore,
-    filePath: string
-) {
+export async function load(projectStore: ProjectStore, filePath: string) {
     let fileData: Buffer;
     try {
         fileData = await fs.promises.readFile(filePath);
@@ -980,20 +977,14 @@ export async function load(
         projectJs = fileData.toString("utf8");
     }
 
-    const project: Project = loadProject(
-        projectEditorStore,
-        projectJs
-    ) as Project;
+    const project: Project = loadProject(projectStore, projectJs) as Project;
 
     project._isDashboardBuild = isDashboardBuild;
 
     return project;
 }
 
-export function getJSON(
-    projectEditorStore: ProjectEditorStore,
-    tabWidth: number = 2
-) {
+export function getJSON(projectStore: ProjectStore, tabWidth: number = 2) {
     const toJsHook = (jsObject: any, object: IEezObject) => {
         let projectFeatures = ProjectEditor.extensions;
         for (let projectFeature of projectFeatures) {
@@ -1003,17 +994,17 @@ export function getJSON(
         }
     };
 
-    (projectEditorStore.project as any)._DocumentStore = undefined;
+    (projectStore.project as any)._store = undefined;
 
-    const json = objectToJson(projectEditorStore.project, tabWidth, toJsHook);
+    const json = objectToJson(projectStore.project, tabWidth, toJsHook);
 
-    projectEditorStore.project._DocumentStore = projectEditorStore;
+    projectStore.project._store = projectStore;
 
     return json;
 }
 
-export function save(projectEditorStore: ProjectEditorStore, filePath: string) {
-    const json = getJSON(projectEditorStore);
+export function save(projectStore: ProjectStore, filePath: string) {
+    const json = getJSON(projectStore);
 
     return new Promise<void>((resolve, reject) => {
         fs.writeFile(filePath, json, "utf8", (err: any) => {

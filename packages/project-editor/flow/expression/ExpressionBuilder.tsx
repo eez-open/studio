@@ -14,7 +14,7 @@ import {
     PropertyInfo
 } from "project-editor/core/object";
 import { ProjectContext } from "project-editor/project/context";
-import { getAncestorOfType, getProjectEditorStore } from "project-editor/store";
+import { getAncestorOfType, getProjectStore } from "project-editor/store";
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import type { Component } from "project-editor/flow/component";
 import {
@@ -73,7 +73,7 @@ export async function expressionBuilder(
         };
 
         const [modalDialog] = showDialog(
-            <ProjectContext.Provider value={getProjectEditorStore(object)}>
+            <ProjectContext.Provider value={getProjectStore(object)}>
                 <SelectItemDialog
                     object={object}
                     propertyInfo={propertyInfo}

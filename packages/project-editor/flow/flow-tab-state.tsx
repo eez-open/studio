@@ -1,7 +1,7 @@
 import { guid } from "eez-studio-shared/guid";
 import { action, computed, makeObservable } from "mobx";
 import { getParent, IEezObject } from "project-editor/core/object";
-import { getProjectEditorStore, getAncestorOfType } from "project-editor/store";
+import { getProjectStore, getAncestorOfType } from "project-editor/store";
 import { Component } from "project-editor/flow/component";
 import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { Transform } from "project-editor/flow/editor/transform";
@@ -18,7 +18,7 @@ export abstract class FlowTabState implements IEditorState {
     constructor(public flow: Flow) {
         makeObservable(this, {
             flowState: computed,
-            projectEditorStore: computed,
+            projectStore: computed,
             isRuntime: computed,
             resetTransform: action,
             selectedObject: computed,
@@ -29,18 +29,18 @@ export abstract class FlowTabState implements IEditorState {
     }
 
     get flowState() {
-        if (this.projectEditorStore.runtime) {
-            return this.projectEditorStore.runtime.getFlowState(this.flow);
+        if (this.projectStore.runtime) {
+            return this.projectStore.runtime.getFlowState(this.flow);
         }
         return undefined;
     }
 
-    get projectEditorStore() {
-        return getProjectEditorStore(this.flow);
+    get projectStore() {
+        return getProjectStore(this.flow);
     }
 
     get isRuntime() {
-        return !!this.projectEditorStore.runtime;
+        return !!this.projectStore.runtime;
     }
 
     get timeline(): PageTimelineEditorState | undefined {

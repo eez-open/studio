@@ -1,7 +1,7 @@
 import { computed, makeObservable } from "mobx";
 import { Point, Rect } from "eez-studio-shared/geometry";
 
-import { getProjectEditorStore } from "project-editor/store";
+import { getProjectStore } from "project-editor/store";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -20,7 +20,7 @@ export class FlowDocument implements IDocument {
             connectionLines: computed,
             selectedConnectionLines: computed,
             nonSelectedConnectionLines: computed,
-            projectEditorStore: computed
+            projectStore: computed
         });
     }
 
@@ -33,11 +33,11 @@ export class FlowDocument implements IDocument {
 
     get selectedConnectionLines() {
         if (
-            this.projectEditorStore.runtime &&
-            (!this.projectEditorStore.runtime.isDebuggerActive ||
+            this.projectStore.runtime &&
+            (!this.projectStore.runtime.isDebuggerActive ||
                 !(
-                    this.projectEditorStore.runtime.isPaused ||
-                    this.projectEditorStore.runtime.isStopped
+                    this.projectStore.runtime.isPaused ||
+                    this.projectStore.runtime.isStopped
                 ))
         ) {
             return [];
@@ -50,11 +50,11 @@ export class FlowDocument implements IDocument {
 
     get nonSelectedConnectionLines() {
         if (
-            this.projectEditorStore.runtime &&
-            (!this.projectEditorStore.runtime.isDebuggerActive ||
+            this.projectStore.runtime &&
+            (!this.projectStore.runtime.isDebuggerActive ||
                 !(
-                    this.projectEditorStore.runtime.isPaused ||
-                    this.projectEditorStore.runtime.isStopped
+                    this.projectStore.runtime.isPaused ||
+                    this.projectStore.runtime.isStopped
                 ))
         ) {
             return this.connectionLines;
@@ -98,8 +98,8 @@ export class FlowDocument implements IDocument {
 
     pasteSelection() {}
 
-    get projectEditorStore() {
-        return getProjectEditorStore(this.flow.object);
+    get projectStore() {
+        return getProjectStore(this.flow.object);
     }
 
     onDragStart(): void {}

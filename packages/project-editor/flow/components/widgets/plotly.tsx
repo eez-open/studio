@@ -73,7 +73,7 @@ const LineChartElement = observer(
                 } else {
                     try {
                         name = evalConstantExpression(
-                            flowContext.projectEditorStore.project,
+                            flowContext.projectStore.project,
                             line.label
                         ).value;
                     } catch (err) {
@@ -249,7 +249,7 @@ const LineChartElement = observer(
                     height
                 }}
                 className={classNames("EezStudio_Plotly", {
-                    interactive: !!flowContext.projectEditorStore.runtime
+                    interactive: !!flowContext.projectStore.runtime
                 })}
             ></div>
         );
@@ -574,7 +574,7 @@ export class LineChartWidget extends Widget {
                 // as property
                 buildExpression(assets, dataBuffer, this, line.label);
             } catch (err) {
-                assets.projectEditorStore.outputSectionsStore.write(
+                assets.projectStore.outputSectionsStore.write(
                     Section.OUTPUT,
                     MessageType.ERROR,
                     err,
@@ -590,7 +590,7 @@ export class LineChartWidget extends Widget {
                 // as property
                 buildExpression(assets, dataBuffer, this, line.value);
             } catch (err) {
-                assets.projectEditorStore.outputSectionsStore.write(
+                assets.projectStore.outputSectionsStore.write(
                     Section.OUTPUT,
                     MessageType.ERROR,
                     err,
@@ -777,7 +777,7 @@ const GaugeElement = observer(
                     height
                 }}
                 className={classNames("EezStudio_Plotly", {
-                    interactive: !!flowContext.projectEditorStore.runtime
+                    interactive: !!flowContext.projectStore.runtime
                 })}
             ></div>
         );

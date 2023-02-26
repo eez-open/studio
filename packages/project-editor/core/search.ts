@@ -17,8 +17,8 @@ import {
     getClassInfo,
     EezValueObject,
     Section,
-    ProjectEditorStore,
-    getProjectEditorStore,
+    ProjectStore,
+    getProjectStore,
     objectToString
 } from "project-editor/store";
 
@@ -365,7 +365,7 @@ export class CurrentSearch {
 
     searchCallback?: SearchCallback;
 
-    constructor(public projectEditorStore: ProjectEditorStore) {}
+    constructor(public projectStore: ProjectStore) {}
 
     finishSearch() {
         if (this.searchCallback) {
@@ -378,10 +378,7 @@ export class CurrentSearch {
             this.interval = undefined;
         }
 
-        this.projectEditorStore.outputSectionsStore.setLoading(
-            Section.SEARCH,
-            false
-        );
+        this.projectStore.outputSectionsStore.setLoading(Section.SEARCH, false);
     }
 
     startNewSearch(
@@ -390,13 +387,13 @@ export class CurrentSearch {
         matchWholeWord: boolean,
         searchCallback?: SearchCallback
     ) {
-        this.projectEditorStore.outputSectionsStore.clear(Section.SEARCH);
+        this.projectStore.outputSectionsStore.clear(Section.SEARCH);
 
         this.finishSearch();
 
         this.searchCallback = searchCallback;
 
-        const root = this.projectEditorStore.project;
+        const root = this.projectStore.project;
 
         if (
             root &&
@@ -417,7 +414,7 @@ export class CurrentSearch {
                     ? searchForReference(root, patternOrObject, true)
                     : searchForAllReferences(root, true);
 
-            this.projectEditorStore.outputSectionsStore.setLoading(
+            this.projectStore.outputSectionsStore.setLoading(
                 Section.SEARCH,
                 true
             );
@@ -442,7 +439,7 @@ export class CurrentSearch {
                                 return;
                             }
                         } else {
-                            this.projectEditorStore.outputSectionsStore.write(
+                            this.projectStore.outputSectionsStore.write(
                                 Section.SEARCH,
                                 MessageType.INFO,
                                 objectToString(valueObject),
@@ -471,13 +468,13 @@ export interface IDocumentSearch {
 ////////////////////////////////////////////////////////////////////////////////
 
 function startNewSearch(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     patternOrObject: string | IEezObject | undefined,
     matchCase: boolean,
     matchWholeWord: boolean,
     searchCallback?: SearchCallback
 ) {
-    projectEditorStore.currentSearch.startNewSearch(
+    projectStore.currentSearch.startNewSearch(
         patternOrObject || "",
         matchCase,
         matchWholeWord,
@@ -486,24 +483,24 @@ function startNewSearch(
 }
 
 export function startSearch(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     pattern: string,
     matchCase: boolean,
     matchWholeWord: boolean
 ) {
-    startNewSearch(projectEditorStore, pattern, matchCase, matchWholeWord);
+    startNewSearch(projectStore, pattern, matchCase, matchWholeWord);
 }
 
 export function findAllReferences(object: IEezObject) {
-    const projectEditorStore = getProjectEditorStore(object);
-    startNewSearch(projectEditorStore, object, true, true);
+    const projectStore = getProjectStore(object);
+    startNewSearch(projectStore, object, true, true);
 }
 
 export function usage(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     searchCallback: SearchCallback
 ) {
-    startNewSearch(projectEditorStore, undefined, true, true, searchCallback);
+    startNewSearch(projectStore, undefined, true, true, searchCallback);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -559,7 +556,7 @@ export function replaceObjectReference(object: IEezObject, newValue: string) {
             if (parent) {
                 let key = getKey(searchValue);
                 if (parent && key && typeof key == "string") {
-                    getProjectEditorStore(rootObject).updateObject(parent, {
+                    getProjectStore(rootObject).updateObject(parent, {
                         [key]: value
                     });
                 }

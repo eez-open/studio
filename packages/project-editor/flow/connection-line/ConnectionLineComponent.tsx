@@ -152,8 +152,7 @@ export const ConnectionLineShape = observer(
                     targetInput={targetInput}
                     shadow={shadow}
                 />
-                {context.projectEditorStore.uiStateStore
-                    .showComponentDescriptions &&
+                {context.projectStore.uiStateStore.showComponentDescriptions &&
                     connectionLine.description && (
                         <SvgLabel
                             text={connectionLine.description}
@@ -278,8 +277,8 @@ const DebugValue = observer(
 
         if (
             context.flowState &&
-            context.document.projectEditorStore.runtime &&
-            context.document.projectEditorStore.runtime.isDebuggerActive &&
+            context.document.projectStore.runtime &&
+            context.document.projectStore.runtime.isDebuggerActive &&
             connectionLine.targetComponent &&
             targetInput
         ) {
@@ -292,7 +291,7 @@ const DebugValue = observer(
                 (!targetInput.isSequenceInput || inputValue != null)
             ) {
                 valueStr = getValueLabel(
-                    context.projectEditorStore.project,
+                    context.projectStore.project,
                     inputValue,
                     targetInput.type
                 );

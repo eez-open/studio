@@ -78,8 +78,8 @@ function getComponentIdOfComponent(assets: Assets, component: Component) {
 
     if (
         flowComponentId == undefined &&
-        (assets.projectEditorStore.projectTypeTraits.isDashboard ||
-            assets.projectEditorStore.projectTypeTraits.isLVGL)
+        (assets.projectStore.projectTypeTraits.isDashboard ||
+            assets.projectStore.projectTypeTraits.isLVGL)
     ) {
         const eezClass = getClass(component);
         const name = getClassName(eezClass);
@@ -124,7 +124,7 @@ function buildComponent(
     if (flowComponentId != undefined) {
         dataBuffer.writeUint16(flowComponentId);
     } else {
-        assets.projectEditorStore.outputSectionsStore.write(
+        assets.projectStore.outputSectionsStore.write(
             Section.OUTPUT,
             MessageType.ERROR,
             "Component is not supported for the build target",
@@ -135,7 +135,7 @@ function buildComponent(
 
     // reserved
     dataBuffer.writeUint16(
-        assets.projectEditorStore.uiStateStore.isBreakpointEnabledForComponent(
+        assets.projectStore.uiStateStore.isBreakpointEnabledForComponent(
             component
         )
             ? 1
@@ -188,7 +188,7 @@ function buildComponent(
                     buildExpression(assets, dataBuffer, component, expression);
                 }
             } catch (err) {
-                assets.projectEditorStore.outputSectionsStore.write(
+                assets.projectStore.outputSectionsStore.write(
                     Section.OUTPUT,
                     MessageType.ERROR,
                     err,
@@ -295,7 +295,7 @@ function buildComponent(
     try {
         component.buildFlowComponentSpecific(assets, dataBuffer);
     } catch (err) {
-        assets.projectEditorStore.outputSectionsStore.write(
+        assets.projectStore.outputSectionsStore.write(
             Section.OUTPUT,
             MessageType.ERROR,
             err.toString(),
@@ -373,7 +373,7 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
             dataBuffer.writeInt16(componentPropertyValue.componentIndex);
             dataBuffer.writeInt16(componentPropertyValue.propertyValueIndex);
         } else {
-            assets.projectEditorStore.outputSectionsStore.write(
+            assets.projectStore.outputSectionsStore.write(
                 Section.OUTPUT,
                 MessageType.ERROR,
                 "Widget data item not found",
@@ -393,7 +393,7 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
             dataBuffer.writeInt16(componentOutput.componentIndex);
             dataBuffer.writeInt16(componentOutput.componentOutputIndex);
         } else {
-            assets.projectEditorStore.outputSectionsStore.write(
+            assets.projectStore.outputSectionsStore.write(
                 Section.OUTPUT,
                 MessageType.ERROR,
                 "Widget action output not found",
@@ -406,7 +406,7 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
 }
 
 export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
-    if (assets.projectEditorStore.projectTypeTraits.hasFlowSupport) {
+    if (assets.projectStore.projectTypeTraits.hasFlowSupport) {
         dataBuffer.writeObjectOffset(() => {
             // flows
             dataBuffer.writeArray(assets.flows, flow => {
@@ -536,7 +536,7 @@ export function buildFlowDefs(assets: Assets) {
                 "SYSTEM_STRUCTURE_",
                 structure.name,
                 NamingConvention.UnderscoreUpperCase
-            )} = ${assets.projectEditorStore.typesStore.getValueTypeIndex(
+            )} = ${assets.projectStore.typesStore.getValueTypeIndex(
                 `struct:${structure.name}`
             )}`
         );
@@ -558,7 +558,7 @@ export function buildFlowDefs(assets: Assets) {
                     "FIELD_",
                     field.name,
                     NamingConvention.UnderscoreUpperCase
-                )} = ${assets.projectEditorStore.typesStore.getFieldIndex(
+                )} = ${assets.projectStore.typesStore.getFieldIndex(
                     `struct:${structure.name}`,
                     field.name
                 )}`
@@ -588,7 +588,7 @@ export function buildFlowDefs(assets: Assets) {
                 "ARRAY_TYPE_",
                 basicType,
                 NamingConvention.UnderscoreUpperCase
-            )} = ${assets.projectEditorStore.typesStore.getValueTypeIndex(
+            )} = ${assets.projectStore.typesStore.getValueTypeIndex(
                 `array:${basicType}` as ValueType
             )}`
         );
@@ -604,14 +604,13 @@ export function buildFlowStructs(assets: Assets) {
 
     // enum FlowStructures
     const structureEnumItems = [];
-    for (const structure of assets.projectEditorStore.project.variables
-        .structures) {
+    for (const structure of assets.projectStore.project.variables.structures) {
         structureEnumItems.push(
             `${TAB}${getName(
                 "FLOW_STRUCTURE_",
                 structure.name,
                 NamingConvention.UnderscoreUpperCase
-            )} = ${assets.projectEditorStore.typesStore.getValueTypeIndex(
+            )} = ${assets.projectStore.typesStore.getValueTypeIndex(
                 `struct:${structure.name}`
             )}`
         );
@@ -621,14 +620,13 @@ export function buildFlowStructs(assets: Assets) {
 
     // enum FlowArrayOfStructures
     const arrayOfStructureEnumItems = [];
-    for (const structure of assets.projectEditorStore.project.variables
-        .structures) {
+    for (const structure of assets.projectStore.project.variables.structures) {
         arrayOfStructureEnumItems.push(
             `${TAB}${getName(
                 "FLOW_ARRAY_OF_STRUCTURE_",
                 structure.name,
                 NamingConvention.UnderscoreUpperCase
-            )} = ${assets.projectEditorStore.typesStore.getValueTypeIndex(
+            )} = ${assets.projectStore.typesStore.getValueTypeIndex(
                 `array:struct:${structure.name}`
             )}`
         );
@@ -639,8 +637,7 @@ export function buildFlowStructs(assets: Assets) {
         )}\n};`
     );
 
-    for (const structure of assets.projectEditorStore.project.variables
-        .structures) {
+    for (const structure of assets.projectStore.project.variables.structures) {
         const fieldEnumItems = [];
         for (const field of structure.fields) {
             fieldEnumItems.push(
@@ -652,7 +649,7 @@ export function buildFlowStructs(assets: Assets) {
                     "FIELD_",
                     field.name,
                     NamingConvention.UnderscoreUpperCase
-                )} = ${assets.projectEditorStore.typesStore.getFieldIndex(
+                )} = ${assets.projectStore.typesStore.getFieldIndex(
                     `struct:${structure.name}`,
                     field.name
                 )}`

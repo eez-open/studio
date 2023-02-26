@@ -5,7 +5,7 @@ import * as notification from "eez-studio-ui/notification";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { IObjectVariableValue } from "project-editor/features/variable/value-type";
 import { IVariable } from "project-editor/flow/flow-interfaces";
-import type { ProjectEditorStore } from "project-editor/store";
+import type { ProjectStore } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -18,7 +18,7 @@ export class RuntimeSettings {
     } = {};
     modified = false;
 
-    constructor(public projectEditorStore: ProjectEditorStore) {
+    constructor(public projectStore: ProjectStore) {
         makeObservable(this, {
             settings: observable
         });
@@ -44,7 +44,7 @@ export class RuntimeSettings {
             const constructorParams = value;
             return objectVariableType.createValue(
                 constructorParams,
-                this.projectEditorStore.runtime ? true : false
+                this.projectStore.runtime ? true : false
             );
         }
 
@@ -62,9 +62,9 @@ export class RuntimeSettings {
     }
 
     async loadPersistentVariables() {
-        const projectEditorStore = this.projectEditorStore;
-        const globalVariables = projectEditorStore.project.allGlobalVariables;
-        const dataContext = projectEditorStore.dataContext;
+        const projectStore = this.projectStore;
+        const globalVariables = projectStore.project.allGlobalVariables;
+        const dataContext = projectStore.dataContext;
         for (const variable of globalVariables) {
             if (variable.persistent) {
                 const value = this.getVariableValue(variable);
@@ -76,13 +76,10 @@ export class RuntimeSettings {
     }
 
     async savePersistentVariables() {
-        const globalVariables =
-            this.projectEditorStore.project.allGlobalVariables;
+        const globalVariables = this.projectStore.project.allGlobalVariables;
         for (const variable of globalVariables) {
             if (variable.persistent) {
-                const value = this.projectEditorStore.dataContext.get(
-                    variable.name
-                );
+                const value = this.projectStore.dataContext.get(variable.name);
                 if (value != null) {
                     const objectVariableType =
                         ProjectEditor.getObjectVariableTypeFromType(
@@ -106,8 +103,8 @@ export class RuntimeSettings {
     }
 
     getSettingsFilePath() {
-        if (this.projectEditorStore.filePath) {
-            return this.projectEditorStore.filePath + "-runtime-settings";
+        if (this.projectStore.filePath) {
+            return this.projectStore.filePath + "-runtime-settings";
         }
         return undefined;
     }

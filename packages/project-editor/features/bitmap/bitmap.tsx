@@ -27,10 +27,10 @@ import { validators } from "eez-studio-shared/validation";
 
 import {
     createObject,
-    getProjectEditorStore,
+    getProjectStore,
     getUniquePropertyValue,
     Message,
-    ProjectEditorStore
+    ProjectStore
 } from "project-editor/store";
 
 import { findStyle } from "project-editor/features/style/style";
@@ -238,10 +238,10 @@ export class Bitmap extends EezObject {
         check: (bitmap: Bitmap) => {
             let messages: Message[] = [];
 
-            const projectEditorStore = getProjectEditorStore(bitmap);
+            const projectStore = getProjectStore(bitmap);
 
             ProjectEditor.checkAssetId(
-                projectEditorStore,
+                projectStore,
                 "bitmaps",
                 bitmap,
                 messages
@@ -250,9 +250,9 @@ export class Bitmap extends EezObject {
             return messages;
         },
         newItem: async (parent: IEezObject) => {
-            const projectEditorStore = getProjectEditorStore(parent);
+            const projectStore = getProjectStore(parent);
 
-            const result = await showGenericDialog(projectEditorStore, {
+            const result = await showGenericDialog(projectStore, {
                 dialogDefinition: {
                     title: "New Bitmap",
                     fields: [
@@ -279,7 +279,7 @@ export class Bitmap extends EezObject {
                                 ]
                             }
                         },
-                        ...(projectEditorStore.projectTypeTraits.isLVGL
+                        ...(projectStore.projectTypeTraits.isLVGL
                             ? []
                             : [
                                   {
@@ -301,16 +301,16 @@ export class Bitmap extends EezObject {
             const bpp: number = result.values.bpp;
 
             return createBitmap(
-                projectEditorStore,
+                projectStore,
                 result.values.imageFilePath,
                 undefined,
                 name,
-                projectEditorStore.projectTypeTraits.isLVGL ? undefined : bpp
+                projectStore.projectTypeTraits.isLVGL ? undefined : bpp
             );
         },
         icon: "image",
         afterLoadHook: (bitmap: Bitmap, project) => {
-            bitmap.migrateLvglBitmap(project._DocumentStore);
+            bitmap.migrateLvglBitmap(project._store);
         }
     };
 
@@ -325,7 +325,7 @@ export class Bitmap extends EezObject {
             );
             if (style && style.backgroundColorProperty) {
                 return getThemedColor(
-                    getProjectEditorStore(this),
+                    getProjectStore(this),
                     style.backgroundColorProperty
                 );
             }
@@ -342,9 +342,9 @@ export class Bitmap extends EezObject {
             return this.image;
         }
 
-        return ProjectEditor.getProject(
-            this
-        )._DocumentStore.getAbsoluteFilePath(this.image);
+        return ProjectEditor.getProject(this)._store.getAbsoluteFilePath(
+            this.image
+        );
     }
 
     get imageElement() {
@@ -462,16 +462,14 @@ export class Bitmap extends EezObject {
         return this.getBitmapData(this.bpp);
     }
 
-    async migrateLvglBitmap(projectEditorStore: ProjectEditorStore) {
+    async migrateLvglBitmap(projectStore: ProjectStore) {
         if (this.image.startsWith("data:image/")) {
             return;
         }
 
         // migrate from assets folder to the embedded asset
 
-        const absoluteFilePath = projectEditorStore.getAbsoluteFilePath(
-            this.image
-        );
+        const absoluteFilePath = projectStore.getAbsoluteFilePath(this.image);
 
         const imageData = await fs.promises.readFile(
             absoluteFilePath,
@@ -488,7 +486,7 @@ export class Bitmap extends EezObject {
 
         runInAction(() => {
             this.image = `data:${fileType};base64,` + imageData;
-            projectEditorStore.modified = true;
+            projectStore.modified = true;
         });
     }
 }
@@ -496,7 +494,7 @@ export class Bitmap extends EezObject {
 registerClass("Bitmap", Bitmap);
 
 export async function createBitmap(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     filePath: string,
     fileType?: string,
     name?: string,
@@ -521,7 +519,7 @@ export async function createBitmap(
 
     if (!name) {
         name = getUniquePropertyValue(
-            projectEditorStore.project.bitmaps,
+            projectStore.project.bitmaps,
             "name",
             path.parse(filePath).name
         ) as string;
@@ -538,7 +536,7 @@ export async function createBitmap(
         };
 
         const bitmap = createObject<Bitmap>(
-            projectEditorStore,
+            projectStore,
             bitmapProperties,
             Bitmap
         );
@@ -625,7 +623,7 @@ export default {
         if (
             !ProjectEditor.getProject(object).projectTypeTraits.isDashboard &&
             !ProjectEditor.getProject(object).projectTypeTraits.isLVGL &&
-            !findStyle(getProjectEditorStore(object).project, "default")
+            !findStyle(getProjectStore(object).project, "default")
         ) {
             messages.push(
                 new Message(

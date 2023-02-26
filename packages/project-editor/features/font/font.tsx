@@ -34,10 +34,10 @@ import {
 } from "project-editor/core/object";
 import {
     getLabel,
-    getProjectEditorStore,
+    getProjectStore,
     Message,
     createObject,
-    ProjectEditorStore
+    ProjectStore
 } from "project-editor/store";
 import {
     isLVGLProject,
@@ -836,7 +836,7 @@ export class Glyph extends EezObject {
                 }
             }
 
-            getProjectEditorStore(this).updateObject(this, {
+            getProjectStore(this).updateObject(this, {
                 width,
                 height,
                 glyphBitmap: {
@@ -1132,21 +1132,16 @@ export class Font extends EezObject {
         },
         afterLoadHook: (font: Font, project) => {
             try {
-                font.migrateLvglFont(project._DocumentStore);
-                font.loadLvglGlyphs(project._DocumentStore);
+                font.migrateLvglFont(project._store);
+                font.loadLvglGlyphs(project._store);
             } catch (err) {}
         },
         check: (font: Font) => {
             let messages: Message[] = [];
 
-            const projectEditorStore = getProjectEditorStore(font);
+            const projectStore = getProjectStore(font);
 
-            ProjectEditor.checkAssetId(
-                projectEditorStore,
-                "fonts",
-                font,
-                messages
-            );
+            ProjectEditor.checkAssetId(projectStore, "fonts", font, messages);
 
             return messages;
         },
@@ -1201,13 +1196,13 @@ export class Font extends EezObject {
                 return getEncodings(ranges) ? null : "Invalid range";
             }
 
-            const projectEditorStore = getProjectEditorStore(parent);
+            const projectStore = getProjectStore(parent);
 
             try {
                 let result;
 
-                if (projectEditorStore.projectTypeTraits.isLVGL) {
-                    result = await showGenericDialog(projectEditorStore, {
+                if (projectStore.projectTypeTraits.isLVGL) {
+                    result = await showGenericDialog(projectStore, {
                         dialogDefinition: {
                             title: "New Font",
                             fields: [
@@ -1274,7 +1269,7 @@ export class Font extends EezObject {
                         result.values.ranges
                     );
                 } else {
-                    result = await showGenericDialog(projectEditorStore, {
+                    result = await showGenericDialog(projectStore, {
                         dialogDefinition: {
                             title: "New Font",
                             fields: [
@@ -1364,7 +1359,7 @@ export class Font extends EezObject {
 
                 try {
                     let absoluteFilePath = result.values.filePath;
-                    let relativeFilePath = getProjectEditorStore(
+                    let relativeFilePath = getProjectStore(
                         parent
                     ).getFilePathRelativeToProjectPath(result.values.filePath);
 
@@ -1391,12 +1386,11 @@ export class Font extends EezObject {
                         createBlankGlyphs: result.values.createBlankGlyphs,
                         doNotAddGlyphIfNotFound: false,
                         lvglInclude:
-                            projectEditorStore.project.settings.build
-                                .lvglInclude
+                            projectStore.project.settings.build.lvglInclude
                     });
 
                     const font = createObject<Font>(
-                        projectEditorStore,
+                        projectStore,
                         fontProperties as any,
                         Font
                     );
@@ -1446,13 +1440,13 @@ export class Font extends EezObject {
         return Math.max(...this.glyphs.map(glyph => glyph.encoding));
     }
 
-    async loadLvglGlyphs(projectEditorStore: ProjectEditorStore) {
+    async loadLvglGlyphs(projectStore: ProjectStore) {
         if (!this.lvglGlyphs) {
             return;
         }
         const fontProperties = await extractFont({
             name: this.name,
-            absoluteFilePath: projectEditorStore.getAbsoluteFilePath(
+            absoluteFilePath: projectStore.getAbsoluteFilePath(
                 this.source!.filePath
             ),
             embeddedFontFile: this.embeddedFontFile,
@@ -1472,7 +1466,7 @@ export class Font extends EezObject {
         runInAction(() => {
             for (const glyphProperties of fontProperties.glyphs) {
                 const glyph = createObject<Glyph>(
-                    projectEditorStore,
+                    projectStore,
                     glyphProperties as any,
                     Glyph
                 );
@@ -1482,7 +1476,7 @@ export class Font extends EezObject {
         });
     }
 
-    async migrateLvglFont(projectEditorStore: ProjectEditorStore) {
+    async migrateLvglFont(projectStore: ProjectStore) {
         if (!this.lvglGlyphs) {
             return;
         }
@@ -1493,7 +1487,7 @@ export class Font extends EezObject {
 
         // migrate from assets folder to the embedded asset
 
-        const absoluteFilePath = projectEditorStore.getAbsoluteFilePath(
+        const absoluteFilePath = projectStore.getAbsoluteFilePath(
             this.source!.filePath
         );
 
@@ -1518,21 +1512,18 @@ export class Font extends EezObject {
             this.embeddedFontFile = fontProperties.embeddedFontFile;
             this.lvglBinFile = fontProperties.lvglBinFile;
             this.lvglSourceFile = fontProperties.lvglSourceFile;
-            projectEditorStore.modified = true;
+            projectStore.modified = true;
         });
     }
 
-    async rebuildLvglFont(
-        projectEditorStore: ProjectEditorStore,
-        lvglInclude: string
-    ) {
+    async rebuildLvglFont(projectStore: ProjectStore, lvglInclude: string) {
         if (!this.embeddedFontFile) {
             return;
         }
 
         const fontProperties = await extractFont({
             name: this.name,
-            absoluteFilePath: projectEditorStore.getAbsoluteFilePath(
+            absoluteFilePath: projectStore.getAbsoluteFilePath(
                 this.source!.filePath
             ),
             embeddedFontFile: this.embeddedFontFile,
@@ -1550,7 +1541,7 @@ export class Font extends EezObject {
             lvglInclude
         });
 
-        projectEditorStore.updateObject(this, {
+        projectStore.updateObject(this, {
             lvglSourceFile: fontProperties.lvglSourceFile
         });
     }
@@ -1572,11 +1563,11 @@ export function findFont(project: Project, fontName: string | undefined) {
 }
 
 export function rebuildLvglFonts(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     lvglInclude: string
 ) {
-    projectEditorStore.project.fonts.forEach(font => {
-        font.rebuildLvglFont(projectEditorStore, lvglInclude);
+    projectStore.project.fonts.forEach(font => {
+        font.rebuildLvglFont(projectStore, lvglInclude);
     });
 }
 

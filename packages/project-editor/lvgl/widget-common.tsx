@@ -244,7 +244,7 @@ export class EventHandler extends EezObject {
             };
 
             const eventHandler = createObject<EventHandler>(
-                project._DocumentStore,
+                project._store,
                 properties,
                 EventHandler
             );

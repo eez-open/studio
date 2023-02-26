@@ -4,7 +4,7 @@ import {
     PropertyType
 } from "project-editor/core/object";
 
-import { ProjectEditorStore } from "project-editor/store";
+import { ProjectStore } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -155,7 +155,7 @@ export type LVGLPropertyInfo = PropertyInfo & {
 export class PropertyValueHolder extends EezObject {
     [propertyName: string]: any;
     constructor(
-        public projectEditorStore: ProjectEditorStore,
+        public projectStore: ProjectStore,
         propertyName: string,
         propertyValue: any
     ) {
@@ -1226,9 +1226,10 @@ export const text_font_property_info: LVGLPropertyInfo = {
     type: PropertyType.Enum,
     enumItems: (propertyValueHolder: PropertyValueHolder) => {
         return [
-            ...propertyValueHolder.projectEditorStore.project.fonts.map(
-                font => ({ id: font.name, label: font.name })
-            ),
+            ...propertyValueHolder.projectStore.project.fonts.map(font => ({
+                id: font.name,
+                label: font.name
+            })),
             ...BUILT_IN_FONTS.map(id => ({ id }))
         ];
     },

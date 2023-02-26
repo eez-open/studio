@@ -1,7 +1,7 @@
 import { Point, Rect } from "eez-studio-shared/geometry";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
-import type { ProjectEditorStore } from "project-editor/store";
+import type { ProjectStore } from "project-editor/store";
 
 import type { Transform } from "project-editor/flow/editor/transform";
 import type { Component, Widget } from "project-editor/flow/component";
@@ -11,7 +11,7 @@ export interface IFlowContext {
     dataContext: IDataContext;
     flowState?: IFlowState;
     document: IDocument;
-    projectEditorStore: ProjectEditorStore;
+    projectStore: ProjectStore;
     viewState: IViewState;
     editorOptions: IEditorOptions;
     frontFace: boolean;
@@ -113,7 +113,7 @@ export interface IFlowState {
     dataContext: IDataContext;
     runtime: IRuntime;
     flow: IFlow;
-    projectEditorStore: any;
+    projectStore: any;
 
     getVariable(component: Component, variableName: string): any;
     setVariable(component: Component, variableName: string, value: any): void;
@@ -128,7 +128,7 @@ export interface IFlowState {
 }
 
 export interface IDocument {
-    projectEditorStore: ProjectEditorStore;
+    projectStore: ProjectStore;
 
     flow: ITreeObjectAdapter;
 

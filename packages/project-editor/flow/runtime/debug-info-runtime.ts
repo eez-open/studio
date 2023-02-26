@@ -1,4 +1,4 @@
-import { ProjectEditorStore } from "project-editor/store";
+import { ProjectStore } from "project-editor/store";
 import { Component, Widget } from "project-editor/flow/component";
 import {
     FlowState,
@@ -18,8 +18,8 @@ export class DebugInfoRuntime extends RuntimeBase {
     pumpTimeoutId: any;
     _lastBreakpointTaks: QueueTask | undefined;
 
-    constructor(public projectEditorStore: ProjectEditorStore) {
-        super(projectEditorStore);
+    constructor(public projectStore: ProjectStore) {
+        super(projectStore);
     }
 
     async loadDebugInfo(filePath: string) {
@@ -95,7 +95,7 @@ export class DebugInfoRuntime extends RuntimeBase {
     destroyObjectLocalVariables(flowState: FlowState) {}
 
     toggleDebugger() {
-        this.projectEditorStore.onRestart();
+        this.projectStore.onRestart();
     }
 
     evalProperty(

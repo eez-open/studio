@@ -91,21 +91,21 @@ function migrateRectangleWidgetToV2(project: Project) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function removeFlowSupport(project: Project) {
-    const projectEditorStore = project._DocumentStore;
+    const projectStore = project._store;
 
     project.actions.forEach(action => {
         if (action.implementationType != "native") {
             // remove all components
-            projectEditorStore.deleteObjects(action.components);
+            projectStore.deleteObjects(action.components);
 
             // remove all connection lines
-            projectEditorStore.deleteObjects(action.connectionLines);
+            projectStore.deleteObjects(action.connectionLines);
 
             // remove all local variables
-            projectEditorStore.deleteObjects(action.localVariables);
+            projectStore.deleteObjects(action.localVariables);
 
             // set as native
-            projectEditorStore.updateObject(action, {
+            projectStore.updateObject(action, {
                 implementationType: "native"
             });
         }
@@ -113,7 +113,7 @@ function removeFlowSupport(project: Project) {
 
     project.pages.forEach(page => {
         // remove all action components
-        projectEditorStore.deleteObjects(
+        projectStore.deleteObjects(
             page.components.filter(
                 component =>
                     component instanceof ProjectEditor.ActionComponentClass
@@ -121,17 +121,17 @@ function removeFlowSupport(project: Project) {
         );
 
         // remove all connection lines
-        projectEditorStore.deleteObjects(page.connectionLines);
+        projectStore.deleteObjects(page.connectionLines);
 
         // remove all local variables
-        projectEditorStore.deleteObjects(page.localVariables);
+        projectStore.deleteObjects(page.localVariables);
 
-        if (projectEditorStore.projectTypeTraits.isLVGL) {
+        if (projectStore.projectTypeTraits.isLVGL) {
             // set all event handlers for LVGL widgets to "action"
             page._lvglWidgets.forEach(lvglWidget => {
                 lvglWidget.eventHandlers.forEach(eventHandler => {
                     if (eventHandler.handlerType == "flow") {
-                        projectEditorStore.updateObject(eventHandler, {
+                        projectStore.updateObject(eventHandler, {
                             handlerType: "action"
                         });
                     }
@@ -143,18 +143,18 @@ function removeFlowSupport(project: Project) {
     // set all globalVariables as native
     project.variables.globalVariables.forEach(globalVariable => {
         if (!globalVariable.native) {
-            projectEditorStore.updateObject(globalVariable, {
+            projectStore.updateObject(globalVariable, {
                 native: true
             });
         }
     });
 
     // remove all structures
-    projectEditorStore.deleteObjects(project.variables.structures);
+    projectStore.deleteObjects(project.variables.structures);
 
-    if (projectEditorStore.projectTypeTraits.isLVGL) {
+    if (projectStore.projectTypeTraits.isLVGL) {
         // remove all enums
-        projectEditorStore.deleteObjects(project.variables.enums);
+        projectStore.deleteObjects(project.variables.enums);
     }
 }
 

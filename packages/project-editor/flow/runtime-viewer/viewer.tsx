@@ -149,8 +149,8 @@ export const Canvas = observer(
                         clientRect.height !== transform.clientRect.height)
                 ) {
                     if (
-                        this.props.flowContext.projectEditorStore.runtime &&
-                        !this.props.flowContext.projectEditorStore.runtime
+                        this.props.flowContext.projectStore.runtime &&
+                        !this.props.flowContext.projectStore.runtime
                             .isDebuggerActive
                     ) {
                         // set overflow to hidden and back to auto after timeout
@@ -174,9 +174,8 @@ export const Canvas = observer(
 
         componentDidMount() {
             if (
-                this.props.flowContext.projectEditorStore.runtime &&
-                this.props.flowContext.projectEditorStore.runtime
-                    .isDebuggerActive
+                this.props.flowContext.projectStore.runtime &&
+                this.props.flowContext.projectStore.runtime.isDebuggerActive
             ) {
                 this.draggable.attach(this.div);
             }
@@ -300,7 +299,7 @@ export const Canvas = observer(
         }
 
         onDragStart(event: PointerEvent) {
-            this.props.flowContext.projectEditorStore.editorsStore.selectEditorTabForObject(
+            this.props.flowContext.projectStore.editorsStore.selectEditorTabForObject(
                 this.props.flowContext.document.flow.object
             );
 
@@ -461,7 +460,7 @@ export const Canvas = observer(
         render() {
             let style: React.CSSProperties = {};
 
-            const runtime = this.props.flowContext.projectEditorStore.runtime!;
+            const runtime = this.props.flowContext.projectStore.runtime!;
             const runMode = runtime && !runtime.isDebuggerActive;
 
             const transform = this.props.flowContext.viewState.transform;
@@ -471,7 +470,7 @@ export const Canvas = observer(
             let scale: number;
             if (
                 runMode &&
-                this.props.flowContext.projectEditorStore.projectTypeTraits
+                this.props.flowContext.projectStore.projectTypeTraits
                     .isDashboard &&
                 this.props.flowContext.document.flow.object instanceof
                     ProjectEditor.PageClass &&
@@ -482,23 +481,23 @@ export const Canvas = observer(
                 scale = 1;
             } else if (
                 runMode &&
-                this.props.flowContext.projectEditorStore.projectTypeTraits
+                this.props.flowContext.projectStore.projectTypeTraits
                     .isFirmware &&
-                this.props.flowContext.projectEditorStore.projectTypeTraits
+                this.props.flowContext.projectStore.projectTypeTraits
                     .hasFlowSupport &&
-                this.props.flowContext.projectEditorStore.runtime instanceof
+                this.props.flowContext.projectStore.runtime instanceof
                     ProjectEditor.WasmRuntimeClass
             ) {
                 xt = Math.round(
                     (transform.clientRect.width -
-                        this.props.flowContext.projectEditorStore.runtime
+                        this.props.flowContext.projectStore.runtime
                             .displayWidth) /
                         2
                 );
 
                 yt = Math.round(
                     (transform.clientRect.height -
-                        this.props.flowContext.projectEditorStore.runtime
+                        this.props.flowContext.projectStore.runtime
                             .displayHeight) /
                         2
                 );
@@ -717,13 +716,13 @@ export const FlowViewer = observer(
             const flow = this.props.tabState.widgetContainer.object as Flow;
 
             const runMode =
-                this.flowContext.projectEditorStore.runtime &&
-                !this.flowContext.projectEditorStore.runtime.isDebuggerActive;
+                this.flowContext.projectStore.runtime &&
+                !this.flowContext.projectStore.runtime.isDebuggerActive;
 
             const renderParts =
                 this.flowContext.flowState ||
                 this.flowContext.flow instanceof ProjectEditor.ActionClass ||
-                this.flowContext.projectEditorStore.projectTypeTraits.isLVGL;
+                this.flowContext.projectStore.projectTypeTraits.isLVGL;
 
             return (
                 <div

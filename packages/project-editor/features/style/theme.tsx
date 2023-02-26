@@ -13,9 +13,9 @@ import {
     getParent
 } from "project-editor/core/object";
 import {
-    ProjectEditorStore,
+    ProjectStore,
     IContextMenuContext,
-    getProjectEditorStore,
+    getProjectStore,
     LayoutModels,
     Message,
     createObject
@@ -335,10 +335,10 @@ export class Color extends EezObject {
         check: (color: Color) => {
             let messages: Message[] = [];
 
-            const projectEditorStore = getProjectEditorStore(color);
+            const projectStore = getProjectStore(color);
 
             ProjectEditor.checkAssetId(
-                projectEditorStore,
+                projectStore,
                 "colors",
                 color,
                 messages,
@@ -396,7 +396,7 @@ export class Color extends EezObject {
             const project = ProjectEditor.getProject(parent);
 
             const color = createObject<Color>(
-                project._DocumentStore,
+                project._store,
                 colorProperties,
                 Color
             );
@@ -418,19 +418,16 @@ export class Color extends EezObject {
                     new MenuItem({
                         label: "Copy to other themes",
                         click: () => {
-                            const projectEditorStore =
-                                getProjectEditorStore(thisObject);
+                            const projectStore = getProjectStore(thisObject);
 
-                            projectEditorStore.undoManager.setCombineCommands(
-                                true
-                            );
+                            projectStore.undoManager.setCombineCommands(true);
 
                             const project = getProjectWithThemes(
-                                getProjectEditorStore(thisObject)
+                                getProjectStore(thisObject)
                             );
 
                             const selectedTheme =
-                                projectEditorStore.navigationStore.selectedThemeObject.get() as Theme;
+                                projectStore.navigationStore.selectedThemeObject.get() as Theme;
 
                             const colorIndex =
                                 project.colors.indexOf(thisObject);
@@ -443,15 +440,13 @@ export class Color extends EezObject {
                                 if (theme != selectedTheme) {
                                     const colors = theme.colors.slice();
                                     colors[colorIndex] = color;
-                                    projectEditorStore.updateObject(theme, {
+                                    projectStore.updateObject(theme, {
                                         colors
                                     });
                                 }
                             });
 
-                            projectEditorStore.undoManager.setCombineCommands(
-                                false
-                            );
+                            projectStore.undoManager.setCombineCommands(false);
                         }
                     })
                 );
@@ -519,7 +514,7 @@ export class Theme extends EezObject implements ITheme {
             const project = ProjectEditor.getProject(parent);
 
             const theme = createObject<Theme>(
-                project._DocumentStore,
+                project._store,
                 themeProperties,
                 Theme
             );
@@ -577,7 +572,7 @@ function getThemedColorInProject(
     colorValue: string
 ): string | undefined {
     let selectedTheme =
-        project._DocumentStore.navigationStore.selectedThemeObject.get() as Theme;
+        project._store.navigationStore.selectedThemeObject.get() as Theme;
     if (!selectedTheme) {
         selectedTheme = project.themes[0];
     }
@@ -599,7 +594,7 @@ function getThemedColorInProject(
 }
 
 export function getThemedColor(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     colorValue: string
 ): string {
     if (colorValue.startsWith("#")) {
@@ -610,7 +605,7 @@ export function getThemedColor(
         return `rgba(0, 0, 0, 0)`;
     }
 
-    const project = getProjectWithThemes(projectEditorStore);
+    const project = getProjectWithThemes(projectStore);
     let color = getThemedColorInProject(project, colorValue);
     if (color) {
         return color;
@@ -621,16 +616,16 @@ export function getThemedColor(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getProjectWithThemes(projectEditorStore: ProjectEditorStore) {
-    if (projectEditorStore.masterProject) {
-        return projectEditorStore.masterProject;
+function getProjectWithThemes(projectStore: ProjectStore) {
+    if (projectStore.masterProject) {
+        return projectStore.masterProject;
     }
 
-    if (projectEditorStore.project.themes.length > 0) {
-        return projectEditorStore.project;
+    if (projectStore.project.themes.length > 0) {
+        return projectStore.project;
     }
 
-    for (const importDirective of projectEditorStore.project.settings.general
+    for (const importDirective of projectStore.project.settings.general
         .imports) {
         if (importDirective.project) {
             if (importDirective.project.themes.length > 0) {
@@ -639,5 +634,5 @@ function getProjectWithThemes(projectEditorStore: ProjectEditorStore) {
         }
     }
 
-    return projectEditorStore.project;
+    return projectStore.project;
 }

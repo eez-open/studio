@@ -1,6 +1,7 @@
 import { MenuItem } from "@electron/remote";
 import React from "react";
 import { observable, computed, makeObservable } from "mobx";
+import classNames from "classnames";
 
 import { _each, _find, _range } from "eez-studio-shared/algorithm";
 import { validators } from "eez-studio-shared/validation";
@@ -39,17 +40,14 @@ import {
     propertyNotSetMessage,
     updateObject,
     createObject,
-    ProjectEditorStore
+    ProjectStore
 } from "project-editor/store";
 import {
     isLVGLProject,
     isNotProjectWithFlowSupport
 } from "project-editor/project/project-type-traits";
 import { objectToJS } from "project-editor/store";
-import {
-    IContextMenuContext,
-    getProjectEditorStore
-} from "project-editor/store";
+import { IContextMenuContext, getProjectStore } from "project-editor/store";
 
 import type {
     IResizeHandler,
@@ -74,7 +72,6 @@ import type {
     SelectWidget
 } from "project-editor/flow/components/widgets";
 import { WIDGET_TYPE_NONE } from "project-editor/flow/components/component_types";
-import classNames from "classnames";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
 import {
     buildAssignableExpression,
@@ -109,8 +106,7 @@ import {
     geometryGroup,
     specificGroup,
     styleGroup,
-    timelineGroup,
-    topGroup
+    timelineGroup
 } from "project-editor/ui-components/PropertyGrid/groups";
 import { IconAction } from "eez-studio-ui/action";
 import { observer } from "mobx-react";
@@ -398,16 +394,17 @@ export function makeExpressionProperty(
                             new MenuItem({
                                 label: "Convert to input",
                                 click: () => {
-                                    const projectEditorStore =
-                                        getProjectEditorStore(props.objects[0]);
+                                    const projectStore = getProjectStore(
+                                        props.objects[0]
+                                    );
 
-                                    projectEditorStore.undoManager.setCombineCommands(
+                                    projectStore.undoManager.setCombineCommands(
                                         true
                                     );
 
                                     const customInput =
                                         createObject<CustomInput>(
-                                            projectEditorStore,
+                                            projectStore,
                                             {
                                                 name: props.propertyInfo.name,
                                                 type:
@@ -417,17 +414,17 @@ export function makeExpressionProperty(
                                             CustomInput
                                         );
 
-                                    projectEditorStore.addObject(
+                                    projectStore.addObject(
                                         component.customInputs,
                                         customInput
                                     );
 
-                                    projectEditorStore.updateObject(component, {
+                                    projectStore.updateObject(component, {
                                         [props.propertyInfo.name]:
                                             customInput.name
                                     });
 
-                                    projectEditorStore.undoManager.setCombineCommands(
+                                    projectStore.undoManager.setCombineCommands(
                                         false
                                     );
                                 }
@@ -525,13 +522,11 @@ export function makeToggablePropertyToOutput(
                                 ? "Convert to output"
                                 : "Convert to property",
                         click: () => {
-                            const projectEditorStore = getProjectEditorStore(
+                            const projectStore = getProjectStore(
                                 props.objects[0]
                             );
 
-                            projectEditorStore.undoManager.setCombineCommands(
-                                true
-                            );
+                            projectStore.undoManager.setCombineCommands(true);
 
                             if (i === -1) {
                                 asOutputProperties.push(
@@ -550,14 +545,12 @@ export function makeToggablePropertyToOutput(
 
                             asOutputProperties.sort();
 
-                            projectEditorStore.updateObject(component, {
+                            projectStore.updateObject(component, {
                                 asOutputProperties,
                                 [props.propertyInfo.name]: undefined
                             });
 
-                            projectEditorStore.undoManager.setCombineCommands(
-                                false
-                            );
+                            projectStore.undoManager.setCombineCommands(false);
                         }
                     })
                 );
@@ -763,7 +756,7 @@ export class CustomInput extends EezObject implements ComponentInput {
                                 validators.required,
                                 componentInputUnique(
                                     createObject<CustomInput>(
-                                        project._DocumentStore,
+                                        project._store,
                                         {},
                                         CustomInput
                                     ),
@@ -788,7 +781,7 @@ export class CustomInput extends EezObject implements ComponentInput {
             };
 
             const customInput = createObject<CustomInput>(
-                project._DocumentStore,
+                project._store,
                 customInputProperties,
                 CustomInput
             );
@@ -885,7 +878,7 @@ export class CustomOutput extends EezObject implements ComponentOutput {
                             validators: [
                                 componentOutputUnique(
                                     createObject<CustomOutput>(
-                                        project._DocumentStore,
+                                        project._store,
                                         {},
                                         CustomOutput
                                     ),
@@ -911,7 +904,7 @@ export class CustomOutput extends EezObject implements ComponentOutput {
             };
 
             const customOutput = createObject<CustomOutput>(
-                project._DocumentStore,
+                project._store,
                 customOutputProperties,
                 CustomOutput
             );
@@ -975,11 +968,11 @@ function addBreakpointMenuItems(
 
     var additionalMenuItems: Electron.MenuItem[] = [];
 
-    const projectEditorStore = getProjectEditorStore(component);
+    const projectStore = getProjectStore(component);
 
-    const uiStateStore = projectEditorStore.uiStateStore;
+    const uiStateStore = projectStore.uiStateStore;
 
-    if (projectEditorStore.projectTypeTraits.hasFlowSupport) {
+    if (projectStore.projectTypeTraits.hasFlowSupport) {
         if (uiStateStore.isBreakpointAddedForComponent(component)) {
             additionalMenuItems.push(
                 new MenuItem({
@@ -1717,14 +1710,14 @@ export class Component extends EezObject {
             {
                 name: "alignAndDistribute",
                 type: PropertyType.Any,
-                propertyGridGroup: topGroup,
+                propertyGridGroup: geometryGroup,
                 computed: true,
                 propertyGridRowComponent: AlignAndDistributePropertyGridUI,
                 hideInPropertyGrid: (widget: Widget) => {
-                    const projectEditorStore =
-                        ProjectEditor.getProject(widget)._DocumentStore;
+                    const projectStore =
+                        ProjectEditor.getProject(widget)._store;
                     const propertyGridObjects =
-                        projectEditorStore.navigationStore.propertyGridObjects;
+                        projectStore.navigationStore.propertyGridObjects;
 
                     if (propertyGridObjects.length < 2) {
                         return true;
@@ -1777,10 +1770,10 @@ export class Component extends EezObject {
                 computed: true,
                 propertyGridRowComponent: CenterWidgetUI,
                 hideInPropertyGrid: (widget: Widget) => {
-                    const projectEditorStore =
-                        ProjectEditor.getProject(widget)._DocumentStore;
+                    const projectStore =
+                        ProjectEditor.getProject(widget)._store;
                     const propertyGridObjects =
-                        projectEditorStore.navigationStore.propertyGridObjects;
+                        projectStore.navigationStore.propertyGridObjects;
                     return !(
                         propertyGridObjects.length == 1 &&
                         propertyGridObjects[0] instanceof Widget
@@ -1888,7 +1881,7 @@ export class Component extends EezObject {
             return object.rect;
         },
         setRect: (object: Component, value: Partial<Rect>) => {
-            const projectEditorStore = getProjectEditorStore(object);
+            const projectStore = getProjectStore(object);
 
             const props: Partial<Rect> = {};
 
@@ -1920,7 +1913,7 @@ export class Component extends EezObject {
                 }
             }
 
-            projectEditorStore.updateObject(object, props);
+            projectStore.updateObject(object, props);
         },
         isMoveable: (object: Component) => {
             return object.isMoveable;
@@ -2087,9 +2080,9 @@ export class Component extends EezObject {
                 // }
             });
 
-            const projectEditorStore = getProjectEditorStore(component);
+            const projectStore = getProjectStore(component);
 
-            if (projectEditorStore.projectTypeTraits.hasFlowSupport) {
+            if (projectStore.projectTypeTraits.hasFlowSupport) {
                 // check properties
                 for (const propertyInfo of getClassInfo(component).properties) {
                     if (isPropertyHidden(component, propertyInfo)) {
@@ -2104,7 +2097,7 @@ export class Component extends EezObject {
                                     propertyInfo.expressionIsConstant === true
                                 ) {
                                     evalConstantExpression(
-                                        projectEditorStore.project,
+                                        projectStore.project,
                                         value
                                     );
                                 } else {
@@ -2454,7 +2447,7 @@ export class Component extends EezObject {
     }
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
-        // if (!flowContext.projectEditorStore.projectTypeTraits.isDashboard) {
+        // if (!flowContext.projectStore.projectTypeTraits.isDashboard) {
         //     const backgroundColor = this.style.backgroundColorProperty;
         //     style.backgroundColor = to16bitsColor(backgroundColor);
         // }
@@ -2741,9 +2734,9 @@ export class Widget extends Component {
                 }
             }
 
-            const projectEditorStore = getProjectEditorStore(object);
+            const projectStore = getProjectStore(object);
 
-            if (!projectEditorStore.projectTypeTraits.hasFlowSupport) {
+            if (!projectStore.projectTypeTraits.hasFlowSupport) {
                 ProjectEditor.documentSearch.checkObjectReference(
                     object,
                     "data",
@@ -2795,7 +2788,7 @@ export class Widget extends Component {
     }
 
     putInSelect() {
-        const projectEditorStore = getProjectEditorStore(this);
+        const projectStore = getProjectStore(this);
 
         var selectWidgetProperties: Partial<SelectWidget> = Object.assign(
             {},
@@ -2804,7 +2797,7 @@ export class Widget extends Component {
         );
 
         const selectWidget = createObject<SelectWidget>(
-            projectEditorStore,
+            projectStore,
             selectWidgetProperties,
             ProjectEditor.SelectWidgetClass
         );
@@ -2816,20 +2809,20 @@ export class Widget extends Component {
 
         selectWidget.widgets.push(this);
 
-        projectEditorStore.undoManager.setCombineCommands(true);
+        projectStore.undoManager.setCombineCommands(true);
 
-        const result = projectEditorStore.replaceObject(
+        const result = projectStore.replaceObject(
             this,
             selectWidget,
             selectWidget.widgets
         );
 
-        projectEditorStore.updateObject(this, {
+        projectStore.updateObject(this, {
             left: 0,
             top: 0
         });
 
-        projectEditorStore.undoManager.setCombineCommands(false);
+        projectStore.undoManager.setCombineCommands(false);
 
         return result;
     }
@@ -2895,14 +2888,14 @@ export class Widget extends Component {
     }
 
     static repositionWidgets(
-        projectEditorStore: ProjectEditorStore,
+        projectStore: ProjectStore,
         widgets: Widget[],
         boundingRect: Rect
     ) {
         for (let i = 0; i < widgets.length; i++) {
             let widget = widgets[i];
 
-            projectEditorStore.updateObject(widget, {
+            projectStore.updateObject(widget, {
                 left: widgets[i].left - boundingRect.left,
                 top: widgets[i].top - boundingRect.top
             });
@@ -2910,7 +2903,7 @@ export class Widget extends Component {
     }
 
     static putInContainer(fromWidgets: Widget[]) {
-        const projectEditorStore = getProjectEditorStore(fromWidgets[0]);
+        const projectStore = getProjectStore(fromWidgets[0]);
 
         var containerWidgetProperties: Partial<ContainerWidget> = Object.assign(
             {},
@@ -2919,7 +2912,7 @@ export class Widget extends Component {
         );
 
         var containerWidget = createObject<ContainerWidget>(
-            projectEditorStore,
+            projectStore,
             containerWidgetProperties,
             ProjectEditor.ContainerWidgetClass
         );
@@ -2935,23 +2928,23 @@ export class Widget extends Component {
             containerWidget.widgets.push(widget);
         });
 
-        projectEditorStore.undoManager.setCombineCommands(true);
+        projectStore.undoManager.setCombineCommands(true);
 
-        const result = projectEditorStore.replaceObjects(
+        const result = projectStore.replaceObjects(
             fromWidgets,
             containerWidget,
             containerWidget.widgets
         );
 
-        Widget.repositionWidgets(projectEditorStore, fromWidgets, boundingRect);
+        Widget.repositionWidgets(projectStore, fromWidgets, boundingRect);
 
-        projectEditorStore.undoManager.setCombineCommands(false);
+        projectStore.undoManager.setCombineCommands(false);
 
         return result;
     }
 
     static putInList(fromWidgets: Widget[]) {
-        const projectEditorStore = getProjectEditorStore(fromWidgets[0]);
+        const projectStore = getProjectStore(fromWidgets[0]);
 
         let boundingRect: Rect | undefined;
 
@@ -2971,7 +2964,7 @@ export class Widget extends Component {
                 );
 
             containerWidget = createObject<ContainerWidget>(
-                projectEditorStore,
+                projectStore,
                 containerWidgetJsObjectProperties,
                 ProjectEditor.ContainerWidgetClass
             );
@@ -2994,7 +2987,7 @@ export class Widget extends Component {
             { type: "List" }
         );
         const listWidget = createObject<ListWidget>(
-            projectEditorStore,
+            projectStore,
             listWidgetJsObjectProperties,
             ProjectEditor.ListWidgetClass
         );
@@ -3010,30 +3003,26 @@ export class Widget extends Component {
         containerWidget.left = 0;
         containerWidget.top = 0;
 
-        projectEditorStore.undoManager.setCombineCommands(true);
+        projectStore.undoManager.setCombineCommands(true);
 
-        const result = projectEditorStore.replaceObjects(
+        const result = projectStore.replaceObjects(
             fromWidgets,
             listWidget,
             containerWidget.widgets
         );
 
         if (boundingRect) {
-            Widget.repositionWidgets(
-                projectEditorStore,
-                fromWidgets,
-                boundingRect
-            );
+            Widget.repositionWidgets(projectStore, fromWidgets, boundingRect);
         }
 
-        projectEditorStore.undoManager.setCombineCommands(false);
+        projectStore.undoManager.setCombineCommands(false);
 
         return result;
     }
 
     static async createCustomWidget(fromWidgets: Component[]) {
-        const projectEditorStore = getProjectEditorStore(fromWidgets[0]);
-        const customWidgets = projectEditorStore.project.pages;
+        const projectStore = getProjectStore(fromWidgets[0]);
+        const customWidgets = projectStore.project.pages;
 
         try {
             const result = await showGenericDialog({
@@ -3059,10 +3048,10 @@ export class Widget extends Component {
 
             const createWidgetsResult = Widget.createWidgets(fromWidgets);
 
-            projectEditorStore.addObject(
+            projectStore.addObject(
                 customWidgets,
                 createObject<Page>(
-                    projectEditorStore,
+                    projectStore,
                     {
                         name: customWidgetName,
                         left: 0,
@@ -3076,10 +3065,10 @@ export class Widget extends Component {
                 )
             );
 
-            return projectEditorStore.replaceObjects(
+            return projectStore.replaceObjects(
                 fromWidgets,
                 createObject<LayoutViewWidget>(
-                    projectEditorStore,
+                    projectStore,
                     {
                         type: "LayoutView",
                         left: createWidgetsResult.left,
@@ -3119,10 +3108,10 @@ export class Widget extends Component {
 
             const createWidgetsResult = Widget.createWidgets(fromWidgets);
 
-            return getProjectEditorStore(fromWidgets[0]).replaceObjects(
+            return getProjectStore(fromWidgets[0]).replaceObjects(
                 fromWidgets,
                 createObject<LayoutViewWidget>(
-                    getProjectEditorStore(fromWidgets[0]),
+                    getProjectStore(fromWidgets[0]),
                     {
                         type: "LayoutView",
                         left: createWidgetsResult.left,

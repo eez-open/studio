@@ -1,7 +1,7 @@
 import { makeObservable } from "mobx";
 import { observable, computed, action } from "mobx";
 
-import type { ProjectEditorStore } from "project-editor/store";
+import type { ProjectStore } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -19,7 +19,7 @@ export class UndoManager {
     private selectionBeforeFirstCommand: any;
     public combineCommands: boolean = false;
 
-    constructor(public projectEditorStore: ProjectEditorStore) {
+    constructor(public projectStore: ProjectStore) {
         makeObservable(this, {
             undoStack: observable,
             redoStack: observable,
@@ -80,7 +80,7 @@ export class UndoManager {
 
         this.redoStack = [];
 
-        this.projectEditorStore.setModified(true);
+        this.projectStore.setModified(true);
     }
 
     static getCommandsDescription(commands: ICommand[]) {
@@ -117,7 +117,7 @@ export class UndoManager {
 
             this.redoStack.push(undoItem);
 
-            this.projectEditorStore.setModified(true);
+            this.projectStore.setModified(true);
         }
     }
 
@@ -147,7 +147,7 @@ export class UndoManager {
 
             this.undoStack.push(redoItem);
 
-            this.projectEditorStore.setModified(true);
+            this.projectStore.setModified(true);
         }
     }
 }

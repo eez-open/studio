@@ -14,9 +14,9 @@ import {
 } from "project-editor/core/object";
 import { visitObjects } from "project-editor/core/search";
 import {
-    getProjectEditorStore,
+    getProjectStore,
     getAncestorOfType,
-    ProjectEditorStore,
+    ProjectStore,
     createObject,
     getClass,
     objectToClipboardData
@@ -180,7 +180,7 @@ export abstract class Flow extends EezObject {
         const flowFragment = new FlowFragment();
         flowFragment.addObjects(this, objects);
         return objectToClipboardData(
-            ProjectEditor.getProject(this)._DocumentStore,
+            ProjectEditor.getProject(this)._store,
             flowFragment
         );
     }
@@ -319,10 +319,10 @@ export class FlowFragment extends EezObject {
             const pasteFlowFragment = clipboardData.serializedData
                 .object as FlowFragment;
 
-            const projectEditorStore = getProjectEditorStore(flow);
+            const projectStore = getProjectStore(flow);
 
             const flowFragment = createObject(
-                projectEditorStore,
+                projectStore,
                 pasteFlowFragment,
                 FlowFragment,
                 undefined,
@@ -330,20 +330,20 @@ export class FlowFragment extends EezObject {
             );
 
             let closeCombineCommands = false;
-            if (!projectEditorStore.undoManager.combineCommands) {
-                projectEditorStore.undoManager.setCombineCommands(true);
+            if (!projectStore.undoManager.combineCommands) {
+                projectStore.undoManager.setCombineCommands(true);
                 closeCombineCommands = true;
             }
 
             let components: EezObject[] | undefined = undefined;
 
             if (flowFragment.connectionLines.length > 0) {
-                projectEditorStore.addObjects(
+                projectStore.addObjects(
                     flow.connectionLines,
                     flowFragment.connectionLines
                 );
 
-                components = projectEditorStore.addObjects(
+                components = projectStore.addObjects(
                     flow.components,
                     flowFragment.components
                 );
@@ -377,7 +377,7 @@ export class FlowFragment extends EezObject {
                     }
 
                     if (containerAncestor) {
-                        components = projectEditorStore.addObjects(
+                        components = projectStore.addObjects(
                             containerAncestor instanceof
                                 ProjectEditor.LVGLWidgetClass
                                 ? containerAncestor.children
@@ -385,13 +385,13 @@ export class FlowFragment extends EezObject {
                             flowFragment.components
                         );
                     } else {
-                        components = projectEditorStore.addObjects(
+                        components = projectStore.addObjects(
                             flow.components,
                             flowFragment.components
                         );
                     }
                 } else {
-                    components = projectEditorStore.addObjects(
+                    components = projectStore.addObjects(
                         flow.components,
                         flowFragment.components
                     );
@@ -399,7 +399,7 @@ export class FlowFragment extends EezObject {
             }
 
             if (closeCombineCommands) {
-                projectEditorStore.undoManager.setCombineCommands(false);
+                projectStore.undoManager.setCombineCommands(false);
             }
 
             return components;
@@ -410,16 +410,16 @@ export class FlowFragment extends EezObject {
         this.components = [];
         this.connectionLines = [];
 
-        const projectEditorStore = getProjectEditorStore(flow);
+        const projectStore = getProjectStore(flow);
 
         const objIDMap = new Set<string>();
 
         function cloneObject<T extends EezObject>(
-            projectEditorStore: ProjectEditorStore,
+            projectStore: ProjectStore,
             obj: T
         ) {
             return createObject<T>(
-                projectEditorStore,
+                projectStore,
                 toJS(obj),
                 getClass(obj),
                 undefined,
@@ -431,7 +431,7 @@ export class FlowFragment extends EezObject {
             if (!(object instanceof Component)) {
                 return;
             }
-            const clone = cloneObject(projectEditorStore, object) as Component;
+            const clone = cloneObject(projectStore, object) as Component;
             this.components.push(clone);
 
             objIDMap.add(object.objID);
@@ -449,7 +449,7 @@ export class FlowFragment extends EezObject {
                 objIDMap.has(connectionLine.target)
             ) {
                 const clone = cloneObject(
-                    projectEditorStore,
+                    projectStore,
                     connectionLine
                 ) as ConnectionLine;
                 this.connectionLines.push(clone);

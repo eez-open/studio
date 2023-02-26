@@ -61,7 +61,7 @@ function getVariableFlowValue(assets: Assets, variable: Variable): FlowValue {
     if (variable.type) {
         type = getValueType(variable.type);
     } else {
-        assets.projectEditorStore.outputSectionsStore.write(
+        assets.projectStore.outputSectionsStore.write(
             Section.OUTPUT,
             MessageType.ERROR,
             "Variable type not set",
@@ -82,7 +82,7 @@ function getVariableFlowValue(assets: Assets, variable: Variable): FlowValue {
             valueType: variable.type
         };
     } catch (err) {
-        assets.projectEditorStore.outputSectionsStore.write(
+        assets.projectStore.outputSectionsStore.write(
             Section.OUTPUT,
             MessageType.ERROR,
             err.toString(),
@@ -177,10 +177,9 @@ function buildFlowValue(
                         valueType: elementType
                     }));
                 } else {
-                    const elementType =
-                        assets.projectEditorStore.typesStore.getType(
-                            flowValue.valueType
-                        );
+                    const elementType = assets.projectStore.typesStore.getType(
+                        flowValue.valueType
+                    );
                     if (elementType?.kind != "object") {
                         throw "elementType is not struct type";
                     }

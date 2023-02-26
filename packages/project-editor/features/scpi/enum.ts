@@ -23,7 +23,7 @@ import {
     Message,
     propertyNotSetMessage
 } from "project-editor/store";
-import { ProjectEditorStore } from "project-editor/store";
+import { ProjectStore } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,7 +139,7 @@ export class ScpiEnum extends EezObject {
             const project = ProjectEditor.getProject(parent);
 
             const scpiEnum = createObject<ScpiEnum>(
-                project._DocumentStore,
+                project._store,
                 scpiEnumProperties,
                 ScpiEnum
             );
@@ -172,11 +172,8 @@ export class ScpiEnum extends EezObject {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function findScpiEnum(
-    projectEditorStore: ProjectEditorStore,
-    enumeration: string
-) {
-    const scpi = projectEditorStore.project.scpi;
+export function findScpiEnum(projectStore: ProjectStore, enumeration: string) {
+    const scpi = projectStore.project.scpi;
 
     for (let i = 0; i < scpi.enums.length; ++i) {
         if (scpi.enums[i].name === enumeration) {
@@ -188,9 +185,9 @@ export function findScpiEnum(
 }
 
 export function getScpiEnumsAsDialogEnumItems(
-    projectEditorStore: ProjectEditorStore
+    projectStore: ProjectStore
 ): EnumItems {
-    return projectEditorStore.project.scpi.enums
+    return projectStore.project.scpi.enums
         .slice()
         .sort((a, b) => stringCompare(getLabel(a), getLabel(b)))
         .map(scpiEnum => ({

@@ -45,7 +45,7 @@ import type { IFlowContext } from "project-editor/flow//flow-interfaces";
 import { Assets, DataBuffer } from "project-editor/build/assets";
 import {
     getChildOfObject,
-    getProjectEditorStore,
+    getProjectStore,
     Message
 } from "project-editor/store";
 import { isNotDashboardProject } from "project-editor/project/project-type-traits";
@@ -181,7 +181,7 @@ export class SCPIActionComponent extends ActionComponent {
             return messages;
         },
         label: (component: SCPIActionComponent) => {
-            const project = getProjectEditorStore(component).project;
+            const project = getProjectStore(component).project;
 
             if (project.projectTypeTraits.isDashboard && component.instrument) {
                 return `SCPI ${component.instrument}`;

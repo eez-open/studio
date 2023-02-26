@@ -509,7 +509,7 @@ export const Canvas = observer(
         }
 
         onDragStart(event: PointerEvent) {
-            this.props.flowContext.projectEditorStore.editorsStore.selectEditorTabForObject(
+            this.props.flowContext.projectStore.editorsStore.selectEditorTabForObject(
                 this.props.flowContext.flow
             );
 

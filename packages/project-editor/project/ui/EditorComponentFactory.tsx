@@ -98,8 +98,7 @@ export function getEditorComponent(
     if (isAncestor(object, project.lvglStyles)) {
         return {
             object: project.lvglStyles,
-            subObject:
-                project._DocumentStore.navigationStore.selectedStyleObject.get(),
+            subObject: project._store.navigationStore.selectedStyleObject.get(),
             EditorComponent: LVGLSelectedStyleEditor
         };
     }

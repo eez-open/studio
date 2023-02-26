@@ -10,7 +10,7 @@ import {
 
 import {
     Section,
-    getProjectEditorStore,
+    getProjectStore,
     getInheritedValue,
     getPropertyAsString
 } from "project-editor/store";
@@ -103,7 +103,7 @@ export function isPropertyInError(
     propertyInfo: PropertyInfo
 ) {
     return (
-        getProjectEditorStore(object)
+        getProjectStore(object)
             .outputSectionsStore.getSection(Section.CHECKS)
             .messages.find(
                 message =>
@@ -137,10 +137,10 @@ export function isHighlightedProperty(
     object: IEezObject,
     propertyInfo: PropertyInfo
 ) {
-    const projectEditorStore = getProjectEditorStore(object);
+    const projectStore = getProjectStore(object);
     const selectedObject =
-        projectEditorStore.navigationStore.selectedPanel &&
-        projectEditorStore.navigationStore.selectedPanel.selectedObject;
+        projectStore.navigationStore.selectedPanel &&
+        projectStore.navigationStore.selectedPanel.selectedObject;
     return !!(
         selectedObject &&
         ((getParent(selectedObject) === object &&

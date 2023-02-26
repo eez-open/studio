@@ -2,7 +2,7 @@ import { action, computed, makeObservable } from "mobx";
 import { observable } from "mobx";
 import * as FlexLayout from "flexlayout-react";
 
-import type { ProjectEditorStore } from "project-editor/store";
+import type { ProjectStore } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -137,12 +137,12 @@ export class LayoutModels {
     texts: FlexLayout.Model;
 
     get editors() {
-        return this.projectEditorStore.runtime
+        return this.projectStore.runtime
             ? this.runtimeModeEditors
             : this.editorModeEditors;
     }
 
-    constructor(public projectEditorStore: ProjectEditorStore) {
+    constructor(public projectStore: ProjectStore) {
         makeObservable(this, {
             root: computed,
             rootEditor: observable,
@@ -178,7 +178,7 @@ export class LayoutModels {
             }
         ];
 
-        if (!this.projectEditorStore.projectTypeTraits.isLVGL) {
+        if (!this.projectStore.projectTypeTraits.isLVGL) {
             borders.push({
                 type: "border",
                 location: "right",
@@ -952,19 +952,15 @@ export class LayoutModels {
     }
 
     get root() {
-        return this.projectEditorStore.runtime
-            ? this.rootRuntime
-            : this.rootEditor;
+        return this.projectStore.runtime ? this.rootRuntime : this.rootEditor;
     }
 
     get pages() {
-        return this.projectEditorStore.runtime
-            ? this.pagesRuntime
-            : this.pagesEditor;
+        return this.projectStore.runtime ? this.pagesRuntime : this.pagesEditor;
     }
 
     get actions() {
-        return this.projectEditorStore.runtime
+        return this.projectStore.runtime
             ? this.actionsRuntime
             : this.actionsEditor;
     }
@@ -979,7 +975,7 @@ export class LayoutModels {
             }
         }
 
-        this.projectEditorStore.project.enableTabs();
+        this.projectStore.project.enableTabs();
     }
 
     save() {

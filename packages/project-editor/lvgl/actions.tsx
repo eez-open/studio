@@ -126,7 +126,7 @@ export class LVGLActionType extends EezObject {
 
             if (result.values.action == "CHANGE_SCREEN") {
                 actionTypeObject = createObject<LVGLChangeScreenActionType>(
-                    project._DocumentStore,
+                    project._store,
                     Object.assign(
                         actionTypeProperties,
                         LVGLChangeScreenActionType.classInfo.defaultValue
@@ -135,7 +135,7 @@ export class LVGLActionType extends EezObject {
                 );
             } else if (result.values.action == "PLAY_ANIMATION") {
                 actionTypeObject = createObject<LVGLPlayAnimationActionType>(
-                    project._DocumentStore,
+                    project._store,
                     Object.assign(
                         actionTypeProperties,
                         LVGLPlayAnimationActionType.classInfo.defaultValue
@@ -144,7 +144,7 @@ export class LVGLActionType extends EezObject {
                 );
             } else {
                 actionTypeObject = createObject<LVGLSetPropertyActionType>(
-                    project._DocumentStore,
+                    project._store,
                     Object.assign(
                         actionTypeProperties,
                         LVGLSetPropertyActionType.classInfo.defaultValue
@@ -822,13 +822,16 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
                         actionType.property
                     ] == undefined
                 ) {
-                    ProjectEditor.getProject(
-                        actionType
-                    )._DocumentStore.updateObject(actionType, {
-                        property: Object.keys(
-                            (PROPERTIES as PropertiesType)[values.targetType]
-                        )[0]
-                    });
+                    ProjectEditor.getProject(actionType)._store.updateObject(
+                        actionType,
+                        {
+                            property: Object.keys(
+                                (PROPERTIES as PropertiesType)[
+                                    values.targetType
+                                ]
+                            )[0]
+                        }
+                    );
                 }
             }
         },

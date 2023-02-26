@@ -25,31 +25,31 @@ import {
     getAncestorOfType,
     getClassInfo,
     isArray,
-    ProjectEditorStore
+    ProjectStore
 } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export function createObject<T extends EezObject>(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     jsObject: Partial<T>,
     aClass: EezClass,
     key?: string,
     _createNewObjectobjIDs?: boolean
 ): T {
-    currentDocumentStore = projectEditorStore;
+    currentProjectStore = projectStore;
     createNewObjectobjIDs = _createNewObjectobjIDs ?? true;
     isLoadProject = false;
     const result = loadObjectInternal(undefined, jsObject, aClass, key);
-    currentDocumentStore = undefined;
+    currentProjectStore = undefined;
     return result as T;
 }
 
 export function loadProject(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     projectObjectOrString: any | string
 ): Project {
-    currentDocumentStore = projectEditorStore;
+    currentProjectStore = projectStore;
     isLoadProject = true;
     createNewObjectobjIDs = false;
 
@@ -69,9 +69,9 @@ export function loadProject(
         }
     }
 
-    currentDocumentStore = undefined;
+    currentProjectStore = undefined;
 
-    project._DocumentStore = projectEditorStore;
+    project._store = projectStore;
 
     rewireEnd(project);
 
@@ -116,7 +116,7 @@ export function objectToJson(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let currentDocumentStore: ProjectEditorStore | undefined;
+let currentProjectStore: ProjectStore | undefined;
 let currentProject: Project | undefined;
 let isLoadProject: boolean;
 let createNewObjectobjIDs: boolean;
@@ -135,7 +135,7 @@ function loadArrayObject(
 ) {
     const eezArray: IEezObject = observable([]);
 
-    setId(currentDocumentStore!, eezArray, currentDocumentStore!.getChildId());
+    setId(currentProjectStore!, eezArray, currentProjectStore!.getChildId());
     setParent(eezArray, parent);
     setKey(eezArray, propertyInfo.name);
     setPropertyInfo(eezArray, propertyInfo);
@@ -188,11 +188,11 @@ function loadObjectInternal(
     if (isLoadProject) {
         if (object instanceof ProjectEditor.ProjectClass) {
             currentProject = object;
-            currentProject._DocumentStore = currentDocumentStore!;
+            currentProject._store = currentProjectStore!;
         }
     }
 
-    setId(currentDocumentStore!, object, currentDocumentStore!.getChildId());
+    setId(currentProjectStore!, object, currentProjectStore!.getChildId());
     setParent(object, parent as IEezObject);
     if (key != undefined) {
         setKey(object, key);
@@ -209,7 +209,7 @@ function loadObjectInternal(
         classInfo.beforeLoadHook(
             object,
             jsObject,
-            isLoadProject ? currentProject! : currentDocumentStore!.project
+            isLoadProject ? currentProject! : currentProjectStore!.project
         );
     }
 
@@ -274,7 +274,7 @@ function loadObjectInternal(
     if (classInfo.afterLoadHook) {
         classInfo.afterLoadHook(
             object,
-            isLoadProject ? currentProject! : currentDocumentStore!.project!
+            isLoadProject ? currentProject! : currentProjectStore!.project!
         );
     }
 

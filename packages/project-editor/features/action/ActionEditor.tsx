@@ -99,7 +99,7 @@ export class ActionFlowTabState extends FlowTabState {
             return;
         }
 
-        const state = this.projectEditorStore.uiStateStore.getObjectUIState(
+        const state = this.projectStore.uiStateStore.getObjectUIState(
             this.flow,
             "flow-state"
         );
@@ -141,7 +141,7 @@ export class ActionFlowTabState extends FlowTabState {
                 : undefined
         };
 
-        this.projectEditorStore.uiStateStore.updateObjectUIState(
+        this.projectStore.uiStateStore.updateObjectUIState(
             this.flow,
             "flow-state",
             state

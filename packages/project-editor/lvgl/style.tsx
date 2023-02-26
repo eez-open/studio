@@ -204,7 +204,7 @@ export class LVGLStyle extends EezObject {
             const project = ProjectEditor.getProject(parent);
 
             const style = createObject<LVGLStyle>(
-                project._DocumentStore,
+                project._store,
                 styleProperties,
                 LVGLStyle
             );

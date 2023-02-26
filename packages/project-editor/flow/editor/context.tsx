@@ -7,7 +7,7 @@ import {
     TreeObjectAdapter
 } from "project-editor/core/objectAdapter";
 
-import { getClassInfo, getProjectEditorStore } from "project-editor/store";
+import { getClassInfo, getProjectStore } from "project-editor/store";
 
 import type {
     IViewState,
@@ -67,8 +67,7 @@ class ViewState implements IViewState {
     }
 
     getResizeHandlers(): IResizeHandler[] | undefined {
-        const isEditor =
-            this.document && !this.document.projectEditorStore.runtime;
+        const isEditor = this.document && !this.document.projectStore.runtime;
 
         if (
             !isEditor ||
@@ -214,9 +213,9 @@ class ViewState implements IViewState {
             widget => getWidgetParent(widget) !== getWidgetParent(components[0])
         );
 
-        const projectEditorStore = getProjectEditorStore(components[0]);
+        const projectStore = getProjectStore(components[0]);
 
-        projectEditorStore.undoManager.setCombineCommands(true);
+        projectStore.undoManager.setCombineCommands(true);
 
         components.forEach(component => {
             const classInfo = getClassInfo(component);
@@ -267,14 +266,14 @@ class ViewState implements IViewState {
             }
         });
 
-        projectEditorStore.undoManager.setCombineCommands(false);
+        projectStore.undoManager.setCombineCommands(false);
     }
 
     get hoveredConnectionLinesComponent() {
         if (!this.hoveredConnectionLines) {
             return undefined;
         }
-        return this.flowContext.projectEditorStore.getObjectFromObjectId(
+        return this.flowContext.projectStore.getObjectFromObjectId(
             this.hoveredConnectionLines.id
         ) as Component;
     }
@@ -313,8 +312,8 @@ export class EditorFlowContext implements IFlowContext {
         });
     }
 
-    get projectEditorStore() {
-        return this.document.projectEditorStore;
+    get projectStore() {
+        return this.document.projectStore;
     }
 
     get containerId() {
@@ -361,7 +360,7 @@ export class EditorFlowContext implements IFlowContext {
         };
 
         this.dataContext =
-            this.document.projectEditorStore.dataContext.createWithLocalVariables(
+            this.document.projectStore.dataContext.createWithLocalVariables(
                 this.flow.localVariables
             );
     }

@@ -14,8 +14,8 @@ import type { Font } from "project-editor/features/font/font";
 import {
     createObject,
     getObjectPathAsString,
-    getProjectEditorStore,
-    ProjectEditorStore
+    getProjectStore,
+    ProjectStore
 } from "project-editor/store";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
@@ -269,7 +269,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                     console.error("pageObj is undefined");
                 }
 
-                const editor = getProjectEditorStore(
+                const editor = getProjectStore(
                     this.page
                 ).editorsStore.getEditorByObject(this.page);
                 if (editor) {
@@ -352,7 +352,7 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
     requestAnimationFrameId: number | undefined;
 
     constructor(
-        public projectEditorStore: ProjectEditorStore,
+        public projectStore: ProjectStore,
         page: Page,
         public displayWidth: number,
         public displayHeight: number,
@@ -386,7 +386,7 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
             });
 
             (
-                this.projectEditorStore.runtime as WasmRuntime
+                this.projectStore.runtime as WasmRuntime
             ).lgvlPageRuntime!.onNonActivePageViewRuntimeMounted(this);
         });
     }
@@ -429,10 +429,9 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
         }
 
         if (
-            this.projectEditorStore.runtime instanceof
-            ProjectEditor.WasmRuntimeClass
+            this.projectStore.runtime instanceof ProjectEditor.WasmRuntimeClass
         ) {
-            this.projectEditorStore.runtime.lgvlPageRuntime!.onNonActivePageViewRuntimeUnmounted(
+            this.projectStore.runtime.lgvlPageRuntime!.onNonActivePageViewRuntimeUnmounted(
                 this
             );
         }
@@ -466,10 +465,9 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         super(runtime.selectedPage);
         this.wasm = runtime.worker.wasm;
 
-        this.widgetIndex =
-            runtime.projectEditorStore.project._lvglIdentifiers.size;
+        this.widgetIndex = runtime.projectStore.project._lvglIdentifiers.size;
 
-        runtime.projectEditorStore.project.pages.forEach(page =>
+        runtime.projectStore.project.pages.forEach(page =>
             this.pageStates.set(page, {
                 page,
                 nonActivePageViewerRuntime: undefined,
@@ -510,7 +508,7 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
 
     async loadAllBitmaps() {
         await Promise.all(
-            this.runtime.projectEditorStore.project.bitmaps.map(bitmap =>
+            this.runtime.projectStore.project.bitmaps.map(bitmap =>
                 this.loadBitmap(bitmap)
             )
         );
@@ -518,7 +516,7 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
 
     getBitmap(bitmapName: string) {
         const bitmap = ProjectEditor.findBitmap(
-            this.runtime.projectEditorStore.project,
+            this.runtime.projectStore.project,
             bitmapName
         );
         if (!bitmap) {
@@ -573,12 +571,12 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
 
     override getWidgetIndex(object: LVGLWidget | Page) {
         if (object instanceof ProjectEditor.PageClass) {
-            return this.runtime.projectEditorStore.project._lvglIdentifiers.get(
+            return this.runtime.projectStore.project._lvglIdentifiers.get(
                 object.name
             )!.index;
         }
         if (object.identifier) {
-            return this.runtime.projectEditorStore.project._lvglIdentifiers.get(
+            return this.runtime.projectStore.project._lvglIdentifiers.get(
                 object.identifier
             )!.index;
         }
@@ -601,7 +599,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
 
     constructor(public project: Project) {
         const page = createObject<Page>(
-            project._DocumentStore,
+            project._store,
             {
                 components: getClassesDerivedFrom(
                     ProjectEditor.LVGLWidgetClass

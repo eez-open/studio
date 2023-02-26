@@ -31,7 +31,7 @@ export function registerPath(
     connectionLine: ConnectionLine,
     path: SVGPathElement
 ) {
-    if (!ProjectEditor.getProject(connectionLine)._DocumentStore.runtime) {
+    if (!ProjectEditor.getProject(connectionLine)._store.runtime) {
         return;
     }
     let paths = connectionLinePaths.get(connectionLine);
@@ -119,7 +119,7 @@ function animate() {
         if (
             t > 1.0 ||
             !ProjectEditor.getProject(activeConnectionLine.connectionLine)
-                ._DocumentStore.runtime
+                ._store.runtime
         ) {
             for (const circle of activeConnectionLine.circles.values()) {
                 circle.remove();

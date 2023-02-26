@@ -216,9 +216,7 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                 }
 
                 const project = ProjectEditor.getProject(component);
-                const type = project._DocumentStore.typesStore.getType(
-                    node.valueType
-                );
+                const type = project._store.typesStore.getType(node.valueType);
                 if (type?.kind != "object") {
                     throw `Invalid type '${node.valueType}'`;
                 }
@@ -252,7 +250,7 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                     const project = ProjectEditor.getProject(component);
                     const builtInConstantName = `${node.object.name}.${node.property.name}`;
                     const buildInConstantValue = builtInConstants(
-                        project._DocumentStore
+                        project._store
                     )[builtInConstantName];
                     if (buildInConstantValue != undefined) {
                         return;

@@ -15,7 +15,7 @@ import {
     isObjectExists,
     objectToString
 } from "project-editor/store/helper";
-import type { ProjectEditorStore } from "project-editor/store";
+import type { ProjectStore } from "project-editor/store";
 import { objectEqual } from "eez-studio-shared/util";
 import type { LVGLStyle } from "project-editor/lvgl/style";
 
@@ -31,7 +31,7 @@ export class Editor implements IEditor {
     loading = false;
 
     constructor(
-        public projectEditorStore: ProjectEditorStore,
+        public projectStore: ProjectStore,
         object?: IEezObject,
         subObject?: IEezObject | undefined,
         params?: any,
@@ -59,7 +59,7 @@ export class Editor implements IEditor {
             return this.state.getTitle(this);
         }
 
-        const projectSettings = this.projectEditorStore.project.settings;
+        const projectSettings = this.projectStore.project.settings;
         if (
             this.object === projectSettings &&
             this.subObject &&
@@ -75,7 +75,7 @@ export class Editor implements IEditor {
             return getTitle(this.subObject);
         }
 
-        const scpi = this.projectEditorStore.project.scpi;
+        const scpi = this.projectStore.project.scpi;
         if (
             this.object === scpi &&
             this.subObject &&
@@ -91,7 +91,7 @@ export class Editor implements IEditor {
             return getTitle(this.subObject);
         }
 
-        if (this.object == this.projectEditorStore.project.lvglStyles) {
+        if (this.object == this.projectStore.project.lvglStyles) {
             return `Style: ${(this.subObject as LVGLStyle).name}`;
         }
 
@@ -99,11 +99,11 @@ export class Editor implements IEditor {
     }
 
     makeActive() {
-        this.projectEditorStore.editorsStore.activateEditor(this);
-        if (this.projectEditorStore.runtime) {
+        this.projectStore.editorsStore.activateEditor(this);
+        if (this.projectStore.runtime) {
             const flow = ProjectEditor.getFlow(this.object);
             if (flow) {
-                this.projectEditorStore.runtime.selectFlowStateForFlow(flow);
+                this.projectStore.runtime.selectFlowStateForFlow(flow);
             }
         }
     }
@@ -128,13 +128,13 @@ export class Editor implements IEditor {
         }
 
         if (this.subObject != subObject) {
-            if (this.object === this.projectEditorStore.project.scpi) {
+            if (this.object === this.projectStore.project.scpi) {
                 return true;
             }
-            if (this.object === this.projectEditorStore.project.settings) {
+            if (this.object === this.projectStore.project.settings) {
                 return true;
             }
-            if (this.object === this.projectEditorStore.project.lvglStyles) {
+            if (this.object === this.projectStore.project.lvglStyles) {
                 return true;
             }
             return false;
@@ -175,7 +175,7 @@ export class EditorsStore {
     dispose1: mobx.IReactionDisposer;
 
     constructor(
-        public projectEditorStore: ProjectEditorStore,
+        public projectStore: ProjectStore,
         public getLayoutModel: () => FlexLayout.Model,
         public tabsetID: string
     ) {
@@ -254,19 +254,19 @@ export class EditorsStore {
             let params: any;
             if (typeof tabConfig == "string") {
                 object = getObjectFromStringPath(
-                    this.projectEditorStore.project,
+                    this.projectStore.project,
                     tabConfig
                 );
                 subObject = undefined;
                 params = undefined;
             } else {
                 object = getObjectFromStringPath(
-                    this.projectEditorStore.project,
+                    this.projectStore.project,
                     tabConfig.objectPath
                 );
                 subObject = tabConfig.subObjectPath
                     ? getObjectFromStringPath(
-                          this.projectEditorStore.project,
+                          this.projectStore.project,
                           tabConfig.subObjectPath
                       )
                     : undefined;
@@ -280,7 +280,7 @@ export class EditorsStore {
 
             let editor = this.tabIdToEditorMap.get(tabId);
             if (!editor) {
-                editor = new Editor(this.projectEditorStore);
+                editor = new Editor(this.projectStore);
 
                 editor.tabId = tabId;
                 editor.object = object;
@@ -314,7 +314,7 @@ export class EditorsStore {
                 const activeEditor = this.activeEditor;
                 if (activeEditor) {
                     activeEditor.makeActive();
-                    this.projectEditorStore.navigationStore.showObjects(
+                    this.projectStore.navigationStore.showObjects(
                         [activeEditor.subObject ?? activeEditor.object],
                         false,
                         false,
@@ -357,7 +357,7 @@ export class EditorsStore {
             return editorFound;
         }
 
-        let editor = new Editor(this.projectEditorStore);
+        let editor = new Editor(this.projectStore);
         runInAction(() => {
             this.editors.push(editor);
         });
@@ -418,7 +418,7 @@ export class EditorsStore {
                 this.activeEditor = editor;
             });
 
-            this.projectEditorStore.layoutModels.selectTab(
+            this.projectStore.layoutModels.selectTab(
                 this.tabsModel,
                 editor.tabId
             );

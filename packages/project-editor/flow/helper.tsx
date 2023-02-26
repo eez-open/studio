@@ -23,8 +23,8 @@ export function evalProperty(
     }
 
     if (flowContext.flowState) {
-        if (flowContext.projectEditorStore.runtime) {
-            return flowContext.projectEditorStore.runtime.evalProperty(
+        if (flowContext.projectStore.runtime) {
+            return flowContext.projectStore.runtime.evalProperty(
                 flowContext,
                 widget,
                 propertyName
@@ -35,7 +35,7 @@ export function evalProperty(
     } else {
         try {
             return evalConstantExpression(
-                flowContext.projectEditorStore.project,
+                flowContext.projectStore.project,
                 expr
             ).value;
         } catch (err) {
@@ -121,7 +121,7 @@ export function getTextValue(
 ): { text: string; node: React.ReactNode } | string {
     let data = (widget as any)[propertyName];
 
-    if (flowContext.projectEditorStore.projectTypeTraits.hasFlowSupport) {
+    if (flowContext.projectStore.projectTypeTraits.hasFlowSupport) {
         if (data) {
             if (flowContext.flowState) {
                 try {
@@ -141,7 +141,7 @@ export function getTextValue(
                 }
             }
 
-            if (flowContext.projectEditorStore.runtime) {
+            if (flowContext.projectStore.runtime) {
                 return "";
             }
 

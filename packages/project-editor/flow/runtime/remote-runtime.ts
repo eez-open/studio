@@ -30,7 +30,7 @@ import {
     RuntimeBase,
     SingleStepMode
 } from "project-editor/flow/runtime/runtime";
-import { ProjectEditorStore } from "project-editor/store";
+import { ProjectStore } from "project-editor/store";
 
 import { getObjectFromStringPath } from "project-editor/store";
 import {
@@ -117,17 +117,17 @@ export class RemoteRuntime extends RuntimeBase {
     transitionToRunningMode: boolean = false;
     resumeAtStart: boolean = false;
 
-    constructor(public projectEditorStore: ProjectEditorStore) {
-        super(projectEditorStore);
+    constructor(public projectStore: ProjectStore) {
+        super(projectStore);
     }
 
     async doStartRuntime(isDebuggerActive: boolean) {
-        const partsPromise = this.projectEditorStore.build();
+        const partsPromise = this.projectStore.build();
 
         const instrument = await showSelectInstrumentDialog();
 
         if (!instrument) {
-            this.projectEditorStore.setEditorMode();
+            this.projectStore.setEditorMode();
             return;
         }
 
@@ -138,13 +138,13 @@ export class RemoteRuntime extends RuntimeBase {
             notification.error("Build error...", {
                 autoClose: false
             });
-            this.projectEditorStore.setEditorMode();
+            this.projectStore.setEditorMode();
             return;
         }
 
         this.assetsMap = parts["GUI_ASSETS_DATA_MAP_JS"] as AssetsMap;
         if (!this.assetsMap) {
-            this.projectEditorStore.setEditorMode();
+            this.projectStore.setEditorMode();
             return;
         }
 
@@ -168,7 +168,7 @@ export class RemoteRuntime extends RuntimeBase {
                 render: `Instrument not connected`,
                 autoClose: 1000
             });
-            this.projectEditorStore.setEditorMode();
+            this.projectStore.setEditorMode();
             return;
         }
 
@@ -193,21 +193,20 @@ export class RemoteRuntime extends RuntimeBase {
                 render: `Error: ${acquireError.toString()}`,
                 autoClose: 1000
             });
-            this.projectEditorStore.setEditorMode();
+            this.projectStore.setEditorMode();
             return;
         }
 
         try {
             this.startDebugger();
 
-            const destinationFolderPath =
-                this.projectEditorStore.getAbsoluteFilePath(
-                    this.projectEditorStore.project.settings.build
-                        .destinationFolder || "."
-                );
+            const destinationFolderPath = this.projectStore.getAbsoluteFilePath(
+                this.projectStore.project.settings.build.destinationFolder ||
+                    "."
+            );
 
             const destinationFileName = `${path.basename(
-                this.projectEditorStore.filePath || "",
+                this.projectStore.filePath || "",
                 ".eez-project"
             )}.app`;
 
@@ -261,7 +260,7 @@ export class RemoteRuntime extends RuntimeBase {
                 autoClose: 1000
             });
 
-            this.projectEditorStore.setEditorMode();
+            this.projectStore.setEditorMode();
 
             return;
         } finally {
@@ -357,8 +356,7 @@ export class RemoteRuntime extends RuntimeBase {
 
             runInAction(() => {
                 this.isDebuggerActive = false;
-                this.projectEditorStore.uiStateStore.pageRuntimeFrontFace =
-                    true;
+                this.projectStore.uiStateStore.pageRuntimeFrontFace = true;
             });
         } else {
             this.pause();
@@ -376,10 +374,8 @@ export class RemoteRuntime extends RuntimeBase {
             );
 
             if (this.isDebuggerActive) {
-                this.projectEditorStore.editorsStore.openEditor(
-                    this.selectedPage
-                );
-                this.projectEditorStore.editorsStore.refresh(true);
+                this.projectStore.editorsStore.openEditor(this.selectedPage);
+                this.projectStore.editorsStore.refresh(true);
             }
         }
     }
@@ -395,7 +391,7 @@ export class RemoteRuntime extends RuntimeBase {
 
         runInAction(() => {
             this.isDebuggerActive = true;
-            this.projectEditorStore.uiStateStore.pageRuntimeFrontFace = false;
+            this.projectStore.uiStateStore.pageRuntimeFrontFace = false;
         });
     }
 
@@ -796,7 +792,7 @@ export abstract class DebuggerConnectionBase {
                             runtime.transition(StateMachineAction.SINGLE_STEP);
                         } else if (state == DEBUGGER_STATE_STOPPED) {
                             if (!runtime.error) {
-                                runtime.projectEditorStore.setEditorMode();
+                                runtime.projectStore.setEditorMode();
                             }
                         }
                     }
@@ -847,7 +843,7 @@ export abstract class DebuggerConnectionBase {
                         }
 
                         const targetComponent = getObjectFromStringPath(
-                            runtime.projectEditorStore.project,
+                            runtime.projectStore.project,
                             targetComponentInAssetsMap.path
                         ) as Component;
                         if (!targetComponent) {
@@ -868,7 +864,7 @@ export abstract class DebuggerConnectionBase {
                             }
 
                             const sourceComponent = getObjectFromStringPath(
-                                runtime.projectEditorStore.project,
+                                runtime.projectStore.project,
                                 sourceComponentInAssetsMap.path
                             ) as Component;
                             if (!sourceComponent) {
@@ -968,7 +964,7 @@ export abstract class DebuggerConnectionBase {
                         }
 
                         const globalVariable =
-                            runtime.projectEditorStore.project.allGlobalVariables.find(
+                            runtime.projectStore.project.allGlobalVariables.find(
                                 globalVariable =>
                                     globalVariable.name ==
                                     globalVariableInAssetsMap.name
@@ -1107,7 +1103,7 @@ export abstract class DebuggerConnectionBase {
                         }
 
                         const component = getObjectFromStringPath(
-                            runtime.projectEditorStore.project,
+                            runtime.projectStore.project,
                             componentInAssetsMap.path
                         ) as Component;
                         if (!component) {
@@ -1182,7 +1178,7 @@ export abstract class DebuggerConnectionBase {
                         }
 
                         const flow = getObjectFromStringPath(
-                            runtime.projectEditorStore.project,
+                            runtime.projectStore.project,
                             flowInAssetsMap.path
                         ) as Flow;
                         if (!flow) {
@@ -1226,7 +1222,7 @@ export abstract class DebuggerConnectionBase {
                                 }
 
                                 parentComponent = getObjectFromStringPath(
-                                    runtime.projectEditorStore.project,
+                                    runtime.projectStore.project,
                                     componentInAssetsMap.path
                                 ) as Component;
                                 if (!parentComponent) {
@@ -1356,7 +1352,7 @@ export abstract class DebuggerConnectionBase {
                             return;
                         }
                         component = getObjectFromStringPath(
-                            runtime.projectEditorStore.project,
+                            runtime.projectStore.project,
                             componentInAssetsMap.path
                         ) as Component;
                         if (!component) {
@@ -1399,7 +1395,7 @@ export abstract class DebuggerConnectionBase {
                                 return;
                             }
                             component = getObjectFromStringPath(
-                                runtime.projectEditorStore.project,
+                                runtime.projectStore.project,
                                 componentInAssetsMap.path
                             ) as Component;
                             if (!component) {
@@ -1448,7 +1444,7 @@ export abstract class DebuggerConnectionBase {
                         }
 
                         const page = getObjectFromStringPath(
-                            runtime.projectEditorStore.project,
+                            runtime.projectStore.project,
                             this.runtime.assetsMap.flows[pageId].path
                         );
 
@@ -1490,7 +1486,7 @@ export abstract class DebuggerConnectionBase {
                             return;
                         }
                         component = getObjectFromStringPath(
-                            runtime.projectEditorStore.project,
+                            runtime.projectStore.project,
                             componentInAssetsMap.path
                         ) as Component;
                         if (!component) {
@@ -1536,7 +1532,7 @@ export abstract class DebuggerConnectionBase {
                             return;
                         }
                         component = getObjectFromStringPath(
-                            runtime.projectEditorStore.project,
+                            runtime.projectStore.project,
                             componentInAssetsMap.path
                         ) as Component;
                         if (!component) {
@@ -1719,10 +1715,7 @@ class GlobalVariableValue implements DebuggerValue {
     ) {}
 
     set(value: any) {
-        this.runtime.projectEditorStore.dataContext.set(
-            this.variableName,
-            value
-        );
+        this.runtime.projectStore.dataContext.set(this.variableName, value);
     }
 }
 

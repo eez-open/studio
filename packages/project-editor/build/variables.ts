@@ -66,7 +66,7 @@ export function buildVariables(
 
         let projectVariables = assets.globalVariables;
 
-        if (assets.projectEditorStore.projectTypeTraits.hasFlowSupport) {
+        if (assets.projectStore.projectTypeTraits.hasFlowSupport) {
             // only native
             projectVariables = projectVariables.filter(
                 variable =>
@@ -98,7 +98,7 @@ export function buildVariables(
 
 export function buildVariableNames(assets: Assets, dataBuffer: DataBuffer) {
     dataBuffer.writeArray(
-        assets.projectEditorStore.masterProject ? assets.globalVariables : [],
+        assets.projectStore.masterProject ? assets.globalVariables : [],
         variable => {
             dataBuffer.writeString(variable.name);
         }

@@ -31,7 +31,7 @@ import {
 import classNames from "classnames";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
-import { getProjectEditorStore } from "project-editor/store";
+import { getProjectStore } from "project-editor/store";
 import { getObjectIdFromPoint } from "project-editor/flow/editor/bounding-rects";
 
 import {
@@ -650,8 +650,8 @@ class FlowContext implements IFlowContext {
         this.transform.scale = DEFAULT_SCALE;
     }
 
-    get projectEditorStore() {
-        return this.document.projectEditorStore;
+    get projectStore() {
+        return this.document.projectStore;
     }
 
     get flowState() {
@@ -659,9 +659,7 @@ class FlowContext implements IFlowContext {
     }
 
     get dataContext() {
-        return (
-            this._dataContext || this.document.projectEditorStore.dataContext
-        );
+        return this._dataContext || this.document.projectStore.dataContext;
     }
 
     get frontFace() {
@@ -708,7 +706,7 @@ class FlowDocument implements IDocument {
     ) {
         makeObservable(this, {
             connectionLines: computed,
-            projectEditorStore: computed
+            projectStore: computed
         });
     }
 
@@ -757,8 +755,8 @@ class FlowDocument implements IDocument {
 
     pasteSelection() {}
 
-    get projectEditorStore() {
-        return getProjectEditorStore(this.flow.object);
+    get projectStore() {
+        return getProjectStore(this.flow.object);
     }
 
     onDragStart(): void {}

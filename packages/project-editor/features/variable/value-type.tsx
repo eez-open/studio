@@ -828,9 +828,7 @@ export function isValueTypeOf(
 }
 
 export function isValidType(project: Project, valueType: ValueType): boolean {
-    return (
-        project._DocumentStore.typesStore.allValueTypes.indexOf(valueType) != -1
-    );
+    return project._store.typesStore.allValueTypes.indexOf(valueType) != -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

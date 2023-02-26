@@ -73,7 +73,7 @@ export class MarkdownWidget extends Widget {
     }
 
     getText(flowContext: IFlowContext): { __html: string } | string {
-        if (flowContext.projectEditorStore.projectTypeTraits.isDashboard) {
+        if (flowContext.projectStore.projectTypeTraits.isDashboard) {
             if (this.text) {
                 if (flowContext.flowState) {
                     try {
@@ -93,7 +93,7 @@ export class MarkdownWidget extends Widget {
                     }
                 }
 
-                if (flowContext.projectEditorStore.runtime) {
+                if (flowContext.projectStore.runtime) {
                     return "";
                 }
 

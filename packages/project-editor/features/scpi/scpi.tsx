@@ -23,7 +23,7 @@ import {
     MessageType
 } from "project-editor/core/object";
 import {
-    getProjectEditorStore,
+    getProjectStore,
     getChildOfObject,
     Message,
     propertyNotSetMessage,
@@ -87,12 +87,7 @@ export class ScpiParameterType extends EezObject implements IParameterType {
             if (!this.enumeration) {
                 messages.push(propertyNotSetMessage(this, "enumeration"));
             } else {
-                if (
-                    !findScpiEnum(
-                        getProjectEditorStore(object),
-                        this.enumeration
-                    )
-                ) {
+                if (!findScpiEnum(getProjectStore(object), this.enumeration)) {
                     messages.push(propertyNotFoundMessage(this, "enumeration"));
                 }
             }
@@ -162,7 +157,7 @@ export class ScpiParameter extends EezObject {
                     object: ScpiParameter,
                     propertyInfo: PropertyInfo
                 ) => {
-                    const projectEditorStore = getProjectEditorStore(object);
+                    const projectStore = getProjectStore(object);
                     const result = await showGenericDialog({
                         dialogDefinition: {
                             title: "Select one or more type",
@@ -228,7 +223,7 @@ export class ScpiParameter extends EezObject {
                                     type: "enum",
                                     enumItems: () => {
                                         return getScpiEnumsAsDialogEnumItems(
-                                            projectEditorStore
+                                            projectStore
                                         );
                                     },
                                     visible: (values: any) => {
@@ -449,12 +444,7 @@ export class ScpiResponseType extends EezObject implements IResponseType {
             if (!this.enumeration) {
                 messages.push(propertyNotSetMessage(this, "enumeration"));
             } else {
-                if (
-                    !findScpiEnum(
-                        getProjectEditorStore(object),
-                        this.enumeration
-                    )
-                ) {
+                if (!findScpiEnum(getProjectStore(object), this.enumeration)) {
                     messages.push(propertyNotFoundMessage(this, "enumeration"));
                 }
             }
@@ -481,7 +471,7 @@ export class ScpiResponse extends EezObject {
                     object: ScpiResponse,
                     propertyInfo: PropertyInfo
                 ) => {
-                    const projectEditorStore = getProjectEditorStore(object);
+                    const projectStore = getProjectStore(object);
                     const result = await showGenericDialog({
                         dialogDefinition: {
                             title: "Select one or more type",
@@ -561,7 +551,7 @@ export class ScpiResponse extends EezObject {
                                     type: "enum",
                                     enumItems: () => {
                                         return getScpiEnumsAsDialogEnumItems(
-                                            projectEditorStore
+                                            projectStore
                                         );
                                     },
                                     visible: (values: any) => {
@@ -796,7 +786,7 @@ export class ScpiCommand extends EezObject {
             const project = ProjectEditor.getProject(parent);
 
             const scpiCommand = createObject<ScpiCommand>(
-                project._DocumentStore,
+                project._store,
                 scpiCommandProperties,
                 ScpiCommand
             );
@@ -874,7 +864,7 @@ export class ScpiSubsystem extends EezObject {
             const project = ProjectEditor.getProject(parent);
 
             const scpiCommand = createObject<ScpiSubsystem>(
-                project._DocumentStore,
+                project._store,
                 scpiSubsystemProperties,
                 ScpiSubsystem
             );

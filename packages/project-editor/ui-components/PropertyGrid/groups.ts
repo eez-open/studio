@@ -49,12 +49,6 @@ export const styleGroup: IPropertyGridGroupDefinition = {
         object instanceof ProjectEditor.ActionComponentClass ? 4 : 3
 };
 
-export const topGroup: IPropertyGridGroupDefinition = {
-    id: "top",
-    title: "",
-    position: (object: IEezObject) => -1
-};
-
 export const timelineGroup: IPropertyGridGroupDefinition = {
     id: "timeline",
     title: "Timeline keyframe",

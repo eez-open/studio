@@ -53,7 +53,7 @@ export const ProjectEditorView = observer(
             const activeTab = ProjectEditor.homeTabs.activeTab;
             if (
                 activeTab instanceof ProjectEditor.ProjectEditorTabClass &&
-                activeTab.projectEditorStore == this.context &&
+                activeTab.projectStore == this.context &&
                 this.context.runtime &&
                 this.context.runtime.isDebuggerActive &&
                 this.context.runtime.isPaused

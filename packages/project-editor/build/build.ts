@@ -18,7 +18,7 @@ import {
     MessageType
 } from "project-editor/core/object";
 import {
-    ProjectEditorStore,
+    ProjectStore,
     isArray,
     getArrayAndObjectProperties,
     getClassInfo,
@@ -37,8 +37,8 @@ import { buildScpi } from "project-editor/build/scpi";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function showCheckResult(projectEditorStore: ProjectEditorStore) {
-    const OutputSections = projectEditorStore.outputSectionsStore;
+function showCheckResult(projectStore: ProjectStore) {
+    const OutputSections = projectStore.outputSectionsStore;
 
     let outputSection = OutputSections.getSection(Section.OUTPUT);
 
@@ -75,12 +75,12 @@ class BuildException {
 }
 
 async function getBuildResults(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     sectionNames: string[] | undefined,
     buildConfiguration: BuildConfiguration | undefined,
     option: "check" | "buildAssets" | "buildFiles"
 ) {
-    const project = projectEditorStore.project;
+    const project = projectStore.project;
 
     let buildResults: BuildResult[] = [];
 
@@ -99,12 +99,12 @@ async function getBuildResults(
 
 const sectionNamesRegexp = /\/\/\$\{eez-studio (\w*)\s*(\w*)\}/g;
 
-function getSectionNames(projectEditorStore: ProjectEditorStore): string[] {
-    if (projectEditorStore.masterProject) {
+function getSectionNames(projectStore: ProjectStore): string[] {
+    if (projectStore.masterProject) {
         return ["GUI_ASSETS_DATA", "GUI_ASSETS_DATA_MAP"];
     }
 
-    const project = projectEditorStore.project;
+    const project = projectStore.project;
 
     const sectionNames: string[] = [];
 
@@ -121,7 +121,7 @@ function getSectionNames(projectEditorStore: ProjectEditorStore): string[] {
 }
 
 async function generateFile(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     configurationBuildResults: {
         [configurationName: string]: BuildResult[];
     },
@@ -166,7 +166,7 @@ async function generateFile(
                 parts["GUI_ASSETS_DATA_MAP"]
             );
 
-            projectEditorStore.outputSectionsStore.write(
+            projectStore.outputSectionsStore.write(
                 Section.OUTPUT,
                 MessageType.INFO,
                 `File "${filePath}.map" builded`
@@ -174,7 +174,7 @@ async function generateFile(
         }
     }
 
-    projectEditorStore.outputSectionsStore.write(
+    projectStore.outputSectionsStore.write(
         Section.OUTPUT,
         MessageType.INFO,
         `File "${filePath}" builded`
@@ -184,7 +184,7 @@ async function generateFile(
 }
 
 async function generateFiles(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     destinationFolderPath: string,
     configurationBuildResults: {
         [configurationName: string]: BuildResult[];
@@ -192,22 +192,19 @@ async function generateFiles(
 ) {
     let parts: any = undefined;
 
-    const project = projectEditorStore.project;
+    const project = projectStore.project;
 
-    if (projectEditorStore.masterProject) {
+    if (projectStore.masterProject) {
         parts = generateFile(
-            projectEditorStore,
+            projectStore,
             configurationBuildResults,
-            projectEditorStore.selectedBuildConfiguration
-                ? projectEditorStore.selectedBuildConfiguration.name
+            projectStore.selectedBuildConfiguration
+                ? projectStore.selectedBuildConfiguration.name
                 : "default",
             undefined,
             destinationFolderPath +
                 "/" +
-                path.basename(
-                    projectEditorStore.filePath || "",
-                    ".eez-project"
-                ) +
+                path.basename(projectStore.filePath || "", ".eez-project") +
                 (project.projectTypeTraits.isApplet ? ".app" : ".res")
         );
 
@@ -215,10 +212,7 @@ async function generateFiles(
             await writeTextFile(
                 destinationFolderPath +
                     "/" +
-                    path.basename(
-                        projectEditorStore.filePath || "",
-                        ".eez-project"
-                    ) +
+                    path.basename(projectStore.filePath || "", ".eez-project") +
                     ".py",
                 project.micropython.code
             );
@@ -231,7 +225,7 @@ async function generateFiles(
                 for (const configuration of build.configurations) {
                     try {
                         parts = await generateFile(
-                            projectEditorStore,
+                            projectStore,
                             configurationBuildResults,
                             configuration.name,
                             buildFile.template,
@@ -246,7 +240,7 @@ async function generateFiles(
                         await new Promise(resolve => setTimeout(resolve, 10));
 
                         parts = await generateFile(
-                            projectEditorStore,
+                            projectStore,
                             configurationBuildResults,
                             configuration.name,
                             buildFile.template,
@@ -261,10 +255,10 @@ async function generateFiles(
                 }
             } else {
                 parts = generateFile(
-                    projectEditorStore,
+                    projectStore,
                     configurationBuildResults,
-                    projectEditorStore.selectedBuildConfiguration
-                        ? projectEditorStore.selectedBuildConfiguration.name
+                    projectStore.selectedBuildConfiguration
+                        ? projectStore.selectedBuildConfiguration.name
                         : "default",
                     buildFile.template,
                     destinationFolderPath + "/" + buildFile.fileName
@@ -276,27 +270,27 @@ async function generateFiles(
     return parts;
 }
 
-function anythingToBuild(projectEditorStore: ProjectEditorStore) {
-    const project = projectEditorStore.project;
+function anythingToBuild(projectStore: ProjectStore) {
+    const project = projectStore.project;
     return (
         project.settings.build.files.length > 0 ||
-        projectEditorStore.masterProject ||
-        projectEditorStore.projectTypeTraits.isDashboard ||
-        projectEditorStore.projectTypeTraits.isLVGL
+        projectStore.masterProject ||
+        projectStore.projectTypeTraits.isDashboard ||
+        projectStore.projectTypeTraits.isLVGL
     );
 }
 
 export async function build(
-    projectEditorStore: ProjectEditorStore,
+    projectStore: ProjectStore,
     option: "check" | "buildAssets" | "buildFiles"
 ) {
     const timeStart = new Date().getTime();
 
-    const OutputSections = projectEditorStore.outputSectionsStore;
+    const OutputSections = projectStore.outputSectionsStore;
 
     OutputSections.clear(Section.OUTPUT);
 
-    if (!anythingToBuild(projectEditorStore)) {
+    if (!anythingToBuild(projectStore)) {
         OutputSections.write(
             Section.OUTPUT,
             MessageType.INFO,
@@ -312,14 +306,14 @@ export async function build(
 
     let parts: any = undefined;
 
-    const project = projectEditorStore.project;
+    const project = projectStore.project;
 
     try {
         let sectionNames: string[] | undefined = undefined;
 
         let destinationFolderPath;
         if (option == "buildFiles") {
-            destinationFolderPath = projectEditorStore.getAbsoluteFilePath(
+            destinationFolderPath = projectStore.getAbsoluteFilePath(
                 project.settings.build.destinationFolder || "."
             );
 
@@ -328,7 +322,7 @@ export async function build(
             }
 
             if (!project.projectTypeTraits.isDashboard) {
-                sectionNames = getSectionNames(projectEditorStore);
+                sectionNames = getSectionNames(projectStore);
             }
         }
 
@@ -344,7 +338,7 @@ export async function build(
             if (
                 project.settings.general.projectVersion !== "v1" &&
                 project.settings.build.configurations.length > 0 &&
-                !projectEditorStore.masterProject
+                !projectStore.masterProject
             ) {
                 for (const configuration of project.settings.build
                     .configurations) {
@@ -355,7 +349,7 @@ export async function build(
                     );
                     configurationBuildResults[configuration.name] =
                         await getBuildResults(
-                            projectEditorStore,
+                            projectStore,
                             sectionNames,
                             configuration,
                             option
@@ -363,7 +357,7 @@ export async function build(
                 }
             } else {
                 const selectedBuildConfiguration =
-                    projectEditorStore.selectedBuildConfiguration ||
+                    projectStore.selectedBuildConfiguration ||
                     project.settings.build.configurations[0];
                 if (selectedBuildConfiguration) {
                     OutputSections.write(
@@ -373,7 +367,7 @@ export async function build(
                     );
                     configurationBuildResults[selectedBuildConfiguration.name] =
                         await getBuildResults(
-                            projectEditorStore,
+                            projectStore,
                             sectionNames,
                             selectedBuildConfiguration,
                             option
@@ -381,7 +375,7 @@ export async function build(
                 } else {
                     configurationBuildResults["default"] =
                         await getBuildResults(
-                            projectEditorStore,
+                            projectStore,
                             sectionNames,
                             undefined,
                             option
@@ -390,7 +384,7 @@ export async function build(
             }
         }
 
-        showCheckResult(projectEditorStore);
+        showCheckResult(projectStore);
 
         if (option == "check") {
             return undefined;
@@ -426,13 +420,13 @@ export async function build(
 
         if (!project.projectTypeTraits.isDashboard) {
             parts = await generateFiles(
-                projectEditorStore,
+                projectStore,
                 destinationFolderPath || "",
                 configurationBuildResults
             );
         } else {
             const baseName = path.basename(
-                projectEditorStore.filePath || "",
+                projectStore.filePath || "",
                 ".eez-project"
             );
 
@@ -462,7 +456,7 @@ export async function build(
 
                 archive.pipe(output);
 
-                const json = getJSON(projectEditorStore, 0);
+                const json = getJSON(projectStore, 0);
                 archive.append(json, { name: baseName + ".eez-project" });
 
                 archive.finalize();
@@ -499,7 +493,7 @@ export async function build(
             );
         }
 
-        showCheckResult(projectEditorStore);
+        showCheckResult(projectStore);
     } finally {
         OutputSections.setLoading(Section.OUTPUT, false);
     }
@@ -507,14 +501,14 @@ export async function build(
     return parts;
 }
 
-export async function buildExtensions(projectEditorStore: ProjectEditorStore) {
+export async function buildExtensions(projectStore: ProjectStore) {
     const timeStart = new Date().getTime();
 
-    const OutputSections = projectEditorStore.outputSectionsStore;
+    const OutputSections = projectStore.outputSectionsStore;
 
     OutputSections.clear(Section.OUTPUT);
 
-    if (!extensionDefinitionAnythingToBuild(projectEditorStore)) {
+    if (!extensionDefinitionAnythingToBuild(projectStore)) {
         OutputSections.write(
             Section.OUTPUT,
             MessageType.INFO,
@@ -528,19 +522,19 @@ export async function buildExtensions(projectEditorStore: ProjectEditorStore) {
     // give some time for loader to start
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    const project = projectEditorStore.project;
+    const project = projectStore.project;
 
     try {
-        let destinationFolderPath = projectEditorStore.getAbsoluteFilePath(
+        let destinationFolderPath = projectStore.getAbsoluteFilePath(
             project.settings.build.destinationFolder || "."
         );
         if (!fs.existsSync(destinationFolderPath)) {
             throw new BuildException("Cannot find destination folder.");
         }
 
-        showCheckResult(projectEditorStore);
+        showCheckResult(projectStore);
 
-        await extensionDefinitionBuild(projectEditorStore);
+        await extensionDefinitionBuild(projectStore);
 
         OutputSections.write(
             Section.OUTPUT,
@@ -573,7 +567,7 @@ export async function buildExtensions(projectEditorStore: ProjectEditorStore) {
             );
         }
 
-        showCheckResult(projectEditorStore);
+        showCheckResult(projectStore);
     } finally {
         OutputSections.setLoading(Section.OUTPUT, false);
     }
@@ -621,26 +615,20 @@ var checkTransformer: (object: IEezObject) => IMessage[] = createTransformer(
 
 let setMessagesTimeoutId: any;
 
-export function backgroundCheck(projectEditorStore: ProjectEditorStore) {
+export function backgroundCheck(projectStore: ProjectStore) {
     //console.time("backgroundCheck");
 
-    projectEditorStore.outputSectionsStore.setLoading(Section.CHECKS, true);
+    projectStore.outputSectionsStore.setLoading(Section.CHECKS, true);
 
-    const messages = checkTransformer(projectEditorStore.project);
+    const messages = checkTransformer(projectStore.project);
 
     if (setMessagesTimeoutId) {
         clearTimeout(setMessagesTimeoutId);
     }
 
     setMessagesTimeoutId = setTimeout(() => {
-        projectEditorStore.outputSectionsStore.setMessages(
-            Section.CHECKS,
-            messages
-        );
-        projectEditorStore.outputSectionsStore.setLoading(
-            Section.CHECKS,
-            false
-        );
+        projectStore.outputSectionsStore.setMessages(Section.CHECKS, messages);
+        projectStore.outputSectionsStore.setLoading(Section.CHECKS, false);
     }, 100);
 
     //console.timeEnd("backgroundCheck");

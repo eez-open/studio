@@ -33,7 +33,7 @@ import {
     isV1Project,
     isV3OrNewerProject
 } from "project-editor/project/project-type-traits";
-import { getProjectEditorStore } from "project-editor/store";
+import { getProjectStore } from "project-editor/store";
 import { validators } from "eez-studio-shared/validation";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
@@ -166,7 +166,7 @@ const inheritFromProperty: PropertyInfo = {
     type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: "styles",
     propertyMenu: (props: PropertyProps): Electron.MenuItem[] => {
-        const projectEditorStore = getProjectEditorStore(props.objects[0]);
+        const projectStore = getProjectStore(props.objects[0]);
 
         let menuItems: Electron.MenuItem[] = [];
 
@@ -204,8 +204,7 @@ const inheritFromProperty: PropertyInfo = {
                                                 validators.required,
                                                 validators.unique(
                                                     {},
-                                                    projectEditorStore.project
-                                                        .styles
+                                                    projectStore.project.styles
                                                 )
                                             ]
                                         }
@@ -213,7 +212,7 @@ const inheritFromProperty: PropertyInfo = {
                                 },
                                 values: {}
                             }).then(result => {
-                                projectEditorStore.undoManager.setCombineCommands(
+                                projectStore.undoManager.setCombineCommands(
                                     true
                                 );
 
@@ -233,20 +232,20 @@ const inheritFromProperty: PropertyInfo = {
                                 objectPropertyValues.inheritFrom =
                                     result.values.name;
 
-                                projectEditorStore.addObject(
-                                    projectEditorStore.project.styles,
+                                projectStore.addObject(
+                                    projectStore.project.styles,
                                     createObject<Style>(
-                                        projectEditorStore,
+                                        projectStore,
                                         stylePropertyValues,
                                         Style
                                     )
                                 );
-                                projectEditorStore.updateObject(
+                                projectStore.updateObject(
                                     object,
                                     objectPropertyValues
                                 );
 
-                                projectEditorStore.undoManager.setCombineCommands(
+                                projectStore.undoManager.setCombineCommands(
                                     false
                                 );
                             });
@@ -255,7 +254,7 @@ const inheritFromProperty: PropertyInfo = {
                 );
 
                 const style = findStyle(
-                    projectEditorStore.project,
+                    projectStore.project,
                     (props.objects[0] as Style).inheritFrom
                 );
                 if (style) {
@@ -263,7 +262,7 @@ const inheritFromProperty: PropertyInfo = {
                         new MenuItem({
                             label: "Update Style",
                             click: () => {
-                                projectEditorStore.undoManager.setCombineCommands(
+                                projectStore.undoManager.setCombineCommands(
                                     true
                                 );
 
@@ -289,16 +288,16 @@ const inheritFromProperty: PropertyInfo = {
                                     }
                                 });
 
-                                projectEditorStore.updateObject(
+                                projectStore.updateObject(
                                     style,
                                     stylePropertyValues
                                 );
-                                projectEditorStore.updateObject(
+                                projectStore.updateObject(
                                     object,
                                     objectPropertyValues
                                 );
 
-                                projectEditorStore.undoManager.setCombineCommands(
+                                projectStore.undoManager.setCombineCommands(
                                     false
                                 );
                             }
@@ -756,7 +755,7 @@ function getInheritedValue(
                 propertyName === "focusBackgroundColor" ||
                 propertyName === "borderColor")
         ) {
-            value = getThemedColor(getProjectEditorStore(styleObject), value);
+            value = getThemedColor(getProjectStore(styleObject), value);
         }
 
         return {
@@ -1038,7 +1037,7 @@ export class Style extends EezObject {
             const project = ProjectEditor.getProject(parent);
 
             const style = createObject<Style>(
-                project._DocumentStore,
+                project._store,
                 styleProperties,
                 Style
             );
@@ -1052,19 +1051,16 @@ export class Style extends EezObject {
         check: (style: Style) => {
             let messages: Message[] = [];
 
-            const projectEditorStore = getProjectEditorStore(style);
+            const projectStore = getProjectStore(style);
 
-            if (projectEditorStore.projectTypeTraits.isLVGL) {
+            if (projectStore.projectTypeTraits.isLVGL) {
                 return [];
             }
 
             function checkColor(propertyName: string) {
                 const color = (style as any)[propertyName];
                 if (color) {
-                    const colorValue = getThemedColor(
-                        projectEditorStore,
-                        color
-                    );
+                    const colorValue = getThemedColor(projectStore, color);
                     if (!isValid(colorValue)) {
                         messages.push(
                             new Message(
@@ -1085,10 +1081,10 @@ export class Style extends EezObject {
             checkColor("focusBackgroundColor");
             checkColor("borderColor");
 
-            if (projectEditorStore.projectTypeTraits.isDashboard) {
+            if (projectStore.projectTypeTraits.isDashboard) {
                 if (
                     style.inheritFrom &&
-                    !findStyle(projectEditorStore.project, style.inheritFrom)
+                    !findStyle(projectStore.project, style.inheritFrom)
                 ) {
                     messages.push(
                         propertyNotFoundMessage(style, "inheritFrom")
@@ -1098,7 +1094,7 @@ export class Style extends EezObject {
                 // TODO
             } else {
                 ProjectEditor.checkAssetId(
-                    projectEditorStore,
+                    projectStore,
                     "styles",
                     style,
                     messages
@@ -1106,7 +1102,7 @@ export class Style extends EezObject {
 
                 if (
                     style.inheritFrom &&
-                    !findStyle(projectEditorStore.project, style.inheritFrom)
+                    !findStyle(projectStore.project, style.inheritFrom)
                 ) {
                     messages.push(
                         propertyNotFoundMessage(style, "inheritFrom")
@@ -1200,8 +1196,8 @@ export class Style extends EezObject {
                     }
 
                     if (
-                        projectEditorStore.project.settings.general
-                            .projectVersion !== "v1"
+                        projectStore.project.settings.general.projectVersion !==
+                        "v1"
                     ) {
                         if (isNaN(style.activeColor16)) {
                             messages.push(
@@ -1744,7 +1740,7 @@ export class Style extends EezObject {
     }
 
     get cssDeclarations() {
-        const projectEditorStore = getProjectEditorStore(this);
+        const projectStore = getProjectStore(this);
 
         let spec = [
             {
@@ -1756,21 +1752,17 @@ export class Style extends EezObject {
                     ["font-style", this.fontStyle],
                     [
                         "color",
-                        this.color &&
-                            getThemedColor(projectEditorStore, this.color)
+                        this.color && getThemedColor(projectStore, this.color)
                     ],
                     [
                         "background-color",
                         this.backgroundColor &&
-                            getThemedColor(
-                                projectEditorStore,
-                                this.backgroundColor
-                            )
+                            getThemedColor(projectStore, this.backgroundColor)
                     ],
                     [
                         "border-color",
                         this.borderColor &&
-                            getThemedColor(projectEditorStore, this.borderColor)
+                            getThemedColor(projectStore, this.borderColor)
                     ],
                     ["border-style", this.borderStyle],
                     ["box-shadow", this.boxShadow]
@@ -1782,13 +1774,13 @@ export class Style extends EezObject {
                     [
                         "color",
                         this.activeColor &&
-                            getThemedColor(projectEditorStore, this.activeColor)
+                            getThemedColor(projectStore, this.activeColor)
                     ],
                     [
                         "background-color",
                         this.activeBackgroundColor &&
                             getThemedColor(
-                                projectEditorStore,
+                                projectStore,
                                 this.activeBackgroundColor
                             )
                     ]
@@ -1800,13 +1792,13 @@ export class Style extends EezObject {
                     [
                         "color",
                         this.focusColor &&
-                            getThemedColor(projectEditorStore, this.focusColor)
+                            getThemedColor(projectStore, this.focusColor)
                     ],
                     [
                         "background-color",
                         this.focusBackgroundColor &&
                             getThemedColor(
-                                projectEditorStore,
+                                projectStore,
                                 this.focusBackgroundColor
                             )
                     ]

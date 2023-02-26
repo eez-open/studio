@@ -53,17 +53,17 @@ export class ShortcutsEditor extends EditorComponent {
         let shortcutsMap = new Map<string, Shortcut>();
         shortcuts.forEach(shortcut => shortcutsMap.set(shortcut.id, shortcut));
 
-        const projectEditorStore = this.context;
+        const projectStore = this.context;
 
         return {
             shortcuts: observable.map(shortcutsMap),
 
             addShortcut(shortcut: Partial<IShortcut>) {
                 shortcut.id = guid();
-                projectEditorStore.addObject(
+                projectStore.addObject(
                     shortcuts,
                     createObject<Shortcut>(
-                        projectEditorStore,
+                        projectStore,
                         shortcut as any,
                         Shortcut
                     )
@@ -74,14 +74,14 @@ export class ShortcutsEditor extends EditorComponent {
             updateShortcut(shortcut: Partial<IShortcut>): void {
                 let shortcutObject = shortcutsMap.get(shortcut.id!);
                 if (shortcutObject) {
-                    projectEditorStore.updateObject(shortcutObject, shortcut);
+                    projectStore.updateObject(shortcutObject, shortcut);
                 }
             },
 
             deleteShortcut(shortcut: Partial<IShortcut>): void {
                 let shortcutObject = shortcutsMap.get(shortcut.id!);
                 if (shortcutObject) {
-                    projectEditorStore.deleteObject(shortcutObject);
+                    projectStore.deleteObject(shortcutObject);
                 }
             },
 

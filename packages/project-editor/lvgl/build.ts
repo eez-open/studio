@@ -14,7 +14,7 @@ export class LVGLBuild {
     project: Project;
 
     constructor(public assets: Assets) {
-        this.project = assets.projectEditorStore.project;
+        this.project = assets.projectStore.project;
     }
 
     result: string;
@@ -455,8 +455,7 @@ extern const ext_img_desc_t images[${this.project.bitmaps.length}];
 
         for (const action of this.project.actions) {
             if (
-                !this.assets.projectEditorStore.projectTypeTraits
-                    .hasFlowSupport ||
+                !this.assets.projectStore.projectTypeTraits.hasFlowSupport ||
                 action.implementationType === "native"
             ) {
                 build.line(
@@ -477,8 +476,7 @@ extern const ext_img_desc_t images[${this.project.bitmaps.length}];
 
         for (const variable of this.project.variables.globalVariables) {
             if (
-                !this.assets.projectEditorStore.projectTypeTraits
-                    .hasFlowSupport ||
+                !this.assets.projectStore.projectTypeTraits.hasFlowSupport ||
                 variable.native
             ) {
                 let type;
@@ -525,8 +523,7 @@ extern const ext_img_desc_t images[${this.project.bitmaps.length}];
 
         for (const variable of this.project.variables.globalVariables) {
             if (
-                !this.assets.projectEditorStore.projectTypeTraits
-                    .hasFlowSupport ||
+                !this.assets.projectStore.projectTypeTraits.hasFlowSupport ||
                 variable.native
             ) {
                 build.line(
@@ -596,7 +593,7 @@ extern const ext_img_desc_t images[${this.project.bitmaps.length}];
 
             try {
                 await writeTextFile(
-                    this.project._DocumentStore.getAbsoluteFilePath(
+                    this.project._store.getAbsoluteFilePath(
                         this.project.settings.build.destinationFolder
                     ) +
                         "/" +
@@ -623,7 +620,7 @@ extern const ext_img_desc_t images[${this.project.bitmaps.length}];
                 );
 
                 await writeTextFile(
-                    this.project._DocumentStore.getAbsoluteFilePath(
+                    this.project._store.getAbsoluteFilePath(
                         this.project.settings.build.destinationFolder
                     ) +
                         "/" +

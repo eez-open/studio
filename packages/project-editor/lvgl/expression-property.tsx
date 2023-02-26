@@ -225,7 +225,7 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
         build.line(`{`);
         build.indent();
 
-        if (build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport) {
+        if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
             const page = getAncestorOfType(
                 widget,
                 ProjectEditor.PageClass.classInfo
@@ -342,7 +342,7 @@ export function expressionPropertyBuildEventHandlerSpecific<
             return;
         }
 
-        if (build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport) {
+        if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
             const page = getAncestorOfType(
                 widget,
                 ProjectEditor.PageClass.classInfo

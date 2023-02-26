@@ -29,7 +29,7 @@ import {
 } from "project-editor/core/object";
 
 import { getProject, Project } from "project-editor/project/project";
-import type { ProjectEditorStore } from "project-editor/store";
+import type { ProjectStore } from "project-editor/store";
 
 import {
     checkClipboard,
@@ -57,9 +57,9 @@ export class EezValueObject extends EezObject {
     static create(object: IEezObject, propertyInfo: PropertyInfo, value: any) {
         const valueObject = new EezValueObject();
 
-        const projectEditorStore = getProjectEditorStore(object);
+        const projectStore = getProjectStore(object);
 
-        setId(projectEditorStore, valueObject, projectEditorStore.getChildId());
+        setId(projectStore, valueObject, projectStore.getChildId());
         setKey(valueObject, propertyInfo.name);
         setParent(valueObject, object);
 
@@ -77,8 +77,8 @@ export function isValue(object: IEezObject | PropertyInfo | undefined) {
     return !!object && object instanceof EezValueObject;
 }
 
-export function getProjectEditorStore(object: IEezObject) {
-    return (getRootObject(object) as Project)._DocumentStore;
+export function getProjectStore(object: IEezObject) {
+    return (getRootObject(object) as Project)._store;
 }
 
 export function getChildOfObject(
@@ -157,9 +157,8 @@ export function getObjectFromStringPath(
     if (stringPath.startsWith("[")) {
         const i = stringPath.indexOf(":");
         const absoluteFilePath = stringPath.substring(1, i - 1);
-        const projectEditorStore = getProjectEditorStore(rootObject);
-        const project =
-            projectEditorStore.externalProjects.get(absoluteFilePath);
+        const projectStore = getProjectStore(rootObject);
+        const project = projectStore.externalProjects.get(absoluteFilePath);
         stringPath = stringPath.substring(stringPath.indexOf(":") + 1);
         return getObjectFromStringPath(project!, stringPath);
     }
@@ -401,9 +400,9 @@ export function getObjectPath(object: IEezObject): (string | number)[] {
 export function getObjectPathAsString(object: IEezObject) {
     const path = getObjectPath(object).join("/");
     const project = getProject(object);
-    const projectEditorStore = project._DocumentStore;
+    const projectStore = project._store;
     const absoluteFilePath =
-        projectEditorStore.mapExternalProjectToAbsolutePath.get(project);
+        projectStore.mapExternalProjectToAbsolutePath.get(project);
     if (absoluteFilePath != undefined) {
         return `[${absoluteFilePath}]:/${path}`;
     }
@@ -647,12 +646,9 @@ export function canContainChildren(object: IEezObject) {
     return false;
 }
 
-export function canPaste(
-    projectEditorStore: ProjectEditorStore,
-    object: IEezObject
-) {
+export function canPaste(projectStore: ProjectStore, object: IEezObject) {
     try {
-        return checkClipboard(projectEditorStore, object);
+        return checkClipboard(projectStore, object);
     } catch (e) {
         return undefined;
     }
@@ -688,14 +684,14 @@ export async function addItem(object: IEezObject) {
         return null;
     }
 
-    return getProjectEditorStore(object).addObject(parent, newObject);
+    return getProjectStore(object).addObject(parent, newObject);
 }
 
 export function pasteItem(object: IEezObject) {
     try {
-        const projectEditorStore = getProjectEditorStore(object);
+        const projectStore = getProjectStore(object);
 
-        const c = checkClipboard(projectEditorStore, object);
+        const c = checkClipboard(projectStore, object);
         if (c) {
             const pastePlace = c.pastePlace;
             if (isArray(pastePlace) || pastePlace instanceof EezObject) {
@@ -705,14 +701,14 @@ export function pasteItem(object: IEezObject) {
                         getParent(object) === pastePlace
                     ) {
                         const pasteObject = createObject(
-                            projectEditorStore,
+                            projectStore,
                             c.serializedData.object,
                             getClass(c.serializedData.object),
                             undefined,
                             false
                         );
 
-                        return projectEditorStore.insertObject(
+                        return projectStore.insertObject(
                             pastePlace,
                             pastePlace.indexOf(object as EezObject) + 1,
                             pasteObject
@@ -730,22 +726,19 @@ export function pasteItem(object: IEezObject) {
                         }
 
                         const pasteObject = createObject(
-                            projectEditorStore,
+                            projectStore,
                             c.serializedData.object,
                             getClass(c.serializedData.object),
                             undefined,
                             false
                         );
 
-                        return projectEditorStore.addObject(
-                            pastePlace,
-                            pasteObject
-                        );
+                        return projectStore.addObject(pastePlace, pasteObject);
                     }
                 } else if (c.serializedData.objects) {
                     const pasteObjects = c.serializedData.objects.map(object =>
                         createObject(
-                            projectEditorStore,
+                            projectStore,
                             object,
                             getClass(object),
                             undefined,
@@ -753,15 +746,12 @@ export function pasteItem(object: IEezObject) {
                         )
                     );
 
-                    return projectEditorStore.addObjects(
-                        pastePlace,
-                        pasteObjects
-                    );
+                    return projectStore.addObjects(pastePlace, pasteObjects);
                 }
             } else {
                 const key = pastePlace.name;
 
-                projectEditorStore.updateObject(object, {
+                projectStore.updateObject(object, {
                     [key]: c.serializedData.object
                 });
 
@@ -781,10 +771,7 @@ export function deleteItem(object: IEezObject) {
 }
 
 export function cutItem(object: IEezObject) {
-    let clipboardText = objectToClipboardData(
-        getProjectEditorStore(object),
-        object
-    );
+    let clipboardText = objectToClipboardData(getProjectStore(object), object);
 
     deleteItems([object], () => {
         copyToClipboard(clipboardText);
@@ -792,9 +779,7 @@ export function cutItem(object: IEezObject) {
 }
 
 export function copyItem(object: IEezObject) {
-    copyToClipboard(
-        objectToClipboardData(getProjectEditorStore(object), object)
-    );
+    copyToClipboard(objectToClipboardData(getProjectStore(object), object));
 }
 
 export interface IContextMenuContext {
@@ -805,10 +790,10 @@ export interface IContextMenuContext {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function deleteItems(objects: IEezObject[], callback?: () => void) {
-    const projectEditorStore = getProjectEditorStore(objects[0]);
+    const projectStore = getProjectStore(objects[0]);
 
     function doDelete() {
-        projectEditorStore.deleteObjects(objects);
+        projectStore.deleteObjects(objects);
         if (callback) {
             callback();
         }

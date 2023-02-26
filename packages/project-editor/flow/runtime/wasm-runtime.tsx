@@ -11,7 +11,7 @@ import { FileHistoryItem } from "instrument/window/history/items/file";
 import { ProjectContext } from "project-editor/project/context";
 
 import {
-    ProjectEditorStore,
+    ProjectStore,
     getClassInfo,
     getObjectFromStringPath,
     getObjectPathAsString,
@@ -136,8 +136,8 @@ export class WasmRuntime extends RemoteRuntime {
 
     ////////////////////////////////////////////////////////////////////////////////
 
-    constructor(public projectEditorStore: ProjectEditorStore) {
-        super(projectEditorStore);
+    constructor(public projectStore: ProjectStore) {
+        super(projectStore);
 
         makeObservable(this, {
             displayWidth: observable,
@@ -148,20 +148,19 @@ export class WasmRuntime extends RemoteRuntime {
     ////////////////////////////////////////////////////////////////////////////////
 
     async doStartRuntime(isDebuggerActive: boolean) {
-        const result = await this.projectEditorStore.buildAssets();
+        const result = await this.projectStore.buildAssets();
 
-        const outputSection =
-            this.projectEditorStore.outputSectionsStore.getSection(
-                Section.OUTPUT
-            );
+        const outputSection = this.projectStore.outputSectionsStore.getSection(
+            Section.OUTPUT
+        );
         if (outputSection.numErrors > 0 || outputSection.numWarnings > 0) {
-            this.projectEditorStore.layoutModels.selectTab(
-                this.projectEditorStore.layoutModels.root,
+            this.projectStore.layoutModels.selectTab(
+                this.projectStore.layoutModels.root,
                 LayoutModels.OUTPUT_TAB_ID
             );
             if (outputSection.numErrors > 0) {
                 this.stopRuntimeWithError("Build error");
-                this.projectEditorStore.setEditorMode();
+                this.projectStore.setEditorMode();
                 return;
             }
         }
@@ -169,7 +168,7 @@ export class WasmRuntime extends RemoteRuntime {
         this.assetsMap = result.GUI_ASSETS_DATA_MAP_JS as AssetsMap;
         if (!this.assetsMap) {
             this.stopRuntimeWithError("Build error");
-            this.projectEditorStore.setEditorMode();
+            this.projectStore.setEditorMode();
             return;
         }
 
@@ -180,7 +179,7 @@ export class WasmRuntime extends RemoteRuntime {
 
         this.assetsData = result.GUI_ASSETS_DATA;
 
-        if (this.projectEditorStore.projectTypeTraits.isDashboard) {
+        if (this.projectStore.projectTypeTraits.isDashboard) {
             await this.loadGlobalVariables();
         }
 
@@ -193,12 +192,12 @@ export class WasmRuntime extends RemoteRuntime {
         this.worker = createWasmWorker(
             this.wasmModuleId,
             this.onWorkerMessage,
-            this.projectEditorStore.projectTypeTraits.isLVGL,
+            this.projectStore.projectTypeTraits.isLVGL,
             this.displayWidth,
             this.displayHeight
         );
 
-        if (this.projectEditorStore.projectTypeTraits.isLVGL) {
+        if (this.projectStore.projectTypeTraits.isLVGL) {
             this.lgvlPageRuntime = new LVGLPageViewerRuntime(this);
         }
     }
@@ -237,7 +236,7 @@ export class WasmRuntime extends RemoteRuntime {
 
         setTimeout(() => {
             if (!this.isStopped) {
-                this.projectEditorStore.setEditorMode();
+                this.projectStore.setEditorMode();
             }
         }, 500);
     }
@@ -263,7 +262,7 @@ export class WasmRuntime extends RemoteRuntime {
             const message: RendererToWorkerMessage = {};
 
             let globalVariableValues: IGlobalVariable[];
-            if (this.projectEditorStore.projectTypeTraits.isDashboard) {
+            if (this.projectStore.projectTypeTraits.isDashboard) {
                 globalVariableValues = this.globalVariables.map(
                     globalVariable => {
                         if (globalVariable.kind == "basic") {
@@ -349,7 +348,7 @@ export class WasmRuntime extends RemoteRuntime {
                         const { flowState, flowIndex } = flowStateAndIndex;
 
                         const component = getObjectFromStringPath(
-                            this.projectEditorStore.project,
+                            this.projectStore.project,
                             this.assetsMap.flows[flowIndex].components[
                                 componentMessage.componentIndex
                             ].path
@@ -470,10 +469,9 @@ export class WasmRuntime extends RemoteRuntime {
     ////////////////////////////////////////////////////////////////////////////////
 
     async loadGlobalVariables() {
-        await this.projectEditorStore.runtimeSettings.loadPersistentVariables();
+        await this.projectStore.runtimeSettings.loadPersistentVariables();
 
-        for (const variable of this.projectEditorStore.project
-            .allGlobalVariables) {
+        for (const variable of this.projectStore.project.allGlobalVariables) {
             const globalVariableInAssetsMap =
                 this.assetsMap.globalVariables.find(
                     globalVariableInAssetsMap =>
@@ -482,7 +480,7 @@ export class WasmRuntime extends RemoteRuntime {
 
             const globalVariableIndex = globalVariableInAssetsMap!.index;
 
-            let value = this.projectEditorStore.dataContext.get(variable.name);
+            let value = this.projectStore.dataContext.get(variable.name);
 
             const objectVariableType = getObjectVariableTypeFromType(
                 variable.type
@@ -502,7 +500,7 @@ export class WasmRuntime extends RemoteRuntime {
                                 true
                             );
 
-                            this.projectEditorStore.dataContext.set(
+                            this.projectStore.dataContext.set(
                                 variable.name,
                                 value
                             );
@@ -607,14 +605,14 @@ export class WasmRuntime extends RemoteRuntime {
         for (let i = 0; i < this.globalVariables.length; i++) {
             const globalVariable = this.globalVariables[i];
             if (globalVariable.kind == "object") {
-                this.projectEditorStore.dataContext.set(
+                this.projectStore.dataContext.set(
                     globalVariable.variable.name,
                     globalVariable.objectVariableValue
                 );
             }
         }
 
-        await this.projectEditorStore.runtimeSettings.savePersistentVariables();
+        await this.projectStore.runtimeSettings.savePersistentVariables();
 
         for (let i = 0; i < this.globalVariables.length; i++) {
             const globalVariable = this.globalVariables[i];

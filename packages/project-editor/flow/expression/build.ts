@@ -151,11 +151,11 @@ function buildExpressionNode(
     }
 
     if (node.type == "TextResource") {
-        if (assets.projectEditorStore.project.texts) {
+        if (assets.projectStore.project.texts) {
             return [
                 makePushConstantInstruction(
                     assets,
-                    assets.projectEditorStore.project.texts.resources.findIndex(
+                    assets.projectStore.project.texts.resources.findIndex(
                         textResource => textResource.resourceID == node.value
                     ),
                     "integer"
@@ -355,14 +355,14 @@ function buildExpressionNode(
             }
 
             const builtInConstantName = `${node.object.name}.${node.property.name}`;
-            const buildInConstantValue = builtInConstants(
-                assets.projectEditorStore
-            )[builtInConstantName];
+            const buildInConstantValue = builtInConstants(assets.projectStore)[
+                builtInConstantName
+            ];
             if (buildInConstantValue != undefined) {
                 return [
                     makePushConstantInstruction(
                         assets,
-                        buildInConstantValue.value(assets.projectEditorStore),
+                        buildInConstantValue.value(assets.projectStore),
                         buildInConstantValue.valueType
                     )
                 ];
@@ -387,11 +387,10 @@ function buildExpressionNode(
             ];
         } else {
             const fieldName = (node.property as IdentifierExpressionNode).name;
-            const fieldIndex =
-                assets.projectEditorStore.typesStore.getFieldIndex(
-                    node.object.valueType,
-                    fieldName
-                );
+            const fieldIndex = assets.projectStore.typesStore.getFieldIndex(
+                node.object.valueType,
+                fieldName
+            );
 
             if (fieldIndex == undefined) {
                 throw `field not found: "${node.object.valueType}"."${fieldName}"`;
@@ -437,9 +436,7 @@ function buildExpressionNode(
     }
 
     if (node.type == "ObjectExpression") {
-        const type = assets.projectEditorStore.typesStore.getType(
-            node.valueType
-        );
+        const type = assets.projectStore.typesStore.getType(node.valueType);
         if (!type || type.kind != "object") {
             throw `Can't build ObjectExpression for type: ${node.valueType}`;
         }

@@ -20,7 +20,7 @@ import {
 } from "project-editor/project/project-type-traits";
 import type { Project } from "project-editor/project/project";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
-import { getProjectEditorStore } from "project-editor/store";
+import { getProjectStore } from "project-editor/store";
 
 import { Flow } from "project-editor/flow/flow";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
@@ -103,10 +103,10 @@ export class Action extends Flow {
         check: (action: Action) => {
             let messages: Message[] = [];
 
-            const projectEditorStore = getProjectEditorStore(action);
+            const projectStore = getProjectStore(action);
 
             ProjectEditor.checkAssetId(
-                projectEditorStore,
+                projectStore,
                 "actions",
                 action,
                 messages
@@ -146,13 +146,13 @@ export class Action extends Flow {
                 values: {}
             });
 
-            const projectEditorStore = getProjectEditorStore(parent);
+            const projectStore = getProjectStore(parent);
 
             const actionProperties: Partial<Action> = Object.assign(
                 {
                     name: result.values.name
                 },
-                projectEditorStore.projectTypeTraits.hasFlowSupport
+                projectStore.projectTypeTraits.hasFlowSupport
                     ? ({
                           implementationType: "flow",
                           components: [],
@@ -162,7 +162,7 @@ export class Action extends Flow {
             );
 
             const action = createObject<Action>(
-                projectEditorStore,
+                projectStore,
                 actionProperties,
                 Action
             );

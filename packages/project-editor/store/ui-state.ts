@@ -7,7 +7,7 @@ import * as notification from "eez-studio-ui/notification";
 import { IEezObject } from "project-editor/core/object";
 import type { Component } from "project-editor/flow/component";
 import { getObjectPathAsString } from "project-editor/store/helper";
-import type { ProjectEditorStore } from "project-editor/store";
+import type { ProjectStore } from "project-editor/store";
 import { Section } from "project-editor/store/output-sections";
 import type { LVGLParts } from "project-editor/lvgl/style-helper";
 
@@ -44,8 +44,8 @@ export class UIStateStore {
     }
 
     get pageRuntimeFrontFace() {
-        return this.projectEditorStore.runtime &&
-            !this.projectEditorStore.runtime.isDebuggerActive
+        return this.projectStore.runtime &&
+            !this.projectStore.runtime.isDebuggerActive
             ? true
             : this._pageRuntimeFrontFace;
     }
@@ -54,7 +54,7 @@ export class UIStateStore {
         runInAction(() => (this._pageRuntimeFrontFace = value));
     }
 
-    constructor(public projectEditorStore: ProjectEditorStore) {
+    constructor(public projectStore: ProjectStore) {
         makeObservable(this, {
             selectedBuildConfiguration: observable,
             features: observable,
@@ -94,8 +94,8 @@ export class UIStateStore {
     }
 
     getUIStateFilePath() {
-        if (this.projectEditorStore.filePath) {
-            return this.projectEditorStore.filePath + "-ui-state";
+        if (this.projectStore.filePath) {
+            return this.projectStore.filePath + "-ui-state";
         }
         return undefined;
     }
@@ -117,13 +117,11 @@ export class UIStateStore {
         } catch (err) {}
 
         runInAction(() => {
-            this.projectEditorStore.navigationStore.loadState(
-                uiState.navigation
-            );
+            this.projectStore.navigationStore.loadState(uiState.navigation);
 
             this.loadObjects(uiState.objects);
 
-            this.projectEditorStore.layoutModels.load(uiState.layoutModel);
+            this.projectStore.layoutModels.load(uiState.layoutModel);
 
             this.selectedBuildConfiguration =
                 uiState.selectedBuildConfiguration || "Default";
@@ -139,10 +137,9 @@ export class UIStateStore {
 
             if (uiState.breakpoints) {
                 for (const key in uiState.breakpoints) {
-                    const component =
-                        this.projectEditorStore.getObjectFromStringPath(
-                            key
-                        ) as Component;
+                    const component = this.projectStore.getObjectFromStringPath(
+                        key
+                    ) as Component;
                     if (component) {
                         this.breakpoints.set(
                             component,
@@ -167,8 +164,8 @@ export class UIStateStore {
                 this.selectedLanguageID = uiState.selectedLanguageID;
             }
 
-            if (this.projectEditorStore.project.changes) {
-                this.projectEditorStore.project.changes._state.selectedRevisionHash =
+            if (this.projectStore.project.changes) {
+                this.projectStore.project.changes._state.selectedRevisionHash =
                     uiState.selectedRevisionHash;
             }
 
@@ -196,7 +193,7 @@ export class UIStateStore {
     }
 
     get objectsJS() {
-        this.projectEditorStore.editorsStore.saveState();
+        this.projectStore.editorsStore.saveState();
 
         let map: any = {};
         for (let [key, value] of this.objectUIStates) {
@@ -207,7 +204,7 @@ export class UIStateStore {
             } else {
                 objectPath = key;
             }
-            if (this.projectEditorStore.getObjectFromStringPath(objectPath)) {
+            if (this.projectStore.getObjectFromStringPath(objectPath)) {
                 map[key] = value;
             }
         }
@@ -216,9 +213,9 @@ export class UIStateStore {
 
     get toJS() {
         const state = {
-            navigation: this.projectEditorStore.navigationStore.saveState(),
-            editors: this.projectEditorStore.editorsStore.saveState(),
-            layoutModel: this.projectEditorStore.layoutModels.save(),
+            navigation: this.projectStore.navigationStore.saveState(),
+            editors: this.projectStore.editorsStore.saveState(),
+            layoutModel: this.projectStore.layoutModels.save(),
             selectedBuildConfiguration: this.selectedBuildConfiguration,
             features: this.featuresJS,
             objects: this.objectsJS,
@@ -235,9 +232,8 @@ export class UIStateStore {
             watchExpressions: toJS(this.watchExpressions),
             showComponentDescriptions: this.showComponentDescriptions,
             selectedLanguageID: this.selectedLanguageID,
-            selectedRevisionHash: this.projectEditorStore.project.changes
-                ? this.projectEditorStore.project.changes._state
-                      .selectedRevisionHash
+            selectedRevisionHash: this.projectStore.project.changes
+                ? this.projectStore.project.changes._state.selectedRevisionHash
                 : undefined,
             logsPanelFilter: this.logsPanelFilter,
             lvglPart: this.lvglPart,
@@ -322,29 +318,29 @@ export class UIStateStore {
 
     addBreakpoint(component: Component) {
         this.breakpoints.set(component, true);
-        if (this.projectEditorStore.runtime) {
-            this.projectEditorStore.runtime.onBreakpointAdded(component);
+        if (this.projectStore.runtime) {
+            this.projectStore.runtime.onBreakpointAdded(component);
         }
     }
 
     removeBreakpoint(component: Component) {
         this.breakpoints.delete(component);
-        if (this.projectEditorStore.runtime) {
-            this.projectEditorStore.runtime.onBreakpointRemoved(component);
+        if (this.projectStore.runtime) {
+            this.projectStore.runtime.onBreakpointRemoved(component);
         }
     }
 
     enableBreakpoint(component: Component) {
         this.breakpoints.set(component, true);
-        if (this.projectEditorStore.runtime) {
-            this.projectEditorStore.runtime.onBreakpointEnabled(component);
+        if (this.projectStore.runtime) {
+            this.projectStore.runtime.onBreakpointEnabled(component);
         }
     }
 
     disableBreakpoint(component: Component) {
         this.breakpoints.set(component, false);
-        if (this.projectEditorStore.runtime) {
-            this.projectEditorStore.runtime.onBreakpointDisabled(component);
+        if (this.projectStore.runtime) {
+            this.projectStore.runtime.onBreakpointDisabled(component);
         }
     }
 
@@ -355,11 +351,11 @@ export class UIStateStore {
 
     ////////////////////////////////////////
     get selectedLanguage() {
-        let language = this.projectEditorStore.project.texts?.languages.find(
+        let language = this.projectStore.project.texts?.languages.find(
             language => language.languageID == this.selectedLanguageID
         );
         if (!language) {
-            language = this.projectEditorStore.project.texts?.languages[0];
+            language = this.projectStore.project.texts?.languages[0];
         }
         return language;
     }

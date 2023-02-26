@@ -279,7 +279,7 @@ export function findValueTypeInExpressionNode(
                     } else {
                         const builtInConstantName = `${node.object.name}.${node.property.name}`;
                         const buildInConstantValue = builtInConstants(
-                            project._DocumentStore
+                            project._store
                         )[builtInConstantName];
                         if (buildInConstantValue != undefined) {
                             node.valueType = buildInConstantValue.valueType;
@@ -288,7 +288,7 @@ export function findValueTypeInExpressionNode(
                     }
                 }
 
-                const type = project._DocumentStore.typesStore.getFieldType(
+                const type = project._store.typesStore.getFieldType(
                     node.object.valueType,
                     node.property.name
                 );
@@ -370,11 +370,11 @@ export function isImplicitConversionPossible(
 
 function getType(project: Project, valueType: ValueType): ValueType {
     if (valueType == "any") {
-        return project._DocumentStore.typesStore.createOpenType();
+        return project._store.typesStore.createOpenType();
     }
 
     if (valueType == "array:any") {
-        return `array:${project._DocumentStore.typesStore.createOpenType()}`;
+        return `array:${project._store.typesStore.createOpenType()}`;
     }
 
     return valueType;

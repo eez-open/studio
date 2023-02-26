@@ -38,7 +38,7 @@ import {
     getAncestorOfType,
     updateObject,
     createObject,
-    getProjectEditorStore,
+    getProjectStore,
     getClassInfo
 } from "project-editor/store";
 
@@ -1561,9 +1561,9 @@ class WidgetTimelinePath {
             this.widget,
             ProjectEditor.PageClass.classInfo
         )!;
-        const projectEditorStore = getProjectEditorStore(page);
+        const projectStore = getProjectStore(page);
 
-        const editor = projectEditorStore.editorsStore.getEditorByObject(page);
+        const editor = projectStore.editorsStore.getEditorByObject(page);
         if (editor) {
             if (editor.object instanceof ProjectEditor.PageClass) {
                 return editor.state as PageTabState;
@@ -1772,12 +1772,10 @@ export class WidgetTimelinePathEditorHandler extends MouseHandlerWithSnapLines {
             this.editorHandleId.split("/");
 
         this.widgetTimelinePath = new WidgetTimelinePath(
-            context.projectEditorStore.project._objectsMap.get(
-                widgetObjId
-            ) as Widget
+            context.projectStore.project._objectsMap.get(widgetObjId) as Widget
         );
 
-        this.keyframe = context.projectEditorStore.project._objectsMap.get(
+        this.keyframe = context.projectStore.project._objectsMap.get(
             keyframeObjId
         ) as TimelineKeyframe;
 
@@ -1894,7 +1892,7 @@ export class WidgetTimelinePathEditorHandler extends MouseHandlerWithSnapLines {
             }
         }
 
-        context.projectEditorStore.undoManager.setCombineCommands(true);
+        context.projectStore.undoManager.setCombineCommands(true);
     }
 
     move(context: IFlowContext, event: IPointerEvent) {
@@ -1917,23 +1915,20 @@ export class WidgetTimelinePathEditorHandler extends MouseHandlerWithSnapLines {
             dx += left - (this.widgetRectAtStart.left + dx);
             dy += top - (this.widgetRectAtStart.top + dy);
 
-            context.projectEditorStore.updateObject(
-                this.widgetTimelinePath.widget,
-                {
-                    left: this.fromAtStart.x + dx,
-                    top: this.fromAtStart.y + dy
-                }
-            );
+            context.projectStore.updateObject(this.widgetTimelinePath.widget, {
+                left: this.fromAtStart.x + dx,
+                top: this.fromAtStart.y + dy
+            });
 
             if (!event.shiftKey) {
                 if (this.cp1AtStart && this.cp2AtStart) {
-                    context.projectEditorStore.updateObject(this.keyframe, {
+                    context.projectStore.updateObject(this.keyframe, {
                         controlPoints: `(${this.cp1AtStart.x + dx}, ${
                             this.cp1AtStart.y + dy
                         }) (${this.cp2AtStart.x}, ${this.cp2AtStart.y})`
                     });
                 } else if (this.cp1AtStart) {
-                    context.projectEditorStore.updateObject(this.keyframe, {
+                    context.projectStore.updateObject(this.keyframe, {
                         controlPoints: `(${this.cp1AtStart.x + dx}, ${
                             this.cp1AtStart.y + dy
                         })`
@@ -1954,7 +1949,7 @@ export class WidgetTimelinePathEditorHandler extends MouseHandlerWithSnapLines {
             dx += left - (this.widgetRectAtStart.left + dx);
             dy += top - (this.widgetRectAtStart.top + dy);
 
-            context.projectEditorStore.updateObject(this.keyframe, {
+            context.projectStore.updateObject(this.keyframe, {
                 left: Object.assign({}, this.keyframe.left, {
                     value: this.toAtStart.x + dx
                 }),
@@ -1965,7 +1960,7 @@ export class WidgetTimelinePathEditorHandler extends MouseHandlerWithSnapLines {
 
             if (!event.shiftKey) {
                 if (this.cp1AtStart && this.cp2AtStart) {
-                    context.projectEditorStore.updateObject(this.keyframe, {
+                    context.projectStore.updateObject(this.keyframe, {
                         controlPoints: `(${this.cp1AtStart.x}, ${
                             this.cp1AtStart.y
                         }) (${this.cp2AtStart.x + dx}, ${
@@ -1975,13 +1970,13 @@ export class WidgetTimelinePathEditorHandler extends MouseHandlerWithSnapLines {
                 }
 
                 if (this.cp1NextAtStart && this.cp2NextAtStart) {
-                    context.projectEditorStore.updateObject(this.keyframeNext, {
+                    context.projectStore.updateObject(this.keyframeNext, {
                         controlPoints: `(${this.cp1NextAtStart.x + dx}, ${
                             this.cp1NextAtStart.y + dy
                         }) (${this.cp2NextAtStart.x}, ${this.cp2NextAtStart.y})`
                     });
                 } else if (this.cp1NextAtStart) {
-                    context.projectEditorStore.updateObject(this.keyframeNext, {
+                    context.projectStore.updateObject(this.keyframeNext, {
                         controlPoints: `(${this.cp1NextAtStart.x + dx}, ${
                             this.cp1NextAtStart.y + dy
                         })`
@@ -1990,13 +1985,13 @@ export class WidgetTimelinePathEditorHandler extends MouseHandlerWithSnapLines {
             }
         } else if (this.handleId == "cp1") {
             if (this.cp2AtStart) {
-                context.projectEditorStore.updateObject(this.keyframe, {
+                context.projectStore.updateObject(this.keyframe, {
                     controlPoints: `(${this.cp1AtStart!.x + dx}, ${
                         this.cp1AtStart!.y + dy
                     }) (${this.cp2AtStart.x}, ${this.cp2AtStart.y})`
                 });
             } else {
-                context.projectEditorStore.updateObject(this.keyframe, {
+                context.projectStore.updateObject(this.keyframe, {
                     controlPoints: `(${this.cp1AtStart!.x + dx}, ${
                         this.cp1AtStart!.y + dy
                     })`
@@ -2020,7 +2015,7 @@ export class WidgetTimelinePathEditorHandler extends MouseHandlerWithSnapLines {
                         y: p.y + (-(p1.y - p.y) / d1) * d2
                     };
 
-                    context.projectEditorStore.updateObject(this.keyframePrev, {
+                    context.projectStore.updateObject(this.keyframePrev, {
                         controlPoints: `(${this.cp1PrevAtStart!.x}, ${
                             this.cp1PrevAtStart!.y
                         }) (${cp2Prev.x}, ${cp2Prev.y})`
@@ -2028,7 +2023,7 @@ export class WidgetTimelinePathEditorHandler extends MouseHandlerWithSnapLines {
                 }
             }
         } else if (this.handleId == "cp2") {
-            context.projectEditorStore.updateObject(this.keyframe, {
+            context.projectStore.updateObject(this.keyframe, {
                 controlPoints: `(${this.cp1AtStart!.x}, ${
                     this.cp1AtStart!.y
                 }) (${this.cp2AtStart!.x + dx}, ${this.cp2AtStart!.y + dy})`
@@ -2052,19 +2047,13 @@ export class WidgetTimelinePathEditorHandler extends MouseHandlerWithSnapLines {
                     };
 
                     if (this.cp2NextAtStart) {
-                        context.projectEditorStore.updateObject(
-                            this.keyframeNext,
-                            {
-                                controlPoints: `(${cp1Next.x}, ${cp1Next.y}) (${this.cp2NextAtStart.x}, ${this.cp2NextAtStart.y})`
-                            }
-                        );
+                        context.projectStore.updateObject(this.keyframeNext, {
+                            controlPoints: `(${cp1Next.x}, ${cp1Next.y}) (${this.cp2NextAtStart.x}, ${this.cp2NextAtStart.y})`
+                        });
                     } else {
-                        context.projectEditorStore.updateObject(
-                            this.keyframeNext,
-                            {
-                                controlPoints: `(${cp1Next.x}, ${cp1Next.y})`
-                            }
-                        );
+                        context.projectStore.updateObject(this.keyframeNext, {
+                            controlPoints: `(${cp1Next.x}, ${cp1Next.y})`
+                        });
                     }
                 }
             }
@@ -2073,7 +2062,7 @@ export class WidgetTimelinePathEditorHandler extends MouseHandlerWithSnapLines {
 
     up(context: IFlowContext) {
         super.up(context);
-        context.projectEditorStore.undoManager.setCombineCommands(false);
+        context.projectStore.undoManager.setCombineCommands(false);
     }
 }
 
@@ -2547,8 +2536,8 @@ export function getEasingFunctionCode(easingFunction: EasingFunction) {
 
 export function getTimelineEditorState(component: Component) {
     if (component instanceof ProjectEditor.WidgetClass) {
-        const projectEditorStore = getProjectEditorStore(component);
-        const editor = projectEditorStore.editorsStore.activeEditor;
+        const projectStore = getProjectStore(component);
+        const editor = projectStore.editorsStore.activeEditor;
         if (editor) {
             if (editor.object instanceof ProjectEditor.PageClass) {
                 const pageTabState = editor.state as PageTabState;
@@ -2576,7 +2565,7 @@ export function setWidgetRectInTimelineEditor(
     widget: Widget,
     value: Partial<Rect>
 ) {
-    const projectEditorStore = getProjectEditorStore(widget);
+    const projectStore = getProjectStore(widget);
     const timelineEditorState = getTimelineEditorState(widget)!;
     const time = timelineEditorState.position;
 
@@ -2592,7 +2581,7 @@ export function setWidgetRectInTimelineEditor(
     }
 
     const newKeyframe = createObject<TimelineKeyframe>(
-        projectEditorStore,
+        projectStore,
         {},
         TimelineKeyframe
     );
@@ -2702,7 +2691,7 @@ export function setWidgetRectInTimelineEditor(
                 };
             }
 
-            projectEditorStore.updateObject(keyframe, changes);
+            projectStore.updateObject(keyframe, changes);
 
             return;
         }
@@ -2728,34 +2717,33 @@ export function setWidgetRectInTimelineEditor(
             newKeyframe.rotate = Object.assign({}, keyframe.rotate);
             newKeyframe.opacity = Object.assign({}, keyframe.opacity);
 
-            const combineCommands =
-                projectEditorStore.undoManager.combineCommands;
+            const combineCommands = projectStore.undoManager.combineCommands;
 
             if (!combineCommands) {
-                projectEditorStore.undoManager.setCombineCommands(true);
+                projectStore.undoManager.setCombineCommands(true);
             }
 
-            projectEditorStore.updateObject(keyframe, {
+            projectStore.updateObject(keyframe, {
                 start: time
             });
 
-            projectEditorStore.insertObjectBefore(keyframe, newKeyframe);
+            projectStore.insertObjectBefore(keyframe, newKeyframe);
 
             if (!combineCommands) {
-                projectEditorStore.undoManager.setCombineCommands(false);
+                projectStore.undoManager.setCombineCommands(false);
             }
 
             return;
         }
 
         if (time <= keyframe.start) {
-            projectEditorStore.insertObjectBefore(keyframe, newKeyframe);
+            projectStore.insertObjectBefore(keyframe, newKeyframe);
 
             return;
         }
     }
 
-    projectEditorStore.addObject(widget.timeline, newKeyframe);
+    projectStore.addObject(widget.timeline, newKeyframe);
 
     return;
 }
@@ -3066,7 +3054,7 @@ export function timelineStyleHook(
     style: React.CSSProperties,
     flowContext: IFlowContext
 ) {
-    if (flowContext.projectEditorStore.projectTypeTraits.isLVGL) {
+    if (flowContext.projectStore.projectTypeTraits.isLVGL) {
         return;
     }
 
@@ -3075,10 +3063,9 @@ export function timelineStyleHook(
     if (flowContext.flowState) {
         timelinePosition = flowContext.flowState.timelinePosition;
     } else {
-        const editor =
-            flowContext.projectEditorStore.editorsStore.getEditorByObject(
-                flowContext.document.flow.object
-            );
+        const editor = flowContext.projectStore.editorsStore.getEditorByObject(
+            flowContext.document.flow.object
+        );
         if (editor && editor.object instanceof ProjectEditor.PageClass) {
             const pageTabState = editor.state as PageTabState;
             if (pageTabState.timeline.isEditorActive) {

@@ -41,7 +41,7 @@ import type {
     IDataContext,
     IVariable
 } from "project-editor/flow/flow-interfaces";
-import { getProjectEditorStore } from "project-editor/store";
+import { getProjectStore } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
 import { humanize } from "eez-studio-shared/string";
 import { evalConstantExpression } from "project-editor/flow//expression";
@@ -472,7 +472,7 @@ export class Variable extends EezObject {
             };
 
             const variable = createObject<Variable>(
-                project._DocumentStore,
+                project._store,
                 variableProperties,
                 Variable
             );
@@ -482,11 +482,11 @@ export class Variable extends EezObject {
         check: (variable: Variable) => {
             let messages: Message[] = [];
 
-            const projectEditorStore = getProjectEditorStore(variable);
+            const projectStore = getProjectStore(variable);
 
             if (isGlobalVariable(variable)) {
                 ProjectEditor.checkAssetId(
-                    projectEditorStore,
+                    projectStore,
                     "variables/globalVariables",
                     variable,
                     messages
@@ -498,7 +498,7 @@ export class Variable extends EezObject {
             }
 
             // if (
-            //     projectEditorStore.projectTypeTraits.hasFlowSupport &&
+            //     projectStore.projectTypeTraits.hasFlowSupport &&
             //     (variable.type === "any" || variable.type === "array:any")
             // ) {
             //     messages.push(
@@ -506,7 +506,7 @@ export class Variable extends EezObject {
             //     );
             // }
 
-            if (!isValidType(projectEditorStore.project, variable.type)) {
+            if (!isValidType(projectStore.project, variable.type)) {
                 messages.push(
                     new Message(MessageType.ERROR, `Invalid type`, variable)
                 );
@@ -515,15 +515,15 @@ export class Variable extends EezObject {
             if (!variable.defaultValue) {
                 messages.push(propertyNotSetMessage(variable, "defaultValue"));
             } else {
-                if (projectEditorStore.projectTypeTraits.hasFlowSupport) {
+                if (projectStore.projectTypeTraits.hasFlowSupport) {
                     try {
                         const { value } = evalConstantExpression(
-                            projectEditorStore.project,
+                            projectStore.project,
                             variable.defaultValue
                         );
 
                         const error = isValueTypeOf(
-                            projectEditorStore.project,
+                            projectStore.project,
                             value,
                             variable.type
                         );
@@ -590,7 +590,7 @@ export class DataContext implements IDataContext {
                     );
                     this.runtimeValues.set(variable.name, value);
                 } catch (err) {
-                    if (project._DocumentStore.runtime) {
+                    if (project._store.runtime) {
                         throw err;
                     }
                     this.runtimeValues.set(variable.name, undefined);
@@ -613,7 +613,7 @@ export class DataContext implements IDataContext {
                     );
                     this.runtimeValues.set(variable.name, value);
                 } catch (err) {
-                    if (this.project._DocumentStore.runtime) {
+                    if (this.project._store.runtime) {
                         throw err;
                     }
                     if (!this.project.projectTypeTraits.hasFlowSupport) {
@@ -1009,8 +1009,8 @@ export class StructureField extends EezObject implements IStructureField {
             //     );
             // }
 
-            const projectEditorStore = getProjectEditorStore(structureField);
-            if (!isValidType(projectEditorStore.project, structureField.type)) {
+            const projectStore = getProjectStore(structureField);
+            if (!isValidType(projectStore.project, structureField.type)) {
                 messages.push(
                     new Message(
                         MessageType.ERROR,
@@ -1059,7 +1059,7 @@ export class StructureField extends EezObject implements IStructureField {
             const project = ProjectEditor.getProject(parent);
 
             const structureField = createObject<StructureField>(
-                project._DocumentStore,
+                project._store,
                 structureFieldProperties,
                 StructureField
             );
@@ -1131,7 +1131,7 @@ export class Structure extends EezObject implements IStructure {
             const project = ProjectEditor.getProject(parent);
 
             const structure = createObject<Structure>(
-                project._DocumentStore,
+                project._store,
                 structureProperties,
                 Structure
             );
@@ -1217,7 +1217,7 @@ export class EnumMember extends EezObject {
             const project = ProjectEditor.getProject(parent);
 
             const enumMember = createObject<EnumMember>(
-                project._DocumentStore,
+                project._store,
                 enumMemberProperties,
                 EnumMember
             );
@@ -1283,7 +1283,7 @@ export class Enum extends EezObject {
             const project = ProjectEditor.getProject(parent);
 
             const enumObject = createObject<Enum>(
-                project._DocumentStore,
+                project._store,
                 enumProperties,
                 Enum
             );

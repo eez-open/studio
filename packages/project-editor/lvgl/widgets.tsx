@@ -31,7 +31,7 @@ import {
     getChildOfObject,
     getClassInfo,
     getObjectPathAsString,
-    getProjectEditorStore,
+    getProjectStore,
     Message,
     propertyNotFoundMessage,
     propertyNotSetMessage
@@ -652,7 +652,7 @@ export class LVGLWidget extends Widget {
         },
 
         setRect: (widget: LVGLWidget, value: Partial<Rect>) => {
-            const projectEditorStore = getProjectEditorStore(widget);
+            const projectStore = getProjectStore(widget);
 
             const props: Partial<Rect> = {};
 
@@ -690,17 +690,17 @@ export class LVGLWidget extends Widget {
                 }
             }
 
-            projectEditorStore.updateObject(widget, props);
+            projectStore.updateObject(widget, props);
         },
 
         check: (widget: LVGLWidget) => {
             let messages: Message[] = [];
 
-            const projectEditorStore = getProjectEditorStore(widget);
+            const projectStore = getProjectStore(widget);
 
             if (widget.useStyle) {
                 const lvglStyle = findLvglStyle(
-                    projectEditorStore.project,
+                    projectStore.project,
                     widget.useStyle
                 );
                 if (!lvglStyle) {
@@ -1311,9 +1311,7 @@ export class LVGLWidget extends Widget {
             build.line(`{`);
             build.indent();
 
-            if (
-                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
-            ) {
+            if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
                 const page = getAncestorOfType(
                     this,
                     ProjectEditor.PageClass.classInfo
@@ -1364,9 +1362,7 @@ export class LVGLWidget extends Widget {
             build.line(`{`);
             build.indent();
 
-            if (
-                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
-            ) {
+            if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
                 const page = getAncestorOfType(
                     this,
                     ProjectEditor.PageClass.classInfo
@@ -1416,9 +1412,7 @@ export class LVGLWidget extends Widget {
             build.line(`{`);
             build.indent();
 
-            if (
-                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
-            ) {
+            if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
                 const page = getAncestorOfType(
                     this,
                     ProjectEditor.PageClass.classInfo
@@ -1469,9 +1463,7 @@ export class LVGLWidget extends Widget {
             build.line(`{`);
             build.indent();
 
-            if (
-                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
-            ) {
+            if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
                 const page = getAncestorOfType(
                     this,
                     ProjectEditor.PageClass.classInfo
@@ -1611,9 +1603,7 @@ export class LVGLWidget extends Widget {
             build.line(`lv_obj_t *ta = lv_event_get_target(e);`);
             build.line(`bool value = lv_obj_has_state(ta, LV_STATE_CHECKED);`);
 
-            if (
-                build.assets.projectEditorStore.projectTypeTraits.hasFlowSupport
-            ) {
+            if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
                 const page = getAncestorOfType(
                     this,
                     ProjectEditor.PageClass.classInfo
@@ -5167,7 +5157,7 @@ export class LVGLMeterIndicator extends EezObject {
 
             if (result.values.type == "NEEDLE_IMG") {
                 indicatorTypeObject = createObject<LVGLMeterIndicatorNeedleImg>(
-                    project._DocumentStore,
+                    project._store,
                     Object.assign(
                         indicatorTypeProperties,
                         LVGLMeterIndicatorNeedleImg.classInfo.defaultValue
@@ -5177,7 +5167,7 @@ export class LVGLMeterIndicator extends EezObject {
             } else if (result.values.type == "NEEDLE_LINE") {
                 indicatorTypeObject =
                     createObject<LVGLMeterIndicatorNeedleLine>(
-                        project._DocumentStore,
+                        project._store,
                         Object.assign(
                             indicatorTypeProperties,
                             LVGLMeterIndicatorNeedleLine.classInfo.defaultValue
@@ -5187,7 +5177,7 @@ export class LVGLMeterIndicator extends EezObject {
             } else if (result.values.type == "SCALE_LINES") {
                 indicatorTypeObject =
                     createObject<LVGLMeterIndicatorScaleLines>(
-                        project._DocumentStore,
+                        project._store,
                         Object.assign(
                             indicatorTypeProperties,
                             LVGLMeterIndicatorScaleLines.classInfo.defaultValue
@@ -5196,7 +5186,7 @@ export class LVGLMeterIndicator extends EezObject {
                     );
             } else {
                 indicatorTypeObject = createObject<LVGLMeterIndicatorArc>(
-                    project._DocumentStore,
+                    project._store,
                     Object.assign(
                         indicatorTypeProperties,
                         LVGLMeterIndicatorArc.classInfo.defaultValue
@@ -5265,8 +5255,7 @@ export class LVGLMeterIndicator extends EezObject {
             build.indent();
             {
                 if (
-                    build.assets.projectEditorStore.projectTypeTraits
-                        .hasFlowSupport
+                    build.assets.projectStore.projectTypeTraits.hasFlowSupport
                 ) {
                     const page = getAncestorOfType(
                         widget,
@@ -6626,8 +6615,7 @@ export class LVGLMeterWidget extends LVGLWidget {
 
                 build.line(`const char *label;`);
                 if (
-                    build.assets.projectEditorStore.projectTypeTraits
-                        .hasFlowSupport
+                    build.assets.projectStore.projectTypeTraits.hasFlowSupport
                 ) {
                     const page = getAncestorOfType(
                         this,

@@ -38,7 +38,7 @@ import type * as SettingsModule from "home/settings";
 
 import { Loader } from "eez-studio-ui/loader";
 
-import { ProjectEditorStore } from "project-editor/store";
+import { ProjectStore } from "project-editor/store";
 
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditorView } from "project-editor/project/ui/ProjectEditor";
@@ -436,7 +436,7 @@ export class ProjectEditorTab implements IHomeTab {
     constructor(public tabs: Tabs, public _filePath: string | undefined) {
         makeObservable(this, {
             _active: observable,
-            projectEditorStore: observable,
+            projectStore: observable,
             error: observable,
             makeActive: action,
             _icon: observable
@@ -447,11 +447,11 @@ export class ProjectEditorTab implements IHomeTab {
     _active: boolean = false;
     loading: boolean = false;
 
-    projectEditorStore: ProjectEditorStore | undefined;
+    projectStore: ProjectStore | undefined;
 
     error: string | undefined;
 
-    ProjectContext: React.Context<ProjectEditorStore>;
+    ProjectContext: React.Context<ProjectStore>;
     ProjectEditor: typeof ProjectEditorView;
 
     closed: boolean = false;
@@ -463,29 +463,29 @@ export class ProjectEditorTab implements IHomeTab {
             this.ProjectEditor = ProjectEditorView;
 
             await initProjectEditor(tabs, ProjectEditorTab);
-            const projectEditorStore = await ProjectEditorStore.create();
-            projectEditorStore.mount();
+            const projectStore = await ProjectStore.create();
+            projectStore.mount();
 
             if (this._filePath) {
-                await projectEditorStore.openFile(this._filePath);
+                await projectStore.openFile(this._filePath);
             } else {
-                await projectEditorStore.newProject();
+                await projectStore.newProject();
             }
 
-            await projectEditorStore.loadAllExternalProjects();
+            await projectStore.loadAllExternalProjects();
             runInAction(() => {
-                projectEditorStore.project._fullyLoaded = true;
+                projectStore.project._fullyLoaded = true;
             });
 
-            if (!projectEditorStore.project._isDashboardBuild) {
-                projectEditorStore.startBackgroundCheck();
+            if (!projectStore.project._isDashboardBuild) {
+                projectStore.startBackgroundCheck();
             } else {
-                projectEditorStore.setRuntimeMode(false);
+                projectStore.setRuntimeMode(false);
             }
 
             if (!this.closed) {
                 runInAction(() => {
-                    this.projectEditorStore = projectEditorStore;
+                    this.projectStore = projectStore;
                 });
             }
         } catch (err) {
@@ -517,12 +517,12 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     async addListeners() {
-        if (!this.projectEditorStore && !this.error) {
+        if (!this.projectStore && !this.error) {
             await this.loadProject();
         }
 
-        const projectEditorStore = this.projectEditorStore;
-        if (!projectEditorStore) {
+        const projectStore = this.projectStore;
+        if (!projectStore) {
             return;
         }
 
@@ -532,41 +532,41 @@ export class ProjectEditorTab implements IHomeTab {
         }
 
         const save = () => {
-            projectEditorStore.save();
+            projectStore.save();
         };
         const saveAs = () => {
-            projectEditorStore.saveAs();
+            projectStore.saveAs();
         };
         const check = () => {
-            projectEditorStore.check();
+            projectStore.check();
         };
         const build = () => {
-            projectEditorStore.build();
+            projectStore.build();
         };
         const buildExtensions = () => {
-            projectEditorStore.buildExtensions();
+            projectStore.buildExtensions();
         };
         const undo = () => {
-            projectEditorStore.undoManager.undo();
+            projectStore.undoManager.undo();
         };
         const redo = () => {
-            projectEditorStore.undoManager.redo();
+            projectStore.undoManager.redo();
         };
         const cut = () => {
-            if (projectEditorStore.navigationStore.selectedPanel)
-                projectEditorStore.navigationStore.selectedPanel.cutSelection();
+            if (projectStore.navigationStore.selectedPanel)
+                projectStore.navigationStore.selectedPanel.cutSelection();
         };
         const copy = () => {
-            if (projectEditorStore.navigationStore.selectedPanel)
-                projectEditorStore.navigationStore.selectedPanel.copySelection();
+            if (projectStore.navigationStore.selectedPanel)
+                projectStore.navigationStore.selectedPanel.copySelection();
         };
         const paste = () => {
-            if (projectEditorStore.navigationStore.selectedPanel)
-                projectEditorStore.navigationStore.selectedPanel.pasteSelection();
+            if (projectStore.navigationStore.selectedPanel)
+                projectStore.navigationStore.selectedPanel.pasteSelection();
         };
         const deleteSelection = () => {
-            if (projectEditorStore.navigationStore.selectedPanel)
-                projectEditorStore.navigationStore.selectedPanel.deleteSelection();
+            if (projectStore.navigationStore.selectedPanel)
+                projectStore.navigationStore.selectedPanel.deleteSelection();
         };
 
         ipcRenderer.on("save", save);
@@ -598,7 +598,7 @@ export class ProjectEditorTab implements IHomeTab {
 
     get filePath() {
         return (
-            (this.projectEditorStore && this.projectEditorStore.filePath) ||
+            (this.projectStore && this.projectStore.filePath) ||
             this._filePath ||
             ""
         );
@@ -609,8 +609,8 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     get title() {
-        if (this.projectEditorStore) {
-            return this.projectEditorStore.title;
+        if (this.projectStore) {
+            return this.projectStore.title;
         }
 
         if (this.filePath) {
@@ -638,12 +638,12 @@ export class ProjectEditorTab implements IHomeTab {
 
     get icon() {
         if (
-            this.projectEditorStore &&
-            this.projectEditorStore.project.settings.general.projectType
+            this.projectStore &&
+            this.projectStore.project.settings.general.projectType
         ) {
             return getProjectIcon(
                 this.filePath,
-                this.projectEditorStore.project.settings.general.projectType,
+                this.projectStore.project.settings.general.projectType,
                 24
             );
         }
@@ -669,7 +669,7 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     render() {
-        if (!this.projectEditorStore) {
+        if (!this.projectStore) {
             return (
                 <div
                     style={{
@@ -688,7 +688,7 @@ export class ProjectEditorTab implements IHomeTab {
         }
 
         return (
-            <this.ProjectContext.Provider value={this.projectEditorStore}>
+            <this.ProjectContext.Provider value={this.projectStore}>
                 <this.ProjectEditor onlyRuntime={false} />
             </this.ProjectContext.Provider>
         );
@@ -699,12 +699,12 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     async close() {
-        if (this.projectEditorStore) {
-            if (await this.projectEditorStore.closeWindow()) {
+        if (this.projectStore) {
+            if (await this.projectStore.closeWindow()) {
                 this.tabs.removeTab(this);
-                this.projectEditorStore.unmount();
+                this.projectStore.unmount();
                 runInAction(() => {
-                    this.projectEditorStore = undefined;
+                    this.projectStore = undefined;
                 });
             }
         } else {
@@ -714,16 +714,16 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     async beforeAppClose() {
-        if (this.projectEditorStore) {
-            return await this.projectEditorStore.closeWindow();
+        if (this.projectStore) {
+            return await this.projectStore.closeWindow();
         }
 
         return true;
     }
 
     loadDebugInfo(filePath: string) {
-        if (this.projectEditorStore) {
-            this.projectEditorStore.loadDebugInfo(filePath);
+        if (this.projectStore) {
+            this.projectStore.loadDebugInfo(filePath);
         }
     }
 }

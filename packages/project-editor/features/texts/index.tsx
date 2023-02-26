@@ -101,7 +101,7 @@ export class Language extends EezObject {
             const project = ProjectEditor.getProject(parent);
 
             const language = createObject<Language>(
-                project._DocumentStore,
+                project._store,
                 languageProperties,
                 Language
             );
@@ -354,7 +354,7 @@ export class TextResource extends EezObject {
             };
 
             const textResource = createObject<TextResource>(
-                project._DocumentStore,
+                project._store,
                 textResourceProperties,
                 TextResource
             );
@@ -404,7 +404,7 @@ export class Texts extends EezObject {
                         addObject(
                             textResource.translations,
                             createObject<Translation>(
-                                project._DocumentStore,
+                                project._store,
                                 {
                                     languageID: language.languageID,
                                     text: ""
