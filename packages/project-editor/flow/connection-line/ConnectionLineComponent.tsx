@@ -5,7 +5,7 @@ import classNames from "classnames";
 import { theme } from "eez-studio-ui/theme";
 import { SvgLabel } from "eez-studio-ui/svg-label";
 
-import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { ConnectionLine } from "project-editor/flow/connection-line";
 
@@ -39,7 +39,7 @@ export const ConnectionLines = observer(
         context,
         selected = false
     }: {
-        connectionLines: ITreeObjectAdapter[];
+        connectionLines: TreeObjectAdapter[];
         context: IFlowContext;
         selected?: boolean;
     }) => {
@@ -64,7 +64,7 @@ export const ConnectionLineDebugValues = observer(
         context,
         selected = false
     }: {
-        connectionLines: ITreeObjectAdapter[];
+        connectionLines: TreeObjectAdapter[];
         context: IFlowContext;
         selected?: boolean;
     }) => {
@@ -90,7 +90,7 @@ export const ConnectionLineShape = observer(
         selected,
         shadow
     }: {
-        connectionLineAdapter: ITreeObjectAdapter;
+        connectionLineAdapter: TreeObjectAdapter;
         context: IFlowContext;
         selected: boolean;
         shadow?: { color: string };
@@ -176,7 +176,7 @@ const ConnectionLineDebugValue = observer(
         context,
         selected
     }: {
-        connectionLineAdapter: ITreeObjectAdapter;
+        connectionLineAdapter: TreeObjectAdapter;
         context: IFlowContext;
         selected: boolean;
     }) => {

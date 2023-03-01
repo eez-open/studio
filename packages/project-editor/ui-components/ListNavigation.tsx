@@ -15,7 +15,6 @@ import { SearchInput } from "eez-studio-ui/search-input";
 
 import { getId, IEezObject } from "project-editor/core/object";
 import {
-    ITreeAdapter,
     SortDirectionType,
     TreeAdapter,
     TreeObjectAdapter
@@ -71,7 +70,7 @@ export const SortControl = observer(
 
 const AddButton = observer(
     class AddButton extends React.Component<{
-        listAdapter: ITreeAdapter;
+        listAdapter: TreeAdapter;
         navigationObject: IEezObject | undefined;
     }> {
         static contextType = ProjectContext;
@@ -120,7 +119,7 @@ const AddButton = observer(
 
 const DeleteButton = observer(
     class DeleteButton extends React.Component<{
-        listAdapter: ITreeAdapter;
+        listAdapter: TreeAdapter;
     }> {
         onDelete = () => {
             this.props.listAdapter.deleteSelection();

@@ -2,10 +2,7 @@ import { observable, computed, action, makeObservable } from "mobx";
 
 import { BoundingRectBuilder } from "eez-studio-shared/geometry";
 
-import {
-    ITreeObjectAdapter,
-    TreeObjectAdapter
-} from "project-editor/core/objectAdapter";
+import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 import { getClassInfo, getProjectStore } from "project-editor/store";
 
@@ -126,7 +123,7 @@ class ViewState implements IViewState {
         ];
     }
 
-    get selectedObjects(): ITreeObjectAdapter[] {
+    get selectedObjects(): TreeObjectAdapter[] {
         return this.flowContext.dragComponent
             ? [new TreeObjectAdapter(this.flowContext.dragComponent)]
             : this.document?.flow.selectedItems ?? [];
@@ -144,7 +141,7 @@ class ViewState implements IViewState {
         return undefined;
     }
 
-    isObjectSelected(object: ITreeObjectAdapter): boolean {
+    isObjectSelected(object: TreeObjectAdapter): boolean {
         return this.selectedObjects.indexOf(object) !== -1;
     }
 
@@ -156,19 +153,19 @@ class ViewState implements IViewState {
         );
     }
 
-    selectObject(object: ITreeObjectAdapter) {
+    selectObject(object: TreeObjectAdapter) {
         if (object.isSelectable && this.document) {
             this.document.flow.selectItem(object);
         }
     }
 
-    deselectObject(object: ITreeObjectAdapter) {
+    deselectObject(object: TreeObjectAdapter) {
         if (this.document) {
             this.document.flow.deselectItem(object);
         }
     }
 
-    selectObjects(objects: ITreeObjectAdapter[]) {
+    selectObjects(objects: TreeObjectAdapter[]) {
         if (this.document) {
             this.document.flow.selectItems(
                 objects.filter(object => object.isSelectable)

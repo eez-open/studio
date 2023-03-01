@@ -59,7 +59,7 @@ export function objectToClipboardData(
 
 export function objectsToClipboardData(
     projectStore: ProjectStore,
-    objects: IEezObject[]
+    objects: EezObject[]
 ): string {
     rewireBegin();
     const clonedObjects = objects.map(object =>

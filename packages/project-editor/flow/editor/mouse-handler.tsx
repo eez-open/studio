@@ -18,7 +18,7 @@ import {
     getObjectIdFromPoint,
     getObjectBoundingRect
 } from "project-editor/flow/editor/bounding-rects";
-import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { Transform } from "project-editor/flow/editor/transform";
 import { generateConnectionLinePath } from "project-editor/flow/connection-line/connection-line-shape";
 import type { Flow } from "project-editor/flow/flow";
@@ -323,7 +323,7 @@ export class MouseHandlerWithSnapLines extends MouseHandler {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DragMouseHandler extends MouseHandlerWithSnapLines {
-    selectedObjects: ITreeObjectAdapter[];
+    selectedObjects: TreeObjectAdapter[];
 
     changed: boolean = false;
     rects: Rect[] = [];
@@ -489,7 +489,7 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
 
     changed: boolean = false;
 
-    object: ITreeObjectAdapter;
+    object: TreeObjectAdapter;
 
     xSnapOffset: number = 0;
     ySnapOffset: number = 0;
@@ -672,7 +672,7 @@ export class NewConnectionLineFromOutputMouseHandler extends MouseHandler {
     targetRect: Rect | undefined;
 
     constructor(
-        private sourceObject: ITreeObjectAdapter,
+        private sourceObject: TreeObjectAdapter,
         private connectionOutput: string
     ) {
         super();
@@ -857,7 +857,7 @@ export class NewConnectionLineFromInputMouseHandler extends MouseHandler {
     targetRect: Rect;
 
     constructor(
-        private targetObject: ITreeObjectAdapter,
+        private targetObject: TreeObjectAdapter,
         private connectionInput: string
     ) {
         super();
@@ -1041,7 +1041,7 @@ export class MoveOutputConnectionLinesMouseHandler extends MouseHandler {
     sourceRect: Rect | undefined;
 
     constructor(
-        private sourceObject: ITreeObjectAdapter,
+        private sourceObject: TreeObjectAdapter,
         private connectionOutput: string
     ) {
         super();
@@ -1282,7 +1282,7 @@ export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
     targetRect: Rect | undefined;
 
     constructor(
-        private targetObject: ITreeObjectAdapter,
+        private targetObject: TreeObjectAdapter,
         private connectionInput: string
     ) {
         super();

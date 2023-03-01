@@ -2,7 +2,7 @@ import { computed, makeObservable } from "mobx";
 import { Point, Rect } from "eez-studio-shared/geometry";
 
 import { getProjectStore } from "project-editor/store";
-import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
@@ -13,7 +13,7 @@ import { getObjectIdFromPoint } from "project-editor/flow/editor/bounding-rects"
 
 export class FlowDocument implements IDocument {
     constructor(
-        public flow: ITreeObjectAdapter,
+        public flow: TreeObjectAdapter,
         private flowContext: RuntimeFlowContext
     ) {
         makeObservable(this, {
@@ -24,8 +24,8 @@ export class FlowDocument implements IDocument {
         });
     }
 
-    get connectionLines(): ITreeObjectAdapter[] {
-        return (this.flow.children as ITreeObjectAdapter[]).filter(
+    get connectionLines() {
+        return (this.flow.children as TreeObjectAdapter[]).filter(
             editorObject =>
                 editorObject.object instanceof ProjectEditor.ConnectionLineClass
         );
@@ -72,7 +72,7 @@ export class FlowDocument implements IDocument {
         return this.flow.getObjectAdapter(id);
     }
 
-    findObjectParent(object: ITreeObjectAdapter) {
+    findObjectParent(object: TreeObjectAdapter) {
         return this.flow.getParent(object);
     }
 
@@ -90,7 +90,7 @@ export class FlowDocument implements IDocument {
         return [];
     }
 
-    createContextMenu(objects: ITreeObjectAdapter[]) {
+    createContextMenu(objects: TreeObjectAdapter[]) {
         return this.flow.createSelectionContextMenu(undefined, false);
     }
 

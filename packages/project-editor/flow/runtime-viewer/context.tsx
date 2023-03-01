@@ -1,7 +1,5 @@
 import { observable, action, computed, makeObservable } from "mobx";
 
-import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
-
 import type {
     IDocument,
     IViewState,
@@ -11,6 +9,8 @@ import type {
     IDataContext
 } from "project-editor/flow/flow-interfaces";
 import { Transform } from "project-editor/flow/editor/transform";
+
+import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 import type { Component } from "project-editor/flow/component";
 import type { FlowTabState } from "project-editor/flow/flow-tab-state";
@@ -119,7 +119,7 @@ class ViewState implements IViewState {
         return undefined;
     }
 
-    isObjectSelected(object: ITreeObjectAdapter): boolean {
+    isObjectSelected(object: TreeObjectAdapter): boolean {
         return this.selectedObjects.indexOf(object) !== -1;
     }
 
@@ -131,13 +131,13 @@ class ViewState implements IViewState {
         );
     }
 
-    selectObject(object: ITreeObjectAdapter) {
+    selectObject(object: TreeObjectAdapter) {
         if (object.isSelectable) {
             this.document && this.document.flow.selectItem(object);
         }
     }
 
-    selectObjects(objects: ITreeObjectAdapter[]) {
+    selectObjects(objects: TreeObjectAdapter[]) {
         this.document &&
             this.document.flow.selectItems(
                 objects.filter(object => object.isSelectable)

@@ -1,5 +1,5 @@
 import { Point, Rect } from "eez-studio-shared/geometry";
-import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 import type { ProjectStore } from "project-editor/store";
 
@@ -130,15 +130,13 @@ export interface IFlowState {
 export interface IDocument {
     projectStore: ProjectStore;
 
-    flow: ITreeObjectAdapter;
+    flow: TreeObjectAdapter;
 
-    selectedConnectionLines: ITreeObjectAdapter[];
-    nonSelectedConnectionLines: ITreeObjectAdapter[];
+    selectedConnectionLines: TreeObjectAdapter[];
+    nonSelectedConnectionLines: TreeObjectAdapter[];
 
-    findObjectById(id: string): ITreeObjectAdapter | undefined;
-    findObjectParent(
-        object: ITreeObjectAdapter
-    ): ITreeObjectAdapter | undefined;
+    findObjectById(id: string): TreeObjectAdapter | undefined;
+    findObjectParent(object: TreeObjectAdapter): TreeObjectAdapter | undefined;
 
     // view
     objectFromPoint(point: Point):
@@ -148,10 +146,10 @@ export interface IDocument {
               connectionOutput?: string;
           }
         | undefined;
-    getObjectsInsideRect(rect: Rect): ITreeObjectAdapter[];
+    getObjectsInsideRect(rect: Rect): TreeObjectAdapter[];
 
     // misc.
-    createContextMenu(objects: ITreeObjectAdapter[]): Electron.Menu | undefined;
+    createContextMenu(objects: TreeObjectAdapter[]): Electron.Menu | undefined;
     duplicateSelection(): void;
     pasteSelection(): void;
 
@@ -187,14 +185,14 @@ export interface IViewState {
     resetTransform(): void;
 
     // selection
-    selectedObjects: ITreeObjectAdapter[];
+    selectedObjects: TreeObjectAdapter[];
     getResizeHandlers: () => IResizeHandler[] | undefined;
 
-    isObjectSelected(object: ITreeObjectAdapter): boolean;
+    isObjectSelected(object: TreeObjectAdapter): boolean;
     isObjectIdSelected(id: string): boolean;
 
-    selectObject(object: ITreeObjectAdapter): void;
-    selectObjects(objects: ITreeObjectAdapter[]): void;
+    selectObject(object: TreeObjectAdapter): void;
+    selectObjects(objects: TreeObjectAdapter[]): void;
     deselectAllObjects(): void;
 
     moveSelection(
@@ -212,14 +210,14 @@ export interface IViewState {
     dxMouseDrag: number | undefined;
     dyMouseDrag: number | undefined;
 
-    sourceComponent: ITreeObjectAdapter | undefined;
-    connectionLine: ITreeObjectAdapter | undefined;
-    targetComponent: ITreeObjectAdapter | undefined;
+    sourceComponent: TreeObjectAdapter | undefined;
+    connectionLine: TreeObjectAdapter | undefined;
+    targetComponent: TreeObjectAdapter | undefined;
 }
 
 export interface IEditorOptions {
     center?: Point;
-    filterSnapLines?: (node: ITreeObjectAdapter) => boolean;
+    filterSnapLines?: (node: TreeObjectAdapter) => boolean;
 }
 
 export type HandleType =

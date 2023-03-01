@@ -3,7 +3,7 @@ import { action, computed, makeObservable } from "mobx";
 import { getParent, IEezObject } from "project-editor/core/object";
 import { getProjectStore, getAncestorOfType } from "project-editor/store";
 import { Component } from "project-editor/flow/component";
-import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { Transform } from "project-editor/flow/editor/transform";
 import { IEditorState } from "project-editor/project/ui/EditorComponent";
 import { PageTimelineEditorState } from "project-editor/features/page/PageTimeline";
@@ -47,7 +47,7 @@ export abstract class FlowTabState implements IEditorState {
         return undefined;
     }
 
-    abstract get widgetContainer(): ITreeObjectAdapter;
+    abstract get widgetContainer(): TreeObjectAdapter;
 
     abstract get transform(): Transform;
     abstract set transform(transform: Transform);
@@ -86,7 +86,7 @@ export abstract class FlowTabState implements IEditorState {
     }
 
     selectObjects(objects: IEezObject[]) {
-        const items: ITreeObjectAdapter[] = [];
+        const items = [];
 
         for (let i = 0; i < objects.length; i++) {
             const object = objects[i];

@@ -1,11 +1,6 @@
 import { objectClone } from "eez-studio-shared/util";
 import { Rect } from "eez-studio-shared/geometry";
-import {
-    DisplayItem,
-    DisplayItemChildrenArray,
-    DisplayItemChildrenObject,
-    TreeObjectAdapter
-} from "project-editor/core/objectAdapter";
+import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { IEezObject, MessageType } from "project-editor/core/object";
 import {
     //createObject,
@@ -124,6 +119,16 @@ function fixDataForMegaBootloader(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+type DisplayItemChildrenArray = DisplayItem[];
+type DisplayItemChildrenObject = { [key: string]: DisplayItem };
+type DisplayItemChildren = DisplayItemChildrenArray | DisplayItemChildrenObject;
+
+interface DisplayItem {
+    object: IEezObject;
+    selected: boolean;
+    children: DisplayItemChildren;
+}
 
 interface TreeNode {
     parent: TreeNode;

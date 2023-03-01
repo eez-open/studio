@@ -7,6 +7,7 @@ import {
     makeObservable
 } from "mobx";
 import { observer } from "mobx-react";
+import classNames from "classnames";
 
 import { _range, _isEqual, _map } from "eez-studio-shared/algorithm";
 import { Point, pointDistance, Rect } from "eez-studio-shared/geometry";
@@ -28,17 +29,12 @@ import {
     PanMouseHandler
 } from "project-editor/flow/editor/mouse-handler";
 
-import classNames from "classnames";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import { getProjectStore } from "project-editor/store";
 import { getObjectIdFromPoint } from "project-editor/flow/editor/bounding-rects";
 
-import {
-    ITreeObjectAdapter,
-    TreeObjectAdapter,
-    TreeObjectAdapterChildren
-} from "project-editor/core/objectAdapter";
+import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 import type {
     IDocument,
@@ -689,7 +685,7 @@ class FlowTreeObjectAdapter extends TreeObjectAdapter {
         super(flow);
     }
 
-    get children(): TreeObjectAdapterChildren {
+    get children() {
         return [
             ...this.flow.components.map(child => this.transformer(child)),
             ...this.flow.connectionLines.map(child => this.transformer(child))
@@ -701,7 +697,7 @@ class FlowTreeObjectAdapter extends TreeObjectAdapter {
 
 class FlowDocument implements IDocument {
     constructor(
-        public flow: ITreeObjectAdapter,
+        public flow: TreeObjectAdapter,
         private flowContext: FlowContext
     ) {
         makeObservable(this, {
@@ -710,8 +706,8 @@ class FlowDocument implements IDocument {
         });
     }
 
-    get connectionLines(): ITreeObjectAdapter[] {
-        return (this.flow.children as ITreeObjectAdapter[]).filter(
+    get connectionLines() {
+        return (this.flow.children as TreeObjectAdapter[]).filter(
             editorObject =>
                 editorObject.object instanceof ProjectEditor.ConnectionLineClass
         );
@@ -729,7 +725,7 @@ class FlowDocument implements IDocument {
         return this.flow.getObjectAdapter(id);
     }
 
-    findObjectParent(object: ITreeObjectAdapter) {
+    findObjectParent(object: TreeObjectAdapter) {
         return this.flow.getParent(object);
     }
 
@@ -747,7 +743,7 @@ class FlowDocument implements IDocument {
         return [];
     }
 
-    createContextMenu(objects: ITreeObjectAdapter[]) {
+    createContextMenu(objects: TreeObjectAdapter[]) {
         return undefined;
     }
 
@@ -833,7 +829,7 @@ class ViewState implements IViewState {
         return undefined;
     }
 
-    isObjectSelected(object: ITreeObjectAdapter): boolean {
+    isObjectSelected(object: TreeObjectAdapter): boolean {
         return false;
     }
 
@@ -841,9 +837,9 @@ class ViewState implements IViewState {
         return false;
     }
 
-    selectObject(object: ITreeObjectAdapter) {}
+    selectObject(object: TreeObjectAdapter) {}
 
-    selectObjects(objects: ITreeObjectAdapter[]) {}
+    selectObjects(objects: TreeObjectAdapter[]) {}
 
     deselectAllObjects(): void {}
 

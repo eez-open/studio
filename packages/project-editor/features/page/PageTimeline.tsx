@@ -26,11 +26,7 @@ import { Draggable } from "eez-studio-ui/draggable";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import { getId, getParent, IEezObject } from "project-editor/core/object";
-import {
-    TreeAdapter,
-    ITreeAdapter,
-    ITreeRow
-} from "project-editor/core/objectAdapter";
+import { TreeAdapter, ITreeRow } from "project-editor/core/objectAdapter";
 import { getAncestorOfType, IPanel } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
 
@@ -112,7 +108,7 @@ export class PageTimelineEditorState {
         };
     }
 
-    get treeAdapter(): ITreeAdapter {
+    get treeAdapter() {
         return new TreeAdapter(
             this.tabState.widgetContainer,
             undefined,

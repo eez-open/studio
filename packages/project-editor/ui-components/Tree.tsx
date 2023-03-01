@@ -9,9 +9,9 @@ import { hasClass } from "eez-studio-shared/dom";
 import { Icon } from "eez-studio-ui/icon";
 
 import {
-    ITreeAdapter,
-    ITreeItem,
-    DropPosition
+    TreeAdapter,
+    DropPosition,
+    TreeObjectAdapter
 } from "project-editor/core/objectAdapter";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,8 +64,8 @@ const TreeRow = observer(
         onEditItem,
         renderItem
     }: {
-        treeAdapter: ITreeAdapter;
-        item: ITreeItem;
+        treeAdapter: TreeAdapter;
+        item: TreeObjectAdapter;
         level: number;
         draggable: boolean;
         onDragStart: (event: any) => void;
@@ -177,7 +177,7 @@ export interface DropFile {
 }
 
 interface TreeProps {
-    treeAdapter: ITreeAdapter;
+    treeAdapter: TreeAdapter;
     tabIndex?: number;
     onFocus?: () => void;
     onEditItem?: (itemId: string) => void;
@@ -726,7 +726,7 @@ export const Tree = observer(
                         iTo = iLast;
                     }
 
-                    const items: ITreeItem[] = [];
+                    const items = [];
                     for (let i = iFrom; i <= iTo; i++) {
                         const id = $($rows.get(i)).attr("data-object-id");
                         if (id) {

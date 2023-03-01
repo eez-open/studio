@@ -9,7 +9,7 @@ import {
 } from "project-editor/flow/editor/bounding-rects";
 import { IEezObject, getParent } from "project-editor/core/object";
 import { createObject, getProjectStore } from "project-editor/store";
-import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { Flow } from "project-editor/flow/flow";
 import { ConnectionLine } from "project-editor/flow/connection-line";
 import { Component } from "project-editor/flow/component";
@@ -18,7 +18,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export class FlowDocument implements IDocument {
     constructor(
-        public flow: ITreeObjectAdapter,
+        public flow: TreeObjectAdapter,
         private flowContext: EditorFlowContext
     ) {
         makeObservable(this, {
@@ -30,8 +30,8 @@ export class FlowDocument implements IDocument {
         });
     }
 
-    get connectionLines(): ITreeObjectAdapter[] {
-        return (this.flow.children as ITreeObjectAdapter[]).filter(
+    get connectionLines(): TreeObjectAdapter[] {
+        return (this.flow.children as TreeObjectAdapter[]).filter(
             editorObject =>
                 editorObject.object instanceof ProjectEditor.ConnectionLineClass
         );
@@ -75,7 +75,7 @@ export class FlowDocument implements IDocument {
         return this.flow.getObjectAdapter(id);
     }
 
-    findObjectParent(object: ITreeObjectAdapter) {
+    findObjectParent(object: TreeObjectAdapter) {
         return this.flow.getParent(object);
     }
 
@@ -94,9 +94,9 @@ export class FlowDocument implements IDocument {
 
         const editorObjectsGroupedByParent = new Map<
             IEezObject,
-            ITreeObjectAdapter[]
+            TreeObjectAdapter[]
         >();
-        let maxLengthGroup: ITreeObjectAdapter[] | undefined;
+        let maxLengthGroup: TreeObjectAdapter[] | undefined;
 
         ids.forEach(id => {
             const editorObject = this.findObjectById(id);
@@ -127,7 +127,7 @@ export class FlowDocument implements IDocument {
         return maxLengthGroup ? maxLengthGroup : [];
     }
 
-    createContextMenu(objects: ITreeObjectAdapter[]) {
+    createContextMenu(objects: TreeObjectAdapter[]) {
         return this.flow.createSelectionContextMenu({
             duplicateSelection: this.duplicateSelection,
             pasteSelection: this.pasteSelection

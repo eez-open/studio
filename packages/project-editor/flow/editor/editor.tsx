@@ -25,7 +25,7 @@ import { Draggable } from "eez-studio-ui/draggable";
 import { settingsController } from "home/settings";
 
 import { setParent, getId } from "project-editor/core/object";
-import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { DragAndDropManager } from "project-editor/core/dd";
 
 import { IPanel, isObjectInstanceOf } from "project-editor/store";
@@ -767,7 +767,7 @@ export const FlowEditor = observer(
 
         divRef = React.createRef<HTMLDivElement>();
 
-        currentWidgetContainer?: ITreeObjectAdapter;
+        currentWidgetContainer?: TreeObjectAdapter;
 
         options: IEditorOptions;
 

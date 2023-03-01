@@ -18,7 +18,6 @@ import { ProjectContext } from "project-editor/project/context";
 import { Panel } from "project-editor/ui-components/Panel";
 import { PropertyGrid } from "project-editor/ui-components/PropertyGrid";
 import {
-    ITreeObjectAdapter,
     TreeAdapter,
     TreeObjectAdapter
 } from "project-editor/core/objectAdapter";
@@ -390,7 +389,7 @@ export const SettingsNavigation = observer(
 
 const AddButton = observer(
     class AddButton extends React.Component<{
-        objectAdapter: ITreeObjectAdapter;
+        objectAdapter: TreeObjectAdapter;
     }> {
         async onAdd() {
             if (this.props.objectAdapter.selectedObject) {
@@ -423,12 +422,9 @@ const AddButton = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 const DeleteButton = observer(
-    class DeleteButton extends React.Component<
-        {
-            objectAdapter: ITreeObjectAdapter;
-        },
-        {}
-    > {
+    class DeleteButton extends React.Component<{
+        objectAdapter: TreeObjectAdapter;
+    }> {
         onDelete() {
             this.props.objectAdapter.deleteSelection();
         }

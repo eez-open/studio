@@ -766,11 +766,11 @@ export function pasteItem(object: IEezObject) {
     return undefined;
 }
 
-export function deleteItem(object: IEezObject) {
+export function deleteItem(object: EezObject) {
     deleteItems([object]);
 }
 
-export function cutItem(object: IEezObject) {
+export function cutItem(object: EezObject) {
     let clipboardText = objectToClipboardData(getProjectStore(object), object);
 
     deleteItems([object], () => {
@@ -778,13 +778,13 @@ export function cutItem(object: IEezObject) {
     });
 }
 
-export function copyItem(object: IEezObject) {
+export function copyItem(object: EezObject) {
     copyToClipboard(objectToClipboardData(getProjectStore(object), object));
 }
 
 export interface IContextMenuContext {
-    selectObject(object: IEezObject): void;
-    selectObjects(objects: IEezObject[]): void;
+    selectObject(object: EezObject): void;
+    selectObjects(objects: EezObject[]): void;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

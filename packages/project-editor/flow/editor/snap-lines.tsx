@@ -6,7 +6,7 @@ import { Point, Rect } from "eez-studio-shared/geometry";
 import { _each } from "eez-studio-shared/algorithm";
 
 import { IEezObject, isAncestor } from "project-editor/core/object";
-import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import type { Component } from "project-editor/flow/component";
@@ -77,11 +77,6 @@ export function findSnapLines(flowContext: IFlowContext): ISnapLines {
                 selectedObject == object || isAncestor(object, selectedObject)
         );
     };
-
-    const tree: ITreeObjectAdapter = {
-        id: "",
-        children: [flowContext.document.flow]
-    } as ITreeObjectAdapter;
 
     let horizontalLines: ISnapLine[] = [];
     let verticalLines: ISnapLine[] = [];
@@ -156,7 +151,7 @@ export function findSnapLines(flowContext: IFlowContext): ISnapLines {
         }
     }
 
-    function findSnapLinesInNode(node: ITreeObjectAdapter) {
+    function findSnapLinesInNode(node: TreeObjectAdapter) {
         if (
             node.object &&
             (node.object instanceof ProjectEditor.PageClass ||
@@ -195,7 +190,7 @@ export function findSnapLines(flowContext: IFlowContext): ISnapLines {
         _each(node.children, (item: any) => findSnapLinesInNode(item));
     }
 
-    findSnapLinesInNode(tree);
+    findSnapLinesInNode(flowContext.document.flow);
 
     const sortByPos = (a: ISnapLine, b: ISnapLine) =>
         a.pos < b.pos ? -1 : a.pos > b.pos ? 1 : 0;

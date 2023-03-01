@@ -2,11 +2,7 @@ import React from "react";
 import { computed, runInAction, observable, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import { IEezObject } from "project-editor/core/object";
-import {
-    ITreeObjectAdapter,
-    TreeObjectAdapter,
-    TreeObjectAdapterChildren
-} from "project-editor/core/objectAdapter";
+import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { FlowEditor } from "project-editor/flow/editor/editor";
 import { FlowViewer } from "project-editor/flow/runtime-viewer/viewer";
 import { ProjectContext } from "project-editor/project/context";
@@ -58,7 +54,7 @@ class PageTreeObjectAdapter extends TreeObjectAdapter {
         super(page);
     }
 
-    get children(): TreeObjectAdapterChildren {
+    get children() {
         if (this.frontFace) {
             return this.page.components
                 .filter(
@@ -77,8 +73,8 @@ class PageTreeObjectAdapter extends TreeObjectAdapter {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class PageTabState extends FlowTabState {
-    widgetContainerFrontFace: ITreeObjectAdapter;
-    widgetContainerBackFace: ITreeObjectAdapter;
+    widgetContainerFrontFace: TreeObjectAdapter;
+    widgetContainerBackFace: TreeObjectAdapter;
 
     _transform: Transform = new Transform({
         translate: { x: 0, y: 0 },

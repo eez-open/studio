@@ -5,7 +5,6 @@ import { ProjectContext } from "project-editor/project/context";
 import { FlowEditor } from "project-editor/flow/editor/editor";
 import { FlowViewer } from "project-editor/flow/runtime-viewer/viewer";
 import {
-    ITreeObjectAdapter,
     TreeAdapter,
     TreeObjectAdapter
 } from "project-editor/core/objectAdapter";
@@ -67,7 +66,7 @@ export const ActionEditor = observer(
 export class ActionFlowTabState extends FlowTabState {
     frontFace = false;
 
-    widgetContainer: ITreeObjectAdapter;
+    widgetContainer: TreeObjectAdapter;
 
     _transform: Transform = new Transform({
         translate: { x: 0, y: 0 },
