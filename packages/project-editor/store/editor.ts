@@ -212,7 +212,7 @@ export class EditorsStore {
     get tabsModel() {
         return (
             this.getLayoutModel()
-                .getNodeById(this.tabsetID)
+                .getNodeById(this.tabsetID)!
                 .getChildren()[0] as FlexLayout.TabNode
         ).getExtraData().model as FlexLayout.Model;
     }

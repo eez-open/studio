@@ -112,7 +112,6 @@ const PdfPreview = observer(
     }> {
         thumbnail: string;
         url: string;
-        webView: any;
         zoom: boolean = false;
 
         constructor(props: any) {
@@ -167,34 +166,20 @@ const PdfPreview = observer(
             }
         }
 
-        bringToFocus = () => {
-            if (this.zoom && this.webView) {
-                if (this.webView.isReady()) {
-                    this.webView.focus();
-                } else {
-                    setTimeout(this.bringToFocus);
-                }
-            }
-        };
-
         componentDidMount() {
             this.update();
-            this.bringToFocus();
         }
 
         componentDidUpdate() {
             this.update();
-            this.bringToFocus();
         }
 
         render() {
             let content;
 
             if (this.zoom) {
-                const WebView = require("react-electron-web-view");
                 content = this.url && (
-                    <WebView
-                        ref={(ref: any) => (this.webView = ref)}
+                    <webview
                         src={
                             "../../libs/pdfjs/web/viewer.html?file=" +
                             encodeURIComponent(this.url)
