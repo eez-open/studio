@@ -1,3 +1,10 @@
+/*
+
+Works in electron 20.3.8. It doesn't work on newer versions.
+See: https://github.com/node-ffi-napi/node-ffi-napi/issues/238
+
+*/
+
 import os from "os";
 import vcon from "instrument/connection/interfaces/visa-constants";
 
@@ -6,7 +13,7 @@ let ffi: typeof ffiModule | undefined;
 try {
     ffi = require("ffi-napi");
 } catch (err) {
-    console.error("VISA: failed to load ffi-napi module");
+    console.error("VISA: failed to load ffi-napi module", err);
 }
 
 import type * as refModule from "ref-napi";
@@ -14,7 +21,7 @@ let ref: typeof refModule | undefined;
 try {
     ref = require("ref-napi");
 } catch (err) {
-    console.error("VISA: failed to load ref-napi module");
+    console.error("VISA: failed to load ref-napi module", err);
 }
 
 export let defaultSessionStatus: number = 0;
