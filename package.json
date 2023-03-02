@@ -146,7 +146,7 @@
         "react-dom": "^18.2.0",
         "react-toastify": "^8.2.0",
         "react-virtualized-auto-sizer": "^1.0.7",
-        "react-window": "^1.8.6",
+        "react-window": "^1.8.8",
         "ref-napi": "^3.0.3",
         "rimraf": "^3.0.2",
         "serialport": "^10.4.0",
