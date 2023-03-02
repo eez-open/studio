@@ -178,6 +178,7 @@ class WebSimulatorPanel extends React.Component<{
         element.style.position = "absolute";
         element.style.width = "100%";
         element.style.height = "100%";
+        element.style.overflow = "hidden";
 
         const connection = instrument.getConnectionProperty();
         const webSimulatorPage = connection?.webSimulator!.src;
