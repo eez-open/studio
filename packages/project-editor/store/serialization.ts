@@ -42,6 +42,7 @@ export function createObject<T extends EezObject>(
     isLoadProject = false;
     const result = loadObjectInternal(undefined, jsObject, aClass, key);
     currentProjectStore = undefined;
+    currentProject = undefined;
     return result as T;
 }
 
@@ -74,6 +75,8 @@ export function loadProject(
     project._store = projectStore;
 
     rewireEnd(project);
+
+    currentProject = undefined;
 
     return project;
 }
