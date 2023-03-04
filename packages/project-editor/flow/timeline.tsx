@@ -68,6 +68,7 @@ import {
 } from "project-editor/flow/editor/mouse-handler";
 import { addAlphaToColor } from "eez-studio-shared/color";
 import { visitObjects } from "project-editor/core/search";
+import { evalConstantExpression } from "./expression";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -585,6 +586,9 @@ interface NumberInputProps {
 
 const NumberInput = observer(
     class NumberInput extends React.Component<NumberInputProps> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
         value: string;
         numValue: number;
         error: string | undefined;
@@ -657,14 +661,16 @@ const NumberInput = observer(
         onKeyDown = (event: React.KeyboardEvent) => {
             if (event.keyCode === 13) {
                 try {
-                    var mexp = require("math-expression-evaluator");
-                    const newValue = mexp.eval(this.value);
+                    const newValue = evalConstantExpression(
+                        this.context.project,
+                        this.value
+                    );
                     if (
-                        newValue !== undefined &&
-                        !isNaN(newValue) &&
-                        newValue !== this.value
+                        typeof newValue.value == "number" &&
+                        !isNaN(newValue.value) &&
+                        newValue.value.toString() !== this.value.toString()
                     ) {
-                        this.props.onChange(newValue);
+                        this.props.onChange(newValue.value);
                     }
                 } catch (err) {
                     console.error(err);

@@ -28,7 +28,10 @@ import { replaceObjectReference } from "project-editor/core/search";
 import { ConfigurationReferencesPropertyValue } from "project-editor/ui-components/ConfigurationReferencesPropertyValue";
 
 import { ProjectContext } from "project-editor/project/context";
-import { parseIdentifier } from "project-editor/flow/expression";
+import {
+    evalConstantExpression,
+    parseIdentifier
+} from "project-editor/flow/expression";
 import {
     EXPR_MARK_END,
     EXPR_MARK_START
@@ -384,14 +387,17 @@ export const Property = observer(
             if (event.keyCode === 13) {
                 if (this.props.propertyInfo.type === PropertyType.Number) {
                     try {
-                        var mexp = require("math-expression-evaluator");
-                        const newValue = mexp.eval(this._value);
+                        const newValue = evalConstantExpression(
+                            this.context.project,
+                            this._value
+                        );
                         if (
-                            newValue !== undefined &&
-                            newValue !== this._value
+                            typeof newValue.value == "number" &&
+                            !isNaN(newValue.value) &&
+                            newValue.value.toString() !== this._value.toString()
                         ) {
                             this.props.updateObject({
-                                [this.props.propertyInfo.name]: newValue
+                                [this.props.propertyInfo.name]: newValue.value
                             });
                         }
                     } catch (err) {

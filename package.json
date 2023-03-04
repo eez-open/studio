@@ -125,7 +125,6 @@
         "lv_font_conv": "^1.5.2",
         "lz4": "0.6.5",
         "marked": "^4.0.14",
-        "math-expression-evaluator": "^1.2.22",
         "mobx": "6.5.0",
         "mobx-react": "^7.3.0",
         "mobx-utils": "^6.0.4",

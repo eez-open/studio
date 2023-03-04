@@ -27,7 +27,7 @@ export function evalConstantExpression(project: Project, expression: string) {
     }
 
     let value;
-    let valueType;
+    let valueType: ValueType;
     if (expression == undefined) {
         value = undefined;
         valueType = "undefined";
