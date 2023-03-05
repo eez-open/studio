@@ -666,6 +666,10 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                     this.tick
                 );
 
+                if (this.autorRunDispose) {
+                    this.autorRunDispose();
+                }
+
                 this.autorRunDispose = autorun(() => {
                     // set all _lvglObj to undefined
                     runInAction(() => {

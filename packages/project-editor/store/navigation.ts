@@ -1,4 +1,4 @@
-import { makeObservable } from "mobx";
+import { makeObservable, runInAction } from "mobx";
 import { observable, action } from "mobx";
 
 import { IEezObject, getParent } from "project-editor/core/object";
@@ -386,5 +386,11 @@ export class NavigationStore {
         }
 
         return objects;
+    }
+
+    unmount() {
+        runInAction(() => {
+            this.selectedPanel = undefined;
+        });
     }
 }

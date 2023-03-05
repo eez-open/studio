@@ -19,7 +19,7 @@ export const LVGLPage = observer(
         declare context: React.ContextType<typeof ProjectContext>;
 
         canvasRef = React.createRef<HTMLCanvasElement>();
-        runtime: LVGLPageRuntime;
+        runtime: LVGLPageRuntime | undefined;
 
         createPageRuntime() {
             if (this.context.runtime) {
@@ -45,12 +45,20 @@ export const LVGLPage = observer(
         }
 
         componentDidUpdate() {
-            this.runtime.unmount();
+            if (this.runtime) {
+                this.runtime.unmount();
+                this.runtime = undefined;
+            }
+
             this.createPageRuntime();
         }
 
         componentWillUnmount() {
-            setTimeout(() => this.runtime.unmount());
+            setTimeout(() => {
+                if (this.runtime) {
+                    this.runtime.unmount();
+                }
+            });
         }
 
         render() {

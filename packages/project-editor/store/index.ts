@@ -237,13 +237,18 @@ export class ProjectStore {
 
     unmount() {
         this.project.settings.general.imports.forEach(importDirective => {
-            if (importDirective.project) {
+            if (
+                importDirective.project &&
+                importDirective.project._store != this
+            ) {
                 importDirective.project._store.unmount();
             }
         });
 
         this.editorsStore.unmount();
         this.uiStateStore.unmount();
+        this.navigationStore.unmount();
+        this.layoutModels.unmount();
 
         this.dispose1();
         this.dispose2();

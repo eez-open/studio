@@ -207,16 +207,17 @@ export class WasmRuntime extends RemoteRuntime {
             window.cancelAnimationFrame(this.requestAnimationFrameId);
         }
 
-        if (this.worker) {
-            this.worker.terminate();
-        }
-
         this.destroyGlobalVariables();
 
         clarStremIDs();
 
         if (this.lgvlPageRuntime) {
             this.lgvlPageRuntime.unmount();
+        }
+
+        if (this.worker) {
+            this.worker.terminate();
+            this.ctx = undefined;
         }
 
         if (this.error) {
@@ -869,6 +870,78 @@ export const WasmCanvas = observer(
 
         canvasRef = React.createRef<HTMLCanvasElement>();
 
+        sendPointerEvent(event: PointerEvent) {
+            const canvas = this.canvasRef.current;
+            if (!canvas) {
+                return;
+            }
+            const wasmRuntime = this.context.runtime as WasmRuntime;
+            if (!wasmRuntime) {
+                return;
+            }
+
+            var bbox = canvas.getBoundingClientRect();
+
+            const x = (event.clientX - bbox.left) * (canvas.width / bbox.width);
+
+            const y =
+                (event.clientY - bbox.top) * (canvas.height / bbox.height);
+
+            const pressed = event.buttons == 1 ? 1 : 0;
+
+            wasmRuntime.pointerEvents.push({ x, y, pressed });
+
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        onPointerDown = (event: PointerEvent) => {
+            const canvas = this.canvasRef.current;
+            if (!canvas) {
+                return;
+            }
+            const wasmRuntime = this.context.runtime as WasmRuntime;
+            if (!wasmRuntime) {
+                return;
+            }
+
+            if (event.buttons == 4) {
+                wasmRuntime.wheelClicked = 1;
+            }
+            canvas.setPointerCapture(event.pointerId);
+            this.sendPointerEvent(event);
+        };
+
+        onPointerMove = (event: PointerEvent) => {
+            this.sendPointerEvent(event);
+        };
+
+        onPointerUp = (event: PointerEvent) => {
+            const canvas = this.canvasRef.current;
+            if (!canvas) {
+                return;
+            }
+            canvas.releasePointerCapture(event.pointerId);
+            this.sendPointerEvent(event);
+        };
+
+        onPointerCancel = (event: PointerEvent) => {
+            const canvas = this.canvasRef.current;
+            if (!canvas) {
+                return;
+            }
+            canvas.releasePointerCapture(event.pointerId);
+            this.sendPointerEvent(event);
+        };
+
+        onWheel = (event: WheelEvent) => {
+            const wasmRuntime = this.context.runtime as WasmRuntime;
+            if (!wasmRuntime) {
+                return;
+            }
+            wasmRuntime.wheelDeltaY += -event.deltaY;
+        };
+
         componentDidMount() {
             const canvasElement = this.canvasRef.current;
             if (!canvasElement) {
@@ -883,74 +956,39 @@ export const WasmCanvas = observer(
 
             wasmRuntime.setCanvasContext(canvas.getContext("2d")!);
 
-            function sendPointerEvent(event: PointerEvent) {
-                var bbox = canvas.getBoundingClientRect();
-
-                const x =
-                    (event.clientX - bbox.left) * (canvas.width / bbox.width);
-
-                const y =
-                    (event.clientY - bbox.top) * (canvas.height / bbox.height);
-
-                const pressed = event.buttons == 1 ? 1 : 0;
-
-                wasmRuntime.pointerEvents.push({ x, y, pressed });
-
-                event.preventDefault();
-                event.stopPropagation();
-            }
-
-            canvas.addEventListener(
-                "pointerdown",
-                event => {
-                    if (event.buttons == 4) {
-                        wasmRuntime.wheelClicked = 1;
-                    }
-                    canvas.setPointerCapture(event.pointerId);
-                    sendPointerEvent(event);
-                },
-                true
-            );
-
-            canvas.addEventListener(
-                "pointermove",
-                event => {
-                    sendPointerEvent(event);
-                },
-                true
-            );
-
-            canvas.addEventListener(
-                "pointerup",
-                event => {
-                    canvas.releasePointerCapture(event.pointerId);
-                    sendPointerEvent(event);
-                },
-                true
-            );
-
+            canvas.addEventListener("pointerdown", this.onPointerDown, true);
+            canvas.addEventListener("pointermove", this.onPointerMove, true);
+            canvas.addEventListener("pointerup", this.onPointerUp, true);
             canvas.addEventListener(
                 "pointercancel",
-                event => {
-                    canvas.releasePointerCapture(event.pointerId);
-                    sendPointerEvent(event);
-                },
+                this.onPointerCancel,
                 true
             );
-
-            document.addEventListener(
-                "wheel",
-                event => {
-                    wasmRuntime.wheelDeltaY += -event.deltaY;
-                },
-                true
-            );
+            document.addEventListener("wheel", this.onWheel, true);
         }
 
         componentWillUnmount() {
-            const wasmRuntime = this.context.runtime as WasmRuntime;
-            if (wasmRuntime) {
-                wasmRuntime.ctx = undefined;
+            const canvasElement = this.canvasRef.current;
+            if (canvasElement) {
+                const canvas = canvasElement;
+
+                canvas.removeEventListener(
+                    "pointerdown",
+                    this.onPointerDown,
+                    true
+                );
+                canvas.removeEventListener(
+                    "pointermove",
+                    this.onPointerMove,
+                    true
+                );
+                canvas.removeEventListener("pointerup", this.onPointerUp, true);
+                canvas.removeEventListener(
+                    "pointercancel",
+                    this.onPointerCancel,
+                    true
+                );
+                document.removeEventListener("wheel", this.onWheel, true);
             }
         }
 

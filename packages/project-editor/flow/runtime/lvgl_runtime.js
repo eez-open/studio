@@ -22,22 +22,35 @@ var Module = typeof Module != 'undefined' ? Module : {};
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
 module["exports"] = function (postWorkerToRendererMessage) {
+    var Module = {};
 
-var Module = {};
+    Module.postWorkerToRendererMessage = postWorkerToRendererMessage;
 
-Module.postWorkerToRendererMessage = postWorkerToRendererMessage;
+    Module.onRuntimeInitialized = function () {
+        postWorkerToRendererMessage({ init: {} });
+    }
 
-Module.onRuntimeInitialized = function () {
-    postWorkerToRendererMessage({ init: {} });
+    Module.print = function (args) {
+        console.log("From LVGL-WASM flow runtime:", args);
+    };
+
+    Module.printErr = function (args) {
+        console.error("From LVGL-WASM flow runtime:", args);
+    };
+
+    Module.onRuntimeTerminate = function () {
+        for (const propName in Module) {
+            delete Module[propName];
+        }
+    };
+
+    runWasmModule(Module);
+
+    return Module;
 }
 
-Module.print = function (args) {
-    console.log("From LVGL-WASM flow runtime:", args);
-};
+function runWasmModule(Module) {
 
-Module.printErr = function (args) {
-    console.error("From LVGL-WASM flow runtime:", args);
-};
 
 
 // Sometimes an existing Module object exists with properties
@@ -157,20 +170,6 @@ readAsync = (filename, onload, onerror) => {
   if (typeof module != 'undefined') {
     module['exports'] = Module;
   }
-
-  process['on']('uncaughtException', function(ex) {
-    // suppress ExitStatus exceptions from showing an error
-    if (!(ex instanceof ExitStatus)) {
-      throw ex;
-    }
-  });
-
-  // Without this older versions of node (< v15) will log unhandled rejections
-  // but return 0, which is not normally the desired behaviour.  This is
-  // not be needed with node v15 and about because it is now the default
-  // behaviour:
-  // See https://nodejs.org/api/cli.html#cli_unhandled_rejections_mode
-  process['on']('unhandledRejection', function(reason) { throw reason; });
 
   quit_ = (status, toThrow) => {
     if (keepRuntimeAlive()) {
@@ -5216,5 +5215,4 @@ run();
 
 
 
-return Module;
-};
+}

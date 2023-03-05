@@ -165,7 +165,9 @@ export class LayoutModels {
 
             scpi: observable,
             styles: observable,
-            themes: observable
+            themes: observable,
+
+            texts: observable
         });
     }
 
@@ -1013,4 +1015,6 @@ export class LayoutModels {
             }
         }
     }
+
+    unmount() {}
 }

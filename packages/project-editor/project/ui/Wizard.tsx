@@ -9,7 +9,8 @@ import {
     observable,
     runInAction,
     makeObservable,
-    computed
+    computed,
+    IReactionDisposer
 } from "mobx";
 import { observer } from "mobx-react";
 
@@ -167,6 +168,8 @@ const NewProjectWizard = observer(
 
         progress: string = "";
 
+        dispose1: IReactionDisposer;
+
         constructor(props: any) {
             super(props);
 
@@ -212,8 +215,10 @@ const NewProjectWizard = observer(
                     console.error(err);
                 }
             }
+        }
 
-            reaction(
+        componentDidMount() {
+            this.dispose1 = reaction(
                 () => ({
                     name: this.name,
                     location: this.location,
@@ -231,9 +236,7 @@ const NewProjectWizard = observer(
                     }
                 }
             );
-        }
 
-        componentDidMount() {
             fetch(
                 "https://envox.hr/gitea/api/v1/repos/search?q=eez-flow-template&topic=true"
             )
@@ -251,6 +254,10 @@ const NewProjectWizard = observer(
                         );
                     });
                 });
+        }
+
+        componentWillUnmount() {
+            this.dispose1();
         }
 
         saveOptions() {
