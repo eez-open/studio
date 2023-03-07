@@ -10,10 +10,12 @@ import {
     registerClass,
     IEezObject,
     EezObject,
-    PropertyType
+    PropertyType,
+    MessageType
 } from "project-editor/core/object";
 import {
     createObject,
+    getChildOfObject,
     getProjectStore,
     Message,
     propertyInvalidValueMessage,
@@ -24,6 +26,7 @@ import {
 import { ProjectContext } from "project-editor/project/context";
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
+import { fileExistsSync } from "eez-studio-shared/util-electron";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -45,6 +48,62 @@ export class ExtensionDefinitionNavigation extends NavigationComponent {
         );
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class UseDashboardProject extends EezObject {
+    projectFilePath: string;
+
+    static classInfo: ClassInfo = {
+        properties: [
+            {
+                name: "projectFilePath",
+                type: PropertyType.RelativeFile,
+                fileFilters: [
+                    { name: "EEZ Project", extensions: ["eez-project"] },
+                    { name: "All Files", extensions: ["*"] }
+                ],
+                isOptional: false
+            }
+        ],
+        defaultValue: {},
+        check: (object: UseDashboardProject) => {
+            let messages: Message[] = [];
+
+            if (object.projectFilePath) {
+                if (
+                    !fileExistsSync(
+                        getProjectStore(object).getAbsoluteFilePath(
+                            object.projectFilePath
+                        )
+                    )
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            "File doesn't exists",
+                            getChildOfObject(object, "projectFilePath")
+                        )
+                    );
+                }
+            } else {
+                messages.push(propertyNotSetMessage(object, "projectFilePath"));
+            }
+
+            return messages;
+        }
+    };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            projectFilePath: observable
+        });
+    }
+}
+
+registerClass("UseDashboardProject", UseDashboardProject);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -71,6 +130,8 @@ export class ExtensionDefinition extends EezObject {
     idfAuthor: string;
 
     sdlFriendlyName: string;
+
+    useDashboardProjects: UseDashboardProject[];
 
     static classInfo: ClassInfo = {
         listLabel: (extensionDefinition: ExtensionDefinition) => {
@@ -187,6 +248,14 @@ export class ExtensionDefinition extends EezObject {
                 displayName: "SDL friendly name",
                 type: PropertyType.String,
                 defaultValue: undefined
+            },
+            {
+                name: "useDashboardProjects",
+                displayName: "Dashboard projects",
+                arrayItemOrientation: "horizontal",
+                type: PropertyType.Array,
+                typeClass: UseDashboardProject,
+                defaultValue: []
             }
         ],
         newItem: async (parent: IEezObject) => {
@@ -295,7 +364,8 @@ export class ExtensionDefinition extends EezObject {
             idfSupportedModels: observable,
             idfRevisionComments: observable,
             idfAuthor: observable,
-            sdlFriendlyName: observable
+            sdlFriendlyName: observable,
+            useDashboardProjects: observable
         });
     }
 }

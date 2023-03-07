@@ -21,10 +21,16 @@ export interface IEditor {
     render(): JSX.Element;
 }
 
+export interface IDashboard {
+    title: string;
+    icon: string;
+}
+
 export interface IExtensionProperties {
     properties?: any;
     shortcuts?: IShortcut[];
     moreDescription?: string;
+    dashboards?: IDashboard[];
 }
 
 export interface IHomeSection {

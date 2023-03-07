@@ -41,6 +41,13 @@ export class RuntimeSettings {
         );
 
         if (objectVariableType) {
+            if (
+                variable.type == "object:Instrument" &&
+                this.projectStore.dashboardInstrument
+            ) {
+                return this.projectStore.dashboardInstrument;
+            }
+
             const constructorParams = value;
             return objectVariableType.createValue(
                 constructorParams,

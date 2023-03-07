@@ -514,7 +514,7 @@ export async function buildExtensions(projectStore: ProjectStore) {
             MessageType.INFO,
             `Nothing to build!`
         );
-        return;
+        return [];
     }
 
     OutputSections.setLoading(Section.OUTPUT, true);
@@ -523,6 +523,8 @@ export async function buildExtensions(projectStore: ProjectStore) {
     await new Promise(resolve => setTimeout(resolve, 50));
 
     const project = projectStore.project;
+
+    let extensionFilePaths: string[] = [];
 
     try {
         let destinationFolderPath = projectStore.getAbsoluteFilePath(
@@ -534,7 +536,7 @@ export async function buildExtensions(projectStore: ProjectStore) {
 
         showCheckResult(projectStore);
 
-        await extensionDefinitionBuild(projectStore);
+        extensionFilePaths = await extensionDefinitionBuild(projectStore);
 
         OutputSections.write(
             Section.OUTPUT,
@@ -571,6 +573,8 @@ export async function buildExtensions(projectStore: ProjectStore) {
     } finally {
         OutputSections.setLoading(Section.OUTPUT, false);
     }
+
+    return extensionFilePaths;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

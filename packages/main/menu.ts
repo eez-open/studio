@@ -317,6 +317,16 @@ function buildFileMenu(win: IWindow | undefined) {
                         focusedWindow.webContents.send("build-extensions");
                     }
                 }
+            },
+            {
+                label: "Build and Install Extensions",
+                click: function (item: any, focusedWindow: any) {
+                    if (focusedWindow) {
+                        focusedWindow.webContents.send(
+                            "build-and-install-extensions"
+                        );
+                    }
+                }
             }
         );
     } else if (win?.activeTabType === "instrument") {

@@ -144,7 +144,6 @@ struct ScpiComponentExecutionState : public ComponenentExecutionState {
     bool getLatestScpiResult(FlowState *flowState, unsigned componentIndex, const char **resultText, size_t *resultTextLen, bool *resultIsBlob) {
         if (errorMessage) {
             throwError(flowState, componentIndex, errorMessage);
-            deallocateComponentExecutionState(flowState, componentIndex);
             return false;
         }
 

@@ -56,16 +56,25 @@ export function extensionDefinitionAnythingToBuild(projectStore: ProjectStore) {
 }
 
 export async function extensionDefinitionBuild(projectStore: ProjectStore) {
+    const extensionFilePaths: string[] = [];
+
     const extensionsToBuild = getExtensionsToBuild(projectStore);
 
     if (!extensionsToBuild) {
-        return;
+        return extensionFilePaths;
     }
 
     for (const extensionDefinition of extensionsToBuild) {
         const idfFromProject = toJS(extensionDefinition);
 
         const instrumentIdf: InstrumentIdfProperties = idfFromProject as any;
+
+        instrumentIdf.useDashboardProjects =
+            idfFromProject.useDashboardProjects.map(useDashboardProject =>
+                projectStore.getAbsoluteFilePath(
+                    useDashboardProject.projectFilePath
+                )
+            );
 
         // collect extension properties
         let properties: any = {};
@@ -153,6 +162,8 @@ export async function extensionDefinitionBuild(projectStore: ProjectStore) {
                 properties
             );
 
+            extensionFilePaths.push(idfFilePath);
+
             projectStore.outputSectionsStore.write(
                 Section.OUTPUT,
                 MessageType.INFO,
@@ -160,4 +171,6 @@ export async function extensionDefinitionBuild(projectStore: ProjectStore) {
             );
         }
     }
+
+    return extensionFilePaths;
 }

@@ -57,6 +57,7 @@ import {
 } from "project-editor/store";
 import {
     isLVGLProject,
+    isNotDashboardProject,
     isNotLVGLProject,
     isNotV1Project
 } from "project-editor/project/project-type-traits";
@@ -711,6 +712,9 @@ export class General extends EezObject {
     displayHeight: number;
     //css: string;
 
+    icon: string;
+    title: string;
+
     static classInfo: ClassInfo = {
         label: () => "General",
         properties: [
@@ -815,6 +819,17 @@ export class General extends EezObject {
                         general.projectType != ProjectType.LVGL
                     );
                 }
+            },
+            {
+                name: "title",
+                type: PropertyType.String,
+                hideInPropertyGrid: isNotDashboardProject
+            },
+            {
+                name: "icon",
+                type: PropertyType.Image,
+                embeddedImage: true,
+                hideInPropertyGrid: isNotDashboardProject
             }
         ],
         check: (general: General) => {

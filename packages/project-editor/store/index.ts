@@ -75,6 +75,9 @@ import {
 import { objectsToClipboardData } from "project-editor/store/clipboard";
 import { getProjectFeatures } from "./features";
 import { RuntimeType } from "project-editor/project/project-type-traits";
+import { IExtension } from "eez-studio-shared/extensions/extension";
+import { installExtension } from "eez-studio-shared/extensions/extensions";
+import type { InstrumentObject } from "instrument/instrument-object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -137,6 +140,8 @@ export class ProjectStore {
     dispose6: mobx.IReactionDisposer;
 
     watcher: FSWatcher | undefined = undefined;
+
+    dashboardInstrument?: InstrumentObject;
 
     get editorsStore() {
         return this.runtime
@@ -375,10 +380,12 @@ export class ProjectStore {
     }
 
     updateMruFilePath() {
-        ipcRenderer.send("setMruFilePath", {
-            filePath: this.filePath,
-            projectType: this.project?.settings?.general?.projectType
-        });
+        if (!this.dashboardInstrument) {
+            ipcRenderer.send("setMruFilePath", {
+                filePath: this.filePath,
+                projectType: this.project?.settings?.general?.projectType
+            });
+        }
     }
 
     getFilePathRelativeToProjectPath(absoluteFilePath: string) {
@@ -574,6 +581,53 @@ export class ProjectStore {
 
     buildExtensions() {
         ProjectEditor.build.buildExtensions(this);
+    }
+
+    async buildAndInstallExtensions() {
+        const extensionFilePaths = await ProjectEditor.build.buildExtensions(
+            this
+        );
+
+        for (const extensionFilePath of extensionFilePaths) {
+            try {
+                const extension = await installExtension(extensionFilePath, {
+                    notFound() {
+                        notification.info(
+                            "This is not a valid extension package file.",
+                            undefined
+                        );
+                    },
+                    async confirmReplaceNewerVersion(
+                        newExtension: IExtension,
+                        existingExtension: IExtension
+                    ) {
+                        return true;
+                    },
+                    async confirmReplaceOlderVersion(
+                        newExtension: IExtension,
+                        existingExtension: IExtension
+                    ) {
+                        return true;
+                    },
+                    async confirmReplaceTheSameVersion(
+                        newExtension: IExtension,
+                        existingExtension: IExtension
+                    ) {
+                        return true;
+                    }
+                });
+
+                if (extension) {
+                    notification.success(
+                        `Extension "${
+                            extension.displayName || extension.name
+                        }" installed`
+                    );
+                }
+            } catch (err) {
+                notification.error(err.toString());
+            }
+        }
     }
 
     async closeWindow() {

@@ -546,6 +546,9 @@ export class ProjectEditorTab implements IHomeTab {
         const buildExtensions = () => {
             projectStore.buildExtensions();
         };
+        const buildAndInstallExtensions = () => {
+            projectStore.buildAndInstallExtensions();
+        };
         const undo = () => {
             projectStore.undoManager.undo();
         };
@@ -574,6 +577,10 @@ export class ProjectEditorTab implements IHomeTab {
         ipcRenderer.on("check", check);
         ipcRenderer.on("build", build);
         ipcRenderer.on("build-extensions", buildExtensions);
+        ipcRenderer.on(
+            "build-and-install-extensions",
+            buildAndInstallExtensions
+        );
         ipcRenderer.on("undo", undo);
         ipcRenderer.on("redo", redo);
         ipcRenderer.on("cut", cut);
@@ -587,6 +594,10 @@ export class ProjectEditorTab implements IHomeTab {
             ipcRenderer.removeListener("check", check);
             ipcRenderer.removeListener("build", build);
             ipcRenderer.removeListener("build-extensions", buildExtensions);
+            ipcRenderer.removeListener(
+                "build-and-install-extensions",
+                buildAndInstallExtensions
+            );
             ipcRenderer.removeListener("undo", undo);
             ipcRenderer.removeListener("redo", redo);
             ipcRenderer.removeListener("cut", cut);

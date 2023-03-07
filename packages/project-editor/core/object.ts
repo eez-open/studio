@@ -205,6 +205,7 @@ export interface PropertyInfo {
     arrayItemOrientation?: "vertical" | "horizontal";
     disableBitmapPreview?: boolean;
     inputPlaceholder?: (object: IEezObject) => string;
+    embeddedImage?: boolean;
 }
 
 export type InheritedValue =

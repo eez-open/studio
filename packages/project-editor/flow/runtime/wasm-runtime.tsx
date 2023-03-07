@@ -203,6 +203,10 @@ export class WasmRuntime extends RemoteRuntime {
     }
 
     async doStopRuntime(notifyUser: boolean) {
+        if (this.projectStore.dashboardInstrument) {
+            notifyUser = false;
+        }
+
         if (this.requestAnimationFrameId) {
             window.cancelAnimationFrame(this.requestAnimationFrameId);
         }
@@ -320,15 +324,20 @@ export class WasmRuntime extends RemoteRuntime {
                 const valueType =
                     workerToRenderMessage.freeArrayValue.valueType;
 
-                const objectVariableType =
-                    getObjectVariableTypeFromType(valueType);
-                if (objectVariableType) {
-                    const value = objectVariableType.createValue(
-                        workerToRenderMessage.freeArrayValue
-                            .value as IObjectVariableValueConstructorParams,
-                        true
-                    );
-                    objectVariableType.destroyValue(value);
+                if (
+                    valueType != "object:Instrument" ||
+                    !this.projectStore.dashboardInstrument
+                ) {
+                    const objectVariableType =
+                        getObjectVariableTypeFromType(valueType);
+                    if (objectVariableType) {
+                        const value = objectVariableType.createValue(
+                            workerToRenderMessage.freeArrayValue
+                                .value as IObjectVariableValueConstructorParams,
+                            true
+                        );
+                        objectVariableType.destroyValue(value);
+                    }
                 }
 
                 return;
@@ -472,6 +481,8 @@ export class WasmRuntime extends RemoteRuntime {
     async loadGlobalVariables() {
         await this.projectStore.runtimeSettings.loadPersistentVariables();
 
+        let firstDashboardInstrument = true;
+
         for (const variable of this.projectStore.project.allGlobalVariables) {
             const globalVariableInAssetsMap =
                 this.assetsMap.globalVariables.find(
@@ -481,7 +492,16 @@ export class WasmRuntime extends RemoteRuntime {
 
             const globalVariableIndex = globalVariableInAssetsMap!.index;
 
-            let value = this.projectStore.dataContext.get(variable.name);
+            let value =
+                variable.type == "object:Instrument" &&
+                firstDashboardInstrument &&
+                this.projectStore.dashboardInstrument
+                    ? this.projectStore.dashboardInstrument
+                    : this.projectStore.dataContext.get(variable.name);
+
+            if (variable.type == "object:Instrument") {
+                firstDashboardInstrument = false;
+            }
 
             const objectVariableType = getObjectVariableTypeFromType(
                 variable.type
@@ -636,18 +656,22 @@ export class WasmRuntime extends RemoteRuntime {
                 const instrument = globalVariable.objectVariableValue;
                 if (instrument instanceof InstrumentObject) {
                     if (scpiCommand.instrumentId == instrument.id) {
-                        const CONNECTION_TIMEOUT = 5000;
-                        const startTime = Date.now();
-                        while (
-                            !instrument.isConnected &&
-                            Date.now() - startTime < CONNECTION_TIMEOUT
+                        if (
+                            instrument != this.projectStore.dashboardInstrument
                         ) {
-                            if (!instrument.connection.isTransitionState) {
-                                instrument.connection.connect();
+                            const CONNECTION_TIMEOUT = 5000;
+                            const startTime = Date.now();
+                            while (
+                                !instrument.isConnected &&
+                                Date.now() - startTime < CONNECTION_TIMEOUT
+                            ) {
+                                if (!instrument.connection.isTransitionState) {
+                                    instrument.connection.connect();
+                                }
+                                await new Promise<boolean>(resolve =>
+                                    setTimeout(resolve, 10)
+                                );
                             }
-                            await new Promise<boolean>(resolve =>
-                                setTimeout(resolve, 10)
-                            );
                         }
 
                         if (!instrument.isConnected) {

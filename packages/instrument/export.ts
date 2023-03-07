@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 import archiver from "archiver";
 import xmlFormatter from "xml-formatter";
 
@@ -17,6 +18,7 @@ import {
     getSdlSemanticTypeForResponse,
     getSdlResponseType
 } from "instrument/scpi";
+import { readTextFile } from "eez-studio-shared/util-electron";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -91,11 +93,12 @@ export interface IdfProperties {
     idfAuthor: string;
     sdlFriendlyName: string;
     //properties: IInstrumentProperties;
+    useDashboardProjects: string[];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildPackageJson(idf: IdfProperties, properties: any) {
+async function buildPackageJson(idf: IdfProperties, properties: any) {
     // remove objID
     properties = JSON.parse(
         JSON.stringify(
@@ -109,6 +112,19 @@ function buildPackageJson(idf: IdfProperties, properties: any) {
             2
         )
     );
+
+    properties.dashboards = [];
+
+    for (const useDashboardProject of idf.useDashboardProjects) {
+        const data = await readTextFile(useDashboardProject);
+        const json = JSON.parse(data);
+        properties.dashboards.push({
+            title:
+                json.settings.general.title ||
+                path.basename(useDashboardProject),
+            icon: json.settings.general.icon
+        });
+    }
 
     return JSON.stringify(
         {
@@ -453,7 +469,7 @@ export function buildInstrumentExtension(
     projectFilePath: string,
     properties: any
 ) {
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<void>(async (resolve, reject) => {
         let extensionName = idf.extensionName;
         var output = fs.createWriteStream(moduleFilePath);
 
@@ -484,7 +500,7 @@ export function buildInstrumentExtension(
             delete webSimulator.files;
         }
 
-        const packageJson = buildPackageJson(idf, properties);
+        const packageJson = await buildPackageJson(idf, properties);
         archive.append(packageJson, { name: "package.json" });
 
         const idfStr = buildIdf(idf);
@@ -508,6 +524,12 @@ export function buildInstrumentExtension(
                     name: file[1]
                 });
             }
+        }
+
+        for (let i = 0; i < idf.useDashboardProjects.length; i++) {
+            archive.file(idf.useDashboardProjects[i], {
+                name: `d${i}.eez-project`
+            });
         }
 
         archive.finalize();

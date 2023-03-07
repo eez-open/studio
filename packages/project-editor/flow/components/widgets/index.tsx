@@ -209,7 +209,7 @@ export class ContainerWidget extends Widget {
             let name = getComponentName(widget.type);
 
             if (widget.name) {
-                return `name: ${widget.name}`;
+                return widget.name;
             }
             return name;
         },

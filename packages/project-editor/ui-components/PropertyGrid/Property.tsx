@@ -1046,7 +1046,10 @@ export const Property = observer(
                                             });
                                         const filePaths = result.filePaths;
                                         if (filePaths && filePaths[0]) {
-                                            if (embeddedImage) {
+                                            if (
+                                                propertyInfo.embeddedImage ==
+                                                true
+                                            ) {
                                                 fs.readFile(
                                                     this.context.getAbsoluteFilePath(
                                                         filePaths[0]

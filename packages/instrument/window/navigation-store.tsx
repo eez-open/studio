@@ -26,6 +26,8 @@ import type { INavigationItem } from "instrument/window/navigation";
 
 import type * as Bb3Module from "instrument/bb3";
 
+import type * as DashboardModule from "instrument/window/dashboard";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export class NavigationStore {
@@ -55,7 +57,8 @@ export class NavigationStore {
             navigateToSessionsList: action.bound,
             navigateToScripts: action.bound,
             _selectedListId: observable,
-            _selectedScriptId: observable
+            _selectedScriptId: observable,
+            dashboardNavigationItems: computed
         });
 
         this.terminalNavigationItem = {
@@ -166,7 +169,7 @@ export class NavigationStore {
     }
 
     get startPageNavigationItem() {
-        if (this.appStore.instrument?.isBB3) {
+        if (this.appStore.instrument.isBB3) {
             return {
                 id: "start-page",
                 icon: "material:dashboard",
@@ -187,12 +190,41 @@ export class NavigationStore {
         return undefined;
     }
 
+    get dashboardNavigationItems() {
+        const dashboards =
+            this.appStore.instrument.extension?.properties?.dashboards;
+        if (!dashboards) {
+            return [];
+        }
+
+        return dashboards.map((dashboard, i) => ({
+            id: "dashboard-" + i,
+            icon: dashboard.icon || "material:dashboard",
+            title: dashboard.title,
+            renderContent: () => {
+                const { Dashboard } =
+                    require("instrument/window/dashboard") as typeof DashboardModule;
+                return (
+                    <Dashboard
+                        instrument={this.appStore.instrument}
+                        dashboardIndex={i}
+                    />
+                );
+            },
+            renderToolbarButtons: () => {
+                return <div></div>;
+            }
+        }));
+    }
+
     get navigationItems() {
         let navigationItems: INavigationItem[] = [];
 
         if (this.startPageNavigationItem) {
             navigationItems.push(this.startPageNavigationItem);
         }
+
+        navigationItems.push(...this.dashboardNavigationItems);
 
         navigationItems.push(this.terminalNavigationItem);
         navigationItems.push(this.deletedHistoryItemsNavigationItem);
