@@ -242,7 +242,10 @@ export class NavigationStore {
     }
 
     get mainNavigationSelectedItem() {
-        if (this._mainNavigationSelectedItem) {
+        if (
+            this._mainNavigationSelectedItem &&
+            this.navigationItems.indexOf(this._mainNavigationSelectedItem) != -1
+        ) {
             return this._mainNavigationSelectedItem;
         }
 
