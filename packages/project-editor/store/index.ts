@@ -584,6 +584,8 @@ export class ProjectStore {
     }
 
     async buildAndInstallExtensions() {
+        notification.info(`Building extensions ...`);
+
         const extensionFilePaths = await ProjectEditor.build.buildExtensions(
             this
         );
