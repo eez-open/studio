@@ -656,12 +656,15 @@ const GaugeElement = observer(
         >();
 
         function getData(): PlotlyModule.Data[] {
+            const minRange = 0;
+            const maxRange = 1;
+
             return [
                 {
                     domain: { x: [0, 1], y: [0, 1] },
                     value: flowContext.flowState
                         ? 0
-                        : (widget.minRange + widget.maxRange) / 2,
+                        : (minRange + maxRange) / 2,
                     title: { text: widget.title },
                     type: "indicator",
                     mode: "gauge+number",
@@ -670,7 +673,7 @@ const GaugeElement = observer(
                             color: widget.color
                         },
                         axis: {
-                            range: [widget.minRange, widget.maxRange],
+                            range: [minRange, maxRange],
                             color: widget.color
                         }
                     }
@@ -717,11 +720,35 @@ const GaugeElement = observer(
                         disposeReaction = reaction(
                             () => {
                                 return flowContext.flowState
-                                    ? evalProperty(flowContext, widget, "data")
+                                    ? {
+                                          value: evalProperty(
+                                              flowContext,
+                                              widget,
+                                              "data"
+                                          ),
+                                          minRange: evalProperty(
+                                              flowContext,
+                                              widget,
+                                              "minRange"
+                                          ),
+                                          maxRange: evalProperty(
+                                              flowContext,
+                                              widget,
+                                              "maxRange"
+                                          )
+                                      }
                                     : undefined;
                             },
                             inputData => {
-                                updateGauge(el, inputData);
+                                if (inputData != undefined) {
+                                    updateGauge(
+                                        el,
+                                        inputData.value,
+                                        inputData.minRange,
+                                        inputData.maxRange,
+                                        widget.color
+                                    );
+                                }
                             }
                         );
                     } else {
@@ -795,16 +822,22 @@ export class GaugeWidget extends Widget {
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
             },
-            {
-                name: "minRange",
-                type: PropertyType.Number,
-                propertyGridGroup: specificGroup
-            },
-            {
-                name: "maxRange",
-                type: PropertyType.Number,
-                propertyGridGroup: specificGroup
-            },
+            makeExpressionProperty(
+                {
+                    name: "minRange",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "float"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "maxRange",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "float"
+            ),
             {
                 name: "color",
                 type: PropertyType.Color,
@@ -823,8 +856,8 @@ export class GaugeWidget extends Widget {
             width: 160,
             height: 160,
             title: "",
-            minRange: 0,
-            maxRange: 1,
+            minRange: "0",
+            maxRange: "1",
             margin: {
                 top: 50,
                 right: 0,
@@ -837,12 +870,21 @@ export class GaugeWidget extends Widget {
 
         showTreeCollapseIcon: "never",
 
+        beforeLoadHook: (object: GaugeWidget, jsObject: any) => {
+            if (typeof jsObject.minRange == "number") {
+                jsObject.minRange = jsObject.minRange.toString();
+            }
+            if (typeof jsObject.maxRange == "number") {
+                jsObject.maxRange = jsObject.maxRange.toString();
+            }
+        },
+
         execute: (context: IDashboardComponentContext) => {}
     });
 
     title: string;
-    minRange: number;
-    maxRange: number;
+    minRange: string;
+    maxRange: string;
     color: string;
     margin: RectObject;
 
@@ -968,6 +1010,9 @@ interface ILineChart {
 interface IGauge {
     type: "gauge";
     value: number;
+    minRange: number;
+    maxRange: number;
+    color: string;
 }
 
 type IChart = ILineChart | IGauge;
@@ -990,7 +1035,22 @@ function doUpdateChart() {
             chart.maxPoints
         );
     } else {
-        Plotly().update(el, { value: chart.value }, {});
+        Plotly().update(
+            el,
+            {
+                value: chart.value,
+                gauge: {
+                    bar: {
+                        color: chart.color
+                    },
+                    axis: {
+                        range: [chart.minRange, chart.maxRange],
+                        color: chart.color
+                    }
+                }
+            },
+            {}
+        );
     }
 
     if (updateQueue.length > 0) {
@@ -1027,12 +1087,21 @@ function updateLineChart(
     }
 }
 
-function updateGauge(el: HTMLElement, value: number) {
+function updateGauge(
+    el: HTMLElement,
+    value: number,
+    minRange: number,
+    maxRange: number,
+    color: string
+) {
     let chart = charts.get(el) as IGauge | undefined;
     if (!chart) {
         chart = {
             type: "gauge",
-            value
+            value,
+            minRange,
+            maxRange,
+            color
         };
         charts.set(el, chart);
         updateQueue.push(el);
@@ -1042,6 +1111,9 @@ function updateGauge(el: HTMLElement, value: number) {
         }
     } else {
         chart.value = value;
+        chart.minRange = minRange;
+        chart.maxRange = maxRange;
+        chart.color = color;
     }
 }
 

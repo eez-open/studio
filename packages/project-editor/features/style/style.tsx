@@ -1883,7 +1883,7 @@ export class Style extends EezObject {
             ]);
         }
 
-        if (this.opacity) {
+        if (!isNaN(this.opacity)) {
             spec[0].attrs.push(["opacity", this.opacity.toString()]);
         }
 

@@ -43,9 +43,6 @@ export function createObject<T extends EezObject>(
     const result = loadObjectInternal(undefined, jsObject, aClass, key);
     currentProjectStore = undefined;
     currentProject = undefined;
-    flowsWireIDToObjID.clear();
-    wireIDToObjID.clear();
-    oldObjID_to_newObjID.clear();
     return result as T;
 }
 
@@ -80,9 +77,6 @@ export function loadProject(
     rewireEnd(project);
 
     currentProject = undefined;
-    flowsWireIDToObjID.clear();
-    wireIDToObjID.clear();
-    oldObjID_to_newObjID.clear();
 
     return project;
 }
@@ -439,4 +433,8 @@ export function rewireEnd(object: IEezObject) {
             }
         }
     }
+
+    flowsWireIDToObjID.clear();
+    wireIDToObjID.clear();
+    oldObjID_to_newObjID.clear();
 }

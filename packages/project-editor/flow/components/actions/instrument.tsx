@@ -99,83 +99,98 @@ export class SCPIActionComponent extends ActionComponent {
                     jsObject.customInputs = [];
                     jsObject.customOutputs = [];
 
-                    const parts = parseScpi(jsObject.scpi);
-                    for (const part of parts) {
-                        const tag = part.tag;
-                        const str = part.value!;
+                    try {
+                        const parts = parseScpi(jsObject.scpi);
+                        for (const part of parts) {
+                            const tag = part.tag;
+                            const str = part.value!;
 
-                        if (tag == SCPI_PART_EXPR) {
-                            const inputName = str.substring(1, str.length - 1);
+                            if (tag == SCPI_PART_EXPR) {
+                                const inputName = str.substring(
+                                    1,
+                                    str.length - 1
+                                );
 
-                            if (
-                                !jsObject.customInputs.find(
-                                    (customInput: {
-                                        name: string;
-                                        type: PropertyType;
-                                    }) => customInput.name == inputName
-                                )
-                            ) {
-                                jsObject.customInputs.push({
-                                    name: inputName,
-                                    type: "string"
+                                if (
+                                    !jsObject.customInputs.find(
+                                        (customInput: {
+                                            name: string;
+                                            type: PropertyType;
+                                        }) => customInput.name == inputName
+                                    )
+                                ) {
+                                    jsObject.customInputs.push({
+                                        name: inputName,
+                                        type: "string"
+                                    });
+                                }
+                            } else if (tag == SCPI_PART_QUERY_WITH_ASSIGNMENT) {
+                                const outputName =
+                                    str[0] == "{"
+                                        ? str.substring(1, str.length - 1)
+                                        : str;
+
+                                jsObject.customOutputs.push({
+                                    name: outputName,
+                                    type: "any"
                                 });
                             }
-                        } else if (tag == SCPI_PART_QUERY_WITH_ASSIGNMENT) {
-                            const outputName =
-                                str[0] == "{"
-                                    ? str.substring(1, str.length - 1)
-                                    : str;
-
-                            jsObject.customOutputs.push({
-                                name: outputName,
-                                type: "any"
-                            });
                         }
-                    }
+                    } catch (err) {}
                 }
             }
         },
         check: (component: SCPIActionComponent) => {
             let messages: Message[] = [];
 
-            const parts = parseScpi(component.scpi);
-            for (const part of parts) {
-                const tag = part.tag;
-                const str = part.value!;
+            try {
+                const parts = parseScpi(component.scpi);
+                for (const part of parts) {
+                    const tag = part.tag;
+                    const str = part.value!;
 
-                if (tag == SCPI_PART_EXPR) {
-                    try {
-                        const expr = str.substring(1, str.length - 1);
-                        checkExpression(component, expr);
-                    } catch (err) {
-                        messages.push(
-                            new Message(
-                                MessageType.ERROR,
-                                `Invalid expression: ${err}`,
-                                getChildOfObject(component, "scpi")
-                            )
-                        );
-                    }
-                } else if (tag == SCPI_PART_QUERY_WITH_ASSIGNMENT) {
-                    try {
-                        const assignableExpression =
-                            str[0] == "{"
-                                ? str.substring(1, str.length - 1)
-                                : str;
-                        checkAssignableExpression(
-                            component,
-                            assignableExpression
-                        );
-                    } catch (err) {
-                        messages.push(
-                            new Message(
-                                MessageType.ERROR,
-                                `Invalid assignable expression: ${err}`,
-                                getChildOfObject(component, "scpi")
-                            )
-                        );
+                    if (tag == SCPI_PART_EXPR) {
+                        try {
+                            const expr = str.substring(1, str.length - 1);
+                            checkExpression(component, expr);
+                        } catch (err) {
+                            messages.push(
+                                new Message(
+                                    MessageType.ERROR,
+                                    `Invalid expression: ${err}`,
+                                    getChildOfObject(component, "scpi")
+                                )
+                            );
+                        }
+                    } else if (tag == SCPI_PART_QUERY_WITH_ASSIGNMENT) {
+                        try {
+                            const assignableExpression =
+                                str[0] == "{"
+                                    ? str.substring(1, str.length - 1)
+                                    : str;
+                            checkAssignableExpression(
+                                component,
+                                assignableExpression
+                            );
+                        } catch (err) {
+                            messages.push(
+                                new Message(
+                                    MessageType.ERROR,
+                                    `Invalid assignable expression: ${err}`,
+                                    getChildOfObject(component, "scpi")
+                                )
+                            );
+                        }
                     }
                 }
+            } catch (err) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Invalid SCPI: ${err}`,
+                        getChildOfObject(component, "scpi")
+                    )
+                );
             }
 
             return messages;

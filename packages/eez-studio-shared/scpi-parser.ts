@@ -717,7 +717,9 @@ export function parseScpi(input: string) {
         } else if (optional("mnemonic")) {
             while (optional("input"));
             while (optional("symbol", ":")) {
-                match("mnemonic");
+                if (!optional("input")) {
+                    match("mnemonic");
+                }
                 while (optional("input"));
             }
             return true;
