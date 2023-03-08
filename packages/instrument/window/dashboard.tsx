@@ -55,6 +55,7 @@ export class DashboardProject {
     ) {
         makeObservable(this, {
             projectStore: observable,
+            runtime: observable,
             error: observable
         });
     }
@@ -111,6 +112,19 @@ export class DashboardProject {
     reload = async () => {
         await this.close();
         await this.loadProject();
+    };
+
+    close = async () => {
+        if (this.projectStore) {
+            if (await this.projectStore.closeWindow()) {
+                this.projectStore.unmount();
+                runInAction(() => {
+                    this.projectStore = undefined;
+                    this.runtime = undefined;
+                });
+                console.log("closed");
+            }
+        }
     };
 
     render() {
@@ -190,17 +204,5 @@ export class DashboardProject {
                 <this.ProjectEditor onlyRuntime={true} />
             </this.ProjectContext.Provider>
         );
-    }
-
-    async close() {
-        if (this.projectStore) {
-            if (await this.projectStore.closeWindow()) {
-                this.projectStore.unmount();
-                runInAction(() => {
-                    this.projectStore = undefined;
-                    this.runtime = undefined;
-                });
-            }
-        }
     }
 }
