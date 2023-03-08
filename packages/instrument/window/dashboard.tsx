@@ -80,6 +80,9 @@ export class DashboardProject {
 
             await initProjectEditor(tabs, ProjectEditorTab);
             const projectStore = await ProjectStore.create();
+
+            projectStore.dashboardInstrument = this.instrument;
+
             projectStore.mount();
 
             if (this._filePath) {
@@ -93,8 +96,6 @@ export class DashboardProject {
             runInAction(() => {
                 projectStore.project._fullyLoaded = true;
             });
-
-            projectStore.dashboardInstrument = this.instrument;
 
             runInAction(() => {
                 this.projectStore = projectStore;
