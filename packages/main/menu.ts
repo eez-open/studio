@@ -87,6 +87,10 @@ function createNewProject() {
     BrowserWindow.getFocusedWindow()!.webContents.send("new-project");
 }
 
+function addInstrument() {
+    BrowserWindow.getFocusedWindow()!.webContents.send("add-instrument");
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildMacOSAppMenu(
@@ -146,17 +150,24 @@ function buildFileMenu(win: IWindow | undefined) {
 
     fileMenuSubmenu.push(
         {
-            label: "New Window",
-            accelerator: "CmdOrCtrl+N",
-            click: function (item, focusedWindow) {
-                openHomeWindow();
-            }
-        },
-        {
-            label: "New Project",
+            label: "New Project...",
             accelerator: "CmdOrCtrl+N",
             click: function (item, focusedWindow) {
                 createNewProject();
+            }
+        },
+        {
+            label: "Add Instrument...",
+            accelerator: "CmdOrCtrl+Alt+N",
+            click: function (item, focusedWindow) {
+                addInstrument();
+            }
+        },
+        {
+            label: "New Window",
+            accelerator: "CmdOrCtrl+Shift+N",
+            click: function (item, focusedWindow) {
+                openHomeWindow();
             }
         },
         {

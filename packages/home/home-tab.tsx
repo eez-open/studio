@@ -55,7 +55,7 @@ import { firstTime } from "./first-time";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const selectedInstrument = observable.box<string | undefined>();
+export const selectedInstrument = observable.box<string | undefined>();
 
 const SORT_ALPHA_ICON = (
     <svg
