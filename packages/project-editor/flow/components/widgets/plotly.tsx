@@ -1,5 +1,11 @@
 import React from "react";
-import { observable, reaction, makeObservable, runInAction } from "mobx";
+import {
+    observable,
+    reaction,
+    makeObservable,
+    runInAction,
+    autorun
+} from "mobx";
 
 import {
     registerClass,
@@ -717,40 +723,37 @@ const GaugeElement = observer(
                     if (!disposed) {
                         setPlotly(plotly);
 
-                        disposeReaction = reaction(
-                            () => {
-                                return flowContext.flowState
-                                    ? {
-                                          value: evalProperty(
-                                              flowContext,
-                                              widget,
-                                              "data"
-                                          ),
-                                          minRange: evalProperty(
-                                              flowContext,
-                                              widget,
-                                              "minRange"
-                                          ),
-                                          maxRange: evalProperty(
-                                              flowContext,
-                                              widget,
-                                              "maxRange"
-                                          )
-                                      }
-                                    : undefined;
-                            },
-                            inputData => {
-                                if (inputData != undefined) {
-                                    updateGauge(
-                                        el,
-                                        inputData.value,
-                                        inputData.minRange,
-                                        inputData.maxRange,
-                                        widget.color
-                                    );
-                                }
+                        disposeReaction = autorun(() => {
+                            const inputData = flowContext.flowState
+                                ? {
+                                      value: evalProperty(
+                                          flowContext,
+                                          widget,
+                                          "data"
+                                      ),
+                                      minRange: evalProperty(
+                                          flowContext,
+                                          widget,
+                                          "minRange"
+                                      ),
+                                      maxRange: evalProperty(
+                                          flowContext,
+                                          widget,
+                                          "maxRange"
+                                      )
+                                  }
+                                : undefined;
+
+                            if (inputData != undefined) {
+                                updateGauge(
+                                    el,
+                                    inputData.value,
+                                    inputData.minRange,
+                                    inputData.maxRange,
+                                    widget.color
+                                );
                             }
-                        );
+                        });
                     } else {
                         removeChart(el);
                     }
