@@ -8,6 +8,7 @@ jobs:
 
         # Platforms to build on/for
         strategy:
+            fail-fast: false
             matrix:
                 os: [macos-latest, ubuntu-latest, windows-2019]
 
