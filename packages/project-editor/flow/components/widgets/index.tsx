@@ -3109,7 +3109,18 @@ export class ButtonWidget extends Widget {
         },
 
         componentDefaultValue: (projectStore: ProjectStore) => {
-            return projectStore.projectTypeTraits.isFirmware
+            return projectStore.projectTypeTraits.isFirmwareModule ||
+                projectStore.projectTypeTraits.isApplet ||
+                projectStore.projectTypeTraits.isResource
+                ? {
+                      style: {
+                          inheritFrom: "button_M"
+                      },
+                      disabledStyle: {
+                          inheritFrom: "button_M_disabled"
+                      }
+                  }
+                : projectStore.projectTypeTraits.isFirmware
                 ? {
                       style: {
                           inheritFrom: "button"
@@ -6863,7 +6874,15 @@ export class TextInputWidget extends Widget {
             title: ""
         },
         componentDefaultValue: (projectStore: ProjectStore) => {
-            return projectStore.projectTypeTraits.isFirmware
+            return projectStore.projectTypeTraits.isFirmwareModule ||
+                projectStore.projectTypeTraits.isApplet ||
+                projectStore.projectTypeTraits.isResource
+                ? {
+                      style: {
+                          inheritFrom: "default"
+                      }
+                  }
+                : projectStore.projectTypeTraits.isFirmware
                 ? {
                       style: {
                           inheritFrom: "text_input"
@@ -7168,7 +7187,21 @@ export class RollerWidget extends Widget {
         },
 
         componentDefaultValue: (projectStore: ProjectStore) => {
-            return projectStore.projectTypeTraits.isFirmware
+            return projectStore.projectTypeTraits.isFirmwareModule ||
+                projectStore.projectTypeTraits.isApplet ||
+                projectStore.projectTypeTraits.isResource
+                ? {
+                      style: {
+                          inheritFrom: "default"
+                      },
+                      selectedValueStyle: {
+                          inheritFrom: "default"
+                      },
+                      unselectedValueStyle: {
+                          inheritFrom: "default"
+                      }
+                  }
+                : projectStore.projectTypeTraits.isFirmware
                 ? {
                       style: {
                           inheritFrom: "roller_widget"
@@ -7315,7 +7348,15 @@ export class SwitchWidget extends Widget {
         },
 
         componentDefaultValue: (projectStore: ProjectStore) => {
-            return projectStore.projectTypeTraits.isFirmware
+            return projectStore.projectTypeTraits.isFirmwareModule ||
+                projectStore.projectTypeTraits.isApplet ||
+                projectStore.projectTypeTraits.isResource
+                ? {
+                      style: {
+                          inheritFrom: "default"
+                      }
+                  }
+                : projectStore.projectTypeTraits.isFirmware
                 ? {
                       style: {
                           inheritFrom: "switch_widget"
@@ -7437,7 +7478,15 @@ export class SliderWidget extends Widget {
         },
 
         componentDefaultValue: (projectStore: ProjectStore) => {
-            return projectStore.projectTypeTraits.isFirmware
+            return projectStore.projectTypeTraits.isFirmwareModule ||
+                projectStore.projectTypeTraits.isApplet ||
+                projectStore.projectTypeTraits.isResource
+                ? {
+                      style: {
+                          inheritFrom: "default"
+                      }
+                  }
+                : projectStore.projectTypeTraits.isFirmware
                 ? {
                       style: {
                           inheritFrom: "slider_widget"

@@ -28,6 +28,14 @@ class ProjectTypeTraits {
         return false;
     }
 
+    get isFirmwareModule() {
+        return false;
+    }
+
+    get isModule() {
+        return false;
+    }
+
     get isResource() {
         return false;
     }
@@ -94,6 +102,10 @@ class FirmwareProjectTypeTraits extends ProjectTypeTraits {
 class FirmwareModuleProjectTypeTraits extends FirmwareProjectTypeTraits {
     override get id() {
         return 2;
+    }
+
+    override get isFirmwareModule() {
+        return true;
     }
 
     override get runtimeType() {

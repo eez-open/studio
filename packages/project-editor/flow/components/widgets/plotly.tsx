@@ -682,6 +682,9 @@ const GaugeElement = observer(
                             range: [minRange, maxRange],
                             color: widget.color
                         }
+                    },
+                    number: {
+                        valueformat: "f"
                     }
                 }
             ];
@@ -1050,6 +1053,9 @@ function doUpdateChart() {
                         range: [chart.minRange, chart.maxRange],
                         color: chart.color
                     }
+                },
+                number: {
+                    valueformat: "f"
                 }
             },
             {}

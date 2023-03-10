@@ -34,9 +34,13 @@ export async function getListsOnTheInstrument(connection: ConnectionBase) {
     const filesInFolderAsOneString = await connection.query(
         'MMEM:CAT? "/Lists"'
     );
-    const filesInFolderAsArray = removeQuotes(filesInFolderAsOneString).split(
-        '","'
-    );
+
+    const filesStr = removeQuotes(filesInFolderAsOneString);
+
+    const filesInFolderAsArray =
+        typeof filesStr == "string"
+            ? removeQuotes(filesInFolderAsOneString).split('","')
+            : [];
 
     for (const fileInfoLine of filesInFolderAsArray) {
         const fileName = fileInfoLine.split(",")[0];
