@@ -326,7 +326,7 @@ export const Scrapbook = observer(
                         height: "100%"
                     }}
                 >
-                    <ToolbarHeader>
+                    <ToolbarHeader className="EezStudio_ScrapbookHeader">
                         <div className="EezStudio_ScrapbookHeaderContainer">
                             {/* do not show this checkbox in Home/History tab */}
                             {isHomeHistoryAppStore(this.props.appStore) ? (

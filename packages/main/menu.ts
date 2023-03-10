@@ -358,20 +358,25 @@ function buildFileMenu(win: IWindow | undefined) {
         );
     }
 
-    fileMenuSubmenu.push(
-        {
-            type: "separator"
-        },
-        {
-            label: "Close Window",
-            accelerator: "CmdOrCtrl+W",
-            click: function (item: any, focusedWindow: any) {
-                if (focusedWindow) {
-                    focusedWindow.webContents.send("beforeClose");
+    let count = BrowserWindow.getAllWindows().filter(b => {
+        return b.isVisible();
+    }).length;
+    if (count > 1) {
+        fileMenuSubmenu.push(
+            {
+                type: "separator"
+            },
+            {
+                label: "Close Window",
+                accelerator: "CmdOrCtrl+W",
+                click: function (item: any, focusedWindow: any) {
+                    if (focusedWindow) {
+                        focusedWindow.webContents.send("beforeClose");
+                    }
                 }
             }
-        }
-    );
+        );
+    }
 
     if (!isMacOs()) {
         fileMenuSubmenu.push(

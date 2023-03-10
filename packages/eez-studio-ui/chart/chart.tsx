@@ -5338,7 +5338,6 @@ const MeasurementComponent = observer(
                     icon="material:delete"
                     iconSize={16}
                     title="Remove measurement"
-                    style={{ color: "#333" }}
                     onClick={() => {
                         runInAction(() => {
                             measurements.splice(index, 1);

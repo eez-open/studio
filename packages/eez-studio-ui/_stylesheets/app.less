@@ -731,6 +731,11 @@ button.EezStudio_Action {
     top: 12px;
 }
 
+.EezStudio_IconAction:disabled .EezStudio_IconOverlay {
+    border: none;
+    background-color: @actionDisabledColor;
+}
+
 .EezStudio_AttentionContainer {
     display: inline-block;
     position: relative;
@@ -2215,11 +2220,19 @@ button.EezStudio_Action {
     }
 }
 
+.EezStudio_ScrapbookHeader {
+    background-color: @backgroundColor!important;
+}
+
 .EezStudio_ScrapbookHeaderContainer {
     flex-grow: 1;
     display: flex;
     justify-content: space-between;
     align-items: center;
+
+    .form-check {
+        margin-bottom: 0;
+    }
 
     label {
         white-space: nowrap;
