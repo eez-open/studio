@@ -166,33 +166,33 @@ export async function delay(time: number) {
 export const studioVersion = require("../../package.json").version;
 
 export function compareVersions(v1: string, v2: string) {
-    const v1Parts = v1
-        .toString()
-        .split(".")
-        .map(x => parseInt(x));
-
-    const v2Parts = v2
-        .toString()
-        .split(".")
-        .map(x => parseInt(x));
+    const v1Parts = v1.toString().split(".");
+    const v2Parts = v2.toString().split(".");
 
     for (let i = 0; i < Math.max(v1Parts.length, v2Parts.length); ++i) {
-        if (isNaN(v1Parts[i])) {
-            if (isNaN(v2Parts[i])) {
-                return 0;
+        const v1 = parseInt(v1Parts[i]);
+        const v2 = parseInt(v2Parts[i]);
+
+        if (isNaN(v1)) {
+            if (isNaN(v2)) {
+                return v1Parts[i] < v2Parts[i]
+                    ? -1
+                    : v1Parts[i] > v2Parts[i]
+                    ? 1
+                    : 0;
             }
             return -1;
         }
 
-        if (isNaN(v2Parts[i])) {
+        if (isNaN(v2)) {
             return 1;
         }
 
-        if (v1Parts[i] < v2Parts[i]) {
+        if (v1 < v2) {
             return -1;
         }
 
-        if (v1Parts[i] > v2Parts[i]) {
+        if (v1 > v2) {
             return 1;
         }
     }
