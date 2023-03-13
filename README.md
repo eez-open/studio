@@ -14,18 +14,14 @@ The EEZ Studio is an open source cross-platform modular visual low-code developm
 
 ![EEZ Studio Project](images/esp_intro.png)
 
--   Modular visual development environment for designing TFT display screen decorations and defining user interaction (HMI)
--   Supported modules (project features):
-    -   _Settings (General, Build, Configurations, Files)_
-    -   _Actions_
-    -   _Data_
-    -   _Extension definitions_
-    -   _GUI (Pages, Widgets, Styles, Fonts, Bitmaps)_
-    -   _SCPI (command subsystems, commands and context sensitive help)_
-    -   _Shortcuts_
--   Generate C++ code for HMI functionality that can be directly included in STM32CubeIDE for BB3 or Arduino IDE for H24005
--   _Instrument definition file_ (IDF) builder with context sensitive SCPI commands help (based on Keysight’s [Offline Command Expert command set](https://www.keysight.com/main/software.jspx?cc=US&lc=eng&ckey=2333687&nid=-11143.0.00&id=2333687) XML structure) suitable for EEZ Studio Workbench (ESW) and [Keysight Command Expert](https://www.keysight.com/en/pd-2036130/command-expert)
+-   Modular visual development environment for designing TFT display screen decorations and defining user interaction (embedded GUI)
+-   Generate C++ code for embedded GUI functionality that can be directly included in [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html) for BB3 and other STM32 target platforms or [Arduino IDE](https://www.arduino.cc/en/software) for H24005 and other Arduino compatible target platforms 
+-   _Instrument definition file_ (IDF) builder with context sensitive SCPI commands help (based on Keysight’s [Offline Command Expert command set](https://www.keysight.com/main/software.jspx?cc=US&lc=eng&ckey=2333687&nid=-11143.0.00&id=2333687) XML structure) suitable for EEZ Studio _Instrument_ and [Keysight Command Expert](https://www.keysight.com/en/pd-2036130/command-expert)
 -   SCPI command help generator based on bookmarked HTML generated directly from .odt file using [EEZ WebPublish](https://github.com/eez-open/WebPublish) extension for OpenOffice/LibreOffice.
+- [LVGL](https://lvgl.io/) (Light and Versatile Graphivs Library) support
+- Project templates (using giteo.io repositories) and comparison of projects
+- Drag&drop editor for creating instrument's desktop dashboard (for remote control and management)
+- Flowchart based low-code programming for desktop dashboard
 
 ![Flow](images/EEZ_Flow_M1_intro.png)
 
@@ -41,19 +37,16 @@ New functionality is under development thanks to the sponsorship of the [NGI0 PE
 * [M9](https://github.com/eez-open/studio/releases/tag/v0.9.93) - Project templates
 * [M10](https://github.com/eez-open/studio/releases/tag/v0.9.94) - Gitea.io integration
 * [M11](https://github.com/eez-open/studio/releases/tag/v0.9.95) - New EEZ Flow extensions
-* [M12](https://github.com/eez-open/studio/releases/tag/v0.9.96) - [LVGL](https://lvgl.io/) integration
-
-Interpreting the flowchart on a PC will allow the creation of a dashboard for remote control of various T&M instruments (including EEZ BB3). The debugger will simplify and speed up the development of flowcharts as it will allow step-by-step execution, setting breakpoints, etc.
-Adding a flow chart interpretation on EEZ BB3 will open up entirely new possibilities for quickly creating different test scenarios, automating measurement data collection, and more.
+* [M12](https://github.com/eez-open/studio/releases/tag/v0.9.96) - LVGL integration
 
 ### EEZ Studio _Instrument_
 
 ![EEZ Studio Instrument](images/esw_intro.png)
 
--   Dynamic environment where multiple instruments and other "widgets" can be placed and easily accessed
+-   Dynamic environment where multiple instruments and other "widgets" can be configured and easily accessed
 -   Session oriented interaction with each SCPI instrument
--   Support for serial (via USB) and TCP/IP communication
--   Direct import of ESP generated IDFs and **Keysight’s Offline Command Expert command** sets
+-   Serial (via USB), Ethernet and VISA (via free [R&S®VISA](https://www.rohde-schwarz.com/us/driver-pages/remote-control/3-visa-and-tools_231388.html)) T&M instrument interfaces support
+-   Direct import of EEZ Studio generated IDFs and **Keysight’s Offline Command Expert command** sets
 -   IEXT (Instrument EXTension) catalog with growing number of supported instruments (Rigol, Siglent, Keysight, etc.)
 -   History of all activities with search/content filtering
 -   Quick navigation via calendar ("heatmap") or sessions list view
