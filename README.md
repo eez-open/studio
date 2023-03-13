@@ -10,9 +10,9 @@ To report an issue, use the [EEZ Studio issue tracker](https://github.com/eez-op
 
 The EEZ Studio is an open source cross-platform modular visual low-code development tool and [SCPI](https://www.ivifoundation.org/scpi/) controller for [EEZ BB3](https://github.com/eez-open/modular-psu) T&M chassis and [EEZ H24005](https://github.com/eez-open/psu-hw) programmable power supply and other T&M devices that support SCPI from manufacturers such as Keysight, Rigol, Siglent, etc.
 
-### EEZ _Flow_ (ex. Studio Project Editor or ESP)
+### EEZ Studio _Project_ (aka _Flow_)
 
-![ESW](images/esp_intro.png)
+![EEZ Studio Project](images/esp_intro.png)
 
 -   Modular visual development environment for designing TFT display screen decorations and defining user interaction (HMI)
 -   Supported modules (project features):
@@ -41,16 +41,17 @@ New functionality is under development thanks to the sponsorship of the [NGI0 PE
 * [M9](https://github.com/eez-open/studio/releases/tag/v0.9.93) - Project templates
 * [M10](https://github.com/eez-open/studio/releases/tag/v0.9.94) - Gitea.io integration
 * [M11](https://github.com/eez-open/studio/releases/tag/v0.9.95) - New EEZ Flow extensions
+* [M12](https://github.com/eez-open/studio/releases/tag/v0.9.96) - [LVGL](https://lvgl.io/) integration
 
 Interpreting the flowchart on a PC will allow the creation of a dashboard for remote control of various T&M instruments (including EEZ BB3). The debugger will simplify and speed up the development of flowcharts as it will allow step-by-step execution, setting breakpoints, etc.
 Adding a flow chart interpretation on EEZ BB3 will open up entirely new possibilities for quickly creating different test scenarios, automating measurement data collection, and more.
 
-### EEZ Studio Workbench (ESW)
+### EEZ Studio _Instrument_
 
-![ESW](images/esw_intro.png)
+![EEZ Studio Instrument](images/esw_intro.png)
 
 -   Dynamic environment where multiple instruments and other "widgets" can be placed and easily accessed
--   **Session oriented interaction with each SCPI instrument**
+-   Session oriented interaction with each SCPI instrument
 -   Support for serial (via USB) and TCP/IP communication
 -   Direct import of ESP generated IDFs and **Keysight’s Offline Command Expert command** sets
 -   IEXT (Instrument EXTension) catalog with growing number of supported instruments (Rigol, Siglent, Keysight, etc.)
@@ -83,8 +84,9 @@ Adding a flow chart interpretation on EEZ BB3 will open up entirely new possibil
 
 ### Linux
 
-Download `eezstudio-linux-x64.tar.gz`, unpack and select `eezstudio`.  
-Optionally if you experience issue on start with your Linux distribution try to run AppImage version using the `--no-sandbox` options, i.e. `./EEZ-Studio-[version].AppImage --no-sandbox`
+Depending on your linux distribution, choose one of the listed packages (.deb, .rpm) and start the installation using the associated installer.  
+In addition, there is a self-executing .AppImage version that, after downloading, needs to enable the `Allow executing file as program` under file `Permissions` before starting it.  
+If you encounter a problem running the .AppImage version on your Linux distribution, try running it using the `--no-sandbox` option, i.e. `./EEZ-Studio-[version].AppImage --no-sandbox`
 
 ### Mac
 
@@ -95,8 +97,8 @@ Download `eezstudio-mac.zip`, unpack and move `eezstudio.app` to Applications.
 Download and start `EEZ_Studio_setup.exe`.
 
 ### Nix
-There is a Nix flake that provides a derivation for EEZ Studio or an overlay
-that provides that derivation. They can be used to install the project using
+The Nix flake provides a derivation for EEZ Studio or an overlay
+that provides that derivation. It can be used to install the project using
 [Nix package manager](https://nixos.org/).
 
 ### Build and run from source (all operating systems)
@@ -160,6 +162,8 @@ nix run 'github:eez-open/studio'
 
 ## USB TMC
 
+The USB TMC driver must be installed if you want to access the T&M instrument using the USB-TMC interface from EEZ Studio _Instrument_ section.
+
 ### Windows
 
 Download and start [Zadig](http://zadig.akeo.ie/). Select your device, select libusb-win32 and press "Replace Driver" button:
@@ -168,19 +172,34 @@ Download and start [Zadig](http://zadig.akeo.ie/). Select your device, select li
 
 ### Linux
 
-Follow instructions described [here](https://www.teuniz.net/DSRemote/) under "USB connection".
+You will probably need to add your Linux account to the usbtmc group before you can access the instrument using EEZ Studio. Connect your instrument with a USB cable and turn it on. Wait until booting is complete. Now check the instrument group name by entering the following command:
+```
+ls -l /dev/usbtmc*
+```
+In case it is root, enter the command:
+```
+sudo groupadd usbtmc
+```
+Now, add your account (<username>) to the group:
+```
+sudo usermod -a -G usbtmc <username>
+```
+A reboot is required. After that, the gid of `/dev/usbtmc0` should be set to `usbtmc` and
+you are ready to use your instrument via USB-TMC interface.
 
 ## FAQ
 
-### Where is database file located?
+**Q**: Where is the database file by default?  
+**A**: Depending on the operating system, it can be:
 
 -   Linux: `~/.config/eezstudio/storage.db`
 -   Mac: `~/Library/Application\ Support/eezstudio/storage.db`
 -   Windows: `%appdata%\eezstudio\storage.db`
 
-Creating database someplace else can be done from ESW Settings.
+The default created database as well as its location can be changed later through the options in the _Settings_ section of EEZ Studio.
 
-### Where are installed extensions stored?
+**Q**: Where are the IEXTs (Instrument EXTensions) used to access T&M instruments stored?  
+**A**: Depending on the operating system, it can be:
 
 -   Linux: `~/.config/eezstudio/extensions`
 -   Mac: `~/Library/Application\ Support/eezstudio/extensions`
