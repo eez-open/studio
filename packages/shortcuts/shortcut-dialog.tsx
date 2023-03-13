@@ -49,7 +49,7 @@ interface ShortcutDialogProps {
     hideCodeEditor: boolean | undefined;
 }
 
-const ShortcutDialog = observer(
+export const ShortcutDialog = observer(
     class ShortcutDialog extends React.Component<ShortcutDialogProps> {
         constructor(props: any) {
             super(props);
@@ -339,26 +339,30 @@ const ShortcutDialog = observer(
                                 this.shortcut
                             )}
 
-                        {this.props.groupsStore && !this.isExtensionShortcut && (
-                            <SelectProperty
-                                name="Group"
-                                value={this.shortcut.groupName!}
-                                onChange={action((value: string) => {
-                                    this.shortcut.groupName = value;
-                                    this.revalidate();
-                                })}
-                                errors={this.validator.errors.groupName}
-                            >
-                                <option key="" value="" />
-                                {Array.from(
-                                    this.props.groupsStore.groups.values()
-                                ).map(group => (
-                                    <option key={group.id} value={group.name}>
-                                        {group.name}
-                                    </option>
-                                ))}
-                            </SelectProperty>
-                        )}
+                        {this.props.groupsStore &&
+                            !this.isExtensionShortcut && (
+                                <SelectProperty
+                                    name="Group"
+                                    value={this.shortcut.groupName!}
+                                    onChange={action((value: string) => {
+                                        this.shortcut.groupName = value;
+                                        this.revalidate();
+                                    })}
+                                    errors={this.validator.errors.groupName}
+                                >
+                                    <option key="" value="" />
+                                    {Array.from(
+                                        this.props.groupsStore.groups.values()
+                                    ).map(group => (
+                                        <option
+                                            key={group.id}
+                                            value={group.name}
+                                        >
+                                            {group.name}
+                                        </option>
+                                    ))}
+                                </SelectProperty>
+                            )}
 
                         {this.props.groupsStore && this.isExtensionShortcut && (
                             <StaticProperty
@@ -513,16 +517,29 @@ export function showShortcutDialog(
     codeErrorColumnNumber?: number,
     hideCodeEditor?: boolean
 ) {
-    showDialog(
-        <ShortcutDialog
-            shortcutsStore={shortcutsStore}
-            groupsStore={groupsStore}
-            shortcut={shortcut}
-            callback={callback}
-            codeError={codeError}
-            codeErrorLineNumber={codeErrorLineNumber}
-            codeErrorColumnNumber={codeErrorColumnNumber}
-            hideCodeEditor={hideCodeEditor}
-        />
-    );
+    if (shortcutsStore.showShortcutDialog) {
+        shortcutsStore.showShortcutDialog(
+            shortcutsStore,
+            groupsStore,
+            shortcut,
+            callback,
+            codeError,
+            codeErrorLineNumber,
+            codeErrorColumnNumber,
+            hideCodeEditor
+        );
+    } else {
+        showDialog(
+            <ShortcutDialog
+                shortcutsStore={shortcutsStore}
+                groupsStore={groupsStore}
+                shortcut={shortcut}
+                callback={callback}
+                codeError={codeError}
+                codeErrorLineNumber={codeErrorLineNumber}
+                codeErrorColumnNumber={codeErrorColumnNumber}
+                hideCodeEditor={hideCodeEditor}
+            />
+        );
+    }
 }

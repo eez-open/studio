@@ -27,6 +27,16 @@ export interface IShortcutsStore {
     updateShortcut?(shortcut: Partial<IShortcut>): void;
     deleteShortcut?(shortcut: Partial<IShortcut>): void;
     renderUsedInProperty?(shortcut: Partial<IShortcut>): JSX.Element;
+    showShortcutDialog?(
+        shortcutsStore: IShortcutsStore,
+        groupsStore: IGroupsStore | undefined,
+        shortcut: Partial<IShortcut>,
+        callback: (shortcut: Partial<IShortcut>) => void,
+        codeError?: string,
+        codeErrorLineNumber?: number,
+        codeErrorColumnNumber?: number,
+        hideCodeEditor?: boolean
+    ): void;
 }
 
 export interface IGroup {

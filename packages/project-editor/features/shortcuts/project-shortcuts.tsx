@@ -9,11 +9,17 @@ import {
     Body
 } from "eez-studio-ui/header-with-body";
 
-import type { IShortcut, IActionType } from "shortcuts/interfaces";
+import type {
+    IShortcut,
+    IActionType,
+    IShortcutsStore,
+    IGroupsStore
+} from "shortcuts/interfaces";
 import {
     Shortcuts as ShortcutsComponent,
     ShortcutsToolbarButtons
 } from "shortcuts/shortcuts";
+import { ShortcutDialog } from "shortcuts/shortcut-dialog";
 
 import type { Project } from "project-editor/project/project";
 
@@ -32,6 +38,7 @@ import type { ExtensionDefinition } from "project-editor/features/extension-defi
 import { ProjectContext } from "project-editor/project/context";
 
 import { EditorComponent } from "project-editor/project/ui/EditorComponent";
+import { showDialog } from "eez-studio-ui/dialog";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -99,6 +106,32 @@ export class ShortcutsEditor extends EditorComponent {
                             />
                         </td>
                     </tr>
+                );
+            },
+
+            showShortcutDialog: (
+                shortcutsStore: IShortcutsStore,
+                groupsStore: IGroupsStore | undefined,
+                shortcut: Partial<IShortcut>,
+                callback: (shortcut: Partial<IShortcut>) => void,
+                codeError?: string,
+                codeErrorLineNumber?: number,
+                codeErrorColumnNumber?: number,
+                hideCodeEditor?: boolean
+            ) => {
+                showDialog(
+                    <ProjectContext.Provider value={projectStore}>
+                        <ShortcutDialog
+                            shortcutsStore={shortcutsStore}
+                            groupsStore={groupsStore}
+                            shortcut={shortcut}
+                            callback={callback}
+                            codeError={codeError}
+                            codeErrorLineNumber={codeErrorLineNumber}
+                            codeErrorColumnNumber={codeErrorColumnNumber}
+                            hideCodeEditor={hideCodeEditor}
+                        />
+                    </ProjectContext.Provider>
                 );
             }
         };

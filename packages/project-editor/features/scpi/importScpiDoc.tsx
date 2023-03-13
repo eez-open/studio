@@ -1355,10 +1355,10 @@ export const ImportScpiDocDialog = observer(
                                 {humanize(section).toUpperCase()}
                                 <span
                                     className={
-                                        "ml-2 badge badge-pills" +
+                                        "ml-2 badge rounded-pill" +
                                         (this.activeTab === section
-                                            ? " badge-light"
-                                            : " badge-dark")
+                                            ? " bg-light"
+                                            : " bg-dark")
                                     }
                                 >
                                     {this.changes[section].length}

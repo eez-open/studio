@@ -342,8 +342,8 @@ export const ExtensionInMasterView = observer(
 
         render() {
             const badgeClassName = classNames("badge", {
-                "badge-success": this.extensionInstalled,
-                "badge-secondary": !this.extensionInstalled
+                "bg-success": this.extensionInstalled,
+                "bg-secondary": !this.extensionInstalled
             });
 
             return (
@@ -367,7 +367,10 @@ export const ExtensionInMasterView = observer(
                                         this.props.extension.name}
                                     <span
                                         className={badgeClassName}
-                                        style={{ marginLeft: 10 }}
+                                        style={{
+                                            marginLeft: 10,
+                                            fontSize: "70%"
+                                        }}
                                     >
                                         <div>
                                             {this.extensionInstalled
