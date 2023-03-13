@@ -1,4 +1,11 @@
-import { observable, action, runInAction, autorun, makeObservable } from "mobx";
+import {
+    observable,
+    action,
+    runInAction,
+    autorun,
+    makeObservable,
+    IReactionDisposer
+} from "mobx";
 
 import { dbQuery } from "eez-studio-shared/db-query";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
@@ -35,6 +42,8 @@ export class HistorySessions {
     selectedSession: ISession | undefined;
     activeSession: SessionHistoryItem | undefined;
 
+    autorunDisposer: IReactionDisposer;
+
     constructor(public history: History) {
         makeObservable(this, {
             sessions: observable,
@@ -45,7 +54,7 @@ export class HistorySessions {
             closeActiveSession: action.bound
         });
 
-        autorun(
+        this.autorunDisposer = autorun(
             () => {
                 let newActiveSession: SessionHistoryItem | undefined;
 
@@ -262,6 +271,12 @@ export class HistorySessions {
             );
 
             commitTransaction();
+        }
+    }
+
+    onTerminate() {
+        if (this.autorunDisposer) {
+            this.autorunDisposer();
         }
     }
 }

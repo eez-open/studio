@@ -6,7 +6,8 @@ import {
     action,
     runInAction,
     autorun,
-    makeObservable
+    makeObservable,
+    IReactionDisposer
 } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
@@ -891,6 +892,7 @@ export function downloadAndInstallExtension(
 export const DetailsView = observer(
     class DetailsView extends React.Component {
         selectedVersion: string;
+        autorunDispose: IReactionDisposer;
 
         constructor(props: any) {
             super(props);
@@ -904,8 +906,10 @@ export const DetailsView = observer(
                 replaceEnabled: computed,
                 uninstallEnabled: computed
             });
+        }
 
-            autorun(() => {
+        componentDidMount() {
+            this.autorunDispose = autorun(() => {
                 const selectedExtensionVersions =
                     extensionsManagerStore.selectedExtensionVersions;
                 if (selectedExtensionVersions) {
@@ -916,6 +920,10 @@ export const DetailsView = observer(
                     );
                 }
             });
+        }
+
+        componentWillUnmount() {
+            this.autorunDispose();
         }
 
         get displayedExtension() {

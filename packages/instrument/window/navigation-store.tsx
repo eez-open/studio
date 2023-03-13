@@ -5,7 +5,8 @@ import {
     action,
     runInAction,
     autorun,
-    makeObservable
+    makeObservable,
+    IReactionDisposer
 } from "mobx";
 
 import type { InstrumentAppStore } from "instrument/window/app-store";
@@ -40,6 +41,8 @@ export class NavigationStore {
     private _mainNavigationSelectedItem: INavigationItem;
 
     mainHistoryView: HistoryViewComponent | undefined;
+
+    autorunDispose: IReactionDisposer | undefined;
 
     constructor(public appStore: InstrumentAppStore) {
         makeObservable<
@@ -151,7 +154,7 @@ export class NavigationStore {
             }
         };
 
-        autorun(() => {
+        this.autorunDispose = autorun(() => {
             if (
                 this.mainNavigationSelectedItem ===
                     this.deletedHistoryItemsNavigationItem &&
@@ -339,5 +342,21 @@ export class NavigationStore {
             this._mainNavigationSelectedItem = this.scriptsNavigationItem;
             this._selectedScriptId = value;
         });
+    }
+
+    onTerminate() {
+        if (this.autorunDispose) {
+            this.autorunDispose();
+            this.autorunDispose = undefined;
+        }
+
+        this.mainHistoryView = undefined;
+
+        // WORKAROUND: for some reason garbage collector doesn't collect this object unless we delete all the properties here
+        for (const propertyName in this) {
+            try {
+                delete this[propertyName];
+            } catch (err) {}
+        }
     }
 }

@@ -242,11 +242,12 @@ export class SendListOperation extends ListOperation {
     ) {
         super(connection, channelIndex, listName, callbackWindowId);
 
-        autorun(() => {
+        const dispose = autorun(() => {
             if (connection.instrument.extension) {
                 // Good. Extension is loaded. Proceed.
                 this.sendCommand();
                 this.setTimeout();
+                dispose();
             }
         });
     }

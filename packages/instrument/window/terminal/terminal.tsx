@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 
 import { Splitter } from "eez-studio-ui/splitter";
 import { IconAction } from "eez-studio-ui/action";
+import * as notification from "eez-studio-ui/notification";
 
 import type { InstrumentAppStore } from "instrument/window/app-store";
 import { executeShortcut } from "instrument/window/script";
@@ -16,6 +17,7 @@ import {
 
 import { ShortcutsToolbar } from "instrument/window/terminal/toolbar";
 import { CommandsBrowser } from "instrument/window/terminal/commands-browser";
+import { parseScpi, SCPI_PART_QUERY } from "eez-studio-shared/scpi-parser";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -278,8 +280,35 @@ export class TerminalComponent extends React.Component<
                 <Input
                     appStore={appStore}
                     sendCommand={async () => {
-                        instrument.connection.send(terminalState.command);
-                        terminalState.command = "";
+                        try {
+                            await instrument.connection.acquire(true);
+
+                            let hasQuery = false;
+                            try {
+                                const parts = parseScpi(terminalState.command);
+                                hasQuery = !!parts.find(
+                                    part => part.tag == SCPI_PART_QUERY
+                                );
+                            } catch (err) {}
+
+                            if (hasQuery) {
+                                const result =
+                                    await instrument.connection.query(
+                                        terminalState.command
+                                    );
+                                console.log(result);
+                            } else {
+                                instrument.connection.send(
+                                    terminalState.command
+                                );
+                            }
+
+                            terminalState.command = "";
+
+                            instrument.connection.release();
+                        } catch (err) {
+                            notification.error(err.toString());
+                        }
                     }}
                     sendFileToInstrumentHandler={
                         instrument.sendFileToInstrumentHandler

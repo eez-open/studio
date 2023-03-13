@@ -793,6 +793,28 @@ export abstract class RuntimeBase {
         propertyName: string,
         value: any
     ): void;
+
+    cleanupFlowStates() {
+        const runtime = this;
+
+        function cleanupFlowState(flowState: FlowState | RuntimeBase) {
+            runInAction(() => {
+                flowState.flowStates = flowState.flowStates.filter(
+                    flowState =>
+                        !flowState.isFinished ||
+                        runtime.logs.logs.find(
+                            logItem => logItem.flowState == flowState
+                        )
+                );
+            });
+
+            flowState.flowStates.forEach(flowState =>
+                cleanupFlowState(flowState)
+            );
+        }
+
+        cleanupFlowState(this);
+    }
 }
 
 export class FlowState {

@@ -1,5 +1,11 @@
 import React from "react";
-import { observable, computed, values, makeObservable } from "mobx";
+import {
+    observable,
+    computed,
+    values,
+    makeObservable,
+    IReactionDisposer
+} from "mobx";
 
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 
@@ -37,21 +43,26 @@ import type * as ScriptModule from "instrument/window/script";
 export const shortcutsOrGroups = observable.box<boolean>(true);
 
 export class ShortcutsStore {
+    bindShortcutsDispose: IReactionDisposer | undefined;
+
     constructor(public appStore: InstrumentAppStore) {
         makeObservable(this, {
             shortcuts: computed
         });
 
-        bindShortcuts(this.instrumentShortcuts, (shortcut: IShortcut) => {
-            if (shortcut.action.type === "micropython") {
-                return;
+        this.bindShortcutsDispose = bindShortcuts(
+            this.instrumentShortcuts,
+            (shortcut: IShortcut) => {
+                if (shortcut.action.type === "micropython") {
+                    return;
+                }
+                const { executeShortcut } =
+                    require("instrument/window/script") as typeof ScriptModule;
+                if (appStore.instrument) {
+                    executeShortcut(this.appStore, shortcut);
+                }
             }
-            const { executeShortcut } =
-                require("instrument/window/script") as typeof ScriptModule;
-            if (appStore.instrument) {
-                executeShortcut(this.appStore, shortcut);
-            }
-        });
+        );
     }
 
     instrumentShortcuts = computed(() => {
@@ -140,6 +151,12 @@ export class ShortcutsStore {
         beginTransaction("Delete shortcut");
         deleteShortcut(shortcut);
         commitTransaction();
+    }
+
+    onTerminate() {
+        if (this.bindShortcutsDispose) {
+            this.bindShortcutsDispose();
+        }
     }
 }
 

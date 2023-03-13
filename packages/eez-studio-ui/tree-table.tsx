@@ -30,7 +30,10 @@ export interface ITreeNode<T = any> {
 
     children: (() => ITreeNode[]) | undefined;
     selected: boolean;
-    expanded: boolean;
+    expanded: {
+        get(): boolean;
+        set(value: boolean): void;
+    };
     data?: T;
 
     className?: string;
@@ -51,7 +54,7 @@ const TreeTableRow = observer(
             event.stopPropagation();
 
             this.props.selectNode(this.props.node);
-            this.props.node.expanded = !this.props.node.expanded;
+            this.props.node.expanded.set(!this.props.node.expanded.get());
         });
 
         onClick(e: React.MouseEvent<HTMLDivElement>) {
@@ -64,7 +67,7 @@ const TreeTableRow = observer(
         render() {
             let childrenRows: JSX.Element[] = [];
 
-            if (this.props.showOnlyChildren || this.props.node.expanded) {
+            if (this.props.showOnlyChildren || this.props.node.expanded.get()) {
                 let childrenLevel = this.props.showOnlyChildren
                     ? this.props.level
                     : this.props.level + 1;
@@ -104,7 +107,7 @@ const TreeTableRow = observer(
                     let triangleClassName = classNames(
                         "EezStudio_TreeRowTriangle",
                         {
-                            EezStudio_Expanded: this.props.node.expanded
+                            EezStudio_Expanded: this.props.node.expanded.get()
                         }
                     );
 

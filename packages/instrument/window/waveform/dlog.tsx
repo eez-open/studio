@@ -5,7 +5,8 @@ import {
     reaction,
     toJS,
     runInAction,
-    makeObservable
+    makeObservable,
+    IReactionDisposer
 } from "mobx";
 
 import { objectEqual, formatDateTimeLong } from "eez-studio-shared/util";
@@ -398,6 +399,11 @@ interface IChannelsGroup {
 }
 
 export class DlogWaveform extends FileHistoryItem {
+    dispose1: IReactionDisposer | undefined;
+    dispose2: IReactionDisposer | undefined;
+    dispose3: IReactionDisposer | undefined;
+    dispose4: IReactionDisposer | undefined;
+
     constructor(
         store: IStore,
         activityLogEntry: IActivityLogEntry | FileHistoryItem
@@ -428,7 +434,7 @@ export class DlogWaveform extends FileHistoryItem {
         this.measurements = new MeasurementsModel(message.measurements);
 
         // save viewOptions when changed
-        reaction(
+        this.dispose1 = reaction(
             () => toJS(this.viewOptions),
             viewOptions => {
                 const message = JSON.parse(this.message);
@@ -454,7 +460,7 @@ export class DlogWaveform extends FileHistoryItem {
         );
 
         // save rulers when changed
-        reaction(
+        this.dispose2 = reaction(
             () => toJS(this.rulers),
             rulers => {
                 if (rulers.pauseDbUpdate) {
@@ -488,7 +494,7 @@ export class DlogWaveform extends FileHistoryItem {
         );
 
         // save measurements when changed
-        reaction(
+        this.dispose3 = reaction(
             () => toJS(this.measurements),
             measurements => {
                 const message = JSON.parse(this.message);
@@ -516,7 +522,7 @@ export class DlogWaveform extends FileHistoryItem {
         );
 
         // make sure there is one Y ruler for each chart
-        reaction(
+        this.dispose4 = reaction(
             () => this.channels.length,
             numCharts => this.rulers.initYRulers(this.channels.length)
         );
@@ -869,6 +875,26 @@ export class DlogWaveform extends FileHistoryItem {
     convertToCsv = async () => {
         return convertDlogToCsv(this.data);
     };
+
+    override dispose() {
+        super.dispose();
+
+        if (this.dispose1) {
+            this.dispose1();
+        }
+
+        if (this.dispose2) {
+            this.dispose2();
+        }
+
+        if (this.dispose3) {
+            this.dispose3();
+        }
+
+        if (this.dispose4) {
+            this.dispose4();
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -429,6 +429,15 @@ export const RulersDockView = observer(
             }
         }
 
+        componentWillUnmount() {
+            if (this.outsideChangeInXRulersSubscriptionDisposer) {
+                this.outsideChangeInXRulersSubscriptionDisposer();
+            }
+            if (this.outsideChangeInYRulersSubscriptionDisposer) {
+                this.outsideChangeInYRulersSubscriptionDisposer();
+            }
+        }
+
         subscribeToOutsideModelChanges() {
             if (this.outsideChangeInXRulersSubscriptionDisposer) {
                 this.outsideChangeInXRulersSubscriptionDisposer();

@@ -621,15 +621,19 @@ export abstract class DebuggerConnectionBase {
 
         const arrayElementAddresses = addresses.slice(2);
 
+        let value;
+
         let arrayValue: any = this.runtime.arrayValues.get(arrayAddress);
         if (arrayValue) {
             const { arrayElementAddresses } = arrayValue;
             for (let i = 0; i < arrayElementAddresses.length; i++) {
                 this.runtime.debuggerValues.delete(arrayElementAddresses[i]);
             }
-        }
 
-        const value = observable(type.kind == "array" ? [] : {});
+            value = arrayValue.value;
+        } else {
+            value = observable(type.kind == "array" ? [] : {});
+        }
 
         this.runtime.arrayValues.set(arrayAddress, {
             arrayElementAddresses,
@@ -1137,11 +1141,11 @@ export abstract class DebuggerConnectionBase {
                         const debuggerValue =
                             runtime.debuggerValues.get(valueAddress);
                         if (!debuggerValue) {
-                            // console.log(
-                            //     "MESSAGE_TO_DEBUGGER_VALUE_CHANGED",
-                            //     messageParameters
-                            // );
-                            // console.error("UNEXPECTED!");
+                            console.log(
+                                "MESSAGE_TO_DEBUGGER_VALUE_CHANGED",
+                                messageParameters
+                            );
+                            console.error("UNEXPECTED!");
                             return;
                         }
 
@@ -1255,6 +1259,8 @@ export abstract class DebuggerConnectionBase {
                                 flowState
                             )
                         );
+
+                        runtime.cleanupFlowStates();
                     }
                     break;
 

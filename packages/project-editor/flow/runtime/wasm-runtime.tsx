@@ -710,6 +710,15 @@ export class WasmRuntime extends RemoteRuntime {
                                 connection.query(command);
                                 result = "";
                             }
+                        } catch (err) {
+                            let data: RendererToWorkerMessage;
+                            data = {
+                                scpiResult: {
+                                    errorMessage: err.toString()
+                                }
+                            };
+                            this.worker.postMessage(data);
+                            return;
                         } finally {
                             connection.release();
                         }

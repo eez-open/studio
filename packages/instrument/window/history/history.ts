@@ -51,6 +51,7 @@ import { getScrapbookStore } from "instrument/window/history/scrapbook";
 import { CONF_ITEMS_BLOCK_SIZE } from "./CONF_ITEMS_BLOCK_SIZE";
 import { IUnit } from "eez-studio-shared/units";
 import type { BaseList } from "instrument/window/lists/store-renderer";
+import { unwatch } from "eez-studio-shared/notify";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -863,6 +864,10 @@ export class History {
     reactionTimeout: any;
     reactionDisposer: any;
 
+    optionsStoreWatchId: string | undefined;
+
+    terminated: boolean = false;
+
     get isSessionsSupported() {
         return !this.isDeletedItemsHistory && this.options.isSessionsSupported;
     }
@@ -903,6 +908,10 @@ export class History {
             "Watch activity log",
             this.isDeletedItemsHistory ? Priority.Lowest : Priority.Middle,
             async () => {
+                if (this.terminated) {
+                    return;
+                }
+
                 let activityLogFilterSpecification: IActivityLogFilterSpecification;
 
                 if (this.appStore.oids) {
@@ -920,7 +929,7 @@ export class History {
                 let objectsToDelete: any = [];
                 let deleteTimeout: any;
 
-                this.options.store.watch(
+                this.optionsStoreWatchId = this.options.store.watch(
                     {
                         createObject: (
                             object: any,
@@ -1092,6 +1101,17 @@ export class History {
 
     onTerminate() {
         this.reactionDisposer();
+        if (this.reactionTimeout) {
+            clearTimeout(this.reactionTimeout);
+        }
+        if (this.sessions) {
+            this.sessions.onTerminate();
+        }
+        this.items.forEach(item => item.dispose());
+        if (this.optionsStoreWatchId) {
+            unwatch(this.optionsStoreWatchId);
+        }
+        this.terminated = true;
     }
 
     findHistoryItemById(id: string) {
@@ -1106,12 +1126,14 @@ export class History {
 
     freeSomeHistoryItemsFromTopIfTooMany() {
         while (this.items.length > CONF_MAX_NUM_OF_LOADED_ITEMS) {
+            this.items[0].dispose();
             this.items.splice(0, 1);
         }
     }
 
     freeSomeHistoryItemsFromBottomIfTooMany() {
         while (this.items.length > CONF_MAX_NUM_OF_LOADED_ITEMS) {
+            this.items[this.items.length - 1].dispose();
             this.items.splice(this.items.length - 1, 1);
         }
     }
@@ -1187,6 +1209,7 @@ export class History {
     removeActivityLogEntry(activityLogEntry: IActivityLogEntry) {
         const foundItem = this.findHistoryItemById(activityLogEntry.id);
         if (foundItem) {
+            this.items[foundItem.index].dispose();
             this.items.splice(foundItem.index, 1);
 
             this.filterStats.onHistoryItemRemoved(foundItem.historyItem);
@@ -1206,6 +1229,7 @@ export class History {
     }
 
     displayRows(rows: any[]) {
+        this.items.forEach(item => item.dispose());
         this.items = this.rowsToHistoryItems(rows);
         this.itemInTheCenterOfTheView = undefined;
         this.navigator.update();

@@ -8,7 +8,6 @@ require("@electron/remote/main").initialize();
 import { setup } from "setup/setup";
 
 import type * as HomeWindowModule from "main/home-window";
-import type * as SettingsModule from "main/settings";
 import { unloadVisa } from "instrument/connection/interfaces/visa-dll";
 
 // disable security warnings inside dev console
@@ -91,9 +90,6 @@ app.on("window-all-closed", function () {
 });
 
 app.on("quit", function () {
-    const { saveSettings } = require("main/settings") as typeof SettingsModule;
-    saveSettings();
-
     unloadVisa();
 });
 

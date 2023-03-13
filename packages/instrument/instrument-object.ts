@@ -5,7 +5,8 @@ import {
     runInAction,
     toJS,
     autorun,
-    makeObservable
+    makeObservable,
+    IReactionDisposer
 } from "mobx";
 
 import {
@@ -104,6 +105,8 @@ export class InstrumentObject {
 
     _commandsTree: CommandsTree;
 
+    _autorunDispose: IReactionDisposer;
+
     constructor(props: IInstrumentObjectProps) {
         makeObservable(this, {
             instrumentExtensionId: observable,
@@ -166,7 +169,7 @@ export class InstrumentObject {
             this.connection = createMainProcessConnection(this);
         }
 
-        autorun(() => {
+        this._autorunDispose = autorun(() => {
             if (this._extension) {
                 if (this.isUnknownExtension) {
                     // check if extension is installed in the meantime
@@ -679,7 +682,7 @@ export class InstrumentObject {
         }
     }
 
-    _instrumentAppStore: AppStoreModule.InstrumentAppStore;
+    _instrumentAppStore: AppStoreModule.InstrumentAppStore | undefined;
 
     getEditor() {
         if (!this._instrumentAppStore) {
@@ -920,7 +923,7 @@ export class InstrumentObject {
     }
 
     terminate() {
-        if (this.isBB3) {
+        if (this.isBB3 && this._instrumentAppStore) {
             const { getBB3Instrument } =
                 require("instrument/bb3") as typeof Bb3Module;
             const bb3Instrument = getBB3Instrument(
@@ -930,6 +933,10 @@ export class InstrumentObject {
             if (bb3Instrument) {
                 bb3Instrument.terminate();
             }
+        }
+
+        if (this._autorunDispose) {
+            this._autorunDispose();
         }
     }
 }

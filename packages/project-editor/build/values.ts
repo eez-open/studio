@@ -2,8 +2,10 @@ import type { Assets, DataBuffer } from "project-editor/build/assets";
 import type { Variable } from "project-editor/features/variable/variable";
 import {
     getArrayElementTypeFromType,
+    getEnumTypeNameFromType,
     isArrayType,
     isEnumType,
+    isObjectType,
     isStructType,
     ValueType
 } from "project-editor/features/variable/value-type";
@@ -22,6 +24,7 @@ import {
     FLOW_VALUE_TYPE_UINT32,
     FLOW_VALUE_TYPE_UNDEFINED
 } from "project-editor/build/value-types";
+import { Project } from "project-editor/project/project";
 
 export interface FlowValue {
     type: number;
@@ -105,6 +108,45 @@ export function buildConstantFlowValue(
     buildFlowValue(assets, dataBuffer, flowValue);
 }
 
+export function getDefaultValueForType(project: Project, type: ValueType): any {
+    if (
+        type == "integer" ||
+        type == "float" ||
+        type == "double" ||
+        type == "date"
+    ) {
+        return 0;
+    }
+    if (type == "boolean") {
+        return false;
+    }
+    if (type == "string") {
+        return "";
+    }
+    if (isObjectType(type)) {
+        return null;
+    }
+    if (isEnumType(type)) {
+        const enumTypeName = getEnumTypeNameFromType(type);
+        if (enumTypeName) {
+            const enumType = project.variables.enumsMap.get(enumTypeName);
+            if (enumType) {
+                if (enumType.members.length > 0) {
+                    return enumType.members[0].value;
+                }
+            }
+        }
+        return 0;
+    }
+    if (isStructType(type)) {
+        return null;
+    }
+    if (isArrayType(type)) {
+        return null;
+    }
+    return null;
+}
+
 export function buildVariableFlowValue(
     assets: Assets,
     dataBuffer: DataBuffer,
@@ -185,7 +227,13 @@ function buildFlowValue(
                     }
                     elements = elementType.fields.map(field => ({
                         type: getValueType(field.valueType),
-                        value: flowValue.value[field.name],
+                        value:
+                            flowValue.value[field.name] !== undefined
+                                ? flowValue.value[field.name]
+                                : getDefaultValueForType(
+                                      assets.projectStore.project,
+                                      field.valueType
+                                  ),
                         valueType: field.valueType
                     }));
                 }

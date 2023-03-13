@@ -272,6 +272,7 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 			size_t resultTextLen;
             bool resultIsBlob;
 			if (!scpiComponentExecutionState->getLatestScpiResult(flowState, componentIndex, &resultText, &resultTextLen, &resultIsBlob)) {
+                deallocateComponentExecutionState(flowState, componentIndex);
 				return;
 			}
 
@@ -323,6 +324,7 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 			size_t resultTextLen;
             bool resultIsBlob;
 			if (!scpiComponentExecutionState->getLatestScpiResult(flowState, componentIndex, &resultText, &resultTextLen, &resultIsBlob)) {
+                deallocateComponentExecutionState(flowState, componentIndex);
 				return;
 			}
 
@@ -342,6 +344,7 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 			size_t resultTextLen;
             bool resultIsBlob;
 			if (!scpiComponentExecutionState->getLatestScpiResult(flowState, componentIndex, &resultText, &resultTextLen, &resultIsBlob)) {
+                deallocateComponentExecutionState(flowState, componentIndex);
 				return;
 			}
 

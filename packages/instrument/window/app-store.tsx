@@ -6,7 +6,8 @@ import {
     runInAction,
     reaction,
     autorun,
-    makeObservable
+    makeObservable,
+    IReactionDisposer
 } from "mobx";
 
 import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
@@ -14,15 +15,11 @@ import type { IStore } from "eez-studio-shared/store";
 
 import type { IEditor } from "eez-studio-shared/extensions/extension";
 
-import type { IShortcut } from "shortcuts/interfaces";
-import { bindShortcuts } from "shortcuts/mousetrap";
-
 import type { InstrumentObject } from "instrument/instrument-object";
 
 import { App } from "instrument/window/app";
 import { NavigationStore } from "instrument/window/navigation-store";
 import { ScriptsModel, ScriptViewComponent } from "instrument/window/scripts";
-import type * as ScriptModule from "instrument/window/script";
 import { ShortcutsStore, GroupsStore } from "instrument/window/shortcuts";
 import { UndoManager } from "instrument/window/undo";
 
@@ -39,6 +36,7 @@ import { TerminalComponent } from "instrument/window/terminal/terminal";
 import { createInstrumentListStore } from "instrument/window/lists/store";
 import { BaseList } from "instrument/window/lists/store-renderer";
 import { getScrapbookStore } from "instrument/window/history/scrapbook";
+import { unwatch } from "eez-studio-shared/notify";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -69,10 +67,14 @@ export class InstrumentAppStore implements IEditor {
 
     scriptView: ScriptViewComponent | null = null;
 
-    autorunDisposer: any;
-    reactionDisposer: any;
+    autorunDisposer: IReactionDisposer | undefined;
+    reactionDisposer: IReactionDisposer | undefined;
 
     _created = false;
+
+    _instrumentListStoreWatchId: string | undefined;
+
+    terminated: boolean = false;
 
     constructor(public instrument: InstrumentObject) {
         makeObservable(this, {
@@ -104,6 +106,10 @@ export class InstrumentAppStore implements IEditor {
             "Load instrument",
             Priority.High,
             action(async () => {
+                if (this.terminated) {
+                    return;
+                }
+
                 this.helpVisible =
                     localStorage.getItem(
                         `instrument/${this.instrument.id}/window/help-visible`
@@ -111,62 +117,55 @@ export class InstrumentAppStore implements IEditor {
 
                 this.filters = this.getFiltersFromLocalStorage();
 
-                bindShortcuts(
-                    this.shortcutsStore.instrumentShortcuts,
-                    (shortcut: IShortcut) => {
-                        if (shortcut.action.type === "micropython") {
-                            return;
-                        }
-                        const { executeShortcut } =
-                            require("instrument/window/script") as typeof ScriptModule;
-                        executeShortcut(this, shortcut);
-                    }
-                );
-
                 // @todo
                 // this is autorun because instrument extension is loaded asynchronously,
                 // so getListsProperty would eventually become true
                 this.autorunDisposer = autorun(() => {
                     if (this.instrument.listsProperty) {
+                        if (this._instrumentListStoreWatchId != undefined) {
+                            unwatch(this._instrumentListStoreWatchId);
+                        }
+
                         this.instrumentListStore =
                             createInstrumentListStore(this);
 
                         const appStore = this;
 
-                        this.instrumentListStore.watch({
-                            createObject(object: any) {
-                                runInAction(() =>
-                                    appStore.instrumentLists.push(object)
-                                );
-                            },
+                        this._instrumentListStoreWatchId =
+                            this.instrumentListStore.watch({
+                                createObject(object: any) {
+                                    runInAction(() =>
+                                        appStore.instrumentLists.push(object)
+                                    );
+                                },
 
-                            updateObject(changes: any) {
-                                const list = appStore.instrumentLists.find(
-                                    list => list.id === changes.id
-                                );
-                                if (list) {
-                                    runInAction(() => {
-                                        list.applyChanges(changes);
-                                    });
-                                }
-                            },
+                                updateObject(changes: any) {
+                                    const list = appStore.instrumentLists.find(
+                                        list => list.id === changes.id
+                                    );
+                                    if (list) {
+                                        runInAction(() => {
+                                            list.applyChanges(changes);
+                                        });
+                                    }
+                                },
 
-                            deleteObject(object: any) {
-                                const list = appStore.instrumentLists.find(
-                                    list => list.id === object.id
-                                );
-                                if (list) {
-                                    runInAction(() => {
-                                        appStore.instrumentLists.splice(
-                                            appStore.instrumentLists.indexOf(
-                                                list
-                                            ),
-                                            1
-                                        );
-                                    });
+                                deleteObject(object: any) {
+                                    const list = appStore.instrumentLists.find(
+                                        list => list.id === object.id
+                                    );
+                                    if (list) {
+                                        runInAction(() => {
+                                            appStore.instrumentLists.splice(
+                                                appStore.instrumentLists.indexOf(
+                                                    list
+                                                ),
+                                                1
+                                            );
+                                        });
+                                    }
                                 }
-                            }
-                        });
+                            });
                     }
                 });
             })
@@ -202,18 +201,29 @@ export class InstrumentAppStore implements IEditor {
     onTerminate() {
         if (this.instrument) {
             this.instrument.terminate();
+            this.instrument._instrumentAppStore = undefined;
         }
         this.editor = null;
         this.terminal = null;
         this.scriptView = null;
         if (this.autorunDisposer) {
             this.autorunDisposer();
+            this.autorunDisposer = undefined;
         }
         if (this.reactionDisposer) {
             this.reactionDisposer();
+            this.reactionDisposer = undefined;
         }
         this.undoManager.onTerminate();
         this.history.onTerminate();
+        this.deletedItemsHistory.onTerminate();
+        this.shortcutsStore.onTerminate();
+        this.navigationStore.onTerminate();
+        if (this._instrumentListStoreWatchId != undefined) {
+            unwatch(this._instrumentListStoreWatchId);
+        }
+
+        this.terminated = true;
     }
 
     onBeforeAppClose() {

@@ -44,6 +44,8 @@ export function scheduleTask(
 let timeout: any = undefined;
 
 async function run() {
+    timeout = undefined;
+
     let task = highestPriorityTasks.shift();
     if (!task) {
         task = highPriorityTasks.shift();
@@ -59,12 +61,14 @@ async function run() {
     }
 
     if (task) {
-        //console.time(task.name);
-        await task.callback();
-        //console.timeEnd(task.name);
+        try {
+            //console.time(task.name);
+            await task.callback();
+            //console.timeEnd(task.name);
+        } catch (err) {
+            console.error("scheduled task error", task, err);
+        }
 
         timeout = setTimeout(run);
-    } else {
-        timeout = undefined;
     }
 }

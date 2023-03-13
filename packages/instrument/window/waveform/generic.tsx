@@ -7,7 +7,8 @@ import {
     toJS,
     when,
     reaction,
-    makeObservable
+    makeObservable,
+    IReactionDisposer
 } from "mobx";
 import { observer } from "mobx-react";
 
@@ -126,6 +127,12 @@ export class WaveformChartsController extends ChartsController {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Waveform extends FileHistoryItem {
+    dispose1: IReactionDisposer | undefined;
+    dispose2: IReactionDisposer | undefined;
+    dispose3: IReactionDisposer | undefined;
+    dispose4: IReactionDisposer | undefined;
+    dispose5: IReactionDisposer | undefined;
+
     canBePartOfMultiChart = true;
 
     constructor(
@@ -169,7 +176,7 @@ export class Waveform extends FileHistoryItem {
         );
 
         // save waveformDefinition when changed
-        reaction(
+        this.dispose1 = reaction(
             () => toJS(this.waveformDefinition),
             waveformDefinition => {
                 const message = JSON.parse(this.message);
@@ -196,7 +203,7 @@ export class Waveform extends FileHistoryItem {
         );
 
         // save viewOptions when changed
-        reaction(
+        this.dispose2 = reaction(
             () => toJS(this.viewOptions),
             viewOptions => {
                 const message = JSON.parse(this.message);
@@ -221,7 +228,7 @@ export class Waveform extends FileHistoryItem {
         );
 
         // save rulers when changed
-        reaction(
+        this.dispose3 = reaction(
             () => toJS(this.rulers),
             rulers => {
                 if (rulers.pauseDbUpdate) {
@@ -251,7 +258,7 @@ export class Waveform extends FileHistoryItem {
         );
 
         // save measurements when changed
-        reaction(
+        this.dispose4 = reaction(
             () => toJS(this.measurements),
             measurements => {
                 const message = JSON.parse(this.message);
@@ -278,7 +285,7 @@ export class Waveform extends FileHistoryItem {
         );
 
         //
-        reaction(
+        this.dispose5 = reaction(
             () => JSON.parse(this.message),
             message => {
                 const waveformDefinition = toJS(this.waveformDefinition);
@@ -628,6 +635,30 @@ export class Waveform extends FileHistoryItem {
     convertToCsv = () => {
         return convertToCsv(this);
     };
+
+    override dispose() {
+        super.dispose();
+
+        if (this.dispose1) {
+            this.dispose1();
+        }
+
+        if (this.dispose2) {
+            this.dispose2();
+        }
+
+        if (this.dispose3) {
+            this.dispose3();
+        }
+
+        if (this.dispose4) {
+            this.dispose4();
+        }
+
+        if (this.dispose5) {
+            this.dispose5();
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

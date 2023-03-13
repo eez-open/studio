@@ -61,9 +61,7 @@ export class IpcConnection extends ConnectionBase {
 
                 if (connectionStatus.state != ConnectionState.CONNECTED) {
                     if (this.rejectCallback) {
-                        this.rejectCallback(
-                            new Error("Connection disconnected.")
-                        );
+                        this.rejectCallback("Connection disconnected.");
                         this.rejectCallback = undefined;
                         this.resolveCallback = undefined;
                     }
@@ -341,7 +339,7 @@ export class IpcConnection extends ConnectionBase {
     onValue(value: any, error: any) {
         if (error) {
             if (this.rejectCallback) {
-                this.rejectCallback(new Error(error));
+                this.rejectCallback(error);
             }
         } else {
             if (value.logEntry !== undefined) {

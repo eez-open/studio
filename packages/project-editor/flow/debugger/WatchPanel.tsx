@@ -190,8 +190,27 @@ const WatchTable = observer(
                 localVariables: computed,
                 selectedComponent: computed,
                 componentInputs: computed,
-                rootNode: computed
+                rootNode: computed,
+                expandedMap: observable
             });
+        }
+
+        expandedMap = new Map<string, boolean>();
+
+        expanded(id: string, defaultValue: boolean) {
+            const expandedMap = this.expandedMap;
+            return {
+                get() {
+                    const expanded = expandedMap.get(id);
+                    if (expanded != undefined) {
+                        return expanded;
+                    }
+                    return defaultValue;
+                },
+                set(value: boolean) {
+                    expandedMap.set(id, value);
+                }
+            };
         }
 
         get columns() {
@@ -217,6 +236,7 @@ const WatchTable = observer(
 
         getValueChildren = computedFn(
             (
+                id: string,
                 value: any,
                 type: string | null
             ): (() => ITreeNode[]) | undefined => {
@@ -246,18 +266,19 @@ const WatchTable = observer(
 
                             children.push(
                                 observable({
-                                    id: name,
+                                    id: id + name,
                                     name,
                                     value: valueLabel,
                                     valueTitle: valueLabel,
                                     type: type,
 
                                     children: this.getValueChildren(
+                                        id + name,
                                         elementValue,
                                         type
                                     ),
                                     selected: false,
-                                    expanded: false
+                                    expanded: this.expanded(id + name, false)
                                 })
                             );
                         }
@@ -298,18 +319,19 @@ const WatchTable = observer(
 
                             children.push(
                                 observable({
-                                    id: name,
+                                    id: id + name,
                                     name,
                                     value: valueLabel,
                                     valueTitle: valueLabel,
                                     type: fieldType ?? typeof propertyValue,
 
                                     children: this.getValueChildren(
+                                        id + name,
                                         propertyValue,
                                         fieldType
                                     ),
                                     selected: false,
-                                    expanded: false
+                                    expanded: this.expanded(id + name, false)
                                 })
                             );
 
@@ -365,27 +387,34 @@ const WatchTable = observer(
                             }
 
                             return observable({
-                                id: expression,
+                                id: "expressions-" + expression,
 
                                 name: expression,
                                 value: watchExpressionLabel,
                                 valueTitle: watchExpressionLabel,
                                 type,
 
-                                children: this.getValueChildren(value, type),
+                                children: this.getValueChildren(
+                                    "expressions-" + expression,
+                                    value,
+                                    type
+                                ),
                                 selected: false,
-                                expanded: false,
+                                expanded: this.expanded(
+                                    "expressions-" + expression,
+                                    false
+                                ),
                                 className,
                                 data: i
                             });
                         }
                     ),
                 selected: false,
-                expanded: true
+                expanded: this.expanded("expressions", true)
             });
         }
 
-        getVariableTreeNodes = (variables: Variable[]) => {
+        getVariableTreeNodes = (id: string, variables: Variable[]) => {
             variables = variables.slice();
             variables.sort((a, b) => stringCompare(a.name, b.name));
             return variables.map(variable => {
@@ -406,16 +435,20 @@ const WatchTable = observer(
                 );
 
                 return observable({
-                    id: variable.name,
+                    id: id + variable.name,
 
                     name: variable.name,
                     value: valueLabel,
                     valueTitle: valueLabel,
                     type: variable.type,
 
-                    children: this.getValueChildren(value, variable.type),
+                    children: this.getValueChildren(
+                        id + variable.name,
+                        value,
+                        variable.type
+                    ),
                     selected: false,
-                    expanded: false
+                    expanded: this.expanded(id + variable.name, false)
                 });
             });
         };
@@ -428,11 +461,12 @@ const WatchTable = observer(
                 type: "",
                 children: () =>
                     this.getVariableTreeNodes(
+                        "global-variables",
                         this.props.runtime.projectStore.project
                             .allGlobalVariables
                     ),
                 selected: false,
-                expanded: true
+                expanded: this.expanded("global-variables", true)
             });
         }
 
@@ -448,13 +482,19 @@ const WatchTable = observer(
                 value: undefined,
                 type: "",
                 children: () =>
-                    this.getVariableTreeNodes(flowState.flow.localVariables),
+                    this.getVariableTreeNodes(
+                        "local-variables",
+                        flowState.flow.localVariables
+                    ),
                 selected: false,
-                expanded: true
+                expanded: this.expanded("local-variables", true)
             });
         }
 
-        getComponentStateInputsTreeNodes = (componentState: ComponentState) => {
+        getComponentStateInputsTreeNodes = (
+            id: string,
+            componentState: ComponentState
+        ) => {
             const inputs = componentState.component.inputs.filter(
                 input => input.name != "@seqin"
             );
@@ -468,7 +508,7 @@ const WatchTable = observer(
                 );
 
                 return observable({
-                    id: input.name,
+                    id: id + input.name,
 
                     name: getInputDisplayName(
                         componentState.component,
@@ -478,9 +518,13 @@ const WatchTable = observer(
                     valueTitle: valueLabel,
                     type: input.type,
 
-                    children: this.getValueChildren(value, null),
+                    children: this.getValueChildren(
+                        id + input.name,
+                        value,
+                        null
+                    ),
                     selected: false,
-                    expanded: false
+                    expanded: this.expanded(id + input.name, false)
                 });
             });
         };
@@ -548,9 +592,12 @@ const WatchTable = observer(
                 value: undefined,
                 type: "",
                 children: () =>
-                    this.getComponentStateInputsTreeNodes(componentState),
+                    this.getComponentStateInputsTreeNodes(
+                        "component-inputs",
+                        componentState
+                    ),
                 selected: false,
-                expanded: true
+                expanded: this.expanded("component-inputs", true)
             });
         }
 
@@ -583,7 +630,7 @@ const WatchTable = observer(
                     return children;
                 },
                 selected: false,
-                expanded: true
+                expanded: this.expanded("root", true)
             };
 
             return treeNode;

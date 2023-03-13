@@ -80,6 +80,9 @@ function executeScpi(
     isQuery: number
 ) {
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
 
     const result = getArrayValue(WasmFlowRuntime, instrumentPtr, [
         "object:Instrument"
@@ -116,6 +119,9 @@ function executeDashboardComponent(
     componentIndex: number
 ) {
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
 
     const dashboardComponentContext = new DashboardComponentContext(
         WasmFlowRuntime,
@@ -140,6 +146,9 @@ function executeDashboardComponent(
 
 function onArrayValueFree(wasmModuleId: number, ptr: number) {
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
 
     const arrayValue = getArrayValue(WasmFlowRuntime, ptr);
     const data: WorkerToRenderMessage = {
@@ -151,6 +160,9 @@ function onArrayValueFree(wasmModuleId: number, ptr: number) {
 
 function getLvglImageByName(wasmModuleId: number, name: string) {
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
 
     return WasmFlowRuntime.postWorkerToRendererMessage({
         getLvglImageByName: { name }

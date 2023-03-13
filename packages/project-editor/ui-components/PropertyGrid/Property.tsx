@@ -123,6 +123,9 @@ export const Property = observer(
             }
         }
 
+        combineCommands = () =>
+            this.context.undoManager.setCombineCommands(true);
+
         componentDidMount() {
             this.updateChangeDocumentObserver();
 
@@ -131,13 +134,8 @@ export const Property = observer(
                     ? this.input || this.textarea || this.select
                     : undefined;
             if (el) {
-                $(el).on("focus", () => {
-                    this.context.undoManager.setCombineCommands(true);
-                });
-
-                $(el).on("blur", () => {
-                    this.context.undoManager.setCombineCommands(false);
-                });
+                $(el).on("focus", this.combineCommands);
+                $(el).on("blur", this.combineCommands);
             }
 
             if (this.textarea) {
@@ -151,6 +149,15 @@ export const Property = observer(
 
             if (this.textarea) {
                 this.resizeObserver.unobserve(this.textarea);
+            }
+
+            let el =
+                this.props.propertyInfo.type != PropertyType.Boolean
+                    ? this.input || this.textarea || this.select
+                    : undefined;
+            if (el) {
+                $(el).off("focus", this.combineCommands);
+                $(el).off("blur", this.combineCommands);
             }
         }
 

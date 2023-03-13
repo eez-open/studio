@@ -6,7 +6,8 @@ import {
     runInAction,
     autorun,
     toJS,
-    makeObservable
+    makeObservable,
+    reaction
 } from "mobx";
 
 import { getUserDataPath } from "eez-studio-shared/util-electron";
@@ -28,122 +29,164 @@ export interface IMruItem {
 }
 
 class Settings {
-    firstTime: boolean;
+    firstTime: boolean = true;
 
-    mru: IMruItem[];
+    mru: IMruItem[] = [];
 
     windowStates: {
         [key: string]: WindowState;
-    };
+    } = {};
 
-    dbPath: string;
+    dbPath: string = "";
 
-    locale: string;
-    dateFormat: string;
-    timeFormat: string;
+    locale: string = "";
+    dateFormat: string = "";
+    timeFormat: string = "";
 
-    isDarkTheme: boolean;
+    isDarkTheme: boolean = true;
 
-    constructor() {
+    get settingsFilePath() {
+        return app.getPath("userData") + "/" + SETTINGS_FILE_NAME;
+    }
+
+    _loaded: boolean = false;
+
+    async loadSettings() {
+        if (this._loaded) {
+            return;
+        }
+
+        try {
+            let data = fs.readFileSync(this.settingsFilePath, "utf8");
+            try {
+                let settingsJs: Settings = JSON.parse(data);
+                await this.readSettings(settingsJs);
+            } catch (parseError) {
+                console.log(data);
+                console.error(parseError);
+            }
+        } catch (readFileError) {
+            console.info(
+                `Settings file "${this.settingsFilePath}" doesn't exists.`
+            );
+        }
+
+        this._loaded = true;
+
         makeObservable(this, {
             mru: observable,
             windowStates: observable,
+            dbPath: observable,
+            locale: observable,
+            dateFormat: observable,
+            timeFormat: observable,
             isDarkTheme: observable
         });
+
+        reaction(
+            () => JSON.stringify(toJS(this), null, 2),
+            settingsJSON => {
+                try {
+                    fs.writeFileSync(
+                        this.settingsFilePath,
+                        settingsJSON,
+                        "utf8"
+                    );
+                } catch (writeFileError) {
+                    console.error(writeFileError);
+                }
+            }
+        );
+
+        autorun(() => {
+            const mru = toJS(this.mru);
+            BrowserWindow.getAllWindows().forEach(window =>
+                window.webContents.send("mru-changed", mru)
+            );
+        });
+    }
+
+    async readSettings(settingsJs: Partial<Settings>) {
+        if (settingsJs.firstTime != undefined) {
+            this.firstTime = settingsJs.firstTime;
+        }
+
+        if (settingsJs.mru != undefined) {
+            const mru = settingsJs.mru.filter((mruItem: IMruItem) =>
+                fs.existsSync(mruItem.filePath)
+            );
+
+            for (const mruItem of mru) {
+                if (!mruItem.projectType) {
+                    try {
+                        const jsonStr = await fs.promises.readFile(
+                            mruItem.filePath,
+                            "utf-8"
+                        );
+                        const json = JSON.parse(jsonStr);
+                        mruItem.projectType = json.settings.general.projectType;
+                    } catch (err) {}
+                }
+            }
+
+            this.mru = mru;
+        }
+
+        if (settingsJs.windowStates != undefined) {
+            this.windowStates = settingsJs.windowStates;
+        }
+
+        if (settingsJs.dbPath != undefined) {
+            this.dbPath = settingsJs.dbPath;
+        }
+
+        if (settingsJs.locale != undefined) {
+            this.locale = settingsJs.locale;
+        }
+
+        if (settingsJs.dateFormat != undefined) {
+            this.dateFormat = settingsJs.dateFormat;
+        }
+
+        if (settingsJs.timeFormat != undefined) {
+            this.timeFormat = settingsJs.timeFormat;
+        }
+
+        if (settingsJs.isDarkTheme != undefined) {
+            this.isDarkTheme = settingsJs.isDarkTheme;
+        }
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 export const settings = new Settings();
 
-function getSettingsFilePath() {
-    return app.getPath("userData") + "/" + SETTINGS_FILE_NAME;
-}
+////////////////////////////////////////////////////////////////////////////////
 
 export async function loadSettings() {
-    runInAction(() => {
-        settings.firstTime = true;
-        settings.mru = [];
-        settings.windowStates = {};
-    });
-
-    try {
-        let data = fs.readFileSync(getSettingsFilePath(), "utf8");
-
-        try {
-            let settingsJs: Settings = JSON.parse(data);
-
-            if (settingsJs.mru) {
-                const mru = settingsJs.mru.filter((mruItem: IMruItem) =>
-                    fs.existsSync(mruItem.filePath)
-                );
-
-                for (const mruItem of mru) {
-                    if (!mruItem.projectType) {
-                        try {
-                            const jsonStr = await fs.promises.readFile(
-                                mruItem.filePath,
-                                "utf-8"
-                            );
-                            const json = JSON.parse(jsonStr);
-                            mruItem.projectType =
-                                json.settings.general.projectType;
-                        } catch (err) {}
-                    }
-                }
-
-                runInAction(() => {
-                    settings.mru = mru;
-                });
-            } else {
-                runInAction(() => {
-                    settings.mru = [];
-                });
-            }
-
-            runInAction(() => {
-                settings.firstTime = !!settingsJs.firstTime;
-
-                if (settingsJs.windowStates) {
-                    settings.windowStates = settingsJs.windowStates;
-                } else {
-                    settings.windowStates = {};
-                }
-
-                settings.dbPath = settingsJs.dbPath;
-                settings.locale = settingsJs.locale;
-                settings.dateFormat = settingsJs.dateFormat;
-                settings.timeFormat = settingsJs.timeFormat;
-                settings.isDarkTheme = settingsJs.isDarkTheme;
-            });
-        } catch (parseError) {
-            console.log(data);
-            console.error(parseError);
-        }
-    } catch (readFileError) {
-        console.info(
-            `Settings file "${getSettingsFilePath()}" doesn't exists.`
-        );
-    }
-
-    autorun(() => {
-        const mru = toJS(settings.mru);
-        BrowserWindow.getAllWindows().forEach(window =>
-            window.webContents.send("mru-changed", mru)
-        );
-    });
+    settings.loadSettings();
 }
 
-export function saveSettings() {
-    try {
-        fs.writeFileSync(
-            getSettingsFilePath(),
-            JSON.stringify(settings, null, 2),
-            "utf8"
-        );
-    } catch (writeFileError) {
-        console.error(writeFileError);
-    }
+////////////////////////////////////////////////////////////////////////////////
+
+export function getFirstTime() {
+    return settings.firstTime;
 }
+
+export function setFirstTime(value: boolean) {
+    runInAction(() => (settings.firstTime = value));
+}
+
+ipcMain.on("getFirstTime", function (event: any) {
+    event.returnValue = getFirstTime();
+});
+
+ipcMain.on("setFirstTime", function (event: any, value: boolean) {
+    setFirstTime(value);
+});
+
+////////////////////////////////////////////////////////////////////////////////
 
 export function findMruIndex(mruItemFilePath: string) {
     for (var i = 0; i < settings.mru.length; i++) {
@@ -153,6 +196,46 @@ export function findMruIndex(mruItemFilePath: string) {
     }
     return -1;
 }
+
+ipcMain.on("setMruFilePath", function (event: any, mruItem: IMruItem) {
+    action(() => {
+        var i = findMruIndex(mruItem.filePath);
+        if (i != -1) {
+            settings.mru.splice(i, 1);
+        }
+
+        settings.mru.unshift(mruItem);
+    })();
+});
+
+ipcMain.on("getMRU", function (event: Electron.IpcMainEvent) {
+    const mru: IMruItem[] = toJS(settings.mru);
+
+    event.returnValue = mru;
+});
+
+ipcMain.on("setMRU", function (event: any, mru: IMruItem[]) {
+    function isMruChanged(mru1: IMruItem[], mru2: IMruItem[]) {
+        if (!!mru1 != !!mru) {
+            return true;
+        }
+        if (mru1.length != mru2.length) {
+            return true;
+        }
+        for (let i = 0; i < mru1.length; i++) {
+            if (mru1[i].filePath != mru2[i].filePath) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    if (isMruChanged(mru, settings.mru)) {
+        runInAction(() => (settings.mru = mru));
+    }
+});
+
+////////////////////////////////////////////////////////////////////////////////
 
 function isValidWindowState(windowState: WindowState) {
     if (windowState && windowState.bounds && windowState.displayBounds) {
@@ -260,16 +343,7 @@ export function settingsRegisterWindow(
     window.on("close", closeHandler);
 }
 
-ipcMain.on("setMruFilePath", function (event: any, mruItem: IMruItem) {
-    action(() => {
-        var i = findMruIndex(mruItem.filePath);
-        if (i != -1) {
-            settings.mru.splice(i, 1);
-        }
-
-        settings.mru.unshift(mruItem);
-    })();
-});
+////////////////////////////////////////////////////////////////////////////////
 
 function isValidDbPath(dbPath: string) {
     try {
@@ -292,60 +366,8 @@ export function getDbPath() {
 }
 
 export function setDbPath(dbPath: string) {
-    settings.dbPath = dbPath;
-    saveSettings();
+    runInAction(() => (settings.dbPath = dbPath));
 }
-
-export function getLocale() {
-    return settings.locale || app.getLocale();
-}
-
-export function setLocale(value: string) {
-    settings.locale = value;
-    saveSettings();
-}
-
-export function getDateFormat() {
-    return settings.dateFormat || DATE_FORMATS[0].format;
-}
-
-export function setDateFormat(value: string) {
-    settings.dateFormat = value;
-    saveSettings();
-}
-
-export function getTimeFormat() {
-    return settings.timeFormat || TIME_FORMATS[0].format;
-}
-
-export function setTimeFormat(value: string) {
-    settings.timeFormat = value;
-    saveSettings();
-}
-
-export function getFirstTime() {
-    return settings.firstTime;
-}
-
-export function setFirstTime(value: boolean) {
-    settings.firstTime = value;
-    saveSettings();
-}
-
-function getIsDarkTheme() {
-    return settings.isDarkTheme;
-}
-
-function setIsDarkTheme(value: boolean) {
-    runInAction(() => {
-        settings.isDarkTheme = value;
-    });
-    saveSettings();
-}
-
-ipcMain.on("saveSettings", function () {
-    saveSettings();
-});
 
 ipcMain.on("getDbPath", function (event: any) {
     event.returnValue = getDbPath();
@@ -354,6 +376,32 @@ ipcMain.on("getDbPath", function (event: any) {
 ipcMain.on("setDbPath", function (event: any, dbPath: string) {
     setDbPath(dbPath);
 });
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function getLocale() {
+    return settings.locale || app.getLocale();
+}
+
+export function setLocale(value: string) {
+    runInAction(() => (settings.locale = value));
+}
+
+export function getDateFormat() {
+    return settings.dateFormat || DATE_FORMATS[0].format;
+}
+
+export function setDateFormat(value: string) {
+    runInAction(() => (settings.dateFormat = value));
+}
+
+export function getTimeFormat() {
+    return settings.timeFormat || TIME_FORMATS[0].format;
+}
+
+export function setTimeFormat(value: string) {
+    runInAction(() => (settings.timeFormat = value));
+}
 
 ipcMain.on("getLocale", function (event: any) {
     event.returnValue = getLocale();
@@ -379,13 +427,17 @@ ipcMain.on("setTimeFormat", function (event: any, value: string) {
     setTimeFormat(value);
 });
 
-ipcMain.on("getFirstTime", function (event: any) {
-    event.returnValue = getFirstTime();
-});
+////////////////////////////////////////////////////////////////////////////////
 
-ipcMain.on("setFirstTime", function (event: any, value: boolean) {
-    setFirstTime(value);
-});
+function getIsDarkTheme() {
+    return settings.isDarkTheme;
+}
+
+function setIsDarkTheme(value: boolean) {
+    runInAction(() => {
+        settings.isDarkTheme = value;
+    });
+}
 
 ipcMain.on("getIsDarkTheme", function (event: any) {
     event.returnValue = getIsDarkTheme();
@@ -395,29 +447,4 @@ ipcMain.on("setIsDarkTheme", function (event: any, value: boolean) {
     setIsDarkTheme(value);
 });
 
-ipcMain.on("getMRU", function (event: Electron.IpcMainEvent) {
-    const mru: IMruItem[] = toJS(settings.mru);
-
-    event.returnValue = mru;
-});
-
-ipcMain.on("setMRU", function (event: any, mru: IMruItem[]) {
-    function isMruChanged(mru1: IMruItem[], mru2: IMruItem[]) {
-        if (!!mru1 != !!mru) {
-            return true;
-        }
-        if (mru1.length != mru2.length) {
-            return true;
-        }
-        for (let i = 0; i < mru1.length; i++) {
-            if (mru1[i].filePath != mru2[i].filePath) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    if (isMruChanged(mru, settings.mru)) {
-        runInAction(() => (settings.mru = mru));
-    }
-});
+////////////////////////////////////////////////////////////////////////////////

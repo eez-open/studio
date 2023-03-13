@@ -123,7 +123,6 @@ export class DashboardProject {
                     this.projectStore = undefined;
                     this.runtime = undefined;
                 });
-                console.log("closed");
             }
         }
     };

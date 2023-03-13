@@ -7,7 +7,8 @@ import {
     action,
     autorun,
     toJS,
-    makeObservable
+    makeObservable,
+    IReactionDisposer
 } from "mobx";
 
 import { stringCompare } from "eez-studio-shared/string";
@@ -43,6 +44,7 @@ import { IHistoryItem } from "instrument/window/history/item";
 
 import * as notification from "eez-studio-ui/notification";
 import { ConnectionBase } from "instrument/connection/connection-base";
+import { bb3InstrumentsMap } from "../global-objects";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -239,7 +241,11 @@ export class BB3Instrument {
 
     isUploadingMasterFirmware: boolean = false;
 
-    terminate: () => void;
+    dispose1: IReactionDisposer;
+    dispose2: IReactionDisposer;
+    dispose3: IReactionDisposer;
+    dispose4: IReactionDisposer;
+    dispose5: IReactionDisposer;
 
     constructor(
         public scriptsCatalog: ScriptsCatalog,
@@ -314,7 +320,7 @@ export class BB3Instrument {
         }
 
         this.refreshScripts(bb3Properties?.scriptsOnInstrument ?? []);
-        const dispose1 = reaction(
+        this.dispose1 = reaction(
             () => scriptsCatalog.scriptItems,
             state => {
                 this.refreshScripts(this.scriptsOnInstrument);
@@ -324,14 +330,14 @@ export class BB3Instrument {
         this.selectedScriptsCollectionType = "allScriptsCollection";
 
         this.refreshLists(bb3Properties?.listsOnInstrument ?? []);
-        const dispose2 = reaction(
+        this.dispose2 = reaction(
             () => this.appStore.instrumentLists.map(list => list.name),
             () => {
                 this.refreshLists(this.listsOnInstrument);
             }
         );
 
-        const dispose3 = reaction(
+        this.dispose3 = reaction(
             () => ({
                 timeOfLastRefresh: this.timeOfLastRefresh,
                 mcu: toJS(this.mcu),
@@ -357,13 +363,13 @@ export class BB3Instrument {
             }
         );
 
-        const dispose4 = autorun(() => {
+        this.dispose4 = autorun(() => {
             if (this.instrument.isConnected) {
                 setTimeout(() => this.refresh(false), 50);
             }
         });
 
-        const dispose5 = autorun(() => {
+        this.dispose5 = autorun(() => {
             if (appStore.history.items.length > 0) {
                 const historyItem =
                     appStore.history.items[appStore.history.items.length - 1];
@@ -383,14 +389,6 @@ export class BB3Instrument {
                 }
             }
         });
-
-        this.terminate = () => {
-            dispose1();
-            dispose2();
-            dispose3();
-            dispose4();
-            dispose5();
-        };
     }
 
     setRefreshInProgress(value: boolean) {
@@ -988,4 +986,14 @@ export class BB3Instrument {
             });
         }
     }
+
+    terminate = () => {
+        this.dispose1();
+        this.dispose2();
+        this.dispose3();
+        this.dispose4();
+        this.dispose5();
+
+        bb3InstrumentsMap.delete(this.instrument.id);
+    };
 }

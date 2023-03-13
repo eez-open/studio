@@ -6,7 +6,8 @@ import {
     runInAction,
     reaction,
     toJS,
-    makeObservable
+    makeObservable,
+    IReactionDisposer
 } from "mobx";
 import { observer } from "mobx-react";
 
@@ -137,6 +138,11 @@ interface ILinkedWaveform {
 }
 
 export class MultiWaveform extends HistoryItem {
+    dispose1: IReactionDisposer | undefined;
+    dispose2: IReactionDisposer | undefined;
+    dispose3: IReactionDisposer | undefined;
+    dispose4: IReactionDisposer | undefined;
+
     constructor(store: IStore, activityLogEntry: IActivityLogEntry) {
         super(store, activityLogEntry);
 
@@ -156,7 +162,7 @@ export class MultiWaveform extends HistoryItem {
         this.waveformLinks = message.waveformLinks || message;
 
         // update waveformLinks when message changes
-        reaction(
+        this.dispose1 = reaction(
             () => ({
                 message: JSON.parse(this.message),
                 waveformLinks: toJS(this.waveformLinks)
@@ -177,7 +183,7 @@ export class MultiWaveform extends HistoryItem {
         );
 
         // save viewOptions when changed
-        reaction(
+        this.dispose2 = reaction(
             () => ({
                 message: JSON.parse(this.message),
                 viewOptions: toJS(this.viewOptions)
@@ -207,7 +213,7 @@ export class MultiWaveform extends HistoryItem {
         this.rulers.initYRulers(this.waveformLinks.length);
 
         // save rulers when changed
-        reaction(
+        this.dispose3 = reaction(
             () => toJS(this.rulers),
             rulers => {
                 if (rulers.pauseDbUpdate) {
@@ -237,7 +243,7 @@ export class MultiWaveform extends HistoryItem {
         );
 
         // save measurements when changed
-        reaction(
+        this.dispose4 = reaction(
             () => toJS(this.measurements),
             measurements => {
                 const message = JSON.parse(this.message);
@@ -390,6 +396,26 @@ export class MultiWaveform extends HistoryItem {
     }
 
     isZoomable = true;
+
+    override dispose() {
+        super.dispose();
+
+        if (this.dispose1) {
+            this.dispose1();
+        }
+
+        if (this.dispose2) {
+            this.dispose2();
+        }
+
+        if (this.dispose3) {
+            this.dispose3();
+        }
+
+        if (this.dispose4) {
+            this.dispose4();
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

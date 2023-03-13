@@ -26,6 +26,7 @@ export interface IHistoryItem {
     selected: boolean;
     getListItemElement(appStore: IAppStore): React.ReactNode;
     canBePartOfMultiChart: boolean;
+    dispose(): void;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -132,4 +133,6 @@ export class HistoryItem implements IHistoryItem {
         }
         return null;
     }
+
+    dispose() {}
 }
