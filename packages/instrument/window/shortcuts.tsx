@@ -79,17 +79,22 @@ export class ShortcutsStore {
             this.addMissingShortcutsInDatabaseDispose!();
             this.addMissingShortcutsInDatabaseDispose = undefined;
 
-            externsionShortcuts.forEach(shortcut => {
+            const anyShortcutInDatabase = externsionShortcuts.find(shortcut => {
                 const groupName =
                     SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX + extension.id;
+                return values(shortcuts).find(
+                    dbShortcut =>
+                        dbShortcut.originalId == shortcut.id &&
+                        dbShortcut.groupName == groupName
+                );
+            });
 
-                if (
-                    !values(shortcuts).find(
-                        dbShortcut =>
-                            dbShortcut.originalId == shortcut.id &&
-                            dbShortcut.groupName == groupName
-                    )
-                ) {
+            if (!anyShortcutInDatabase) {
+                externsionShortcuts.forEach(shortcut => {
+                    const groupName =
+                        SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX +
+                        extension.id;
+
                     addShortcut(
                         Object.assign({}, shortcut, {
                             id: undefined,
@@ -97,8 +102,8 @@ export class ShortcutsStore {
                             originalId: shortcut.id
                         })
                     );
-                }
-            });
+                });
+            }
         });
     }
 
