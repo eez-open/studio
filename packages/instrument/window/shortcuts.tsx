@@ -4,7 +4,8 @@ import {
     computed,
     values,
     makeObservable,
-    IReactionDisposer
+    IReactionDisposer,
+    autorun
 } from "mobx";
 
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
@@ -44,6 +45,7 @@ export const shortcutsOrGroups = observable.box<boolean>(true);
 
 export class ShortcutsStore {
     bindShortcutsDispose: IReactionDisposer | undefined;
+    addMissingShortcutsInDatabaseDispose: IReactionDisposer | undefined;
 
     constructor(public appStore: InstrumentAppStore) {
         makeObservable(this, {
@@ -63,6 +65,41 @@ export class ShortcutsStore {
                 }
             }
         );
+
+        this.addMissingShortcutsInDatabaseDispose = autorun(() => {
+            const extension = this.appStore.instrument?.extension;
+            if (!extension) {
+                return;
+            }
+            const externsionShortcuts = extension?.properties?.shortcuts;
+            if (!externsionShortcuts) {
+                return;
+            }
+
+            this.addMissingShortcutsInDatabaseDispose!();
+            this.addMissingShortcutsInDatabaseDispose = undefined;
+
+            externsionShortcuts.forEach(shortcut => {
+                const groupName =
+                    SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX + extension.id;
+
+                if (
+                    !values(shortcuts).find(
+                        dbShortcut =>
+                            dbShortcut.originalId == shortcut.id &&
+                            dbShortcut.groupName == groupName
+                    )
+                ) {
+                    addShortcut(
+                        Object.assign({}, shortcut, {
+                            id: undefined,
+                            groupName,
+                            originalId: shortcut.id
+                        })
+                    );
+                }
+            });
+        });
     }
 
     instrumentShortcuts = computed(() => {
@@ -156,6 +193,10 @@ export class ShortcutsStore {
     onTerminate() {
         if (this.bindShortcutsDispose) {
             this.bindShortcutsDispose();
+        }
+
+        if (this.addMissingShortcutsInDatabaseDispose) {
+            this.addMissingShortcutsInDatabaseDispose();
         }
     }
 }
