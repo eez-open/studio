@@ -378,17 +378,11 @@ class ShortcutRow implements IRow {
                         icon="material:delete"
                         title="Delete shortcut"
                         onClick={() => {
-                            confirm(
-                                "Are you sure?",
-                                this.isExtensionShortcut
-                                    ? "This type of shortcut once deleted cannot be restored without reinstalling instrument extension."
-                                    : undefined,
-                                () => {
-                                    this.props.shortcutsStore.deleteShortcut!(
-                                        this.shortcut
-                                    );
-                                }
-                            );
+                            confirm("Are you sure?", undefined, () => {
+                                this.props.shortcutsStore.deleteShortcut!(
+                                    this.shortcut
+                                );
+                            });
                         }}
                     />
                 </Toolbar>

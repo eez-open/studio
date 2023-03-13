@@ -38,6 +38,7 @@ import {
 
 import { InstrumentAppStore } from "instrument/window/app-store";
 import type * as ScriptModule from "instrument/window/script";
+import type { IExtension } from "eez-studio-shared/extensions/extension";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -45,11 +46,12 @@ export const shortcutsOrGroups = observable.box<boolean>(true);
 
 export class ShortcutsStore {
     bindShortcutsDispose: IReactionDisposer | undefined;
-    addMissingShortcutsInDatabaseDispose: IReactionDisposer | undefined;
+    addShortcutsToDatabaseIfAllAreMissingDispose: IReactionDisposer | undefined;
 
     constructor(public appStore: InstrumentAppStore) {
         makeObservable(this, {
-            shortcuts: computed
+            shortcuts: computed,
+            isAnyMissingShortcuts: computed
         });
 
         this.bindShortcutsDispose = bindShortcuts(
@@ -66,7 +68,7 @@ export class ShortcutsStore {
             }
         );
 
-        this.addMissingShortcutsInDatabaseDispose = autorun(() => {
+        this.addShortcutsToDatabaseIfAllAreMissingDispose = autorun(() => {
             const extension = this.appStore.instrument?.extension;
             if (!extension) {
                 return;
@@ -76,33 +78,15 @@ export class ShortcutsStore {
                 return;
             }
 
-            this.addMissingShortcutsInDatabaseDispose!();
-            this.addMissingShortcutsInDatabaseDispose = undefined;
+            this.addShortcutsToDatabaseIfAllAreMissingDispose!();
+            this.addShortcutsToDatabaseIfAllAreMissingDispose = undefined;
 
-            const anyShortcutInDatabase = externsionShortcuts.find(shortcut => {
-                const groupName =
-                    SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX + extension.id;
-                return values(shortcuts).find(
-                    dbShortcut =>
-                        dbShortcut.originalId == shortcut.id &&
-                        dbShortcut.groupName == groupName
-                );
-            });
+            const anyShortcutInDatabase = externsionShortcuts.find(shortcut =>
+                this.isShortcutInDatabase(extension, shortcut)
+            );
 
             if (!anyShortcutInDatabase) {
-                externsionShortcuts.forEach(shortcut => {
-                    const groupName =
-                        SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX +
-                        extension.id;
-
-                    addShortcut(
-                        Object.assign({}, shortcut, {
-                            id: undefined,
-                            groupName,
-                            originalId: shortcut.id
-                        })
-                    );
-                });
+                this.addMissingShortcuts();
             }
         });
     }
@@ -195,13 +179,64 @@ export class ShortcutsStore {
         commitTransaction();
     }
 
+    isShortcutInDatabase(extension: IExtension, shortcut: IShortcut) {
+        const groupName =
+            SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX + extension.id;
+        return values(shortcuts).find(
+            dbShortcut =>
+                dbShortcut.originalId == shortcut.id &&
+                dbShortcut.groupName == groupName
+        );
+    }
+
+    get isAnyMissingShortcuts() {
+        const extension = this.appStore.instrument?.extension;
+        if (!extension) {
+            return false;
+        }
+        const externsionShortcuts = extension?.properties?.shortcuts;
+        if (!externsionShortcuts) {
+            return false;
+        }
+
+        return externsionShortcuts.find(
+            shortcut => !this.isShortcutInDatabase(extension, shortcut)
+        );
+    }
+
+    addMissingShortcuts() {
+        const extension = this.appStore.instrument?.extension;
+        if (!extension) {
+            return;
+        }
+        const externsionShortcuts = extension?.properties?.shortcuts;
+        if (!externsionShortcuts) {
+            return;
+        }
+
+        externsionShortcuts.forEach(shortcut => {
+            const groupName =
+                SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX + extension.id;
+
+            if (!this.isShortcutInDatabase(extension, shortcut)) {
+                addShortcut(
+                    Object.assign({}, shortcut, {
+                        id: undefined,
+                        groupName,
+                        originalId: shortcut.id
+                    })
+                );
+            }
+        });
+    }
+
     onTerminate() {
         if (this.bindShortcutsDispose) {
             this.bindShortcutsDispose();
         }
 
-        if (this.addMissingShortcutsInDatabaseDispose) {
-            this.addMissingShortcutsInDatabaseDispose();
+        if (this.addShortcutsToDatabaseIfAllAreMissingDispose) {
+            this.addShortcutsToDatabaseIfAllAreMissingDispose();
         }
     }
 }

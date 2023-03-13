@@ -597,7 +597,7 @@ export function findBitmap(project: Project, bitmapName: any) {
 export default {
     name: "eezstudio-project-feature-bitmap",
     version: "0.1.0",
-    description: "Bitmpas support for your project",
+    description: "Bitmaps support for your project",
     author: "EEZ",
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
     displayName: "Bitmaps",

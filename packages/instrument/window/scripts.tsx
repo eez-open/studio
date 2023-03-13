@@ -35,7 +35,6 @@ import * as notification from "eez-studio-ui/notification";
 import { Toolbar } from "eez-studio-ui/toolbar";
 
 import type { IShortcut } from "shortcuts/interfaces";
-import { SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX } from "shortcuts/shortcuts-store";
 import { DEFAULT_TOOLBAR_BUTTON_COLOR } from "shortcuts/toolbar-button-colors";
 import { showShortcutDialog } from "shortcuts/shortcut-dialog";
 
@@ -223,21 +222,9 @@ export class ScriptsModel implements IModel {
     deleteScript = () => {
         const selectedScript = this.selectedScript;
         if (selectedScript) {
-            const isExtensionShortcut =
-                selectedScript.groupName &&
-                selectedScript.groupName.startsWith(
-                    SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX
-                );
-
-            confirm(
-                "Are you sure?",
-                isExtensionShortcut
-                    ? "This will also delete shortcut which cannot be restored without reinstalling instrument extension."
-                    : undefined,
-                () => {
-                    this.appStore.shortcutsStore.deleteShortcut(selectedScript);
-                }
-            );
+            confirm("Are you sure?", undefined, () => {
+                this.appStore.shortcutsStore.deleteShortcut(selectedScript);
+            });
         }
     };
 

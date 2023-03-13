@@ -124,6 +124,19 @@ export const ShortcutsToolbar = observer(
                             }
                         />
                     ))}
+                    {this.props.appStore.shortcutsStore
+                        .isAnyMissingShortcuts && (
+                        <button
+                            className="btn btn-link"
+                            style={{ marginLeft: 5 }}
+                            onClick={event => {
+                                event.preventDefault();
+                                this.props.appStore.shortcutsStore.addMissingShortcuts();
+                            }}
+                        >
+                            Add missing shortcuts
+                        </button>
+                    )}
                 </Toolbar>
             );
         }
