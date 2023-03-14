@@ -324,6 +324,53 @@ export class SendListOperation extends ListOperation {
 }
 
 ipcMain.on(
+    "instrument/connection/get-list",
+    async function (
+        event: any,
+        arg: {
+            instrumentId: string;
+            channelIndex: number;
+            listData: any;
+            listName: any;
+            callbackWindowId: number;
+        }
+    ) {
+        const { connections } = await import(
+            "instrument/connection/connection-main"
+        );
+        let connection = connections.get(arg.instrumentId);
+        if (connection) {
+            getListMain(
+                connection as Connection,
+                arg.channelIndex,
+                arg.callbackWindowId
+            );
+        }
+    }
+);
+
+function getListMain(
+    connection: Connection,
+    channelIndex: number,
+    callbackWindowId: number
+): void {
+    try {
+        connection.startLongOperation(
+            () =>
+                new GetListOperation(connection, channelIndex, callbackWindowId)
+        );
+    } catch (error) {
+        let browserWindow = BrowserWindow.fromId(callbackWindowId)!;
+        browserWindow.webContents.send(
+            "instrument/connection/list-operation-result",
+            {
+                error
+            }
+        );
+    }
+}
+
+ipcMain.on(
     "instrument/connection/send-list",
     async function (
         event: any,

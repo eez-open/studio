@@ -823,9 +823,15 @@ export const TableDetailsView = observer(
                 const key = selectedCell.key;
 
                 executeCommand(this.props.appStore, this.props.list, data => {
-                    data.dwell.splice(index, 0, data.dwell[index]);
-                    data.voltage.splice(index, 0, data.voltage[index]);
-                    data.current.splice(index, 0, data.current[index]);
+                    if (index < data.dwell.length) {
+                        data.dwell.splice(index, 0, data.dwell[index]);
+                    }
+                    if (index < data.voltage.length) {
+                        data.voltage.splice(index, 0, data.voltage[index]);
+                    }
+                    if (index < data.current.length) {
+                        data.current.splice(index, 0, data.current[index]);
+                    }
                 });
 
                 setTimeout(() => {
@@ -846,9 +852,15 @@ export const TableDetailsView = observer(
                 const key = selectedCell.key;
 
                 executeCommand(this.props.appStore, this.props.list, data => {
-                    data.dwell.splice(index + 1, 0, data.dwell[index]);
-                    data.voltage.splice(index + 1, 0, data.voltage[index]);
-                    data.current.splice(index + 1, 0, data.current[index]);
+                    if (index < data.dwell.length) {
+                        data.dwell.splice(index + 1, 0, data.dwell[index]);
+                    }
+                    if (index < data.voltage.length) {
+                        data.voltage.splice(index + 1, 0, data.voltage[index]);
+                    }
+                    if (index < data.current.length) {
+                        data.current.splice(index + 1, 0, data.current[index]);
+                    }
                 });
 
                 setTimeout(() => {
@@ -869,9 +881,15 @@ export const TableDetailsView = observer(
                 const key = selectedCell.key;
 
                 executeCommand(this.props.appStore, this.props.list, data => {
-                    data.dwell.splice(index, 1);
-                    data.voltage.splice(index, 1);
-                    data.current.splice(index, 1);
+                    if (index < data.dwell.length) {
+                        data.dwell.splice(index, 1);
+                    }
+                    if (index < data.voltage.length) {
+                        data.voltage.splice(index, 1);
+                    }
+                    if (index < data.current.length) {
+                        data.current.splice(index, 1);
+                    }
                 });
 
                 setTimeout(() => {
@@ -1121,6 +1139,14 @@ class TableChartController extends ChartController {
         let time = 0;
         let lastDwell: number | undefined = data.dwell[0];
         for (let i = 0; i <= selectedCell.index; i++) {
+            if (
+                (i >= data.dwell.length || data.dwell[i] == undefined) &&
+                (i >= data.voltage.length || data.voltage[i] == undefined) &&
+                (i >= data.current.length || data.current[i] == undefined)
+            ) {
+                continue;
+            }
+
             let dwell: number;
             if (i < data.dwell.length) {
                 dwell = data.dwell[i];
