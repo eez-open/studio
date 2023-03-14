@@ -1136,17 +1136,10 @@ class TableChartController extends ChartController {
         if (data.dwell.length === 0) {
             return null;
         }
+
         let time = 0;
         let lastDwell: number | undefined = data.dwell[0];
         for (let i = 0; i <= selectedCell.index; i++) {
-            if (
-                (i >= data.dwell.length || data.dwell[i] == undefined) &&
-                (i >= data.voltage.length || data.voltage[i] == undefined) &&
-                (i >= data.current.length || data.current[i] == undefined)
-            ) {
-                continue;
-            }
-
             let dwell: number;
             if (i < data.dwell.length) {
                 dwell = data.dwell[i];
@@ -1162,14 +1155,26 @@ class TableChartController extends ChartController {
             time += dwell;
             lastDwell = dwell;
         }
+
         if (lastDwell === undefined) {
             return null;
         }
 
-        let x =
-            this.chartsController.chartLeft +
-            Math.max(this.xAxisController.valueToPx(time - lastDwell), 0);
-        let width = Math.max(this.xAxisController.valueToPx(lastDwell), 0);
+        let x1 = this.xAxisController.valueToPx(time - lastDwell);
+        if (x1 < 0) {
+            x1 = 0;
+        }
+        let x2 = this.xAxisController.valueToPx(time);
+        if (x2 > this.chartsController.chartWidth) {
+            x2 = this.chartsController.chartWidth;
+        }
+
+        let x = this.chartsController.chartLeft + x1;
+        let width = x2 - x1;
+
+        if (width <= 0) {
+            return null;
+        }
 
         let y = this.chartsController.chartTop;
         let height = this.chartsController.chartHeight;

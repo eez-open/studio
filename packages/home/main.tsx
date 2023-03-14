@@ -29,6 +29,7 @@ import { openProject } from "home/open-project";
 import { LineMarkers } from "project-editor/flow/connection-line/ConnectionLineComponent";
 
 import "home/settings";
+import { extensionsCatalog } from "./extensions-manager/catalog";
 
 configure({ enforceActions: "observed" });
 
@@ -147,6 +148,8 @@ async function main() {
     }
 
     await loadExtensions(nodeModuleFolders);
+
+    extensionsCatalog.load();
 
     setTimeout(yarnInstall, 1000);
 

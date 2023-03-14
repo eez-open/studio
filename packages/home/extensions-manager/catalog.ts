@@ -33,8 +33,10 @@ class ExtensionsCatalog {
         makeObservable(this, {
             catalog: observable
         });
+    }
 
-        this.loadCatalog()
+    load() {
+        this._loadCatalog()
             .then(catalog => {
                 runInAction(() => (this.catalog = catalog));
             })
@@ -44,7 +46,7 @@ class ExtensionsCatalog {
                 )
             );
 
-        this.loadCatalogVersion()
+        this._loadCatalogVersion()
             .then(catalogVersion => {
                 runInAction(() => (this.catalogVersion = catalogVersion));
 
@@ -68,7 +70,7 @@ class ExtensionsCatalog {
         return getUserDataPath("catalog.json");
     }
 
-    async loadCatalog() {
+    async _loadCatalog() {
         let catalogPath = this.catalogPath;
         if (!(await fileExists(catalogPath))) {
             if (isDev) {
@@ -84,7 +86,7 @@ class ExtensionsCatalog {
         return getUserDataPath("catalog-version.json");
     }
 
-    async loadCatalogVersion() {
+    async _loadCatalogVersion() {
         let catalogVersion;
 
         let catalogVersionPath = this.catalogVersionPath;

@@ -1239,7 +1239,7 @@ const AxisView = observer(
             }
 
             return (
-                <g>
+                <g className="eez-flow-editor-capture-pointers">
                     {axisController.position !== "x" && (
                         <AxisLines axisController={axisController} />
                     )}
@@ -1261,7 +1261,10 @@ const AxisView = observer(
                                 width={ZOOM_ICON_SIZE}
                                 height={ZOOM_ICON_SIZE}
                                 padding={ZOOM_ICON_PADDING}
-                                onClick={this.props.axisController.zoomOut}
+                                onClick={() => {
+                                    console.log(axisController.position);
+                                    this.props.axisController.zoomOut();
+                                }}
                             />
                         )}
 
@@ -1275,7 +1278,10 @@ const AxisView = observer(
                                 width={ZOOM_ICON_SIZE}
                                 height={ZOOM_ICON_SIZE}
                                 padding={ZOOM_ICON_PADDING}
-                                onClick={this.props.axisController.zoomIn}
+                                onClick={() => {
+                                    console.log(axisController.position);
+                                    this.props.axisController.zoomIn();
+                                }}
                             />
                         )}
 
@@ -2319,7 +2325,7 @@ export const ChartView = observer(
                         ref={ref => (this.svg = ref!)}
                         onWheel={this.onWheel}
                     >
-                        {chartController.customRender()}
+                        <g>{chartController.customRender()}</g>
 
                         {isNonEmpty && (
                             <AxisLines
@@ -4143,9 +4149,12 @@ class DynamicAxisController extends AxisController {
     }
 
     zoomIn = () => {
+        console.log("Zoom in");
         if (!this.zoomInEnabled) {
             return;
         }
+
+        console.log("Zoom in 2");
 
         const c = (this.to + this.from) / 2;
         const newDistance = this.distance / CONF_ZOOM_STEP;
@@ -4154,9 +4163,12 @@ class DynamicAxisController extends AxisController {
     };
 
     zoomOut = () => {
+        console.log("Zoom out");
         if (!this.zoomOutEnabled) {
             return;
         }
+
+        console.log("Zoom out");
 
         const c = (this.to + this.from) / 2;
         const newDistance = this.distance * CONF_ZOOM_STEP;
@@ -4343,8 +4355,8 @@ class FixedAxisController extends AxisController {
 
         if (this.axisModel.fixed.zoomMode === "all") {
             return calcSubdivisionScaleAndOffset(
-                this.minValue,
-                this.maxValue,
+                this._minValue,
+                this._maxValue,
                 this.majorSubdivison
             ).offset;
         }
@@ -4536,9 +4548,12 @@ class FixedAxisController extends AxisController {
     }
 
     zoomIn = () => {
+        console.log("Zoom in");
         if (!this.zoomInEnabled) {
             return;
         }
+
+        console.log("Zoom in 2");
 
         const c = (this.to + this.from) / 2;
         const scale = scaleZoomIn(this.subdivisionScale);
@@ -4552,9 +4567,12 @@ class FixedAxisController extends AxisController {
     };
 
     zoomOut = () => {
+        console.log("Zoom out");
         if (!this.zoomOutEnabled) {
             return;
         }
+
+        console.log("Zoom out 2");
 
         const c = (this.to + this.from) / 2;
         const scale = scaleZoomOut(this.subdivisionScale);
