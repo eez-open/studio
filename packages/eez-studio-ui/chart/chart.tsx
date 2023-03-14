@@ -879,6 +879,7 @@ const SvgButton = observer(
             height: number;
             padding: number;
             onClick: () => void;
+            title: string;
         },
         {}
     > {
@@ -897,12 +898,13 @@ const SvgButton = observer(
 
             const tx = x + padding - viewBox.x;
             const ty = y + padding - viewBox.y;
-            const sx = (width - 2 * padding) / viewBox.width;
-            const sy = (height - 2 * padding) / viewBox.height;
+            const sx = (width - 2 * padding) / viewBox.width / 1.5;
+            const sy = (height - 2 * padding) / viewBox.height / 1.5;
 
             return (
                 <g transform={`translate(${tx}, ${ty}) scale(${sx}, ${sy})`}>
                     <g className="EezStudio_SvgButtonGroup" onClick={onClick}>
+                        <title>{this.props.title}</title>
                         <rect
                             x={viewBox.x}
                             y={viewBox.y}
@@ -1198,44 +1200,49 @@ const AxisView = observer(
 
             let x1;
             let y1;
+            let x2;
+            let y2;
 
             if (axisController.position === "x") {
-                x1 = chartsController.chartLeft + ZOOM_ICON_SIZE / 2;
+                x1 =
+                    (chartsController.chartLeft + chartsController.chartRight) /
+                        2 -
+                    ZOOM_ICON_SIZE;
                 y1 =
                     chartsController.xAxisHeight -
                     SCROLL_BAR_SIZE -
-                    ZOOM_ICON_SIZE;
+                    ZOOM_ICON_SIZE / 1.5;
+                x2 =
+                    (chartsController.chartLeft + chartsController.chartRight) /
+                    2;
+                y2 = y1;
             } else if (axisController.position === "y") {
                 x1 =
                     chartsController.chartLeft -
                     chartsController.minLeftMargin +
                     SCROLL_BAR_SIZE;
-                y1 = chartsController.chartBottom - (3 * ZOOM_ICON_SIZE) / 2;
+                y1 =
+                    (chartsController.chartTop + chartsController.chartBottom) /
+                        2 -
+                    ZOOM_ICON_SIZE;
+                x2 = x1;
+                y2 =
+                    (chartsController.chartTop + chartsController.chartBottom) /
+                    2;
             } else {
                 x1 =
                     chartsController.chartRight +
                     chartsController.minRightMargin -
                     ZOOM_ICON_SIZE -
                     SCROLL_BAR_SIZE;
-                y1 = chartsController.chartBottom - (3 * ZOOM_ICON_SIZE) / 2;
-            }
-
-            let x2;
-            let y2;
-
-            if (axisController.position === "x") {
-                x2 = chartsController.chartRight - (3 * ZOOM_ICON_SIZE) / 2;
-                y2 = y1;
-            } else if (axisController.position === "y") {
+                y1 =
+                    (chartsController.chartTop + chartsController.chartBottom) /
+                        2 -
+                    ZOOM_ICON_SIZE;
                 x2 = x1;
                 y2 =
-                    chartsController.chartBottom -
-                    (chartsController.chartHeight - ZOOM_ICON_SIZE / 2);
-            } else {
-                x2 = x1;
-                y2 =
-                    chartsController.chartBottom -
-                    (chartsController.chartHeight - ZOOM_ICON_SIZE / 2);
+                    (chartsController.chartTop + chartsController.chartBottom) /
+                    2;
             }
 
             return (
@@ -1253,29 +1260,31 @@ const AxisView = observer(
 
                     {chartsController.areZoomButtonsVisible &&
                         !axisController.isDigital &&
-                        axisController.zoomOutEnabled && (
+                        axisController.zoomInEnabled && (
                             <SvgButton
-                                icon={SVG_ICON_ZOOM_OUT}
+                                icon={SVG_ICON_ZOOM_IN}
                                 x={Math.round(x1) + 0.5}
                                 y={Math.round(y1) + 0.5}
                                 width={ZOOM_ICON_SIZE}
                                 height={ZOOM_ICON_SIZE}
                                 padding={ZOOM_ICON_PADDING}
-                                onClick={this.props.axisController.zoomOut}
+                                onClick={this.props.axisController.zoomIn}
+                                title="Zoom In"
                             />
                         )}
 
                     {chartsController.areZoomButtonsVisible &&
                         !axisController.isDigital &&
-                        axisController.zoomInEnabled && (
+                        axisController.zoomOutEnabled && (
                             <SvgButton
-                                icon={SVG_ICON_ZOOM_IN}
+                                icon={SVG_ICON_ZOOM_OUT}
                                 x={Math.round(x2) + 0.5}
                                 y={Math.round(y2) + 0.5}
                                 width={ZOOM_ICON_SIZE}
                                 height={ZOOM_ICON_SIZE}
                                 padding={ZOOM_ICON_PADDING}
-                                onClick={this.props.axisController.zoomIn}
+                                onClick={this.props.axisController.zoomOut}
+                                title="Zoom Out"
                             />
                         )}
 
@@ -4330,8 +4339,16 @@ class FixedAxisController extends AxisController {
     get subdivisionOffset() {
         if (
             this.chartsController.mode === "preview" ||
-            this.axisModel.fixed.zoomMode === "default"
+            this.axisModel.fixed.zoomMode === "all"
         ) {
+            return calcSubdivisionScaleAndOffset(
+                this._minValue,
+                this._maxValue,
+                this.majorSubdivison
+            ).offset;
+        }
+
+        if (this.axisModel.fixed.zoomMode === "default") {
             return this.axisModel.defaultSubdivisionOffset !== undefined
                 ? this.axisModel.defaultSubdivisionOffset
                 : calcSubdivisionScaleAndOffset(
@@ -4341,22 +4358,22 @@ class FixedAxisController extends AxisController {
                   ).offset;
         }
 
-        if (this.axisModel.fixed.zoomMode === "all") {
-            return calcSubdivisionScaleAndOffset(
-                this._minValue,
-                this._maxValue,
-                this.majorSubdivison
-            ).offset;
-        }
-
         return this.axisModel.fixed.subdivisionOffset;
     }
 
     get subdivisionScale() {
         if (
             this.chartsController.mode === "preview" ||
-            this.axisModel.fixed.zoomMode === "default"
+            this.axisModel.fixed.zoomMode === "all"
         ) {
+            return calcSubdivisionScaleAndOffset(
+                this.minValue,
+                this.maxValue,
+                this.majorSubdivison
+            ).scale;
+        }
+
+        if (this.axisModel.fixed.zoomMode === "default") {
             return this.axisModel.defaultSubdivisionScale !== undefined
                 ? this.axisModel.defaultSubdivisionScale
                 : calcSubdivisionScaleAndOffset(
@@ -4364,14 +4381,6 @@ class FixedAxisController extends AxisController {
                       this.axisModel.defaultTo,
                       this.majorSubdivison
                   ).scale;
-        }
-
-        if (this.axisModel.fixed.zoomMode === "all") {
-            return calcSubdivisionScaleAndOffset(
-                this.minValue,
-                this.maxValue,
-                this.majorSubdivison
-            ).scale;
         }
 
         return this.axisModel.fixed.subdivisonScale;
@@ -4852,7 +4861,7 @@ class GenericChartXAxisModel implements IAxisModel {
         from: number;
         to: number;
     } = {
-        zoomMode: "default",
+        zoomMode: "all",
         from: 0,
         to: 0
     };
@@ -4862,7 +4871,7 @@ class GenericChartXAxisModel implements IAxisModel {
         subdivisionOffset: number;
         subdivisonScale: number;
     } = {
-        zoomMode: "default",
+        zoomMode: "all",
         subdivisionOffset: 0,
         subdivisonScale: 0
     };
@@ -4924,7 +4933,7 @@ class GenericChartYAxisModel implements IAxisModel {
         from: number;
         to: number;
     } = {
-        zoomMode: "default",
+        zoomMode: "all",
         from: 0,
         to: 0
     };
@@ -4934,7 +4943,7 @@ class GenericChartYAxisModel implements IAxisModel {
         subdivisionOffset: number;
         subdivisonScale: number;
     } = {
-        zoomMode: "default",
+        zoomMode: "all",
         subdivisionOffset: 0,
         subdivisonScale: 0
     };
@@ -4990,7 +4999,7 @@ class GenericChartViewOptions implements IViewOptions {
             vertical: 5
         },
         snapToGrid: true,
-        defaultZoomMode: "default"
+        defaultZoomMode: "all"
     };
 
     showAxisLabels: boolean = true;
@@ -5017,10 +5026,22 @@ class GenericChartViewOptions implements IViewOptions {
     }
 
     setAxesLinesStepsX(steps: number[]) {
+        if (!this.axesLines.steps) {
+            this.axesLines.steps = {
+                x: [],
+                y: []
+            };
+        }
         this.axesLines.steps.x = steps;
     }
 
     setAxesLinesStepsY(index: number, steps: number[]): void {
+        if (!this.axesLines.steps) {
+            this.axesLines.steps = {
+                x: [],
+                y: []
+            };
+        }
         this.axesLines.steps.y[index] = steps;
     }
 

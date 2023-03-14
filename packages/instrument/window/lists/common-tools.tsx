@@ -44,12 +44,12 @@ export const CommonTools = observer(
                                 <td>
                                     <button
                                         className="btn btn-secondary"
-                                        title="Zoom All"
+                                        title="Zoom to view all list data"
                                         onClick={
                                             this.props.chartsController.zoomAll
                                         }
                                     >
-                                        Zoom All
+                                        Zoom to Fit
                                     </button>
                                 </td>
                             )}

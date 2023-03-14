@@ -132,7 +132,7 @@ class ListViewOptions {
             vertical: 5
         },
         snapToGrid: true,
-        defaultZoomMode: "default"
+        defaultZoomMode: "all"
     };
     showAxisLabels: boolean = true;
     showZoomButtons: boolean = true;
@@ -376,13 +376,13 @@ export class ListAxis {
 
     constructor(props: ListAxis) {
         this.dynamic = (props && props.dynamic) || {
-            zoomMode: "default",
+            zoomMode: "all",
             from: 0,
             to: 0
         };
 
         this.fixed = (props && props.fixed) || {
-            zoomMode: "default",
+            zoomMode: "all",
             subdivisionOffset: 0,
             subdivisonScale: 0
         };

@@ -157,7 +157,7 @@ export class Waveform extends FileHistoryItem {
         this.viewOptions = new ViewOptions(message.viewOptions);
 
         this.xAxisModel.dynamic.zoomMode = this.xAxisModel.fixed.zoomMode =
-            this.viewOptions.axesLines.defaultZoomMode || "default";
+            this.viewOptions.axesLines.defaultZoomMode || "all";
 
         this.rulers = new RulersModel(message.rulers);
         this.rulers.initYRulers(1);

@@ -40,16 +40,16 @@ export const WaveformToolbar = observer(
                     </Toolbar>
                     <Toolbar>
                         <ButtonAction
-                            text="Zoom Default"
+                            text="Zoom to Fit"
                             className="btn-secondary"
-                            title="Reset zoom and offset to default values"
-                            onClick={this.props.chartsController.zoomDefault}
+                            title="Zoom to Fit"
+                            onClick={this.props.chartsController.zoomAll}
                         />
                         <ButtonAction
-                            text="Zoom All"
+                            text="Zoom 100%"
                             className="btn-secondary"
-                            title="Zoom all"
-                            onClick={this.props.chartsController.zoomAll}
+                            title="Zoom 100% (1px per sample)"
+                            onClick={this.props.chartsController.zoomDefault}
                         />
                     </Toolbar>
                 </React.Fragment>

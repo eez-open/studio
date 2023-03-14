@@ -67,7 +67,7 @@ export class WaveformTimeAxisModel implements IAxisModel {
         from: number;
         to: number;
     } = {
-        zoomMode: "default",
+        zoomMode: "all",
         from: 0,
         to: 0
     };
@@ -77,7 +77,7 @@ export class WaveformTimeAxisModel implements IAxisModel {
         subdivisionOffset: number;
         subdivisonScale: number;
     } = {
-        zoomMode: "default",
+        zoomMode: "all",
         subdivisionOffset: 0,
         subdivisonScale: 0
     };

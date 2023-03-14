@@ -36,7 +36,7 @@ export class ViewOptions implements IViewOptions {
             vertical: 5
         },
         snapToGrid: true,
-        defaultZoomMode: "default"
+        defaultZoomMode: "all"
     };
 
     showAxisLabels: boolean = true;
@@ -63,10 +63,22 @@ export class ViewOptions implements IViewOptions {
     }
 
     setAxesLinesStepsX(steps: number[]) {
+        if (!this.axesLines.steps) {
+            this.axesLines.steps = {
+                x: [],
+                y: []
+            };
+        }
         this.axesLines.steps.x = steps;
     }
 
     setAxesLinesStepsY(index: number, steps: number[]): void {
+        if (!this.axesLines.steps) {
+            this.axesLines.steps = {
+                x: [],
+                y: []
+            };
+        }
         this.axesLines.steps.y[index] = steps;
     }
 
