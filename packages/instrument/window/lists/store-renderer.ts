@@ -386,6 +386,11 @@ export class ListAxis {
             subdivisionOffset: 0,
             subdivisonScale: 0
         };
+
+        makeObservable(this, {
+            dynamic: observable,
+            fixed: observable
+        });
     }
 
     applyChanges(changes: any) {
