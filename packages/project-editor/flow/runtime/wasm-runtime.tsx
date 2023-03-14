@@ -574,6 +574,21 @@ export class WasmRuntime extends RemoteRuntime {
         }
     }
 
+    override setObjectVariableValue(
+        variableName: string,
+        objectVariableValue: IObjectVariableValue
+    ) {
+        for (const globalVariable of this.globalVariables) {
+            if (
+                globalVariable.variable.name == variableName &&
+                globalVariable.kind == "object"
+            ) {
+                globalVariable.objectVariableValue = objectVariableValue;
+                return;
+            }
+        }
+    }
+
     getUpdatedObjectGlobalVariableValues(): IGlobalVariable[] {
         const updatedGlobalVariableValues: IGlobalVariable[] = [];
 
@@ -647,124 +662,135 @@ export class WasmRuntime extends RemoteRuntime {
 
     ////////////////////////////////////////////////////////////////////////////////
 
-    async executeScpiCommand(scpiCommand: ScpiCommand) {
-        const command = arrayBufferToBinaryString(scpiCommand.command);
-
+    findInstrument(scpiCommand: ScpiCommand) {
         for (let i = 0; i < this.globalVariables.length; i++) {
             const globalVariable = this.globalVariables[i];
             if (globalVariable.kind == "object") {
                 const instrument = globalVariable.objectVariableValue;
                 if (instrument instanceof InstrumentObject) {
                     if (scpiCommand.instrumentId == instrument.id) {
-                        if (
-                            instrument != this.projectStore.dashboardInstrument
-                        ) {
-                            const CONNECTION_TIMEOUT = 5000;
-                            const startTime = Date.now();
-                            while (
-                                !instrument.isConnected &&
-                                Date.now() - startTime < CONNECTION_TIMEOUT
-                            ) {
-                                if (!instrument.connection.isTransitionState) {
-                                    instrument.connection.connect();
-                                }
-                                await new Promise<boolean>(resolve =>
-                                    setTimeout(resolve, 10)
-                                );
-                            }
-                        }
-
-                        if (!instrument.isConnected) {
-                            const data: RendererToWorkerMessage = {
-                                scpiResult: {
-                                    errorMessage: "instrument not connected"
-                                }
-                            };
-                            this.worker.postMessage(data);
-                            return;
-                        }
-
-                        const connection = instrument.connection;
-
-                        try {
-                            await connection.acquire(false);
-                        } catch (err) {
-                            let data: RendererToWorkerMessage;
-                            data = {
-                                scpiResult: {
-                                    errorMessage: err.toString()
-                                }
-                            };
-                            this.worker.postMessage(data);
-                            return;
-                        }
-
-                        let result: any = "";
-                        try {
-                            if (scpiCommand.isQuery) {
-                                //console.log("SCPI query", command);
-                                result = await connection.query(command);
-                                //console.log("SCPI result", result);
-                            } else {
-                                //console.log("SCPI command", command);
-                                connection.query(command);
-                                result = "";
-                            }
-                        } catch (err) {
-                            let data: RendererToWorkerMessage;
-                            data = {
-                                scpiResult: {
-                                    errorMessage: err.toString()
-                                }
-                            };
-                            this.worker.postMessage(data);
-                            return;
-                        } finally {
-                            connection.release();
-                        }
-
-                        if (result instanceof FileHistoryItem) {
-                            result = result.data;
-                        }
-
-                        let data: RendererToWorkerMessage;
-                        if (result instanceof Uint8Array) {
-                            data = {
-                                scpiResult: {
-                                    result
-                                }
-                            };
-                        } else if (typeof result == "number") {
-                            data = {
-                                scpiResult: {
-                                    result: binaryStringToArrayBuffer(
-                                        result.toString()
-                                    )
-                                }
-                            };
-                        } else if (typeof result == "string") {
-                            data = {
-                                scpiResult: {
-                                    result: binaryStringToArrayBuffer(result)
-                                }
-                            };
-                        } else {
-                            data = {
-                                scpiResult: {
-                                    errorMessage: result.error
-                                        ? result.error
-                                        : "unknown SCPI result"
-                                }
-                            };
-                        }
-
-                        this.worker.postMessage(data);
-
-                        return;
+                        return instrument;
                     }
                 }
             }
         }
+        return undefined;
+    }
+
+    async executeScpiCommand(scpiCommand: ScpiCommand) {
+        const instrument = this.findInstrument(scpiCommand);
+
+        if (!instrument) {
+            const data: RendererToWorkerMessage = {
+                scpiResult: {
+                    errorMessage: "instrument not found"
+                }
+            };
+            this.worker.postMessage(data);
+            return;
+        }
+
+        if (instrument != this.projectStore.dashboardInstrument) {
+            const CONNECTION_TIMEOUT = 3000;
+            const startTime = Date.now();
+            while (
+                !instrument.isConnected &&
+                Date.now() - startTime < CONNECTION_TIMEOUT
+            ) {
+                if (!instrument.connection.isTransitionState) {
+                    instrument.connection.connect();
+                }
+                await new Promise<boolean>(resolve => setTimeout(resolve, 10));
+            }
+        }
+
+        if (!instrument.isConnected) {
+            const data: RendererToWorkerMessage = {
+                scpiResult: {
+                    errorMessage: "instrument not connected"
+                }
+            };
+            this.worker.postMessage(data);
+            return;
+        }
+
+        const connection = instrument.connection;
+
+        try {
+            await connection.acquire(false);
+        } catch (err) {
+            let data: RendererToWorkerMessage;
+            data = {
+                scpiResult: {
+                    errorMessage: err.toString()
+                }
+            };
+            this.worker.postMessage(data);
+            return;
+        }
+
+        const command = arrayBufferToBinaryString(scpiCommand.command);
+
+        let result: any = "";
+        try {
+            if (scpiCommand.isQuery) {
+                //console.log("SCPI query", command);
+                result = await connection.query(command);
+                //console.log("SCPI result", result);
+            } else {
+                //console.log("SCPI command", command);
+                connection.query(command);
+                result = "";
+            }
+        } catch (err) {
+            let data: RendererToWorkerMessage;
+            data = {
+                scpiResult: {
+                    errorMessage: err.toString()
+                }
+            };
+            this.worker.postMessage(data);
+            return;
+        } finally {
+            connection.release();
+        }
+
+        if (result instanceof FileHistoryItem) {
+            result = result.data;
+        }
+
+        let data: RendererToWorkerMessage;
+        if (result instanceof Uint8Array) {
+            data = {
+                scpiResult: {
+                    result
+                }
+            };
+        } else if (typeof result == "number") {
+            data = {
+                scpiResult: {
+                    result: binaryStringToArrayBuffer(result.toString())
+                }
+            };
+        } else if (typeof result == "string") {
+            data = {
+                scpiResult: {
+                    result: binaryStringToArrayBuffer(result)
+                }
+            };
+        } else {
+            data = {
+                scpiResult: {
+                    errorMessage: result.error
+                        ? result.error
+                        : "unknown SCPI result"
+                }
+            };
+        }
+
+        this.worker.postMessage(data);
+
+        return;
     }
 
     connectToInstrument(instrumentId: string) {

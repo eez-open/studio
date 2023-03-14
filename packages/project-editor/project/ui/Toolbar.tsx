@@ -6,35 +6,14 @@ import { startSearch } from "project-editor/core/search";
 import { ButtonAction, IconAction } from "eez-studio-ui/action";
 import { BuildConfiguration } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
-import {
-    getObjectVariableTypeFromType,
-    IObjectVariableValue
-} from "project-editor/features/variable/value-type";
 import { PageTabState } from "project-editor/features/page/PageEditor";
 import { LayoutModels, objectToString } from "project-editor/store";
-import { RenderVariableStatus } from "project-editor/features/variable/variable";
+import { GlobalVariableStatuses } from "project-editor/features/variable/global-variable-status";
 import { FlowTabState } from "project-editor/flow/flow-tab-state";
 import { RuntimeType } from "project-editor/project/project-type-traits";
+import { RUN_ICON } from "project-editor/ui-components/icons";
 
-const RUN_ICON = (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        strokeWidth="2"
-        stroke="currentColor"
-        fill="none"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-    >
-        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-        <circle cx="13" cy="4" r="1"></circle>
-        <path d="M4 17l5 1l.75 -1.5"></path>
-        <path d="M15 21l0 -4l-4 -3l1 -6"></path>
-        <path d="M7 12l0 -3l5 -1l3 3l3 1"></path>
-    </svg>
-);
+////////////////////////////////////////////////////////////////////////////////
 
 export const Toolbar = observer(
     class Toolbar extends React.Component {
@@ -49,7 +28,7 @@ export const Toolbar = observer(
                         this.context.runtime &&
                         !this.context.runtime.isDebuggerActive
                     ) ? (
-                        <Controls />
+                        <EditorButtons />
                     ) : (
                         <div />
                     )}
@@ -73,67 +52,10 @@ export const Toolbar = observer(
     }
 );
 
-const GlobalVariableStatuses = observer(
-    class GlobalVariableStatuses extends React.Component {
-        static contextType = ProjectContext;
-        declare context: React.ContextType<typeof ProjectContext>;
+////////////////////////////////////////////////////////////////////////////////
 
-        render() {
-            let globalVariablesStatus: React.ReactNode[] = [];
-
-            for (const variable of this.context.project.allGlobalVariables) {
-                const objectVariableType = getObjectVariableTypeFromType(
-                    variable.type
-                );
-                if (objectVariableType) {
-                    const objectVariableValue:
-                        | IObjectVariableValue
-                        | undefined = this.context.dataContext.get(
-                        variable.name
-                    );
-
-                    globalVariablesStatus.push(
-                        <RenderVariableStatus
-                            key={variable.name}
-                            variable={variable}
-                            value={objectVariableValue}
-                            onClick={async () => {
-                                if (objectVariableType.editConstructorParams) {
-                                    const constructorParams =
-                                        await objectVariableType.editConstructorParams(
-                                            variable,
-                                            objectVariableValue?.constructorParams
-                                        );
-                                    if (constructorParams !== undefined) {
-                                        this.context.dataContext.set(
-                                            variable.name,
-                                            objectVariableType.createValue(
-                                                constructorParams,
-                                                !!this.context.runtime
-                                            )
-                                        );
-                                    }
-                                }
-                            }}
-                        />
-                    );
-                }
-            }
-
-            return (
-                <div
-                    className="EezStudio_FlowRuntimeControls"
-                    style={{ width: 0, justifyContent: "flex-end" }}
-                >
-                    {globalVariablesStatus}
-                </div>
-            );
-        }
-    }
-);
-
-const Controls = observer(
-    class Controls extends React.Component {
+const EditorButtons = observer(
+    class EditorButtons extends React.Component {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -379,6 +301,41 @@ const Controls = observer(
     }
 );
 
+const SelectLanguage = observer(
+    class SelectLanguage extends React.Component {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        render() {
+            return (
+                <select
+                    className="form-select"
+                    value={
+                        this.context.uiStateStore.selectedLanguage.languageID
+                    }
+                    onChange={action(
+                        (event: React.ChangeEvent<HTMLSelectElement>) =>
+                            (this.context.uiStateStore.selectedLanguageID =
+                                event.currentTarget.value)
+                    )}
+                    style={{ width: "fit-content" }}
+                >
+                    {this.context.project.texts.languages.map(language => (
+                        <option
+                            key={language.languageID}
+                            value={language.languageID}
+                        >
+                            {language.languageID}
+                        </option>
+                    ))}
+                </select>
+            );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 const RunEditSwitchControls = observer(
     class RunEditSwitchControls extends React.Component {
         static contextType = ProjectContext;
@@ -450,6 +407,8 @@ const RunEditSwitchControls = observer(
         }
     }
 );
+
+////////////////////////////////////////////////////////////////////////////////
 
 const Search = observer(
     class Search extends React.Component {
@@ -574,39 +533,6 @@ const Search = observer(
                         />
                     </div>
                 </div>
-            );
-        }
-    }
-);
-
-const SelectLanguage = observer(
-    class SelectLanguage extends React.Component {
-        static contextType = ProjectContext;
-        declare context: React.ContextType<typeof ProjectContext>;
-
-        render() {
-            return (
-                <select
-                    className="form-select"
-                    value={
-                        this.context.uiStateStore.selectedLanguage.languageID
-                    }
-                    onChange={action(
-                        (event: React.ChangeEvent<HTMLSelectElement>) =>
-                            (this.context.uiStateStore.selectedLanguageID =
-                                event.currentTarget.value)
-                    )}
-                    style={{ width: "fit-content" }}
-                >
-                    {this.context.project.texts.languages.map(language => (
-                        <option
-                            key={language.languageID}
-                            value={language.languageID}
-                        >
-                            {language.languageID}
-                        </option>
-                    ))}
-                </select>
             );
         }
     }

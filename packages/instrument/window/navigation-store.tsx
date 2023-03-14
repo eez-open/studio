@@ -164,9 +164,9 @@ export class NavigationStore {
             }
 
             if (appStore.instrument) {
-                document.title = `${appStore.instrument.name} - Instrument - EEZ Studio`;
+                document.title = `${appStore.instrument.name} - EEZ Studio`;
             } else {
-                document.title = "Instrument - EEZ Studio";
+                document.title = "EEZ Studio";
             }
         });
     }

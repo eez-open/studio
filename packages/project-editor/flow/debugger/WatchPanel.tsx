@@ -240,6 +240,10 @@ const WatchTable = observer(
                 value: any,
                 type: string | null
             ): (() => ITreeNode[]) | undefined => {
+                if (type == "date") {
+                    return undefined;
+                }
+
                 const MAX_CHILDREN = 1000;
 
                 if (Array.isArray(value) || value instanceof Uint8Array) {

@@ -638,7 +638,7 @@ async function connectToInstrument(instrument: InstrumentObject) {
 
     const connection = instrument.connection;
     connection.connect();
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 10; i++) {
         try {
             await connection.acquire(false);
             connection.release();
@@ -647,7 +647,6 @@ async function connectToInstrument(instrument: InstrumentObject) {
             await new Promise<void>(resolve => setTimeout(resolve, 100));
         }
     }
-    notification.error("Failed to connect to the instrument!");
 }
 
 type InstrumentConstructorParams = "string" | { id: "string" };
@@ -673,7 +672,15 @@ registerObjectVariableType("Instrument", {
         );
 
         if (instrument) {
-            if (!instrument.lastConnection) {
+            if (instrument.lastConnection) {
+                await connectToInstrument(instrument);
+
+                if (!instrument.isConnected) {
+                    notification.error("Failed to connect to the instrument!");
+                }
+            }
+
+            if (!instrument.isConnected) {
                 instrument.openConnectDialog();
             }
         }

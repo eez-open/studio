@@ -9,7 +9,18 @@ import {
     IReactionDisposer
 } from "mobx";
 import { observer } from "mobx-react";
+
+import { humanize } from "eez-studio-shared/string";
+import { _difference } from "eez-studio-shared/algorithm";
+
 import { FieldComponent } from "eez-studio-ui/generic-dialog";
+
+import type {
+    IObjectVariableType,
+    IObjectVariableValue,
+    ValueType
+} from "eez-studio-types";
+
 import {
     PropertyType,
     PropertyInfo,
@@ -17,19 +28,12 @@ import {
 } from "project-editor/core/object";
 import type { Project } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
-import { humanize } from "eez-studio-shared/string";
 import { getPropertyValue } from "project-editor/ui-components/PropertyGrid/utils";
 import type {
     IFlowContext,
     IVariable
 } from "project-editor/flow/flow-interfaces";
-import { _difference } from "eez-studio-shared/algorithm";
 
-import type {
-    IObjectVariableType,
-    IObjectVariableValue,
-    ValueType
-} from "eez-studio-types";
 import type { IStructure } from "project-editor/features/variable/variable";
 import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
 
@@ -272,11 +276,12 @@ export function getValueLabel(
     }
 
     if (typeof value == "object") {
-        try {
-            return JSON.stringify(value);
-        } catch (err) {
-            return "[object]";
-        }
+        return "";
+        // try {
+        //     return JSON.stringify(value);
+        // } catch (err) {
+        //     return "[object]";
+        // }
     }
 
     if (typeof value == "string") {

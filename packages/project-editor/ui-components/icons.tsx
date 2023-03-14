@@ -2315,3 +2315,23 @@ export const GAUGE_ICON = (
         </g>
     </svg>
 );
+
+export const RUN_ICON = (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        strokeWidth="2"
+        stroke="currentColor"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+        <circle cx="13" cy="4" r="1"></circle>
+        <path d="M4 17l5 1l.75 -1.5"></path>
+        <path d="M15 21l0 -4l-4 -3l1 -6"></path>
+        <path d="M7 12l0 -3l5 -1l3 3l3 1"></path>
+    </svg>
+);

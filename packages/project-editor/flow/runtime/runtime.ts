@@ -41,7 +41,7 @@ import {
     evalExpression,
     IExpressionContext
 } from "project-editor/flow/expression";
-import type { ValueType } from "eez-studio-types";
+import type { IObjectVariableValue, ValueType } from "eez-studio-types";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -815,6 +815,8 @@ export abstract class RuntimeBase {
 
         cleanupFlowState(this);
     }
+
+    setObjectVariableValue(variableName: string, value: IObjectVariableValue) {}
 }
 
 export class FlowState {

@@ -23,15 +23,15 @@
         "build-lvgl-runtime:win32": "copy packages\\project-editor\\flow\\runtime\\lvgl_runtime.* build\\project-editor\\flow\\runtime\\",
         "make-electron-builder-yml": "cd installation && tsc && cd .. && node installation/make-electron-builder-yml.js",
         "watch": "node node_modules/gulp-cli/bin/gulp.js debug && tsc --project tsconfig.dev.json",
-        "tsc-version": "tsc --version",
-        "electron-version": "electron --version",
-        "publish-types": "cd packages/eez-studio-types && npm publish",
         "pack": "electron-builder --dir",
         "dist": "electron-builder",
         "madge-circular": "madge --circular packages/home/main.tsx > circular.txt",
         "madge-graph": "madge --image source-graph.svg packages/home/main.tsx",
         "madge-graph-circular": "madge --circular --image source-graph-circular.svg packages/home/main.tsx",
-        "dist-raspbian": "USE_SYSTEM_FPM=true npm run dist"
+        "dist-raspbian": "USE_SYSTEM_FPM=true npm run dist",
+        "tsc-version": "tsc --version",
+        "electron-version": "electron --version",
+        "publish-types": "cd packages/eez-studio-types && npm publish"
     },
     "prettier": {
         "printWidth": 80,

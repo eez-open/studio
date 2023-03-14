@@ -348,6 +348,10 @@ export class ProjectStore {
     }
 
     updateProjectWindowState() {
+        if (this.dashboardInstrument) {
+            return;
+        }
+
         let title = "";
 
         if (this.project) {
@@ -380,12 +384,14 @@ export class ProjectStore {
     }
 
     updateMruFilePath() {
-        if (!this.dashboardInstrument) {
-            ipcRenderer.send("setMruFilePath", {
-                filePath: this.filePath,
-                projectType: this.project?.settings?.general?.projectType
-            });
+        if (this.dashboardInstrument) {
+            return;
         }
+
+        ipcRenderer.send("setMruFilePath", {
+            filePath: this.filePath,
+            projectType: this.project?.settings?.general?.projectType
+        });
     }
 
     getFilePathRelativeToProjectPath(absoluteFilePath: string) {
