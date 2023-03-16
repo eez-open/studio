@@ -598,6 +598,7 @@ export abstract class BaseList implements ChartData {
     }
 
     abstract getMaxTime(): number;
+    abstract getRange(unit: ListAxisModel): { from: number; to: number };
 
     abstract createChartsController(
         appStore: IAppStore,

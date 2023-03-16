@@ -157,6 +157,44 @@ export class TableList extends BaseList {
         return max;
     }
 
+    getRange(model: ListAxisModel) {
+        function getRangeFromNumberArray(arr: number[]) {
+            if (arr.length == 0) {
+                return {
+                    from: model.minValue,
+                    to: model.maxValue
+                };
+            }
+            let min = model.maxValue;
+            let max = model.minValue;
+
+            for (let i = 0; i < arr.length; i++) {
+                if (arr[i] < min) {
+                    min = arr[i];
+                }
+                if (arr[i] > max) {
+                    max = arr[i];
+                }
+            }
+
+            return {
+                from: min,
+                to: max
+            };
+        }
+
+        if (model.unit.name == "voltage") {
+            return getRangeFromNumberArray(this.data.voltage);
+        } else if (model.unit.name == "current") {
+            return getRangeFromNumberArray(this.data.current);
+        } else {
+            return {
+                from: 0,
+                to: this.getMaxTime()
+            };
+        }
+    }
+
     createChartsController(
         appStore: IAppStore,
         displayOption: ChartsDisplayOption,

@@ -203,6 +203,44 @@ export class EnvelopeList extends BaseList {
         );
     }
 
+    getRange(model: ListAxisModel) {
+        function getRangeFromEnvelopePoints(points: IEnvelopePoint[]) {
+            if (points.length == 0) {
+                return {
+                    from: model.minValue,
+                    to: model.maxValue
+                };
+            }
+            let min = model.maxValue;
+            let max = model.minValue;
+
+            for (let i = 0; i < points.length; i++) {
+                if (points[i].value < min) {
+                    min = points[i].value;
+                }
+                if (points[i].value > max) {
+                    max = points[i].value;
+                }
+            }
+
+            return {
+                from: min,
+                to: max
+            };
+        }
+
+        if (model.unit.name == "voltage") {
+            return getRangeFromEnvelopePoints(this.data.voltage);
+        } else if (model.unit.name == "current") {
+            return getRangeFromEnvelopePoints(this.data.current);
+        } else {
+            return {
+                from: 0,
+                to: this.getMaxTime()
+            };
+        }
+    }
+
     createChartsController(
         appStore: IAppStore,
         displayOption: ChartsDisplayOption,
@@ -907,7 +945,7 @@ export class EnvelopeLineController extends LineController {
             yMax: computed,
             instrument: computed,
             tableListData: computed,
-            powerLimitError: computed
+            limitError: computed
         });
     }
 
@@ -941,7 +979,39 @@ export class EnvelopeLineController extends LineController {
         return getTableListData(this.list, this.instrument);
     }
 
-    get powerLimitError() {
+    get limitError() {
+        const maxVoltage = getMaxVoltage(this.instrument);
+        for (let i = 0; i < this.tableListData.voltage.length; i++) {
+            if (this.tableListData.voltage[i] < 0) {
+                return "Voltage must be >= 0";
+            }
+            if (this.tableListData.voltage[i] > maxVoltage) {
+                return (
+                    "Voltage must be <= " +
+                    VOLTAGE_UNIT.formatValue(
+                        maxVoltage,
+                        this.instrument.getDigits(VOLTAGE_UNIT)
+                    )
+                );
+            }
+        }
+
+        const maxCurrent = getMaxCurrent(this.instrument);
+        for (let i = 0; i < this.tableListData.current.length; i++) {
+            if (this.tableListData.current[i] < 0) {
+                return "Current must be >= 0";
+            }
+            if (this.tableListData.current[i] > maxCurrent) {
+                return (
+                    "Current must be <= " +
+                    CURRENT_UNIT.formatValue(
+                        maxCurrent,
+                        this.instrument.getDigits(VOLTAGE_UNIT)
+                    )
+                );
+            }
+        }
+
         for (let i = 0; i < this.tableListData.dwell.length; i++) {
             let power =
                 this.tableListData.voltage[i] * this.tableListData.current[i];
@@ -949,6 +1019,7 @@ export class EnvelopeLineController extends LineController {
                 return getPowerLimitErrorMessage(this.instrument);
             }
         }
+
         return undefined;
     }
 
@@ -1025,7 +1096,13 @@ export class EnvelopeLineController extends LineController {
             value: cursor.value
         };
         this.values.splice(cursor.valueIndex, 0, newValue);
-        cursor.error = time < 0 ? "Time must be >= 0" : this.powerLimitError;
+        cursor.error =
+            time < 0
+                ? "Time must be >= 0"
+                : time > this.list.data.duration
+                ? "Time must be <= " +
+                  TIME_UNIT.formatValue(this.list.data.duration)
+                : this.limitError;
         this.values.splice(cursor.valueIndex, 1);
 
         cursor.addPoint = !cursor.error;

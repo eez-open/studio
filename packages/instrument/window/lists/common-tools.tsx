@@ -2,7 +2,11 @@ import React from "react";
 import { observable, action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
-import type { IChartsController } from "eez-studio-ui/chart/chart";
+import type {
+    IAxisController,
+    IChartsController
+} from "eez-studio-ui/chart/chart";
+import { ListAxisModel } from "instrument/window/lists/store-renderer";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -35,21 +39,61 @@ export const CommonTools = observer(
             );
         }
 
+        zoomToFitRange = () => {
+            function zoom(axisController: IAxisController | undefined) {
+                if (!axisController) {
+                    return;
+                }
+
+                const listAxisModel = axisController.axisModel as ListAxisModel;
+
+                const range = listAxisModel.list.getRange(listAxisModel);
+
+                const from = Math.max(
+                    listAxisModel.minValue,
+                    range.from - 0.05 * (range.to - range.from)
+                );
+
+                const to = Math.min(
+                    listAxisModel.maxValue,
+                    range.to + 0.05 * (range.to - range.from)
+                );
+
+                axisController.zoom(from, to);
+            }
+
+            for (const chartController of this.props.chartsController
+                .chartControllers) {
+                zoom(chartController.yAxisController);
+                zoom(chartController.yAxisControllerOnRightSide);
+            }
+        };
+
         render() {
             return (
                 <table>
                     <tbody>
                         <tr>
-                            {this.props.chartsController.isZoomAllEnabled && (
+                            {this.props.chartsController && (
                                 <td>
                                     <button
                                         className="btn btn-secondary"
-                                        title="Zoom to view all list data"
+                                        title="Zoom to fit range"
                                         onClick={
                                             this.props.chartsController.zoomAll
                                         }
+                                        style={{
+                                            marginRight: 10
+                                        }}
                                     >
-                                        Zoom to Fit
+                                        Zoom 100%
+                                    </button>
+                                    <button
+                                        className="btn btn-secondary"
+                                        title="Zoom to fit range"
+                                        onClick={this.zoomToFitRange}
+                                    >
+                                        Zoom to Fit Range
                                     </button>
                                 </td>
                             )}
