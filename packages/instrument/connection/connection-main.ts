@@ -260,11 +260,13 @@ export class Connection
             let browserWindow = require("electron").BrowserWindow.fromId(
                 this.callbackWindowId
             )!;
-            browserWindow.webContents.send("instrument/connection/value", {
-                instrumentId: this.instrumentId,
-                acquireId: this.acquireId,
-                value
-            });
+            if (browserWindow) {
+                browserWindow.webContents.send("instrument/connection/value", {
+                    instrumentId: this.instrumentId,
+                    acquireId: this.acquireId,
+                    value
+                });
+            }
         }
     }
 
@@ -332,15 +334,16 @@ export class Connection
                 const browserWindow = require("electron").BrowserWindow.fromId(
                     acquireTask.callbackWindowId
                 )!;
-
-                browserWindow.webContents.send(
-                    "instrument/connection/acquire-result",
-                    {
-                        instrumentId: acquireTask.instrumentId,
-                        acquireId: acquireTask.acquireId,
-                        rejectReason: "timeout"
-                    }
-                );
+                if (browserWindow) {
+                    browserWindow.webContents.send(
+                        "instrument/connection/acquire-result",
+                        {
+                            instrumentId: acquireTask.instrumentId,
+                            acquireId: acquireTask.acquireId,
+                            rejectReason: "timeout"
+                        }
+                    );
+                }
             }
         }
 
@@ -546,11 +549,13 @@ export class Connection
             let browserWindow = require("electron").BrowserWindow.fromId(
                 this.callbackWindowId
             )!;
-            browserWindow.webContents.send("instrument/connection/value", {
-                instrumentId: this.instrumentId,
-                acquireId: this.acquireId,
-                error: "connection is diconnected"
-            });
+            if (browserWindow) {
+                browserWindow.webContents.send("instrument/connection/value", {
+                    instrumentId: this.instrumentId,
+                    acquireId: this.acquireId,
+                    error: "connection is diconnected"
+                });
+            }
         }
     }
 
@@ -635,23 +640,27 @@ export class Connection
                 this.callbackWindowId = callbackWindowId;
                 this.traceEnabled = traceEnabled;
 
+                if (browserWindow) {
+                    browserWindow.webContents.send(
+                        "instrument/connection/acquire-result",
+                        {
+                            instrumentId,
+                            acquireId
+                        }
+                    );
+                }
+            }
+        } else {
+            if (browserWindow) {
                 browserWindow.webContents.send(
                     "instrument/connection/acquire-result",
                     {
                         instrumentId,
-                        acquireId
+                        acquireId,
+                        rejectReason: "not connected"
                     }
                 );
             }
-        } else {
-            browserWindow.webContents.send(
-                "instrument/connection/acquire-result",
-                {
-                    instrumentId,
-                    acquireId,
-                    rejectReason: "not connected"
-                }
-            );
         }
     }
 
@@ -780,25 +789,29 @@ export function setupIpcServer() {
                             require("electron").BrowserWindow.fromId(
                                 arg.callbackWindowId
                             )!;
-                        browserWindow.webContents.send(
-                            "instrument/connection/long-operation-result",
-                            {
-                                instrumentId: arg.instrumentId
-                            }
-                        );
+                        if (browserWindow) {
+                            browserWindow.webContents.send(
+                                "instrument/connection/long-operation-result",
+                                {
+                                    instrumentId: arg.instrumentId
+                                }
+                            );
+                        }
                     },
                     error => {
                         let browserWindow =
                             require("electron").BrowserWindow.fromId(
                                 arg.callbackWindowId
                             )!;
-                        browserWindow.webContents.send(
-                            "instrument/connection/long-operation-result",
-                            {
-                                instrumentId: arg.instrumentId,
-                                error
-                            }
-                        );
+                        if (browserWindow) {
+                            browserWindow.webContents.send(
+                                "instrument/connection/long-operation-result",
+                                {
+                                    instrumentId: arg.instrumentId,
+                                    error
+                                }
+                            );
+                        }
                     }
                 );
             }
@@ -858,14 +871,16 @@ export function setupIpcServer() {
                 let browserWindow = require("electron").BrowserWindow.fromId(
                     arg.callbackWindowId
                 )!;
-                browserWindow.webContents.send(
-                    "instrument/connection/acquire-result",
-                    {
-                        instrumentId: arg.instrumentId,
-                        acquireId: arg.acquireId,
-                        rejectReason: "not connected"
-                    }
-                );
+                if (browserWindow) {
+                    browserWindow.webContents.send(
+                        "instrument/connection/acquire-result",
+                        {
+                            instrumentId: arg.instrumentId,
+                            acquireId: arg.acquireId,
+                            rejectReason: "not connected"
+                        }
+                    );
+                }
             }
         }
     );

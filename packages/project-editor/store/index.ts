@@ -142,6 +142,7 @@ export class ProjectStore {
     watcher: FSWatcher | undefined = undefined;
 
     dashboardInstrument?: InstrumentObject;
+    standalone: boolean = false;
 
     get editorsStore() {
         return this.runtime
@@ -348,7 +349,7 @@ export class ProjectStore {
     }
 
     updateProjectWindowState() {
-        if (this.dashboardInstrument) {
+        if (this.dashboardInstrument || this.standalone) {
             return;
         }
 

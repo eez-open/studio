@@ -53,7 +53,8 @@ export const GlobalVariableStatuses = observer(
                                     const constructorParams =
                                         await objectVariableType.editConstructorParams(
                                             variable,
-                                            objectVariableValue?.constructorParams
+                                            objectVariableValue?.constructorParams ||
+                                                objectVariableValue
                                         );
                                     if (constructorParams !== undefined) {
                                         this.context.runtime!.setObjectVariableValue(

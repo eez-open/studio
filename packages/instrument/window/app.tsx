@@ -23,20 +23,22 @@ import type { InstrumentObject } from "instrument/instrument-object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function EditInstrumentLabelDialog({
-    instrument
+export function EditInstrumentLabelDialog({
+    instrument,
+    size
 }: {
     instrument: InstrumentObject;
+    size?: "small" | "medium" | "large";
 }) {
     const [label, setLabel] = React.useState(instrument.label || "");
 
     return (
         <Dialog
-            okButtonText="Connect"
             onOk={() => {
                 instrument.setLabel(label.trim());
                 return true;
             }}
+            size={size}
         >
             <PropertyList>
                 <TextInputProperty

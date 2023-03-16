@@ -162,12 +162,6 @@ export class NavigationStore {
             ) {
                 this.navigateToHistory();
             }
-
-            if (appStore.instrument) {
-                document.title = `${appStore.instrument.name} - EEZ Studio`;
-            } else {
-                document.title = "EEZ Studio";
-            }
         });
     }
 

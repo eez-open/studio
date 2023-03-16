@@ -126,15 +126,17 @@ const DeletedNotebooksDialog = observer(
                     ref={(ref: any) => {
                         this.element = findDOMNode(ref) as Element;
                     }}
-                    additionalButton={{
-                        id: "deleteAllPermanently",
-                        type: "danger",
-                        position: "left",
-                        onClick: () => this.deleteAllPermanently(),
-                        disabled: false,
-                        style: { marginRight: "auto" },
-                        text: "Delete All Permanently"
-                    }}
+                    additionalButtons={[
+                        {
+                            id: "deleteAllPermanently",
+                            type: "danger",
+                            position: "left",
+                            onClick: () => this.deleteAllPermanently(),
+                            disabled: false,
+                            style: { marginRight: "auto" },
+                            text: "Delete All Permanently"
+                        }
+                    ]}
                 >
                     <ListContainer tabIndex={0} minHeight={240} maxHeight={400}>
                         <List

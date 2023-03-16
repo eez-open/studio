@@ -88,7 +88,7 @@ export class MicroPython extends EezObject {
 
         const partsPromise = projectStore.build();
 
-        const instrument = await showSelectInstrumentDialog();
+        const instrument = await showSelectInstrumentDialog(undefined);
 
         if (!instrument) {
             return;

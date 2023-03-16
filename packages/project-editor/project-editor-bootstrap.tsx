@@ -159,7 +159,7 @@ export async function initExtensions() {
 }
 
 export async function initProjectEditor(
-    homeTabs: Tabs,
+    homeTabs: Tabs | undefined,
     ProjectEditorTabClass: typeof ProjectEditorTab
 ) {
     if (ProjectEditor.DataContextClass) {

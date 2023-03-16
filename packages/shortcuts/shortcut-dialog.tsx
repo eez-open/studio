@@ -321,7 +321,9 @@ export const ShortcutDialog = observer(
                 <Dialog
                     onOk={this.handleSubmit}
                     size="large"
-                    additionalButton={resetToDefaultButton}
+                    additionalButtons={
+                        resetToDefaultButton ? [resetToDefaultButton] : []
+                    }
                 >
                     <PropertyList>
                         <TextInputProperty

@@ -51,7 +51,7 @@ export const ListItem = observer(
                         />
                     );
                 } else {
-                    leftIcon = this.props.leftIcon;
+                    rightIcon = this.props.rightIcon;
                 }
             }
 

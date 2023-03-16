@@ -85,7 +85,7 @@ export const Dialog = observer(
         okEnabled?: () => boolean;
         onCancel?: (() => void) | null;
         cancelDisabled?: boolean;
-        additionalButton?: IDialogButton;
+        additionalButtons?: IDialogButton[];
         additionalFooterControl?: React.ReactNode;
         backdrop?: "static" | boolean;
     }> {
@@ -137,8 +137,8 @@ export const Dialog = observer(
         render() {
             const buttons: IDialogButton[] = [];
 
-            if (this.props.additionalButton) {
-                buttons.push(this.props.additionalButton);
+            if (this.props.additionalButtons) {
+                buttons.push(...this.props.additionalButtons);
             }
 
             if (!this.props.cancelDisabled) {
@@ -305,7 +305,7 @@ export const BootstrapDialog = observer(
         render() {
             const props = this.props;
 
-            const buttons = props.buttons?.map(button =>
+            const buttons = props.buttons?.map((button, i) =>
                 button.text ? (
                     <button
                         key={button.id}

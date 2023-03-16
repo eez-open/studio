@@ -276,37 +276,41 @@ const FileUploadDialog = observer(
                 <Dialog
                     onOk={this.handleSubmit}
                     size="large"
-                    additionalButton={{
-                        id: "settings",
-                        type: "secondary",
-                        position: "left",
-                        onClick: () =>
-                            showAdvancedSettingsDialog(
-                                this.instructions,
-                                action(
-                                    (instructions: IFileUploadInstructions) => {
-                                        let updateDestinationFileName =
-                                            this.instructions
-                                                .destinationFileName ===
-                                            this.deriveDestinationFileNameFromSourceFilePath();
-
-                                        Object.assign(
-                                            this.instructions,
-                                            instructions
-                                        );
-
-                                        if (updateDestinationFileName) {
-                                            this.instructions.destinationFileName =
+                    additionalButtons={[
+                        {
+                            id: "settings",
+                            type: "secondary",
+                            position: "left",
+                            onClick: () =>
+                                showAdvancedSettingsDialog(
+                                    this.instructions,
+                                    action(
+                                        (
+                                            instructions: IFileUploadInstructions
+                                        ) => {
+                                            let updateDestinationFileName =
+                                                this.instructions
+                                                    .destinationFileName ===
                                                 this.deriveDestinationFileNameFromSourceFilePath();
+
+                                            Object.assign(
+                                                this.instructions,
+                                                instructions
+                                            );
+
+                                            if (updateDestinationFileName) {
+                                                this.instructions.destinationFileName =
+                                                    this.deriveDestinationFileNameFromSourceFilePath();
+                                            }
                                         }
-                                    }
-                                )
-                            ),
-                        disabled: false,
-                        style: { marginRight: "auto" },
-                        icon: "material:settings",
-                        title: "Show advanced settings"
-                    }}
+                                    )
+                                ),
+                            disabled: false,
+                            style: { marginRight: "auto" },
+                            icon: "material:settings",
+                            title: "Show advanced settings"
+                        }
+                    ]}
                 >
                     <PropertyList>
                         <FileInputProperty

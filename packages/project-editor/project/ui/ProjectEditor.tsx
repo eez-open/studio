@@ -50,7 +50,7 @@ export const ProjectEditorView = observer(
         declare context: React.ContextType<typeof ProjectContext>;
 
         onKeyDown = (e: KeyboardEvent) => {
-            const activeTab = ProjectEditor.homeTabs.activeTab;
+            const activeTab = ProjectEditor.homeTabs?.activeTab;
             if (
                 activeTab instanceof ProjectEditor.ProjectEditorTabClass &&
                 activeTab.projectStore == this.context &&

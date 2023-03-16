@@ -260,27 +260,30 @@ export function settingsSetWindowBoundsIntoParams(
     windowId: string,
     params: Electron.BrowserWindowConstructorOptions
 ) {
+    const initialWidth = params.width || 1200;
+    const initialHeight = params.height || 900;
+
     let windowState = settings.windowStates[windowId];
     if (isValidWindowState(windowState)) {
         if (windowState.isMaximized) {
-            if (windowState.bounds!.width < 1200) {
-                windowState.bounds!.width = 1200;
+            if (windowState.bounds!.width < initialWidth) {
+                windowState.bounds!.width = initialWidth;
             }
-            if (windowState.bounds!.height < 900) {
-                windowState.bounds!.height = 900;
+            if (windowState.bounds!.height < initialHeight) {
+                windowState.bounds!.height = initialHeight;
             }
         } else {
-            if (windowState.bounds!.width < 640) {
-                windowState.bounds!.width = 640;
+            if (windowState.bounds!.width < Math.round(initialWidth / 2)) {
+                windowState.bounds!.width = Math.round(initialWidth / 2);
             }
-            if (windowState.bounds!.height < 480) {
-                windowState.bounds!.height = 480;
+            if (windowState.bounds!.height < Math.round(initialHeight / 2)) {
+                windowState.bounds!.height = Math.round(initialHeight / 2);
             }
         }
         Object.assign(params, windowState.bounds);
     } else {
-        params.width = 1200;
-        params.height = 900;
+        params.width = initialWidth;
+        params.height = initialHeight;
     }
 }
 

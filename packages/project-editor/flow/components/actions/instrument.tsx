@@ -46,7 +46,8 @@ import { Assets, DataBuffer } from "project-editor/build/assets";
 import {
     getChildOfObject,
     getProjectStore,
-    Message
+    Message,
+    ProjectStore
 } from "project-editor/store";
 import { isNotDashboardProject } from "project-editor/project/project-type-traits";
 import {
@@ -67,6 +68,9 @@ import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups"
 import { COMPONENT_TYPE_SCPIACTION } from "project-editor/flow/components/component_types";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 import type { WorkerToRenderMessage } from "eez-studio-types";
+import { ProjectContext } from "project-editor/project/context";
+import { ProjectEditor } from "project-editor/project-editor-interface";
+import { IconAction } from "eez-studio-ui/action";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -298,6 +302,9 @@ export const SelectInstrumentDialog = observer(
         instrument?: InstrumentObject;
         callback: (instrument: InstrumentObject | undefined) => void;
     }> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
         _selectedInstrument: InstrumentObject | undefined;
 
         constructor(props: any) {
@@ -310,6 +317,10 @@ export const SelectInstrumentDialog = observer(
             });
         }
 
+        get allFeatures() {
+            return this.context?.standalone;
+        }
+
         get selectedInstrument() {
             return this._selectedInstrument || this.props.instrument;
         }
@@ -318,7 +329,7 @@ export const SelectInstrumentDialog = observer(
             runInAction(() => (this._selectedInstrument = value));
         }
 
-        renderNode(node: IListNode<InstrumentObject>) {
+        renderNode = (node: IListNode<InstrumentObject>) => {
             let instrument = node.data;
             return (
                 <ListItem
@@ -335,9 +346,30 @@ export const SelectInstrumentDialog = observer(
                             <span>{instrument.name}</span>
                         </div>
                     }
+                    rightIcon={
+                        this.allFeatures &&
+                        instrument == this.selectedInstrument ? (
+                            <IconAction
+                                icon="material:edit"
+                                title="Edit Instrument Label"
+                                onClick={async () => {
+                                    const { EditInstrumentLabelDialog } =
+                                        await import("instrument/window/app");
+
+                                    showDialog(
+                                        <EditInstrumentLabelDialog
+                                            instrument={instrument}
+                                            size="large"
+                                        />
+                                    );
+                                }}
+                                style={{ color: "white" }}
+                            ></IconAction>
+                        ) : null
+                    }
                 />
             );
-        }
+        };
 
         get instrumentNodes() {
             const instrumentObjects = [];
@@ -386,7 +418,64 @@ export const SelectInstrumentDialog = observer(
                 <Dialog
                     okEnabled={this.isOkEnabled}
                     onOk={this.onOk}
+                    okButtonText="Select"
+                    cancelButtonText="Close"
                     onCancel={this.onCancel}
+                    additionalButtons={
+                        this.allFeatures
+                            ? [
+                                  {
+                                      id: "add-instrument",
+                                      type: "primary",
+                                      position: "left",
+                                      onClick: async () => {
+                                          const { showAddInstrumentDialog } =
+                                              await import(
+                                                  "instrument/add-instrument-dialog"
+                                              );
+
+                                          showAddInstrumentDialog(
+                                              instrumentId => {
+                                                  setTimeout(() => {
+                                                      runInAction(
+                                                          () =>
+                                                              (this._selectedInstrument =
+                                                                  instruments.get(
+                                                                      instrumentId
+                                                                  ))
+                                                      );
+                                                  }, 100);
+                                              }
+                                          );
+                                      },
+                                      disabled: false,
+                                      style: {},
+                                      title: "Add Instrument",
+                                      text: "Add Instrument"
+                                  },
+                                  {
+                                      id: "delete-instrument",
+                                      type: "danger",
+                                      position: "left",
+                                      onClick: async () => {
+                                          if (!this.selectedInstrument) {
+                                              return;
+                                          }
+                                          this.selectedInstrument.deletePermanently();
+                                          runInAction(
+                                              () =>
+                                                  (this._selectedInstrument =
+                                                      undefined)
+                                          );
+                                      },
+                                      disabled: !this.selectedInstrument,
+                                      style: { marginRight: "auto" },
+                                      title: "Delete Instrument",
+                                      text: "Delete Instrument"
+                                  }
+                              ]
+                            : []
+                    }
                 >
                     <PropertyList>
                         <SelectFromListProperty
@@ -403,11 +492,12 @@ export const SelectInstrumentDialog = observer(
 );
 
 export async function showSelectInstrumentDialog(
+    projectStore: ProjectStore | undefined,
     name?: string,
     instrumentId?: string | null
 ) {
     return new Promise<InstrumentObject | undefined>(resolve => {
-        showDialog(
+        const dialog = (
             <SelectInstrumentDialog
                 name={name}
                 instruments={instruments}
@@ -419,6 +509,15 @@ export async function showSelectInstrumentDialog(
                 }}
             />
         );
+        if (projectStore) {
+            showDialog(
+                <ProjectContext.Provider value={projectStore}>
+                    {dialog}
+                </ProjectContext.Provider>
+            );
+        } else {
+            showDialog(dialog);
+        }
     });
 }
 
@@ -667,6 +766,7 @@ registerObjectVariableType("Instrument", {
         constructorParams?: InstrumentConstructorParams
     ): Promise<IObjectVariableValueConstructorParams | undefined> => {
         let instrument = await showSelectInstrumentDialog(
+            ProjectEditor.getProject(variable as any)?._store,
             variable.description || humanize(variable.name),
             getInstrumentIdFromConstructorParams(constructorParams)
         );

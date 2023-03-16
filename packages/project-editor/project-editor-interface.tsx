@@ -75,7 +75,7 @@ import type { LVGLStyle } from "project-editor/lvgl/style";
 import type { Property } from "project-editor/ui-components/PropertyGrid/Property";
 
 export interface IProjectEditor {
-    homeTabs: Tabs;
+    homeTabs?: Tabs;
     ProjectEditorTabClass: typeof ProjectEditorTab;
     DataContextClass: typeof DataContext;
     extensions: ProjectEditorFeature[];

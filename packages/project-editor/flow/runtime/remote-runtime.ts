@@ -124,7 +124,7 @@ export class RemoteRuntime extends RuntimeBase {
     async doStartRuntime(isDebuggerActive: boolean) {
         const partsPromise = this.projectStore.build();
 
-        const instrument = await showSelectInstrumentDialog();
+        const instrument = await showSelectInstrumentDialog(this.projectStore);
 
         if (!instrument) {
             this.projectStore.setEditorMode();
