@@ -192,7 +192,10 @@ export const RenderVariableStatus = observer(
                 hint = `Select ${getObjectType(variable.type)}`;
             }
         } else {
-            label = variable.description || humanize(variable.name);
+            label =
+                value?.status.label ||
+                variable.description ||
+                humanize(variable.name);
         }
 
         const element = (

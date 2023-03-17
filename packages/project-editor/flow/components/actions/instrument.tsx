@@ -70,7 +70,8 @@ import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 import type { WorkerToRenderMessage } from "eez-studio-types";
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { IconAction } from "eez-studio-ui/action";
+import { TextAction, IconAction } from "eez-studio-ui/action";
+import { ConnectionParameters } from "instrument/connection/interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -306,6 +307,7 @@ export const SelectInstrumentDialog = observer(
         declare context: React.ContextType<typeof ProjectContext>;
 
         _selectedInstrument: InstrumentObject | undefined;
+        open: boolean = true;
 
         constructor(props: any) {
             super(props);
@@ -313,11 +315,12 @@ export const SelectInstrumentDialog = observer(
             makeObservable(this, {
                 _selectedInstrument: observable,
                 instrumentNodes: computed,
-                selectInstrumentExtension: action.bound
+                selectInstrumentExtension: action.bound,
+                open: observable
             });
         }
 
-        get allFeatures() {
+        get isStandaloneDashboard() {
             return this.context?.standalone;
         }
 
@@ -347,24 +350,41 @@ export const SelectInstrumentDialog = observer(
                         </div>
                     }
                     rightIcon={
-                        this.allFeatures &&
+                        this.isStandaloneDashboard &&
                         instrument == this.selectedInstrument ? (
-                            <IconAction
-                                icon="material:edit"
-                                title="Edit Instrument Label"
-                                onClick={async () => {
-                                    const { EditInstrumentLabelDialog } =
-                                        await import("instrument/window/app");
+                            <span>
+                                {instrument != this.props.instrument &&
+                                    instrument.isConnected && (
+                                        <TextAction
+                                            text="Disconnect"
+                                            title="Disconnect connection to the instrument"
+                                            onClick={async () => {
+                                                if (instrument.isConnected) {
+                                                    instrument.connection.disconnect();
+                                                }
+                                            }}
+                                            style={{ color: "white" }}
+                                        ></TextAction>
+                                    )}
+                                <IconAction
+                                    icon="material:edit"
+                                    title="Edit Instrument Label"
+                                    onClick={async () => {
+                                        const { EditInstrumentLabelDialog } =
+                                            await import(
+                                                "instrument/window/app"
+                                            );
 
-                                    showDialog(
-                                        <EditInstrumentLabelDialog
-                                            instrument={instrument}
-                                            size="large"
-                                        />
-                                    );
-                                }}
-                                style={{ color: "white" }}
-                            ></IconAction>
+                                        showDialog(
+                                            <EditInstrumentLabelDialog
+                                                instrument={instrument}
+                                                size="large"
+                                            />
+                                        );
+                                    }}
+                                    style={{ color: "white" }}
+                                ></IconAction>
+                            </span>
                         ) : null
                     }
                 />
@@ -401,11 +421,64 @@ export const SelectInstrumentDialog = observer(
             return this.selectedInstrument != undefined;
         };
 
+        async connectToInstrument(
+            instrument: InstrumentObject,
+            callback: (instrument: InstrumentObject | undefined) => void
+        ) {
+            const { showConnectionDialog } = await import(
+                "instrument/window/connection-dialog"
+            );
+
+            showConnectionDialog(
+                instrument.getConnectionParameters([
+                    instrument.lastConnection,
+                    instrument.defaultConnectionParameters
+                ]),
+                async (connectionParameters: ConnectionParameters) => {
+                    if (!connectionParameters && !instrument.lastConnection) {
+                        connectionParameters =
+                            instrument.defaultConnectionParameters;
+                    }
+
+                    instrument.connection.connect(connectionParameters);
+
+                    for (let i = 0; i < 30; i++) {
+                        try {
+                            await instrument.connection.acquire(false);
+                            instrument.connection.release();
+
+                            callback(instrument);
+
+                            runInAction(() => (this.open = false));
+
+                            return;
+                        } catch (err) {
+                            console.log("trace 6");
+                            await new Promise<void>(resolve =>
+                                setTimeout(resolve, 100)
+                            );
+                        }
+                    }
+
+                    notification.error("Failed to connect");
+                },
+                instrument.availableConnections,
+                instrument.serialBaudRates
+            );
+        }
+
         onOk = () => {
-            if (this.selectedInstrument) {
-                this.props.callback(this.selectedInstrument);
+            const instrument = this.selectedInstrument;
+            if (!instrument) {
+                return false;
+            }
+
+            if (instrument.isConnected) {
+                this.props.callback(instrument);
                 return true;
             }
+
+            this.connectToInstrument(instrument, this.props.callback);
             return false;
         };
 
@@ -418,11 +491,12 @@ export const SelectInstrumentDialog = observer(
                 <Dialog
                     okEnabled={this.isOkEnabled}
                     onOk={this.onOk}
-                    okButtonText="Select"
+                    open={this.open}
+                    okButtonText="Connect"
                     cancelButtonText="Close"
                     onCancel={this.onCancel}
                     additionalButtons={
-                        this.allFeatures
+                        this.isStandaloneDashboard
                             ? [
                                   {
                                       id: "add-instrument",
@@ -770,20 +844,6 @@ registerObjectVariableType("Instrument", {
             variable.description || humanize(variable.name),
             getInstrumentIdFromConstructorParams(constructorParams)
         );
-
-        if (instrument) {
-            if (instrument.lastConnection) {
-                await connectToInstrument(instrument);
-
-                if (!instrument.isConnected) {
-                    notification.error("Failed to connect to the instrument!");
-                }
-            }
-
-            if (!instrument.isConnected) {
-                instrument.openConnectDialog();
-            }
-        }
 
         return instrument
             ? {
