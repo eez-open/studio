@@ -285,7 +285,7 @@ export const Setup = observer(({ onlyBody }: { onlyBody: boolean }) => {
                             "mt-3": !onlyBody
                         }
                     )}
-                    style={{ minHeight: 200, maxHeight: 400, width: "100%" }}
+                    style={{ minHeight: 220, maxHeight: 400, width: "100%" }}
                 >
                     <List
                         nodes={setupState.manufacturers}
