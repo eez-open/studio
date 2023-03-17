@@ -20,6 +20,7 @@ import { Table, IColumn, IRow } from "eez-studio-ui/table";
 
 import { IGroup, IGroupsStore, IShortcutsStore } from "shortcuts/interfaces";
 import { GroupDialog } from "shortcuts/group-dialog";
+import { SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX } from "shortcuts/shortcuts-store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -216,6 +217,55 @@ class GroupRow implements IRow {
     };
 }
 
+class ExtensionGroupRow implements IRow {
+    constructor(public numShortcuts: number) {
+        makeObservable(this, {
+            selected: computed,
+            isGroupEnabledComponent: computed,
+            className: computed,
+            selectGroup: action
+        });
+    }
+
+    get id() {
+        return "__extensions__";
+    }
+
+    get selected() {
+        return selectedGroupId.get() === this.id;
+    }
+
+    get isGroupEnabled() {
+        return 1;
+    }
+
+    get isGroupEnabledComponent() {
+        return <input type="checkbox" checked={true} disabled={true} />;
+    }
+
+    get name() {
+        return "<IEXT shortcuts>";
+    }
+
+    get actions() {
+        return null;
+    }
+
+    get className() {
+        return classNames(`group-${this.id}`, {
+            selected: this.selected
+        });
+    }
+
+    selectGroup() {
+        selectedGroupId.set(this.id);
+    }
+
+    onClick = () => {
+        this.selectGroup();
+    };
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export const Groups = observer(
@@ -273,15 +323,27 @@ export const Groups = observer(
             );
         }
 
+        get numExtensionShortcuts() {
+            return [...this.props.shortcutsStore.shortcuts.values()].filter(
+                shortcut =>
+                    shortcut.groupName.startsWith(
+                        SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX
+                    )
+            ).length;
+        }
+
         get rows() {
-            return Array.from(this.props.groupsStore.groups.values()).map(
-                group =>
-                    new GroupRow({
-                        groupsStore: this.props.groupsStore,
-                        group,
-                        numShortcuts: this.numShortcuts[group.name] || 0
-                    })
-            );
+            return [
+                new ExtensionGroupRow(this.numExtensionShortcuts),
+                ...Array.from(this.props.groupsStore.groups.values()).map(
+                    group =>
+                        new GroupRow({
+                            groupsStore: this.props.groupsStore,
+                            group,
+                            numShortcuts: this.numShortcuts[group.name] || 0
+                        })
+                )
+            ];
         }
 
         render() {

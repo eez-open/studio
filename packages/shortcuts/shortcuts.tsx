@@ -4,7 +4,8 @@ import {
     computed,
     action,
     IObservableValue,
-    makeObservable
+    makeObservable,
+    runInAction
 } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
@@ -54,6 +55,10 @@ export function selectShortcutById(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const showExtensionShortcuts = observable.box<boolean>();
+
+////////////////////////////////////////////////////////////////////////////////
+
 export const ShortcutsToolbarButtons = observer(
     class ShortcutsToolbarButtons extends React.Component<
         {
@@ -72,6 +77,14 @@ export const ShortcutsToolbarButtons = observer(
 
             this.addShortcut = this.addShortcut.bind(this);
             this.showGroups = this.showGroups.bind(this);
+
+            showExtensionShortcuts.set(
+                window.localStorage.getItem(
+                    "Shortcuts_showExtensionShortcuts"
+                ) == "false"
+                    ? false
+                    : true
+            );
         }
 
         addShortcut() {
@@ -113,6 +126,38 @@ export const ShortcutsToolbarButtons = observer(
 
         render() {
             let buttons = [];
+
+            if (this.props.groupsStore) {
+                buttons.push(
+                    <div
+                        key="show-extension-shortcuts-checkbox"
+                        className="form-check"
+                        style={{ minHeight: 0, marginBottom: 0 }}
+                    >
+                        <label className="form-check-label">
+                            <input
+                                type="checkbox"
+                                className="form-check-input"
+                                checked={showExtensionShortcuts.get()}
+                                onChange={action(event => {
+                                    runInAction(() =>
+                                        showExtensionShortcuts.set(
+                                            event.target.checked
+                                        )
+                                    );
+                                    window.localStorage.setItem(
+                                        "Shortcuts_showExtensionShortcuts",
+                                        showExtensionShortcuts.get()
+                                            ? "true"
+                                            : "false"
+                                    );
+                                })}
+                            />
+                            Show IEXT shortcuts
+                        </label>
+                    </div>
+                );
+            }
 
             if (this.props.shortcutsStore.addShortcut) {
                 buttons.push(
@@ -453,7 +498,9 @@ export const Shortcuts = observer(
             if (this.props.groupsStore) {
                 result.push({
                     name: "group",
-                    title: "Group / Extension",
+                    title: showExtensionShortcuts.get()
+                        ? "Group / Extension"
+                        : "Group",
                     sortEnabled: true
                 });
             }
@@ -500,11 +547,20 @@ export const Shortcuts = observer(
 
             const sorted = Array.from(
                 this.props.shortcutsStore.shortcuts.values()
-            ).sort((s1, s2) => {
-                let name1 = s1.name.toLocaleLowerCase();
-                let name2 = s2.name.toLocaleLowerCase();
-                return name1 < name2 ? -1 : name1 > name2 ? 1 : 0;
-            });
+            )
+                .filter(
+                    shortcut =>
+                        !this.props.groupsStore ||
+                        showExtensionShortcuts.get() ||
+                        !shortcut.groupName.startsWith(
+                            SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX
+                        )
+                )
+                .sort((s1, s2) => {
+                    let name1 = s1.name.toLocaleLowerCase();
+                    let name2 = s2.name.toLocaleLowerCase();
+                    return name1 < name2 ? -1 : name1 > name2 ? 1 : 0;
+                });
 
             if (this.props.groupsStore) {
                 // combine duplicate shortcuts
