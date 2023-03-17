@@ -43,7 +43,7 @@ class Settings {
     dateFormat: string = "";
     timeFormat: string = "";
 
-    isDarkTheme: boolean = true;
+    isDarkTheme: boolean = false;
 
     get settingsFilePath() {
         return app.getPath("userData") + "/" + SETTINGS_FILE_NAME;
