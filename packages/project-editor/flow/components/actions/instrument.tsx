@@ -321,7 +321,7 @@ export const SelectInstrumentDialog = observer(
         }
 
         get isStandaloneDashboard() {
-            return true || this.context?.standalone;
+            return this.context?.standalone;
         }
 
         get selectedInstrument() {
