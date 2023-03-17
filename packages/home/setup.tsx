@@ -135,7 +135,9 @@ function renderExtension(node: IListNode) {
     );
 }
 
-async function onAdd(onAddCallback?: (instrumentId: string) => void) {
+export async function onAddInstrument(
+    onAddCallback?: (instrumentId: string) => void
+) {
     const extensionVersions = setupState.extensionsManagerStore.all.find(
         extensionVersions =>
             extensionVersions.latestVersion.id == setupState.selectedExtensionId
@@ -212,111 +214,106 @@ async function onAdd(onAddCallback?: (instrumentId: string) => void) {
 function onTryAgain() {
     runInAction(() => {
         setupState.extensionInstalling = undefined;
-        onAdd();
+        onAddInstrument(undefined);
     });
 }
 
-export const Setup = observer(
-    ({
-        onAddCallback,
-        onCancelCallback
-    }: {
-        onAddCallback?: (instrumentId: string) => void;
-        onCancelCallback?: () => void;
-    }) => {
-        if (setupState.extensionInstalling) {
-            const buttonsContainerClassName = classNames(
-                "d-flex justify-content-between mt-3 mb-5",
-                {
-                    "invisible ":
-                        setupState.extensionInstalling.infoType !==
-                        notification.ERROR
-                }
-            );
+export const Setup = observer(({ onlyBody }: { onlyBody: boolean }) => {
+    if (setupState.extensionInstalling) {
+        const buttonsContainerClassName = classNames(
+            "d-flex justify-content-between mt-3 mb-5",
+            {
+                "invisible ":
+                    setupState.extensionInstalling.infoType !==
+                    notification.ERROR
+            }
+        );
 
-            return (
-                <div className="d-flex flex-column justify-content-center align-items-center h-100">
-                    {setupState.extensionInstalling.inProgress && (
-                        <div>
-                            <h3>Installing Extension</h3>
-                            <Loader />
-                        </div>
-                    )}
-                    <h5
-                        className="d-flex flex-column justify-content-center align-items-center"
-                        style={{ minHeight: 120 }}
-                    >
-                        {setupState.extensionInstalling.infoNode}
-                    </h5>
-                    <div
-                        className={buttonsContainerClassName}
-                        style={{ width: "400" }}
-                    >
-                        <button
-                            className="btn btn-secondary"
-                            onClick={action(event => {
-                                event.preventDefault();
-                                setupState.extensionInstalling = undefined;
-                            })}
-                        >
-                            Back
-                        </button>
-                        <button
-                            className="btn btn-primary"
-                            disabled={
-                                !setupState.selectedManufacturer ||
-                                !setupState.selectedExtensionId
-                            }
-                            onClick={event => {
-                                event.preventDefault();
-                                onTryAgain();
-                            }}
-                        >
-                            Try Again
-                        </button>
+        return (
+            <div className="d-flex flex-column justify-content-center align-items-center h-100">
+                {setupState.extensionInstalling.inProgress && (
+                    <div>
+                        <h3>Installing Extension</h3>
+                        <Loader />
                     </div>
+                )}
+                <h5
+                    className="d-flex flex-column justify-content-center align-items-center"
+                    style={{ minHeight: 120 }}
+                >
+                    {setupState.extensionInstalling.infoNode}
+                </h5>
+                <div
+                    className={buttonsContainerClassName}
+                    style={{ width: "400" }}
+                >
+                    <button
+                        className="btn btn-secondary"
+                        onClick={action(event => {
+                            event.preventDefault();
+                            setupState.extensionInstalling = undefined;
+                        })}
+                    >
+                        Back
+                    </button>
+                    <button
+                        className="btn btn-primary"
+                        disabled={
+                            !setupState.selectedManufacturer ||
+                            !setupState.selectedExtensionId
+                        }
+                        onClick={event => {
+                            event.preventDefault();
+                            onTryAgain();
+                        }}
+                    >
+                        Try Again
+                    </button>
                 </div>
-            );
-        } else {
-            return (
-                <div className="d-flex flex-column justify-content-center align-items-center h-100">
+            </div>
+        );
+    } else {
+        return (
+            <div className="d-flex flex-column justify-content-center align-items-center h-100">
+                {!onlyBody && (
                     <h3>Add Instrument{firstTime.get() ? " or Skip" : ""}</h3>
-                    <div
-                        className="d-flex justify-content-center h-50 mt-3"
-                        style={{ maxHeight: 400, width: "100%" }}
-                    >
-                        <List
-                            nodes={setupState.manufacturers}
-                            renderNode={renderManufacturer}
-                            selectNode={setupState.selectManufacturer}
-                            className="overflow-auto border"
-                            style={{ width: 240 }}
-                            tabIndex={0}
-                        />
-                        <List
-                            nodes={setupState.extensionNodes}
-                            renderNode={renderExtension}
-                            selectNode={setupState.selectExtension}
-                            className="overflow-auto border ml-2"
-                            style={{ width: 320 }}
-                            tabIndex={0}
-                        />
-                    </div>
+                )}
+                <div
+                    className={classNames(
+                        "d-flex justify-content-center h-50",
+                        {
+                            "mt-3": !onlyBody
+                        }
+                    )}
+                    style={{ minHeight: 200, maxHeight: 400, width: "100%" }}
+                >
+                    <List
+                        nodes={setupState.manufacturers}
+                        renderNode={renderManufacturer}
+                        selectNode={setupState.selectManufacturer}
+                        className="overflow-auto border"
+                        style={{ width: 240 }}
+                        tabIndex={0}
+                    />
+                    <List
+                        nodes={setupState.extensionNodes}
+                        renderNode={renderExtension}
+                        selectNode={setupState.selectExtension}
+                        className="overflow-auto border ml-2"
+                        style={{ width: 320 }}
+                        tabIndex={0}
+                    />
+                </div>
+                {!onlyBody && (
                     <div className="d-flex justify-content-between mt-3 mb-5">
                         <button
-                            className={classNames("btn px-3 me-4", {
-                                "btn-secondary": onCancelCallback
-                            })}
+                            className={"btn px-3 me-4"}
                             onClick={event => {
                                 event.preventDefault();
-                                if (onCancelCallback) {
-                                    onCancelCallback();
-                                } else {
-                                    onSetupSkip();
-                                }
+                                onSetupSkip();
                             }}
                         >
-                            {onCancelCallback ? "Cancel" : "Skip"}
+                            Skip
                         </button>
                         <button
                             className="btn btn-lg btn-primary px-5"
@@ -326,14 +323,14 @@ export const Setup = observer(
                             }
                             onClick={async event => {
                                 event.preventDefault();
-                                onAdd(onAddCallback);
+                                onAddInstrument(undefined);
                             }}
                         >
                             Add
                         </button>
                     </div>
-                </div>
-            );
-        }
+                )}
+            </div>
+        );
     }
-);
+});

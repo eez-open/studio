@@ -527,7 +527,7 @@ export const Workbench = observer(
                     </Header>
                     <Body>
                         {firstTime.get() ? (
-                            <Setup />
+                            <Setup onlyBody={false} />
                         ) : (
                             <Splitter
                                 type="horizontal"

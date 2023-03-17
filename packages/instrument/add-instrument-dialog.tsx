@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 
 import { BootstrapDialog, showDialog } from "eez-studio-ui/dialog";
 
-import { Setup, setupState } from "home/setup";
+import { Setup, setupState, onAddInstrument } from "home/setup";
 import { action, observable, makeObservable } from "mobx";
 
 const AddInstrumentDialog = observer(
@@ -17,14 +17,14 @@ const AddInstrumentDialog = observer(
 
             makeObservable(this, {
                 open: observable,
-                onAdd: action.bound,
+                onOk: action.bound,
                 onCancel: action.bound
             });
         }
 
-        onAdd(instrumentId: string) {
+        onOk(instrumentId: string) {
             this.open = false;
-            this.props.callback(instrumentId);
+            onAddInstrument(instrumentId => this.props.callback(instrumentId));
         }
 
         onCancel() {
@@ -35,17 +35,35 @@ const AddInstrumentDialog = observer(
             return (
                 <BootstrapDialog
                     modal={true}
+                    title="Add Instrument"
                     open={this.open}
                     size={"large"}
                     onCancel={this.onCancel}
                     disableButtons={true}
                     okEnabled={() => false}
                     backdrop="static"
+                    buttons={[
+                        {
+                            id: "cancel",
+                            type: "secondary",
+                            position: "right",
+                            onClick: this.onCancel,
+                            disabled: false,
+                            style: {},
+                            text: "Cancel"
+                        },
+                        {
+                            id: "ok",
+                            type: "primary",
+                            position: "right",
+                            onClick: this.onOk,
+                            disabled: false,
+                            style: {},
+                            text: "OK"
+                        }
+                    ]}
                 >
-                    <Setup
-                        onAddCallback={this.onAdd}
-                        onCancelCallback={this.onCancel}
-                    />
+                    <Setup onlyBody={true} />
                 </BootstrapDialog>
             );
         }
