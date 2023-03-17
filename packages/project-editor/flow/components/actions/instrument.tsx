@@ -321,7 +321,7 @@ export const SelectInstrumentDialog = observer(
         }
 
         get isStandaloneDashboard() {
-            return this.context?.standalone;
+            return true || this.context?.standalone;
         }
 
         get selectedInstrument() {
@@ -418,7 +418,10 @@ export const SelectInstrumentDialog = observer(
         }
 
         isOkEnabled = () => {
-            return this.selectedInstrument != undefined;
+            return (
+                this.selectedInstrument != undefined &&
+                this.selectedInstrument != this.props.instrument
+            );
         };
 
         async connectToInstrument(
@@ -492,7 +495,7 @@ export const SelectInstrumentDialog = observer(
                     okEnabled={this.isOkEnabled}
                     onOk={this.onOk}
                     open={this.open}
-                    okButtonText="Connect"
+                    okButtonText="Select"
                     cancelButtonText="Close"
                     onCancel={this.onCancel}
                     additionalButtons={
