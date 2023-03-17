@@ -39,7 +39,7 @@ const AddInstrumentDialog = observer(
                     open={this.open}
                     size={"large"}
                     onCancel={this.onCancel}
-                    disableButtons={true}
+                    disableButtons={false}
                     okEnabled={() => false}
                     backdrop="static"
                     buttons={[
