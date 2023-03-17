@@ -250,7 +250,7 @@ export const Setup = observer(
                     </h5>
                     <div
                         className={buttonsContainerClassName}
-                        style={{ width: 400 }}
+                        style={{ width: "400" }}
                     >
                         <button
                             className="btn btn-secondary"
@@ -282,8 +282,8 @@ export const Setup = observer(
                 <div className="d-flex flex-column justify-content-center align-items-center h-100">
                     <h3>Add Instrument{firstTime.get() ? " or Skip" : ""}</h3>
                     <div
-                        className="d-flex h-50 mt-3"
-                        style={{ maxHeight: 400 }}
+                        className="d-flex justify-content-center h-50 mt-3"
+                        style={{ maxHeight: 400, width: "100%" }}
                     >
                         <List
                             nodes={setupState.manufacturers}
@@ -302,12 +302,9 @@ export const Setup = observer(
                             tabIndex={0}
                         />
                     </div>
-                    <div
-                        className="d-flex justify-content-between mt-3 mb-5"
-                        style={{ width: 400 }}
-                    >
+                    <div className="d-flex justify-content-between mt-3 mb-5">
                         <button
-                            className={classNames("btn px-3", {
+                            className={classNames("btn px-3 me-4", {
                                 "btn-secondary": onCancelCallback
                             })}
                             onClick={event => {
