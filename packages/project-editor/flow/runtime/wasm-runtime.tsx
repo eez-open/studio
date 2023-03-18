@@ -690,18 +690,21 @@ export class WasmRuntime extends RemoteRuntime {
             return;
         }
 
-        if (instrument != this.projectStore.dashboardInstrument) {
+        if (
+            !instrument.isConnected &&
+            instrument != this.projectStore.dashboardInstrument
+        ) {
             const CONNECTION_TIMEOUT = 3000;
             const startTime = Date.now();
-            while (
-                !instrument.isConnected &&
-                Date.now() - startTime < CONNECTION_TIMEOUT
-            ) {
+            do {
                 if (!instrument.connection.isTransitionState) {
                     instrument.connection.connect();
                 }
                 await new Promise<boolean>(resolve => setTimeout(resolve, 10));
-            }
+            } while (
+                !instrument.isConnected &&
+                Date.now() - startTime < CONNECTION_TIMEOUT
+            );
         }
 
         if (!instrument.isConnected) {
@@ -739,7 +742,7 @@ export class WasmRuntime extends RemoteRuntime {
                 //console.log("SCPI result", result);
             } else {
                 //console.log("SCPI command", command);
-                connection.query(command);
+                connection.command(command);
                 result = "";
             }
         } catch (err) {

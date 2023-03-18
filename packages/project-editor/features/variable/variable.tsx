@@ -402,17 +402,21 @@ export class DataContext implements IDataContext {
         this.localVariables = localVariables;
         if (this.localVariables) {
             this.localVariables.forEach(variable => {
-                try {
-                    const { value } = evalConstantExpression(
-                        project,
-                        variable.defaultValue
-                    );
-                    this.runtimeValues.set(variable.name, value);
-                } catch (err) {
-                    if (project._store.runtime) {
-                        throw err;
-                    }
+                if (this.project._store.runtime) {
                     this.runtimeValues.set(variable.name, undefined);
+                } else {
+                    try {
+                        const { value } = evalConstantExpression(
+                            project,
+                            variable.defaultValue
+                        );
+                        this.runtimeValues.set(variable.name, value);
+                    } catch (err) {
+                        if (project._store.runtime) {
+                            throw err;
+                        }
+                        this.runtimeValues.set(variable.name, undefined);
+                    }
                 }
             });
         }

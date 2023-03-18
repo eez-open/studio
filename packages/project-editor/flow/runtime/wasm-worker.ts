@@ -302,7 +302,7 @@ export function createWasmWorker(
                 blob
             );
 
-            WasmFlowRuntime._mainLoop();
+            //WasmFlowRuntime._mainLoop();
 
             return;
         }
@@ -321,7 +321,7 @@ export function createWasmWorker(
 
             WasmFlowRuntime._free(ptr);
 
-            WasmFlowRuntime._mainLoop();
+            //WasmFlowRuntime._mainLoop();
 
             return;
         }

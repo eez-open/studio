@@ -46,6 +46,8 @@ export class CommandsTree {
     children: ICommandNode[] = [];
     enums: IEnum[];
 
+    _findCommandCache = new Map<string, ICommandSyntax | IQuerySyntax>();
+
     constructor() {
         makeObservable(this, {
             id: observable,
@@ -120,7 +122,15 @@ export class CommandsTree {
     }
 
     findCommand(commandName: string) {
-        return this.findCommandInChildren(commandName, this.children);
+        let command: ICommandSyntax | IQuerySyntax | undefined =
+            this._findCommandCache.get(commandName);
+        if (!command) {
+            command = this.findCommandInChildren(commandName, this.children);
+            if (command) {
+                this._findCommandCache.set(commandName, command);
+            }
+        }
+        return command;
     }
 }
 
