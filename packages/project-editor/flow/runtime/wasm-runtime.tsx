@@ -681,12 +681,11 @@ export class WasmRuntime extends RemoteRuntime {
         const instrument = this.findInstrument(scpiCommand);
 
         if (!instrument) {
-            const data: RendererToWorkerMessage = {
+            this.worker.postMessage({
                 scpiResult: {
                     errorMessage: "instrument not found"
                 }
-            };
-            this.worker.postMessage(data);
+            });
             return;
         }
 
@@ -708,12 +707,11 @@ export class WasmRuntime extends RemoteRuntime {
         }
 
         if (!instrument.isConnected) {
-            const data: RendererToWorkerMessage = {
+            this.worker.postMessage({
                 scpiResult: {
                     errorMessage: "instrument not connected"
                 }
-            };
-            this.worker.postMessage(data);
+            });
             return;
         }
 
@@ -722,13 +720,11 @@ export class WasmRuntime extends RemoteRuntime {
         try {
             await connection.acquire(false);
         } catch (err) {
-            let data: RendererToWorkerMessage;
-            data = {
+            this.worker.postMessage({
                 scpiResult: {
                     errorMessage: err.toString()
                 }
-            };
-            this.worker.postMessage(data);
+            });
             return;
         }
 
@@ -746,13 +742,11 @@ export class WasmRuntime extends RemoteRuntime {
                 result = "";
             }
         } catch (err) {
-            let data: RendererToWorkerMessage;
-            data = {
+            this.worker.postMessage({
                 scpiResult: {
                     errorMessage: err.toString()
                 }
-            };
-            this.worker.postMessage(data);
+            });
             return;
         } finally {
             connection.release();
