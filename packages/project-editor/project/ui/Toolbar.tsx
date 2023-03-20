@@ -347,7 +347,7 @@ const RunEditSwitchControls = observer(
                 <div className="d-flex">
                     <ButtonAction
                         text="Edit"
-                        title="Enter edit mode"
+                        title="Enter edit mode (Shift+F5)"
                         icon="material:mode_edit"
                         iconSize={iconSize}
                         onClick={this.context.onSetEditorMode}
@@ -356,7 +356,7 @@ const RunEditSwitchControls = observer(
 
                     <ButtonAction
                         text="Run"
-                        title="Enter run mode"
+                        title="Enter run mode (F5)"
                         icon={RUN_ICON}
                         iconSize={iconSize}
                         onClick={this.context.onSetRuntimeMode}
@@ -368,7 +368,7 @@ const RunEditSwitchControls = observer(
 
                     <ButtonAction
                         text="Debug"
-                        title="Enter debug mode"
+                        title="Enter debug mode (Ctrl+F5)"
                         icon={
                             <svg viewBox="0 0 64 64" fill="currentColor">
                                 <g transform="translate(-1,-1)">

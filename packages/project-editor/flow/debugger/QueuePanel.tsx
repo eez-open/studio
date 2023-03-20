@@ -40,7 +40,7 @@ export const QueuePanel = observer(
                                               </svg>
                                           }
                                           iconSize={16}
-                                          title="Resume"
+                                          title="Resume (F5)"
                                           onClick={() =>
                                               this.props.runtime.resume()
                                           }
@@ -57,7 +57,7 @@ export const QueuePanel = observer(
                                               </svg>
                                           }
                                           iconSize={16}
-                                          title="Pause"
+                                          title="Pause (F6)"
                                           onClick={() =>
                                               this.props.runtime.pause()
                                           }

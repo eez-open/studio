@@ -53,27 +53,61 @@ export const ProjectEditorView = observer(
             const activeTab = ProjectEditor.homeTabs?.activeTab;
             if (
                 activeTab instanceof ProjectEditor.ProjectEditorTabClass &&
-                activeTab.projectStore == this.context &&
-                this.context.runtime &&
-                this.context.runtime.isDebuggerActive &&
-                this.context.runtime.isPaused
+                activeTab.projectStore == this.context
             ) {
-                let singleStepMode: SingleStepMode | undefined;
-                if (e.key == "F10") {
-                    singleStepMode = "step-over";
-                } else if (e.key == "F11") {
-                    if (e.shiftKey) {
-                        singleStepMode = "step-out";
+                if (this.context.runtime) {
+                    if (this.context.runtime.isDebuggerActive) {
+                        if (this.context.runtime.isPaused) {
+                            if (e.key == "F5") {
+                                if (e.shiftKey) {
+                                    this.context.setEditorMode();
+                                } else {
+                                    this.context.runtime.resume();
+                                }
+                            } else {
+                                let singleStepMode: SingleStepMode | undefined;
+
+                                if (e.key == "F10") {
+                                    singleStepMode = "step-over";
+                                } else if (e.key == "F11") {
+                                    if (e.shiftKey) {
+                                        singleStepMode = "step-out";
+                                    } else {
+                                        singleStepMode = "step-into";
+                                    }
+                                }
+
+                                if (singleStepMode) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+
+                                    this.context.runtime.runSingleStep(
+                                        singleStepMode
+                                    );
+                                }
+                            }
+                        } else {
+                            if (e.key == "F5") {
+                                if (e.shiftKey) {
+                                    this.context.setEditorMode();
+                                }
+                            } else if (e.key == "F6") {
+                                this.context.runtime.pause();
+                            }
+                        }
                     } else {
-                        singleStepMode = "step-into";
+                        if (e.key == "F5") {
+                            if (e.shiftKey) {
+                                this.context.setEditorMode();
+                            } else if (e.ctrlKey) {
+                                this.context.setRuntimeMode(true);
+                            }
+                        }
                     }
-                }
-
-                if (singleStepMode) {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    this.context.runtime.runSingleStep(singleStepMode);
+                } else {
+                    if (e.key == "F5") {
+                        this.context.setRuntimeMode(e.ctrlKey);
+                    }
                 }
             }
         };
