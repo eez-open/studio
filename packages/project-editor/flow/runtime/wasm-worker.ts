@@ -266,9 +266,15 @@ export function createWasmWorker(
 
     const componentMessageCallbacks = new Map<number, (result: any) => void>();
 
+    let stopScriptCalled = false;
+
     const postRendererToWorkerMessage = async function (
         rendererToWorkerMessage: RendererToWorkerMessage
     ) {
+        if (stopScriptCalled) {
+            return;
+        }
+
         if (rendererToWorkerMessage.scpiResult) {
             let errorMessagePtr = 0;
             let resultPtr = 0;
@@ -363,6 +369,7 @@ export function createWasmWorker(
 
         if (rendererToWorkerMessage.stopScript) {
             WasmFlowRuntime._stopScript();
+            stopScriptCalled = true;
             return;
         }
 
