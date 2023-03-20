@@ -255,6 +255,9 @@ export class WasmRuntime extends RemoteRuntime {
                     workerToRenderMessage.getLvglImageByName.name
                 ) ?? 0
             );
+        } else if (workerToRenderMessage.fatalError) {
+            this.stop();
+            return;
         }
         this.onWorkerMessageAsync(workerToRenderMessage);
         return undefined;
