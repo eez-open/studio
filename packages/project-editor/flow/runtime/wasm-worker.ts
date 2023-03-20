@@ -596,7 +596,6 @@ export function createWasmWorker(
         terminate: () => {
             wasmFlowRuntimes.delete(wasmModuleId);
             fireTerminateEvent(WasmFlowRuntime);
-            //WasmFlowRuntime.onRuntimeTerminate();
         }
     };
 }

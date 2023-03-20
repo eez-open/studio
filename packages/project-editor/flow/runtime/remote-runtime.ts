@@ -1259,8 +1259,6 @@ export abstract class DebuggerConnectionBase {
                                 flowState
                             )
                         );
-
-                        runtime.cleanupFlowStates();
                     }
                     break;
 

@@ -701,7 +701,6 @@ const ListWidgetItem = observer(
 
             return (
                 <ComponentEnclosure
-                    key={i}
                     component={itemWidget}
                     flowContext={overridenFlowContext}
                     left={xListItem}
@@ -825,39 +824,21 @@ export class GridWidget extends Widget {
             return null;
         }
 
-        return _range(dataValue.length).map(i => {
-            const rows = Math.floor(width / itemWidget.width);
-            const cols = Math.floor(height / itemWidget.height);
+        const iterators =
+            flowContext.dataContext.get(FLOW_ITERATOR_INDEXES_VARIABLE) || [];
 
-            let row;
-            let col;
-            if (this.gridFlow === "column") {
-                row = Math.floor(i / cols);
-                col = i % cols;
-                if (row >= rows) {
-                    return undefined;
-                }
-            } else {
-                row = i % rows;
-                col = Math.floor(i / rows);
-                if (col >= cols) {
-                    return undefined;
-                }
-            }
-
-            let xListItem = row * itemWidget.width;
-            let yListItem = col * itemWidget.height;
-
-            return (
-                <ComponentEnclosure
-                    key={i}
-                    component={itemWidget}
-                    flowContext={flowContext.overrideDataContext(dataValue[i])}
-                    left={xListItem}
-                    top={yListItem}
-                />
-            );
-        });
+        return _range(dataValue.length).map(i => (
+            <GridWidgetItem
+                key={i}
+                flowContext={flowContext}
+                gridWidget={this}
+                itemWidget={itemWidget}
+                i={i}
+                width={width}
+                height={height}
+                iterators={iterators}
+            />
+        ));
     }
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
@@ -879,6 +860,66 @@ export class GridWidget extends Widget {
 }
 
 registerClass("GridWidget", GridWidget);
+
+const GridWidgetItem = observer(
+    class GridWidgetItem extends React.Component<{
+        flowContext: IFlowContext;
+        gridWidget: GridWidget;
+        itemWidget: Widget;
+        i: number;
+        width: number;
+        height: number;
+        iterators: any;
+    }> {
+        render() {
+            const {
+                flowContext,
+                gridWidget,
+                itemWidget,
+                i,
+                width,
+                height,
+                iterators
+            } = this.props;
+
+            const rows = Math.floor(width / itemWidget.width);
+            const cols = Math.floor(height / itemWidget.height);
+
+            let row;
+            let col;
+            if (gridWidget.gridFlow === "column") {
+                row = Math.floor(i / cols);
+                col = i % cols;
+                if (row >= rows) {
+                    return null;
+                }
+            } else {
+                row = i % rows;
+                col = Math.floor(i / rows);
+                if (col >= cols) {
+                    return null;
+                }
+            }
+
+            let xListItem = row * itemWidget.width;
+            let yListItem = col * itemWidget.height;
+
+            const overridenFlowContext = flowContext.overrideDataContext({
+                [FLOW_ITERATOR_INDEX_VARIABLE]: i,
+                [FLOW_ITERATOR_INDEXES_VARIABLE]: [i, ...iterators]
+            });
+
+            return (
+                <ComponentEnclosure
+                    component={itemWidget}
+                    flowContext={overridenFlowContext}
+                    left={xListItem}
+                    top={yListItem}
+                />
+            );
+        }
+    }
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 

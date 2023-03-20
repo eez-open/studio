@@ -471,6 +471,19 @@ export class DataContext implements IDataContext {
         return new DataContext(this.project, this, undefined, localVariables);
     }
 
+    getDefaultValue(variableName: string): any {
+        if (this.defaultValueOverrides) {
+            const value = this.defaultValueOverrides[variableName];
+            if (value != undefined) {
+                return value;
+            }
+        }
+        if (this.parentDataContext) {
+            return this.parentDataContext.getDefaultValue(variableName);
+        }
+        return undefined;
+    }
+
     getRuntimeValue(variable: IVariable | undefined): {
         hasValue: boolean;
         value: any;
@@ -574,36 +587,27 @@ export class DataContext implements IDataContext {
             variable = findVariable(this.project, variableName);
         }
 
-        if (variableName === FLOW_ITERATOR_INDEX_VARIABLE) {
-            return {
-                name: FLOW_ITERATOR_INDEX_VARIABLE,
-                type: "integer",
-                defaultValue: 0,
-                defaultMinValue: undefined,
-                defaultMaxValue: undefined,
-                defaultValueList: undefined,
-                persistent: false
-            };
-        } else if (variableName === FLOW_ITERATOR_INDEXES_VARIABLE) {
-            return {
-                name: FLOW_ITERATOR_INDEXES_VARIABLE,
-                type: "array:integer",
-                defaultValue: null,
-                defaultMinValue: undefined,
-                defaultMaxValue: undefined,
-                defaultValueList: undefined,
-                persistent: false
-            };
-        }
-
         return variable;
     }
 
     has(variableName: string) {
+        if (
+            variableName == FLOW_ITERATOR_INDEX_VARIABLE ||
+            variableName == FLOW_ITERATOR_INDEXES_VARIABLE
+        ) {
+            return this.get(variableName) !== undefined;
+        }
         return !!this.findVariable(variableName);
     }
 
     get(variableName: string): any {
+        if (
+            variableName == FLOW_ITERATOR_INDEX_VARIABLE ||
+            variableName == FLOW_ITERATOR_INDEXES_VARIABLE
+        ) {
+            return this.getDefaultValue(variableName);
+        }
+
         if (!variableName) {
             return undefined;
         }

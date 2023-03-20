@@ -404,6 +404,10 @@ export class WasmRuntime extends RemoteRuntime {
     };
 
     tick = () => {
+        if (this.isStopped) {
+            return;
+        }
+
         if (this.componentProperties.selectedPage != this.selectedPage) {
             this.componentProperties.selectedPage = this.selectedPage;
             this.componentProperties.reset();
