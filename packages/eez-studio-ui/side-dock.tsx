@@ -56,6 +56,7 @@ export class SideDockComponent2 extends React.Component<{
             <div
                 className={dockSwitcherClassName}
                 onClick={this.toggleIsOpen}
+                title={this.isOpen ? "Hide Side bar" : "Show Side bar"}
             />
         );
 

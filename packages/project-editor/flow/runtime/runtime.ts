@@ -111,8 +111,6 @@ export abstract class RuntimeBase {
 
     isRTL: boolean = false;
 
-    cleanupFlowStatesInterval: any;
-
     get isPaused() {
         return this.state == State.PAUSED;
     }
@@ -201,19 +199,9 @@ export abstract class RuntimeBase {
         });
 
         this.doStartRuntime(isDebuggerActive);
-
-        this.cleanupFlowStatesInterval = setInterval(
-            this.cleanupFlowStates,
-            1000
-        );
     }
 
     async stopRuntime(notifyUser: boolean) {
-        if (this.cleanupFlowStatesInterval) {
-            clearInterval(this.cleanupFlowStatesInterval);
-            this.cleanupFlowStatesInterval = undefined;
-        }
-
         if (this.state == State.STOPPED) {
             return;
         }
@@ -806,7 +794,7 @@ export abstract class RuntimeBase {
         value: any
     ): void;
 
-    cleanupFlowStates = () => {
+    cleanupFlowStates() {
         const runtime = this;
 
         function cleanupFlowState(flowState: FlowState | RuntimeBase) {
@@ -826,7 +814,7 @@ export abstract class RuntimeBase {
         }
 
         cleanupFlowState(this);
-    };
+    }
 
     setObjectVariableValue(variableName: string, value: IObjectVariableValue) {}
 }

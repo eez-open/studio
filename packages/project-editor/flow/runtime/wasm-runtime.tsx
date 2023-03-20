@@ -234,16 +234,10 @@ export class WasmRuntime extends RemoteRuntime {
     }
 
     stop() {
-        const message: RendererToWorkerMessage = {};
-        message.stopScript = true;
-
-        this.worker.postMessage(message);
-
-        setTimeout(() => {
-            if (!this.isStopped) {
-                this.projectStore.setEditorMode();
-            }
-        }, 500);
+        this.worker.postMessage({
+            stopScript: true
+        });
+        this.projectStore.setEditorMode();
     }
 
     ////////////////////////////////////////////////////////////////////////////////

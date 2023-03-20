@@ -1309,6 +1309,8 @@ export abstract class DebuggerConnectionBase {
                         runtime.flowStateToFlowIndexMap.delete(flowState);
 
                         runInAction(() => (flowState.isFinished = true));
+
+                        this.runtime.cleanupFlowStates();
                     }
                     break;
 
