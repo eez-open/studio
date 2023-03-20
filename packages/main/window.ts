@@ -97,6 +97,11 @@ export function createWindow(params: IWindowParams) {
     browserWindow.show();
 
     browserWindow.on("close", function (event: any) {
+        if (isCrashed(browserWindow)) {
+            app.exit();
+            return;
+        }
+
         if (params.hideOnClose && windows.length > 1 && !forceQuit) {
             browserWindow.hide();
             event.preventDefault();
@@ -151,6 +156,10 @@ export function closeWindow(params: IWindowParams) {
     if (win) {
         win.browserWindow.close();
     }
+}
+
+export function isCrashed(window: BrowserWindow) {
+    return window.webContents.isCrashed();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

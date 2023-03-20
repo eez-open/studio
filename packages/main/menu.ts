@@ -11,7 +11,8 @@ import {
     IWindow,
     setForceQuit,
     windows,
-    findWindowByBrowserWindow
+    findWindowByBrowserWindow,
+    isCrashed
 } from "main/window";
 import { settings } from "main/settings";
 import { APP_NAME } from "main/util";
@@ -371,10 +372,10 @@ function buildFileMenu(win: IWindow | undefined) {
                 accelerator: "CmdOrCtrl+W",
                 click: function (item: any, focusedWindow: any) {
                     if (focusedWindow) {
-                        try {
+                        if (isCrashed(focusedWindow)) {
+                            app.exit();
+                        } else {
                             focusedWindow.webContents.send("beforeClose");
-                        } catch (err) {
-                            focusedWindow.close();
                         }
                     }
                 }
@@ -390,8 +391,12 @@ function buildFileMenu(win: IWindow | undefined) {
             {
                 label: "Exit",
                 click: function (item: any, focusedWindow: any) {
-                    setForceQuit();
-                    app.quit();
+                    if (isCrashed(focusedWindow)) {
+                        app.exit();
+                    } else {
+                        setForceQuit();
+                        app.quit();
+                    }
                 }
             }
         );
@@ -666,13 +671,9 @@ function buildViewMenu(win: IWindow | undefined) {
         accelerator: "CmdOrCtrl+R",
         click: function (item, focusedWindow) {
             if (focusedWindow) {
-                try {
-                    focusedWindow.webContents.send("reload");
-                    //focusedWindow.webContents.reload();
-                    //focusedWindow.webContents.clearHistory();
-                } catch (err) {
-                    focusedWindow.close();
-                }
+                focusedWindow.webContents.send("reload");
+                //focusedWindow.webContents.reload();
+                //focusedWindow.webContents.clearHistory();
             }
         }
     });
