@@ -469,7 +469,7 @@ export class HistoryViewComponent extends React.Component<{
                                     {appStore.selectHistoryItemsSpecification
                                         .loading && (
                                         <Loader
-                                            size={18}
+                                            size={24}
                                             style={{ marginRight: 20 }}
                                         />
                                     )}
