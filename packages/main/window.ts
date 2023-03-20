@@ -104,8 +104,10 @@ export function createWindow(params: IWindowParams) {
         }
 
         if (!window.readyToClose) {
-            browserWindow.webContents.send("beforeClose");
-            event.preventDefault();
+            try {
+                browserWindow.webContents.send("beforeClose");
+                event.preventDefault();
+            } catch (err) {}
         }
     });
 

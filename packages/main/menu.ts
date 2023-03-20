@@ -371,7 +371,11 @@ function buildFileMenu(win: IWindow | undefined) {
                 accelerator: "CmdOrCtrl+W",
                 click: function (item: any, focusedWindow: any) {
                     if (focusedWindow) {
-                        focusedWindow.webContents.send("beforeClose");
+                        try {
+                            focusedWindow.webContents.send("beforeClose");
+                        } catch (err) {
+                            focusedWindow.close();
+                        }
                     }
                 }
             }
@@ -662,9 +666,13 @@ function buildViewMenu(win: IWindow | undefined) {
         accelerator: "CmdOrCtrl+R",
         click: function (item, focusedWindow) {
             if (focusedWindow) {
-                focusedWindow.webContents.send("reload");
-                //focusedWindow.webContents.reload();
-                //focusedWindow.webContents.clearHistory();
+                try {
+                    focusedWindow.webContents.send("reload");
+                    //focusedWindow.webContents.reload();
+                    //focusedWindow.webContents.clearHistory();
+                } catch (err) {
+                    focusedWindow.close();
+                }
             }
         }
     });
