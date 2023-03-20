@@ -328,7 +328,9 @@ export class EditorsStore {
     }
 
     activateEditor(editor: Editor) {
-        this.tabsModel.doAction(FlexLayout.Actions.selectTab(editor.tabId));
+        try {
+            this.tabsModel.doAction(FlexLayout.Actions.selectTab(editor.tabId));
+        } catch (err) {}
     }
 
     openEditor(object: IEezObject, subObject?: IEezObject, params?: any) {

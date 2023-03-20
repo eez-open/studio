@@ -909,7 +909,26 @@ export class ProjectStore {
         return objectsToClipboardData(this, objects);
     }
 
+    changingRuntimeMode: boolean = false;
+    static CONF_CHANGE_RUNTIME_MODE_DEBOUNCE_TIMEOUT = 300;
+
+    debounceChangeRuntimeMode() {
+        if (this.changingRuntimeMode) {
+            return true;
+        }
+        this.changingRuntimeMode = true;
+        setTimeout(
+            () => (this.changingRuntimeMode = false),
+            ProjectStore.CONF_CHANGE_RUNTIME_MODE_DEBOUNCE_TIMEOUT
+        );
+        return false;
+    }
+
     setRuntimeMode(isDebuggerActive: boolean) {
+        if (this.debounceChangeRuntimeMode()) {
+            return;
+        }
+
         let runtime: RuntimeBase;
 
         if (this.projectTypeTraits.runtimeType == RuntimeType.WASM) {
@@ -933,6 +952,10 @@ export class ProjectStore {
     }
 
     async setEditorMode() {
+        if (this.debounceChangeRuntimeMode()) {
+            return;
+        }
+
         if (this.runtime) {
             if (this.runtime.isDebuggerActive) {
                 const editorState = this.editorsStore.activeEditor?.state;
