@@ -592,18 +592,7 @@ export function createWasmWorker(
 
     return {
         wasm: WasmFlowRuntime,
-        postMessage: async (
-            rendererToWorkerMessage: RendererToWorkerMessage
-        ) => {
-            try {
-                await postRendererToWorkerMessage(rendererToWorkerMessage);
-            } catch (err) {
-                console.error("flow fatal error", err);
-                postWorkerToRenderMessage({
-                    fatalError: true
-                });
-            }
-        },
+        postMessage: postRendererToWorkerMessage,
         terminate: () => {
             wasmFlowRuntimes.delete(wasmModuleId);
             fireTerminateEvent(WasmFlowRuntime);

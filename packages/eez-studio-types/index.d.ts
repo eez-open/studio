@@ -347,8 +347,6 @@ export interface WorkerToRenderMessage {
     getLvglImageByName?: {
         name: string;
     };
-
-    fatalError?: boolean;
 }
 
 interface IField {

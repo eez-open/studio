@@ -38,12 +38,6 @@ module["exports"] = function (postWorkerToRendererMessage) {
         console.error("From EEZ-WASM flow runtime:", args);
     };
 
-    Module.onRuntimeTerminate = function () {
-        for (const propName in Module) {
-            delete Module[propName];
-        }
-    };
-
     runWasmModule(Module);
 
     return Module;

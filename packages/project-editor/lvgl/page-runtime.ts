@@ -296,14 +296,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
     }
 
     tick = () => {
-        try {
-            this.wasm._mainLoop();
-        } catch (err) {
-            console.error("LVGLPageEditorRuntime fatal error", err);
-            this.unmount();
-            this.mount();
-            return;
-        }
+        this.wasm._mainLoop();
 
         var buf_addr = this.wasm._getSyncedBuffer();
         if (buf_addr != 0) {
@@ -399,14 +392,7 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
     }
 
     tick = () => {
-        try {
-            this.wasm._mainLoop();
-        } catch (err) {
-            console.error("LVGLNonActivePageViewerRuntime fatal error", err);
-            this.unmount();
-            this.mount();
-            return;
-        }
+        this.wasm._mainLoop();
 
         var buf_addr = this.wasm._getSyncedBuffer();
         if (buf_addr != 0) {
@@ -737,12 +723,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
 
     tick = () => {
         if (this.canvas && this.wasmInitialized) {
-            try {
-                this.wasm._mainLoop();
-            } catch (err) {
-                console.error("LVGLStylesEditorRuntime fatal error", err);
-                return;
-            }
+            this.wasm._mainLoop();
 
             var buf_addr = this.wasm._getSyncedBuffer();
             if (buf_addr != 0) {
