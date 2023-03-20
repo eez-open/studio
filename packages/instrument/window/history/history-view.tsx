@@ -42,6 +42,7 @@ import {
     detectFileType,
     extractColumnFromCSVHeuristically
 } from "instrument/connection/file-type";
+import { Loader } from "eez-studio-ui/loader";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -157,6 +158,7 @@ export const HistoryTools = observer(
                 message: "Select one or more waveform data items",
                 okButtonText: "Add Chart",
                 okButtonTitle: "Add chart",
+                loading: true,
                 onOk: () => {
                     const multiWaveformDefinition = {
                         waveformLinks: keys(
@@ -460,10 +462,26 @@ export class HistoryViewComponent extends React.Component<{
                 {appStore.selectHistoryItemsSpecification && (
                     <div className="EezStudio_HistoryHeader EezStudio_SlideInDownTransition">
                         <div>
-                            {appStore.selectedHistoryItems.size > 0
-                                ? `${appStore.selectedHistoryItems.size} selected`
-                                : appStore.selectHistoryItemsSpecification
-                                      .message}
+                            {appStore.selectedHistoryItems.size > 0 ? (
+                                `${appStore.selectedHistoryItems.size} selected`
+                            ) : (
+                                <span style={{ display: "flex" }}>
+                                    {appStore.selectHistoryItemsSpecification
+                                        .loading && (
+                                        <Loader
+                                            size={18}
+                                            style={{ marginRight: 20 }}
+                                        />
+                                    )}
+                                    <span>
+                                        {
+                                            appStore
+                                                .selectHistoryItemsSpecification
+                                                .message
+                                        }
+                                    </span>
+                                </span>
+                            )}
                         </div>
                         <Toolbar>
                             {appStore.selectedHistoryItems.size > 0 && (

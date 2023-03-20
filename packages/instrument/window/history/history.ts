@@ -70,6 +70,7 @@ export interface SelectHistoryItemsSpecification {
     alertDanger?: boolean;
     okButtonText: string;
     okButtonTitle: string;
+    loading: boolean;
     onOk(): void;
 }
 
@@ -678,6 +679,17 @@ class HistoryNavigator {
             this.hasOlder = false;
         }
 
+        const selectHistoryItemsSpecification =
+            this.history.appStore.selectHistoryItemsSpecification;
+        if (
+            selectHistoryItemsSpecification &&
+            selectHistoryItemsSpecification.historyItemType == "chart"
+        ) {
+            runInAction(
+                () => (selectHistoryItemsSpecification.loading = false)
+            );
+        }
+
         if (this.lastHistoryItem) {
             this.lastHistoryItemTime = this.lastHistoryItem.date.getTime();
 
@@ -1161,7 +1173,22 @@ export class History {
     }
 
     getFilter() {
-        return "AND NOT deleted AND " + this.appStore.filters.getFilter();
+        let filter = "AND NOT deleted AND " + this.appStore.filters.getFilter();
+
+        if (
+            this.appStore.selectHistoryItemsSpecification &&
+            this.appStore.selectHistoryItemsSpecification.historyItemType ==
+                "chart"
+        ) {
+            filter +=
+                ` AND message IS NOT NULL` +
+                ` AND json_valid(message)` +
+                ` AND json_extract(message, '$.state') = 'success'` +
+                ` AND json_extract(message, '$.dataLength') > 0` +
+                ` AND instr('text/csv,application/eez-binary-list,application/eez-raw', json_extract(message, '$.fileType.mime'))`;
+        }
+
+        return filter;
     }
 
     addActivityLogEntry(activityLogEntry: IActivityLogEntry) {
