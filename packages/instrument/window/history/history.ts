@@ -33,7 +33,7 @@ import { Filters, FilterStats } from "instrument/window/history/filters";
 
 import { HistorySessions } from "instrument/window/history/session/store";
 
-import type { IHistoryItem } from "instrument/window/history/item";
+import { IHistoryItem } from "instrument/window/history/item";
 import {
     createHistoryItem,
     rowsToHistoryItems,
@@ -755,12 +755,9 @@ class HistoryNavigator {
                 runInAction(() => {
                     this.history.calendar.showFirstHistoryItemAsSelectedDay =
                         true;
-                    this.history.items.splice(
-                        0,
-                        0,
-                        ...this.history.rowsToHistoryItems(rows)
+                    this.history.addRowsToStart(
+                        this.history.rowsToHistoryItems(rows)
                     );
-                    this.history.freeSomeHistoryItemsFromBottomIfTooMany();
                 });
                 this.update();
             }
@@ -796,10 +793,9 @@ class HistoryNavigator {
                 runInAction(() => {
                     this.history.calendar.showFirstHistoryItemAsSelectedDay =
                         false;
-                    this.history.items.push(
-                        ...this.history.rowsToHistoryItems(rows)
+                    this.history.addRowsToEnd(
+                        this.history.rowsToHistoryItems(rows)
                     );
-                    this.history.freeSomeHistoryItemsFromTopIfTooMany();
                 });
                 this.update();
             }
@@ -893,6 +889,8 @@ export class History {
             freeSomeHistoryItemsFromTopIfTooMany: action,
             freeSomeHistoryItemsFromBottomIfTooMany: action,
             displayRows: action,
+            addRowsToStart: action,
+            addRowsToEnd: action,
             onCreateActivityLogEntry: action,
             onUpdateActivityLogEntry: action,
             onDeleteActivityLogEntry: action,
@@ -1136,20 +1134,6 @@ export class History {
         return undefined;
     }
 
-    freeSomeHistoryItemsFromTopIfTooMany() {
-        while (this.items.length > CONF_MAX_NUM_OF_LOADED_ITEMS) {
-            this.items[0].dispose();
-            this.items.splice(0, 1);
-        }
-    }
-
-    freeSomeHistoryItemsFromBottomIfTooMany() {
-        while (this.items.length > CONF_MAX_NUM_OF_LOADED_ITEMS) {
-            this.items[this.items.length - 1].dispose();
-            this.items.splice(this.items.length - 1, 1);
-        }
-    }
-
     getHistoryItemById(id: string) {
         const foundItem = this.findHistoryItemById(id);
         if (foundItem) {
@@ -1191,6 +1175,10 @@ export class History {
         return filter;
     }
 
+    rowsToHistoryItems(rows: any[]) {
+        return rowsToHistoryItems(this.options.store, rows);
+    }
+
     addActivityLogEntry(activityLogEntry: IActivityLogEntry) {
         const historyItem = createHistoryItem(
             this.options.store,
@@ -1209,6 +1197,12 @@ export class History {
 
         let j;
         for (j = 0; j < this.items.length; j++) {
+            if (this.items[j].id == historyItem.id) {
+                // duplicate
+                j = -1;
+                break;
+            }
+
             if (
                 this.items.length > 0 &&
                 (historyItem.date < this.items[j].date ||
@@ -1219,15 +1213,17 @@ export class History {
             }
         }
 
-        if (j == 0) {
-            // add to the front
-            this.items.unshift(historyItem);
-        } else if (j == this.items.length) {
-            // add to the back
-            this.items.push(historyItem);
-        } else {
-            // add inside
-            this.items.splice(j, 0, historyItem);
+        if (j != -1) {
+            if (j == 0) {
+                // add to the front
+                this.items.unshift(historyItem);
+            } else if (j == this.items.length) {
+                // add to the back
+                this.items.push(historyItem);
+            } else {
+                // add inside
+                this.items.splice(j, 0, historyItem);
+            }
         }
 
         return historyItem;
@@ -1251,15 +1247,54 @@ export class History {
         }
     }
 
-    rowsToHistoryItems(rows: any[]) {
-        return rowsToHistoryItems(this.options.store, rows);
-    }
-
     displayRows(rows: any[]) {
         this.items.forEach(item => item.dispose());
         this.items = this.rowsToHistoryItems(rows);
         this.itemInTheCenterOfTheView = undefined;
         this.navigator.update();
+    }
+
+    freeSomeHistoryItemsFromTopIfTooMany() {
+        while (this.items.length > CONF_MAX_NUM_OF_LOADED_ITEMS) {
+            this.items[0].dispose();
+            this.items.splice(0, 1);
+        }
+    }
+
+    removeDuplicates() {
+        const items: IHistoryItem[] = [];
+
+        this.items.forEach(item => {
+            if (items.find(item2 => item.id == item2.id)) {
+                // duplicate
+                item.dispose();
+            } else {
+                items.push(item);
+            }
+        });
+
+        if (items.length != this.items.length) {
+            this.items = items;
+        }
+    }
+
+    addRowsToEnd(items: IHistoryItem[]) {
+        this.items.push(...items);
+        this.removeDuplicates();
+        this.freeSomeHistoryItemsFromTopIfTooMany();
+    }
+
+    freeSomeHistoryItemsFromBottomIfTooMany() {
+        while (this.items.length > CONF_MAX_NUM_OF_LOADED_ITEMS) {
+            this.items[this.items.length - 1].dispose();
+            this.items.splice(this.items.length - 1, 1);
+        }
+    }
+
+    addRowsToStart(items: IHistoryItem[]) {
+        this.items.splice(0, 0, ...items);
+        this.removeDuplicates();
+        this.freeSomeHistoryItemsFromBottomIfTooMany();
     }
 
     async onCreateActivityLogEntry(

@@ -343,18 +343,18 @@ export const FiltersComponent = observer(
                             )}
                         />
 
-                        {this.props.appStore.instrument &&
-                            this.props.appStore.instrument.listsProperty && (
-                                <BooleanProperty
-                                    name={`Lists (${filterStats.lists})`}
-                                    value={this.props.appStore.filters.lists}
-                                    onChange={action(
-                                        (value: boolean) =>
-                                            (this.props.appStore.filters.lists =
-                                                value)
-                                    )}
-                                />
-                            )}
+                        {(this.props.appStore.instrument.id == "0" ||
+                            this.props.appStore.instrument.listsProperty) && (
+                            <BooleanProperty
+                                name={`Lists (${filterStats.lists})`}
+                                value={this.props.appStore.filters.lists}
+                                onChange={action(
+                                    (value: boolean) =>
+                                        (this.props.appStore.filters.lists =
+                                            value)
+                                )}
+                            />
+                        )}
                         <BooleanProperty
                             name={`Notes (${filterStats.notes})`}
                             value={this.props.appStore.filters.notes}

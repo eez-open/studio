@@ -43,6 +43,7 @@ import {
     extractColumnFromCSVHeuristically
 } from "instrument/connection/file-type";
 import { Loader } from "eez-studio-ui/loader";
+import { WaveformFormat } from "eez-studio-ui/chart/WaveformFormat";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -85,11 +86,12 @@ export const HistoryTools = observer(
                             data = result.data;
 
                             message = {
+                                sourceFilePath: filePath,
                                 state: "success",
                                 fileType: { mime: "application/eez-raw" },
                                 waveformDefinition: {
                                     samplingRate: result.samplingRate,
-                                    format: 7, // FLOATS_64BIT
+                                    format: WaveformFormat.FLOATS_64BIT,
                                     unitName: result.unitName,
                                     color: result.color,
                                     colorInverse: result.colorInverse,
@@ -129,6 +131,35 @@ export const HistoryTools = observer(
                             sourceFilePath: filePath,
                             state: "success",
                             fileType,
+                            waveformDefinition: {
+                                samplingRate: 1,
+                                format: WaveformFormat.CSV_STRING,
+                                unitName: "volt",
+                                color: "blue",
+                                colorInverse: "blue",
+                                label: "Voltage",
+                                offset: 0,
+                                scale: 1
+                            },
+                            viewOptions: {
+                                axesLines: {
+                                    type: "dynamic",
+                                    steps: {
+                                        x: [],
+                                        y: []
+                                    },
+                                    majorSubdivision: {
+                                        horizontal: 24,
+                                        vertical: 8
+                                    },
+                                    minorSubdivision: {
+                                        horizontal: 5,
+                                        vertical: 5
+                                    },
+                                    snapToGrid: true,
+                                    defaultZoomMode: "all"
+                                }
+                            },
                             note,
                             dataLength: data.length
                         };
@@ -213,7 +244,7 @@ export const HistoryTools = observer(
                         fileType: { mime: "application/eez-raw" },
                         waveformDefinition: {
                             samplingRate: 1,
-                            format: 7, // FLOATS_64BIT
+                            format: WaveformFormat.FLOATS_64BIT,
                             unitName: "volt",
                             color: "blue",
                             colorInverse: "blue",
