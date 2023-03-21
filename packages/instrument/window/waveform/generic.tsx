@@ -63,6 +63,7 @@ import { ViewOptions } from "instrument/window/waveform/ViewOptions";
 import { WaveformAxisModel } from "instrument/window/waveform/WaveformAxisModel";
 import { WaveformDefinitionProperties } from "instrument/window/waveform/WaveformDefinitionProperties";
 import type { IAppStore } from "instrument/window/history/history";
+import { capitalize } from "eez-studio-shared/string";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -795,10 +796,20 @@ export async function convertToCsv(waveform: Waveform) {
 
     await new Promise(resolve => setTimeout(resolve, 0));
 
+    csv += `Time,${
+        waveform.waveformDefinition.label ||
+        capitalize(waveform.waveformDefinition.unitName)
+    }\n`;
+    csv += `(ms),(${capitalize(
+        UNITS[waveform.waveformDefinition.unitName].unitSymbol
+    )})\n`;
+    csv += "\n";
+
     for (let i = 0; i < waveform.length; i++) {
-        csv += numberFormat.format(i / waveform.samplingRate);
+        csv += numberFormat.format(i / waveform.samplingRate / 1000);
         csv += separator;
-        csv += numberFormat.format(waveform.value(i));
+        const value = waveform.value(i);
+        csv += numberFormat.format(value);
         csv += "\n";
 
         if (i > 0 && i % 100000 === 0) {
