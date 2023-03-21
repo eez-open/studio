@@ -16,6 +16,7 @@ import {
     LayoutModels
 } from "eez-studio-ui/side-dock";
 import { SearchInput } from "eez-studio-ui/search-input";
+import * as notification from "eez-studio-ui/notification";
 
 import { extensions } from "eez-studio-shared/extensions/extensions";
 
@@ -76,12 +77,37 @@ export const HistoryTools = observer(
             const filePaths = result.filePaths;
             if (filePaths) {
                 filePaths.forEach(async filePath => {
+                    const progressToastId = notification.info(
+                        "Loading file ...",
+                        {
+                            autoClose: false,
+                            closeButton: false,
+                            closeOnClick: false,
+                            hideProgressBar: false,
+                            progressStyle: {
+                                transition: "none"
+                            }
+                        }
+                    );
+
+                    await new Promise(resolve => setTimeout(resolve, 600));
+
                     let data = await readBinaryFile(filePath);
 
                     let message;
 
                     if (filePath.toLowerCase().endsWith(".csv")) {
-                        const result = extractColumnFromCSVHeuristically(data);
+                        notification.update(progressToastId, {
+                            render: "Importing CSV ..."
+                        });
+
+                        await new Promise(resolve => setTimeout(resolve, 300));
+
+                        const result = await extractColumnFromCSVHeuristically(
+                            data,
+                            progressToastId
+                        );
+
                         if (result) {
                             data = result.data;
 
@@ -120,10 +146,48 @@ export const HistoryTools = observer(
                                 },
                                 dataLength: data.length
                             };
+                        } else {
+                            const fileType = detectFileType(data, filePath);
+                            const note = fileType.comment;
+                            delete fileType.comment;
+                            message = {
+                                sourceFilePath: filePath,
+                                state: "success",
+                                fileType,
+                                waveformDefinition: {
+                                    samplingRate: 1,
+                                    format: WaveformFormat.CSV_STRING,
+                                    unitName: "volt",
+                                    color: "blue",
+                                    colorInverse: "blue",
+                                    label: "Voltage",
+                                    offset: 0,
+                                    scale: 1
+                                },
+                                viewOptions: {
+                                    axesLines: {
+                                        type: "dynamic",
+                                        steps: {
+                                            x: [],
+                                            y: []
+                                        },
+                                        majorSubdivision: {
+                                            horizontal: 24,
+                                            vertical: 8
+                                        },
+                                        minorSubdivision: {
+                                            horizontal: 5,
+                                            vertical: 5
+                                        },
+                                        snapToGrid: true,
+                                        defaultZoomMode: "all"
+                                    }
+                                },
+                                note,
+                                dataLength: data.length
+                            };
                         }
-                    }
-
-                    if (!message) {
+                    } else {
                         const fileType = detectFileType(data, filePath);
                         const note = fileType.comment;
                         delete fileType.comment;
@@ -131,41 +195,16 @@ export const HistoryTools = observer(
                             sourceFilePath: filePath,
                             state: "success",
                             fileType,
-                            waveformDefinition: {
-                                samplingRate: 1,
-                                format: WaveformFormat.CSV_STRING,
-                                unitName: "volt",
-                                color: "blue",
-                                colorInverse: "blue",
-                                label: "Voltage",
-                                offset: 0,
-                                scale: 1
-                            },
-                            viewOptions: {
-                                axesLines: {
-                                    type: "dynamic",
-                                    steps: {
-                                        x: [],
-                                        y: []
-                                    },
-                                    majorSubdivision: {
-                                        horizontal: 24,
-                                        vertical: 8
-                                    },
-                                    minorSubdivision: {
-                                        horizontal: 5,
-                                        vertical: 5
-                                    },
-                                    snapToGrid: true,
-                                    defaultZoomMode: "all"
-                                }
-                            },
                             note,
                             dataLength: data.length
                         };
                     }
 
-                    beginTransaction("Attach file");
+                    notification.update(progressToastId, {
+                        render: "Importing to database ..."
+                    });
+                    await new Promise(resolve => setTimeout(resolve, 300));
+
                     log(
                         this.props.appStore.history.options.store,
                         {
@@ -178,7 +217,15 @@ export const HistoryTools = observer(
                             undoable: true
                         }
                     );
-                    commitTransaction();
+
+                    notification.update(progressToastId, {
+                        render: "Import done.",
+                        type: notification.SUCCESS,
+                        closeButton: true,
+                        closeOnClick: true,
+                        hideProgressBar: true,
+                        autoClose: 3000
+                    });
                 });
             }
         };

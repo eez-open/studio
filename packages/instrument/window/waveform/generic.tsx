@@ -779,7 +779,7 @@ export async function convertToCsv(waveform: Waveform) {
 
     const numberFormat = new Intl.NumberFormat(locale, {
         useGrouping: false,
-        maximumFractionDigits: 9
+        maximumFractionDigits: 19
     });
 
     let csv = "";

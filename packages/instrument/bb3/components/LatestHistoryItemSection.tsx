@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 import { Section } from "instrument/bb3/components/Section";
+import { ErrorBoundary } from "instrument/window/history/list-component";
 
 export const LatestHistoryItemSection = observer(
     class LatestHistoryItemSection extends React.Component<{
@@ -18,8 +19,14 @@ export const LatestHistoryItemSection = observer(
         }
 
         get listItemElement() {
-            return this.props.bb3Instrument.latestHistoryItem!.getListItemElement(
-                this.props.bb3Instrument.appStore
+            return (
+                <ErrorBoundary
+                    id={this.props.bb3Instrument.latestHistoryItem!.id}
+                >
+                    {this.props.bb3Instrument.latestHistoryItem!.getListItemElement(
+                        this.props.bb3Instrument.appStore
+                    )}
+                </ErrorBoundary>
             );
         }
 

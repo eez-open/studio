@@ -2,6 +2,8 @@ import { BrowserWindow, ipcMain } from "electron";
 
 const fileType = require("file-type");
 
+import * as notification from "eez-studio-ui/notification";
+
 import { getFileNameExtension } from "eez-studio-shared/util-electron";
 import { UNITS, PREFIXES } from "eez-studio-shared/units";
 
@@ -218,7 +220,10 @@ function recognizeYAxisUnit(yAxisUnit: string): {
     };
 }
 
-export function extractColumnFromCSVHeuristically(data: string | Buffer) {
+export async function extractColumnFromCSVHeuristically(
+    data: string | Buffer,
+    progressToastId: string | number
+) {
     // Basically, recognizes CSV file that looks like this (exported from PicoScope):
     // Time,Channel C
     // (ms),(V)
@@ -269,7 +274,22 @@ export function extractColumnFromCSVHeuristically(data: string | Buffer) {
     let numbers = Buffer.alloc((lines.length - 3) * 8);
     for (let i = 3; i < lines.length; ++i) {
         const number = parseFloat(lines[i].split(",")[1]) * valueScale;
+
+        if (isNaN(number)) {
+            console.log(lines[i]);
+        }
+
         numbers.writeDoubleLE(number, (i - 3) * 8);
+
+        if (progressToastId != undefined && i % 100000 == 0) {
+            const progress = (i / lines.length) * 0.9;
+
+            notification.update(progressToastId, {
+                progress
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 0));
+        }
     }
 
     return {
