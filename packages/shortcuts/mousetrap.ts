@@ -7,7 +7,7 @@ export function bindShortcuts(
     instumentShortcuts: IComputedValue<ObservableMap<string, IShortcut>>,
     executeShortcut: (shortcut: IShortcut) => void
 ) {
-    return autorun(() => {
+    const dispose = autorun(() => {
         Mousetrap.reset();
 
         values(instumentShortcuts.get()).forEach(shortcut => {
@@ -19,4 +19,9 @@ export function bindShortcuts(
             }
         });
     });
+
+    return () => {
+        dispose();
+        Mousetrap.reset();
+    };
 }

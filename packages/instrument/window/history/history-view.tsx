@@ -155,7 +155,7 @@ export const HistoryTools = observer(
         addChart = () => {
             this.props.appStore.selectHistoryItems({
                 historyItemType: "chart",
-                message: "Select one or more waveform data items",
+                message: "Select two or more waveform data items",
                 okButtonText: "Add Chart",
                 okButtonTitle: "Add chart",
                 loading: true,
@@ -484,7 +484,7 @@ export class HistoryViewComponent extends React.Component<{
                             )}
                         </div>
                         <Toolbar>
-                            {appStore.selectedHistoryItems.size > 0 && (
+                            {appStore.selectedHistoryItems.size > 1 && (
                                 <ButtonAction
                                     text={
                                         appStore.selectHistoryItemsSpecification

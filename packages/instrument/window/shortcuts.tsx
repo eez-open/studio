@@ -45,7 +45,7 @@ import type { IExtension } from "eez-studio-shared/extensions/extension";
 export const shortcutsOrGroups = observable.box<boolean>(true);
 
 export class ShortcutsStore {
-    bindShortcutsDispose: IReactionDisposer | undefined;
+    bindShortcutsDispose: (() => void) | undefined;
     addShortcutsToDatabaseIfAllAreMissingDispose: IReactionDisposer | undefined;
 
     constructor(public appStore: InstrumentAppStore) {
@@ -53,20 +53,6 @@ export class ShortcutsStore {
             shortcuts: computed,
             isAnyMissingShortcuts: computed
         });
-
-        this.bindShortcutsDispose = bindShortcuts(
-            this.instrumentShortcuts,
-            (shortcut: IShortcut) => {
-                if (shortcut.action.type === "micropython") {
-                    return;
-                }
-                const { executeShortcut } =
-                    require("instrument/window/script") as typeof ScriptModule;
-                if (appStore.instrument) {
-                    executeShortcut(this.appStore, shortcut);
-                }
-            }
-        );
 
         this.addShortcutsToDatabaseIfAllAreMissingDispose = autorun(() => {
             const extension = this.appStore.instrument?.extension;
@@ -230,9 +216,37 @@ export class ShortcutsStore {
         });
     }
 
+    onActivate() {
+        if (this.bindShortcutsDispose) {
+            return;
+        }
+
+        this.bindShortcutsDispose = bindShortcuts(
+            this.instrumentShortcuts,
+            (shortcut: IShortcut) => {
+                if (shortcut.action.type === "micropython") {
+                    return;
+                }
+                const { executeShortcut } =
+                    require("instrument/window/script") as typeof ScriptModule;
+                if (this.appStore.instrument) {
+                    executeShortcut(this.appStore, shortcut);
+                }
+            }
+        );
+    }
+
+    onDeactivate() {
+        if (this.bindShortcutsDispose) {
+            this.bindShortcutsDispose();
+            this.bindShortcutsDispose = undefined;
+        }
+    }
+
     onTerminate() {
         if (this.bindShortcutsDispose) {
             this.bindShortcutsDispose();
+            this.bindShortcutsDispose = undefined;
         }
 
         if (this.addShortcutsToDatabaseIfAllAreMissingDispose) {

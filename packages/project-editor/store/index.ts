@@ -13,6 +13,7 @@ import {
     runInAction
 } from "mobx";
 import type { FSWatcher } from "chokidar";
+import Mousetrap from "mousetrap";
 
 import { confirmSave } from "eez-studio-shared/util-renderer";
 
@@ -239,6 +240,97 @@ export class ProjectStore {
                 });
             }
         });
+    }
+
+    onActivate() {
+        Mousetrap.reset();
+
+        Mousetrap.bind("f5", () => {
+            if (
+                !this.project._isDashboardBuild &&
+                this.projectTypeTraits.runtimeType != RuntimeType.NONE
+            ) {
+                if (this.runtime) {
+                    if (this.runtime.isDebuggerActive) {
+                        if (this.runtime.isPaused) {
+                            this.runtime.resume();
+                        } else {
+                            this.onSetRuntimeMode();
+                        }
+                    }
+                } else {
+                    this.onSetRuntimeMode();
+                }
+            }
+            return false;
+        });
+
+        Mousetrap.bind("shift+f5", () => {
+            if (this.runtime) {
+                this.onSetEditorMode();
+            }
+            return false;
+        });
+
+        Mousetrap.bind("ctrl+f5", () => {
+            if (
+                !this.project._isDashboardBuild &&
+                this.projectTypeTraits.runtimeType != RuntimeType.NONE
+            ) {
+                if (!this.runtime || !this.runtime.isDebuggerActive) {
+                    this.onSetDebuggerMode();
+                }
+            }
+            return false;
+        });
+
+        Mousetrap.bind("f6", () => {
+            if (
+                this.runtime &&
+                this.runtime.isDebuggerActive &&
+                !this.runtime.isPaused
+            ) {
+                this.runtime.pause();
+            }
+            return false;
+        });
+
+        Mousetrap.bind("f10", () => {
+            if (
+                this.runtime &&
+                this.runtime.isDebuggerActive &&
+                this.runtime.isPaused
+            ) {
+                this.runtime.runSingleStep("step-over");
+            }
+            return false;
+        });
+
+        Mousetrap.bind("f11", () => {
+            if (
+                this.runtime &&
+                this.runtime.isDebuggerActive &&
+                this.runtime.isPaused
+            ) {
+                this.runtime.runSingleStep("step-into");
+            }
+            return false;
+        });
+
+        Mousetrap.bind("shift+f11", () => {
+            if (
+                this.runtime &&
+                this.runtime.isDebuggerActive &&
+                this.runtime.isPaused
+            ) {
+                this.runtime.runSingleStep("step-out");
+            }
+            return false;
+        });
+    }
+
+    onDeactivate() {
+        Mousetrap.reset();
     }
 
     unmount() {
@@ -976,6 +1068,10 @@ export class ProjectStore {
     }
 
     onSetEditorMode = () => {
+        if (this.changingRuntimeMode) {
+            return;
+        }
+
         if (this.runtime && !this.runtime.isStopped) {
             this.runtime.stop();
         } else {
@@ -988,6 +1084,10 @@ export class ProjectStore {
     };
 
     onSetRuntimeMode = async () => {
+        if (this.changingRuntimeMode) {
+            return;
+        }
+
         if (this.runtime) {
             if (this.runtime.isDebuggerActive) {
                 this.runtime.toggleDebugger();
@@ -998,6 +1098,10 @@ export class ProjectStore {
     };
 
     onSetDebuggerMode = () => {
+        if (this.changingRuntimeMode) {
+            return;
+        }
+
         if (!this.runtime) {
             this.setRuntimeMode(true);
         } else {

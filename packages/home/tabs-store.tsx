@@ -604,7 +604,11 @@ export class ProjectEditorTab implements IHomeTab {
             ipcRenderer.removeListener("copy", copy);
             ipcRenderer.removeListener("paste", paste);
             ipcRenderer.removeListener("delete", deleteSelection);
+
+            projectStore.onDeactivate();
         };
+
+        projectStore.onActivate();
     }
 
     get filePath() {

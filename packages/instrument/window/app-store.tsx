@@ -188,6 +188,8 @@ export class InstrumentAppStore implements IEditor {
         ipcRenderer.on("save", this.onSave);
         ipcRenderer.on("delete", this.onDeleteShortcut);
         document.addEventListener("keydown", this.onKeyDown);
+
+        this.shortcutsStore.onActivate();
     }
 
     onDeactivate() {
@@ -196,6 +198,8 @@ export class InstrumentAppStore implements IEditor {
         ipcRenderer.removeListener("save", this.onSave);
         ipcRenderer.removeListener("delete", this.onDeleteShortcut);
         document.removeEventListener("keydown", this.onKeyDown);
+
+        this.shortcutsStore.onDeactivate();
     }
 
     onTerminate() {

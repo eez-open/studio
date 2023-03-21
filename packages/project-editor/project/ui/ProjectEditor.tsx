@@ -33,8 +33,6 @@ import {
 import { getEditorComponent } from "project-editor/project/ui/EditorComponentFactory";
 import { Icon } from "eez-studio-ui/icon";
 import { Loader } from "eez-studio-ui/loader";
-import { SingleStepMode } from "project-editor/flow/runtime/runtime";
-import { ProjectEditor } from "project-editor/project-editor-interface";
 import { QueuePanel } from "project-editor/flow/debugger/QueuePanel";
 import { WatchPanel } from "project-editor/flow/debugger/WatchPanel";
 import { ActiveFlowsPanel } from "project-editor/flow/debugger/ActiveFlowsPanel";
@@ -48,77 +46,6 @@ export const ProjectEditorView = observer(
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
-
-        onKeyDown = (e: KeyboardEvent) => {
-            const activeTab = ProjectEditor.homeTabs?.activeTab;
-            if (
-                activeTab instanceof ProjectEditor.ProjectEditorTabClass &&
-                activeTab.projectStore == this.context
-            ) {
-                if (this.context.runtime) {
-                    if (this.context.runtime.isDebuggerActive) {
-                        if (this.context.runtime.isPaused) {
-                            if (e.key == "F5") {
-                                if (e.shiftKey) {
-                                    this.context.setEditorMode();
-                                } else {
-                                    this.context.runtime.resume();
-                                }
-                            } else {
-                                let singleStepMode: SingleStepMode | undefined;
-
-                                if (e.key == "F10") {
-                                    singleStepMode = "step-over";
-                                } else if (e.key == "F11") {
-                                    if (e.shiftKey) {
-                                        singleStepMode = "step-out";
-                                    } else {
-                                        singleStepMode = "step-into";
-                                    }
-                                }
-
-                                if (singleStepMode) {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-
-                                    this.context.runtime.runSingleStep(
-                                        singleStepMode
-                                    );
-                                }
-                            }
-                        } else {
-                            if (e.key == "F5") {
-                                if (e.shiftKey) {
-                                    this.context.setEditorMode();
-                                }
-                            } else if (e.key == "F6") {
-                                this.context.runtime.pause();
-                            }
-                        }
-                    } else {
-                        if (e.key == "F5") {
-                            if (e.shiftKey) {
-                                this.context.setEditorMode();
-                            } else if (e.ctrlKey) {
-                                this.context.setRuntimeMode(true);
-                            }
-                        }
-                    }
-                } else {
-                    if (e.key == "F5") {
-                        this.context.setRuntimeMode(e.ctrlKey);
-                    }
-                }
-            }
-        };
-
-        componentDidMount() {
-            document.addEventListener("keydown", this.onKeyDown);
-        }
-
-        componentWillUnmount() {
-            document.removeEventListener("keydown", this.onKeyDown);
-        }
 
         render() {
             if (!this.context.project || !this.context.project._fullyLoaded) {
