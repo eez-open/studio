@@ -41,7 +41,6 @@ import { RulersModel, IRulersModel } from "eez-studio-ui/chart/rulers";
 import {
     logUpdate,
     IActivityLogEntry,
-    activityLogStore,
     getHistoryItemById
 } from "instrument/window/history/activity-log";
 
@@ -191,7 +190,7 @@ export class MultiWaveform extends HistoryItem {
             arg => {
                 if (!objectEqual(arg.message.viewOptions, arg.viewOptions)) {
                     logUpdate(
-                        activityLogStore,
+                        this.store,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -224,7 +223,7 @@ export class MultiWaveform extends HistoryItem {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.rulers, rulers)) {
                     logUpdate(
-                        activityLogStore,
+                        this.store,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -255,7 +254,7 @@ export class MultiWaveform extends HistoryItem {
                     );
                     runInAction(() => (this.message = messageStr));
                     logUpdate(
-                        activityLogStore,
+                        this.store,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -657,9 +656,13 @@ const MultiWaveformConfigurationDialog = observer(
                 beginTransaction("Edit chart configuration");
 
                 changedHistoryItems.forEach(changedHistoryItem => {
-                    logUpdate(activityLogStore, changedHistoryItem, {
-                        undoable: true
-                    });
+                    logUpdate(
+                        this.props.multiWaveform.store,
+                        changedHistoryItem,
+                        {
+                            undoable: true
+                        }
+                    );
                 });
 
                 commitTransaction();

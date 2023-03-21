@@ -267,7 +267,7 @@ export async function extractColumnFromCSVHeuristically(
     if (isNaN(dt)) {
         return undefined;
     }
-    dt *= timeScale;
+    dt /= timeScale;
     let samplingRate = 1 / dt;
 
     // get y values

@@ -111,7 +111,7 @@ export interface IScriptHistoryItemMessage {
 }
 
 export class ScriptHistoryItem extends HistoryItem {
-    constructor(protected store: IStore, activityLogEntry: IActivityLogEntry) {
+    constructor(public store: IStore, activityLogEntry: IActivityLogEntry) {
         super(store, activityLogEntry);
 
         makeObservable(this, {

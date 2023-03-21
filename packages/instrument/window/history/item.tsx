@@ -43,7 +43,7 @@ export class HistoryItem implements IHistoryItem {
     deleted: boolean;
     canBePartOfMultiChart = false;
 
-    constructor(protected store: IStore, activityLogEntry: IActivityLogEntry) {
+    constructor(public store: IStore, activityLogEntry: IActivityLogEntry) {
         makeObservable(this, {
             message: observable,
             selected: observable

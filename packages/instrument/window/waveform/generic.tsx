@@ -46,8 +46,7 @@ import * as notification from "eez-studio-ui/notification";
 
 import {
     logUpdate,
-    IActivityLogEntry,
-    activityLogStore
+    IActivityLogEntry
 } from "instrument/window/history/activity-log";
 
 import { checkMime } from "instrument/connection/file-type";
@@ -185,7 +184,7 @@ export class Waveform extends FileHistoryItem {
                     !objectEqual(message.waveformDefinition, waveformDefinition)
                 ) {
                     logUpdate(
-                        activityLogStore,
+                        this.store,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -210,7 +209,7 @@ export class Waveform extends FileHistoryItem {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.viewOptions, viewOptions)) {
                     logUpdate(
-                        activityLogStore,
+                        this.store,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -240,7 +239,7 @@ export class Waveform extends FileHistoryItem {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.rulers, rulers)) {
                     logUpdate(
-                        activityLogStore,
+                        this.store,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -271,7 +270,7 @@ export class Waveform extends FileHistoryItem {
                     );
                     runInAction(() => (this.message = messageStr));
                     logUpdate(
-                        activityLogStore,
+                        this.store,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -736,7 +735,7 @@ const WaveformConfigurationDialog = observer(
 
                 beginTransaction("Edit waveform configuration");
                 logUpdate(
-                    activityLogStore,
+                    this.props.waveform.store,
                     {
                         id: this.props.waveform.id,
                         oid: this.props.waveform.oid,

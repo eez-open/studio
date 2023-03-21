@@ -43,7 +43,6 @@ import type * as UiBalloonModule from "eez-studio-ui/balloon";
 import pdfToPng from "pdf-services/pdf-to-png";
 
 import {
-    activityLogStore,
     IActivityLogEntry,
     logUpdate
 } from "instrument/window/history/activity-log";
@@ -705,7 +704,7 @@ export class FileHistoryItem extends HistoryItem {
         fileState.note = value;
 
         logUpdate(
-            activityLogStore,
+            this.store,
             {
                 id: this.id,
                 oid: appStore.history.oid,

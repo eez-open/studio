@@ -53,7 +53,6 @@ import { initValuesAccesor } from "eez-studio-ui/chart/value-accesor";
 import {
     logUpdate,
     IActivityLogEntry,
-    activityLogStore,
     log
 } from "instrument/window/history/activity-log";
 
@@ -441,7 +440,7 @@ export class DlogWaveform extends FileHistoryItem {
                 if (!objectEqual(message.viewOptions, viewOptions)) {
                     console.log(this);
                     logUpdate(
-                        activityLogStore,
+                        this.store,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -479,7 +478,7 @@ export class DlogWaveform extends FileHistoryItem {
                     this.message = newMessage;
 
                     logUpdate(
-                        activityLogStore,
+                        this.store,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -507,7 +506,7 @@ export class DlogWaveform extends FileHistoryItem {
                     runInAction(() => (this.message = messageStr));
                     console.log(this);
                     logUpdate(
-                        activityLogStore,
+                        this.store,
                         {
                             id: this.id,
                             oid: this.oid,

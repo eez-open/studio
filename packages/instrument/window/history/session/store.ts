@@ -259,7 +259,7 @@ export class HistorySessions {
             let message: any = JSON.parse(this.activeSession.message);
             message.sessionCloseId = sessionCloseId;
             logUpdate(
-                activityLogStore,
+                this.history.options.store,
                 {
                     id: this.activeSession.id,
                     oid: this.activeSession.oid,
