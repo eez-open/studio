@@ -577,6 +577,15 @@ export const ListsButtons = observer(
                 this.numChannels
             );
 
+            const connection = this.props.appStore.instrument.connection;
+
+            try {
+                await connection.acquire(false);
+            } catch (err) {
+                notification.error(`Failed to get list: ${err.toString()}`);
+                return;
+            }
+
             let listData, logId: string;
             try {
                 ({ listData, logId } = await getList(
@@ -586,6 +595,8 @@ export const ListsButtons = observer(
             } catch (err) {
                 notification.error(`Failed to get list: ${err.toString()}`);
                 return;
+            } finally {
+                connection.release();
             }
 
             const tableListData = Object.assign({}, listData[0]);
@@ -672,6 +683,18 @@ export const ListsButtons = observer(
                     this.selectedList,
                     this.props.appStore.instrument
                 );
+
+                const connection = this.props.appStore.instrument.connection;
+
+                try {
+                    await connection.acquire(false);
+                } catch (err) {
+                    notification.error(
+                        `Failed to send list: ${err.toString()}`
+                    );
+                    return;
+                }
+
                 try {
                     await sendList(
                         this.props.appStore.history.oid,
@@ -688,6 +711,8 @@ export const ListsButtons = observer(
                     notification.error(
                         `Failed to send list: ${err.toString()}`
                     );
+                } finally {
+                    connection.release();
                 }
             }
         };

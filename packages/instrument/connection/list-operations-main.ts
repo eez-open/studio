@@ -55,23 +55,19 @@ export abstract class ListOperation {
                 })
             };
 
-            if (!this.connection.callbackWindowId) {
-                this.logId = log(activityLogStore, logEntry, {
-                    undoable: false
-                });
+            this.logId = log(activityLogStore, logEntry, {
+                undoable: false
+            });
 
-                let browserWindow = require("electron").BrowserWindow.fromId(
-                    this.callbackWindowId
-                )!;
-                browserWindow.webContents.send(
-                    "instrument/connection/list-operation-result",
-                    {
-                        error
-                    }
-                );
-            } else {
-                this.logEntry = logEntry;
-            }
+            let browserWindow = require("electron").BrowserWindow.fromId(
+                this.callbackWindowId
+            )!;
+            browserWindow.webContents.send(
+                "instrument/connection/list-operation-result",
+                {
+                    error
+                }
+            );
         }
     }
 
@@ -204,24 +200,20 @@ export class GetListOperation extends ListOperation {
                 })
             };
 
-            if (!this.connection.callbackWindowId) {
-                let logId = log(activityLogStore, logEntry, {
-                    undoable: false
-                });
+            let logId = log(activityLogStore, logEntry, {
+                undoable: false
+            });
 
-                let browserWindow = require("electron").BrowserWindow.fromId(
-                    this.callbackWindowId
-                )!;
-                browserWindow.webContents.send(
-                    "instrument/connection/list-operation-result",
-                    {
-                        listData: [this.listData],
-                        logId
-                    }
-                );
-            } else {
-                this.logEntry = logEntry;
-            }
+            let browserWindow = require("electron").BrowserWindow.fromId(
+                this.callbackWindowId
+            )!;
+            browserWindow.webContents.send(
+                "instrument/connection/list-operation-result",
+                {
+                    listData: [this.listData],
+                    logId
+                }
+            );
 
             if (this.dataReceived) {
                 this.dataSurplus = this.dataReceived;
@@ -301,21 +293,17 @@ export class SendListOperation extends ListOperation {
             })
         };
 
-        if (!this.connection.callbackWindowId) {
-            log(activityLogStore, logEntry, {
-                undoable: false
-            });
+        log(activityLogStore, logEntry, {
+            undoable: false
+        });
 
-            let browserWindow = require("electron").BrowserWindow.fromId(
-                this.callbackWindowId
-            )!;
-            browserWindow.webContents.send(
-                "instrument/connection/list-operation-result",
-                {}
-            );
-        } else {
-            this.logEntry = logEntry;
-        }
+        let browserWindow = require("electron").BrowserWindow.fromId(
+            this.callbackWindowId
+        )!;
+        browserWindow.webContents.send(
+            "instrument/connection/list-operation-result",
+            {}
+        );
 
         if (this.dataReceived) {
             this.dataSurplus = this.dataReceived;

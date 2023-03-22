@@ -272,7 +272,7 @@ export class Connection
 
     longOperationDone() {
         if (this.longOperation) {
-            if (this.longOperation.isQuery) {
+            if (this.longOperation.isQuery && this.longOperation.logEntry) {
                 this.sendValue({ logEntry: this.longOperation.logEntry });
             }
             this.longOperation = undefined;

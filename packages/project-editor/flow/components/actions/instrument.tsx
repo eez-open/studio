@@ -26,6 +26,8 @@ import {
 
 import { InstrumentObject, instruments } from "instrument/instrument-object";
 
+import type * as AddInstrumentDialogModule from "instrument/add-instrument-dialog";
+
 import type { IDashboardComponentContext } from "eez-studio-types";
 
 import {
@@ -507,9 +509,7 @@ export const SelectInstrumentDialog = observer(
                                       position: "left",
                                       onClick: async () => {
                                           const { showAddInstrumentDialog } =
-                                              await import(
-                                                  "instrument/add-instrument-dialog"
-                                              );
+                                              require("instrument/add-instrument-dialog") as typeof AddInstrumentDialogModule;
 
                                           showAddInstrumentDialog(
                                               instrumentId => {
