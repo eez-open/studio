@@ -528,7 +528,7 @@ class ActiveSession {
 export const activeSession = new ActiveSession();
 
 export function getHistoryItemById(store: IStore, id: string) {
-    const activityLogEntry = activityLogStore.findById(id);
+    const activityLogEntry = store.findById(id);
     if (activityLogEntry) {
         return createHistoryItem(store, activityLogEntry);
     }

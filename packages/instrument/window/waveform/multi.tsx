@@ -41,7 +41,8 @@ import { RulersModel, IRulersModel } from "eez-studio-ui/chart/rulers";
 import {
     logUpdate,
     IActivityLogEntry,
-    getHistoryItemById
+    getHistoryItemById,
+    activityLogStore
 } from "instrument/window/history/activity-log";
 
 import { ChartPreview } from "instrument/window/chart-preview";
@@ -178,7 +179,7 @@ export class MultiWaveform extends HistoryItem {
         );
 
         this.viewOptions = new ViewOptions(
-            message.viewOptions || this.linkedWaveforms[0].waveform.viewOptions
+            message.viewOptions || this.linkedWaveforms[0]?.waveform.viewOptions
         );
 
         // save viewOptions when changed
@@ -288,10 +289,22 @@ export class MultiWaveform extends HistoryItem {
     get linkedWaveforms() {
         return this.waveformLinks
             .map(waveformLink => {
-                const waveform = getHistoryItemById(
+                let waveform = getHistoryItemById(
                     this.store,
                     waveformLink.id
                 )! as Waveform;
+
+                if (!waveform) {
+                    waveform = getHistoryItemById(
+                        activityLogStore,
+                        waveformLink.id
+                    )! as Waveform;
+
+                    if (waveform) {
+                        console.log(waveformLink.id);
+                    }
+                }
+
                 return {
                     waveformLink,
                     waveform,
@@ -381,11 +394,11 @@ export class MultiWaveform extends HistoryItem {
     }
 
     get xAxisDefaultSubdivisionOffset(): number | undefined {
-        return this.linkedWaveforms[0].waveform.xAxisDefaultSubdivisionOffset;
+        return this.linkedWaveforms[0]?.waveform.xAxisDefaultSubdivisionOffset;
     }
 
     get xAxisDefaultSubdivisionScale() {
-        return this.linkedWaveforms[0].waveform.xAxisDefaultSubdivisionScale;
+        return this.linkedWaveforms[0]?.waveform.xAxisDefaultSubdivisionScale;
     }
 
     getListItemElement(appStore: IAppStore): React.ReactNode {
