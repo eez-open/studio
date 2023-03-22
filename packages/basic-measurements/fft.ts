@@ -111,21 +111,25 @@ export default function (task: IMeasureTask) {
         }
     }
 
-    //
-    task.result = {
-        data,
-        samplingRate,
-        xAxes: {
-            unit: "frequency",
-            logarithmic:
-                !task.parameters ||
-                !task.parameters.xAxis ||
-                task.parameters.xAxis === "logarithmic"
-        },
-        yAxes: {
-            unit: yAxisInDecibels ? "decibel" : task.valueUnit,
-            minValue,
-            maxValue
-        }
-    };
+    if (!isNaN(minValue) && !isNaN(maxValue)) {
+        //
+        task.result = {
+            data,
+            samplingRate,
+            xAxes: {
+                unit: "frequency",
+                logarithmic:
+                    !task.parameters ||
+                    !task.parameters.xAxis ||
+                    task.parameters.xAxis === "logarithmic"
+            },
+            yAxes: {
+                unit: yAxisInDecibels ? "decibel" : task.valueUnit,
+                minValue,
+                maxValue
+            }
+        };
+    } else {
+        task.result = null;
+    }
 }

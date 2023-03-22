@@ -5634,7 +5634,7 @@ const MeasurementComponent = observer(
                                     onClick={this.onCopy}
                                     enabled={
                                         !this.operationInProgress &&
-                                        !!measurement.result
+                                        !!measurement.result?.result
                                     }
                                 />
                                 <IconAction
@@ -5645,7 +5645,7 @@ const MeasurementComponent = observer(
                                     overlayText={"CSV"}
                                     enabled={
                                         !this.operationInProgress &&
-                                        !!measurement.result &&
+                                        !!measurement.result?.result &&
                                         measurement.resultType == "chart"
                                     }
                                     style={{
@@ -5811,7 +5811,21 @@ const MeasurementValue = observer(
 
             if (measurementResult == null || measurementResult.result == null) {
                 if (this.props.inDockablePanel) {
-                    return null;
+                    return this.props.measurement.dirty ? null : (
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                height: "100%"
+                            }}
+                        >
+                            <div className="alert alert-danger">
+                                Too many samples. Use the X-axis ruler to reduce
+                                input samples.
+                            </div>
+                        </div>
+                    );
                 }
                 return (
                     <input
