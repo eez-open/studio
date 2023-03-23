@@ -253,7 +253,9 @@ export class MultiWaveform extends HistoryItem {
                             measurements
                         })
                     );
+
                     runInAction(() => (this.message = messageStr));
+
                     logUpdate(
                         this.store,
                         {

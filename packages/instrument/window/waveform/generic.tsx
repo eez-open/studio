@@ -183,16 +183,20 @@ export class Waveform extends FileHistoryItem {
                 if (
                     !objectEqual(message.waveformDefinition, waveformDefinition)
                 ) {
+                    const messageStr = JSON.stringify(
+                        Object.assign(message, {
+                            waveformDefinition
+                        })
+                    );
+
+                    runInAction(() => (this.message = messageStr));
+
                     logUpdate(
                         this.store,
                         {
                             id: this.id,
                             oid: this.oid,
-                            message: JSON.stringify(
-                                Object.assign(message, {
-                                    waveformDefinition
-                                })
-                            )
+                            message: messageStr
                         },
                         {
                             undoable: false
@@ -208,16 +212,20 @@ export class Waveform extends FileHistoryItem {
             viewOptions => {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.viewOptions, viewOptions)) {
+                    const messageStr = JSON.stringify(
+                        Object.assign(message, {
+                            viewOptions
+                        })
+                    );
+
+                    runInAction(() => (this.message = messageStr));
+
                     logUpdate(
                         this.store,
                         {
                             id: this.id,
                             oid: this.oid,
-                            message: JSON.stringify(
-                                Object.assign(message, {
-                                    viewOptions
-                                })
-                            )
+                            message: messageStr
                         },
                         {
                             undoable: false
@@ -238,16 +246,20 @@ export class Waveform extends FileHistoryItem {
 
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.rulers, rulers)) {
+                    const messageStr = JSON.stringify(
+                        Object.assign(message, {
+                            rulers
+                        })
+                    );
+
+                    runInAction(() => (this.message = messageStr));
+
                     logUpdate(
                         this.store,
                         {
                             id: this.id,
                             oid: this.oid,
-                            message: JSON.stringify(
-                                Object.assign(message, {
-                                    rulers
-                                })
-                            )
+                            message: messageStr
                         },
                         {
                             undoable: false
@@ -268,7 +280,9 @@ export class Waveform extends FileHistoryItem {
                             measurements
                         })
                     );
+
                     runInAction(() => (this.message = messageStr));
+
                     logUpdate(
                         this.store,
                         {

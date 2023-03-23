@@ -469,20 +469,20 @@ export class DlogWaveform extends FileHistoryItem {
 
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.rulers, rulers)) {
-                    const newMessage = JSON.stringify(
+                    const messageStr = JSON.stringify(
                         Object.assign(message, {
                             rulers
                         })
                     );
 
-                    this.message = newMessage;
+                    runInAction(() => (this.message = messageStr));
 
                     logUpdate(
                         this.store,
                         {
                             id: this.id,
                             oid: this.oid,
-                            message: newMessage
+                            message: messageStr
                         },
                         {
                             undoable: false
@@ -503,8 +503,9 @@ export class DlogWaveform extends FileHistoryItem {
                             measurements
                         })
                     );
+
                     runInAction(() => (this.message = messageStr));
-                    console.log(this);
+
                     logUpdate(
                         this.store,
                         {

@@ -8,11 +8,11 @@ module["exports"] = function (postWorkerToRendererMessage) {
     }
 
     Module.print = function (args) {
-        console.log("From EEZ-WASM flow runtime:", args);
+        console.log("From LVGL-WASM flow runtime:", args);
     };
 
     Module.printErr = function (args) {
-        console.error("From EEZ-WASM flow runtime:", args);
+        console.error("From LVGL-WASM flow runtime:", args);
     };
 
     runWasmModule(Module);
