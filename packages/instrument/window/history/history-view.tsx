@@ -412,6 +412,7 @@ export const HistoryTools = observer(
                         <ButtonAction
                             key="deletedItems"
                             text={`Deleted Items (${appStore.deletedItemsHistory.deletedCount})`}
+                            icon="material:delete"
                             title="Show deleted items"
                             onClick={
                                 appStore.navigationStore
