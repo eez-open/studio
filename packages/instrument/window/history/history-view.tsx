@@ -417,7 +417,7 @@ export const HistoryTools = observer(
                                 appStore.navigationStore
                                     .navigateToDeletedHistoryItems
                             }
-                            className="btn-sm"
+                            className="btn-secondary btn-sm"
                             style={style}
                         />
                     );
