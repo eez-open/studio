@@ -5625,7 +5625,7 @@ const MeasurementComponent = observer(
                     <tr key={measurement.measurementId}>
                         <td>{measurement.name}</td>
                         {content}
-                        <td style={{ paddingRight: 20 }}>
+                        <td>
                             <div className="EezStudio_ActionsContainer">
                                 <IconAction
                                     icon="material:content_copy"
@@ -5648,9 +5648,7 @@ const MeasurementComponent = observer(
                                         !!measurement.result?.result &&
                                         measurement.resultType == "chart"
                                     }
-                                    style={{
-                                        marginBottom: 10
-                                    }}
+                                    style={{ marginRight: 12 }}
                                 />
                                 {this.deleteAction}
                             </div>
