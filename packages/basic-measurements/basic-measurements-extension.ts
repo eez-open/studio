@@ -39,7 +39,7 @@ const fftParametersDescription: IFieldProperties[] = [
         name: "xAxis",
         displayName: "X axis",
         type: "enum",
-        defaultValue: "log",
+        defaultValue: "logarithmic",
         enumItems: [
             { id: "logarithmic", label: "Logarithmic" },
             { id: "linear", label: "Linear" },
