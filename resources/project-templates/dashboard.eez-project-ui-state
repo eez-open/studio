@@ -324,6 +324,60 @@
         }
       }
     },
+    "runtimeEditors": {
+      "version": 3,
+      "json": {
+        "global": {
+          "splitterSize": 4,
+          "splitterExtra": 4,
+          "tabEnableRename": false,
+          "borderEnableAutoHide": true
+        },
+        "borders": [],
+        "layout": {
+          "type": "row",
+          "id": "#3aae1637-fa4a-4117-99ca-9ddb43b01413",
+          "children": [
+            {
+              "type": "tabset",
+              "id": "RUNTIME-EDITORS",
+              "enableDrop": false,
+              "enableDrag": false,
+              "enableTabStrip": false,
+              "children": [
+                {
+                  "type": "tab",
+                  "id": "#9cc52a55-0647-4a5d-b251-7c8635a8713c",
+                  "component": "sub",
+                  "config": {
+                    "model": {
+                      "global": {
+                        "borderEnableAutoHide": true,
+                        "splitterSize": 4,
+                        "splitterExtra": 4,
+                        "legacyOverflowMenu": false,
+                        "tabEnableRename": false,
+                        "tabEnableClose": true
+                      },
+                      "borders": [],
+                      "layout": {
+                        "type": "row",
+                        "children": [
+                          {
+                            "type": "tabset",
+                            "children": []
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
     "variables": {
       "version": 7,
       "json": {
@@ -497,7 +551,7 @@
       }
     },
     "pagesEditor": {
-      "version": 6,
+      "version": 7,
       "json": {
         "global": {
           "splitterSize": 4,
@@ -508,19 +562,19 @@
         "borders": [],
         "layout": {
           "type": "row",
-          "id": "#79011f37-f6a6-47ea-9ef4-b052fbfef344",
+          "id": "#7991815c-b9d3-4cb2-a5b0-0a93d63cc725",
           "children": [
             {
               "type": "row",
-              "id": "#06369a2b-17ac-4b94-ae72-1897a42daa34",
+              "id": "#9bf65768-7e09-4da7-ae3f-da4a0c375259",
               "children": [
                 {
                   "type": "tabset",
-                  "id": "#ed83414f-a7e5-4e92-8026-008b090bcb96",
+                  "id": "#4078ec34-bec4-42a0-9171-e79a33e8e11d",
                   "children": [
                     {
                       "type": "tab",
-                      "id": "#c747e319-a700-4285-ab77-a662cd4b4a01",
+                      "id": "#c33cebe6-6a98-420f-9d20-82fc7f7c786c",
                       "name": "Pages",
                       "component": "pages",
                       "enableClose": false
@@ -529,7 +583,7 @@
                 },
                 {
                   "type": "tabset",
-                  "id": "#26ad4298-950b-498c-9c0f-0d068df86833",
+                  "id": "#57f6f08c-bcc9-499b-af12-35a7e65a87d7",
                   "children": [
                     {
                       "type": "tab",
@@ -537,12 +591,19 @@
                       "name": "Page Structure",
                       "component": "page-structure",
                       "enableClose": false
+                    },
+                    {
+                      "type": "tab",
+                      "id": "action-components",
+                      "name": "Action Components",
+                      "component": "action-components",
+                      "enableClose": false
                     }
                   ]
                 },
                 {
                   "type": "tabset",
-                  "id": "#cd2d0232-f2a3-438b-a096-d569d963f81f",
+                  "id": "#ddc4ce66-03da-4775-ab03-5dae1f5294db",
                   "children": [
                     {
                       "type": "tab",
@@ -591,7 +652,7 @@
       }
     },
     "actionsEditor": {
-      "version": 6,
+      "version": 7,
       "json": {
         "global": {
           "splitterSize": 4,
@@ -602,15 +663,15 @@
         "borders": [],
         "layout": {
           "type": "row",
-          "id": "#5c763a16-2be8-4a67-93e8-aeee70a1374b",
+          "id": "#ae5f6c98-c3c8-43d9-ae37-c5854a2ff71f",
           "children": [
             {
               "type": "row",
-              "id": "#9b8dbe7a-2f29-4e3a-a8c4-85df5250c722",
+              "id": "#3691b4da-3bc1-4447-8251-35f914484f91",
               "children": [
                 {
                   "type": "tabset",
-                  "id": "#0f86110d-acc7-4b59-a97e-84f6bb28dfd2",
+                  "id": "#ef669fed-3c99-4a20-8aef-3d1b95b791e0",
                   "children": [
                     {
                       "type": "tab",
@@ -623,7 +684,20 @@
                 },
                 {
                   "type": "tabset",
-                  "id": "#f155b685-a257-4d1b-a3ee-18d3e15b4aa1",
+                  "id": "#5e13c76f-ce48-47bb-81ab-78699c0574ec",
+                  "children": [
+                    {
+                      "type": "tab",
+                      "id": "action-components",
+                      "name": "Action Components",
+                      "component": "action-components",
+                      "enableClose": false
+                    }
+                  ]
+                },
+                {
+                  "type": "tabset",
+                  "id": "#fcac01e5-8892-41d0-8145-be14536706b5",
                   "children": [
                     {
                       "type": "tab",

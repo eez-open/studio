@@ -43,7 +43,7 @@ New functionality is under development thanks to the sponsorship of the [NGI0 PE
 
 ![EEZ Studio Instrument](images/esw_intro.png)
 
--   Dynamic environment where multiple instruments and other "widgets" can be configured and easily accessed
+-   Dynamic environment where multiple instruments can be configured and easily accessed
 -   Session oriented interaction with each SCPI instrument
 -   Serial (via USB), Ethernet and VISA (via free [R&S®VISA](https://www.rohde-schwarz.com/us/driver-pages/remote-control/3-visa-and-tools_231388.html)) T&M instrument interfaces support
 -   Direct import of EEZ Studio generated IDFs and **Keysight’s Offline Command Expert command** sets
