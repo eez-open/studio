@@ -412,12 +412,13 @@ export const HistoryTools = observer(
                         <ButtonAction
                             key="deletedItems"
                             text={`Deleted Items (${appStore.deletedItemsHistory.deletedCount})`}
+                            icon="material:delete"
                             title="Show deleted items"
                             onClick={
                                 appStore.navigationStore
                                     .navigateToDeletedHistoryItems
                             }
-                            className="btn-sm"
+                            className="btn-secondary btn-sm"
                             style={style}
                         />
                     );

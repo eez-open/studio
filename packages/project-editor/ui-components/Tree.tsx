@@ -681,8 +681,10 @@ export const Tree = observer(
         };
 
         onRowClick = (event: React.MouseEvent<HTMLDivElement>) => {
-            event.preventDefault();
-            event.stopPropagation();
+            if (!(event.nativeEvent.target instanceof HTMLInputElement)) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
 
             const $rowDiv = $(event.target).closest(
                 ".tree-row[data-object-id]"

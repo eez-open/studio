@@ -66,7 +66,10 @@ export const DeletedHistoryItemsTools = observer(
             }
 
             actions.push(
-                <span key="deletedItems" style={{ paddingRight: 10 }}>
+                <span
+                    key="deletedItems"
+                    style={{ paddingLeft: 10, paddingRight: 20 }}
+                >
                     {`${
                         this.props.appStore.deletedItemsHistory.deletedCount
                     } deleted ${
@@ -87,6 +90,7 @@ export const DeletedHistoryItemsTools = observer(
                     onClick={
                         this.props.appStore.navigationStore.navigateToHistory
                     }
+                    className="btn-secondary btn-sm"
                 />
             );
 
