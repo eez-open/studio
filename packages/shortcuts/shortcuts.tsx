@@ -522,12 +522,12 @@ export const Shortcuts = observer(
             });
             result.push({
                 name: "toolbar",
-                title: "Toolbar",
+                title: "Show in Shortcuts bar",
                 sortEnabled: true
             });
             result.push({
                 name: "toolbarPosition",
-                title: "Toolbar position",
+                title: "Shortcuts bar position",
                 sortEnabled: true
             });
 

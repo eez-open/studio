@@ -449,7 +449,7 @@ export const ShortcutDialog = observer(
 
                         {this.shortcut.action!.type !== "micropython" && (
                             <BooleanProperty
-                                name="Show in toolbar"
+                                name="Show in Shortcuts bar"
                                 value={this.shortcut.showInToolbar!}
                                 onChange={action(
                                     (value: boolean) =>
