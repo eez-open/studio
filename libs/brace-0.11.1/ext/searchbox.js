@@ -176,7 +176,7 @@ var html = '<div class="ace_search right">\
         <span action="replaceAll" class="ace_searchbtn">All</span>\
     </div>\
     <div class="ace_search_options">\
-        <span action="toggleReplace" class="ace_button" title="Toggel Replace mode"\
+        <span action="toggleReplace" class="ace_button" title="Toggle Replace Mode"\
             style="float:left;margin-top:-2px;padding:0 5px;">+</span>\
         <span class="ace_search_counter"></span>\
         <span action="toggleRegexpMode" class="ace_button" title="RegExp Search">.*</span>\
@@ -221,12 +221,12 @@ var SearchBox = function(editor, range, showReplaceForm) {
         this.replaceInput = this.replaceBox.querySelector(".ace_search_field");
         this.searchCounter = sb.querySelector(".ace_search_counter");
     };
-    
+
     this.$init = function() {
         var sb = this.element;
-        
+
         this.$initElements(sb);
-        
+
         var _this = this;
         event.addListener(sb, "mousedown", function(e) {
             setTimeout(function(){
@@ -436,7 +436,7 @@ var SearchBox = function(editor, range, showReplaceForm) {
         this.find(true, true);
     };
     this.findAll = function(){
-        var range = this.editor.findAll(this.searchInput.value, {            
+        var range = this.editor.findAll(this.searchInput.value, {
             regExp: this.regExpOption.checked,
             caseSensitive: this.caseSensitiveOption.checked,
             wholeWord: this.wholeWordOption.checked
@@ -450,7 +450,7 @@ var SearchBox = function(editor, range, showReplaceForm) {
     this.replace = function() {
         if (!this.editor.getReadOnly())
             this.editor.replace(this.replaceInput.value);
-    };    
+    };
     this.replaceAndFindNext = function() {
         if (!this.editor.getReadOnly()) {
             this.editor.replace(this.replaceInput.value);
@@ -479,7 +479,7 @@ var SearchBox = function(editor, range, showReplaceForm) {
 
         if (value)
             this.searchInput.value = value;
-        
+
         this.searchInput.focus();
         this.searchInput.select();
 
@@ -505,4 +505,3 @@ exports.Search = function(editor, isReplace) {
                 (function() {
                     ace.acequire(["ace/ext/searchbox"], function() {});
                 })();
-            
