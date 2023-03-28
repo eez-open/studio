@@ -327,9 +327,8 @@ export const Splitter = observer(
                 if (this.childIsFixed[i]) {
                     this.idealSizes[i] = this.sizes[i];
                 } else {
-                    this.idealSizes[i] = Math.round(
-                        (100 * this.sizes[i]) / sizeStretchable
-                    );
+                    this.idealSizes[i] =
+                        (100 * this.sizes[i]) / sizeStretchable;
                 }
             }
 

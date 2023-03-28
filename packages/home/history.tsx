@@ -70,7 +70,7 @@ class HomeAppStore implements IAppStore {
         loadAtStart: false
     });
     deletedItemsHistory: DeletedItemsHistory = new DeletedItemsHistory(this, {
-        loadAtStart: false
+        loadAtStart: true
     });
 
     isHistoryItemSelected(id: string): boolean {
@@ -157,7 +157,7 @@ export const HistorySection = observer(
 
             return (
                 <VerticalHeaderWithBody>
-                    <ToolbarHeader>
+                    <ToolbarHeader style={{ padding: 5 }}>
                         <HistoryTools appStore={this.appStore} />
                     </ToolbarHeader>
                     <Body>{historyView}</Body>
@@ -179,7 +179,7 @@ export const DeletedHistoryItemsSection = observer(
         render() {
             return (
                 <VerticalHeaderWithBody>
-                    <ToolbarHeader>
+                    <ToolbarHeader style={{ padding: 5 }}>
                         <DeletedHistoryItemsTools appStore={getAppStore()} />
                     </ToolbarHeader>
                     <Body>

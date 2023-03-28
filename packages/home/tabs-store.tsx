@@ -46,6 +46,7 @@ import { firstTime } from "./first-time";
 import { initProjectEditor } from "project-editor/project-editor-bootstrap";
 import { PROJECT_TAB_ID_PREFIX } from "home/tabs-store-conf";
 import { getProjectIcon } from "home/helper";
+import { getAppStore } from "home/history";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -93,13 +94,22 @@ class HomeTab implements IHomeTab {
 class HistoryTab implements IHomeTab {
     constructor(public tabs: Tabs) {
         makeObservable(this, {
-            active: observable,
+            _active: observable,
             makeActive: action
+        });
+
+        autorun(() => {
+            if (
+                this.tabs.viewDeletedHistory &&
+                getAppStore().deletedItemsHistory.deletedCount === 0
+            ) {
+                runInAction(() => (this.tabs.viewDeletedHistory = false));
+            }
         });
     }
 
     permanent: boolean = true;
-    active: boolean = false;
+    _active: boolean = false;
     loading: boolean = false;
 
     id = "history";
@@ -108,6 +118,39 @@ class HistoryTab implements IHomeTab {
 
     get titleStr() {
         return this.title;
+    }
+
+    get active() {
+        return this._active;
+    }
+
+    set active(value: boolean) {
+        if (value !== this._active) {
+            runInAction(() => (this._active = value));
+
+            if (this._active) {
+                this.onActivate();
+            } else {
+                this.onDeactivate();
+            }
+        }
+    }
+
+    deleteSelectedHistoryItems = () => {
+        const appStore = getAppStore();
+        if (this.tabs.viewDeletedHistory) {
+            appStore.deletedItemsHistory.deleteSelectedHistoryItems();
+        } else {
+            appStore.history.deleteSelectedHistoryItems();
+        }
+    };
+
+    onActivate() {
+        ipcRenderer.on("delete", this.deleteSelectedHistoryItems);
+    }
+
+    onDeactivate() {
+        ipcRenderer.removeListener("delete", this.deleteSelectedHistoryItems);
     }
 
     render() {
@@ -913,18 +956,6 @@ export class Tabs {
                     document.title = `${this.activeTab.titleStr} - EEZ Studio`;
                 } else {
                     document.title = `EEZ Studio`;
-                }
-            });
-
-            autorun(() => {
-                if (
-                    this.activeTab &&
-                    this.activeTab.id === "history" &&
-                    this.mainHistoryView &&
-                    this.mainHistoryView.props.appStore.deletedItemsHistory
-                        .deletedCount === 0
-                ) {
-                    runInAction(() => (this.viewDeletedHistory = false));
                 }
             });
 
