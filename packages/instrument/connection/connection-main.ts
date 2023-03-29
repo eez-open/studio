@@ -419,7 +419,7 @@ export class Connection
             this.onDataLineReceived(data);
         }
 
-        if (this.data !== undefined) {
+        if (this.data !== undefined && !this.idnExpected) {
             this.dataTimeoutId = setTimeout(() => {
                 this.flushData();
             }, CONF_COMBINE_IF_BELOW_MS);
@@ -503,7 +503,7 @@ export class Connection
             this.onDataLineReceived(this.data);
             this.data = undefined;
         } else {
-            if (this.sendIdnTimeoutCounter++ < 3) {
+            if (this.sendIdnTimeoutCounter++ < 2) {
                 this.idnExpectedTimeout = setTimeout(
                     this.onSendIdnTimeout,
                     CONF_IDN_EXPECTED_TIMEOUT

@@ -23,10 +23,13 @@ import {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ipcMain.on("get-visa-resources", function (event) {
+ipcMain.on("get-visa-resources", function (event, includeNetworkResources) {
     if (defaultSessionStatus == 0) {
         try {
-            const resources = vhListResources(defaultSession);
+            const resources = vhListResources(
+                defaultSession,
+                includeNetworkResources
+            );
             event.sender.send(
                 "visa-resources",
                 resources.map(resource => resource.toString())

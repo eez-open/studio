@@ -168,7 +168,7 @@ export const ConnectionProperties = observer(
                 }
             }
 
-            await this.refreshVisaResources();
+            await this.refreshVisaResources(false);
 
             $(this.div).modal();
 
@@ -352,9 +352,9 @@ export const ConnectionProperties = observer(
             this.refreshUsbDevices();
         };
 
-        refreshVisaResources() {
+        refreshVisaResources(includeNetworkResources: boolean) {
             return new Promise<void>(resolve => {
-                ipcRenderer.send("get-visa-resources");
+                ipcRenderer.send("get-visa-resources", includeNetworkResources);
                 ipcRenderer.once("visa-resources", (event, args) => {
                     runInAction(() => (this.visaResources = args));
                     resolve();
@@ -364,7 +364,7 @@ export const ConnectionProperties = observer(
 
         onRefreshVisaResources = (event: React.MouseEvent) => {
             event.preventDefault();
-            this.refreshVisaResources();
+            this.refreshVisaResources(true);
         };
 
         onVisaResourceChange(value: string) {

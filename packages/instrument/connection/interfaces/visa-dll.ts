@@ -28,7 +28,11 @@ export let defaultSessionStatus: number = 0;
 export let defaultSession: number = 0;
 
 let _viOpenDefaultRM: () => any;
-let _viFindRsrc: (sesn: any, expr: any) => any;
+let _viFindRsrc: (
+    sesn: any,
+    includeNetworkResources: boolean,
+    expr: any
+) => any;
 let _viFindNext: (findList: any) => any;
 let _viParseRsrc: (sesn: any, rsrcName: any) => any;
 let _viParseRsrcEx: (sesn: any, rsrcName: any) => any;
@@ -43,7 +47,11 @@ let _viRead: (vi: any, count: any) => any;
 let _viReadRaw: (vi: any, count: any) => any;
 let _viReadToFile: (vi: any, fileName: any, count: any) => any;
 let _viWrite: (vi: any, buf: any) => any;
-let _vhListResources: (sesn: any, expr: any) => string[];
+let _vhListResources: (
+    sesn: any,
+    includeNetworkResources: boolean,
+    expr: any
+) => string[];
 let _vhQuery: (vi: any, query: any) => any;
 let _viInstallHandler: (
     sesn: any,
@@ -219,19 +227,13 @@ if (ffi && ref) {
         return [status, pSesn.deref()];
     };
 
-    _viFindRsrc = (sesn: any, expr: any) => {
+    _viFindRsrc = (sesn: any, includeNetworkResources: boolean, expr: any) => {
         if (!libVisa || !ref) throw "VISA not supported";
 
-        viSetAttribute(
-            defaultSession,
-            vcon.VI_RS_ATTR_TCPIP_FIND_RSRC_TMO,
-            0x3e8
-        );
-        viSetAttribute(
-            defaultSession,
-            vcon.VI_RS_ATTR_TCPIP_FIND_RSRC_MODE,
-            0x7
-        );
+        if (includeNetworkResources) {
+            viSetAttribute(sesn, vcon.VI_RS_ATTR_TCPIP_FIND_RSRC_TMO, 0x3e8);
+            viSetAttribute(sesn, vcon.VI_RS_ATTR_TCPIP_FIND_RSRC_MODE, 0x7);
+        }
 
         let status;
         let pFindList = ref.alloc(ViFindList);
@@ -364,6 +366,7 @@ if (ffi && ref) {
         let buf = Buffer.alloc(count);
         let pRetCount = ref.alloc(ViUInt32);
         status = libVisa.viRead(vi, buf as any, buf.length, pRetCount as any);
+        console.log("status");
         statusCheck(status);
         //debug(`read (${count}) -> ${pRetCount.deref()}`);
         return [
@@ -422,11 +425,19 @@ if (ffi && ref) {
     /**
      * Returns a list of strings of found resources
      */
-    _vhListResources = (sesn: any, expr: any = "?*") => {
+    _vhListResources = (
+        sesn: any,
+        includeNetworkResources: boolean,
+        expr: any = "?*"
+    ) => {
         if (!libVisa) throw "VISA not supported";
         let descList = [];
         try {
-            let [status, findList, retcnt, instrDesc] = viFindRsrc(sesn, expr);
+            let [status, findList, retcnt, instrDesc] = viFindRsrc(
+                sesn,
+                includeNetworkResources,
+                expr
+            );
             if (status == 0 && retcnt) {
                 descList.push(instrDesc);
                 for (let i = 1; i < retcnt; ++i) {
@@ -570,9 +581,13 @@ export function viOpenDefaultRM() {
     return _viOpenDefaultRM();
 }
 
-export function viFindRsrc(sesn: any, expr: any) {
+export function viFindRsrc(
+    sesn: any,
+    includeNetworkResources: boolean,
+    expr: any
+) {
     if (!_viFindRsrc) throw "VISA not supported";
-    return _viFindRsrc(sesn, expr);
+    return _viFindRsrc(sesn, includeNetworkResources, expr);
 }
 
 export function viFindNext(findList: any) {
@@ -625,9 +640,13 @@ export function viWrite(vi: any, buf: any) {
     return _viWrite(vi, buf);
 }
 
-export function vhListResources(sesn: any, expr: any = "?*") {
+export function vhListResources(
+    sesn: any,
+    includeNetworkResources: boolean,
+    expr: any = "?*"
+) {
     if (!_vhListResources) throw "VISA not supported";
-    return _vhListResources(sesn, expr);
+    return _vhListResources(sesn, includeNetworkResources, expr);
 }
 
 export function vhQuery(vi: any, query: any) {
