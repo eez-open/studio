@@ -634,7 +634,11 @@ const constants = {
     VI_ATTR_FIREWIRE_LOWER_CHIP_ID: 0x3fff01f4,
     VI_ATTR_FIREWIRE_UPPER_CHIP_ID: 0x3fff01f5,
 
-    VI_FIREWIRE_DFLT_SPACE: 5
+    VI_FIREWIRE_DFLT_SPACE: 5,
+
+    // R&S specific attributes to find resources
+    VI_RS_ATTR_TCPIP_FIND_RSRC_TMO: 0x0faf0001,
+    VI_RS_ATTR_TCPIP_FIND_RSRC_MODE: 0x0faf0002
 };
 
 /**

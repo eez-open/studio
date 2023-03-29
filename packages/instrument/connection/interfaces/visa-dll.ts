@@ -222,6 +222,17 @@ if (ffi && ref) {
     _viFindRsrc = (sesn: any, expr: any) => {
         if (!libVisa || !ref) throw "VISA not supported";
 
+        viSetAttribute(
+            defaultSession,
+            vcon.VI_RS_ATTR_TCPIP_FIND_RSRC_TMO,
+            0x3e8
+        );
+        viSetAttribute(
+            defaultSession,
+            vcon.VI_RS_ATTR_TCPIP_FIND_RSRC_MODE,
+            0x7
+        );
+
         let status;
         let pFindList = ref.alloc(ViFindList);
         let pRetcnt = ref.alloc(ViUInt32);
