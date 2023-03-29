@@ -189,19 +189,22 @@ export class VisaInterface implements CommunicationInterface {
         if (this.vi != undefined) {
             try {
                 this.readLock = true;
-                const [status, buffer] = viRead(this.vi, 1024 * 1024);
+                const [status, buffer] = viRead(this.vi, 128 * 1024);
                 this.readLock = false;
                 // TODO check status
                 console.log("viRead return status", status);
                 if (typeof buffer == "string") {
                     consoleLogMaxChars(`RECEIVED FROM VISA`, buffer, 20);
-                    this.host.onData(buffer);
+                    this.host.onData(buffer, status == 0 ? true : undefined);
                 } else {
                     console.log(
                         "RECEIVED FROM VISA (number):",
                         JSON.stringify(buffer.toString())
                     );
-                    this.host.onData(buffer.toString());
+                    this.host.onData(
+                        buffer.toString(),
+                        status == 0 ? true : undefined
+                    );
                 }
 
                 if (status == vcon.VI_SUCCESS_MAX_CNT) {

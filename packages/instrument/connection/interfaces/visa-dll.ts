@@ -366,7 +366,6 @@ if (ffi && ref) {
         let buf = Buffer.alloc(count);
         let pRetCount = ref.alloc(ViUInt32);
         status = libVisa.viRead(vi, buf as any, buf.length, pRetCount as any);
-        console.log("status");
         statusCheck(status);
         //debug(`read (${count}) -> ${pRetCount.deref()}`);
         return [

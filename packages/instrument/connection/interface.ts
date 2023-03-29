@@ -40,7 +40,7 @@ export interface CommunicationInterfaceHost {
     connectionParameters: ConnectionParameters;
     setError(errorCode: ConnectionErrorCode, error: string | undefined): void;
     connected(): void;
-    onData(data: string): void;
+    onData(data: string, endIndicatorReceived?: boolean | undefined): void;
     disconnected(): void;
 }
 

@@ -367,7 +367,7 @@ export class Connection
         }
     };
 
-    onData(data: string) {
+    onData(data: string, endIndicatorReceived?: boolean | undefined) {
         if (this.dataTimeoutId) {
             clearTimeout(this.dataTimeoutId);
         }
@@ -406,20 +406,25 @@ export class Connection
             this.data += data;
         }
 
-        let index = this.data.indexOf("\n");
-        if (index !== -1) {
-            index++;
-            let data = this.data.substr(0, index);
-            if (index < this.data.length) {
-                this.data = this.data.substr(index);
-            } else {
-                this.data = undefined;
-            }
+        if (endIndicatorReceived === true) {
+            this.onDataLineReceived(this.data);
+            this.data = undefined;
+        } else {
+            let index = this.data.indexOf("\n");
+            if (index !== -1) {
+                index++;
+                let data = this.data.substr(0, index);
+                if (index < this.data.length) {
+                    this.data = this.data.substr(index);
+                } else {
+                    this.data = undefined;
+                }
 
-            this.onDataLineReceived(data);
+                this.onDataLineReceived(data);
+            }
         }
 
-        if (this.data !== undefined && !this.idnExpected) {
+        if (this.data !== undefined) {
             this.dataTimeoutId = setTimeout(() => {
                 this.flushData();
             }, CONF_COMBINE_IF_BELOW_MS);
@@ -482,41 +487,19 @@ export class Connection
 
         this.idnExpected = true;
 
-        this.idnExpectedTimeout = setTimeout(
-            this.onSendIdnTimeout,
-            CONF_IDN_EXPECTED_TIMEOUT
-        );
+        this.idnExpectedTimeout = setTimeout(() => {
+            this.idnExpectedTimeout = undefined;
+
+            this.setError(
+                ConnectionErrorCode.NONE,
+                "Timeout (no response to IDN query)."
+            );
+            this.disconnect();
+        }, CONF_IDN_EXPECTED_TIMEOUT);
 
         this.send("*IDN?");
         this.flushData();
     }
-
-    sendIdnTimeoutCounter = 0;
-
-    onSendIdnTimeout = () => {
-        this.idnExpectedTimeout = undefined;
-
-        if (
-            this.data &&
-            this.data.trim().length >= CONF_MIN_IDN_RESPONSE_LENGTH
-        ) {
-            this.onDataLineReceived(this.data);
-            this.data = undefined;
-        } else {
-            if (this.sendIdnTimeoutCounter++ < 2) {
-                this.idnExpectedTimeout = setTimeout(
-                    this.onSendIdnTimeout,
-                    CONF_IDN_EXPECTED_TIMEOUT
-                );
-            } else {
-                this.setError(
-                    ConnectionErrorCode.NONE,
-                    "Timeout (no response to IDN query)."
-                );
-                this.disconnect();
-            }
-        }
-    };
 
     startLongOperation(createLongOperation: () => LongOperation) {
         if (
