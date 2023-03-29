@@ -425,14 +425,16 @@ if (ffi && ref) {
     _vhListResources = (sesn: any, expr: any = "?*") => {
         if (!libVisa) throw "VISA not supported";
         let descList = [];
-        let [status, findList, retcnt, instrDesc] = viFindRsrc(sesn, expr);
-        if (status == 0 && retcnt) {
-            descList.push(instrDesc);
-            for (let i = 1; i < retcnt; ++i) {
-                [status, instrDesc] = viFindNext(findList);
+        try {
+            let [status, findList, retcnt, instrDesc] = viFindRsrc(sesn, expr);
+            if (status == 0 && retcnt) {
                 descList.push(instrDesc);
+                for (let i = 1; i < retcnt; ++i) {
+                    [status, instrDesc] = viFindNext(findList);
+                    descList.push(instrDesc);
+                }
             }
-        }
+        } catch (err) {}
         return descList;
     };
 
