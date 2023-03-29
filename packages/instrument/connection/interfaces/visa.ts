@@ -189,7 +189,7 @@ export class VisaInterface implements CommunicationInterface {
         if (this.vi != undefined) {
             try {
                 this.readLock = true;
-                const [status, buffer] = viRead(this.vi, 128 * 1024);
+                const [status, buffer] = viRead(this.vi, 32 * 1024);
                 this.readLock = false;
                 // TODO check status
                 console.log("viRead return status", status);
