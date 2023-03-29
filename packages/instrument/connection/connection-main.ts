@@ -290,9 +290,12 @@ export class Connection
             this.sendValue(value);
 
             if (this.idnExpected) {
-                clearTimeout(this.idnExpectedTimeout);
-                this.idnExpectedTimeout = undefined;
                 this.idnExpected = false;
+
+                if (this.idnExpectedTimeout) {
+                    clearTimeout(this.idnExpectedTimeout);
+                    this.idnExpectedTimeout = undefined;
+                }
 
                 if (typeof value !== "string") {
                     this.setError(
@@ -493,7 +496,10 @@ export class Connection
     onSendIdnTimeout = () => {
         this.idnExpectedTimeout = undefined;
 
-        if (this.data && this.data.length >= CONF_MIN_IDN_RESPONSE_LENGTH) {
+        if (
+            this.data &&
+            this.data.trim().length >= CONF_MIN_IDN_RESPONSE_LENGTH
+        ) {
             this.onDataLineReceived(this.data);
             this.data = undefined;
         } else {
