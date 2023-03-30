@@ -405,9 +405,11 @@ export class Connection
             this.data += data;
         }
 
-        if (endIndicatorReceived === true) {
-            this.onDataLineReceived(this.data);
-            this.data = undefined;
+        if (typeof endIndicatorReceived == "boolean") {
+            if (endIndicatorReceived) {
+                this.onDataLineReceived(this.data);
+                this.data = undefined;
+            }
         } else {
             let index = this.data.indexOf("\n");
             if (index !== -1) {

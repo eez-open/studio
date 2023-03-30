@@ -195,7 +195,7 @@ export class VisaInterface implements CommunicationInterface {
                 console.log("viRead return status", status);
                 if (typeof buffer == "string") {
                     consoleLogMaxChars(`RECEIVED FROM VISA`, buffer, 20);
-                    this.host.onData(buffer, status == 0 ? true : undefined);
+                    this.host.onData(buffer, status == 0 ? true : false);
                 } else {
                     console.log(
                         "RECEIVED FROM VISA (number):",

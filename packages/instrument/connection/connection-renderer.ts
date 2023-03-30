@@ -202,7 +202,7 @@ export class IpcConnection extends ConnectionBase {
         });
     }
 
-    send(command: string) {
+    async send(command: string) {
         let options: ISendOptions | undefined;
 
         // find out command name, i.e. up to parameters section which start with space
@@ -218,11 +218,14 @@ export class IpcConnection extends ConnectionBase {
         if (commandName.endsWith("?")) {
             // get expected query response
             options = {
-                queryResponseType:
-                    this.instrument.getQueryResponseType(commandName)
+                queryResponseType: await this.instrument.getQueryResponseType(
+                    commandName
+                )
             };
         } else {
-            if (this.instrument.isCommandSendsBackDataBlock(commandName)) {
+            if (
+                await this.instrument.isCommandSendsBackDataBlock(commandName)
+            ) {
                 options = {
                     queryResponseType: "non-standard-data-block"
                 };

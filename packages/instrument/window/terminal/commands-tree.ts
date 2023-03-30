@@ -48,6 +48,8 @@ export class CommandsTree {
 
     _findCommandCache = new Map<string, ICommandSyntax | IQuerySyntax>();
 
+    _loadPromise: Promise<void>;
+
     constructor() {
         makeObservable(this, {
             id: observable,
@@ -78,7 +80,7 @@ export class CommandsTree {
         }
     }
 
-    async load(extensionId: string) {
+    async doLoad(extensionId: string) {
         try {
             let { enums, commands } = await loadCommands(extensionId);
 
@@ -90,6 +92,14 @@ export class CommandsTree {
         } catch (err) {
             console.error(err);
         }
+    }
+
+    load(extensionId: string) {
+        this._loadPromise = this.doLoad(extensionId);
+    }
+
+    async waitLoad() {
+        await this._loadPromise;
     }
 
     findCommandInNode(

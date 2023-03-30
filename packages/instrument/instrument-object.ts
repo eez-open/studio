@@ -68,8 +68,8 @@ export interface IInstrumentObjectProps {
     lastFileUploadInstructions?: IFileUploadInstructions;
     selectedShortcutGroups: string[];
     custom?: any;
-    getQueryResponseType(query: string): IResponseTypeType | undefined;
-    isCommandSendsBackDataBlock(commandName: string): boolean;
+    getQueryResponseType(query: string): Promise<IResponseTypeType | undefined>;
+    isCommandSendsBackDataBlock(commandName: string): Promise<boolean>;
     defaultConnectionParameters: ConnectionParameters;
     setConnectionParameters(connectionParameters: ConnectionParameters): void;
     setLastFileUploadInstructions(
@@ -103,7 +103,7 @@ export class InstrumentObject {
 
     _creationDate: Date | null | undefined;
 
-    _commandsTree: CommandsTree;
+    commandsTree: CommandsTree;
 
     _autorunDispose: IReactionDisposer;
 
@@ -158,6 +158,12 @@ export class InstrumentObject {
         }
 
         this.custom = props.custom || {};
+
+        if (this.instrumentExtensionId) {
+            this.commandsTree = getCommandsTree(this.instrumentExtensionId);
+        } else {
+            this.commandsTree = new CommandsTree();
+        }
 
         if (isRenderer()) {
             const { createRendererProcessConnection } =
@@ -253,19 +259,6 @@ export class InstrumentObject {
         }
 
         return extension;
-    }
-
-    get commandsTree() {
-        if (!this._commandsTree) {
-            if (this.instrumentExtensionId) {
-                this._commandsTree = getCommandsTree(
-                    this.instrumentExtensionId
-                );
-            } else {
-                this._commandsTree = new CommandsTree();
-            }
-        }
-        return this._commandsTree;
     }
 
     get properties(): IInstrumentProperties | undefined {
@@ -814,7 +807,9 @@ export class InstrumentObject {
         store.deleteObject(this, { deletePermanently: true });
     }
 
-    getQueryResponseType(query: string) {
+    async getQueryResponseType(query: string) {
+        await this.commandsTree.waitLoad();
+
         const command = this.commandsTree.findCommand(query);
         const response = command && (command as IQuerySyntax).response;
         if (response && response.type && response.type.length > 0) {
@@ -823,7 +818,9 @@ export class InstrumentObject {
         return undefined;
     }
 
-    isCommandSendsBackDataBlock(commandName: string) {
+    async isCommandSendsBackDataBlock(commandName: string) {
+        await this.commandsTree.waitLoad();
+
         const command = this.commandsTree.findCommand(commandName);
         return command ? (command as ICommandSyntax).sendsBackDataBlock : false;
     }
