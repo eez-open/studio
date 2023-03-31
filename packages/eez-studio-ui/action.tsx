@@ -243,8 +243,9 @@ export const DropdownIconAction = observer(
                 <div className="dropdown">
                     <button
                         {...buttonProps}
+                        type="button"
+                        data-bs-auto-close="true"
                         data-bs-toggle="dropdown"
-                        aria-haspopup="true"
                         aria-expanded="false"
                     >
                         <Icon icon={icon} size={iconSize} />
@@ -266,13 +267,6 @@ export const DropdownItem = observer(
         },
         {}
     > {
-        onClick = (event: any) => {
-            event.preventDefault();
-            event.stopPropagation();
-
-            this.props.onClick();
-        };
-
         render() {
             const { text } = this.props;
 
@@ -285,7 +279,7 @@ export const DropdownItem = observer(
                     className={className}
                     title={this.props.title}
                     href="#"
-                    onClick={this.onClick}
+                    onClick={this.props.onClick}
                 >
                     {text}
                 </a>

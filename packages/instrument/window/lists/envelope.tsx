@@ -1546,7 +1546,7 @@ const EnvelopeChartsHeader = observer(
             );
         }
 
-        clearAllPoints() {
+        clearAllPoints = () => {
             if (this.canClearAllPoints) {
                 const oldVoltage = this.list.data.voltage;
                 const oldCurrent = this.list.data.current;
@@ -1577,7 +1577,7 @@ const EnvelopeChartsHeader = observer(
                     }
                 );
             }
-        }
+        };
 
         get canClearAllVoltagePoints() {
             return (
@@ -1586,7 +1586,7 @@ const EnvelopeChartsHeader = observer(
             );
         }
 
-        clearAllVoltagePoints() {
+        clearAllVoltagePoints = () => {
             if (this.canClearAllVoltagePoints) {
                 const oldVoltage = this.list.data.voltage;
 
@@ -1611,7 +1611,7 @@ const EnvelopeChartsHeader = observer(
                     }
                 );
             }
-        }
+        };
 
         get canClearAllCurrentPoints() {
             return (
@@ -1620,7 +1620,7 @@ const EnvelopeChartsHeader = observer(
             );
         }
 
-        clearAllCurrentPoints() {
+        clearAllCurrentPoints = () => {
             if (this.canClearAllCurrentPoints) {
                 const oldCurrent = this.list.data.current;
 
@@ -1645,7 +1645,7 @@ const EnvelopeChartsHeader = observer(
                     }
                 );
             }
-        }
+        };
 
         render() {
             return (

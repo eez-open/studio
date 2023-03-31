@@ -85,14 +85,16 @@ export class UndoManager {
 
     commit() {
         if (this.dbObject) {
-            beginTransaction(this.transactionLabel);
-            this.store.updateObject(objectClone(this.object));
-            commitTransaction();
-
-            this.dbObject = false;
-            this.object = undefined;
-            this.undoStack = [];
-            this.redoStack = [];
+            try {
+                beginTransaction(this.transactionLabel);
+                this.store.updateObject(objectClone(this.object));
+                commitTransaction();
+            } finally {
+                this.dbObject = false;
+                this.object = undefined;
+                this.undoStack = [];
+                this.redoStack = [];
+            }
         } else if (this._model) {
             this._model.commit();
             this._model = undefined;
@@ -101,16 +103,18 @@ export class UndoManager {
 
     rollback() {
         if (this.dbObject) {
-            runInAction(() => {
-                while (this.canUndo) {
-                    this.undo();
-                }
-            });
-
-            this.dbObject = false;
-            this.object = undefined;
-            this.undoStack = [];
-            this.redoStack = [];
+            try {
+                runInAction(() => {
+                    while (this.canUndo) {
+                        this.undo();
+                    }
+                });
+            } finally {
+                this.dbObject = false;
+                this.object = undefined;
+                this.undoStack = [];
+                this.redoStack = [];
+            }
         } else if (this._model) {
             this._model.rollback();
             this._model = undefined;

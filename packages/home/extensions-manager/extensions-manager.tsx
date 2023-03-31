@@ -419,7 +419,7 @@ const MasterView = observer(
             });
         }
 
-        async installExtension() {
+        installExtension = async () => {
             const result = await dialog.showOpenDialog({
                 properties: ["openFile"],
                 filters: [
@@ -493,15 +493,15 @@ const MasterView = observer(
                     notification.error(err.toString());
                 }
             }
-        }
+        };
 
-        async updateCatalog() {
+        updateCatalog = async () => {
             if (!(await extensionsCatalog.checkNewVersionOfCatalog())) {
                 notification.info(
                     "There is currently no new version of catalog available."
                 );
             }
-        }
+        };
 
         updateAll = async () => {
             runInAction(() => (this.isUpdatingAll = true));
