@@ -1591,7 +1591,7 @@ const CenterWidgetUI = observer(
 
         render() {
             return (
-                <div className="EezStudio_WidgetCenter">
+                <div>
                     <IconAction
                         icon={ALIGN_HORIZONTAL_CENTER_ICON()}
                         title="Center horizontally relative to parent"

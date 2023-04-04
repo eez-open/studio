@@ -2805,7 +2805,7 @@ button.EezStudio_Action {
 
 .EezStudio_ArrayProperty {
     border: 1px solid @borderColor;
-    margin-bottom: 10px;
+    margin-bottom: 0;
 
     input[type="color"] {
         height: 28px;
@@ -2912,7 +2912,7 @@ button.EezStudio_Action {
 
             .accordion-body {
                 cursor: default;
-                padding: 0.5rem 0.625rem 0.5rem 1.8rem;
+                padding: 5px;
 
                 table {
                     width: 100%;
@@ -2965,10 +2965,27 @@ button.EezStudio_Action {
 .EezStudio_PropertyGrid {
     flex-grow: 1;
     padding: 5px 2px 10px 0px;
-    overflow: hidden;
+    overflow-y: auto;
+
+    select,
+    input.form-control,
+    textarea {
+        padding: 2px 2px 2px 6px;
+        height: 26px;
+        min-height: 26px;
+    }
+
+    .input-group > button {
+        padding: 2px;
+    }
 
     select {
         padding-right: 2rem;
+    }
+
+    .form-check {
+        margin-bottom: 0;
+        min-height: unset;
     }
 
     .form-switch {
@@ -2994,7 +3011,7 @@ button.EezStudio_Action {
                 }
 
                 & > td {
-                    vertical-align: baseline;
+                    vertical-align: center;
                     padding-top: 1px;
                     padding-bottom: 1px;
                 }
@@ -3006,7 +3023,7 @@ button.EezStudio_Action {
 
                 & > td.property-name {
                     white-space: nowrap;
-                    height: 34px;
+                    height: 26px;
 
                     & > .collapsable {
                         transform: translateX(-10px);
@@ -3023,8 +3040,9 @@ button.EezStudio_Action {
 
                 & > td.group-cell {
                     padding-left: 0;
-                    padding-bottom: 5px;
+                    padding-right: 0;
                     & > div.group-container {
+                        width: 100%;
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
@@ -3044,7 +3062,8 @@ button.EezStudio_Action {
                 }
 
                 & > td.embedded-property-cell {
-                    padding-left: 10px;
+                    padding-left: 20px;
+                    padding-right: 0;
                 }
 
                 textarea.pre {
@@ -4387,9 +4406,13 @@ button.EezStudio_Action {
 
 .EezStudio_PropertiesPanel {
     height: 100%;
-    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 
     .header {
+        flex-shrink: 0;
+        flex-grow: 0;
         background-color: @panelHeaderColorInsideFlexLayout;
         border-bottom: 1px solid @borderColor;
         padding: 4px 11px;
@@ -4417,7 +4440,6 @@ button.EezStudio_Action {
 
 .EezStudio_ThemedColorInput_DropdownButton {
     border-color: @formControlBorderColor;
-    font-size: 18px;
     padding: 1px 6px;
 }
 
@@ -4433,7 +4455,6 @@ button.EezStudio_Action {
 
 .EezStudio_ObjectReferenceInput_DropdownButton {
     border-color: @formControlBorderColor;
-    font-size: 18px;
     padding: 1px 6px;
 }
 
@@ -5638,11 +5659,6 @@ button.EezStudio_Action {
     }
 }
 
-.EezStudio_WidgetCenter {
-    padding-top: 10px;
-    padding-bottom: 5px;
-}
-
 .EeezStudio_Readme_Container {
     user-select: text !important;
     * {
@@ -5887,22 +5903,17 @@ button.EezStudio_Action {
 }
 
 .EezStudio_LVGLStylesDefinition {
-    padding-top: 5px;
-    padding-left: 5px;
-    padding-bottom: 5px;
     display: flex;
     width: 100%;
 
     & > div:nth-child(1) {
         border: 1px solid @panelBorderColor;
-        padding: 5px;
     }
 
     & > div:nth-child(2) {
         border: 1px solid @panelBorderColor;
         border-left: none;
         flex: 1;
-        padding: 5px;
     }
 
     .EezStudio_SimpleTree {
@@ -5959,6 +5970,9 @@ button.EezStudio_Action {
                 .EezStudio_LVGLStylesDefinition_Name {
                     font-size: 95%;
                     min-width: 120px;
+                    .form-check-label {
+                        transform: translateY(-3px);
+                    }
                 }
                 .EezStudio_LVGLStylesDefinition_Value {
                     input[type="color"] {
@@ -5985,7 +5999,7 @@ button.EezStudio_Action {
 .EezStudio_LVGProperty {
     width: 100%;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     & > select {
         min-width: 130px;
