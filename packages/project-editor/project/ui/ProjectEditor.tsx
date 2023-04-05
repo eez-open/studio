@@ -1,8 +1,6 @@
 import React from "react";
-import { IObservableValue, action } from "mobx";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
-import classNames from "classnames";
 
 import { Messages } from "project-editor/ui-components/Output";
 
@@ -13,23 +11,11 @@ import {
     PageTabState
 } from "project-editor/features/page/PageEditor";
 
-import {
-    Editor,
-    getChildren,
-    getClassInfo,
-    LayoutModels,
-    objectToString,
-    Section
-} from "project-editor/store";
+import { Editor, LayoutModels, Section } from "project-editor/store";
 import { PropertiesPanel } from "./PropertiesPanel";
 import { ComponentsPalette } from "project-editor/flow/editor/ComponentsPalette";
 import { BreakpointsPanel } from "project-editor/flow/debugger/BreakpointsPanel";
 import { ThemesSideView } from "project-editor/features/style/theme";
-import { getId, IEezObject } from "project-editor/core/object";
-import {
-    getNavigationComponent,
-    getNavigationComponentId
-} from "project-editor/project/ui/NavigationComponentFactory";
 import { getEditorComponent } from "project-editor/project/ui/EditorComponentFactory";
 import { Icon } from "eez-studio-ui/icon";
 import { Loader } from "eez-studio-ui/loader";
@@ -37,6 +23,16 @@ import { QueuePanel } from "project-editor/flow/debugger/QueuePanel";
 import { WatchPanel } from "project-editor/flow/debugger/WatchPanel";
 import { ActiveFlowsPanel } from "project-editor/flow/debugger/ActiveFlowsPanel";
 import { LogsPanel } from "project-editor/flow/debugger/LogsPanel";
+import { ListNavigation } from "project-editor/ui-components/ListNavigation";
+import { VariablesTab } from "project-editor/features/variable/VariablesNavigation";
+import { FlowStructureTab } from "project-editor/flow/FlowStructureTab";
+import { StylesTab } from "project-editor/features/style/StylesNavigation";
+import { FontsTab } from "project-editor/features/font/FontsNavigation";
+import { BitmapsTab } from "project-editor/features/bitmap/BitmapsNavigation";
+import { TextsTab } from "project-editor/features/texts/navigation";
+import { ScpiTab } from "project-editor/features/scpi/ScpiNavigation";
+import { ExtensionDefinitionsTab } from "project-editor/features/extension-definitions/extension-definitions";
+import { ChangesTab } from "project-editor/features/changes/navigation";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -74,16 +70,66 @@ const Content = observer(
         factory = (node: FlexLayout.TabNode) => {
             var component = node.getComponent();
 
-            if (component === "navigation") {
+            if (component === "pages") {
                 return (
-                    <SubNavigation
-                        id="project"
-                        navigationObject={this.context.project}
+                    <ListNavigation
+                        id="pages"
+                        navigationObject={this.context.project.pages}
                         selectedObject={
-                            this.context.navigationStore.selectedRootObject
+                            this.context.navigationStore.selectedPageObject
                         }
+                        editable={!this.context.runtime}
                     />
                 );
+            }
+
+            if (component === "actions") {
+                return (
+                    <ListNavigation
+                        id="actions"
+                        navigationObject={this.context.project.actions}
+                        selectedObject={
+                            this.context.navigationStore.selectedActionObject
+                        }
+                        editable={!this.context.runtime}
+                    />
+                );
+            }
+
+            if (component === "flow-structure") {
+                return <FlowStructureTab />;
+            }
+
+            if (component === "variables") {
+                return <VariablesTab />;
+            }
+
+            if (component === "styles") {
+                return <StylesTab />;
+            }
+
+            if (component === "fonts") {
+                return <FontsTab />;
+            }
+
+            if (component === "bitmaps") {
+                return <BitmapsTab />;
+            }
+
+            if (component === "changes") {
+                return <ChangesTab />;
+            }
+
+            if (component === "texts") {
+                return <TextsTab />;
+            }
+
+            if (component === "scpi") {
+                return <ScpiTab />;
+            }
+
+            if (component === "extension-definitions") {
+                return <ExtensionDefinitionsTab />;
             }
 
             if (component === "editors") {
@@ -273,11 +319,6 @@ const Content = observer(
                         flexDirection: "row"
                     }}
                 >
-                    <Menu
-                        selectedObject={
-                            this.context.navigationStore.selectedRootObject
-                        }
-                    />
                     <div
                         style={{
                             position: "relative",
@@ -290,50 +331,11 @@ const Content = observer(
                             realtimeResize={true}
                             font={LayoutModels.FONT}
                             onRenderTab={this.onRenderTab}
+                            iconFactory={LayoutModels.iconFactory}
                         />
                     </div>
                 </div>
             );
-        }
-    }
-);
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const SubNavigation = observer(
-    class SubNavigation extends React.Component<
-        {
-            id: string;
-            navigationObject: IEezObject;
-            selectedObject: IObservableValue<IEezObject | undefined>;
-        },
-        {}
-    > {
-        static contextType = ProjectContext;
-        declare context: React.ContextType<typeof ProjectContext>;
-
-        render() {
-            let subNavigation: React.ReactNode = null;
-
-            let selectedObject = this.props.selectedObject.get();
-
-            if (selectedObject) {
-                let NavigationComponent =
-                    getNavigationComponent(selectedObject);
-                if (NavigationComponent) {
-                    subNavigation = (
-                        <NavigationComponent
-                            id={
-                                getNavigationComponentId(selectedObject) ||
-                                this.props.id
-                            }
-                            navigationObject={selectedObject}
-                        />
-                    );
-                }
-            }
-
-            return subNavigation;
         }
     }
 );
@@ -440,143 +442,6 @@ const Editors = observer(
                     realtimeResize={true}
                     font={LayoutModels.FONT}
                 />
-            );
-        }
-    }
-);
-
-////////////////////////////////////////////////////////////////////////////////
-
-const Menu = observer(
-    class Menu extends React.Component<{
-        selectedObject: IObservableValue<IEezObject | undefined>;
-    }> {
-        static contextType = ProjectContext;
-        declare context: React.ContextType<typeof ProjectContext>;
-
-        onFocus() {
-            this.context.navigationStore.setSelectedPanel(undefined);
-        }
-
-        render() {
-            let items = getChildren(this.context.project)
-                .filter(object => getClassInfo(object).icon)
-                .filter(object => {
-                    if (this.context.runtime) {
-                        // if runtime then only show pages and actions
-                        return (
-                            object == this.context.project.pages ||
-                            object == this.context.project.actions
-                        );
-                    }
-                    return true;
-                });
-
-            // push Settings to the end
-            const settingsIndex = items.findIndex(
-                item => item == this.context.project.settings
-            );
-            if (settingsIndex != -1) {
-                items.splice(settingsIndex, 1);
-                items.push(this.context.project.settings);
-            }
-
-            const navigationItems = items.map(item => (
-                <NavigationMenuObject
-                    key={getId(item)}
-                    selectedObject={this.props.selectedObject}
-                    object={item}
-                />
-            ));
-
-            return (
-                <div
-                    className="EezStudio_MenuContainer"
-                    tabIndex={0}
-                    onFocus={this.onFocus.bind(this)}
-                >
-                    {navigationItems}
-                </div>
-            );
-        }
-    }
-);
-
-////////////////////////////////////////////////////////////////////////////////
-
-const NavigationMenuObject = observer(
-    class NavigationMenuObject extends React.Component<{
-        selectedObject: IObservableValue<IEezObject | undefined>;
-        object: IEezObject;
-    }> {
-        static contextType = ProjectContext;
-        declare context: React.ContextType<typeof ProjectContext>;
-
-        onClick = action(() => {
-            this.props.selectedObject.set(this.props.object);
-            const result = getEditorComponent(this.props.object, undefined);
-            if (result) {
-                this.context.editorsStore.openEditor(
-                    result.object,
-                    result.subObject
-                );
-            }
-
-            if (this.props.object != this.context.project.settings) {
-                this.context.editorsStore.closeEditorForObject(
-                    this.context.project.settings
-                );
-            }
-
-            if (this.props.object != this.context.project.shortcuts) {
-                this.context.editorsStore.closeEditorForObject(
-                    this.context.project.shortcuts
-                );
-            }
-
-            if (this.props.object != this.context.project.scpi) {
-                this.context.editorsStore.closeEditorForObject(
-                    this.context.project.scpi
-                );
-            }
-
-            if (this.props.object != this.context.project.readme) {
-                this.context.editorsStore.closeEditorForObject(
-                    this.context.project.readme
-                );
-            }
-
-            if (this.props.object != this.context.project.lvglStyles) {
-                this.context.editorsStore.closeEditorForObject(
-                    this.context.project.lvglStyles
-                );
-            }
-        });
-
-        render() {
-            let className = classNames(
-                "EezStudio_NavigationMenuItemContainer",
-                {
-                    selected:
-                        this.props.object == this.props.selectedObject.get()
-                }
-            );
-
-            let icon = getClassInfo(this.props.object).icon || "extension";
-
-            return (
-                <div
-                    className={className}
-                    title={objectToString(this.props.object)}
-                    onClick={this.onClick}
-                >
-                    {typeof icon == "string" ? (
-                        <i className="material-icons md-24">{icon}</i>
-                    ) : (
-                        icon
-                    )}
-                    <span>{objectToString(this.props.object)}</span>
-                </div>
             );
         }
     }

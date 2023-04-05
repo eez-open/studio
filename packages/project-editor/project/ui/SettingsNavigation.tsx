@@ -54,6 +54,8 @@ const ProjectFeature = observer(
             };
 
             this.context.updateObject(this.context.project, changes);
+
+            this.context.project.enableTabs();
         }
 
         onRemove() {
@@ -65,6 +67,8 @@ const ProjectFeature = observer(
                         this.context.updateObject(this.context.project, {
                             [this.props.projectFeature.key]: undefined
                         });
+
+                        this.context.project.enableTabs();
                     }
                 }
             );

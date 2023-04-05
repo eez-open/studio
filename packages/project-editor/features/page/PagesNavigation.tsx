@@ -1,7 +1,6 @@
 import React from "react";
 import { computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
-import * as FlexLayout from "flexlayout-react";
 
 import { _find } from "eez-studio-shared/algorithm";
 
@@ -10,17 +9,14 @@ import {
     TreeAdapter,
     TreeObjectAdapter
 } from "project-editor/core/objectAdapter";
-import { IPanel, LayoutModels } from "project-editor/store";
+import { IPanel } from "project-editor/store";
 
-import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { Tree } from "project-editor/ui-components/Tree";
 
 import { ProjectContext } from "project-editor/project/context";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
 import type { PageTabState } from "project-editor/features/page/PageEditor";
-import { LocalVariables } from "../variable/VariablesNavigation";
 import type { Widget } from "project-editor/flow/component";
 import classNames from "classnames";
 import { IconAction } from "eez-studio-ui/action";
@@ -57,55 +53,6 @@ const EYE_CLOSE_ICON = (
     <svg viewBox="0 0 256 256">
         <path d="M229.1563 163.8125a6.0001 6.0001 0 1 1-10.3926 6l-19.4546-33.6953a121.9088 121.9088 0 0 1-38.2362 17.6728l6.1322 34.7744a6.0008 6.0008 0 0 1-4.8672 6.9512 6.098 6.098 0 0 1-1.0488.0918 6.002 6.002 0 0 1-5.9024-4.959l-6.058-34.3544a134.2055 134.2055 0 0 1-42.747-.0137l-6.0573 34.3555a6.002 6.002 0 0 1-5.9023 4.959 6.0991 6.0991 0 0 1-1.0489-.0918 6.0008 6.0008 0 0 1-4.8671-6.9512l6.133-34.7846a121.903 121.903 0 0 1-38.1914-17.6802L37.085 169.9707a6.0001 6.0001 0 0 1-10.3926-6l20.3362-35.2231a145.1916 145.1916 0 0 1-19.6965-20.102 5.9998 5.9998 0 0 1 9.334-7.541 130.8535 130.8535 0 0 0 21.582 21.2558c.1215.085.2364.1758.3498.2686A111.5045 111.5045 0 0 0 128 146a111.5016 111.5016 0 0 0 69.3887-23.3618c.1052-.0845.211-.1685.3228-.2466a130.8324 130.8324 0 0 0 21.6215-21.2871 5.9998 5.9998 0 1 1 9.334 7.541 145.1519 145.1519 0 0 1-19.7368 20.1352Z" />
     </svg>
-);
-
-export const PagesNavigation = observer(
-    class PagesNavigation extends NavigationComponent {
-        static contextType = ProjectContext;
-        declare context: React.ContextType<typeof ProjectContext>;
-
-        factory = (node: FlexLayout.TabNode) => {
-            var component = node.getComponent();
-
-            if (component === "pages") {
-                return (
-                    <ListNavigation
-                        id={this.props.id}
-                        navigationObject={this.props.navigationObject}
-                        selectedObject={
-                            this.context.navigationStore.selectedPageObject
-                        }
-                        editable={!this.context.runtime}
-                    />
-                );
-            }
-
-            if (component === "page-structure") {
-                return <PageStructure />;
-            }
-
-            if (component === "action-components") {
-                return <ActionComponents />;
-            }
-
-            if (component === "locals") {
-                return <LocalVariables />;
-            }
-
-            return null;
-        };
-
-        render() {
-            return (
-                <FlexLayout.Layout
-                    model={this.context.layoutModels.pages}
-                    factory={this.factory}
-                    realtimeResize={true}
-                    font={LayoutModels.FONT_SUB}
-                />
-            );
-        }
-    }
 );
 
 export const PageStructure = observer(

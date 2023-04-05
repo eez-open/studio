@@ -13,7 +13,6 @@ import {
 } from "project-editor/core/object";
 import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import { ProjectContext } from "project-editor/project/context";
-import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
 import { EditorComponent } from "project-editor/project/ui/EditorComponent";
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
@@ -294,19 +293,15 @@ export class LVGLStyles extends EezObject {
 registerClass("LVGLStyles", LVGLStyles);
 
 export const LVGLStylesNavigation = observer(
-    class LVGLStylesNavigation extends NavigationComponent {
+    class LVGLStylesNavigation extends React.Component {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
-
-        get navigationObject() {
-            return this.props.navigationObject as LVGLStyles;
-        }
 
         render() {
             return (
                 <ListNavigation
-                    id={this.props.id}
-                    navigationObject={this.navigationObject.styles}
+                    id={"lvgl-styles"}
+                    navigationObject={this.context.project.lvglStyles.styles}
                     selectedObject={
                         this.context.navigationStore.selectedStyleObject
                     }

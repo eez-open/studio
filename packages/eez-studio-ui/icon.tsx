@@ -7,7 +7,7 @@ const MATERIAL_PREFIX = "material:";
 export const Icon = observer(
     class Icon extends React.Component<
         {
-            icon: string | JSX.Element;
+            icon: string | JSX.Element | React.ReactNode;
             size?: number;
             className?: string;
             style?: React.CSSProperties;
@@ -84,7 +84,7 @@ export const Icon = observer(
                     );
                 }
             } else {
-                result = React.cloneElement(icon, {
+                result = React.cloneElement(icon as React.ReactElement<any>, {
                     className: classnames("EezStudio_Icon", className),
                     style,
                     width: iconSize,

@@ -25,25 +25,23 @@ import {
 
 import { ProjectContext } from "project-editor/project/context";
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
-import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
 import { fileExistsSync } from "eez-studio-shared/util-electron";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ExtensionDefinitionNavigation extends NavigationComponent {
+export class ExtensionDefinitionsTab extends React.Component {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
     render() {
         return (
             <ListNavigation
-                id={this.props.id}
-                navigationObject={this.props.navigationObject}
+                id={"extension-definitions"}
+                navigationObject={this.context.project.extensionDefinitions}
                 selectedObject={
                     this.context.navigationStore
                         .selectedExtensionDefinitionObject
                 }
-                onDoubleClickItem={this.props.onDoubleClickItem}
             />
         );
     }

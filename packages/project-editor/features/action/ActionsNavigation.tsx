@@ -1,13 +1,8 @@
 import React from "react";
 import { observer } from "mobx-react";
-import * as FlexLayout from "flexlayout-react";
 import { computed, makeObservable } from "mobx";
 
 import { ProjectContext } from "project-editor/project/context";
-import { ListNavigation } from "project-editor/ui-components/ListNavigation";
-import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
-import { LocalVariables } from "../variable/VariablesNavigation";
-import { LayoutModels } from "project-editor/store";
 import { IEezObject } from "project-editor/core/object";
 import { TreeAdapter } from "project-editor/core/objectAdapter";
 import { IPanel } from "project-editor/store";
@@ -15,52 +10,6 @@ import { Tree } from "project-editor/ui-components/Tree";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { ActionFlowTabState } from "../action/ActionEditor";
 import { CommentActionComponent } from "project-editor/flow/components/actions";
-
-export const ActionsNavigation = observer(
-    class ActionsNavigation extends NavigationComponent {
-        static contextType = ProjectContext;
-        declare context: React.ContextType<typeof ProjectContext>;
-
-        factory = (node: FlexLayout.TabNode) => {
-            var component = node.getComponent();
-
-            if (component === "actions") {
-                return (
-                    <ListNavigation
-                        id={this.props.id}
-                        navigationObject={this.props.navigationObject}
-                        selectedObject={
-                            this.context.navigationStore.selectedActionObject
-                        }
-                        editable={!this.context.runtime}
-                        onDoubleClickItem={this.props.onDoubleClickItem}
-                    />
-                );
-            }
-
-            if (component === "action-components") {
-                return <ActionComponents />;
-            }
-
-            if (component === "locals") {
-                return <LocalVariables />;
-            }
-
-            return null;
-        };
-
-        render() {
-            return (
-                <FlexLayout.Layout
-                    model={this.context.layoutModels.actions}
-                    factory={this.factory}
-                    realtimeResize={true}
-                    font={LayoutModels.FONT_SUB}
-                />
-            );
-        }
-    }
-);
 
 export const ActionComponents = observer(
     class ActionComponents extends React.Component implements IPanel {

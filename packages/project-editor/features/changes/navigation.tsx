@@ -10,7 +10,6 @@ import { Loader } from "eez-studio-ui/loader";
 import { List, IListNode } from "eez-studio-ui/list";
 
 import { ProjectContext } from "project-editor/project/context";
-import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
 import {
     Body,
     ToolbarHeader,
@@ -28,8 +27,10 @@ import {
     getFilePathFromHash
 } from "./state";
 
-export const ChangesNavigation = observer(
-    class ChangesNavigation extends NavigationComponent {
+////////////////////////////////////////////////////////////////////////////////
+
+export const ChangesTab = observer(
+    class ChangesTab extends React.Component {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 

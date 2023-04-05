@@ -2,22 +2,10 @@ import { action } from "mobx";
 
 import { IEezObject } from "project-editor/core/object";
 
-import { getProject, Settings } from "project-editor/project/project";
+import { Settings } from "project-editor/project/project";
 
-import { ActionsNavigation } from "project-editor/features/action/ActionsNavigation";
-import { BitmapsNavigation } from "project-editor/features/bitmap/BitmapsNavigation";
-import {
-    ExtensionDefinition,
-    ExtensionDefinitionNavigation
-} from "project-editor/features/extension-definitions/extension-definitions";
-import { FontsNavigation } from "project-editor/features/font/FontsNavigation";
-import { PagesNavigation } from "project-editor/features/page/PagesNavigation";
-import { ScpiNavigation } from "project-editor/features/scpi/ScpiNavigation";
-import { StylesNavigation } from "project-editor/features/style/StylesNavigation";
-import { ProjectVariablesNavigation } from "project-editor/features/variable/VariablesNavigation";
-import { SettingsNavigation } from "./SettingsNavigation";
+import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 
-import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
 import { Action } from "project-editor/features/action/action";
 import {
     getAncestorOfType,
@@ -41,104 +29,9 @@ import {
 import { Component } from "project-editor/flow/component";
 import { ScpiEnum } from "project-editor/features/scpi/enum";
 import { ConnectionLine } from "project-editor/flow/connection-line";
-import { TextsNavigation } from "project-editor/features/texts/navigation";
 import { Language, TextResource } from "project-editor/features/texts";
-import { ReadmeNavigation } from "project-editor/features/readme/navigation";
-import { ChangesNavigation } from "project-editor/features/changes/navigation";
-import { LVGLStyle, LVGLStylesNavigation } from "project-editor/lvgl/style";
-
-export function getNavigationComponentId(object: IEezObject) {
-    const project = getProject(object);
-
-    if (object == project.actions) {
-        return "actions";
-    } else if (object == project.bitmaps) {
-        return "bitmaps";
-    } else if (object == project.extensionDefinitions) {
-        return "iext";
-    } else if (object == project.fonts) {
-        return "fonts";
-    } else if (object == project.pages) {
-        return "pages";
-    } else if (object == project.scpi) {
-        return "scpi";
-    } else if (object == project.styles) {
-        return "styles";
-    } else if (object == project.variables) {
-        return "variables";
-    } else if (object == project.settings) {
-        return "settings";
-    }
-
-    return undefined;
-}
-
-export function getNavigationComponent(
-    object: IEezObject
-): typeof NavigationComponent | undefined {
-    const project = getProject(object);
-
-    if (object == project.actions) {
-        return ActionsNavigation;
-    }
-
-    if (object == project.bitmaps) {
-        return BitmapsNavigation;
-    }
-
-    if (object == project.extensionDefinitions) {
-        return ExtensionDefinitionNavigation;
-    }
-
-    if (object == project.fonts) {
-        return FontsNavigation;
-    }
-
-    if (object == project.pages) {
-        return PagesNavigation;
-    }
-
-    if (object == project.scpi) {
-        return ScpiNavigation;
-    }
-
-    if (object == project.styles) {
-        return StylesNavigation;
-    }
-
-    if (object == project.lvglStyles) {
-        return LVGLStylesNavigation;
-    }
-
-    if (object == project.variables) {
-        return ProjectVariablesNavigation;
-    }
-
-    if (object == project.settings) {
-        if (
-            !(
-                project.projectTypeTraits.isDashboard ||
-                project.projectTypeTraits.isApplet
-            )
-        ) {
-            return SettingsNavigation;
-        }
-    }
-
-    if (object == project.texts) {
-        return TextsNavigation;
-    }
-
-    if (object == project.readme) {
-        return ReadmeNavigation;
-    }
-
-    if (object == project.changes) {
-        return ChangesNavigation;
-    }
-
-    return undefined;
-}
+import { LVGLStyle } from "project-editor/lvgl/style";
+import { NavigationStore } from "project-editor/store/navigation";
 
 export function getNavigationObject(
     object: IEezObject
@@ -419,30 +312,27 @@ export function selectObject(object: IEezObject) {
     ancestor = getAncestorOfType(object, Variable.classInfo);
     if (ancestor) {
         projectStore.navigationStore.selectedGlobalVariableObject.set(ancestor);
-        projectStore.layoutModels.selectTab(
-            projectStore.layoutModels.variables,
-            LayoutModels.GLOBAL_VARS_TAB_ID
-        );
+        projectStore.navigationStore.subnavigationSelectedItems[
+            NavigationStore.VARIABLES_SUB_NAVIGATION_ID
+        ] = NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_GLOBAL;
         return;
     }
 
     ancestor = getAncestorOfType(object, Structure.classInfo);
     if (ancestor) {
         projectStore.navigationStore.selectedStructureObject.set(ancestor);
-        projectStore.layoutModels.selectTab(
-            projectStore.layoutModels.variables,
-            LayoutModels.STRUCTS_TAB_ID
-        );
+        projectStore.navigationStore.subnavigationSelectedItems[
+            NavigationStore.VARIABLES_SUB_NAVIGATION_ID
+        ] = NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_STRUCTS;
         return;
     }
 
     ancestor = getAncestorOfType(object, Enum.classInfo);
     if (ancestor) {
         projectStore.navigationStore.selectedEnumObject.set(ancestor);
-        projectStore.layoutModels.selectTab(
-            projectStore.layoutModels.variables,
-            LayoutModels.ENUMS_TAB_ID
-        );
+        projectStore.navigationStore.subnavigationSelectedItems[
+            NavigationStore.VARIABLES_SUB_NAVIGATION_ID
+        ] = NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_ENUMS;
         return;
     }
 

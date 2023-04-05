@@ -7,14 +7,37 @@ import * as FlexLayout from "flexlayout-react";
 import { LayoutModels } from "project-editor/store";
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { ProjectContext } from "project-editor/project/context";
-import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
 import { Style } from "./style";
 import { drawText } from "project-editor/flow/editor/draw";
+import { LVGLStylesNavigation } from "project-editor/lvgl/style";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const StylesNavigation = observer(
-    class StylesNavigation extends NavigationComponent {
+export const StylesTab = observer(
+    class StylesTab extends React.Component {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {});
+        }
+
+        render() {
+            return this.context.projectTypeTraits.isLVGL ? (
+                <LVGLStylesNavigation />
+            ) : (
+                <StylesNavigation />
+            );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+const StylesNavigation = observer(
+    class StylesNavigation extends React.Component {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -28,7 +51,7 @@ export const StylesNavigation = observer(
         }
 
         get navigationObject() {
-            return this.props.navigationObject;
+            return this.context.project.styles;
         }
 
         get style() {
@@ -52,7 +75,7 @@ export const StylesNavigation = observer(
             if (component === "styles") {
                 return (
                     <ListNavigation
-                        id={this.props.id}
+                        id={"styles"}
                         navigationObject={this.navigationObject}
                         selectedObject={
                             this.context.navigationStore.selectedStyleObject

@@ -77,7 +77,7 @@ export const TextAction = observer(
 export const IconAction = observer(
     class IconAction extends React.Component<
         {
-            icon: string | JSX.Element;
+            icon: string | React.ReactNode;
             iconSize?: number;
             title: string;
             onClick?: (event: any) => void;

@@ -4,13 +4,12 @@ import { observer } from "mobx-react";
 import { IEezObject, getParent } from "project-editor/core/object";
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { ProjectContext } from "project-editor/project/context";
-import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
 import { Font } from "./font";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const FontsNavigation = observer(
-    class FontsNavigation extends NavigationComponent {
+export const FontsTab = observer(
+    class FontsTab extends React.Component {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -36,7 +35,7 @@ export const FontsNavigation = observer(
             const navigationStore = this.context.navigationStore;
 
             if (navigationStore.selectedPanel) {
-                const font = FontsNavigation.getFont(
+                const font = FontsTab.getFont(
                     navigationStore.selectedPanel.selectedObject
                 );
                 if (font) {
@@ -44,7 +43,7 @@ export const FontsNavigation = observer(
                 }
             }
 
-            const font = FontsNavigation.getFont(
+            const font = FontsTab.getFont(
                 navigationStore.selectedFontObject.get()
             );
             if (font) {
@@ -57,8 +56,8 @@ export const FontsNavigation = observer(
         render() {
             return (
                 <ListNavigation
-                    id={this.props.id}
-                    navigationObject={this.props.navigationObject}
+                    id={"fonts"}
+                    navigationObject={this.context.project.fonts}
                     selectedObject={
                         this.context.navigationStore.selectedFontObject
                     }

@@ -11,13 +11,12 @@ import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { ScpiSubsystem, ScpiCommand } from "project-editor/features/scpi/scpi";
 import { showImportScpiDocDialog } from "project-editor/features/scpi/importScpiDoc";
 import { computed, makeObservable } from "mobx";
-import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
 import { EditorComponent } from "project-editor/project/ui/EditorComponent";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const ScpiNavigation = observer(
-    class ScpiNavigation extends NavigationComponent {
+export const ScpiTab = observer(
+    class ScpiTab extends React.Component {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -35,7 +34,7 @@ export const ScpiNavigation = observer(
             if (component === "enums") {
                 return (
                     <ListNavigation
-                        id={this.props.id}
+                        id={"scpi-enums"}
                         navigationObject={this.context.project.scpi.enums}
                         selectedObject={
                             this.context.navigationStore.selectedScpiEnumObject

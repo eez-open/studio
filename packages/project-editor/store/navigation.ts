@@ -44,11 +44,28 @@ export class NavigationStore {
     selectedTextResourceObject = observable.box<IEezObject>();
     selectedLanguageObject = observable.box<IEezObject>();
 
+    static VARIABLES_SUB_NAVIGATION_ID =
+        "variables-tab/sub-navigation/selected-item";
+    static VARIABLES_SUB_NAVIGATION_ITEM_GLOBAL = "Global";
+    static VARIABLES_SUB_NAVIGATION_ITEM_LOCAL = "Local";
+    static VARIABLES_SUB_NAVIGATION_ITEM_STRUCTS = "Structs";
+    static VARIABLES_SUB_NAVIGATION_ITEM_ENUMS = "Enums";
+
+    static FLOW_STRUCTURE_SUB_NAVIGATION_ID =
+        "flow-structure-tab/sub-navigation/selected-item";
+    static FLOW_STRUCTURE_SUB_NAVIGATION_ITEM_WIDGETS = "Widgets";
+    static FLOW_STRUCTURE_SUB_NAVIGATION_ITEM_ACTIONS = "Actions";
+
+    subnavigationSelectedItems: {
+        [id: string]: string;
+    } = {};
+
     editable = true;
 
     constructor(public projectStore: ProjectStore) {
         makeObservable(this, {
             selectedPanel: observable,
+            subnavigationSelectedItems: observable,
             setSelectedPanel: action,
             showObjects: action
         });
@@ -230,6 +247,11 @@ export class NavigationStore {
                     )
                 );
             }
+
+            if (state.subnavigationSelectedItems) {
+                this.subnavigationSelectedItems =
+                    state.subnavigationSelectedItems;
+            }
         }
     }
 
@@ -294,7 +316,9 @@ export class NavigationStore {
                 : undefined,
             selectedLanguageObject: this.selectedLanguageObject.get()
                 ? getObjectPathAsString(this.selectedLanguageObject.get())
-                : undefined
+                : undefined,
+
+            subnavigationSelectedItems: this.subnavigationSelectedItems
         };
     }
 

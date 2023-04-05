@@ -5,13 +5,12 @@ import * as FlexLayout from "flexlayout-react";
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { LayoutModels } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
-import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
 import { Bitmap, createBitmap } from "./bitmap";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const BitmapsNavigation = observer(
-    class BitmapsNavigation extends NavigationComponent {
+export const BitmapsTab = observer(
+    class BitmapsTab extends React.Component {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -43,8 +42,8 @@ export const BitmapsNavigation = observer(
             if (component === "bitmaps") {
                 return (
                     <ListNavigation
-                        id={this.props.id}
-                        navigationObject={this.props.navigationObject}
+                        id={"bitmaps"}
+                        navigationObject={this.context.project.bitmaps}
                         selectedObject={
                             this.context.navigationStore.selectedBitmapObject
                         }

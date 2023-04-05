@@ -1,8 +1,21 @@
+import React from "react";
+
 import { action, computed, makeObservable } from "mobx";
 import { observable } from "mobx";
 import * as FlexLayout from "flexlayout-react";
 
+import { Icon } from "eez-studio-ui/icon";
+
 import type { ProjectStore } from "project-editor/store";
+import {
+    LANGUAGE_ICON,
+    CHANGES_ICON,
+    VARIABLE_ICON,
+    HIERARCHY_ICON,
+    PROPERTIES_ICON,
+    COMPONENTS_ICON,
+    PALETTE_ICON
+} from "project-editor/ui-components/icons";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -26,7 +39,6 @@ export class LayoutModels {
     static CHECKS_TAB_ID = "CHECKS";
     static OUTPUT_TAB_ID = "OUTPUT";
     static SEARCH_RESULTS_TAB_ID = "SEARCH_RESULTS";
-    static NAVIGATION_TABSET_ID = "NAVIGATION";
     static EDITOR_MODE_EDITORS_TABSET_ID = "EDITORS";
     static RUNTIME_MODE_EDITORS_TABSET_ID = "RUNTIME-EDITORS";
     static PROPERTIES_TAB_ID = "PROPERTIES";
@@ -34,11 +46,6 @@ export class LayoutModels {
     static BREAKPOINTS_TAB_ID = "BREAKPOINTS_PALETTE";
     static DEBUGGER_TAB_ID = "DEBUGGER";
     static DEBUGGER_LOGS_TAB_ID = "DEBUGGER_LOGS";
-
-    static LOCAL_VARS_TAB_ID = "LOCAL_VARS";
-    static GLOBAL_VARS_TAB_ID = "GLOBAL_VARS";
-    static STRUCTS_TAB_ID = "STRUCTS";
-    static ENUMS_TAB_ID = "ENUMS";
 
     static SCPI_SUBSYSTEMS_TAB_ID = "SCPI_SUBSYSTEMS";
     static SCPI_ENUMS_TAB_ID = "SCPI_ENUMS";
@@ -48,9 +55,87 @@ export class LayoutModels {
     static TEXT_RESOURCES_TAB_ID = "TEXT_RESOURCES";
     static TEXTS_STATISTICS_TAB_ID = "TEXTS_STATISTICS";
 
-    static PAGE_STRUCTURE_TAB_ID = "page-structure";
-    static ACTION_COMPONENTS_TAB_ID = "action-components";
-    static ACTIONS_TAB_ID = "actions";
+    static STYLES_TAB_ID = "styles";
+    static FONTS_TAB_ID = "fonts";
+    static BITMAPS_TAB_ID = "bitmaps";
+    static TEXTS_TAB_ID = "texts";
+    static SCPI_TAB_ID = "scpi";
+    static SHORTCUTS_TAB_ID = "shortcuts";
+    static EXTENSION_DEFINITIONS_TAB_ID = "iext";
+    static CHANGES_TAB_ID = "changes";
+    static MICRO_PYTHON_TAB_ID = "micro-python";
+    static README_TAB_ID = "readme";
+
+    static STYLES_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Styles",
+        id: LayoutModels.STYLES_TAB_ID,
+        component: "styles",
+        icon: "material:format_color_fill"
+    };
+
+    static FONTS_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Fonts",
+        id: LayoutModels.FONTS_TAB_ID,
+        component: "fonts",
+        icon: "material:font_download"
+    };
+
+    static BITMAPS_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Bitmaps",
+        id: LayoutModels.BITMAPS_TAB_ID,
+        component: "bitmaps",
+        icon: "material:image"
+    };
+
+    static THEMES_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Themes",
+        component: "themesSideView",
+        icon: "svg:palette"
+    };
+
+    static TEXTS_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Texts",
+        id: LayoutModels.TEXTS_TAB_ID,
+        component: "texts",
+        icon: "svg:language"
+    };
+
+    static SCPI_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "SCPI",
+        id: LayoutModels.SCPI_TAB_ID,
+        component: "scpi",
+        icon: "material:navigate_next"
+    };
+
+    static EXTENSION_DEFINITIONS_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "IEXT",
+        id: LayoutModels.EXTENSION_DEFINITIONS_TAB_ID,
+        component: "extension-definitions",
+        icon: "material:extension"
+    };
+
+    static CHANGES_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Changes",
+        id: LayoutModels.CHANGES_TAB_ID,
+        component: "changes",
+        icon: "svg:changes"
+    };
 
     static BREAKPOINTS_TAB: FlexLayout.IJsonTabNode = {
         type: "tab",
@@ -60,113 +145,69 @@ export class LayoutModels {
         component: "breakpointsPanel"
     };
 
-    static GLOBAL_VARS_TAB: FlexLayout.IJsonTabNode = {
-        type: "tab",
-        enableClose: false,
-        name: "Global Vars",
-        id: LayoutModels.GLOBAL_VARS_TAB_ID,
-        component: "globals"
+    static SVG_ICONS: { [icon: string]: JSX.Element } = {
+        language: LANGUAGE_ICON,
+        changes: CHANGES_ICON,
+        variable: VARIABLE_ICON,
+        hierarchy: HIERARCHY_ICON,
+        properties: PROPERTIES_ICON,
+        components: COMPONENTS_ICON,
+        palette: PALETTE_ICON
     };
 
-    static PAGES_TAB: FlexLayout.IJsonTabNode = {
-        type: "tab",
-        enableClose: false,
-        name: "Pages",
-        component: "pages"
-    };
-
-    static PAGE_STRUCTURE_TAB: FlexLayout.IJsonTabNode = {
-        type: "tab",
-        enableClose: false,
-        name: "Page Structure",
-        component: "page-structure",
-        id: LayoutModels.PAGE_STRUCTURE_TAB_ID
-    };
-
-    static ACTION_COMPONENTS_TAB: FlexLayout.IJsonTabNode = {
-        type: "tab",
-        enableClose: false,
-        name: "Action Components",
-        component: "action-components",
-        id: LayoutModels.ACTION_COMPONENTS_TAB_ID
-    };
-
-    static LOCAL_VARS_TAB: FlexLayout.IJsonTabNode = {
-        type: "tab",
-        enableClose: false,
-        name: "Local Vars",
-        id: LayoutModels.LOCAL_VARS_TAB_ID,
-        component: "locals"
-    };
-
-    static STRUCTS_TAB: FlexLayout.IJsonTabNode = {
-        type: "tab",
-        enableClose: false,
-        name: "Structs",
-        id: LayoutModels.STRUCTS_TAB_ID,
-        component: "structs"
-    };
-
-    static ENUMS_TAB: FlexLayout.IJsonTabNode = {
-        type: "tab",
-        enableClose: false,
-        name: "Enums",
-        id: LayoutModels.ENUMS_TAB_ID,
-        component: "enums"
+    static iconFactory = (node: FlexLayout.TabNode) => {
+        let iconStr = node.getIcon();
+        if (!iconStr) {
+            return null;
+        }
+        let icon: string | JSX.Element | undefined;
+        if (iconStr.startsWith("svg:")) {
+            icon = this.SVG_ICONS[iconStr.substring(4)];
+        } else {
+            icon = iconStr;
+        }
+        if (!icon) {
+            return null;
+        }
+        return <Icon icon={icon} size={20} />;
     };
 
     rootEditor: FlexLayout.Model;
     rootRuntime: FlexLayout.Model;
+    get root() {
+        return this.projectStore.runtime ? this.rootRuntime : this.rootEditor;
+    }
 
     editorModeEditors: FlexLayout.Model;
     runtimeModeEditors: FlexLayout.Model;
-
-    variables: FlexLayout.Model;
-    bitmaps: FlexLayout.Model;
-    fonts: FlexLayout.Model;
-
-    pagesEditor: FlexLayout.Model;
-    pagesRuntime: FlexLayout.Model;
-
-    actionsEditor: FlexLayout.Model;
-    actionsRuntime: FlexLayout.Model;
-
-    scpi: FlexLayout.Model;
-    styles: FlexLayout.Model;
-    themes: FlexLayout.Model;
-    texts: FlexLayout.Model;
-
     get editors() {
         return this.projectStore.runtime
             ? this.runtimeModeEditors
             : this.editorModeEditors;
     }
 
+    styles: FlexLayout.Model;
+    bitmaps: FlexLayout.Model;
+    fonts: FlexLayout.Model;
+    themes: FlexLayout.Model;
+    scpi: FlexLayout.Model;
+    texts: FlexLayout.Model;
+
     constructor(public projectStore: ProjectStore) {
         makeObservable(this, {
-            root: computed,
             rootEditor: observable,
             rootRuntime: observable,
+            root: computed,
 
             editorModeEditors: observable,
             runtimeModeEditors: observable,
+            editors: computed,
 
-            variables: observable,
+            styles: observable,
             bitmaps: observable,
             fonts: observable,
-
-            pages: computed,
-            pagesEditor: observable,
-            pagesRuntime: observable,
-
-            actions: computed,
-            actionsEditor: observable,
-            actionsRuntime: observable,
-
-            scpi: observable,
-            styles: observable,
             themes: observable,
-
+            scpi: observable,
             texts: observable
         });
     }
@@ -180,20 +221,20 @@ export class LayoutModels {
             }
         ];
 
+        const rightBorderChildren = [
+            LayoutModels.STYLES_TAB,
+            LayoutModels.FONTS_TAB,
+            LayoutModels.BITMAPS_TAB
+        ];
         if (!this.projectStore.projectTypeTraits.isLVGL) {
-            borders.push({
-                type: "border",
-                location: "right",
-                children: [
-                    {
-                        type: "tab",
-                        enableClose: false,
-                        name: "Themes",
-                        component: "themesSideView"
-                    }
-                ]
-            });
+            rightBorderChildren.push(LayoutModels.THEMES_TAB);
         }
+        borders.push({
+            type: "border",
+            location: "right",
+            size: 240,
+            children: rightBorderChildren
+        });
 
         borders.push({
             type: "border",
@@ -223,6 +264,18 @@ export class LayoutModels {
             ]
         });
 
+        borders.push({
+            type: "border",
+            location: "left",
+            size: 240,
+            children: [
+                LayoutModels.TEXTS_TAB,
+                LayoutModels.SCPI_TAB,
+                LayoutModels.EXTENSION_DEFINITIONS_TAB,
+                LayoutModels.CHANGES_TAB
+            ]
+        });
+
         return borders;
     }
 
@@ -236,7 +289,7 @@ export class LayoutModels {
         return [
             {
                 name: "rootEditor",
-                version: 33,
+                version: 66,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: this.borders,
@@ -244,29 +297,65 @@ export class LayoutModels {
                         type: "row",
                         children: [
                             {
-                                type: "tabset",
+                                type: "row",
                                 weight: 15,
-                                enableTabStrip: false,
-                                enableDrag: false,
-                                enableDrop: false,
-                                enableClose: false,
-                                id: LayoutModels.NAVIGATION_TABSET_ID,
                                 children: [
                                     {
-                                        type: "tab",
+                                        type: "tabset",
+                                        weight: 1,
                                         enableClose: false,
-                                        name: "Navigation",
-                                        component: "navigation"
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Pages",
+                                                component: "pages",
+                                                icon: "material:filter"
+                                            },
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Actions",
+                                                component: "actions",
+                                                icon: "material:code"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        weight: 1,
+                                        enableClose: false,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Structure",
+                                                component: "flow-structure",
+                                                icon: "svg:hierarchy"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        weight: 1,
+                                        enableClose: false,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Variables",
+                                                component: "variables",
+                                                icon: "svg:variable"
+                                            }
+                                        ]
                                     }
                                 ]
                             },
                             {
                                 type: "tabset",
                                 weight: 60,
-                                enableTabStrip: false,
-                                enableDrag: false,
-                                enableDrop: false,
                                 enableClose: false,
+                                enableDeleteWhenEmpty: false,
                                 id: LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID,
                                 children: [
                                     {
@@ -290,7 +379,8 @@ export class LayoutModels {
                                                 enableClose: false,
                                                 name: "Properties",
                                                 id: LayoutModels.PROPERTIES_TAB_ID,
-                                                component: "propertiesPanel"
+                                                component: "propertiesPanel",
+                                                icon: "svg:properties"
                                             },
                                             LayoutModels.BREAKPOINTS_TAB
                                         ]
@@ -304,7 +394,8 @@ export class LayoutModels {
                                                 enableClose: false,
                                                 name: "Components Palette",
                                                 id: LayoutModels.COMPONENTS_PALETTE_TAB_ID,
-                                                component: "componentsPalette"
+                                                component: "componentsPalette",
+                                                icon: "svg:components"
                                             }
                                         ]
                                     }
@@ -318,7 +409,7 @@ export class LayoutModels {
             },
             {
                 name: "rootRuntime",
-                version: 24,
+                version: 26,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     layout: {
@@ -327,17 +418,18 @@ export class LayoutModels {
                             {
                                 type: "tabset",
                                 weight: 20,
-                                enableTabStrip: false,
-                                enableDrag: false,
-                                enableDrop: false,
-                                enableClose: false,
-                                id: LayoutModels.NAVIGATION_TABSET_ID,
                                 children: [
                                     {
                                         type: "tab",
                                         enableClose: false,
-                                        name: "Navigation",
-                                        component: "navigation"
+                                        name: "Pages",
+                                        component: "pages"
+                                    },
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        name: "Actions",
+                                        component: "actions"
                                     }
                                 ]
                             },
@@ -501,41 +593,6 @@ export class LayoutModels {
                 set: action(model => (this.runtimeModeEditors = model))
             },
             {
-                name: "variables",
-                version: 7,
-                json: {
-                    global: LayoutModels.GLOBAL_OPTIONS,
-                    borders: [],
-                    layout: {
-                        type: "row",
-                        children: [
-                            {
-                                type: "row",
-                                children: [
-                                    {
-                                        type: "tabset",
-                                        children: [LayoutModels.GLOBAL_VARS_TAB]
-                                    },
-                                    {
-                                        type: "tabset",
-                                        children: [LayoutModels.LOCAL_VARS_TAB]
-                                    },
-                                    {
-                                        type: "tabset",
-                                        children: [
-                                            LayoutModels.STRUCTS_TAB,
-                                            LayoutModels.ENUMS_TAB
-                                        ]
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                },
-                get: () => this.variables,
-                set: action(model => (this.variables = model))
-            },
-            {
                 name: "bitmaps",
                 version: 1,
                 json: {
@@ -621,135 +678,6 @@ export class LayoutModels {
                 },
                 get: () => this.fonts,
                 set: action(model => (this.fonts = model))
-            },
-            {
-                name: "pagesEditor",
-                version: 7,
-                json: {
-                    global: LayoutModels.GLOBAL_OPTIONS,
-                    borders: [],
-                    layout: {
-                        type: "row",
-                        children: [
-                            {
-                                type: "row",
-                                children: [
-                                    {
-                                        type: "tabset",
-                                        children: [LayoutModels.PAGES_TAB]
-                                    },
-                                    {
-                                        type: "tabset",
-                                        children: [
-                                            LayoutModels.PAGE_STRUCTURE_TAB,
-                                            LayoutModels.ACTION_COMPONENTS_TAB
-                                        ]
-                                    },
-                                    {
-                                        type: "tabset",
-                                        children: [LayoutModels.LOCAL_VARS_TAB]
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                },
-                get: () => this.pagesEditor,
-                set: action(model => (this.pagesEditor = model))
-            },
-            {
-                name: "pagesRuntime",
-                version: 3,
-                json: {
-                    global: LayoutModels.GLOBAL_OPTIONS,
-                    borders: [],
-                    layout: {
-                        type: "row",
-                        children: [
-                            {
-                                type: "tabset",
-                                children: [
-                                    {
-                                        type: "tab",
-                                        enableClose: false,
-                                        name: "Pages",
-                                        component: "pages"
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                },
-                get: () => this.pagesRuntime,
-                set: action(model => (this.pagesRuntime = model))
-            },
-            {
-                name: "actionsEditor",
-                version: 7,
-                json: {
-                    global: LayoutModels.GLOBAL_OPTIONS,
-                    borders: [],
-                    layout: {
-                        type: "row",
-                        children: [
-                            {
-                                type: "row",
-                                children: [
-                                    {
-                                        type: "tabset",
-                                        children: [
-                                            {
-                                                type: "tab",
-                                                enableClose: false,
-                                                name: "Actions",
-                                                component: "actions",
-                                                id: LayoutModels.ACTIONS_TAB_ID
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        type: "tabset",
-                                        children: [
-                                            LayoutModels.ACTION_COMPONENTS_TAB
-                                        ]
-                                    },
-                                    {
-                                        type: "tabset",
-                                        children: [LayoutModels.LOCAL_VARS_TAB]
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                },
-                get: () => this.actionsEditor,
-                set: action(model => (this.actionsEditor = model))
-            },
-            {
-                name: "actionsRuntime",
-                version: 3,
-                json: {
-                    global: LayoutModels.GLOBAL_OPTIONS,
-                    borders: [],
-                    layout: {
-                        type: "row",
-                        children: [
-                            {
-                                type: "tabset",
-                                children: [
-                                    {
-                                        type: "tab",
-                                        enableClose: false,
-                                        name: "Actions",
-                                        component: "actions"
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                },
-                get: () => this.actionsRuntime,
-                set: action(model => (this.actionsRuntime = model))
             },
             {
                 name: "scpi",
@@ -951,20 +879,6 @@ export class LayoutModels {
                 set: action(model => (this.texts = model))
             }
         ];
-    }
-
-    get root() {
-        return this.projectStore.runtime ? this.rootRuntime : this.rootEditor;
-    }
-
-    get pages() {
-        return this.projectStore.runtime ? this.pagesRuntime : this.pagesEditor;
-    }
-
-    get actions() {
-        return this.projectStore.runtime
-            ? this.actionsRuntime
-            : this.actionsEditor;
     }
 
     load(layoutModels: any) {

@@ -46,7 +46,6 @@ import type {
     migrateProjectType
 } from "project-editor/project/migrate-project";
 import type {
-    getNavigationComponent,
     getNavigationObject,
     navigateTo,
     selectObject
@@ -123,7 +122,6 @@ export interface IProjectEditor {
     getBitmapData: typeof getBitmapData;
     migrateProjectVersion: typeof migrateProjectVersion;
     migrateProjectType: typeof migrateProjectType;
-    getNavigationComponent: typeof getNavigationComponent;
     getNavigationObject: typeof getNavigationObject;
     navigateTo: typeof navigateTo;
     selectObject: typeof selectObject;

@@ -60,14 +60,14 @@ let features: ProjectEditorFeature[] = [
     styleFeature,
     jsonStylesFeature,
     fontFeature,
-    textsFeature,
     bitmapFeature,
-    microPythonFeature,
-    extensionDefinitionsFeature,
+    textsFeature,
     scpiFeature,
+    extensionDefinitionsFeature,
+    diffFeature,
     shortcutsFeature,
-    readmeFeature,
-    diffFeature
+    microPythonFeature,
+    readmeFeature
 ];
 
 export function getProjectFeatures() {

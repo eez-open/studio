@@ -1805,49 +1805,57 @@ export class Project extends EezObject {
 
         enableTab(
             this._store.layoutModels.rootEditor,
+            LayoutModels.FONTS_TAB_ID,
+            LayoutModels.FONTS_TAB,
+            LayoutModels.STYLES_TAB_ID,
+            this.fonts != undefined
+        );
+
+        enableTab(
+            this._store.layoutModels.rootEditor,
+            LayoutModels.BITMAPS_TAB_ID,
+            LayoutModels.BITMAPS_TAB,
+            LayoutModels.STYLES_TAB_ID,
+            this.bitmaps != undefined
+        );
+
+        enableTab(
+            this._store.layoutModels.rootEditor,
+            LayoutModels.TEXTS_TAB_ID,
+            LayoutModels.TEXTS_TAB,
+            LayoutModels.STYLES_TAB_ID,
+            this.texts != undefined
+        );
+
+        enableTab(
+            this._store.layoutModels.rootEditor,
+            LayoutModels.SCPI_TAB_ID,
+            LayoutModels.SCPI_TAB,
+            LayoutModels.STYLES_TAB_ID,
+            this.scpi != undefined
+        );
+
+        enableTab(
+            this._store.layoutModels.rootEditor,
+            LayoutModels.EXTENSION_DEFINITIONS_TAB_ID,
+            LayoutModels.EXTENSION_DEFINITIONS_TAB,
+            LayoutModels.STYLES_TAB_ID,
+            this.extensionDefinitions != undefined
+        );
+
+        enableTab(
+            this._store.layoutModels.rootEditor,
+            LayoutModels.CHANGES_TAB_ID,
+            LayoutModels.CHANGES_TAB,
+            LayoutModels.STYLES_TAB_ID,
+            this.changes != undefined
+        );
+
+        enableTab(
+            this._store.layoutModels.rootEditor,
             LayoutModels.BREAKPOINTS_TAB_ID,
             LayoutModels.BREAKPOINTS_TAB,
             LayoutModels.COMPONENTS_PALETTE_TAB_ID,
-            flowSupport
-        );
-
-        enableTab(
-            this._store.layoutModels.variables,
-            LayoutModels.LOCAL_VARS_TAB_ID,
-            LayoutModels.LOCAL_VARS_TAB,
-            LayoutModels.GLOBAL_VARS_TAB_ID,
-            flowSupport
-        );
-
-        enableTab(
-            this._store.layoutModels.variables,
-            LayoutModels.ENUMS_TAB_ID,
-            LayoutModels.ENUMS_TAB,
-            LayoutModels.GLOBAL_VARS_TAB_ID,
-            flowSupport || !this.projectTypeTraits.isLVGL
-        );
-
-        enableTab(
-            this._store.layoutModels.variables,
-            LayoutModels.STRUCTS_TAB_ID,
-            LayoutModels.STRUCTS_TAB,
-            LayoutModels.GLOBAL_VARS_TAB_ID,
-            flowSupport
-        );
-
-        enableTab(
-            this._store.layoutModels.pagesEditor,
-            LayoutModels.LOCAL_VARS_TAB_ID,
-            LayoutModels.LOCAL_VARS_TAB,
-            LayoutModels.PAGE_STRUCTURE_TAB_ID,
-            flowSupport
-        );
-
-        enableTab(
-            this._store.layoutModels.actionsEditor,
-            LayoutModels.LOCAL_VARS_TAB_ID,
-            LayoutModels.LOCAL_VARS_TAB,
-            LayoutModels.ACTIONS_TAB_ID,
             flowSupport
         );
     }

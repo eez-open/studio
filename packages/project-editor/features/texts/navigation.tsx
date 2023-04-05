@@ -4,7 +4,6 @@ import xliff from "xliff";
 
 import * as notification from "eez-studio-ui/notification";
 import { ProjectContext } from "project-editor/project/context";
-import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
 import { LayoutModels } from "project-editor/store";
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { observer } from "mobx-react";
@@ -19,8 +18,8 @@ import { readTextFile, writeTextFile } from "eez-studio-shared/util-electron";
 import { LabelWithProgress } from "./LabelWithProgress";
 import { LabelWithInfo } from "./LabelWithInfo";
 
-export const TextsNavigation = observer(
-    class TextsNavigation extends NavigationComponent {
+export const TextsTab = observer(
+    class TextsNavigation extends React.Component {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -361,6 +360,9 @@ export const Statistics = observer(
         }
 
         get progress() {
+            if (this.totalStrings == 0) {
+                return 1;
+            }
             return this.numTranslated / this.totalStrings;
         }
 

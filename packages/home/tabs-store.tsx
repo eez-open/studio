@@ -46,7 +46,6 @@ import { firstTime } from "./first-time";
 import { initProjectEditor } from "project-editor/project-editor-bootstrap";
 import { PROJECT_TAB_ID_PREFIX } from "home/tabs-store-conf";
 import { getProjectIcon } from "home/helper";
-import { getAppStore } from "home/history";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -98,6 +97,8 @@ class HistoryTab implements IHomeTab {
             makeActive: action
         });
 
+        const { getAppStore } = require("home/history") as typeof HistoryModule;
+
         autorun(() => {
             if (
                 this.tabs.viewDeletedHistory &&
@@ -137,6 +138,7 @@ class HistoryTab implements IHomeTab {
     }
 
     deleteSelectedHistoryItems = () => {
+        const { getAppStore } = require("home/history") as typeof HistoryModule;
         const appStore = getAppStore();
         if (this.tabs.viewDeletedHistory) {
             appStore.deletedItemsHistory.deleteSelectedHistoryItems();

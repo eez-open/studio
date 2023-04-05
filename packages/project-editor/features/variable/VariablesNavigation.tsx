@@ -1,103 +1,36 @@
 import React from "react";
 import { computed, observable, makeObservable } from "mobx";
 import { observer } from "mobx-react";
-import * as FlexLayout from "flexlayout-react";
 
-import { LayoutModels } from "project-editor/store";
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
+import {
+    SubNavigation,
+    SubNavigationItem
+} from "project-editor/ui-components/SubNavigation";
 import { ProjectContext } from "project-editor/project/context";
-import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
 import { Page } from "project-editor/features/page/page";
 import { Action } from "project-editor/features/action/action";
 import { IEezObject } from "project-editor/core/object";
+import { NavigationStore } from "project-editor/store/navigation";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const ProjectVariablesNavigation = observer(
-    class ProjectVariablesNavigation extends NavigationComponent {
+export const VariablesTab = observer(
+    class VariablesTab extends React.Component {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
-        factory = (node: FlexLayout.TabNode) => {
-            var component = node.getComponent();
-
-            if (component === "locals") {
-                return <LocalVariables />;
-            }
-
-            if (component === "globals") {
-                return (
-                    <ListNavigation
-                        id="global-variables"
-                        navigationObject={
-                            this.context.project.variables.globalVariables
-                        }
-                        selectedObject={
-                            this.context.navigationStore
-                                .selectedGlobalVariableObject
-                        }
-                    />
-                );
-            }
-
-            if (component === "structs") {
-                return (
-                    <ListNavigation
-                        id="structs"
-                        navigationObject={
-                            this.context.project.variables.structures
-                        }
-                        selectedObject={
-                            this.context.navigationStore.selectedStructureObject
-                        }
-                    />
-                );
-            }
-
-            if (component === "enums") {
-                return (
-                    <ListNavigation
-                        id="enums"
-                        navigationObject={this.context.project.variables.enums}
-                        selectedObject={
-                            this.context.navigationStore.selectedEnumObject
-                        }
-                    />
-                );
-            }
-
-            return null;
-        };
-
-        render() {
-            return (
-                <FlexLayout.Layout
-                    model={this.context.layoutModels.variables}
-                    factory={this.factory}
-                    realtimeResize={true}
-                    font={LayoutModels.FONT_SUB}
-                />
-            );
-        }
-    }
-);
-
-export const LocalVariables = observer(
-    class LocalVariables extends React.Component {
-        static contextType = ProjectContext;
-        declare context: React.ContextType<typeof ProjectContext>;
-
-        selectedObject = observable.box<IEezObject>();
+        selectedLocalVariable = observable.box<IEezObject>();
 
         constructor(props: any) {
             super(props);
 
             makeObservable(this, {
-                navigationObject: computed
+                localVariables: computed
             });
         }
 
-        get navigationObject() {
+        get localVariables() {
             const editor = this.context.editorsStore.activeEditor;
             if (editor) {
                 const object = editor.object;
@@ -108,19 +41,77 @@ export const LocalVariables = observer(
 
             return undefined;
         }
-
         render() {
-            if (this.navigationObject) {
-                return (
-                    <ListNavigation
-                        id="local-variables"
-                        navigationObject={this.navigationObject}
-                        selectedObject={this.selectedObject}
-                    />
-                );
+            const items: SubNavigationItem[] = [
+                {
+                    name: NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_GLOBAL,
+                    component: (
+                        <ListNavigation
+                            id="global-variables"
+                            navigationObject={
+                                this.context.project.variables.globalVariables
+                            }
+                            selectedObject={
+                                this.context.navigationStore
+                                    .selectedGlobalVariableObject
+                            }
+                        />
+                    )
+                }
+            ];
+
+            if (this.context.projectTypeTraits.hasFlowSupport) {
+                items.push({
+                    name: NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_LOCAL,
+                    component: this.localVariables ? (
+                        <ListNavigation
+                            id="local-variables"
+                            navigationObject={this.localVariables}
+                            selectedObject={this.selectedLocalVariable}
+                        />
+                    ) : null
+                });
+
+                items.push({
+                    name: NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_STRUCTS,
+                    component: (
+                        <ListNavigation
+                            id="structs"
+                            navigationObject={
+                                this.context.project.variables.structures
+                            }
+                            selectedObject={
+                                this.context.navigationStore
+                                    .selectedStructureObject
+                            }
+                        />
+                    )
+                });
             }
 
-            return null;
+            if (!this.context.projectTypeTraits.isLVGL) {
+                items.push({
+                    name: NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_ENUMS,
+                    component: (
+                        <ListNavigation
+                            id="enums"
+                            navigationObject={
+                                this.context.project.variables.enums
+                            }
+                            selectedObject={
+                                this.context.navigationStore.selectedEnumObject
+                            }
+                        />
+                    )
+                });
+            }
+
+            return (
+                <SubNavigation
+                    id={NavigationStore.VARIABLES_SUB_NAVIGATION_ID}
+                    items={items}
+                />
+            );
         }
     }
 );

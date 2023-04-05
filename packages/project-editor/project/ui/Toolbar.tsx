@@ -7,11 +7,17 @@ import { ButtonAction, IconAction } from "eez-studio-ui/action";
 import { BuildConfiguration } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 import { PageTabState } from "project-editor/features/page/PageEditor";
-import { LayoutModels, objectToString } from "project-editor/store";
+import {
+    LayoutModels,
+    getChildren,
+    getClassInfo,
+    objectToString
+} from "project-editor/store";
 import { GlobalVariableStatuses } from "project-editor/features/variable/global-variable-status";
 import { FlowTabState } from "project-editor/flow/flow-tab-state";
 import { RuntimeType } from "project-editor/project/project-type-traits";
 import { RUN_ICON } from "project-editor/ui-components/icons";
+import { getEditorComponent } from "./EditorComponentFactory";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -117,6 +123,39 @@ const EditorButtons = observer(
                     }
                 );
 
+            let featureItems = !this.context.runtime
+                ? getChildren(this.context.project).filter(
+                      object =>
+                          getClassInfo(object).icon &&
+                          getEditorComponent(object, undefined) &&
+                          !(
+                              object == this.context.project.pages ||
+                              object == this.context.project.actions ||
+                              object == this.context.project.variables ||
+                              object == this.context.project.styles ||
+                              object == this.context.project.lvglStyles ||
+                              object == this.context.project.fonts ||
+                              object == this.context.project.bitmaps ||
+                              object == this.context.project.texts ||
+                              object == this.context.project.scpi ||
+                              object ==
+                                  this.context.project.extensionDefinitions ||
+                              object == this.context.project.changes
+                          )
+                  )
+                : undefined;
+
+            // push Settings to the end
+            if (featureItems) {
+                const settingsIndex = featureItems.findIndex(
+                    item => item == this.context.project.settings
+                );
+                if (settingsIndex != -1) {
+                    featureItems.splice(settingsIndex, 1);
+                    featureItems.push(this.context.project.settings);
+                }
+            }
+
             return (
                 <div
                     style={{
@@ -158,6 +197,40 @@ const EditorButtons = observer(
                                 onClick={() => this.context.undoManager.redo()}
                                 enabled={this.context.undoManager.canRedo}
                             />
+                        </div>
+                    )}
+
+                    {featureItems && (
+                        <div className="btn-group" role="group">
+                            {featureItems.map(item => {
+                                const title = objectToString(item);
+
+                                let icon = getClassInfo(item).icon!;
+                                if (typeof icon == "string") {
+                                    icon = "material:" + icon;
+                                }
+
+                                const onClick = action(() => {
+                                    const result = getEditorComponent(
+                                        item,
+                                        undefined
+                                    );
+                                    if (result) {
+                                        this.context.editorsStore.openEditor(
+                                            result.object,
+                                            result.subObject
+                                        );
+                                    }
+                                });
+
+                                return (
+                                    <IconAction
+                                        title={title}
+                                        icon={icon}
+                                        onClick={onClick}
+                                    />
+                                );
+                            })}
                         </div>
                     )}
 

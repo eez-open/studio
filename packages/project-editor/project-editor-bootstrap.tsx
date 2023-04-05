@@ -89,7 +89,6 @@ import {
     migrateProjectType
 } from "project-editor/project/migrate-project";
 import {
-    getNavigationComponent,
     getNavigationObject,
     navigateTo,
     selectObject
@@ -223,7 +222,6 @@ export async function initProjectEditor(
         getBitmapData,
         migrateProjectVersion,
         migrateProjectType,
-        getNavigationComponent,
         getNavigationObject,
         navigateTo,
         selectObject,
