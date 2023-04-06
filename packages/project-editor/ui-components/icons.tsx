@@ -2420,10 +2420,10 @@ export const COMPONENTS_ICON = (
     <svg viewBox="0 0 21 21">
         <g
             fill="none"
-            fill-rule="evenodd"
+            fillRule="evenodd"
             stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+            strokeLinecap="round"
+            strokeLinejoin="round"
         >
             <path d="M9.5 5.5h-4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-4M14.5 2.5v6M17.5 5.5h-6" />
         </g>

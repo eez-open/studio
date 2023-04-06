@@ -1795,6 +1795,37 @@ export class Project extends EezObject {
             }
         }
 
+        function enableTabOnBorder(
+            layoutModel: FlexLayout.Model,
+            tabId: string,
+            tabJson: FlexLayout.IJsonTabNode,
+            borderLocation: FlexLayout.DockLocation,
+            enabled: boolean
+        ) {
+            if (enabled) {
+                if (!layoutModel.getNodeById(tabId)) {
+                    const borderNode = layoutModel
+                        .getBorderSet()
+                        .getBorders()
+                        .find(border => border.getLocation() == borderLocation);
+
+                    if (borderNode) {
+                        layoutModel.doAction(
+                            FlexLayout.Actions.addNode(
+                                tabJson,
+                                borderNode.getId(),
+                                FlexLayout.DockLocation.CENTER,
+                                -1,
+                                false
+                            )
+                        );
+                    }
+                }
+            } else {
+                layoutModel.doAction(FlexLayout.Actions.deleteTab(tabId));
+            }
+        }
+
         if (projectType == undefined) {
             projectType = this.settings.general.projectType;
         }
@@ -1803,51 +1834,51 @@ export class Project extends EezObject {
             flowSupport = this.projectTypeTraits.hasFlowSupport;
         }
 
-        enableTab(
+        enableTabOnBorder(
             this._store.layoutModels.rootEditor,
             LayoutModels.FONTS_TAB_ID,
             LayoutModels.FONTS_TAB,
-            LayoutModels.STYLES_TAB_ID,
+            FlexLayout.DockLocation.RIGHT,
             this.fonts != undefined
         );
 
-        enableTab(
+        enableTabOnBorder(
             this._store.layoutModels.rootEditor,
             LayoutModels.BITMAPS_TAB_ID,
             LayoutModels.BITMAPS_TAB,
-            LayoutModels.STYLES_TAB_ID,
+            FlexLayout.DockLocation.RIGHT,
             this.bitmaps != undefined
         );
 
-        enableTab(
+        enableTabOnBorder(
             this._store.layoutModels.rootEditor,
             LayoutModels.TEXTS_TAB_ID,
             LayoutModels.TEXTS_TAB,
-            LayoutModels.STYLES_TAB_ID,
+            FlexLayout.DockLocation.LEFT,
             this.texts != undefined
         );
 
-        enableTab(
+        enableTabOnBorder(
             this._store.layoutModels.rootEditor,
             LayoutModels.SCPI_TAB_ID,
             LayoutModels.SCPI_TAB,
-            LayoutModels.STYLES_TAB_ID,
+            FlexLayout.DockLocation.LEFT,
             this.scpi != undefined
         );
 
-        enableTab(
+        enableTabOnBorder(
             this._store.layoutModels.rootEditor,
             LayoutModels.EXTENSION_DEFINITIONS_TAB_ID,
             LayoutModels.EXTENSION_DEFINITIONS_TAB,
-            LayoutModels.STYLES_TAB_ID,
+            FlexLayout.DockLocation.LEFT,
             this.extensionDefinitions != undefined
         );
 
-        enableTab(
+        enableTabOnBorder(
             this._store.layoutModels.rootEditor,
             LayoutModels.CHANGES_TAB_ID,
             LayoutModels.CHANGES_TAB,
-            LayoutModels.STYLES_TAB_ID,
+            FlexLayout.DockLocation.LEFT,
             this.changes != undefined
         );
 
