@@ -102,12 +102,12 @@ export class ProjectStore {
     layoutModels = new LayoutModels(this);
     editorModeEditorsStore = new EditorsStore(
         this,
-        () => this.layoutModels.editorModeEditors,
+        () => this.layoutModels.rootEditor,
         LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID
     );
     runtimeModeEditorsStore = new EditorsStore(
         this,
-        () => this.layoutModels.runtimeModeEditors,
+        () => this.layoutModels.rootRuntime,
         LayoutModels.RUNTIME_MODE_EDITORS_TABSET_ID
     );
     uiStateStore = new UIStateStore(this);
@@ -1115,17 +1115,6 @@ export class ProjectStore {
             this.layoutModels.root,
             LayoutModels.DEBUGGER_TAB_ID
         );
-
-        if (
-            this.navigationStore.selectedRootObject.get() !=
-                this.project.pages ||
-            this.navigationStore.selectedRootObject.get() !=
-                this.project.actions
-        ) {
-            runInAction(() => {
-                this.navigationStore.selectedRootObject.set(this.project.pages);
-            });
-        }
     };
 
     onRestart = () => {

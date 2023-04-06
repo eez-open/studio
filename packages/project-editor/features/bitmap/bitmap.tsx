@@ -308,7 +308,7 @@ export class Bitmap extends EezObject {
                 projectStore.projectTypeTraits.isLVGL ? undefined : bpp
             );
         },
-        icon: "image",
+        icon: "material:image",
         afterLoadHook: (bitmap: Bitmap, project) => {
             bitmap.migrateLvglBitmap(project._store);
         }
@@ -605,7 +605,7 @@ export default {
     key: "bitmaps",
     type: PropertyType.Array,
     typeClass: Bitmap,
-    icon: "image",
+    icon: "material:image",
     create: () => [],
     check: (object: EezObject[]) => {
         let messages: Message[] = [];

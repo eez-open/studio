@@ -142,71 +142,103 @@ export const navigateTo = action((object: IEezObject) => {
 
     let ancestor;
 
+    ancestor = getAncestorOfType(object, Page.classInfo);
+    if (ancestor) {
+        projectStore.layoutModels.selectTab(
+            projectStore.layoutModels.root,
+            LayoutModels.PAGES_TAB_ID
+        );
+
+        return;
+    }
+
     ancestor = getAncestorOfType(object, Action.classInfo);
     if (ancestor) {
-        projectStore.navigationStore.selectedRootObject.set(project.actions);
+        projectStore.layoutModels.selectTab(
+            projectStore.layoutModels.root,
+            LayoutModels.ACTIONS_TAB_ID
+        );
         return;
     }
 
     ancestor = getAncestorOfType(object, Bitmap.classInfo);
     if (ancestor) {
-        projectStore.navigationStore.selectedRootObject.set(project.bitmaps);
+        projectStore.layoutModels.selectTab(
+            projectStore.layoutModels.root,
+            LayoutModels.BITMAPS_TAB_ID
+        );
         return;
     }
 
     ancestor = getAncestorOfType(object, ExtensionDefinition.classInfo);
     if (ancestor) {
-        projectStore.navigationStore.selectedRootObject.set(
-            project.extensionDefinitions
+        projectStore.layoutModels.selectTab(
+            projectStore.layoutModels.root,
+            LayoutModels.EXTENSION_DEFINITIONS_TAB_ID
         );
         return;
     }
 
     ancestor = getAncestorOfType(object, Font.classInfo);
     if (ancestor) {
-        projectStore.navigationStore.selectedRootObject.set(project.fonts);
-        return;
-    }
-
-    ancestor = getAncestorOfType(object, Page.classInfo);
-    if (ancestor) {
-        projectStore.navigationStore.selectedRootObject.set(project.pages);
+        projectStore.layoutModels.selectTab(
+            projectStore.layoutModels.root,
+            LayoutModels.FONTS_TAB_ID
+        );
         return;
     }
 
     ancestor = getAncestorOfType(object, Scpi.classInfo);
     if (ancestor) {
-        projectStore.navigationStore.selectedRootObject.set(project.scpi);
+        projectStore.layoutModels.selectTab(
+            projectStore.layoutModels.root,
+            LayoutModels.SCPI_TAB_ID
+        );
         return;
     }
 
     ancestor = getAncestorOfType(object, Style.classInfo);
     if (ancestor) {
-        projectStore.navigationStore.selectedRootObject.set(project.styles);
+        projectStore.layoutModels.selectTab(
+            projectStore.layoutModels.root,
+            LayoutModels.STYLES_TAB_ID
+        );
         return;
     }
 
     ancestor = getAncestorOfType(object, Variable.classInfo);
     if (ancestor) {
-        projectStore.navigationStore.selectedRootObject.set(project.variables);
+        projectStore.layoutModels.selectTab(
+            projectStore.layoutModels.root,
+            LayoutModels.VARIABLES_TAB_ID
+        );
         return;
     }
 
     ancestor = getAncestorOfType(object, Structure.classInfo);
     if (ancestor) {
-        projectStore.navigationStore.selectedRootObject.set(project.variables);
+        projectStore.layoutModels.selectTab(
+            projectStore.layoutModels.root,
+            LayoutModels.VARIABLES_TAB_ID
+        );
         return;
     }
 
     ancestor = getAncestorOfType(object, Enum.classInfo);
     if (ancestor) {
-        projectStore.navigationStore.selectedRootObject.set(project.variables);
+        projectStore.layoutModels.selectTab(
+            projectStore.layoutModels.root,
+            LayoutModels.VARIABLES_TAB_ID
+        );
         return;
     }
 
     if (getAncestorOfType(object, Settings.classInfo)) {
-        // TODO
-        projectStore.navigationStore.selectedRootObject.set(project.settings);
+        // TODO Currently, it always shows general object. But, maybe object is not general.
+        projectStore.editorsStore.openEditor(
+            project.settings,
+            project.settings.general
+        );
         return;
     }
 });

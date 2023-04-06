@@ -67,6 +67,10 @@ const Content = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
+        componentDidMount() {
+            this.context.editorsStore.refresh(true);
+        }
+
         factory = (node: FlexLayout.TabNode) => {
             var component = node.getComponent();
 
@@ -132,10 +136,6 @@ const Content = observer(
                 return <ExtensionDefinitionsTab />;
             }
 
-            if (component === "editors") {
-                return <Editors />;
-            }
-
             if (this.context.runtime) {
                 if (component === "queue") {
                     return <QueuePanel runtime={this.context.runtime} />;
@@ -196,8 +196,35 @@ const Content = observer(
                         section={this.context.outputSectionsStore.getSection(
                             Section.SEARCH
                         )}
+                        showObjectIcon={true}
                     />
                 );
+            }
+
+            if (component === "editor") {
+                const editor = this.context.editorsStore.tabIdToEditorMap.get(
+                    node.getId()
+                );
+
+                node.setEventListener("visibility", (p: any) => {
+                    this.context.editorsStore.refresh(true);
+                });
+
+                node.setEventListener("close", (p: any) => {
+                    this.context.editorsStore.refresh(true);
+                });
+
+                if (editor) {
+                    let result = getEditorComponent(
+                        editor.object,
+                        editor.params
+                    );
+                    if (result) {
+                        return <result.EditorComponent editor={editor} />;
+                    }
+                }
+
+                return null;
             }
 
             return null;
@@ -259,6 +286,26 @@ const Content = observer(
                             <span></span>
                             <div className="EezStudio_AttentionDiv" />
                         </div>
+                    );
+                }
+            }
+        };
+
+        onAuxMouseClick = (
+            node:
+                | FlexLayout.TabNode
+                | FlexLayout.TabSetNode
+                | FlexLayout.BorderNode,
+            event: React.MouseEvent<HTMLElement, MouseEvent>
+        ) => {
+            if (event.button == 1) {
+                // delete tab on mouse middle click
+                if (
+                    node instanceof FlexLayout.TabNode &&
+                    node.getComponent() == "editor"
+                ) {
+                    node.getModel().doAction(
+                        FlexLayout.Actions.deleteTab(node.getId())
                     );
                 }
             }
@@ -332,116 +379,10 @@ const Content = observer(
                             font={LayoutModels.FONT}
                             onRenderTab={this.onRenderTab}
                             iconFactory={LayoutModels.iconFactory}
+                            onAuxMouseClick={this.onAuxMouseClick}
                         />
                     </div>
                 </div>
-            );
-        }
-    }
-);
-
-////////////////////////////////////////////////////////////////////////////////
-
-const Editors = observer(
-    class Editors extends React.Component {
-        static contextType = ProjectContext;
-        declare context: React.ContextType<typeof ProjectContext>;
-
-        factory = (node: FlexLayout.TabNode) => {
-            var component = node.getComponent();
-
-            if (component === "sub") {
-                var model = node.getExtraData().model;
-                if (model == null) {
-                    node.getExtraData().model = FlexLayout.Model.fromJson(
-                        node.getConfig().model
-                    );
-                    model = node.getExtraData().model;
-
-                    // save submodel on save event
-                    node.setEventListener("save", (p: any) => {
-                        this.context.layoutModels.editors.doAction(
-                            FlexLayout.Actions.updateNodeAttributes(
-                                node.getId(),
-                                {
-                                    config: {
-                                        model: node
-                                            .getExtraData()
-                                            .model.toJson()
-                                    }
-                                }
-                            )
-                        );
-                    });
-
-                    this.context.editorsStore.refresh(false);
-                }
-
-                return (
-                    <FlexLayout.Layout
-                        model={model}
-                        factory={this.factory}
-                        realtimeResize={true}
-                        font={LayoutModels.FONT_SUB}
-                        onAuxMouseClick={this.onAuxMouseClick}
-                    />
-                );
-            }
-
-            if (component === "editor") {
-                const editor = this.context.editorsStore.tabIdToEditorMap.get(
-                    node.getId()
-                );
-
-                node.setEventListener("visibility", (p: any) => {
-                    this.context.editorsStore.refresh(true);
-                });
-
-                node.setEventListener("close", (p: any) => {
-                    this.context.editorsStore.refresh(true);
-                });
-
-                if (editor) {
-                    let result = getEditorComponent(
-                        editor.object,
-                        editor.params
-                    );
-                    if (result) {
-                        return <result.EditorComponent editor={editor} />;
-                    }
-                }
-
-                return null;
-            }
-
-            return null;
-        };
-
-        onAuxMouseClick = (
-            node:
-                | FlexLayout.TabNode
-                | FlexLayout.TabSetNode
-                | FlexLayout.BorderNode,
-            event: React.MouseEvent<HTMLElement, MouseEvent>
-        ) => {
-            if (event.button == 1) {
-                // delete tab on mouse middle click
-                if (node instanceof FlexLayout.TabNode) {
-                    node.getModel().doAction(
-                        FlexLayout.Actions.deleteTab(node.getId())
-                    );
-                }
-            }
-        };
-
-        render() {
-            return (
-                <FlexLayout.Layout
-                    model={this.context.layoutModels.editors}
-                    factory={this.factory}
-                    realtimeResize={true}
-                    font={LayoutModels.FONT}
-                />
             );
         }
     }

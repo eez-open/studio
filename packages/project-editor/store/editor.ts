@@ -10,6 +10,7 @@ import {
     IEditorState
 } from "project-editor/project/ui/EditorComponent";
 import {
+    getClassInfo,
     getObjectFromStringPath,
     getObjectPathAsString,
     isObjectExists,
@@ -57,22 +58,6 @@ export class Editor implements IEditor {
     get title() {
         if (this.state && this.state.getTitle) {
             return this.state.getTitle(this);
-        }
-
-        const projectSettings = this.projectStore.project.settings;
-        if (
-            this.object === projectSettings &&
-            this.subObject &&
-            this.subObject != this.object
-        ) {
-            function getTitle(object: IEezObject): string {
-                if (object == projectSettings) {
-                    return objectToString(object);
-                }
-                const parent = getParent(object);
-                return getTitle(parent) + " / " + objectToString(object);
-            }
-            return getTitle(this.subObject);
         }
 
         const scpi = this.projectStore.project.scpi;
@@ -210,29 +195,16 @@ export class EditorsStore {
     }
 
     get tabsModel() {
-        return (
-            this.getLayoutModel()
-                .getNodeById(this.tabsetID)!
-                .getChildren()[0] as FlexLayout.TabNode
-        ).getExtraData().model as FlexLayout.Model;
-    }
-
-    get tabsSet() {
-        let tabsSet: FlexLayout.TabSetNode;
-
-        this.tabsModel.visitNodes(node => {
-            if (!tabsSet && node instanceof FlexLayout.TabSetNode) {
-                tabsSet = node;
-            }
-        });
-
-        return tabsSet!;
+        return this.getLayoutModel();
     }
 
     get tabs() {
         const tabs: FlexLayout.TabNode[] = [];
         this.tabsModel?.visitNodes(node => {
-            if (node instanceof FlexLayout.TabNode) {
+            if (
+                node instanceof FlexLayout.TabNode &&
+                node.getComponent() == "editor"
+            ) {
                 tabs.push(node);
             }
         });
@@ -293,10 +265,8 @@ export class EditorsStore {
             tabIdToEditorMap.set(tabId, editor);
 
             const parentNode = tab.getParent() as FlexLayout.TabSetNode;
-            if (parentNode.isActive()) {
-                if (parentNode.getSelectedNode() == tab) {
-                    activeEditor = editor;
-                }
+            if (parentNode.getSelectedNode() == tab) {
+                activeEditor = editor;
             }
         }
 
@@ -370,15 +340,23 @@ export class EditorsStore {
         editor.state = ProjectEditor.createEditorState(object);
 
         try {
+            let icon = getClassInfo(object).icon;
+            if (typeof icon == "string") {
+                if (!icon.startsWith("material:") && !icon.startsWith("svg:")) {
+                    icon = "material:" + icon;
+                }
+            }
+
             const tabNode = this.tabsModel.doAction(
                 FlexLayout.Actions.addNode(
                     {
                         type: "tab",
                         name: editor.title,
                         component: "editor",
-                        config: editor.getConfig()
+                        config: editor.getConfig(),
+                        icon
                     },
-                    this.tabsSet.getId(),
+                    this.tabsetID,
                     FlexLayout.DockLocation.CENTER,
                     0,
                     true

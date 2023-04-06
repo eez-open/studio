@@ -9,6 +9,7 @@ export const Panel = observer(
         title: JSX.Element | string;
         buttons?: JSX.Element[];
         body: JSX.Element | undefined;
+        style?: React.CSSProperties;
     }> {
         render() {
             let title: JSX.Element;
@@ -23,7 +24,10 @@ export const Panel = observer(
             }
 
             return (
-                <div className="EezStudio_PanelContainer">
+                <div
+                    className="EezStudio_PanelContainer"
+                    style={this.props.style}
+                >
                     <div className="EezStudio_PanelHeader">
                         <span className="EezStudio_ProjectEditorPanelTitle">
                             {title}

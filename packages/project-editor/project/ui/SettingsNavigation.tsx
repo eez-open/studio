@@ -1,5 +1,6 @@
 import { observer } from "mobx-react";
 import React from "react";
+import { computed, makeObservable } from "mobx";
 import * as FlexLayout from "flexlayout-react";
 
 import { getProperty, getParent, IEezObject } from "project-editor/core/object";
@@ -24,10 +25,12 @@ import {
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { IconAction } from "eez-studio-ui/action";
 import { Tree } from "project-editor/ui-components/Tree";
-import { computed, makeObservable } from "mobx";
 import { CodeEditor } from "eez-studio-ui/code-editor";
-import { EditorComponent } from "project-editor/project/ui/EditorComponent";
-import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
+import {
+    EditorComponent,
+    IEditor
+} from "project-editor/project/ui/EditorComponent";
+import { Icon } from "eez-studio-ui/icon";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -130,23 +133,11 @@ const ProjectFeature = observer(
                 >
                     <div className="card-body pb-5">
                         <h5 className="card-title">
-                            {typeof this.props.projectFeature.icon ==
-                            "string" ? (
-                                <i
-                                    className="material-icons card-img-top"
-                                    style={{
-                                        fontSize: 32,
-                                        display: "inline",
-                                        marginRight: 5
-                                    }}
-                                >
-                                    {this.props.projectFeature.icon}
-                                </i>
-                            ) : (
-                                <span className="EezStudio_SettingsEditor_FeatureIcon">
-                                    {this.props.projectFeature.icon}
-                                </span>
-                            )}
+                            <Icon
+                                icon={this.props.projectFeature.icon}
+                                size={32}
+                                style={{ marginRight: 5 }}
+                            />
                             {this.props.projectFeature.displayName ||
                                 this.props.projectFeature.name}
                         </h5>
@@ -176,13 +167,78 @@ export const SettingsEditor = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
-        constructor(props: any) {
-            super(props);
-
-            makeObservable(this, {
-                object: computed
+        get layoutModel() {
+            return FlexLayout.Model.fromJson({
+                global: LayoutModels.GLOBAL_OPTIONS,
+                borders: [],
+                layout: {
+                    type: "row",
+                    children: [
+                        {
+                            type: "tabset",
+                            enableTabStrip: false,
+                            enableDrag: false,
+                            enableDrop: false,
+                            enableClose: false,
+                            width: 240,
+                            children: [
+                                {
+                                    type: "tab",
+                                    enableClose: false,
+                                    component: "navigation"
+                                }
+                            ]
+                        },
+                        {
+                            type: "tabset",
+                            enableTabStrip: false,
+                            enableDrag: false,
+                            enableDrop: false,
+                            enableClose: false,
+                            children: [
+                                {
+                                    type: "tab",
+                                    enableClose: false,
+                                    component: "content"
+                                }
+                            ]
+                        }
+                    ]
+                }
             });
         }
+
+        factory = (node: FlexLayout.TabNode) => {
+            var component = node.getComponent();
+
+            if (component === "navigation") {
+                return <SettingsNavigation />;
+            }
+
+            if (component === "content") {
+                return <SettingsContent editor={this.props.editor} />;
+            }
+
+            return null;
+        };
+
+        render() {
+            return (
+                <FlexLayout.Layout
+                    model={this.layoutModel}
+                    factory={this.factory}
+                    realtimeResize={true}
+                    font={LayoutModels.FONT_SUB}
+                />
+            );
+        }
+    }
+);
+
+export const SettingsContent = observer(
+    class SettingsContent extends React.Component<{ editor: IEditor }> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
 
         get object() {
             let object =
@@ -196,7 +252,7 @@ export const SettingsEditor = observer(
             return object;
         }
 
-        get model() {
+        get layoutModel() {
             return FlexLayout.Model.fromJson({
                 global: LayoutModels.GLOBAL_OPTIONS,
                 borders: [],
@@ -226,11 +282,12 @@ export const SettingsEditor = observer(
                                     enableDrag: false,
                                     enableDrop: false,
                                     enableClose: false,
+                                    height: 120,
                                     children: [
                                         {
                                             type: "tab",
                                             enableClose: false,
-                                            component: "properties"
+                                            component: "file-properties"
                                         }
                                     ]
                                 }
@@ -248,7 +305,7 @@ export const SettingsEditor = observer(
                 return <BuildFileEditor buildFile={this.object as BuildFile} />;
             }
 
-            if (component === "properties") {
+            if (component === "file-properties") {
                 return (
                     <PropertyGrid objects={this.object ? [this.object] : []} />
                 );
@@ -302,7 +359,7 @@ export const SettingsEditor = observer(
                 ) {
                     return (
                         <FlexLayout.Layout
-                            model={this.model}
+                            model={this.layoutModel}
                             factory={this.factory}
                             realtimeResize={true}
                             font={LayoutModels.FONT_SUB}
@@ -323,9 +380,22 @@ export const SettingsEditor = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 export const SettingsNavigation = observer(
-    class SettingsNavigation extends NavigationComponent {
+    class SettingsNavigation extends React.Component {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                navigationObjectAdapter: computed,
+                treeAdapter: computed
+            });
+        }
+
+        componentDidMount() {
+            this.treeAdapter.selectItem(this.treeAdapter.allRows[0].item);
+        }
 
         static navigationTreeFilter(object: IEezObject) {
             if (object instanceof ImportDirective) {
@@ -345,13 +415,27 @@ export const SettingsNavigation = observer(
             );
         };
 
-        render() {
-            const navigationObjectAdapter = new TreeObjectAdapter(
+        get navigationObjectAdapter() {
+            return new TreeObjectAdapter(
                 this.context.project.settings,
                 undefined,
                 true // expanded
             );
+        }
 
+        get treeAdapter() {
+            return new TreeAdapter(
+                this.navigationObjectAdapter,
+                undefined,
+                SettingsNavigation.navigationTreeFilter,
+                true,
+                "none",
+                undefined,
+                this.onClick
+            );
+        }
+
+        render() {
             return (
                 <Panel
                     id="navigation"
@@ -359,18 +443,18 @@ export const SettingsNavigation = observer(
                     buttons={[
                         <AddButton
                             key="add"
-                            objectAdapter={navigationObjectAdapter}
+                            objectAdapter={this.navigationObjectAdapter}
                         />,
                         <DeleteButton
                             key="delete"
-                            objectAdapter={navigationObjectAdapter}
+                            objectAdapter={this.navigationObjectAdapter}
                         />
                     ]}
                     body={
                         <Tree
                             treeAdapter={
                                 new TreeAdapter(
-                                    navigationObjectAdapter,
+                                    this.navigationObjectAdapter,
                                     undefined,
                                     SettingsNavigation.navigationTreeFilter,
                                     true,
@@ -383,6 +467,7 @@ export const SettingsNavigation = observer(
                             onFocus={this.onFocus.bind(this)}
                         />
                     }
+                    style={{ overflow: "hidden" }}
                 />
             );
         }

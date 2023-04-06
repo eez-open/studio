@@ -282,7 +282,7 @@ export class LVGLStyles extends EezObject {
             styles: [],
             defaultStyles: {}
         },
-        icon: "format_color_fill"
+        icon: "material:format_color_fill"
     };
 
     get lvglRuntime() {
@@ -415,7 +415,7 @@ export default {
     key: "lvglStyles",
     type: PropertyType.Object,
     typeClass: LVGLStyles,
-    icon: "format_color_fill",
+    icon: "material:format_color_fill",
     create: () => {
         styles: [];
     }

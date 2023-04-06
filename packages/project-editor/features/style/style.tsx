@@ -1046,7 +1046,7 @@ export class Style extends EezObject {
         },
         getInheritedValue: (styleObject: Style, propertyName: string) =>
             getInheritedValue(styleObject, propertyName, [], false),
-        icon: "format_color_fill",
+        icon: "material:format_color_fill",
         defaultValue: {},
         check: (style: Style) => {
             let messages: Message[] = [];
@@ -2055,7 +2055,7 @@ export default {
     key: "styles",
     type: PropertyType.Array,
     typeClass: Style,
-    icon: "format_color_fill",
+    icon: "material:format_color_fill",
     create: () => [],
     afterLoadProject: (project: Project) => {
         if (project.themes) {

@@ -451,7 +451,7 @@ export class Page extends Flow {
 
             return page;
         },
-        icon: "filter",
+        icon: "svg:page",
         check: (page: Page) => {
             let messages: Message[] = [];
 
@@ -1008,6 +1008,6 @@ export default {
     key: "pages",
     type: PropertyType.Array,
     typeClass: Page,
-    icon: "filter",
+    icon: "svg:pages",
     create: () => []
 };

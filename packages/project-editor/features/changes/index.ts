@@ -32,7 +32,7 @@ export default {
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
     displayName: "Changes",
     mandatory: false,
-    key: "changes",
+    key: "material:changes",
     type: PropertyType.Object,
     typeClass: Changes,
     icon: CHANGES_ICON,

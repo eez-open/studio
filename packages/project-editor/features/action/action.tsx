@@ -169,7 +169,7 @@ export class Action extends Flow {
 
             return action;
         },
-        icon: "code"
+        icon: "material:code"
     });
 
     get rect() {
@@ -220,7 +220,7 @@ export default {
     key: "actions",
     type: PropertyType.Array,
     typeClass: Action,
-    icon: "code",
+    icon: "material:code",
     create: () => [],
     check: (object: EezObject[]) => {
         let messages: Message[] = [];

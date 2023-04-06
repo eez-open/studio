@@ -656,6 +656,10 @@ input::placeholder {
 }
 
 button.EezStudio_Action {
+    &:active {
+        transform: translate(1px, 1px);
+    }
+
     &:not(.btn-outline-success, .btn-outline-danger) {
         border: none;
     }
@@ -3407,8 +3411,6 @@ button.EezStudio_Action {
 
         cursor: pointer;
         white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
 
         small {
             margin-right: 5px;
@@ -6065,4 +6067,9 @@ button.EezStudio_Action {
         flex-grow: 1;
         overflow: hidden;
     }
+}
+
+.flexlayout__tab_button_leading .EezStudio_Icon {
+    fill: @textColor;
+    opacity: 0.7;
 }

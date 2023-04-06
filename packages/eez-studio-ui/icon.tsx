@@ -2,7 +2,42 @@ import React from "react";
 import { observer } from "mobx-react";
 import classnames from "classnames";
 
+import {
+    LANGUAGE_ICON,
+    CHANGES_ICON,
+    VARIABLE_ICON,
+    HIERARCHY_ICON,
+    PROPERTIES_ICON,
+    COMPONENTS_ICON,
+    PALETTE_ICON,
+    PAGES_ICON,
+    PAGE_ICON,
+    LOG_ICON,
+    WATCH_PANEL_ICON,
+    QUEUE_PANEL_ICON,
+    ACTIVE_FLOWS_PANEL_ICON,
+    BREAKPOINTS_PANEL_ICON
+} from "project-editor/ui-components/icons";
+
 const MATERIAL_PREFIX = "material:";
+const SVG_PREFIX = "svg:";
+
+const SVG_ICONS: { [icon: string]: JSX.Element } = {
+    language: LANGUAGE_ICON,
+    changes: CHANGES_ICON,
+    variable: VARIABLE_ICON,
+    hierarchy: HIERARCHY_ICON,
+    properties: PROPERTIES_ICON,
+    components: COMPONENTS_ICON,
+    palette: PALETTE_ICON,
+    pages: PAGES_ICON,
+    page: PAGE_ICON,
+    log: LOG_ICON,
+    watch_panel: WATCH_PANEL_ICON,
+    queue_panel: QUEUE_PANEL_ICON,
+    active_flows_panel: ACTIVE_FLOWS_PANEL_ICON,
+    breakpoints_panel: BREAKPOINTS_PANEL_ICON
+};
 
 export const Icon = observer(
     class Icon extends React.Component<
@@ -19,11 +54,17 @@ export const Icon = observer(
         {}
     > {
         render() {
-            const { icon, size, style, className, onClick } = this.props;
+            const { size, style, className, onClick } = this.props;
+
+            let icon = this.props.icon;
 
             let iconSize = size || 24;
 
             let result;
+
+            if (typeof icon === "string" && icon.startsWith(SVG_PREFIX)) {
+                icon = SVG_ICONS[icon.substring(4)];
+            }
 
             if (typeof icon === "string") {
                 if (icon.startsWith(MATERIAL_PREFIX)) {

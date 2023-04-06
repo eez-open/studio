@@ -24,8 +24,6 @@ export interface IPanel {
 export class NavigationStore {
     selectedPanel: IPanel | undefined;
 
-    selectedRootObject = observable.box<IEezObject>();
-
     selectedPageObject = observable.box<IEezObject>();
     selectedActionObject = observable.box<IEezObject>();
     selectedGlobalVariableObject = observable.box<IEezObject>();
@@ -72,45 +70,6 @@ export class NavigationStore {
     }
 
     loadState(state: any) {
-        let selectedRootObject: IEezObject | undefined;
-
-        if (state && state.selectedRootObject) {
-            selectedRootObject = this.projectStore.getObjectFromStringPath(
-                state.selectedRootObject
-            );
-        }
-
-        if (!selectedRootObject) {
-            selectedRootObject =
-                this.projectStore.project.readme ||
-                this.projectStore.project.pages ||
-                this.projectStore.project.settings;
-
-            let editorObject: IEezObject | undefined;
-            if (this.projectStore.project.readme) {
-                selectedRootObject = this.projectStore.project.readme;
-                editorObject = selectedRootObject;
-            } else if (this.projectStore.project.changes) {
-                selectedRootObject = this.projectStore.project.changes;
-                editorObject = selectedRootObject;
-            } else if (this.projectStore.project.pages) {
-                selectedRootObject = this.projectStore.project.pages;
-                if (this.projectStore.project.pages.length > 0) {
-                    editorObject = this.projectStore.project.pages[0];
-                }
-            } else {
-                selectedRootObject = this.projectStore.project.settings;
-                editorObject = selectedRootObject;
-            }
-
-            if (editorObject) {
-                setTimeout(() => {
-                    this.showObjects([editorObject!], true, true, true);
-                }, 50);
-            }
-        }
-        this.selectedRootObject.set(selectedRootObject);
-
         if (state) {
             if (state.selectedPageObject) {
                 this.selectedPageObject.set(
@@ -257,9 +216,6 @@ export class NavigationStore {
 
     saveState() {
         return {
-            selectedRootObject: this.selectedRootObject.get()
-                ? getObjectPathAsString(this.selectedRootObject.get())
-                : undefined,
             selectedPageObject: this.selectedPageObject.get()
                 ? getObjectPathAsString(this.selectedPageObject.get())
                 : undefined,

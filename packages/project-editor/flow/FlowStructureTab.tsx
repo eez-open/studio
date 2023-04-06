@@ -2,18 +2,11 @@ import React from "react";
 import { computed, observable, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
-import { SubNavigation } from "project-editor/ui-components/SubNavigation";
 import { ProjectContext } from "project-editor/project/context";
 import { Page } from "project-editor/features/page/page";
 import { Action } from "project-editor/features/action/action";
 import { IEezObject } from "project-editor/core/object";
-import { IPanel, NavigationStore } from "project-editor/store/navigation";
 import { PageStructure } from "project-editor/features/page/PagesNavigation";
-import { ProjectEditor } from "project-editor/project-editor-interface";
-import { FlowTabState } from "project-editor/flow/flow-tab-state";
-import { TreeAdapter } from "project-editor/core/objectAdapter";
-import { CommentActionComponent } from "project-editor/flow/components/actions";
-import { Tree } from "project-editor/ui-components/Tree";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -43,30 +36,33 @@ export const FlowStructureTab = observer(
 
             return undefined;
         }
-        render() {
-            if (!this.context.projectTypeTraits.hasFlowSupport) {
-                return <PageStructure />;
-            }
 
-            return (
-                <SubNavigation
-                    id={NavigationStore.FLOW_STRUCTURE_SUB_NAVIGATION_ID}
-                    items={[
-                        {
-                            name: NavigationStore.FLOW_STRUCTURE_SUB_NAVIGATION_ITEM_WIDGETS,
-                            component: <PageStructure />
-                        },
-                        {
-                            name: NavigationStore.FLOW_STRUCTURE_SUB_NAVIGATION_ITEM_ACTIONS,
-                            component: <ActionComponents />
-                        }
-                    ]}
-                />
-            );
+        render() {
+            return <PageStructure />;
+            // if (!this.context.projectTypeTraits.hasFlowSupport) {
+            //     return <PageStructure />;
+            // }
+
+            // return (
+            //     <SubNavigation
+            //         id={NavigationStore.FLOW_STRUCTURE_SUB_NAVIGATION_ID}
+            //         items={[
+            //             {
+            //                 name: NavigationStore.FLOW_STRUCTURE_SUB_NAVIGATION_ITEM_WIDGETS,
+            //                 component: <PageStructure />
+            //             },
+            //             {
+            //                 name: NavigationStore.FLOW_STRUCTURE_SUB_NAVIGATION_ITEM_ACTIONS,
+            //                 component: <ActionComponents />
+            //             }
+            //         ]}
+            //     />
+            // );
         }
     }
 );
 
+/*
 const ActionComponents = observer(
     class ActionComponents extends React.Component implements IPanel {
         static contextType = ProjectContext;
@@ -191,3 +187,4 @@ const ActionComponents = observer(
         }
     }
 );
+*/

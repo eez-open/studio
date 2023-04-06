@@ -4,20 +4,8 @@ import { observer } from "mobx-react";
 
 import { ProjectContext } from "project-editor/project/context";
 import { EditorComponent } from "project-editor/project/ui/EditorComponent";
-import { NavigationComponent } from "project-editor/project/ui/NavigationComponent";
 import { IPanel } from "project-editor/store";
 import { readTextFile } from "eez-studio-shared/util-electron";
-
-export const ReadmeNavigation = observer(
-    class ReadmeNavigation extends NavigationComponent {
-        static contextType = ProjectContext;
-        declare context: React.ContextType<typeof ProjectContext>;
-
-        render() {
-            return null;
-        }
-    }
-);
 
 export const ReadmeEditor = observer(
     class ReadmeEditor extends EditorComponent implements IPanel {

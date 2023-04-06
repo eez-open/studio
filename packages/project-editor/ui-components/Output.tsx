@@ -9,12 +9,15 @@ import {
     IPanel,
     Message as OutputMessage,
     objectToString,
-    OutputSection
+    OutputSection,
+    getClassInfo,
+    EezValueObject
 } from "project-editor/store";
 
 import { ProjectContext } from "project-editor/project/context";
 import {
     getAncestors,
+    getParent,
     IEezObject,
     MessageType
 } from "project-editor/core/object";
@@ -29,6 +32,7 @@ export const Messages = observer(
     class Messages
         extends React.Component<{
             section: OutputSection;
+            showObjectIcon?: boolean;
         }>
         implements IPanel
     {
@@ -97,6 +101,7 @@ export const Messages = observer(
                                     key={message.id}
                                     message={message}
                                     onSelect={this.onSelectMessage}
+                                    showObjectIcon={this.props.showObjectIcon}
                                 />
                             ))}
                         </tbody>
@@ -114,23 +119,51 @@ const Message = observer(
         {
             message: OutputMessage;
             onSelect: (message: OutputMessage) => void;
+            showObjectIcon?: boolean;
         },
         {}
     > {
         render() {
-            let iconName = "material:";
-            let iconClassName;
-            if (this.props.message.type == MessageType.ERROR) {
-                iconName += "error";
-                iconClassName = "error";
-            } else if (this.props.message.type == MessageType.WARNING) {
-                iconName += "warning";
-                iconClassName = "warning";
-            } else {
-                iconName += "info";
+            let icon;
+
+            if (this.props.showObjectIcon && this.props.message.object) {
+                let iconName;
+                let iconClassName;
+
+                if (this.props.message.object instanceof EezValueObject) {
+                    iconName = getClassInfo(
+                        getParent(this.props.message.object)
+                    ).icon;
+                } else {
+                    iconName = getClassInfo(this.props.message.object).icon;
+                }
+                if (!iconName) {
+                    iconName = "material:info";
+                }
                 iconClassName = "info";
+                icon = (
+                    <Icon
+                        icon={iconName}
+                        className={iconClassName}
+                        size={20}
+                        style={{ marginRight: 5 }}
+                    />
+                );
+            } else {
+                let iconName = "material:";
+                let iconClassName;
+                if (this.props.message.type == MessageType.ERROR) {
+                    iconName += "error";
+                    iconClassName = "error";
+                } else if (this.props.message.type == MessageType.WARNING) {
+                    iconName += "warning";
+                    iconClassName = "warning";
+                } else {
+                    iconName += "info";
+                    iconClassName = "info";
+                }
+                icon = <Icon icon={iconName} className={iconClassName} />;
             }
-            let icon = <Icon icon={iconName} className={iconClassName} />;
 
             let objectPath: JSX.Element | undefined;
             if (this.props.message.object) {

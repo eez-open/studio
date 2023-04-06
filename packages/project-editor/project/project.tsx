@@ -969,7 +969,7 @@ export class Settings extends EezObject {
             }
         ],
         hideInProperties: true,
-        icon: "settings"
+        icon: "material:settings"
     };
 
     constructor() {

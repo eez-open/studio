@@ -29,6 +29,8 @@ interface SplitterProps {
     splitterSize?: number;
 
     resizeable?: boolean;
+
+    style?: React.CSSProperties;
 }
 
 interface IDraggableParams {
@@ -456,11 +458,15 @@ export const Splitter = observer(
 
             ////////////////////////////////////////////////////////////////////////////////
 
-            let style: React.CSSProperties = {
-                overflow: this.props.overflow || "hidden",
-                flexGrow: 1,
-                position: "relative"
-            };
+            let style: React.CSSProperties = Object.assign(
+                {},
+                this.props.style,
+                {
+                    overflow: this.props.overflow || "hidden",
+                    flexGrow: 1,
+                    position: "relative"
+                }
+            );
 
             const className = classNames(
                 this.props.type === "horizontal"

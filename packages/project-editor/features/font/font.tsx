@@ -1423,7 +1423,7 @@ export class Font extends EezObject {
                 return undefined;
             }
         },
-        icon: "font_download"
+        icon: "material:font_download"
     };
 
     get glyphsMap() {
@@ -1584,7 +1584,7 @@ export default {
     key: "fonts",
     type: PropertyType.Array,
     typeClass: Font,
-    icon: "font_download",
+    icon: "material:font_download",
     create: () => [],
     check: (object: EezObject[]) => {
         let messages: Message[] = [];

@@ -290,7 +290,7 @@ export class ExtensionDefinition extends EezObject {
             return extensionDefinition;
         },
         hideInProperties: true,
-        icon: "extension",
+        icon: "material:extension",
         check: (object: ExtensionDefinition) => {
             let messages: Message[] = [];
 
@@ -384,7 +384,7 @@ export default {
     key: "extensionDefinitions",
     type: PropertyType.Array,
     typeClass: ExtensionDefinition,
-    icon: "extension",
+    icon: "material:extension",
     create: () => {
         return [];
     },

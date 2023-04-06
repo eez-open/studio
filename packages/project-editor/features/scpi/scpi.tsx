@@ -909,7 +909,7 @@ export class Scpi extends EezObject {
                 hideInPropertyGrid: true
             }
         ],
-        icon: "navigate_next"
+        icon: "material:navigate_next"
     };
 
     constructor() {
@@ -937,7 +937,7 @@ export default {
     key: "scpi",
     type: PropertyType.Object,
     typeClass: Scpi,
-    icon: "navigate_next",
+    icon: "material:navigate_next",
     create: () => {
         return {
             subsystems: [],

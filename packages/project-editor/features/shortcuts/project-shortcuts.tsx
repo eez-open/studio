@@ -284,7 +284,7 @@ export class Shortcuts extends EezObject {
             }
         ],
         hideInProperties: true,
-        icon: "playlist_play"
+        icon: "material:playlist_play"
     };
 
     constructor() {
@@ -312,7 +312,7 @@ export default {
     key: "shortcuts",
     type: PropertyType.Object,
     typeClass: Shortcuts,
-    icon: "playlist_play",
+    icon: "material:playlist_play",
     create: () => {
         return {
             shortcuts: []

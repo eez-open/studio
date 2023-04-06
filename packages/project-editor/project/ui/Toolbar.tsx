@@ -18,6 +18,7 @@ import { FlowTabState } from "project-editor/flow/flow-tab-state";
 import { RuntimeType } from "project-editor/project/project-type-traits";
 import { RUN_ICON } from "project-editor/ui-components/icons";
 import { getEditorComponent } from "./EditorComponentFactory";
+import { getId } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -200,40 +201,6 @@ const EditorButtons = observer(
                         </div>
                     )}
 
-                    {featureItems && (
-                        <div className="btn-group" role="group">
-                            {featureItems.map(item => {
-                                const title = objectToString(item);
-
-                                let icon = getClassInfo(item).icon!;
-                                if (typeof icon == "string") {
-                                    icon = "material:" + icon;
-                                }
-
-                                const onClick = action(() => {
-                                    const result = getEditorComponent(
-                                        item,
-                                        undefined
-                                    );
-                                    if (result) {
-                                        this.context.editorsStore.openEditor(
-                                            result.object,
-                                            result.subObject
-                                        );
-                                    }
-                                });
-
-                                return (
-                                    <IconAction
-                                        title={title}
-                                        icon={icon}
-                                        onClick={onClick}
-                                    />
-                                );
-                            })}
-                        </div>
-                    )}
-
                     {!this.context.runtime &&
                         this.isBuildConfigurationSelectorVisible && (
                             <div className="btn-group">
@@ -368,6 +335,38 @@ const EditorButtons = observer(
                                 <SelectLanguage />
                             </div>
                         )}
+
+                    {featureItems && (
+                        <div className="btn-group" role="group">
+                            {featureItems.map(featureItem => {
+                                const title = objectToString(featureItem);
+
+                                let icon = getClassInfo(featureItem).icon!;
+
+                                const onClick = action(() => {
+                                    const result = getEditorComponent(
+                                        featureItem,
+                                        undefined
+                                    );
+                                    if (result) {
+                                        this.context.editorsStore.openEditor(
+                                            result.object,
+                                            result.subObject
+                                        );
+                                    }
+                                });
+
+                                return (
+                                    <IconAction
+                                        key={getId(featureItem)}
+                                        title={title}
+                                        icon={icon}
+                                        onClick={onClick}
+                                    />
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             );
         }
