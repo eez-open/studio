@@ -1,6 +1,7 @@
 import React from "react";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
+import { Menu, MenuItem } from "@electron/remote";
 
 import { Messages } from "project-editor/ui-components/Output";
 
@@ -33,6 +34,8 @@ import { TextsTab } from "project-editor/features/texts/navigation";
 import { ScpiTab } from "project-editor/features/scpi/ScpiNavigation";
 import { ExtensionDefinitionsTab } from "project-editor/features/extension-definitions/extension-definitions";
 import { ChangesTab } from "project-editor/features/changes/navigation";
+import classNames from "classnames";
+import { runInAction } from "mobx";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -289,6 +292,21 @@ const Content = observer(
                     );
                 }
             }
+
+            if (node.getComponent() == "editor") {
+                const editor = this.context.editorsStore.tabIdToEditorMap.get(
+                    node.getId()
+                );
+                renderValues.content = (
+                    <div
+                        className={classNames({
+                            "fst-italic": !editor?.permanent
+                        })}
+                    >
+                        {node.getName()}
+                    </div>
+                );
+            }
         };
 
         onAuxMouseClick = (
@@ -298,15 +316,56 @@ const Content = observer(
                 | FlexLayout.BorderNode,
             event: React.MouseEvent<HTMLElement, MouseEvent>
         ) => {
-            if (event.button == 1) {
-                // delete tab on mouse middle click
-                if (
-                    node instanceof FlexLayout.TabNode &&
-                    node.getComponent() == "editor"
-                ) {
+            if (
+                node instanceof FlexLayout.TabNode &&
+                node.getComponent() == "editor"
+            ) {
+                if (event.button == 1) {
+                    // delete tab on mouse middle click
                     node.getModel().doAction(
                         FlexLayout.Actions.deleteTab(node.getId())
                     );
+                }
+            }
+        };
+
+        onContextMenu = (
+            node:
+                | FlexLayout.TabNode
+                | FlexLayout.TabSetNode
+                | FlexLayout.BorderNode,
+            event: React.MouseEvent<HTMLElement, MouseEvent>
+        ) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (
+                node instanceof FlexLayout.TabNode &&
+                node.getComponent() == "editor"
+            ) {
+                const editor = this.context.editorsStore.tabIdToEditorMap.get(
+                    node.getId()
+                );
+                if (editor && !editor.permanent) {
+                    // open context menu
+                    const menu = new Menu();
+                    menu.append(
+                        new MenuItem({
+                            label: "Keep Tab Open",
+                            click: () => {
+                                runInAction(() => (editor.permanent = true));
+                                this.context.layoutModels.root.doAction(
+                                    FlexLayout.Actions.updateNodeAttributes(
+                                        node.getId(),
+                                        {
+                                            config: editor.getConfig()
+                                        }
+                                    )
+                                );
+                            }
+                        })
+                    );
+                    menu.popup();
                 }
             }
         };
@@ -380,6 +439,7 @@ const Content = observer(
                             onRenderTab={this.onRenderTab}
                             iconFactory={LayoutModels.iconFactory}
                             onAuxMouseClick={this.onAuxMouseClick}
+                            onContextMenu={this.onContextMenu}
                         />
                     </div>
                 </div>

@@ -667,7 +667,7 @@ export const Canvas = observer(
                                 this.mouseHandler = undefined;
                             }
 
-                            menu.popup({});
+                            menu.popup();
                         }
                     }, 0);
                 }

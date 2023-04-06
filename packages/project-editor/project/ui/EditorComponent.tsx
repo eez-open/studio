@@ -16,6 +16,7 @@ export interface IEditor {
     subObject?: IEezObject;
     params?: any;
     state: IEditorState | undefined;
+    permanent: boolean;
 
     getConfig(): any;
 }

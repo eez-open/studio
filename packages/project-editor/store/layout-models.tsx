@@ -270,7 +270,7 @@ export class LayoutModels {
         return [
             {
                 name: "rootEditor",
-                version: 86,
+                version: 87,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: this.borders,
@@ -279,7 +279,7 @@ export class LayoutModels {
                         children: [
                             {
                                 type: "row",
-                                weight: 15,
+                                weight: 20,
                                 children: [
                                     {
                                         type: "tabset",

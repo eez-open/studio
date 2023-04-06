@@ -28,6 +28,7 @@ export class Editor implements IEditor {
     subObject: IEezObject | undefined;
     params: any;
     state: IEditorState | undefined;
+    permanent: boolean = false;
 
     loading = false;
 
@@ -50,6 +51,7 @@ export class Editor implements IEditor {
             subObject: observable,
             state: observable,
             params: observable,
+            permanent: observable,
             title: computed,
             makeActive: action
         });
@@ -99,7 +101,8 @@ export class Editor implements IEditor {
             subObjectPath: this.subObject
                 ? getObjectPathAsString(this.subObject)
                 : undefined,
-            params: this.params
+            params: this.params,
+            permanent: this.permanent
         };
     }
 
@@ -149,6 +152,7 @@ type IEditorTabConfig =
           objectPath: string;
           subObjectPath: string | undefined;
           params: any;
+          permanent: boolean;
       };
 
 export class EditorsStore {
@@ -224,6 +228,7 @@ export class EditorsStore {
             let object: IEezObject;
             let subObject: IEezObject | undefined;
             let params: any;
+            let permanent: boolean;
             if (typeof tabConfig == "string") {
                 object = getObjectFromStringPath(
                     this.projectStore.project,
@@ -231,6 +236,7 @@ export class EditorsStore {
                 );
                 subObject = undefined;
                 params = undefined;
+                permanent = false;
             } else {
                 object = getObjectFromStringPath(
                     this.projectStore.project,
@@ -243,6 +249,7 @@ export class EditorsStore {
                       )
                     : undefined;
                 params = tabConfig.params;
+                permanent = tabConfig.permanent;
             }
 
             if (!object) {
@@ -259,6 +266,7 @@ export class EditorsStore {
                 editor.subObject = subObject;
                 editor.params = params;
                 editor.state = ProjectEditor.createEditorState(object);
+                editor.permanent = permanent;
             }
 
             editors.push(editor);
@@ -326,6 +334,7 @@ export class EditorsStore {
                     editorFound.title
                 )
             );
+
             return editorFound;
         }
 
@@ -347,21 +356,44 @@ export class EditorsStore {
                 }
             }
 
-            const tabNode = this.tabsModel.doAction(
-                FlexLayout.Actions.addNode(
-                    {
+            for (let i = 0; i < editors.length; i++) {
+                if (!editors[i].permanent) {
+                    editorFound = editors[i];
+                    break;
+                }
+            }
+
+            let tabNode;
+            if (editorFound) {
+                this.tabsModel.doAction(
+                    FlexLayout.Actions.updateNodeAttributes(editorFound.tabId, {
                         type: "tab",
                         name: editor.title,
                         component: "editor",
                         config: editor.getConfig(),
                         icon
-                    },
-                    this.tabsetID,
-                    FlexLayout.DockLocation.CENTER,
-                    0,
-                    true
-                )
-            ) as FlexLayout.TabNode;
+                    })
+                );
+                tabNode = this.tabsModel.getNodeById(
+                    editorFound.tabId
+                ) as FlexLayout.TabNode;
+            } else {
+                tabNode = this.tabsModel.doAction(
+                    FlexLayout.Actions.addNode(
+                        {
+                            type: "tab",
+                            name: editor.title,
+                            component: "editor",
+                            config: editor.getConfig(),
+                            icon
+                        },
+                        this.tabsetID,
+                        FlexLayout.DockLocation.CENTER,
+                        0,
+                        true
+                    )
+                ) as FlexLayout.TabNode;
+            }
 
             editor.tabId = tabNode.getId();
 
