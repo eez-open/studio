@@ -370,6 +370,13 @@ const Content = observer(
             }
         };
 
+        onModelChange = (
+            model: FlexLayout.Model,
+            action: FlexLayout.Action
+        ) => {
+            this.context.editorsStore.refresh(false);
+        };
+
         render() {
             if (
                 this.context.runtime &&
@@ -440,6 +447,7 @@ const Content = observer(
                             iconFactory={LayoutModels.iconFactory}
                             onAuxMouseClick={this.onAuxMouseClick}
                             onContextMenu={this.onContextMenu}
+                            onModelChange={this.onModelChange}
                         />
                     </div>
                 </div>

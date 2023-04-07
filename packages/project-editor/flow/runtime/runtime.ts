@@ -146,7 +146,6 @@ export abstract class RuntimeBase {
         this.selectedPageTimeout = setTimeout(() => {
             if (this.isDebuggerActive && !this.isPaused) {
                 this.projectStore.editorsStore.openEditor(this.selectedPage);
-                this.projectStore.editorsStore.refresh(true);
             }
         }, 50);
     }

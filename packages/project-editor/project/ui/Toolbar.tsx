@@ -1,5 +1,5 @@
 import React from "react";
-import { action, makeObservable } from "mobx";
+import { action, computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 import { startSearch } from "project-editor/core/search";
@@ -66,6 +66,14 @@ const EditorButtons = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                featureItems: computed
+            });
+        }
+
         setFrontFace = action((enabled: boolean) => {
             if (this.pageTabState) {
                 this.pageTabState.frontFace = enabled;
@@ -112,39 +120,29 @@ const EditorButtons = observer(
             return false;
         }
 
-        render() {
-            let configurations =
-                this.context.project.settings.build.configurations.map(
-                    (item: BuildConfiguration) => {
-                        return (
-                            <option key={item.name} value={item.name}>
-                                {objectToString(item)}
-                            </option>
-                        );
-                    }
-                );
+        get featureItems() {
+            if (this.context.runtime) {
+                return undefined;
+            }
 
-            let featureItems = !this.context.runtime
-                ? getChildren(this.context.project).filter(
-                      object =>
-                          getClassInfo(object).icon &&
-                          getEditorComponent(object, undefined) &&
-                          !(
-                              object == this.context.project.pages ||
-                              object == this.context.project.actions ||
-                              object == this.context.project.variables ||
-                              object == this.context.project.styles ||
-                              object == this.context.project.lvglStyles ||
-                              object == this.context.project.fonts ||
-                              object == this.context.project.bitmaps ||
-                              object == this.context.project.texts ||
-                              object == this.context.project.scpi ||
-                              object ==
-                                  this.context.project.extensionDefinitions ||
-                              object == this.context.project.changes
-                          )
-                  )
-                : undefined;
+            let featureItems = getChildren(this.context.project).filter(
+                object =>
+                    getClassInfo(object).icon &&
+                    getEditorComponent(object, undefined) &&
+                    !(
+                        object == this.context.project.pages ||
+                        object == this.context.project.actions ||
+                        object == this.context.project.variables ||
+                        object == this.context.project.styles ||
+                        object == this.context.project.lvglStyles ||
+                        object == this.context.project.fonts ||
+                        object == this.context.project.bitmaps ||
+                        object == this.context.project.texts ||
+                        object == this.context.project.scpi ||
+                        object == this.context.project.extensionDefinitions ||
+                        object == this.context.project.changes
+                    )
+            );
 
             // push Settings to the end
             if (featureItems) {
@@ -156,6 +154,21 @@ const EditorButtons = observer(
                     featureItems.push(this.context.project.settings);
                 }
             }
+
+            return featureItems;
+        }
+
+        render() {
+            let configurations =
+                this.context.project.settings.build.configurations.map(
+                    (item: BuildConfiguration) => {
+                        return (
+                            <option key={item.name} value={item.name}>
+                                {objectToString(item)}
+                            </option>
+                        );
+                    }
+                );
 
             return (
                 <div
@@ -336,9 +349,9 @@ const EditorButtons = observer(
                             </div>
                         )}
 
-                    {featureItems && (
+                    {this.featureItems && (
                         <div className="btn-group" role="group">
-                            {featureItems.map(featureItem => {
+                            {this.featureItems.map(featureItem => {
                                 const title = objectToString(featureItem);
 
                                 let icon = getClassInfo(featureItem).icon!;

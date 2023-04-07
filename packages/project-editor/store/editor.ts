@@ -273,7 +273,10 @@ export class EditorsStore {
             tabIdToEditorMap.set(tabId, editor);
 
             const parentNode = tab.getParent() as FlexLayout.TabSetNode;
-            if (parentNode.getSelectedNode() == tab) {
+            if (
+                (!activeEditor && parentNode.getSelectedNode() == tab) ||
+                (parentNode.isActive() && parentNode.getSelectedNode() == tab)
+            ) {
                 activeEditor = editor;
             }
         }
@@ -365,6 +368,11 @@ export class EditorsStore {
 
             let tabNode;
             if (editorFound) {
+                let index = this.editors.indexOf(editorFound);
+                if (index != -1) {
+                    this.editors.splice(index, 1);
+                }
+
                 this.tabsModel.doAction(
                     FlexLayout.Actions.updateNodeAttributes(editorFound.tabId, {
                         type: "tab",
@@ -400,6 +408,12 @@ export class EditorsStore {
             this.tabIdToEditorMap.set(editor.tabId, editor);
 
             this.tabsModel.doAction(FlexLayout.Actions.selectTab(editor.tabId));
+
+            runInAction(() => {
+                this.activeEditor = editor;
+            });
+
+            this.refresh(true);
         } catch (err) {}
 
         return editor;

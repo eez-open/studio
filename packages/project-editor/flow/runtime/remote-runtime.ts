@@ -375,7 +375,6 @@ export class RemoteRuntime extends RuntimeBase {
 
             if (this.isDebuggerActive) {
                 this.projectStore.editorsStore.openEditor(this.selectedPage);
-                this.projectStore.editorsStore.refresh(true);
             }
         }
     }
