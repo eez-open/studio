@@ -360,7 +360,10 @@ export class EditorsStore {
             }
 
             for (let i = 0; i < editors.length; i++) {
-                if (!editors[i].permanent) {
+                if (
+                    !editors[i].permanent &&
+                    getClassInfo(editors[i].object) == getClassInfo(object)
+                ) {
                     editorFound = editors[i];
                     break;
                 }
