@@ -66,10 +66,7 @@ import { drawBackground } from "project-editor/flow/editor/draw";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
 import { LVGLPage } from "project-editor/lvgl/Page";
 import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import {
-    LVGLCreateResultType,
-    LVGLStylesDefinitionProperty
-} from "project-editor/lvgl/LVGLStylesDefinitionProperty";
+import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import type { LVGLBuild } from "project-editor/lvgl/build";
 import { visitObjects } from "project-editor/core/search";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
@@ -336,8 +333,7 @@ export class Page extends Flow {
             {
                 name: "isUsedAsCustomWidget",
                 type: PropertyType.Boolean,
-                propertyGridGroup: generalGroup,
-                hideInPropertyGrid: isLVGLProject
+                propertyGridGroup: generalGroup
             },
             {
                 name: "closePageIfTouchedOutside",
@@ -885,25 +881,43 @@ export class Page extends Flow {
 
     lvglCreate(
         runtime: LVGLPageRuntime,
-        parentObj: number
-    ): LVGLCreateResultType {
-        const obj = runtime.wasm._lvglCreateContainer(
-            parentObj,
-            runtime.getWidgetIndex(this),
-            this.left,
-            this.top,
-            this.width,
-            this.height
-        );
+        parentObj: number,
+        customWidget?: {
+            widgetIndex: number;
+            left: number;
+            top: number;
+            width: number;
+            height: number;
+        }
+    ) {
+        const obj = customWidget
+            ? runtime.wasm._lvglCreateUserWidget(
+                  parentObj,
+                  customWidget.widgetIndex,
+                  customWidget.left,
+                  customWidget.top,
+                  customWidget.width,
+                  customWidget.height
+              )
+            : runtime.wasm._lvglCreateContainer(
+                  parentObj,
+                  runtime.getWidgetIndex(this),
+                  this.left,
+                  this.top,
+                  this.width,
+                  this.height
+              );
 
-        runtime.wasm._lvglObjClearFlag(
-            obj,
-            getCode(["SCROLLABLE"], LVGL_FLAG_CODES)
-        );
+        if (!customWidget) {
+            runtime.wasm._lvglObjClearFlag(
+                obj,
+                getCode(["SCROLLABLE"], LVGL_FLAG_CODES)
+            );
+        }
 
         this.lvglLocalStyles.lvglCreate(runtime, this, obj);
 
-        const children = this.components
+        this.components
             .filter(component => component instanceof Widget)
             .map((widget: Widget) => widget.lvglCreate(runtime, obj));
 
@@ -911,10 +925,7 @@ export class Page extends Flow {
             lvglWidget.lvglPostCreate(runtime)
         );
 
-        return {
-            obj,
-            children
-        };
+        return obj;
     }
 
     lvglBuild(build: LVGLBuild) {

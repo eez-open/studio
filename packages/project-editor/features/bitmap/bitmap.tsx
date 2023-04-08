@@ -172,7 +172,8 @@ export class Bitmap extends EezObject {
                 name: "image",
                 type: PropertyType.Image,
                 skipSearch: true,
-                disableBitmapPreview: true
+                disableBitmapPreview: true,
+                embeddedImage: true
             },
             {
                 name: "bpp",
@@ -311,6 +312,15 @@ export class Bitmap extends EezObject {
         icon: "material:image",
         afterLoadHook: (bitmap: Bitmap, project) => {
             bitmap.migrateLvglBitmap(project._store);
+        },
+        updateObjectValueHook: (bitmap: Bitmap, values: any) => {
+            if (values.image != undefined && bitmap.image != values.image) {
+                const project = ProjectEditor.getProject(bitmap);
+
+                if (project.projectTypeTraits.isLVGL) {
+                    project._store.updateObject(bitmap, {});
+                }
+            }
         }
     };
 

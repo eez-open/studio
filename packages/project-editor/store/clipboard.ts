@@ -73,7 +73,10 @@ export function objectsToClipboardData(
     });
 }
 
-function clipboardDataToObject(projectStore: ProjectStore, data: string) {
+export function clipboardDataToObject(
+    projectStore: ProjectStore,
+    data: string
+) {
     let serializedData: SerializedData = JSON.parse(data);
 
     const aClass = findClass(serializedData.objectClassName);

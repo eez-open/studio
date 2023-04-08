@@ -3,7 +3,8 @@ import {
     autorun,
     runInAction,
     makeObservable,
-    computed
+    computed,
+    reaction
 } from "mobx";
 
 import type { Page } from "project-editor/features/page/page";
@@ -30,6 +31,7 @@ const lvgl_flow_runtime_constructor = require("project-editor/flow/runtime/lvgl_
 
 export abstract class LVGLPageRuntime {
     wasm: IWasmFlowRuntime;
+    isMounted: boolean = false;
 
     bitmapsCache = new Map<
         Bitmap,
@@ -213,8 +215,11 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
     autorRunDispose: IReactionDisposer | undefined;
     requestAnimationFrameId: number | undefined;
 
+    dispose1: IReactionDisposer | undefined;
+
     constructor(page: Page, public ctx: CanvasRenderingContext2D) {
         super(page);
+
         makeObservable(this, {
             displayWidth: computed,
             displayHeight: computed
@@ -226,13 +231,19 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
     }
 
     get displayWidth() {
-        return ProjectEditor.getProject(this.page).settings.general
-            .displayWidth;
+        let width = this.page.width;
+        if (typeof width != "number" || isNaN(width) || width < 1) {
+            width = 1;
+        }
+        return width;
     }
 
     get displayHeight() {
-        return ProjectEditor.getProject(this.page).settings.general
-            .displayHeight;
+        let height = this.page.height;
+        if (typeof height != "number" || isNaN(height) || height < 1) {
+            height = 1;
+        }
+        return height;
     }
 
     mount() {
@@ -264,7 +275,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
 
                 this.freeStrings();
 
-                const pageObj = this.page.lvglCreate(this, 0).obj;
+                const pageObj = this.page.lvglCreate(this, 0);
                 if (!pageObj) {
                     console.error("pageObj is undefined");
                 }
@@ -293,6 +304,23 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
         });
 
         this.wasm = wasm;
+        this.isMounted = true;
+
+        if (this.dispose1) {
+            this.dispose1();
+            this.dispose1 = undefined;
+        }
+
+        this.dispose1 = reaction(
+            () => ({
+                width: this.displayWidth,
+                height: this.displayHeight
+            }),
+            size => {
+                this.unmount();
+                this.mount();
+            }
+        );
     }
 
     tick = () => {
@@ -328,6 +356,11 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
     };
 
     unmount() {
+        if (this.dispose1) {
+            this.dispose1();
+            this.dispose1 = undefined;
+        }
+
         if (this.requestAnimationFrameId != undefined) {
             window.cancelAnimationFrame(this.requestAnimationFrameId);
             this.requestAnimationFrameId = undefined;
@@ -339,6 +372,8 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
         }
 
         LVGLPageRuntime.detachRuntimeFromPage(this.page);
+
+        this.isMounted = false;
     }
 
     override getWidgetIndex(object: LVGLWidget | Page) {
@@ -378,7 +413,7 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
                 this.tick
             );
 
-            const pageObj = this.page.lvglCreate(this, 0).obj;
+            const pageObj = this.page.lvglCreate(this, 0);
             this.wasm._lvglScreenLoad(-1, pageObj);
             runInAction(() => {
                 this.page._lvglRuntime = this;
@@ -389,6 +424,7 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
                 this.projectStore.runtime as WasmRuntime
             ).lgvlPageRuntime!.onNonActivePageViewRuntimeMounted(this);
         });
+        this.isMounted = true;
     }
 
     tick = () => {
@@ -435,6 +471,8 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
                 this
             );
         }
+
+        this.isMounted = false;
     }
 
     override getWidgetIndex(object: LVGLWidget | Page) {
@@ -492,6 +530,8 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
                 this.lvglCreate(selectedPage);
             }
         });
+
+        this.isMounted = true;
     }
 
     unmount() {
@@ -504,6 +544,8 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         for (const page of project.pages) {
             LVGLPageRuntime.detachRuntimeFromPage(page);
         }
+
+        this.isMounted = false;
     }
 
     async loadAllBitmaps() {
@@ -536,7 +578,7 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
             this.page._lvglRuntime = this;
         });
 
-        const pageObj = this.page.lvglCreate(this, 0).obj;
+        const pageObj = this.page.lvglCreate(this, 0);
 
         const pagePath = getObjectPathAsString(this.page);
         const pageIndex = this.runtime.assetsMap.flowIndexes[pagePath];
@@ -678,7 +720,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                         );
                     });
 
-                    const pageObj = this.page.lvglCreate(this, 0).obj;
+                    const pageObj = this.page.lvglCreate(this, 0);
                     if (!pageObj) {
                         console.error("pageObj is undefined");
                     }
@@ -696,6 +738,8 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
 
             this.wasm = wasm;
         });
+
+        this.isMounted = true;
     }
 
     unmount() {
@@ -710,6 +754,8 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
         }
 
         LVGLPageRuntime.detachRuntimeFromPage(this.page);
+
+        this.isMounted = false;
     }
 
     override getWidgetIndex(object: LVGLWidget | Page) {

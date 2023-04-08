@@ -173,7 +173,8 @@ import {
 } from "project-editor/flow/helper";
 import {
     GAUGE_ICON,
-    LINE_CHART_ICON
+    LINE_CHART_ICON,
+    USER_WIDGET_ICON
 } from "project-editor/ui-components/icons";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 import type { IDashboardComponentContext } from "eez-studio-types";
@@ -1319,20 +1320,7 @@ export class LayoutViewWidget extends Widget {
             height: 32
         },
 
-        icon: (
-            <svg
-                strokeWidth="2"
-                stroke="currentColor"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                viewBox="0 0 24 24"
-            >
-                <path d="M0 0h24v24H0z" stroke="none" />
-                <rect x="4" y="4" width="16" height="16" rx="2" />
-                <path d="M4 9h8m0 6h8M12 4v16" />
-            </svg>
-        ),
+        icon: USER_WIDGET_ICON,
 
         check: (object: LayoutViewWidget) => {
             let messages: Message[] = [];

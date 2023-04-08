@@ -112,7 +112,11 @@ import {
 } from "project-editor/flow/components/widgets";
 import { ArrayProperty } from "project-editor/ui-components/PropertyGrid/ArrayElementProperty";
 import { EmbeddedPropertyGrid } from "project-editor/ui-components/PropertyGrid/EmbeddedPropertyGrid";
-import { LVGLWidget, LVGLPanelWidget } from "project-editor/lvgl/widgets";
+import {
+    LVGLWidget,
+    LVGLPanelWidget,
+    LVGLUserWidgetWidget
+} from "project-editor/lvgl/widgets";
 import { LVGLStyle } from "project-editor/lvgl/style";
 import { Property } from "./ui-components/PropertyGrid/Property";
 
@@ -208,6 +212,7 @@ export async function initProjectEditor(
         ScpiSubsystemClass: ScpiSubsystem,
         LVGLWidgetClass: LVGLWidget,
         LVGLPanelWidgetClass: LVGLPanelWidget,
+        LVGLUserWidgetWidgetClass: LVGLUserWidgetWidget,
         LVGLStyleClass: LVGLStyle,
         getProject,
         getFlow,

@@ -1168,12 +1168,12 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  965360: ($0, $1) => { freeComponentExecutionState($0, $1); },  
- 965401: ($0) => { startToDebuggerMessage($0); },  
- 965433: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 965508: ($0) => { finishToDebuggerMessage($0); },  
- 965541: ($0, $1) => { onArrayValueFree($0, $1); },  
- 965571: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
+  965456: ($0, $1) => { freeComponentExecutionState($0, $1); },  
+ 965497: ($0) => { startToDebuggerMessage($0); },  
+ 965529: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 965604: ($0) => { finishToDebuggerMessage($0); },  
+ 965637: ($0, $1) => { onArrayValueFree($0, $1); },  
+ 965667: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
 };
 
 
@@ -4465,6 +4465,9 @@ var _lvglCreateButton = Module["_lvglCreateButton"] = createExportWrapper("lvglC
 
 /** @type {function(...*):?} */
 var _lvglCreatePanel = Module["_lvglCreatePanel"] = createExportWrapper("lvglCreatePanel");
+
+/** @type {function(...*):?} */
+var _lvglCreateUserWidget = Module["_lvglCreateUserWidget"] = createExportWrapper("lvglCreateUserWidget");
 
 /** @type {function(...*):?} */
 var _lvglCreateImage = Module["_lvglCreateImage"] = createExportWrapper("lvglCreateImage");

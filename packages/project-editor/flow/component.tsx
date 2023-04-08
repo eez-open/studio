@@ -128,7 +128,6 @@ import {
 } from "project-editor/ui-components/icons";
 import { ProjectContext } from "project-editor/project/context";
 import { Icon } from "eez-studio-ui/icon";
-import type { LVGLCreateResultType } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 
 import {
@@ -3307,14 +3306,8 @@ export class Widget extends Component {
         return getTimelineProperty(this, timelinePosition, propertyName);
     }
 
-    lvglCreate(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): LVGLCreateResultType {
-        return {
-            obj: 0,
-            children: []
-        };
+    lvglCreate(runtime: LVGLPageRuntime, parentObj: number) {
+        return 0;
     }
 
     lvglPostCreate(runtime: LVGLPageRuntime) {}

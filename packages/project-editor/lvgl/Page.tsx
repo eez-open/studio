@@ -65,8 +65,8 @@ export const LVGLPage = observer(
             return (
                 <canvas
                     ref={this.canvasRef}
-                    width={this.context.project.settings.general.displayWidth}
-                    height={this.context.project.settings.general.displayHeight}
+                    width={this.props.page.width}
+                    height={this.props.page.height}
                     style={{
                         imageRendering: "pixelated"
                     }}

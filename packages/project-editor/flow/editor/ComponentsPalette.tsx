@@ -97,10 +97,16 @@ export const ComponentsPalette = observer(
             if (!showOnlyActions) {
                 for (const page of this.context.project.pages) {
                     if (page.isUsedAsCustomWidget) {
+                        const widgetName = this.context.projectTypeTraits.isLVGL
+                            ? "LVGLUserWidgetWidget"
+                            : "LayoutViewWidget";
+
                         userWidgets.push({
-                            id: `LayoutViewWidget<${page.name}>`,
-                            name: "LayoutViewWidget",
-                            objectClass: ProjectEditor.LayoutViewWidgetClass,
+                            id: `${widgetName}<${page.name}>`,
+                            name: widgetName,
+                            objectClass: this.context.projectTypeTraits.isLVGL
+                                ? ProjectEditor.LVGLUserWidgetWidgetClass
+                                : ProjectEditor.LayoutViewWidgetClass,
                             displayName: page.name,
                             componentPaletteGroupName: "!7User Widgets",
                             props: {

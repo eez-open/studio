@@ -2474,3 +2474,18 @@ export const BREAKPOINTS_PANEL_ICON = (
         <circle cx="12" cy="12" r="8" />
     </svg>
 );
+
+export const USER_WIDGET_ICON = (
+    <svg
+        strokeWidth="2"
+        stroke="currentColor"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        viewBox="0 0 24 24"
+    >
+        <path d="M0 0h24v24H0z" stroke="none" />
+        <rect x="4" y="4" width="16" height="16" rx="2" />
+        <path d="M4 9h8m0 6h8M12 4v16" />
+    </svg>
+);

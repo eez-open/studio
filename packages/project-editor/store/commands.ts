@@ -431,7 +431,7 @@ function ensureUniqueProperties(
     if (project.projectTypeTraits.isLVGL) {
         const existingLvglWidgets: LVGLWidget[] = [];
 
-        for (const widget of visitObjects(parentObject)) {
+        for (const widget of visitObjects(project)) {
             if (widget instanceof ProjectEditor.LVGLWidgetClass) {
                 existingLvglWidgets.push(widget);
             }

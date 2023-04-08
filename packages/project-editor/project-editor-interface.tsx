@@ -69,7 +69,11 @@ import type {
 } from "project-editor/flow/components/widgets";
 import type { ArrayProperty } from "project-editor/ui-components/PropertyGrid/ArrayElementProperty";
 import type { EmbeddedPropertyGrid } from "project-editor/ui-components/PropertyGrid/EmbeddedPropertyGrid";
-import type { LVGLWidget, LVGLPanelWidget } from "project-editor/lvgl/widgets";
+import type {
+    LVGLWidget,
+    LVGLPanelWidget,
+    LVGLUserWidgetWidget
+} from "project-editor/lvgl/widgets";
 import type { LVGLStyle } from "project-editor/lvgl/style";
 import type { Property } from "project-editor/ui-components/PropertyGrid/Property";
 
@@ -108,6 +112,7 @@ export interface IProjectEditor {
     ScpiSubsystemClass: typeof ScpiSubsystem;
     LVGLWidgetClass: typeof LVGLWidget;
     LVGLPanelWidgetClass: typeof LVGLPanelWidget;
+    LVGLUserWidgetWidgetClass: typeof LVGLUserWidgetWidget;
     LVGLStyleClass: typeof LVGLStyle;
     getProject: typeof getProject;
     getFlow: typeof getFlow;

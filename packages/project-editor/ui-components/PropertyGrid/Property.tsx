@@ -332,6 +332,10 @@ export const Property = observer(
                     fields: [
                         {
                             name: this.props.propertyInfo.name,
+                            displayName: getObjectPropertyDisplayName(
+                                this.props.objects[0],
+                                this.props.propertyInfo
+                            ),
                             type: "string",
                             validators: [
                                 typeof this.props.propertyInfo.unique ===

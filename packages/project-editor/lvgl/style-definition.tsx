@@ -271,8 +271,9 @@ export class LVGLStylesDefinition extends EezObject {
                                                 await runtime.loadFont(font);
                                             if (fontPtr != 0) {
                                                 if (
-                                                    !runtime.isEditor ||
-                                                    obj == widget._lvglObj
+                                                    runtime.isMounted &&
+                                                    (!runtime.isEditor ||
+                                                        obj == widget._lvglObj)
                                                 ) {
                                                     runtime.wasm._lvglObjSetLocalStylePropPtr(
                                                         obj,
@@ -331,8 +332,9 @@ export class LVGLStylesDefinition extends EezObject {
                                     );
                                     if (bitmapPtr) {
                                         if (
-                                            !runtime.isEditor ||
-                                            obj == widget._lvglObj
+                                            runtime.isMounted &&
+                                            (!runtime.isEditor ||
+                                                obj == widget._lvglObj)
                                         ) {
                                             runtime.wasm._lvglObjSetLocalStylePropPtr(
                                                 obj,
@@ -676,8 +678,9 @@ export class LVGLStylesPicasoDefinition extends EezObject {
                                                 await runtime.loadFont(font);
                                             if (fontPtr != 0) {
                                                 if (
-                                                    !runtime.isEditor ||
-                                                    obj == widget._lvglObj
+                                                    runtime.isMounted &&
+                                                    (!runtime.isEditor ||
+                                                        obj == widget._lvglObj)
                                                 ) {
                                                     runtime.wasm._lvglObjSetLocalStylePropPtr(
                                                         obj,
@@ -736,8 +739,9 @@ export class LVGLStylesPicasoDefinition extends EezObject {
                                     );
                                     if (bitmapPtr) {
                                         if (
-                                            !runtime.isEditor ||
-                                            obj == widget._lvglObj
+                                            runtime.isMounted &&
+                                            (!runtime.isEditor ||
+                                                obj == widget._lvglObj)
                                         ) {
                                             runtime.wasm._lvglObjSetLocalStylePropPtr(
                                                 obj,

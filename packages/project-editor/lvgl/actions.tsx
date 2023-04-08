@@ -336,11 +336,17 @@ export class LVGLPlayAnimationActionType extends LVGLActionType {
                 name: "target",
                 type: PropertyType.Enum,
                 enumItems: (component: LVGLActionComponent) => {
-                    return [
+                    const targets = [
                         ...ProjectEditor.getProject(
                             component
                         )._lvglIdentifiers.keys()
-                    ].map(id => ({
+                    ];
+
+                    targets.sort((a, b) =>
+                        a.toLowerCase().localeCompare(b.toLowerCase())
+                    );
+
+                    return targets.map(id => ({
                         id,
                         label: id
                     }));
@@ -688,11 +694,19 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
                 displayName: "Target",
                 type: PropertyType.Enum,
                 enumItems: (actionType: LVGLSetPropertyActionType) => {
-                    return [
+                    const lvglIdentifiers = [
                         ...ProjectEditor.getProject(
                             actionType
                         )._lvglIdentifiers.values()
-                    ]
+                    ];
+
+                    lvglIdentifiers.sort((a, b) =>
+                        a.identifier
+                            .toLowerCase()
+                            .localeCompare(b.identifier.toLowerCase())
+                    );
+
+                    return lvglIdentifiers
                         .filter(lvglIdentifier =>
                             filterSetPropertyTarget(
                                 actionType,

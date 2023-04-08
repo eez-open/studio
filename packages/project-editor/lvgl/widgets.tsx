@@ -22,7 +22,9 @@ import {
     MessageType,
     getClassInfoLvglProperties,
     EezObject,
-    ClassInfo
+    ClassInfo,
+    isAncestor,
+    setParent
 } from "project-editor/core/object";
 
 import {
@@ -34,10 +36,12 @@ import {
     getProjectStore,
     Message,
     propertyNotFoundMessage,
-    propertyNotSetMessage
+    propertyNotSetMessage,
+    objectToClipboardData,
+    clipboardDataToObject
 } from "project-editor/store";
 
-import { ProjectType } from "project-editor/project/project";
+import { getProject, ProjectType } from "project-editor/project/project";
 
 import type {
     IFlowContext,
@@ -47,6 +51,7 @@ import type {
 import {
     AutoSize,
     Component,
+    ComponentInput,
     ComponentOutput,
     isFlowProperty,
     makeExpressionProperty,
@@ -66,7 +71,6 @@ import { ValueType } from "project-editor/features/variable/value-type";
 
 import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
 import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
-import type { LVGLCreateResultType } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { LVGLBuild } from "project-editor/lvgl/build";
 import {
@@ -99,6 +103,16 @@ import {
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { humanize } from "eez-studio-shared/string";
 import { checkExpression } from "project-editor/flow/expression";
+import { Button } from "eez-studio-ui/button";
+import { USER_WIDGET_ICON } from "project-editor/ui-components/icons";
+import {
+    EndActionComponent,
+    InputActionComponent,
+    OutputActionComponent,
+    StartActionComponent
+} from "project-editor/flow/components/actions";
+import { Assets, DataBuffer } from "project-editor/build/assets";
+import { COMPONENT_TYPE_LVGL_USER_WIDGET } from "project-editor/flow/components/component_types";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -971,10 +985,7 @@ export class LVGLWidget extends Widget {
         ];
     }
 
-    override lvglCreate(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): LVGLCreateResultType {
+    override lvglCreate(runtime: LVGLPageRuntime, parentObj: number) {
         const obj = this.lvglCreateObj(runtime, parentObj);
 
         runInAction(() => (this._lvglObj = obj));
@@ -1151,8 +1162,6 @@ export class LVGLWidget extends Widget {
             keyframe.lvglCreate(runtime, obj, flowIndex);
         }
 
-        let children: LVGLCreateResultType[];
-
         if (obj) {
             const useStyle = this.styleTemplate;
             if (useStyle) {
@@ -1163,17 +1172,12 @@ export class LVGLWidget extends Widget {
             }
             this.localStyles.lvglCreate(runtime, this, obj);
 
-            children = this.children.map((widget: LVGLWidget) =>
+            this.children.map((widget: LVGLWidget) =>
                 widget.lvglCreate(runtime, obj)
             );
-        } else {
-            children = [];
         }
 
-        return {
-            obj,
-            children
-        };
+        return obj;
     }
 
     lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number): number {
@@ -2043,6 +2047,344 @@ export class LVGLPanelWidget extends LVGLWidget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const userWidgetGroup: IPropertyGridGroupDefinition = {
+    id: "lvgl-user-widget",
+    title: "User Widget",
+    position: SPECIFIC_GROUP_POSITION
+};
+
+const LVGLUserWidgetWidgetPropertyGridUI = observer(
+    class LVGLUserWidgetWidgetPropertyGridUI extends React.Component<PropertyProps> {
+        showLayout = () => {
+            (this.props.objects[0] as LVGLUserWidgetWidget).open();
+        };
+
+        render() {
+            if (this.props.objects.length > 1) {
+                return null;
+            }
+            return (
+                <Button color="primary" size="small" onClick={this.showLayout}>
+                    Show Layout
+                </Button>
+            );
+        }
+    }
+);
+
+export class LVGLUserWidgetWidget extends LVGLWidget {
+    layout: string;
+
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        flowComponentId: COMPONENT_TYPE_LVGL_USER_WIDGET,
+
+        componentPaletteGroupName: "!1Basic Widgets",
+
+        label: (widget: LVGLUserWidgetWidget) => {
+            let name = getComponentName(widget.type);
+
+            if (widget.identifier) {
+                name = `${name} [${widget.identifier}]`;
+            }
+
+            if (widget.layout) {
+                return `${name}: ${widget.layout}`;
+            }
+
+            return name;
+        },
+
+        properties: [
+            {
+                name: "layout",
+                type: PropertyType.ObjectReference,
+                propertyGridGroup: userWidgetGroup,
+                referencedObjectCollectionPath: "pages"
+            },
+            {
+                name: "customUI",
+                type: PropertyType.Any,
+                propertyGridGroup: userWidgetGroup,
+                computed: true,
+                propertyGridRowComponent: LVGLUserWidgetWidgetPropertyGridUI,
+                hideInPropertyGrid: (widget: LVGLUserWidgetWidget) => {
+                    if (!widget.layout) {
+                        return true;
+                    }
+
+                    const project = getProject(widget);
+
+                    const layout = ProjectEditor.findPage(
+                        project,
+                        widget.layout
+                    );
+                    if (!layout) {
+                        return true;
+                    }
+
+                    return false;
+                }
+            }
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 100,
+            height: 50,
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            clickableFlag: true
+        },
+
+        icon: USER_WIDGET_ICON,
+
+        lvgl: {
+            parts: ["MAIN", "SCROLLBAR"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "CHECKABLE",
+                "PRESS_LOCK",
+                "CLICK_FOCUSABLE",
+                "ADV_HITTEST",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE",
+                "SCROLLABLE",
+                "SCROLL_ELASTIC",
+                "SCROLL_MOMENTUM",
+                "SCROLL_ON_FOCUS",
+                "SCROLL_CHAIN",
+                "SCROLL_ONE"
+            ],
+            defaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        },
+
+        check: (object: LVGLUserWidgetWidget) => {
+            let messages: Message[] = [];
+
+            if (!object.layout) {
+                messages.push(propertyNotSetMessage(object, "layout"));
+            } else {
+                let layout = ProjectEditor.findPage(
+                    getProject(object),
+                    object.layout
+                );
+                if (!layout) {
+                    messages.push(propertyNotFoundMessage(object, "layout"));
+                }
+            }
+
+            return messages;
+        }
+    });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            layout: observable,
+            layoutPage: computed,
+            layoutPageCopy: computed
+        });
+    }
+
+    get layoutPage(): Page | undefined {
+        let layout;
+
+        const project = getProject(this);
+
+        if (!layout) {
+            layout = ProjectEditor.findPage(project, this.layout);
+        }
+
+        if (!layout) {
+            return undefined;
+        }
+
+        if (isAncestor(this, layout)) {
+            // prevent cyclic referencing
+            return undefined;
+        }
+
+        return layout;
+    }
+
+    get layoutPageCopy(): Page | undefined {
+        const page = this.layoutPage;
+
+        if (!page) {
+            return undefined;
+        }
+
+        const projectStore = ProjectEditor.getProject(this)._store;
+
+        let layoutPageCopy: Page | undefined = undefined;
+
+        // runInAction is needed to avoid observing copied page
+        runInAction(() => {
+            layoutPageCopy = clipboardDataToObject(
+                projectStore,
+                objectToClipboardData(projectStore, page)
+            ).object as Page;
+            setParent(layoutPageCopy, projectStore.project.pages);
+        });
+
+        return layoutPageCopy;
+    }
+
+    open() {
+        if (this.layoutPage) {
+            getProjectStore(this).navigationStore.showObjects(
+                [this.layoutPage],
+                true,
+                false,
+                false
+            );
+        }
+    }
+
+    getInputs() {
+        const page = ProjectEditor.findPage(getProject(this), this.layout);
+        if (!page) {
+            return super.getInputs();
+        }
+
+        const startComponents: ComponentInput[] = page.components
+            .filter(component => component instanceof StartActionComponent)
+            .map(() => ({
+                name: "@seqin",
+                type: "null",
+                isSequenceInput: true,
+                isOptionalInput: true
+            }));
+
+        const inputComponents: ComponentInput[] = page.components
+            .filter(component => component instanceof InputActionComponent)
+            .sort((a, b) => a.top - b.top)
+            .map((inputActionComponent: InputActionComponent) => ({
+                name: inputActionComponent.objID,
+                displayName: inputActionComponent.name,
+                type: inputActionComponent.inputType,
+                isSequenceInput: false,
+                isOptionalInput: false
+            }));
+
+        return [...super.getInputs(), ...startComponents, ...inputComponents];
+    }
+
+    getOutputs() {
+        const page = ProjectEditor.findPage(getProject(this), this.layout);
+        if (!page) {
+            return super.getOutputs();
+        }
+
+        const endComponents: ComponentOutput[] = page.components
+            .filter(component => component instanceof EndActionComponent)
+            .map(() => ({
+                name: "@seqout",
+                type: "any",
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            }));
+
+        const outputComponents: ComponentOutput[] = page.components
+            .filter(component => component instanceof OutputActionComponent)
+            .sort((a, b) => a.top - b.top)
+            .map((outputActionComponent: OutputActionComponent) => ({
+                name: outputActionComponent.objID,
+                displayName: outputActionComponent.name,
+                type: outputActionComponent.outputType,
+                isSequenceOutput: false,
+                isOptionalOutput: false
+            }));
+
+        return [...super.getOutputs(), ...endComponents, ...outputComponents];
+    }
+
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
+        const widgetIndex = runtime.getWidgetIndex(this);
+
+        if (!this.layoutPageCopy) {
+            return runtime.wasm._lvglCreateUserWidget(
+                parentObj,
+                runtime.getWidgetIndex(this),
+
+                this.lvglCreateLeft,
+                this.lvglCreateTop,
+                this.lvglCreateWidth,
+                this.lvglCreateHeight
+            );
+        }
+
+        const obj = this.layoutPageCopy.lvglCreate(runtime, parentObj, {
+            widgetIndex,
+            left: this.lvglCreateLeft,
+            top: this.lvglCreateTop,
+            width: this.lvglCreateWidth,
+            height: this.lvglCreateHeight
+        });
+
+        return obj;
+    }
+
+    override lvglBuildObj(build: LVGLBuild) {
+        build.line(`lv_obj_t *obj = lv_obj_create(parent_obj);`);
+    }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        const layoutPage = this.layoutPage;
+        if (layoutPage) {
+            // flowIndex
+            const flowIndex = assets.flows.indexOf(layoutPage);
+            dataBuffer.writeInt16(flowIndex);
+
+            // inputsStartIndex
+            if (layoutPage.inputComponents.length > 0) {
+                dataBuffer.writeUint8(
+                    this.buildInputs.findIndex(
+                        input =>
+                            input.name == layoutPage.inputComponents[0].objID
+                    )
+                );
+            } else {
+                dataBuffer.writeUint8(1);
+            }
+
+            // outputsStartIndex
+            if (layoutPage.outputComponents.length > 0) {
+                dataBuffer.writeUint8(
+                    this.buildOutputs.findIndex(
+                        output =>
+                            output.name == layoutPage.outputComponents[0].objID
+                    )
+                );
+            } else {
+                dataBuffer.writeUint8(0);
+            }
+        } else {
+            // flowIndex
+            dataBuffer.writeInt16(-1);
+            // inputsStartIndex
+            dataBuffer.writeUint8(0);
+            // outputsStartIndex
+            dataBuffer.writeUint8(0);
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export const imageGroup: IPropertyGridGroupDefinition = {
     id: "lvgl-image",
     title: "Image",
@@ -2209,7 +2551,10 @@ export class LVGLImageWidget extends LVGLWidget {
         if (bitmap && bitmap.image) {
             (async () => {
                 const image = await runtime.loadBitmap(bitmap);
-                if (!runtime.isEditor || obj == this._lvglObj) {
+                if (
+                    runtime.isMounted &&
+                    (!runtime.isEditor || obj == this._lvglObj)
+                ) {
                     runtime.wasm._lvglSetImageSrc(
                         obj,
                         image,
@@ -6666,6 +7011,7 @@ registerClass("LVGLLabelWidget", LVGLLabelWidget);
 registerClass("LVGLKeyboardWidget", LVGLKeyboardWidget);
 registerClass("LVGLMeterWidget", LVGLMeterWidget);
 registerClass("LVGLPanelWidget", LVGLPanelWidget);
+registerClass("LVGLUserWidgetWidget", LVGLUserWidgetWidget);
 registerClass("LVGLRollerWidget", LVGLRollerWidget);
 registerClass("LVGLSliderWidget", LVGLSliderWidget);
 registerClass("LVGLSpinnerWidget", LVGLSpinnerWidget);

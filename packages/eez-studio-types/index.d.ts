@@ -561,6 +561,7 @@ export interface IWasmFlowRuntime {
     _lvglCreateLabel(parentObj: number, index: number, x: number, y: number, w: number, h: number, text: number, long_mode: number, recolor: number): number;
     _lvglCreateButton(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreatePanel(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
+    _lvglCreateUserWidget(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateImage(parentObj: number, index: number, x: number, y: number, w: number, h: number, img_src: number, pivotX: number, pivotY: number, zoom: number, angle: number): number;
     _lvglCreateSlider(parentObj: number, index: number, x: number, y: number, w: number, h: number, min: number, max: number, mode: number, value: number, value_left: number): number;
     _lvglCreateRoller(parentObj: number, index: number, x: number, y: number, w: number, h: number, options: number, selected: number, mode: number): number;

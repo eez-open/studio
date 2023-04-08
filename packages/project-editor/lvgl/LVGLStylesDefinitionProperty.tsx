@@ -33,11 +33,6 @@ import { ITreeNode, Tree } from "eez-studio-ui/tree";
 import { _intersection } from "eez-studio-shared/algorithm";
 import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
 
-export type LVGLCreateResultType = {
-    obj: number;
-    children: LVGLCreateResultType[];
-};
-
 type TreeNodeData =
     | {
           part: LVGLParts;
