@@ -54,7 +54,7 @@ EM_PORT_API(lv_obj_t *) lvglCreateUserWidget(lv_obj_t *parentObj, int32_t index,
     lv_obj_t *obj = lv_obj_create(parentObj);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
-    lv_obj_update_layout(obj);
+
     lv_style_value_t value;
     value.num = 0;
     lv_obj_set_local_style_prop(obj, LV_STYLE_PAD_LEFT, value, LV_PART_MAIN);
@@ -63,6 +63,8 @@ EM_PORT_API(lv_obj_t *) lvglCreateUserWidget(lv_obj_t *parentObj, int32_t index,
     lv_obj_set_local_style_prop(obj, LV_STYLE_PAD_LEFT, value, LV_PART_MAIN);
     lv_obj_set_local_style_prop(obj, LV_STYLE_BG_OPA, value, LV_PART_MAIN);
     lv_obj_set_local_style_prop(obj, LV_STYLE_BORDER_WIDTH, value, LV_PART_MAIN);
+
+    lv_obj_update_layout(obj);
     setObjectIndex(obj, index);
     return obj;
 }
@@ -415,10 +417,10 @@ EM_PORT_API(void) lvglFreeFont(lv_font_t *font) {
     return lv_font_free(font);
 }
 
-EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filter, unsigned page_index, unsigned component_index, unsigned output_or_property_index) {
+EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filter, int32_t *flow_state_address_index, unsigned component_index, unsigned output_or_property_index) {
     FlowEventCallbackData *data = (FlowEventCallbackData *)lv_mem_alloc(sizeof(FlowEventCallbackData));
 
-    data->page_index = page_index;
+    data->flow_state_address_index = flow_state_address_index;
     data->component_index = component_index;
     data->output_or_property_index = output_or_property_index;
 
@@ -449,8 +451,8 @@ EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filte
     lv_obj_add_event_cb(obj, flow_event_callback_delete_user_data, LV_EVENT_DELETE, data);
 }
 
-EM_PORT_API(void) lvglUpdateLabelText(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_LABEL_TEXT, obj, page_index, component_index, property_index, 0);
+EM_PORT_API(void) lvglUpdateLabelText(lv_obj_t *obj, int32_t *flow_state_address_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_LABEL_TEXT, obj, flow_state_address_index, component_index, property_index, 0);
 }
 
 EM_PORT_API(void) lvglSetImageSrc(lv_obj_t *obj, const void *img_src, lv_coord_t pivotX, lv_coord_t pivotY, uint16_t zoom, int16_t angle) {
@@ -510,64 +512,64 @@ EM_PORT_API(lv_meter_indicator_t *) lvglMeterAddIndicatorArc(lv_obj_t *obj, lv_m
     return indicator;
 }
 
-EM_PORT_API(void) lvglUpdateMeterIndicatorValue(lv_obj_t *obj, lv_meter_indicator_t *indicator, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_METER_INDICATOR_VALUE, obj, page_index, component_index, property_index, indicator);
+EM_PORT_API(void) lvglUpdateMeterIndicatorValue(lv_obj_t *obj, lv_meter_indicator_t *indicator, int32_t *flow_state_address_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_METER_INDICATOR_VALUE, obj, flow_state_address_index, component_index, property_index, indicator);
 }
 
-EM_PORT_API(void) lvglUpdateMeterIndicatorStartValue(lv_obj_t *obj, lv_meter_indicator_t *indicator, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_METER_INDICATOR_START_VALUE, obj, page_index, component_index, property_index, indicator);
+EM_PORT_API(void) lvglUpdateMeterIndicatorStartValue(lv_obj_t *obj, lv_meter_indicator_t *indicator, int32_t *flow_state_address_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_METER_INDICATOR_START_VALUE, obj, flow_state_address_index, component_index, property_index, indicator);
 }
 
-EM_PORT_API(void) lvglUpdateMeterIndicatorEndValue(lv_obj_t *obj, lv_meter_indicator_t *indicator, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_METER_INDICATOR_END_VALUE, obj, page_index, component_index, property_index, indicator);
+EM_PORT_API(void) lvglUpdateMeterIndicatorEndValue(lv_obj_t *obj, lv_meter_indicator_t *indicator, int32_t *flow_state_address_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_METER_INDICATOR_END_VALUE, obj, flow_state_address_index, component_index, property_index, indicator);
 }
 
-EM_PORT_API(void) lvglUpdateDropdownSelected(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_DROPDOWN_SELECTED, obj, page_index, component_index, property_index, 0);
+EM_PORT_API(void) lvglUpdateDropdownSelected(lv_obj_t *obj, int32_t *flow_state_address_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_DROPDOWN_SELECTED, obj, flow_state_address_index, component_index, property_index, 0);
 }
 
-EM_PORT_API(void) lvglUpdateRollerSelected(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_ROLLER_SELECTED, obj, page_index, component_index, property_index, 0);
+EM_PORT_API(void) lvglUpdateRollerSelected(lv_obj_t *obj, int32_t *flow_state_address_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_ROLLER_SELECTED, obj, flow_state_address_index, component_index, property_index, 0);
 }
 
-EM_PORT_API(void) lvglUpdateSliderValue(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_SLIDER_VALUE, obj, page_index, component_index, property_index, 0);
+EM_PORT_API(void) lvglUpdateSliderValue(lv_obj_t *obj, int32_t *flow_state_address_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_SLIDER_VALUE, obj, flow_state_address_index, component_index, property_index, 0);
 }
 
-EM_PORT_API(void) lvglUpdateSliderValueLeft(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_SLIDER_VALUE_LEFT, obj, page_index, component_index, property_index, 0);
+EM_PORT_API(void) lvglUpdateSliderValueLeft(lv_obj_t *obj, int32_t *flow_state_address_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_SLIDER_VALUE_LEFT, obj, flow_state_address_index, component_index, property_index, 0);
 }
 
-EM_PORT_API(void) lvglUpdateBarValue(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_BAR_VALUE, obj, page_index, component_index, property_index, 0);
+EM_PORT_API(void) lvglUpdateBarValue(lv_obj_t *obj, int32_t *flow_state_address_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_BAR_VALUE, obj, flow_state_address_index, component_index, property_index, 0);
 }
 
-EM_PORT_API(void) lvglUpdateBarValueStart(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_BAR_VALUE_START, obj, page_index, component_index, property_index, 0);
+EM_PORT_API(void) lvglUpdateBarValueStart(lv_obj_t *obj, int32_t *flow_state_address_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_BAR_VALUE_START, obj, flow_state_address_index, component_index, property_index, 0);
 }
 
-EM_PORT_API(void) lvglUpdateArcValue(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_ARC_VALUE, obj, page_index, component_index, property_index, 0);
+EM_PORT_API(void) lvglUpdateArcValue(lv_obj_t *obj, int32_t *flow_state_address_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_ARC_VALUE, obj, flow_state_address_index, component_index, property_index, 0);
 }
 
-EM_PORT_API(void) lvglUpdateTextareaText(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_TEXTAREA_TEXT, obj, page_index, component_index, property_index, 0);
+EM_PORT_API(void) lvglUpdateTextareaText(lv_obj_t *obj, int32_t *flow_state_address_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_TEXTAREA_TEXT, obj, flow_state_address_index, component_index, property_index, 0);
 }
 
-EM_PORT_API(void) lvglUpdateCheckedState(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_CHECKED_STATE, obj, page_index, component_index, property_index, 0);
+EM_PORT_API(void) lvglUpdateCheckedState(lv_obj_t *obj, int32_t *flow_state_address_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_CHECKED_STATE, obj, flow_state_address_index, component_index, property_index, 0);
 }
 
-EM_PORT_API(void) lvglUpdateDisabledState(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_DISABLED_STATE, obj, page_index, component_index, property_index, 0);
+EM_PORT_API(void) lvglUpdateDisabledState(lv_obj_t *obj, int32_t *flow_state_address_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_DISABLED_STATE, obj, flow_state_address_index, component_index, property_index, 0);
 }
 
-EM_PORT_API(void) lvglUpdateHiddenFlag(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_HIDDEN_FLAG, obj, page_index, component_index, property_index, 0);
+EM_PORT_API(void) lvglUpdateHiddenFlag(lv_obj_t *obj, int32_t *flow_state_address_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_HIDDEN_FLAG, obj, flow_state_address_index, component_index, property_index, 0);
 }
 
-EM_PORT_API(void) lvglUpdateClickableFlag(lv_obj_t *obj, unsigned page_index, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_CLICKABLE_FLAG, obj, page_index, component_index, property_index, 0);
+EM_PORT_API(void) lvglUpdateClickableFlag(lv_obj_t *obj, int32_t *flow_state_address_index, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_CLICKABLE_FLAG, obj, flow_state_address_index, component_index, property_index, 0);
 }
 
 EM_PORT_API(void) lvglAddTimelineKeyframe(

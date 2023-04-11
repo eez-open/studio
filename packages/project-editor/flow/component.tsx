@@ -67,7 +67,7 @@ import type { Page } from "project-editor/features/page/page";
 import { Style } from "project-editor/features/style/style";
 import type {
     ContainerWidget,
-    LayoutViewWidget,
+    UserWidgetWidget,
     ListWidget,
     SelectWidget
 } from "project-editor/flow/components/widgets";
@@ -277,7 +277,7 @@ export function migrateStyleProperty(
 
 function getClassFromType(type: string) {
     if (type.startsWith("Local.")) {
-        return findClass("LayoutViewWidget");
+        return findClass("UserWidgetWidget");
     }
 
     if (type == "OverrideStyle") {
@@ -306,6 +306,8 @@ function getClassFromType(type: string) {
         }
     }
 
+    console.log(type);
+
     return NotFoundComponent;
 }
 
@@ -321,6 +323,12 @@ function getComponentClass(jsObject: any) {
     }
     if (jsObject.type === "HTTPGet") {
         jsObject.type = "HTTP";
+    }
+    if (
+        jsObject.type === "LayoutViewWidget" ||
+        jsObject.type === "LayoutView"
+    ) {
+        jsObject.type = "UserWidgetWidget";
     }
     return getClassFromType(jsObject.type);
 }
@@ -2531,7 +2539,7 @@ export class Widget extends Component {
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
             if (jsObject.type.startsWith("Local.")) {
                 jsObject.layout = jsObject.type.substring("Local.".length);
-                jsObject.type = "LayoutView";
+                jsObject.type = "UserWidgetWidget";
             }
 
             migrateStyleProperty(jsObject, "style");
@@ -2603,10 +2611,10 @@ export class Widget extends Component {
 
                     additionalMenuItems.push(
                         new MenuItem({
-                            label: "Create Custom Widget",
+                            label: "Create User Widget",
                             click: async () => {
                                 const layoutWidget =
-                                    await Widget.createCustomWidget(
+                                    await Widget.createUserWidgetPage(
                                         objects as Widget[]
                                     );
                                 if (layoutWidget) {
@@ -2618,10 +2626,10 @@ export class Widget extends Component {
 
                     additionalMenuItems.push(
                         new MenuItem({
-                            label: "Replace with Custom Widget",
+                            label: "Replace with User Widget",
                             click: async () => {
                                 const layoutWidget =
-                                    await Widget.replaceWithCustomWidget(
+                                    await Widget.replaceWithUserWidgetPage(
                                         objects as Widget[]
                                     );
                                 if (layoutWidget) {
@@ -3019,14 +3027,14 @@ export class Widget extends Component {
         return result;
     }
 
-    static async createCustomWidget(fromWidgets: Component[]) {
+    static async createUserWidgetPage(fromWidgets: Component[]) {
         const projectStore = getProjectStore(fromWidgets[0]);
         const customWidgets = projectStore.project.pages;
 
         try {
             const result = await showGenericDialog({
                 dialogDefinition: {
-                    title: "Custom widget name",
+                    title: "User widget name",
                     fields: [
                         {
                             name: "name",
@@ -3043,7 +3051,7 @@ export class Widget extends Component {
                 }
             });
 
-            const customWidgetName = result.values.name;
+            const userWidgetPageName = result.values.name;
 
             const createWidgetsResult = Widget.createWidgets(fromWidgets);
 
@@ -3052,13 +3060,13 @@ export class Widget extends Component {
                 createObject<Page>(
                     projectStore,
                     {
-                        name: customWidgetName,
+                        name: userWidgetPageName,
                         left: 0,
                         top: 0,
                         width: createWidgetsResult.width,
                         height: createWidgetsResult.height,
                         components: createWidgetsResult.widgets,
-                        isUsedAsCustomWidget: true
+                        isUsedAsUserWidget: true
                     },
                     ProjectEditor.PageClass
                 )
@@ -3066,17 +3074,17 @@ export class Widget extends Component {
 
             return projectStore.replaceObjects(
                 fromWidgets,
-                createObject<LayoutViewWidget>(
+                createObject<UserWidgetWidget>(
                     projectStore,
                     {
-                        type: "LayoutView",
+                        type: "UserWidgetWidget",
                         left: createWidgetsResult.left,
                         top: createWidgetsResult.top,
                         width: createWidgetsResult.width,
                         height: createWidgetsResult.height,
-                        layout: customWidgetName
+                        userWidgetPageName
                     },
-                    ProjectEditor.LayoutViewWidgetClass
+                    ProjectEditor.UserWidgetWidgetClass
                 )
             );
         } catch (error) {
@@ -3085,11 +3093,11 @@ export class Widget extends Component {
         }
     }
 
-    static async replaceWithCustomWidget(fromWidgets: Component[]) {
+    static async replaceWithUserWidgetPage(fromWidgets: Component[]) {
         try {
             const result = await showGenericDialog({
                 dialogDefinition: {
-                    title: "Custom widget name",
+                    title: "User widget name",
                     fields: [
                         {
                             name: "name",
@@ -3103,23 +3111,23 @@ export class Widget extends Component {
                 }
             });
 
-            const customWidgetName = result.values.name;
+            const userWidgetPageName = result.values.name;
 
             const createWidgetsResult = Widget.createWidgets(fromWidgets);
 
             return getProjectStore(fromWidgets[0]).replaceObjects(
                 fromWidgets,
-                createObject<LayoutViewWidget>(
+                createObject<UserWidgetWidget>(
                     getProjectStore(fromWidgets[0]),
                     {
-                        type: "LayoutView",
+                        type: "UserWidgetWidget",
                         left: createWidgetsResult.left,
                         top: createWidgetsResult.top,
                         width: createWidgetsResult.width,
                         height: createWidgetsResult.height,
-                        layout: customWidgetName
+                        userWidgetPageName
                     },
-                    ProjectEditor.LayoutViewWidgetClass
+                    ProjectEditor.UserWidgetWidgetClass
                 )
             );
         } catch (error) {
@@ -3607,7 +3615,7 @@ export class ActionComponent extends Component {
 export class NotFoundComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         label: (widget: Component) => {
-            return `${ActionComponent.classInfo.label!(widget)} [NOT FOUND]`;
+            return `${widget.type} [NOT FOUND]`;
         },
         icon: (
             <svg

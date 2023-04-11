@@ -15,7 +15,8 @@ import type {
     getFlow,
     getNameProperty,
     getProject,
-    Project
+    Project,
+    getLvglIdentifiers
 } from "project-editor/project/project";
 import type { findPage, Page } from "project-editor/features/page/page";
 import type {
@@ -63,7 +64,7 @@ import type {
 } from "project-editor/flow/components/actions";
 import type {
     ContainerWidget,
-    LayoutViewWidget,
+    UserWidgetWidget,
     ListWidget,
     SelectWidget
 } from "project-editor/flow/components/widgets";
@@ -100,7 +101,7 @@ export interface IProjectEditor {
     ActionComponentClass: typeof ActionComponent;
     WidgetClass: typeof Widget;
     ConnectionLineClass: typeof ConnectionLine;
-    LayoutViewWidgetClass: typeof LayoutViewWidget;
+    UserWidgetWidgetClass: typeof UserWidgetWidget;
     SelectWidgetClass: typeof SelectWidget;
     ContainerWidgetClass: typeof ContainerWidget;
     ListWidgetClass: typeof ListWidget;
@@ -135,6 +136,7 @@ export interface IProjectEditor {
     createEditorState: typeof createEditorState;
     browseGlyph: typeof browseGlyph;
     checkAssetId: typeof checkAssetId;
+    getLvglIdentifiers: typeof getLvglIdentifiers;
     Property: typeof Property;
     ArrayProperty: typeof ArrayProperty;
     EmbeddedPropertyGrid: typeof EmbeddedPropertyGrid;

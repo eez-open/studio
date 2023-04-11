@@ -387,9 +387,15 @@ export function getObjectPath(object: IEezObject): (string | number)[] {
     let parent = getParent(object);
     if (parent) {
         if (isArray(parent)) {
-            return getObjectPath(parent).concat(
-                parent.indexOf(object as EezObject)
-            );
+            let index = parent.indexOf(object as EezObject);
+            if (index === -1) {
+                const classInfo = getClassInfo(object);
+                if (classInfo.findChildIndex) {
+                    index = classInfo.findChildIndex(parent, object);
+                }
+            }
+
+            return getObjectPath(parent).concat(index);
         } else {
             return getObjectPath(parent).concat(getKey(object));
         }

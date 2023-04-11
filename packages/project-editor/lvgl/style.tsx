@@ -29,7 +29,7 @@ import { Icon } from "eez-studio-ui/icon";
 ////////////////////////////////////////////////////////////////////////////////
 
 const DefaultStylePropertyGridUI = observer(
-    class LayoutViewPropertyGridUI extends React.Component<PropertyProps> {
+    class DefaultStylePropertyGridUI extends React.Component<PropertyProps> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 

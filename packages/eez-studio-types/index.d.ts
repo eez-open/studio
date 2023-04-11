@@ -597,7 +597,7 @@ export interface IWasmFlowRuntime {
     _lvglGetObjHeight(obj: number): number;
     _lvglLoadFont(font_file_path: number): number;
     _lvglFreeFont(font_ptr: number): void;
-    _lvglAddObjectFlowCallback(obj: number, filter: number, page_index: number, component_index: number, output_or_property_index: number): void;
+    _lvglAddObjectFlowCallback(obj: number, filter: number, flow_state_address_index: number, component_index: number, output_or_property_index: number): void;
     _lvglSetImageSrc(parentObj: number, img_src: number, pivotX: number, pivotY: number, zoom: number, angle: number): void;
     _lvglSetImgbuttonImageSrc(obj: number, statE: number, img_src: number): void;
     _lvglSetKeyboardTextarea(obj: number, textarea: number): void;
@@ -609,22 +609,22 @@ export interface IWasmFlowRuntime {
     _lvglMeterAddIndicatorNeedleLine(obj: number, scale: number, width: number, color: number, radiusModifier: number, value: number): number;
     _lvglMeterAddIndicatorScaleLines(obj: number, scale: number, colorStart: number, colorEnd: number, local: boolean, widthModifier: number, startValue: number, endValue: number): number;
     _lvglMeterAddIndicatorArc(obj: number, scale: number, width: number, color: number, radiusModifier: number, startValue: number, endValue: number): number;
-    _lvglUpdateMeterIndicatorValue(obj: number, indicator: number, page_index: number, component_index: number, property_index: number): void;
-    _lvglUpdateMeterIndicatorStartValue(obj: number, indicator: number, page_index: number, component_index: number, property_index: number): void;
-    _lvglUpdateMeterIndicatorEndValue(obj: number, indicator: number, page_index: number, component_index: number, property_index: number): void;
-    _lvglUpdateLabelText(obj: number, page_index: number, component_index: number, property_index: number): void;
-    _lvglUpdateRollerSelected(obj: number, page_index: number, component_index: number, property_index: number): void;
-    _lvglUpdateDropdownSelected(obj: number, page_index: number, component_index: number, property_index: number): void;
-    _lvglUpdateSliderValue(obj: number, page_index: number, component_index: number, property_index: number): void;
-    _lvglUpdateSliderValueLeft(obj: number, page_index: number, component_index: number, property_index: number): void;
-    _lvglUpdateBarValue(obj: number, page_index: number, component_index: number, property_index: number): void;
-    _lvglUpdateBarValueStart(obj: number, page_index: number, component_index: number, property_index: number): void;
-    _lvglUpdateArcValue(obj: number, page_index: number, component_index: number, property_index: number): void;
-    _lvglUpdateTextareaText(obj: number, page_index: number, component_index: number, property_index: number): void;
-    _lvglUpdateCheckedState(obj: number, page_index: number, component_index: number, property_index: number): void;
-    _lvglUpdateDisabledState(obj: number, page_index: number, component_index: number, property_index: number): void;
-    _lvglUpdateHiddenFlag(obj: number, page_index: number, component_index: number, property_index: number): void;
-    _lvglUpdateClickableFlag(obj: number, page_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateMeterIndicatorValue(obj: number, indicator: number, flow_state_address_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateMeterIndicatorStartValue(obj: number, indicator: number, flow_state_address_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateMeterIndicatorEndValue(obj: number, indicator: number, flow_state_address_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateLabelText(obj: number, flow_state_address_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateRollerSelected(obj: number, flow_state_address_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateDropdownSelected(obj: number, flow_state_address_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateSliderValue(obj: number, flow_state_address_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateSliderValueLeft(obj: number, flow_state_address_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateBarValue(obj: number, flow_state_address_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateBarValueStart(obj: number, flow_state_address_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateArcValue(obj: number, flow_state_address_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateTextareaText(obj: number, flow_state_address_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateCheckedState(obj: number, flow_state_address_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateDisabledState(obj: number, flow_state_address_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateHiddenFlag(obj: number, flow_state_address_index: number, component_index: number, property_index: number): void;
+    _lvglUpdateClickableFlag(obj: number, flow_state_address_index: number, component_index: number, property_index: number): void;
     _lvglAddTimelineKeyframe(
         obj: number,
         page_index: number,

@@ -40,7 +40,7 @@ import {
     ButtonWidget,
     ContainerWidget,
     DisplayDataWidget,
-    LayoutViewWidget,
+    UserWidgetWidget,
     ListGraphWidget,
     ListWidget,
     MultilineTextWidget,
@@ -177,7 +177,7 @@ const WIDGET_TYPE_BUTTON = 10;
 const WIDGET_TYPE_TOGGLE_BUTTON = 11;
 const WIDGET_TYPE_BUTTON_GROUP = 12;
 const WIDGET_TYPE_BAR_GRAPH = 14;
-const WIDGET_TYPE_LAYOUT_VIEW = 15;
+const WIDGET_TYPE_USER_WIDGET = 15;
 const WIDGET_TYPE_YT_GRAPH = 16;
 const WIDGET_TYPE_UP_DOWN = 17;
 const WIDGET_TYPE_LIST_GRAPH = 18;
@@ -898,8 +898,8 @@ function buildWidget(object: Widget | Page, assets: Assets) {
             type = WIDGET_TYPE_UP_DOWN;
         } else if (widgetType == "ListGraph") {
             type = WIDGET_TYPE_LIST_GRAPH;
-        } else if (widgetType == "LayoutView") {
-            type = WIDGET_TYPE_LAYOUT_VIEW;
+        } else if (widgetType == "UserWidget") {
+            type = WIDGET_TYPE_USER_WIDGET;
         } else if (widgetType == "AppView") {
             type = WIDGET_TYPE_APP_VIEW;
         } else if (widgetType == "Grid") {
@@ -1315,17 +1315,17 @@ function buildWidget(object: Widget | Page, assets: Assets) {
         }
 
         specific.addField(new UInt8(bitmap));
-    } else if (type == WIDGET_TYPE_LAYOUT_VIEW) {
-        let widget = object as LayoutViewWidget;
+    } else if (type == WIDGET_TYPE_USER_WIDGET) {
+        let widget = object as UserWidgetWidget;
         specific = new Struct();
 
         // layout
-        let layout: number = 0;
-        if (widget.layout) {
-            layout = assets.getPageIndex(widget, "layout");
+        let userWidgetPage: number = 0;
+        if (widget.userWidgetPageName) {
+            userWidgetPage = assets.getPageIndex(widget, "userWidgetPageName");
         }
 
-        specific.addField(new Int16(layout));
+        specific.addField(new Int16(userWidgetPage));
 
         // context
         let context = 0;

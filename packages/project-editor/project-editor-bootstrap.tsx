@@ -31,7 +31,8 @@ import {
     findReferencedObject,
     getNameProperty,
     checkObjectReference,
-    checkAssetId
+    checkAssetId,
+    getLvglIdentifiers
 } from "project-editor/project/project";
 
 import { extensions } from "eez-studio-shared/extensions/extensions";
@@ -106,7 +107,7 @@ import {
 } from "project-editor/flow/components/actions";
 import {
     ContainerWidget,
-    LayoutViewWidget,
+    UserWidgetWidget,
     ListWidget,
     SelectWidget
 } from "project-editor/flow/components/widgets";
@@ -200,7 +201,7 @@ export async function initProjectEditor(
         ActionComponentClass: ActionComponent,
         WidgetClass: Widget,
         ConnectionLineClass: ConnectionLine,
-        LayoutViewWidgetClass: LayoutViewWidget,
+        UserWidgetWidgetClass: UserWidgetWidget,
         SelectWidgetClass: SelectWidget,
         ContainerWidgetClass: ContainerWidget,
         ListWidgetClass: ListWidget,
@@ -235,6 +236,7 @@ export async function initProjectEditor(
         createEditorState,
         browseGlyph,
         checkAssetId,
+        getLvglIdentifiers,
         Property,
         ArrayProperty,
         EmbeddedPropertyGrid

@@ -37,7 +37,7 @@ import {
     ButtonWidget,
     ContainerWidget,
     DisplayDataWidget,
-    LayoutViewWidget,
+    UserWidgetWidget,
     ListGraphWidget,
     ListWidget,
     MultilineTextWidget,
@@ -517,7 +517,7 @@ function getItem(
 
 function getPageLayoutIndex(object: any, propertyName: string) {
     const pages = getProject(object).pages.filter(
-        page => page.isUsedAsCustomWidget
+        page => page.isUsedAsUserWidget
     );
     return getItem(pages, object, propertyName);
 }
@@ -1194,7 +1194,7 @@ function buildWidget(object: Widget | Page) {
             type = WIDGET_TYPE_UP_DOWN;
         } else if (widgetType == "ListGraph") {
             type = WIDGET_TYPE_LIST_GRAPH;
-        } else if (widgetType == "LayoutView") {
+        } else if (widgetType == "UserWidget") {
             type = WIDGET_TYPE_CUSTOM;
         } else {
             type = WIDGET_TYPE_NONE;
@@ -1644,16 +1644,16 @@ function buildWidget(object: Widget | Page) {
 
         specific.addField(new UInt8(bitmap));
     } else if (type == WIDGET_TYPE_CUSTOM) {
-        let widget = object as LayoutViewWidget;
+        let widget = object as UserWidgetWidget;
         specific = new Struct();
 
         // layout
-        let layout: number = 0;
-        if (widget.layout) {
-            layout = getPageLayoutIndex(widget, "layout");
+        let userWidgetPage: number = 0;
+        if (widget.userWidgetPageName) {
+            userWidgetPage = getPageLayoutIndex(widget, "userWidgetPageName");
         }
 
-        specific.addField(new UInt8(layout));
+        specific.addField(new UInt8(userWidgetPage));
     }
 
     result.addField(new ObjectPtr(specific));
@@ -1665,7 +1665,7 @@ function buildWidget(object: Widget | Page) {
 
 function buildGuiPagesEnum(project: Project) {
     let pages = project.pages
-        .filter(page => !page.isUsedAsCustomWidget)
+        .filter(page => !page.isUsedAsUserWidget)
         .map(
             widget =>
                 `${TAB}${getName(
@@ -1733,7 +1733,7 @@ function buildGuiDocumentDef(
     function build() {
         let customWidgets = new ObjectList();
         project.pages
-            .filter(page => page.isUsedAsCustomWidget)
+            .filter(page => page.isUsedAsUserWidget)
             .forEach(customWidget => {
                 customWidgets.addItem(buildCustomWidget(customWidget));
             });
@@ -1741,7 +1741,7 @@ function buildGuiDocumentDef(
 
         let pages = new ObjectList();
         project.pages
-            .filter(page => !page.isUsedAsCustomWidget)
+            .filter(page => !page.isUsedAsUserWidget)
             .forEach(page => {
                 pages.addItem(buildPage(page));
             });

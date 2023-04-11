@@ -23,7 +23,6 @@ import {
     getClassInfoLvglProperties,
     EezObject,
     ClassInfo,
-    isAncestor,
     setParent
 } from "project-editor/core/object";
 
@@ -113,6 +112,7 @@ import {
 } from "project-editor/flow/components/actions";
 import { Assets, DataBuffer } from "project-editor/build/assets";
 import { COMPONENT_TYPE_LVGL_USER_WIDGET } from "project-editor/flow/components/component_types";
+import { visitObjects } from "project-editor/core/search";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -253,6 +253,39 @@ function stateEnabledInWidget(
     );
 }
 
+function getFlowStateAddressIndex(runtime: LVGLPageRuntime) {
+    const len = runtime.lvglCreateContext.userWidgetComponentIndexes.length;
+
+    const ptr = runtime.wasm._malloc(1 + 4 * len + 1);
+
+    runtime.wasm.HEAP32[(ptr >> 2) + 0] = runtime.lvglCreateContext.flowIndex;
+
+    for (let i = 0; i < len; i++) {
+        runtime.wasm.HEAP32[(ptr >> 2) + 1 + i] =
+            runtime.lvglCreateContext.userWidgetComponentIndexes[i];
+    }
+
+    runtime.wasm.HEAP32[(ptr >> 2) + 1 + len] = -1;
+
+    return ptr;
+}
+
+function lvglAddObjectFlowCallback(
+    runtime: LVGLPageRuntime,
+    obj: number,
+    filter: number,
+    component_index: number,
+    output_or_property_index: number
+) {
+    runtime.wasm._lvglAddObjectFlowCallback(
+        obj,
+        filter,
+        getFlowStateAddressIndex(runtime),
+        component_index,
+        output_or_property_index
+    );
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLWidget extends Widget {
@@ -325,9 +358,9 @@ export class LVGLWidget extends Widget {
                         }
 
                         if (
-                            ProjectEditor.getProject(
-                                parent
-                            )._lvglIdentifiers.get(newIdentifer) == undefined
+                            ProjectEditor.getLvglIdentifiers(parent).get(
+                                newIdentifer
+                            ) == undefined
                         ) {
                             return null;
                         }
@@ -712,6 +745,21 @@ export class LVGLWidget extends Widget {
 
             const projectStore = getProjectStore(widget);
 
+            if (widget.identifier) {
+                const lvglIdentifier = ProjectEditor.getLvglIdentifiers(
+                    widget
+                ).get(widget.identifier);
+                if (lvglIdentifier && lvglIdentifier.duplicate) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Duplicate identifier`,
+                            getChildOfObject(widget, "identifier")
+                        )
+                    );
+                }
+            }
+
             if (widget.useStyle) {
                 const lvglStyle = findLvglStyle(
                     projectStore.project,
@@ -993,7 +1041,12 @@ export class LVGLWidget extends Widget {
         const project = ProjectEditor.getProject(this);
 
         if (runtime.wasm.assetsMap) {
-            const pagePath = getObjectPathAsString(runtime.page);
+            const page = getAncestorOfType(
+                this,
+                ProjectEditor.PageClass.classInfo
+            ) as Page;
+            const pagePath = getObjectPathAsString(page);
+
             const flowIndex = runtime.wasm.assetsMap.flowIndexes[pagePath];
             if (flowIndex != undefined) {
                 const flow = runtime.wasm.assetsMap.flows[flowIndex];
@@ -1008,10 +1061,10 @@ export class LVGLWidget extends Widget {
                             const outputIndex =
                                 component.outputIndexes[eventHandler.trigger];
                             if (outputIndex != undefined) {
-                                runtime.wasm._lvglAddObjectFlowCallback(
+                                lvglAddObjectFlowCallback(
+                                    runtime,
                                     obj,
                                     eventHandler.triggerCode,
-                                    flowIndex,
                                     componentIndex,
                                     outputIndex
                                 );
@@ -1026,10 +1079,10 @@ export class LVGLWidget extends Widget {
                             const actionPath = getObjectPathAsString(action);
                             const actionFlowIndex =
                                 runtime.wasm.assetsMap.flowIndexes[actionPath];
-                            runtime.wasm._lvglAddObjectFlowCallback(
+                            lvglAddObjectFlowCallback(
+                                runtime,
                                 obj,
                                 eventHandler.triggerCode,
-                                flowIndex,
                                 -1,
                                 actionFlowIndex
                             );
@@ -1073,7 +1126,7 @@ export class LVGLWidget extends Widget {
             if (hiddenFlagExpr) {
                 runtime.wasm._lvglUpdateHiddenFlag(
                     obj,
-                    hiddenFlagExpr.flowIndex,
+                    getFlowStateAddressIndex(runtime),
                     hiddenFlagExpr.componentIndex,
                     hiddenFlagExpr.propertyIndex
                 );
@@ -1087,7 +1140,7 @@ export class LVGLWidget extends Widget {
             if (clickableFlagExpr) {
                 runtime.wasm._lvglUpdateClickableFlag(
                     obj,
-                    clickableFlagExpr.flowIndex,
+                    getFlowStateAddressIndex(runtime),
                     clickableFlagExpr.componentIndex,
                     clickableFlagExpr.propertyIndex
                 );
@@ -1129,7 +1182,7 @@ export class LVGLWidget extends Widget {
             if (checkedStateExpr) {
                 runtime.wasm._lvglUpdateCheckedState(
                     obj,
-                    checkedStateExpr.flowIndex,
+                    getFlowStateAddressIndex(runtime),
                     checkedStateExpr.componentIndex,
                     checkedStateExpr.propertyIndex
                 );
@@ -1143,7 +1196,7 @@ export class LVGLWidget extends Widget {
             if (disabledStateExpr) {
                 runtime.wasm._lvglUpdateDisabledState(
                     obj,
-                    disabledStateExpr.flowIndex,
+                    getFlowStateAddressIndex(runtime),
                     disabledStateExpr.componentIndex,
                     disabledStateExpr.propertyIndex
                 );
@@ -1192,10 +1245,10 @@ export class LVGLWidget extends Widget {
             "checkedState"
         );
         if (checkedStateExpr) {
-            runtime.wasm._lvglAddObjectFlowCallback(
+            lvglAddObjectFlowCallback(
+                runtime,
                 obj,
                 LV_EVENT_CHECKED_STATE_CHANGED,
-                checkedStateExpr.flowIndex,
                 checkedStateExpr.componentIndex,
                 checkedStateExpr.propertyIndex
             );
@@ -1834,7 +1887,7 @@ export class LVGLLabelWidget extends LVGLWidget {
         if (textExpr) {
             runtime.wasm._lvglUpdateLabelText(
                 obj,
-                textExpr.flowIndex,
+                getFlowStateAddressIndex(runtime),
                 textExpr.componentIndex,
                 textExpr.propertyIndex
             );
@@ -2055,7 +2108,7 @@ export const userWidgetGroup: IPropertyGridGroupDefinition = {
 
 const LVGLUserWidgetWidgetPropertyGridUI = observer(
     class LVGLUserWidgetWidgetPropertyGridUI extends React.Component<PropertyProps> {
-        showLayout = () => {
+        showUserWidgetPage = () => {
             (this.props.objects[0] as LVGLUserWidgetWidget).open();
         };
 
@@ -2064,8 +2117,12 @@ const LVGLUserWidgetWidgetPropertyGridUI = observer(
                 return null;
             }
             return (
-                <Button color="primary" size="small" onClick={this.showLayout}>
-                    Show Layout
+                <Button
+                    color="primary"
+                    size="small"
+                    onClick={this.showUserWidgetPage}
+                >
+                    Show User Widget Page
                 </Button>
             );
         }
@@ -2073,7 +2130,7 @@ const LVGLUserWidgetWidgetPropertyGridUI = observer(
 );
 
 export class LVGLUserWidgetWidget extends LVGLWidget {
-    layout: string;
+    userWidgetPageName: string;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -2090,8 +2147,8 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
                 name = `${name} [${widget.identifier}]`;
             }
 
-            if (widget.layout) {
-                return `${name}: ${widget.layout}`;
+            if (widget.userWidgetPageName) {
+                return `${name}: ${widget.userWidgetPageName}`;
             }
 
             return name;
@@ -2099,7 +2156,8 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
 
         properties: [
             {
-                name: "layout",
+                name: "userWidgetPageName",
+                displayName: "User widget page",
                 type: PropertyType.ObjectReference,
                 propertyGridGroup: userWidgetGroup,
                 referencedObjectCollectionPath: "pages"
@@ -2111,17 +2169,17 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
                 computed: true,
                 propertyGridRowComponent: LVGLUserWidgetWidgetPropertyGridUI,
                 hideInPropertyGrid: (widget: LVGLUserWidgetWidget) => {
-                    if (!widget.layout) {
+                    if (!widget.userWidgetPageName) {
                         return true;
                     }
 
                     const project = getProject(widget);
 
-                    const layout = ProjectEditor.findPage(
+                    const userWidgetPage = ProjectEditor.findPage(
                         project,
-                        widget.layout
+                        widget.userWidgetPageName
                     );
-                    if (!layout) {
+                    if (!userWidgetPage) {
                         return true;
                     }
 
@@ -2167,18 +2225,43 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
             states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
         },
 
-        check: (object: LVGLUserWidgetWidget) => {
+        check: (widget: LVGLUserWidgetWidget) => {
             let messages: Message[] = [];
 
-            if (!object.layout) {
-                messages.push(propertyNotSetMessage(object, "layout"));
-            } else {
-                let layout = ProjectEditor.findPage(
-                    getProject(object),
-                    object.layout
+            if (!widget.userWidgetPageName) {
+                messages.push(
+                    propertyNotSetMessage(widget, "userWidgetPageName")
                 );
-                if (!layout) {
-                    messages.push(propertyNotFoundMessage(object, "layout"));
+            } else {
+                let userWidgetPage = ProjectEditor.findPage(
+                    getProject(widget),
+                    widget.userWidgetPageName
+                );
+
+                if (!userWidgetPage) {
+                    messages.push(
+                        propertyNotFoundMessage(widget, "userWidgetPageName")
+                    );
+                } else {
+                    if (!userWidgetPage.isUsedAsUserWidget) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `Page "${userWidgetPage.name}" is not an user widget page`,
+                                widget
+                            )
+                        );
+                    }
+
+                    if (widget.isCycleDetected) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `Cycle detected in user widget page`,
+                                getChildOfObject(widget, "userWidgetPageName")
+                            )
+                        );
+                    }
                 }
             }
 
@@ -2190,35 +2273,80 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
         super();
 
         makeObservable(this, {
-            layout: observable,
-            layoutPage: computed,
-            layoutPageCopy: computed
+            userWidgetPageName: observable,
+            userWidgetPage: computed,
+            isCycleDetected: computed,
+            userWidgetPageCopy: computed
         });
     }
 
-    get layoutPage(): Page | undefined {
-        let layout;
+    get userWidgetPage(): Page | undefined {
+        if (!this.userWidgetPageName) {
+            return undefined;
+        }
+
+        return ProjectEditor.findPage(
+            getProject(this),
+            this.userWidgetPageName
+        );
+    }
+
+    get isCycleDetected() {
+        const visited = new Set<Page>();
+
+        function testForCycle(page: Page): boolean {
+            if (visited.has(page)) {
+                return false;
+            }
+
+            visited.add(page);
+
+            for (const widget of visitObjects(page)) {
+                if (widget instanceof ProjectEditor.LVGLUserWidgetWidgetClass) {
+                    if (widget.userWidgetPageName) {
+                        const userWidgetPage = ProjectEditor.findPage(
+                            project,
+                            widget.userWidgetPageName
+                        );
+                        if (userWidgetPage) {
+                            if (userWidgetPage === origPage) {
+                                return true;
+                            }
+                            if (testForCycle(userWidgetPage)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        if (!this.userWidgetPageName) {
+            return false;
+        }
 
         const project = getProject(this);
 
-        if (!layout) {
-            layout = ProjectEditor.findPage(project, this.layout);
+        const userWidgetPage = ProjectEditor.findPage(
+            project,
+            this.userWidgetPageName
+        );
+        if (!userWidgetPage) {
+            return false;
         }
 
-        if (!layout) {
-            return undefined;
-        }
+        const origPage = getAncestorOfType(
+            this,
+            ProjectEditor.PageClass.classInfo
+        ) as Page;
 
-        if (isAncestor(this, layout)) {
-            // prevent cyclic referencing
-            return undefined;
-        }
-
-        return layout;
+        return testForCycle(userWidgetPage);
     }
 
-    get layoutPageCopy(): Page | undefined {
-        const page = this.layoutPage;
+    get userWidgetPageCopy(): Page | undefined {
+        const page = this.userWidgetPage;
 
         if (!page) {
             return undefined;
@@ -2226,24 +2354,24 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
 
         const projectStore = ProjectEditor.getProject(this)._store;
 
-        let layoutPageCopy: Page | undefined = undefined;
+        let userWidgetPageCopy: Page | undefined = undefined;
 
         // runInAction is needed to avoid observing copied page
         runInAction(() => {
-            layoutPageCopy = clipboardDataToObject(
+            userWidgetPageCopy = clipboardDataToObject(
                 projectStore,
                 objectToClipboardData(projectStore, page)
             ).object as Page;
-            setParent(layoutPageCopy, projectStore.project.pages);
+            setParent(userWidgetPageCopy, projectStore.project.pages);
         });
 
-        return layoutPageCopy;
+        return userWidgetPageCopy;
     }
 
     open() {
-        if (this.layoutPage) {
+        if (this.userWidgetPage) {
             getProjectStore(this).navigationStore.showObjects(
-                [this.layoutPage],
+                [this.userWidgetPage],
                 true,
                 false,
                 false
@@ -2252,7 +2380,10 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
     }
 
     getInputs() {
-        const page = ProjectEditor.findPage(getProject(this), this.layout);
+        const page = ProjectEditor.findPage(
+            getProject(this),
+            this.userWidgetPageName
+        );
         if (!page) {
             return super.getInputs();
         }
@@ -2281,7 +2412,10 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
     }
 
     getOutputs() {
-        const page = ProjectEditor.findPage(getProject(this), this.layout);
+        const page = ProjectEditor.findPage(
+            getProject(this),
+            this.userWidgetPageName
+        );
         if (!page) {
             return super.getOutputs();
         }
@@ -2315,10 +2449,10 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
     ): number {
         const widgetIndex = runtime.getWidgetIndex(this);
 
-        if (!this.layoutPageCopy) {
+        if (!this.userWidgetPageCopy || this.isCycleDetected) {
             return runtime.wasm._lvglCreateUserWidget(
                 parentObj,
-                runtime.getWidgetIndex(this),
+                widgetIndex,
 
                 this.lvglCreateLeft,
                 this.lvglCreateTop,
@@ -2327,13 +2461,33 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
             );
         }
 
-        const obj = this.layoutPageCopy.lvglCreate(runtime, parentObj, {
+        const savedUserWidgetContext = runtime.lvglCreateContext;
+
+        if (runtime.wasm.assetsMap) {
+            const flow =
+                runtime.wasm.assetsMap.flows[savedUserWidgetContext.flowIndex];
+            const componentPath = getObjectPathAsString(this);
+            const componentIndex = flow.componentIndexes[componentPath];
+
+            runtime.lvglCreateContext = {
+                widgetIndex: widgetIndex + 1,
+                flowIndex: savedUserWidgetContext.flowIndex,
+                userWidgetComponentIndexes: [
+                    ...runtime.lvglCreateContext.userWidgetComponentIndexes,
+                    componentIndex
+                ]
+            };
+        }
+
+        const obj = this.userWidgetPageCopy.lvglCreate(runtime, parentObj, {
             widgetIndex,
             left: this.lvglCreateLeft,
             top: this.lvglCreateTop,
             width: this.lvglCreateWidth,
             height: this.lvglCreateHeight
         });
+
+        runtime.lvglCreateContext = savedUserWidgetContext;
 
         return obj;
     }
@@ -2343,18 +2497,19 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        const layoutPage = this.layoutPage;
-        if (layoutPage) {
+        const userWidgetPage = this.userWidgetPage;
+        if (userWidgetPage) {
             // flowIndex
-            const flowIndex = assets.flows.indexOf(layoutPage);
+            const flowIndex = assets.flows.indexOf(userWidgetPage);
             dataBuffer.writeInt16(flowIndex);
 
             // inputsStartIndex
-            if (layoutPage.inputComponents.length > 0) {
+            if (userWidgetPage.inputComponents.length > 0) {
                 dataBuffer.writeUint8(
                     this.buildInputs.findIndex(
                         input =>
-                            input.name == layoutPage.inputComponents[0].objID
+                            input.name ==
+                            userWidgetPage.inputComponents[0].objID
                     )
                 );
             } else {
@@ -2362,16 +2517,24 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
             }
 
             // outputsStartIndex
-            if (layoutPage.outputComponents.length > 0) {
+            if (userWidgetPage.outputComponents.length > 0) {
                 dataBuffer.writeUint8(
                     this.buildOutputs.findIndex(
                         output =>
-                            output.name == layoutPage.outputComponents[0].objID
+                            output.name ==
+                            userWidgetPage.outputComponents[0].objID
                     )
                 );
             } else {
                 dataBuffer.writeUint8(0);
             }
+
+            // widgetStartIndex
+            // TODO currently UserWidget requires identifier to be set
+            const widgetStartIndex =
+                ProjectEditor.getLvglIdentifiers(this).get(this.identifier)!
+                    .index + 1;
+            dataBuffer.writeInt32(widgetStartIndex);
         } else {
             // flowIndex
             dataBuffer.writeInt16(-1);
@@ -2379,6 +2542,8 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
             dataBuffer.writeUint8(0);
             // outputsStartIndex
             dataBuffer.writeUint8(0);
+            // widgetStartIndex
+            dataBuffer.writeInt32(0);
         }
     }
 }
@@ -2782,7 +2947,7 @@ export class LVGLSliderWidget extends LVGLWidget {
         if (valueExpr) {
             runtime.wasm._lvglUpdateSliderValue(
                 obj,
-                valueExpr.flowIndex,
+                getFlowStateAddressIndex(runtime),
                 valueExpr.componentIndex,
                 valueExpr.propertyIndex
             );
@@ -2791,7 +2956,7 @@ export class LVGLSliderWidget extends LVGLWidget {
         if (valueLeftExpr) {
             runtime.wasm._lvglUpdateSliderValueLeft(
                 obj,
-                valueLeftExpr.flowIndex,
+                getFlowStateAddressIndex(runtime),
                 valueLeftExpr.componentIndex,
                 valueLeftExpr.propertyIndex
             );
@@ -2803,10 +2968,10 @@ export class LVGLSliderWidget extends LVGLWidget {
     override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
         const valueExpr = getExpressionPropertyData(runtime, this, "value");
         if (valueExpr) {
-            runtime.wasm._lvglAddObjectFlowCallback(
+            lvglAddObjectFlowCallback(
+                runtime,
                 obj,
                 LV_EVENT_SLIDER_VALUE_CHANGED,
-                valueExpr.flowIndex,
                 valueExpr.componentIndex,
                 valueExpr.propertyIndex
             );
@@ -2817,10 +2982,10 @@ export class LVGLSliderWidget extends LVGLWidget {
                 ? getExpressionPropertyData(runtime, this, "valueLeft")
                 : undefined;
         if (valueLeftExpr) {
-            runtime.wasm._lvglAddObjectFlowCallback(
+            lvglAddObjectFlowCallback(
+                runtime,
                 obj,
                 LV_EVENT_SLIDER_VALUE_LEFT_CHANGED,
-                valueLeftExpr.flowIndex,
                 valueLeftExpr.componentIndex,
                 valueLeftExpr.propertyIndex
             );
@@ -3057,7 +3222,7 @@ export class LVGLRollerWidget extends LVGLWidget {
         if (selectedExpr) {
             runtime.wasm._lvglUpdateRollerSelected(
                 obj,
-                selectedExpr.flowIndex,
+                getFlowStateAddressIndex(runtime),
                 selectedExpr.componentIndex,
                 selectedExpr.propertyIndex
             );
@@ -3073,10 +3238,10 @@ export class LVGLRollerWidget extends LVGLWidget {
             "selected"
         );
         if (selectedExpr) {
-            runtime.wasm._lvglAddObjectFlowCallback(
+            lvglAddObjectFlowCallback(
+                runtime,
                 obj,
                 LV_EVENT_ROLLER_SELECTED_CHANGED,
-                selectedExpr.flowIndex,
                 selectedExpr.componentIndex,
                 selectedExpr.propertyIndex
             );
@@ -3378,7 +3543,7 @@ export class LVGLBarWidget extends LVGLWidget {
         if (valueExpr) {
             runtime.wasm._lvglUpdateBarValue(
                 obj,
-                valueExpr.flowIndex,
+                getFlowStateAddressIndex(runtime),
                 valueExpr.componentIndex,
                 valueExpr.propertyIndex
             );
@@ -3387,7 +3552,7 @@ export class LVGLBarWidget extends LVGLWidget {
         if (valueStartExpr) {
             runtime.wasm._lvglUpdateBarValueStart(
                 obj,
-                valueStartExpr.flowIndex,
+                getFlowStateAddressIndex(runtime),
                 valueStartExpr.componentIndex,
                 valueStartExpr.propertyIndex
             );
@@ -3578,7 +3743,7 @@ export class LVGLDropdownWidget extends LVGLWidget {
         if (selectedExpr) {
             runtime.wasm._lvglUpdateDropdownSelected(
                 obj,
-                selectedExpr.flowIndex,
+                getFlowStateAddressIndex(runtime),
                 selectedExpr.componentIndex,
                 selectedExpr.propertyIndex
             );
@@ -3594,10 +3759,10 @@ export class LVGLDropdownWidget extends LVGLWidget {
             "selected"
         );
         if (selectedExpr) {
-            runtime.wasm._lvglAddObjectFlowCallback(
+            lvglAddObjectFlowCallback(
+                runtime,
                 obj,
                 LV_EVENT_DROPDOWN_SELECTED_CHANGED,
-                selectedExpr.flowIndex,
                 selectedExpr.componentIndex,
                 selectedExpr.propertyIndex
             );
@@ -3827,7 +3992,7 @@ export class LVGLArcWidget extends LVGLWidget {
         if (valueExpr) {
             runtime.wasm._lvglUpdateArcValue(
                 obj,
-                valueExpr.flowIndex,
+                getFlowStateAddressIndex(runtime),
                 valueExpr.componentIndex,
                 valueExpr.propertyIndex
             );
@@ -3839,10 +4004,10 @@ export class LVGLArcWidget extends LVGLWidget {
     override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
         const valueExpr = getExpressionPropertyData(runtime, this, "value");
         if (valueExpr) {
-            runtime.wasm._lvglAddObjectFlowCallback(
+            lvglAddObjectFlowCallback(
+                runtime,
                 obj,
                 LV_EVENT_ARC_VALUE_CHANGED,
-                valueExpr.flowIndex,
                 valueExpr.componentIndex,
                 valueExpr.propertyIndex
             );
@@ -4248,7 +4413,7 @@ export class LVGLTextareaWidget extends LVGLWidget {
         if (textExpr) {
             runtime.wasm._lvglUpdateTextareaText(
                 obj,
-                textExpr.flowIndex,
+                getFlowStateAddressIndex(runtime),
                 textExpr.componentIndex,
                 textExpr.propertyIndex
             );
@@ -4264,10 +4429,10 @@ export class LVGLTextareaWidget extends LVGLWidget {
     override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
         const valueExpr = getExpressionPropertyData(runtime, this, "text");
         if (valueExpr) {
-            runtime.wasm._lvglAddObjectFlowCallback(
+            lvglAddObjectFlowCallback(
+                runtime,
                 obj,
                 LV_EVENT_TEXTAREA_TEXT_CHANGED,
-                valueExpr.flowIndex,
                 valueExpr.componentIndex,
                 valueExpr.propertyIndex
             );
@@ -5204,7 +5369,7 @@ export class LVGLKeyboardWidget extends LVGLWidget {
 
             if (widget.textarea) {
                 if (
-                    !ProjectEditor.getProject(widget)._lvglIdentifiers.get(
+                    !ProjectEditor.getLvglIdentifiers(widget).get(
                         widget.textarea
                     )
                 ) {
@@ -5271,9 +5436,9 @@ export class LVGLKeyboardWidget extends LVGLWidget {
 
     override lvglPostCreate(runtime: LVGLPageRuntime) {
         if (this.textarea) {
-            const lvglIdentifier = ProjectEditor.getProject(
-                this
-            )._lvglIdentifiers.get(this.textarea);
+            const lvglIdentifier = ProjectEditor.getLvglIdentifiers(this).get(
+                this.textarea
+            );
             if (lvglIdentifier) {
                 const textareaWidget = lvglIdentifier.object;
                 if (textareaWidget) {
@@ -5305,9 +5470,9 @@ export class LVGLKeyboardWidget extends LVGLWidget {
     override lvglPostBuild(build: LVGLBuild) {
         if (this.textarea) {
             if (this.textarea) {
-                const lvglIdentifier = ProjectEditor.getProject(
+                const lvglIdentifier = ProjectEditor.getLvglIdentifiers(
                     this
-                )._lvglIdentifiers.get(this.textarea);
+                ).get(this.textarea);
                 if (lvglIdentifier != undefined) {
                     const textareaWidget = lvglIdentifier.object;
                     build.line(
@@ -5793,7 +5958,7 @@ export class LVGLMeterIndicatorNeedleImg extends LVGLMeterIndicator {
                         runtime.wasm._lvglUpdateMeterIndicatorValue(
                             obj,
                             indicator,
-                            valueExpr.flowIndex,
+                            getFlowStateAddressIndex(runtime),
                             valueExpr.componentIndex,
                             valueExpr.propertyIndex
                         );
@@ -5952,7 +6117,7 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
             runtime.wasm._lvglUpdateMeterIndicatorValue(
                 obj,
                 indicator,
-                valueExpr.flowIndex,
+                getFlowStateAddressIndex(runtime),
                 valueExpr.componentIndex,
                 valueExpr.propertyIndex
             );
@@ -6164,7 +6329,7 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
             runtime.wasm._lvglUpdateMeterIndicatorStartValue(
                 obj,
                 indicator,
-                startValueExpr.flowIndex,
+                getFlowStateAddressIndex(runtime),
                 startValueExpr.componentIndex,
                 startValueExpr.propertyIndex
             );
@@ -6174,7 +6339,7 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
             runtime.wasm._lvglUpdateMeterIndicatorEndValue(
                 obj,
                 indicator,
-                endValueExpr.flowIndex,
+                getFlowStateAddressIndex(runtime),
                 endValueExpr.componentIndex,
                 endValueExpr.propertyIndex
             );
@@ -6389,7 +6554,7 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
             runtime.wasm._lvglUpdateMeterIndicatorStartValue(
                 obj,
                 indicator,
-                startValueExpr.flowIndex,
+                getFlowStateAddressIndex(runtime),
                 startValueExpr.componentIndex,
                 startValueExpr.propertyIndex
             );
@@ -6399,7 +6564,7 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
             runtime.wasm._lvglUpdateMeterIndicatorEndValue(
                 obj,
                 indicator,
-                endValueExpr.flowIndex,
+                getFlowStateAddressIndex(runtime),
                 endValueExpr.componentIndex,
                 endValueExpr.propertyIndex
             );
@@ -6840,10 +7005,10 @@ export class LVGLMeterWidget extends LVGLWidget {
                 );
 
                 if (labelExpr) {
-                    runtime.wasm._lvglAddObjectFlowCallback(
+                    lvglAddObjectFlowCallback(
+                        runtime,
                         obj,
                         LV_EVENT_METER_TICK_LABEL_EVENT,
-                        labelExpr.flowIndex,
                         labelExpr.componentIndex,
                         labelExpr.propertyIndex
                     );

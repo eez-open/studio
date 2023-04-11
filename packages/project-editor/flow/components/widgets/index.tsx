@@ -38,7 +38,8 @@ import {
     propertyNotSetMessage,
     propertySetButNotUsedMessage,
     createObject,
-    getChildOfObject
+    getChildOfObject,
+    getAncestorOfType
 } from "project-editor/store";
 import {
     isProjectWithFlowSupport,
@@ -65,7 +66,6 @@ import {
     ComponentCanvas
 } from "project-editor/flow/editor/render";
 
-import type { Page } from "project-editor/features/page/page";
 import { Bitmap, findBitmap } from "project-editor/features/bitmap/bitmap";
 import { Style } from "project-editor/features/style/style";
 import { findVariable } from "project-editor/features/variable/variable";
@@ -126,7 +126,7 @@ import {
     WIDGET_TYPE_LIST,
     WIDGET_TYPE_GRID,
     WIDGET_TYPE_SELECT,
-    WIDGET_TYPE_LAYOUT_VIEW,
+    WIDGET_TYPE_USER_WIDGET,
     WIDGET_TYPE_DISPLAY_DATA,
     WIDGET_TYPE_TEXT,
     WIDGET_TYPE_MULTILINE_TEXT,
@@ -178,6 +178,8 @@ import {
 } from "project-editor/ui-components/icons";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 import type { IDashboardComponentContext } from "eez-studio-types";
+import type { Page } from "project-editor/features/page/page";
+import { visitObjects } from "project-editor/core/search";
 
 const LIST_TYPE_VERTICAL = 1;
 const LIST_TYPE_HORIZONTAL = 2;
@@ -1238,10 +1240,10 @@ registerClass("SelectWidget", SelectWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const LayoutViewPropertyGridUI = observer(
-    class LayoutViewPropertyGridUI extends React.Component<PropertyProps> {
-        showLayout = () => {
-            (this.props.objects[0] as LayoutViewWidget).open();
+const UserWidgetPropertyGridUI = observer(
+    class UserWidgetPropertyGridUI extends React.Component<PropertyProps> {
+        showUserWidgetPage = () => {
+            (this.props.objects[0] as UserWidgetWidget).open();
         };
 
         render() {
@@ -1249,8 +1251,12 @@ const LayoutViewPropertyGridUI = observer(
                 return null;
             }
             return (
-                <Button color="primary" size="small" onClick={this.showLayout}>
-                    Show Layout
+                <Button
+                    color="primary"
+                    size="small"
+                    onClick={this.showUserWidgetPage}
+                >
+                    Show User Widget Page
                 </Button>
             );
         }
@@ -1259,19 +1265,20 @@ const LayoutViewPropertyGridUI = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class LayoutViewWidget extends Widget {
-    layout: string;
+export class UserWidgetWidget extends Widget {
+    userWidgetPageName: string;
     context?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
 
-        flowComponentId: WIDGET_TYPE_LAYOUT_VIEW,
+        flowComponentId: WIDGET_TYPE_USER_WIDGET,
 
         properties: [
             {
-                name: "layout",
+                name: "userWidgetPageName",
+                displayName: "User Widget Page",
                 type: PropertyType.ObjectReference,
                 propertyGridGroup: specificGroup,
                 referencedObjectCollectionPath: "pages"
@@ -1282,19 +1289,19 @@ export class LayoutViewWidget extends Widget {
                 type: PropertyType.Any,
                 propertyGridGroup: specificGroup,
                 computed: true,
-                propertyGridRowComponent: LayoutViewPropertyGridUI,
-                hideInPropertyGrid: (widget: LayoutViewWidget) => {
-                    if (!widget.layout) {
+                propertyGridRowComponent: UserWidgetPropertyGridUI,
+                hideInPropertyGrid: (widget: UserWidgetWidget) => {
+                    if (!widget.userWidgetPageName) {
                         return true;
                     }
 
                     const project = getProject(widget);
 
-                    const layout = ProjectEditor.findPage(
+                    const userWidgetPage = ProjectEditor.findPage(
                         project,
-                        widget.layout
+                        widget.userWidgetPageName
                     );
-                    if (!layout) {
+                    if (!userWidgetPage) {
                         return true;
                     }
 
@@ -1303,11 +1310,21 @@ export class LayoutViewWidget extends Widget {
             }
         ],
 
-        label: (widget: LayoutViewWidget) => {
+        beforeLoadHook: (
+            widget: UserWidgetWidget,
+            jsWidget: Partial<UserWidgetWidget>
+        ) => {
+            if ((jsWidget as any).layout != undefined) {
+                jsWidget.userWidgetPageName = (jsWidget as any).layout;
+                delete (jsWidget as any).layout;
+            }
+        },
+
+        label: (widget: UserWidgetWidget) => {
             let name = getComponentName(widget.type);
 
-            if (widget.layout) {
-                return `${name}: ${widget.layout}`;
+            if (widget.userWidgetPageName) {
+                return `${name}: ${widget.userWidgetPageName}`;
             }
 
             return name;
@@ -1322,37 +1339,63 @@ export class LayoutViewWidget extends Widget {
 
         icon: USER_WIDGET_ICON,
 
-        check: (object: LayoutViewWidget) => {
+        check: (object: UserWidgetWidget) => {
             let messages: Message[] = [];
 
-            if (!object.data && !object.layout) {
+            if (!object.data && !object.userWidgetPageName) {
                 messages.push(
                     new Message(
                         MessageType.ERROR,
-                        "Either layout or data must be set",
+                        "Either user widget page or data must be set",
                         object
                     )
                 );
             } else {
-                if (object.data && object.layout) {
+                if (object.data && object.userWidgetPageName) {
                     messages.push(
                         new Message(
                             MessageType.ERROR,
-                            "Both layout and data set, only layout is used",
+                            "Both user widget page and data set, only user widget page is used",
                             object
                         )
                     );
                 }
 
-                if (object.layout) {
-                    let layout = ProjectEditor.findPage(
+                if (object.userWidgetPageName) {
+                    let userWidgetPage = ProjectEditor.findPage(
                         getProject(object),
-                        object.layout
+                        object.userWidgetPageName
                     );
-                    if (!layout) {
+                    if (!userWidgetPage) {
                         messages.push(
-                            propertyNotFoundMessage(object, "layout")
+                            propertyNotFoundMessage(
+                                object,
+                                "userWidgetPageName"
+                            )
                         );
+                    } else {
+                        if (!userWidgetPage.isUsedAsUserWidget) {
+                            messages.push(
+                                new Message(
+                                    MessageType.ERROR,
+                                    `Page "${userWidgetPage.name}" is not an user widget page`,
+                                    object
+                                )
+                            );
+                        }
+
+                        if (object.isCycleDetected) {
+                            messages.push(
+                                new Message(
+                                    MessageType.ERROR,
+                                    `Cycle detected in user widget page`,
+                                    getChildOfObject(
+                                        object,
+                                        "userWidgetPageName"
+                                    )
+                                )
+                            );
+                        }
                     }
                 }
             }
@@ -1362,7 +1405,7 @@ export class LayoutViewWidget extends Widget {
             return messages;
         },
 
-        open: (object: LayoutViewWidget) => {
+        open: (object: UserWidgetWidget) => {
             object.open();
         },
 
@@ -1383,7 +1426,7 @@ export class LayoutViewWidget extends Widget {
 
             if (objects.length === 1) {
                 const object = objects[0];
-                if (object instanceof LayoutViewWidget) {
+                if (object instanceof UserWidgetWidget) {
                     menuItems.push(
                         new MenuItem({
                             label: "Replace with Container",
@@ -1404,45 +1447,101 @@ export class LayoutViewWidget extends Widget {
         super();
 
         makeObservable(this, {
-            layout: observable,
-            context: observable
+            userWidgetPageName: observable,
+            context: observable,
+            userWidgetPage: computed,
+            isCycleDetected: computed
         });
     }
 
-    get layoutPage() {
-        return this.getLayoutPage(getProjectStore(this).dataContext);
+    get userWidgetPage() {
+        return this.getUserWidgetPage(getProjectStore(this).dataContext);
     }
 
-    getLayoutPage(dataContext: IDataContext) {
-        let layout;
+    getUserWidgetPage(dataContext: IDataContext) {
+        let userWidgetPage;
 
         const project = getProject(this);
 
         if (this.data) {
-            const layoutName = dataContext.get(this.data);
-            if (layoutName) {
-                layout = ProjectEditor.findPage(project, layoutName);
+            const userWidgetPageName = dataContext.get(this.data);
+            if (userWidgetPageName) {
+                userWidgetPage = ProjectEditor.findPage(
+                    project,
+                    userWidgetPageName
+                );
             }
         }
 
-        if (!layout) {
-            layout = ProjectEditor.findPage(project, this.layout);
+        if (!userWidgetPage) {
+            userWidgetPage = ProjectEditor.findPage(
+                project,
+                this.userWidgetPageName
+            );
         }
 
-        if (!layout) {
-            return null;
+        return userWidgetPage;
+    }
+
+    get isCycleDetected() {
+        const visited = new Set<Page>();
+
+        function testForCycle(page: Page): boolean {
+            if (visited.has(page)) {
+                return false;
+            }
+
+            visited.add(page);
+
+            for (const widget of visitObjects(page)) {
+                if (widget instanceof ProjectEditor.UserWidgetWidgetClass) {
+                    if (widget.userWidgetPageName) {
+                        const userWidgetPage = ProjectEditor.findPage(
+                            project,
+                            widget.userWidgetPageName
+                        );
+                        if (userWidgetPage) {
+                            if (userWidgetPage === origPage) {
+                                return true;
+                            }
+                            if (testForCycle(userWidgetPage)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
         }
 
-        if (isAncestor(this, layout)) {
-            // prevent cyclic referencing
-            return null;
+        if (!this.userWidgetPageName) {
+            return false;
         }
 
-        return layout;
+        const project = getProject(this);
+
+        const userWidgetPage = ProjectEditor.findPage(
+            project,
+            this.userWidgetPageName
+        );
+        if (!userWidgetPage) {
+            return false;
+        }
+
+        const origPage = getAncestorOfType(
+            this,
+            ProjectEditor.PageClass.classInfo
+        ) as Page;
+
+        return testForCycle(userWidgetPage);
     }
 
     getInputs() {
-        const page = ProjectEditor.findPage(getProject(this), this.layout);
+        const page = ProjectEditor.findPage(
+            getProject(this),
+            this.userWidgetPageName
+        );
         if (!page) {
             return super.getInputs();
         }
@@ -1471,7 +1570,10 @@ export class LayoutViewWidget extends Widget {
     }
 
     getOutputs() {
-        const page = ProjectEditor.findPage(getProject(this), this.layout);
+        const page = ProjectEditor.findPage(
+            getProject(this),
+            this.userWidgetPageName
+        );
         if (!page) {
             return super.getOutputs();
         }
@@ -1499,14 +1601,6 @@ export class LayoutViewWidget extends Widget {
         return [...super.getOutputs(), ...endComponents, ...outputComponents];
     }
 
-    // This is for prevention of circular rendering of layouts, i.e Layout A is using Layout B and Layout B is using Layout A.
-    static renderedLayoutPages: Page[] = [];
-    static clearRenderedLayoutPagesFrameRequestId: number | undefined;
-    static clearRenderedLayoutPages() {
-        LayoutViewWidget.renderedLayoutPages = [];
-        LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId = undefined;
-    }
-
     render(
         flowContext: IFlowContext,
         width: number,
@@ -1514,15 +1608,8 @@ export class LayoutViewWidget extends Widget {
     ): React.ReactNode {
         let element;
 
-        const layoutPage = this.getLayoutPage(flowContext.dataContext);
-        if (layoutPage) {
-            if (!LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId) {
-                LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId =
-                    window.requestAnimationFrame(
-                        LayoutViewWidget.clearRenderedLayoutPages
-                    );
-            }
-
+        const userWidgetPage = this.getUserWidgetPage(flowContext.dataContext);
+        if (userWidgetPage && !this.isCycleDetected) {
             let flowStateExists = true;
             if (flowContext.flowState) {
                 flowStateExists =
@@ -1530,26 +1617,18 @@ export class LayoutViewWidget extends Widget {
             }
 
             if (flowStateExists) {
-                const renderedLayoutPages =
-                    LayoutViewWidget.renderedLayoutPages;
-                if (renderedLayoutPages.indexOf(layoutPage) === -1) {
-                    renderedLayoutPages.push(layoutPage);
-
-                    element = (
-                        <ComponentEnclosure
-                            component={layoutPage}
-                            flowContext={
-                                flowContext.flowState
-                                    ? flowContext.overrideFlowState(this)
-                                    : flowContext
-                            }
-                            width={width}
-                            height={height}
-                        />
-                    );
-
-                    renderedLayoutPages.pop();
-                }
+                element = (
+                    <ComponentEnclosure
+                        component={userWidgetPage}
+                        flowContext={
+                            flowContext.flowState
+                                ? flowContext.overrideFlowState(this)
+                                : flowContext
+                        }
+                        width={width}
+                        height={height}
+                    />
+                );
             }
         }
 
@@ -1581,9 +1660,9 @@ export class LayoutViewWidget extends Widget {
     }
 
     open() {
-        if (this.layoutPage) {
+        if (this.userWidgetPage) {
             getProjectStore(this).navigationStore.showObjects(
-                [this.layoutPage],
+                [this.userWidgetPage],
                 true,
                 false,
                 false
@@ -1592,13 +1671,14 @@ export class LayoutViewWidget extends Widget {
     }
 
     replaceWithContainer() {
-        if (this.layoutPage) {
+        if (this.userWidgetPage) {
             var containerWidgetJsObject: Partial<ContainerWidget> =
                 Object.assign({}, ContainerWidget.classInfo.defaultValue);
 
-            containerWidgetJsObject.widgets = this.layoutPage.components.map(
-                widget => objectToJS(widget)
-            );
+            containerWidgetJsObject.widgets =
+                this.userWidgetPage.components.map(widget =>
+                    objectToJS(widget)
+                );
 
             containerWidgetJsObject.left = this.left;
             containerWidgetJsObject.top = this.top;
@@ -1622,11 +1702,11 @@ export class LayoutViewWidget extends Widget {
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
         // layout
-        let layout: number = 0;
-        if (this.layout) {
-            layout = assets.getPageIndex(this, "layout");
+        let userWidgetPage: number = 0;
+        if (this.userWidgetPageName) {
+            userWidgetPage = assets.getPageIndex(this, "userWidgetPageName");
         }
-        dataBuffer.writeInt16(layout);
+        dataBuffer.writeInt16(userWidgetPage);
 
         // context
         dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "context"));
@@ -1636,18 +1716,19 @@ export class LayoutViewWidget extends Widget {
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        const layoutPage = this.layoutPage;
-        if (layoutPage) {
+        const userWidgetPage = this.userWidgetPage;
+        if (userWidgetPage) {
             // flowIndex
-            const flowIndex = assets.flows.indexOf(layoutPage);
+            const flowIndex = assets.flows.indexOf(userWidgetPage);
             dataBuffer.writeInt16(flowIndex);
 
             // inputsStartIndex
-            if (layoutPage.inputComponents.length > 0) {
+            if (userWidgetPage.inputComponents.length > 0) {
                 dataBuffer.writeUint8(
                     this.buildInputs.findIndex(
                         input =>
-                            input.name == layoutPage.inputComponents[0].objID
+                            input.name ==
+                            userWidgetPage.inputComponents[0].objID
                     )
                 );
             } else {
@@ -1655,11 +1736,12 @@ export class LayoutViewWidget extends Widget {
             }
 
             // outputsStartIndex
-            if (layoutPage.outputComponents.length > 0) {
+            if (userWidgetPage.outputComponents.length > 0) {
                 dataBuffer.writeUint8(
                     this.buildOutputs.findIndex(
                         output =>
-                            output.name == layoutPage.outputComponents[0].objID
+                            output.name ==
+                            userWidgetPage.outputComponents[0].objID
                     )
                 );
             } else {
@@ -1676,7 +1758,7 @@ export class LayoutViewWidget extends Widget {
     }
 }
 
-registerClass("LayoutViewWidget", LayoutViewWidget);
+registerClass("UserWidgetWidget", UserWidgetWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 

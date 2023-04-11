@@ -50,6 +50,16 @@ export abstract class LVGLPageRuntime {
         }
     >();
 
+    lvglCreateContext: {
+        widgetIndex: number;
+        flowIndex: number;
+        userWidgetComponentIndexes: number[];
+    } = {
+        widgetIndex: 0,
+        flowIndex: 0,
+        userWidgetComponentIndexes: []
+    };
+
     constructor(public page: Page) {}
 
     abstract get isEditor(): boolean;
@@ -503,7 +513,7 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         super(runtime.selectedPage);
         this.wasm = runtime.worker.wasm;
 
-        this.widgetIndex = runtime.projectStore.project._lvglIdentifiers.size;
+        this.widgetIndex = ProjectEditor.getLvglIdentifiers(this.page).size;
 
         runtime.projectStore.project.pages.forEach(page =>
             this.pageStates.set(page, {
@@ -578,10 +588,16 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
             this.page._lvglRuntime = this;
         });
 
-        const pageObj = this.page.lvglCreate(this, 0);
-
         const pagePath = getObjectPathAsString(this.page);
         const pageIndex = this.runtime.assetsMap.flowIndexes[pagePath];
+
+        this.lvglCreateContext = {
+            widgetIndex: 0,
+            flowIndex: pageIndex,
+            userWidgetComponentIndexes: []
+        };
+
+        const pageObj = this.page.lvglCreate(this, 0);
 
         this.wasm._lvglScreenLoad(pageIndex, pageObj);
 
@@ -612,17 +628,21 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
     }
 
     override getWidgetIndex(object: LVGLWidget | Page) {
+        let widgetIndex;
         if (object instanceof ProjectEditor.PageClass) {
-            return this.runtime.projectStore.project._lvglIdentifiers.get(
+            widgetIndex = ProjectEditor.getLvglIdentifiers(object).get(
                 object.name
             )!.index;
+        } else if (object.identifier) {
+            widgetIndex =
+                this.lvglCreateContext.widgetIndex +
+                ProjectEditor.getLvglIdentifiers(object).get(object.identifier)!
+                    .index;
+        } else {
+            widgetIndex = this.widgetIndex++;
         }
-        if (object.identifier) {
-            return this.runtime.projectStore.project._lvglIdentifiers.get(
-                object.identifier
-            )!.index;
-        }
-        return this.widgetIndex++;
+
+        return widgetIndex;
     }
 }
 

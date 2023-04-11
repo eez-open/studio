@@ -337,9 +337,7 @@ export class LVGLPlayAnimationActionType extends LVGLActionType {
                 type: PropertyType.Enum,
                 enumItems: (component: LVGLActionComponent) => {
                     const targets = [
-                        ...ProjectEditor.getProject(
-                            component
-                        )._lvglIdentifiers.keys()
+                        ...ProjectEditor.getLvglIdentifiers(component).keys()
                     ];
 
                     targets.sort((a, b) =>
@@ -427,7 +425,7 @@ export class LVGLPlayAnimationActionType extends LVGLActionType {
                 messages.push(propertyNotSetMessage(object, "target"));
             } else {
                 if (
-                    ProjectEditor.getProject(object)._lvglIdentifiers.get(
+                    ProjectEditor.getLvglIdentifiers(object).get(
                         object.target
                     ) == undefined
                 ) {
@@ -442,8 +440,7 @@ export class LVGLPlayAnimationActionType extends LVGLActionType {
     override build(assets: Assets, dataBuffer: DataBuffer) {
         // target
         dataBuffer.writeInt32(
-            ProjectEditor.getProject(this)._lvglIdentifiers.get(this.target)
-                ?.index ?? -1
+            ProjectEditor.getLvglIdentifiers(this).get(this.target)?.index ?? -1
         );
 
         // property
@@ -695,9 +692,7 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
                 type: PropertyType.Enum,
                 enumItems: (actionType: LVGLSetPropertyActionType) => {
                     const lvglIdentifiers = [
-                        ...ProjectEditor.getProject(
-                            actionType
-                        )._lvglIdentifiers.values()
+                        ...ProjectEditor.getLvglIdentifiers(actionType).values()
                     ];
 
                     lvglIdentifiers.sort((a, b) =>
@@ -855,9 +850,9 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
             if (!object.target) {
                 messages.push(propertyNotSetMessage(object, "target"));
             } else {
-                const lvglIdentifier = ProjectEditor.getProject(
+                const lvglIdentifier = ProjectEditor.getLvglIdentifiers(
                     object
-                )._lvglIdentifiers.get(object.target);
+                ).get(object.target);
                 if (lvglIdentifier == undefined) {
                     messages.push(propertyNotFoundMessage(object, "target"));
                 } else {
@@ -900,9 +895,9 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
 
             if (object.propertyInfo.type == "textarea") {
                 if (object.textarea) {
-                    const lvglIdentifier = ProjectEditor.getProject(
+                    const lvglIdentifier = ProjectEditor.getLvglIdentifiers(
                         object
-                    )._lvglIdentifiers.get(object.textarea);
+                    ).get(object.textarea);
                     if (lvglIdentifier == undefined) {
                         messages.push(
                             propertyNotFoundMessage(object, "textarea")
@@ -965,8 +960,7 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
     override build(assets: Assets, dataBuffer: DataBuffer) {
         // target
         dataBuffer.writeInt32(
-            ProjectEditor.getProject(this)._lvglIdentifiers.get(this.target)
-                ?.index ?? -1
+            ProjectEditor.getLvglIdentifiers(this).get(this.target)?.index ?? -1
         );
 
         // property
@@ -987,8 +981,8 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
 
         // textarea
         dataBuffer.writeInt32(
-            ProjectEditor.getProject(this)._lvglIdentifiers.get(this.textarea)
-                ?.index ?? -1
+            ProjectEditor.getLvglIdentifiers(this).get(this.textarea)?.index ??
+                -1
         );
 
         // animated

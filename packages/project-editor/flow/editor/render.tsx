@@ -177,9 +177,9 @@ export const ComponentEnclosure = observer(
                     return;
                 }
 
-                const el = this.elRef.current.closest(".LayoutViewWidget");
+                const el = this.elRef.current.closest(".UserWidgetWidget");
                 if (el && el != this.elRef.current) {
-                    // do not calculate geometry if component is inside LayoutViewWidget
+                    // do not calculate geometry if component is inside UserWidgetWidget
                     return;
                 }
 

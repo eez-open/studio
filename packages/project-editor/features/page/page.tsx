@@ -187,7 +187,7 @@ export class Page extends Flow {
 
     portrait: PageOrientation;
 
-    isUsedAsCustomWidget: boolean;
+    isUsedAsUserWidget: boolean;
 
     dataContextOverrides: string;
 
@@ -213,7 +213,7 @@ export class Page extends Flow {
             height: observable,
             scaleToFit: observable,
             portrait: observable,
-            isUsedAsCustomWidget: observable,
+            isUsedAsUserWidget: observable,
             dataContextOverrides: observable,
             dataContextOverridesObject: computed,
             rect: computed,
@@ -239,12 +239,12 @@ export class Page extends Flow {
                 name: "name",
                 type: PropertyType.String,
                 unique: (
-                    object: IEezObject,
+                    page: Page,
                     parent: IEezObject,
                     propertyInfo?: PropertyInfo
                 ) => {
                     const oldIdentifier = propertyInfo
-                        ? getProperty(object, propertyInfo.name)
+                        ? getProperty(page, propertyInfo.name)
                         : undefined;
 
                     return (object: any, ruleName: string) => {
@@ -257,9 +257,9 @@ export class Page extends Flow {
                         }
 
                         if (
-                            ProjectEditor.getProject(
-                                parent
-                            )._lvglIdentifiers.get(newIdentifer) == undefined
+                            ProjectEditor.getLvglIdentifiers(page).get(
+                                newIdentifer
+                            ) == undefined
                         ) {
                             return null;
                         }
@@ -331,7 +331,7 @@ export class Page extends Flow {
                 enumerable: false
             },
             {
-                name: "isUsedAsCustomWidget",
+                name: "isUsedAsUserWidget",
                 type: PropertyType.Boolean,
                 propertyGridGroup: generalGroup
             },
@@ -356,8 +356,8 @@ export class Page extends Flow {
         ],
         label: (page: Page) => {
             let label = page.name;
-            if (page.isUsedAsCustomWidget) {
-                label = "[CUSTOM WIDGET] " + label;
+            if (page.isUsedAsUserWidget) {
+                label = "[USER WIDGET] " + label;
             }
             return label;
         },
@@ -399,6 +399,11 @@ export class Page extends Flow {
             if (jsObject.css) {
                 jsObject.style = jsObject.css;
                 delete jsObject.css;
+            }
+
+            if (jsObject.isUsedAsCustomWidget != undefined) {
+                jsObject.isUsedAsUserWidget = jsObject.isUsedAsCustomWidget;
+                delete jsObject.isUsedAsCustomWidget;
             }
         },
         isPropertyMenuSupported: true,
@@ -474,7 +479,7 @@ export class Page extends Flow {
 
             if (
                 projectStore.projectTypeTraits.hasDisplaySizeProperty &&
-                !page.isUsedAsCustomWidget
+                !page.isUsedAsUserWidget
             ) {
                 const isSimulatorPage =
                     page.usedIn &&
@@ -487,7 +492,7 @@ export class Page extends Flow {
                         undefined &&
                     page.width !=
                         projectStore.project.settings.general.displayWidth &&
-                    !(page.scaleToFit || page.isUsedAsCustomWidget)
+                    !(page.scaleToFit || page.isUsedAsUserWidget)
                 ) {
                     messages.push(
                         new Message(
@@ -517,7 +522,7 @@ export class Page extends Flow {
                         undefined &&
                     page.height !=
                         projectStore.project.settings.general.displayHeight &&
-                    !(page.scaleToFit || page.isUsedAsCustomWidget)
+                    !(page.scaleToFit || page.isUsedAsUserWidget)
                 ) {
                     messages.push(
                         new Message(
@@ -573,6 +578,10 @@ export class Page extends Flow {
             ],
             defaultFlags: "CLICKABLE|PRESS_LOCK|SCROLL_ELASTIC|SCROLL_MOMENTUM",
             states: ["CHECKED", "FOCUSED", "PRESSED"]
+        },
+
+        findChildIndex: (parent: Page[], page: Page) => {
+            return parent.findIndex(child => child.name == page.name);
         }
     });
 
@@ -651,12 +660,13 @@ export class Page extends Flow {
             const projectStore = getProjectStore(this);
             return (
                 <>
-                    {projectStore.runtime!.isPaused && (
-                        <ComponentEnclosure
-                            component={this}
-                            flowContext={flowContext}
-                        />
-                    )}
+                    {projectStore.runtime!.isDebuggerActive &&
+                        projectStore.runtime!.isPaused && (
+                            <ComponentEnclosure
+                                component={this}
+                                flowContext={flowContext}
+                            />
+                        )}
                     {(
                         flowContext.projectStore.runtime! as WasmRuntime
                     ).renderPage()}
@@ -727,7 +737,7 @@ export class Page extends Flow {
             this.style || "default"
         );
 
-        const isLayoutViewWidgetPage =
+        const isUserWidgetWidgetPage =
             !flowContext.document.findObjectById(getId(this)) &&
             !flowContext.projectStore.runtime;
 
@@ -735,7 +745,7 @@ export class Page extends Flow {
         if (
             !flowContext.projectStore.projectTypeTraits.isDashboard &&
             !flowContext.projectStore.projectTypeTraits.isLVGL &&
-            !isLayoutViewWidgetPage
+            !isUserWidgetWidgetPage
         ) {
             pageBackground = (
                 <ComponentCanvas
@@ -801,12 +811,12 @@ export class Page extends Flow {
             return;
         }
 
-        const isLayoutViewWidgetPage =
+        const isUserWidgetWidgetPage =
             !flowContext.document.findObjectById(getId(this)) &&
             !flowContext.projectStore.runtime;
-        if (isLayoutViewWidgetPage) {
-            // this is LayoutViewWidget page, forbid interaction with the content
-            // and do not draw background (it is drawn by LayoutViewWidget)
+        if (isUserWidgetWidgetPage) {
+            // this is UserWidgetWidget page, forbid interaction with the content
+            // and do not draw background (it is drawn by UserWidgetWidget)
             style.pointerEvents = "none";
         } else {
             const pageStyle = findStyle(
@@ -845,7 +855,7 @@ export class Page extends Flow {
         let flags = 0;
 
         const CLOSE_PAGE_IF_TOUCHED_OUTSIDE_FLAG = 1 << 1;
-        const PAGE_IS_USED_AS_CUSTOM_WIDGET = 1 << 2;
+        const PAGE_IS_USED_AS_USER_WIDGET = 1 << 2;
         const PAGE_CONTAINER = 1 << 3;
         const PAGE_SCALE_TO_FIT = 1 << 4;
 
@@ -853,8 +863,8 @@ export class Page extends Flow {
             flags |= CLOSE_PAGE_IF_TOUCHED_OUTSIDE_FLAG;
         }
 
-        if (this.isUsedAsCustomWidget) {
-            flags |= PAGE_IS_USED_AS_CUSTOM_WIDGET;
+        if (this.isUsedAsUserWidget) {
+            flags |= PAGE_IS_USED_AS_USER_WIDGET;
         } else {
             flags |= PAGE_CONTAINER;
         }
@@ -984,11 +994,27 @@ export class Page extends Flow {
     get _lvglWidgets() {
         const widgets: LVGLWidget[] = [];
 
-        for (const widget of visitObjects(this.components)) {
-            if (widget instanceof ProjectEditor.LVGLWidgetClass) {
-                widgets.push(widget);
+        function addWidgets(page: Page) {
+            for (const widget of visitObjects(page.components)) {
+                if (widget instanceof ProjectEditor.LVGLWidgetClass) {
+                    widgets.push(widget);
+
+                    if (
+                        widget instanceof
+                        ProjectEditor.LVGLUserWidgetWidgetClass
+                    ) {
+                        if (
+                            widget.userWidgetPageCopy &&
+                            !widget.isCycleDetected
+                        ) {
+                            addWidgets(widget.userWidgetPageCopy);
+                        }
+                    }
+                }
             }
         }
+
+        addWidgets(this);
 
         return widgets;
     }

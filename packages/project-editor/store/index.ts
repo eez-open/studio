@@ -365,6 +365,10 @@ export class ProjectStore {
         if (this.dispose6) {
             this.dispose6();
         }
+
+        if (this.changingRuntimeMode) {
+            clearTimeout(this.changingRuntimeMode);
+        }
     }
 
     async loadMasterProject() {
@@ -1001,18 +1005,28 @@ export class ProjectStore {
         return objectsToClipboardData(this, objects);
     }
 
-    changingRuntimeMode: boolean = false;
+    changingRuntimeMode: any;
+    changingRuntimeModeNewMode: "editor" | "runtime" | "debugger" | undefined;
     static CONF_CHANGE_RUNTIME_MODE_DEBOUNCE_TIMEOUT = 300;
 
     debounceChangeRuntimeMode() {
         if (this.changingRuntimeMode) {
             return true;
         }
-        this.changingRuntimeMode = true;
-        setTimeout(
-            () => (this.changingRuntimeMode = false),
-            ProjectStore.CONF_CHANGE_RUNTIME_MODE_DEBOUNCE_TIMEOUT
-        );
+        this.changingRuntimeMode = setTimeout(() => {
+            this.changingRuntimeMode = undefined;
+            if (this.changingRuntimeModeNewMode != undefined) {
+                if (this.changingRuntimeModeNewMode == "editor") {
+                    this.onSetEditorMode();
+                } else if (this.changingRuntimeModeNewMode == "runtime") {
+                    this.onSetRuntimeMode();
+                } else {
+                    this.onSetDebuggerMode();
+                }
+                this.changingRuntimeModeNewMode = undefined;
+            }
+            this.changingRuntimeMode = false;
+        }, ProjectStore.CONF_CHANGE_RUNTIME_MODE_DEBOUNCE_TIMEOUT);
         return false;
     }
 
@@ -1069,6 +1083,7 @@ export class ProjectStore {
 
     onSetEditorMode = () => {
         if (this.changingRuntimeMode) {
+            this.changingRuntimeModeNewMode = "editor";
             return;
         }
 
@@ -1085,6 +1100,7 @@ export class ProjectStore {
 
     onSetRuntimeMode = async () => {
         if (this.changingRuntimeMode) {
+            this.changingRuntimeModeNewMode = "runtime";
             return;
         }
 
@@ -1099,6 +1115,7 @@ export class ProjectStore {
 
     onSetDebuggerMode = () => {
         if (this.changingRuntimeMode) {
+            this.changingRuntimeModeNewMode = "debugger";
             return;
         }
 

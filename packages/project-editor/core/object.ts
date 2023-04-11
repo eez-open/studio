@@ -379,6 +379,8 @@ export interface ClassInfo {
     getAdditionalFlowProperties?: (object: IEezObject) => PropertyInfo[];
 
     execute?: (context: IDashboardComponentContext) => void;
+
+    findChildIndex?: (parent: IEezObject[], child: IEezObject) => number;
 }
 
 export function makeDerivedClassInfo(

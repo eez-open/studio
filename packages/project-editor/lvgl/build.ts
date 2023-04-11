@@ -126,9 +126,14 @@ export class LVGLBuild {
     }
 
     isLvglObjectAccessible(lvglWidget: LVGLWidget) {
-        if (this.project._lvglIdentifiers.get(lvglWidget.identifier)) {
+        if (
+            ProjectEditor.getLvglIdentifiers(lvglWidget).get(
+                lvglWidget.identifier
+            )
+        ) {
             return true;
         }
+
         return this.widgetToIdentifier.get(lvglWidget)?.addToStruct ?? false;
     }
 
@@ -173,16 +178,13 @@ export class LVGLBuild {
         build.line(`typedef struct _objects_t {`);
         build.indent();
 
-        const lvglIdentifiers = [...this.project._lvglIdentifiers.values()];
+        const lvglIdentifiers = [
+            ...ProjectEditor.getLvglIdentifiers(this.project.pages[0]).values()
+        ];
         lvglIdentifiers.sort((a, b) => a.index - b.index);
 
         lvglIdentifiers.forEach(lvglIdentifier =>
-            build.line(
-                `lv_obj_t *${this.getLvglObjectIdentifierInSourceCode(
-                    lvglIdentifier.object,
-                    false
-                )};`
-            )
+            build.line(`lv_obj_t *${lvglIdentifier.identifier};`)
         );
 
         for (const entry of this.widgetToIdentifier) {

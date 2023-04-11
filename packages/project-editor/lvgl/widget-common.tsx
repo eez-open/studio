@@ -623,5 +623,5 @@ export function getExpressionPropertyData(
         return undefined;
     }
 
-    return { flowIndex, componentIndex, propertyIndex };
+    return { componentIndex, propertyIndex };
 }
