@@ -13,14 +13,13 @@ import {
     PropertyType
 } from "project-editor/core/object";
 import { ProjectContext } from "project-editor/project/context";
-import { getAncestorOfType, getClassInfo } from "project-editor/store";
+import { getClassInfo } from "project-editor/store";
 import { Property } from "project-editor/ui-components/PropertyGrid/Property";
 import { expressionBuilder } from "project-editor/flow/expression/ExpressionBuilder";
 import type { LVGLLabelWidget, LVGLWidget } from "project-editor/lvgl/widgets";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getPropertyValue } from "project-editor/ui-components/PropertyGrid/utils";
 import { ValueType } from "eez-studio-types";
-import type { Page } from "project-editor/features/page/page";
 import type { LVGLBuild } from "project-editor/lvgl/build";
 import { humanize } from "eez-studio-shared/string";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
@@ -226,12 +225,6 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
         build.indent();
 
         if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
-            const page = getAncestorOfType(
-                widget,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
-
-            let flowIndex = build.assets.getFlowIndex(page);
             let componentIndex = build.assets.getComponentIndex(widget);
             const propertyIndex = build.assets.getComponentPropertyIndex(
                 widget,
@@ -240,13 +233,13 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
 
             if (propertyInfo.expressionType == "string") {
                 build.line(
-                    `const char *new_val = evalTextProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate ${humanize(
+                    `const char *new_val = evalTextProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evaluate ${humanize(
                         propName
                     )} in ${getComponentName(widget.type)} widget");`
                 );
             } else if (propertyInfo.expressionType == "integer") {
                 build.line(
-                    `int32_t new_val = evalIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, "Failed to evaluate ${humanize(
+                    `int32_t new_val = evalIntegerProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evaluate ${humanize(
                         propName
                     )} in ${getComponentName(widget.type)} widget");`
                 );
@@ -343,11 +336,6 @@ export function expressionPropertyBuildEventHandlerSpecific<
         }
 
         if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
-            const page = getAncestorOfType(
-                widget,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
-            const flowIndex = build.assets.getFlowIndex(page);
             const componentIndex = build.assets.getComponentIndex(widget);
             const propertyIndex = build.assets.getComponentPropertyIndex(
                 widget,
@@ -359,13 +347,13 @@ export function expressionPropertyBuildEventHandlerSpecific<
 
             if (propertyInfo.expressionType == "integer") {
                 build.line(
-                    `assignIntegerProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, value, "Failed to assign ${humanize(
+                    `assignIntegerProperty(flowState, ${componentIndex}, ${propertyIndex}, value, "Failed to assign ${humanize(
                         propName
                     )} in ${getComponentName(widget.type)} widget");`
                 );
             } else if (propertyInfo.expressionType == "string") {
                 build.line(
-                    `assignStringProperty(${flowIndex}, ${componentIndex}, ${propertyIndex}, value, "Failed to assign ${humanize(
+                    `assignStringProperty(flowState, ${componentIndex}, ${propertyIndex}, value, "Failed to assign ${humanize(
                         propName
                     )} in ${getComponentName(widget.type)} widget");`
                 );

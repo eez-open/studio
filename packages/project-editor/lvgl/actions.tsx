@@ -336,18 +336,14 @@ export class LVGLPlayAnimationActionType extends LVGLActionType {
                 name: "target",
                 type: PropertyType.Enum,
                 enumItems: (component: LVGLActionComponent) => {
-                    const targets = [
-                        ...ProjectEditor.getLvglIdentifiers(component).keys()
-                    ];
-
-                    targets.sort((a, b) =>
-                        a.toLowerCase().localeCompare(b.toLowerCase())
-                    );
-
-                    return targets.map(id => ({
-                        id,
-                        label: id
-                    }));
+                    return ProjectEditor.getProjectStore(component)
+                        .lvglIdentifiers.getIdentifiersVisibleFromFlow(
+                            ProjectEditor.getFlow(component)
+                        )
+                        .map(lvglIdentifier => ({
+                            id: lvglIdentifier.identifier,
+                            label: lvglIdentifier.identifier
+                        }));
                 }
             },
             {
@@ -425,7 +421,10 @@ export class LVGLPlayAnimationActionType extends LVGLActionType {
                 messages.push(propertyNotSetMessage(object, "target"));
             } else {
                 if (
-                    ProjectEditor.getLvglIdentifiers(object).get(
+                    ProjectEditor.getProjectStore(
+                        object
+                    ).lvglIdentifiers.getIdentifierByName(
+                        ProjectEditor.getFlow(object),
                         object.target
                     ) == undefined
                 ) {
@@ -440,7 +439,12 @@ export class LVGLPlayAnimationActionType extends LVGLActionType {
     override build(assets: Assets, dataBuffer: DataBuffer) {
         // target
         dataBuffer.writeInt32(
-            ProjectEditor.getLvglIdentifiers(this).get(this.target)?.index ?? -1
+            ProjectEditor.getProjectStore(
+                this
+            ).lvglIdentifiers.getIdentifierByName(
+                ProjectEditor.getFlow(this),
+                this.target
+            )?.index ?? -1
         );
 
         // property
@@ -691,14 +695,10 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
                 displayName: "Target",
                 type: PropertyType.Enum,
                 enumItems: (actionType: LVGLSetPropertyActionType) => {
-                    const lvglIdentifiers = [
-                        ...ProjectEditor.getLvglIdentifiers(actionType).values()
-                    ];
-
-                    lvglIdentifiers.sort((a, b) =>
-                        a.identifier
-                            .toLowerCase()
-                            .localeCompare(b.identifier.toLowerCase())
+                    const lvglIdentifiers = ProjectEditor.getProjectStore(
+                        actionType
+                    ).lvglIdentifiers.getIdentifiersVisibleFromFlow(
+                        ProjectEditor.getFlow(actionType)
                     );
 
                     return lvglIdentifiers
@@ -831,7 +831,7 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
                         actionType.property
                     ] == undefined
                 ) {
-                    ProjectEditor.getProject(actionType)._store.updateObject(
+                    ProjectEditor.getProjectStore(actionType).updateObject(
                         actionType,
                         {
                             property: Object.keys(
@@ -850,9 +850,13 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
             if (!object.target) {
                 messages.push(propertyNotSetMessage(object, "target"));
             } else {
-                const lvglIdentifier = ProjectEditor.getLvglIdentifiers(
+                const lvglIdentifier = ProjectEditor.getProjectStore(
                     object
-                ).get(object.target);
+                ).lvglIdentifiers.getIdentifierByName(
+                    ProjectEditor.getFlow(object),
+                    object.target
+                );
+
                 if (lvglIdentifier == undefined) {
                     messages.push(propertyNotFoundMessage(object, "target"));
                 } else {
@@ -895,9 +899,13 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
 
             if (object.propertyInfo.type == "textarea") {
                 if (object.textarea) {
-                    const lvglIdentifier = ProjectEditor.getLvglIdentifiers(
+                    const lvglIdentifier = ProjectEditor.getProjectStore(
                         object
-                    ).get(object.textarea);
+                    ).lvglIdentifiers.getIdentifierByName(
+                        ProjectEditor.getFlow(object),
+                        object.textarea
+                    );
+
                     if (lvglIdentifier == undefined) {
                         messages.push(
                             propertyNotFoundMessage(object, "textarea")
@@ -960,7 +968,12 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
     override build(assets: Assets, dataBuffer: DataBuffer) {
         // target
         dataBuffer.writeInt32(
-            ProjectEditor.getLvglIdentifiers(this).get(this.target)?.index ?? -1
+            ProjectEditor.getProjectStore(
+                this
+            ).lvglIdentifiers.getIdentifierByName(
+                ProjectEditor.getFlow(this),
+                this.target
+            )?.index ?? -1
         );
 
         // property
@@ -980,10 +993,18 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
         );
 
         // textarea
-        dataBuffer.writeInt32(
-            ProjectEditor.getLvglIdentifiers(this).get(this.textarea)?.index ??
-                -1
-        );
+        if (this.textarea) {
+            dataBuffer.writeInt32(
+                ProjectEditor.getProjectStore(
+                    this
+                ).lvglIdentifiers.getIdentifierByName(
+                    ProjectEditor.getFlow(this),
+                    this.textarea
+                )?.index ?? -1
+            );
+        } else {
+            dataBuffer.writeInt32(-1);
+        }
 
         // animated
         dataBuffer.writeUint32(this.animated ? 1 : 0);

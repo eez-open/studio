@@ -80,6 +80,8 @@ import { IExtension } from "eez-studio-shared/extensions/extension";
 import { installExtension } from "eez-studio-shared/extensions/extensions";
 import type { InstrumentObject } from "instrument/instrument-object";
 
+import { LVGLIdentifiers } from "project-editor/lvgl/identifiers";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export * from "project-editor/store/helper";
@@ -114,6 +116,7 @@ export class ProjectStore {
     runtimeSettings = new RuntimeSettings(this);
     outputSectionsStore = new OutputSections(this);
     typesStore = new TypesStore(this);
+    lvglIdentifiers = new LVGLIdentifiers(this);
 
     runtime: RuntimeBase | undefined;
 

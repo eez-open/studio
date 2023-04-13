@@ -180,7 +180,7 @@ export abstract class Flow extends EezObject {
         const flowFragment = new FlowFragment();
         flowFragment.addObjects(this, objects);
         return objectToClipboardData(
-            ProjectEditor.getProject(this)._store,
+            ProjectEditor.getProjectStore(this),
             flowFragment
         );
     }

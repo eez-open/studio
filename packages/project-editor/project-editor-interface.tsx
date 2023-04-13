@@ -15,8 +15,7 @@ import type {
     getFlow,
     getNameProperty,
     getProject,
-    Project,
-    getLvglIdentifiers
+    Project
 } from "project-editor/project/project";
 import type { findPage, Page } from "project-editor/features/page/page";
 import type {
@@ -77,6 +76,7 @@ import type {
 } from "project-editor/lvgl/widgets";
 import type { LVGLStyle } from "project-editor/lvgl/style";
 import type { Property } from "project-editor/ui-components/PropertyGrid/Property";
+import type { getProjectStore } from "project-editor/store";
 
 export interface IProjectEditor {
     homeTabs?: Tabs;
@@ -116,6 +116,7 @@ export interface IProjectEditor {
     LVGLUserWidgetWidgetClass: typeof LVGLUserWidgetWidget;
     LVGLStyleClass: typeof LVGLStyle;
     getProject: typeof getProject;
+    getProjectStore: typeof getProjectStore;
     getFlow: typeof getFlow;
     getNameProperty: typeof getNameProperty;
     getObjectVariableTypeFromType: typeof getObjectVariableTypeFromType;
@@ -136,7 +137,6 @@ export interface IProjectEditor {
     createEditorState: typeof createEditorState;
     browseGlyph: typeof browseGlyph;
     checkAssetId: typeof checkAssetId;
-    getLvglIdentifiers: typeof getLvglIdentifiers;
     Property: typeof Property;
     ArrayProperty: typeof ArrayProperty;
     EmbeddedPropertyGrid: typeof EmbeddedPropertyGrid;

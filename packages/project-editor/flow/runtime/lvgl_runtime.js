@@ -4455,6 +4455,9 @@ var _stopScript = Module["_stopScript"] = createExportWrapper("stopScript");
 var _onMessageFromDebugger = Module["_onMessageFromDebugger"] = createExportWrapper("onMessageFromDebugger");
 
 /** @type {function(...*):?} */
+var _lvglGetFlowState = Module["_lvglGetFlowState"] = createExportWrapper("lvglGetFlowState");
+
+/** @type {function(...*):?} */
 var _lvglCreateContainer = Module["_lvglCreateContainer"] = createExportWrapper("lvglCreateContainer");
 
 /** @type {function(...*):?} */

@@ -84,7 +84,7 @@ export class MicroPython extends EezObject {
     }
 
     async runScript() {
-        const projectStore = ProjectEditor.getProject(this)._store;
+        const projectStore = ProjectEditor.getProjectStore(this);
 
         const partsPromise = projectStore.build();
 

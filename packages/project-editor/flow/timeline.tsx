@@ -426,7 +426,7 @@ export class TimelineKeyframe extends EezObject {
         );
     }
 
-    lvglCreate(runtime: LVGLPageRuntime, obj: number, flowIndex: number) {
+    lvglCreate(runtime: LVGLPageRuntime, obj: number, flowState: number) {
         // enabledProperties
         const WIDGET_TIMELINE_PROPERTY_X = 1 << 0;
         const WIDGET_TIMELINE_PROPERTY_Y = 1 << 1;
@@ -471,7 +471,7 @@ export class TimelineKeyframe extends EezObject {
 
         runtime.wasm._lvglAddTimelineKeyframe(
             obj,
-            flowIndex,
+            flowState,
             this.start,
             this.end,
             enabledProperties,
@@ -2939,6 +2939,7 @@ export function getTimelineProperty(
                     stylePropertyInfo
                 ) as number;
             }
+            console.log(value);
 
             if (propertyName == "opacity") {
                 value /= 255;
@@ -3292,14 +3293,12 @@ export function lvglBuildPageTimeline(build: LVGLBuild, page: Page) {
     );
 
     if (hasTimeline) {
-        let flowIndex = build.assets.getFlowIndex(page);
-
         build.line(`{`);
         {
             build.indent();
 
             build.line(
-                `float timeline_position = getTimelinePosition(${flowIndex});`
+                `float timeline_position = getTimelinePosition(flowState);`
             );
 
             //
@@ -3316,8 +3315,7 @@ export function lvglBuildPageTimeline(build: LVGLBuild, page: Page) {
                     )) {
                         build.line(
                             `int32_t obj_${build.getLvglObjectIdentifierInSourceCode(
-                                lvglWidget,
-                                false
+                                lvglWidget
                             )}_${propertyName}_init_value;`
                         );
                     }
@@ -3347,8 +3345,7 @@ export function lvglBuildPageTimeline(build: LVGLBuild, page: Page) {
 
                         build.line(
                             `anim_state.obj_${build.getLvglObjectIdentifierInSourceCode(
-                                lvglWidget,
-                                false
+                                lvglWidget
                             )}_${propertyName}_init_value = ${lvglFromValue(
                                 keyframeProperty,
                                 `lv_obj_get_style_prop(${build.getLvglObjectAccessor(
@@ -3400,8 +3397,7 @@ export function lvglBuildPageTimeline(build: LVGLBuild, page: Page) {
                             for (const propertyName of propertyNames) {
                                 build.line(
                                     `float ${propertyName}_value = anim_state.obj_${build.getLvglObjectIdentifierInSourceCode(
-                                        lvglWidget,
-                                        false
+                                        lvglWidget
                                     )}_${propertyName}_init_value;`
                                 );
                             }

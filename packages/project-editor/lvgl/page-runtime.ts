@@ -52,12 +52,12 @@ export abstract class LVGLPageRuntime {
 
     lvglCreateContext: {
         widgetIndex: number;
-        flowIndex: number;
-        userWidgetComponentIndexes: number[];
+        pageIndex: number;
+        flowState: number;
     } = {
         widgetIndex: 0,
-        flowIndex: 0,
-        userWidgetComponentIndexes: []
+        pageIndex: 0,
+        flowState: 0
     };
 
     constructor(public page: Page) {}
@@ -209,7 +209,7 @@ export abstract class LVGLPageRuntime {
                 runtime.wasm._lvglDeleteObject(page._lvglObj);
                 page._lvglObj = undefined;
 
-                page._lvglWidgets.forEach(
+                page._lvglWidgetsIncludingUserWidgets.forEach(
                     widget => (widget._lvglObj = undefined)
                 );
             }
@@ -257,7 +257,10 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
     }
 
     mount() {
+        console.log("mount");
+
         const wasm = lvgl_flow_runtime_constructor(() => {
+            console.log("mount constructor");
             if (this.wasm != wasm) {
                 return;
             }
@@ -273,44 +276,47 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                 this.tick
             );
 
-            this.autorRunDispose = autorun(() => {
-                // set all _lvglObj to undefined
-                runInAction(() => {
-                    this.page._lvglWidgets.forEach(
-                        widget => (widget._lvglObj = undefined)
-                    );
-                });
-
-                this.wasm._lvglClearTimeline();
-
-                this.freeStrings();
-
-                const pageObj = this.page.lvglCreate(this, 0);
-                if (!pageObj) {
-                    console.error("pageObj is undefined");
-                }
-
-                const editor = getProjectStore(
-                    this.page
-                ).editorsStore.getEditorByObject(this.page);
-                if (editor) {
-                    const pageTabState = editor.state as PageTabState;
-                    if (pageTabState?.timeline?.isEditorActive) {
-                        this.wasm._lvglSetTimelinePosition(
-                            pageTabState.timeline.position
+            this.autorRunDispose = autorun(
+                () => {
+                    // set all _lvglObj to undefined
+                    runInAction(() => {
+                        this.page._lvglWidgetsIncludingUserWidgets.forEach(
+                            widget => (widget._lvglObj = undefined)
                         );
-                    }
-                }
+                    });
 
-                this.wasm._lvglScreenLoad(-1, pageObj);
+                    this.wasm._lvglClearTimeline();
 
-                runInAction(() => {
-                    if (this.page._lvglObj != undefined) {
-                        this.wasm._lvglDeleteObject(this.page._lvglObj);
+                    this.freeStrings();
+
+                    const pageObj = this.page.lvglCreate(this, 0);
+                    if (!pageObj) {
+                        console.error("pageObj is undefined");
                     }
-                    this.page._lvglObj = pageObj;
-                });
-            });
+
+                    const editor = getProjectStore(
+                        this.page
+                    ).editorsStore.getEditorByObject(this.page);
+                    if (editor) {
+                        const pageTabState = editor.state as PageTabState;
+                        if (pageTabState?.timeline?.isEditorActive) {
+                            this.wasm._lvglSetTimelinePosition(
+                                pageTabState.timeline.position
+                            );
+                        }
+                    }
+
+                    this.wasm._lvglScreenLoad(-1, pageObj);
+
+                    runInAction(() => {
+                        if (this.page._lvglObj != undefined) {
+                            this.wasm._lvglDeleteObject(this.page._lvglObj);
+                        }
+                        this.page._lvglObj = pageObj;
+                    });
+                },
+                { delay: 1 }
+            );
         });
 
         this.wasm = wasm;
@@ -513,7 +519,8 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         super(runtime.selectedPage);
         this.wasm = runtime.worker.wasm;
 
-        this.widgetIndex = ProjectEditor.getLvglIdentifiers(this.page).size;
+        this.widgetIndex =
+            this.runtime.projectStore.lvglIdentifiers.maxWidgetIndex + 1;
 
         runtime.projectStore.project.pages.forEach(page =>
             this.pageStates.set(page, {
@@ -593,8 +600,8 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
 
         this.lvglCreateContext = {
             widgetIndex: 0,
-            flowIndex: pageIndex,
-            userWidgetComponentIndexes: []
+            pageIndex,
+            flowState: this.wasm._lvglGetFlowState(0, pageIndex)
         };
 
         const pageObj = this.page.lvglCreate(this, 0);
@@ -628,21 +635,13 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
     }
 
     override getWidgetIndex(object: LVGLWidget | Page) {
-        let widgetIndex;
-        if (object instanceof ProjectEditor.PageClass) {
-            widgetIndex = ProjectEditor.getLvglIdentifiers(object).get(
-                object.name
-            )!.index;
-        } else if (object.identifier) {
-            widgetIndex =
-                this.lvglCreateContext.widgetIndex +
-                ProjectEditor.getLvglIdentifiers(object).get(object.identifier)!
-                    .index;
-        } else {
-            widgetIndex = this.widgetIndex++;
+        const identifier =
+            this.runtime.projectStore.lvglIdentifiers.getIdentifier(object);
+        if (identifier) {
+            return this.lvglCreateContext.widgetIndex + identifier.index;
         }
 
-        return widgetIndex;
+        return this.widgetIndex++;
     }
 }
 
@@ -735,7 +734,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                 this.autorRunDispose = autorun(() => {
                     // set all _lvglObj to undefined
                     runInAction(() => {
-                        this.page._lvglWidgets.forEach(
+                        this.page._lvglWidgetsIncludingUserWidgets.forEach(
                             widget => (widget._lvglObj = undefined)
                         );
                     });
@@ -865,7 +864,9 @@ function getObjects(page: Page) {
     const objects = [];
     objects.push(page._lvglObj!);
 
-    page._lvglWidgets.forEach(widget => objects.push(widget._lvglObj!));
+    page._lvglWidgetsIncludingUserWidgets.forEach(widget =>
+        objects.push(widget._lvglObj!)
+    );
 
     return objects;
 }
@@ -882,7 +883,7 @@ function setObjects(
 
         page._lvglObj = objects[index++];
 
-        page._lvglWidgets.forEach(
+        page._lvglWidgetsIncludingUserWidgets.forEach(
             widget => (widget._lvglObj = objects[index++])
         );
     });

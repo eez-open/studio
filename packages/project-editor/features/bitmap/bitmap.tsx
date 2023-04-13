@@ -352,7 +352,7 @@ export class Bitmap extends EezObject {
             return this.image;
         }
 
-        return ProjectEditor.getProject(this)._store.getAbsoluteFilePath(
+        return ProjectEditor.getProjectStore(this).getAbsoluteFilePath(
             this.image
         );
     }

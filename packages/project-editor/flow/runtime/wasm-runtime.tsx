@@ -293,11 +293,14 @@ export class WasmRuntime extends RemoteRuntime {
                 displayHeight: this.displayHeight
             };
 
+            if (this.lgvlPageRuntime) {
+                await this.lgvlPageRuntime.loadAllBitmaps();
+            }
+
             await this.worker.postMessage(message);
 
             if (this.lgvlPageRuntime) {
                 this.lgvlPageRuntime.mount();
-                await this.lgvlPageRuntime.loadAllBitmaps();
             }
 
             this.debuggerConnection.onConnected();

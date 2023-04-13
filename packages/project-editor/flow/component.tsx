@@ -1721,8 +1721,7 @@ export class Component extends EezObject {
                 computed: true,
                 propertyGridRowComponent: AlignAndDistributePropertyGridUI,
                 hideInPropertyGrid: (widget: Widget) => {
-                    const projectStore =
-                        ProjectEditor.getProject(widget)._store;
+                    const projectStore = ProjectEditor.getProjectStore(widget);
                     const propertyGridObjects =
                         projectStore.navigationStore.propertyGridObjects;
 
@@ -1777,8 +1776,7 @@ export class Component extends EezObject {
                 computed: true,
                 propertyGridRowComponent: CenterWidgetUI,
                 hideInPropertyGrid: (widget: Widget) => {
-                    const projectStore =
-                        ProjectEditor.getProject(widget)._store;
+                    const projectStore = ProjectEditor.getProjectStore(widget);
                     const propertyGridObjects =
                         projectStore.navigationStore.propertyGridObjects;
                     return !(

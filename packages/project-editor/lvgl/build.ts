@@ -6,7 +6,6 @@ import type { Project } from "project-editor/project/project";
 import { getAncestorOfType } from "project-editor/store";
 import type { LVGLWidget } from "./widgets";
 import type { Assets } from "project-editor/build/assets";
-import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 import { writeTextFile } from "eez-studio-shared/util-electron";
 import { getLvglBitmapSourceFile } from "project-editor/lvgl/bitmap";
 
@@ -19,13 +18,6 @@ export class LVGLBuild {
 
     result: string;
     indentation: string;
-
-    // auto-generated widget identifiers
-    widgetToIdentifier = new Map<
-        LVGLWidget,
-        { identifier: string; addToStruct: boolean }
-    >();
-    widgetIdentifiers = new Set<string>();
 
     indent() {
         this.indentation += TAB;
@@ -51,11 +43,15 @@ export class LVGLBuild {
     }
 
     getScreenCreateFunctionName(page: Page) {
-        return `create_screen_${this.getScreenIdentifier(page)}`;
+        return page.isUsedAsUserWidget
+            ? `create_user_widget_${this.getScreenIdentifier(page)}`
+            : `create_screen_${this.getScreenIdentifier(page)}`;
     }
 
     getScreenTickFunctionName(page: Page) {
-        return `tick_screen_${this.getScreenIdentifier(page)}`;
+        return page.isUsedAsUserWidget
+            ? `tick_user_widget_${this.getScreenIdentifier(page)}`
+            : `tick_screen_${this.getScreenIdentifier(page)}`;
     }
 
     getImageVariableName(bitmap: Bitmap) {
@@ -86,62 +82,35 @@ export class LVGLBuild {
         );
     }
 
-    getLvglObjectIdentifierInSourceCode(
-        lvglObject: Page | LVGLWidget,
-        addToStruct: boolean
-    ) {
-        let identifier;
-
-        if (lvglObject instanceof ProjectEditor.PageClass) {
-            identifier = lvglObject.name;
-        } else {
-            if (lvglObject.identifier) {
-                identifier = lvglObject.identifier;
-            } else {
-                let result = this.widgetToIdentifier.get(lvglObject);
-                if (!result) {
-                    let index = 0;
-                    let prefix = getComponentName(lvglObject.type) + "_";
-                    do {
-                        index++;
-                        identifier = prefix + index;
-                    } while (this.widgetIdentifiers.has(identifier));
-
-                    this.widgetIdentifiers.add(identifier);
-                    result = {
-                        identifier,
-                        addToStruct
-                    };
-                    this.widgetToIdentifier.set(lvglObject, result);
-                } else {
-                    if (addToStruct) {
-                        result.addToStruct = addToStruct;
-                    }
-                }
-                identifier = result.identifier;
-            }
-        }
-
-        return getName("", identifier, NamingConvention.UnderscoreLowerCase);
+    getLvglObjectIdentifierInSourceCode(lvglObject: Page | LVGLWidget) {
+        return this.project._store.lvglIdentifiers.getIdentifier(lvglObject)
+            .identifier;
     }
 
-    isLvglObjectAccessible(lvglWidget: LVGLWidget) {
-        if (
-            ProjectEditor.getLvglIdentifiers(lvglWidget).get(
-                lvglWidget.identifier
-            )
-        ) {
-            return true;
-        }
+    getWidgetObjectIndex(lvglWidget: LVGLWidget) {
+        const identifier =
+            this.project._store.lvglIdentifiers.getIdentifier(lvglWidget);
 
-        return this.widgetToIdentifier.get(lvglWidget)?.addToStruct ?? false;
+        return identifier.index;
     }
 
     getLvglObjectAccessor(lvglObject: Page | LVGLWidget) {
-        return `objects.${this.getLvglObjectIdentifierInSourceCode(
-            lvglObject,
-            true
-        )}`;
+        const identifier = this.getLvglObjectIdentifierInSourceCode(lvglObject);
+
+        if (lvglObject instanceof ProjectEditor.LVGLWidgetClass) {
+            const page = getAncestorOfType(
+                lvglObject,
+                ProjectEditor.PageClass.classInfo
+            ) as Page;
+
+            if (page.isUsedAsUserWidget) {
+                return `((lv_obj_t **)&objects)[startWidgetIndex + ${this.getWidgetObjectIndex(
+                    lvglObject
+                )}]`;
+            }
+        }
+
+        return `objects.${identifier}`;
     }
 
     getEventHandlerCallbackName(widget: LVGLWidget) {
@@ -151,7 +120,7 @@ export class LVGLBuild {
         ) as Page;
         return `event_handler_cb_${this.getScreenIdentifier(
             page
-        )}_${this.getLvglObjectIdentifierInSourceCode(widget, false)}`;
+        )}_${this.getLvglObjectIdentifierInSourceCode(widget)}`;
     }
 
     getFontVariableName(fontName: string) {
@@ -178,25 +147,11 @@ export class LVGLBuild {
         build.line(`typedef struct _objects_t {`);
         build.indent();
 
-        const lvglIdentifiers = [
-            ...ProjectEditor.getLvglIdentifiers(this.project.pages[0]).values()
-        ];
-        lvglIdentifiers.sort((a, b) => a.index - b.index);
-
-        lvglIdentifiers.forEach(lvglIdentifier =>
-            build.line(`lv_obj_t *${lvglIdentifier.identifier};`)
-        );
-
-        for (const entry of this.widgetToIdentifier) {
-            if (entry[1].addToStruct) {
-                build.line(
-                    `lv_obj_t *${this.getLvglObjectIdentifierInSourceCode(
-                        entry[0],
-                        false
-                    )};`
-                );
-            }
-        }
+        this.project._store.lvglIdentifiers.identifiersArray
+            .get(this.project.pages[0])!
+            .forEach((lvglIdentifier, i) => {
+                build.line(`lv_obj_t *${lvglIdentifier.identifier};`);
+            });
 
         build.unindent();
         build.line(`} objects_t;`);
@@ -205,8 +160,21 @@ export class LVGLBuild {
 
         for (const page of this.project.pages) {
             build.line("");
-            build.line(`void ${this.getScreenCreateFunctionName(page)}();`);
-            build.line(`void ${this.getScreenTickFunctionName(page)}();`);
+            if (page.isUsedAsUserWidget) {
+                build.line(
+                    `void ${this.getScreenCreateFunctionName(
+                        page
+                    )}(lv_obj_t *parent_obj, void *flowState, int startWidgetIndex);`
+                );
+                build.line(
+                    `void ${this.getScreenTickFunctionName(
+                        page
+                    )}(void *flowState, int startWidgetIndex);`
+                );
+            } else {
+                build.line(`void ${this.getScreenCreateFunctionName(page)}();`);
+                build.line(`void ${this.getScreenTickFunctionName(page)}();`);
+            }
         }
 
         return this.result;
@@ -232,6 +200,8 @@ export class LVGLBuild {
                     build.indent();
 
                     build.line(`lv_event_code_t event = lv_event_get_code(e);`);
+
+                    build.line(`void *flowState = e->user_data;`);
 
                     for (const eventHandler of widget.eventHandlers) {
                         if (
@@ -278,17 +248,14 @@ export class LVGLBuild {
                                         )}(e);`
                                     );
                                 } else {
-                                    let flowIndex =
-                                        build.assets.getFlowIndex(page);
                                     let actionFlowIndex =
                                         build.assets.getFlowIndex(action);
                                     build.line(
-                                        `flowPropagateValue(${flowIndex}, -1, ${actionFlowIndex});`
+                                        `flowPropagateValue(flowState, -1, ${actionFlowIndex});`
                                     );
                                 }
                             }
                         } else {
-                            let flowIndex = build.assets.getFlowIndex(page);
                             let componentIndex =
                                 build.assets.getComponentIndex(widget);
                             const outputIndex =
@@ -297,7 +264,7 @@ export class LVGLBuild {
                                     eventHandler.trigger
                                 );
                             build.line(
-                                `flowPropagateValue(${flowIndex}, ${componentIndex}, ${outputIndex});`
+                                `flowPropagateValue(flowState, ${componentIndex}, ${outputIndex});`
                             );
                         }
                         build.unindent();
@@ -316,14 +283,32 @@ export class LVGLBuild {
         }
 
         for (const page of this.project.pages) {
-            build.line(`void ${this.getScreenCreateFunctionName(page)}() {`);
+            if (page.isUsedAsUserWidget) {
+                build.line(
+                    `void ${this.getScreenCreateFunctionName(
+                        page
+                    )}(lv_obj_t *parent_obj, void *flowState, int startWidgetIndex) {`
+                );
+            } else {
+                build.line(
+                    `void ${this.getScreenCreateFunctionName(page)}() {`
+                );
+            }
             build.indent();
             page.lvglBuild(this);
             build.unindent();
             build.line("}");
             build.line("");
 
-            build.line(`void ${this.getScreenTickFunctionName(page)}() {`);
+            if (page.isUsedAsUserWidget) {
+                build.line(
+                    `void ${this.getScreenTickFunctionName(
+                        page
+                    )}(void *flowState, int startWidgetIndex) {`
+                );
+            } else {
+                build.line(`void ${this.getScreenTickFunctionName(page)}() {`);
+            }
             build.indent();
             page.lvglBuildTick(this);
             build.unindent();
@@ -361,7 +346,9 @@ export class LVGLBuild {
         build.line("");
 
         for (const page of this.project.pages) {
-            build.line(`${this.getScreenCreateFunctionName(page)}();`);
+            if (!page.isUsedAsUserWidget) {
+                build.line(`${this.getScreenCreateFunctionName(page)}();`);
+            }
         }
         build.unindent();
         build.line("}");
@@ -375,7 +362,11 @@ export class LVGLBuild {
         build.line("tick_screen_func_t tick_screen_funcs[] = {");
         build.indent();
         for (const page of this.project.pages) {
-            build.line(`${this.getScreenTickFunctionName(page)},`);
+            if (page.isUsedAsUserWidget) {
+                build.line(`0,`);
+            } else {
+                build.line(`${this.getScreenTickFunctionName(page)},`);
+            }
         }
         build.unindent();
         build.line("};");

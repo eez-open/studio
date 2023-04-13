@@ -31,7 +31,7 @@ export function registerPath(
     connectionLine: ConnectionLine,
     path: SVGPathElement
 ) {
-    if (!ProjectEditor.getProject(connectionLine)._store.runtime) {
+    if (!ProjectEditor.getProjectStore(connectionLine).runtime) {
         return;
     }
     let paths = connectionLinePaths.get(connectionLine);

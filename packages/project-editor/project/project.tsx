@@ -37,8 +37,7 @@ import {
     getProperty,
     getRootObject,
     ProjectType,
-    MessageType,
-    getParent
+    MessageType
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -90,7 +89,6 @@ import { Readme } from "project-editor/features/readme";
 import { Changes } from "project-editor/features/changes";
 import { validators } from "eez-studio-shared/validation";
 import { createProjectTypeTraits } from "./project-type-traits";
-import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import type { LVGLStyles } from "project-editor/lvgl/style";
 
 export { ProjectType } from "project-editor/core/object";
@@ -98,9 +96,6 @@ export { ProjectType } from "project-editor/core/object";
 ////////////////////////////////////////////////////////////////////////////////
 
 export const NAMESPACE_PREFIX = "::";
-
-const LVGL_IDENTIFIERS_PAGE_PREFIX = "[page]";
-const LVGL_IDENTIFIERS_ACTION_PREFIX = "[action]";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1552,161 +1547,6 @@ export class Project extends EezObject {
 
     lvglStyles: LVGLStyles;
 
-    get _lvglIdentifiers() {
-        type LvglIdentifier = {
-            identifier: string;
-            object: LVGLWidget | Page;
-            index: number;
-            duplicate: boolean;
-        };
-
-        function sort(
-            startIndex: number,
-            lvglIdentifiers: Map<string, LvglIdentifier>
-        ) {
-            const identifiers = [...lvglIdentifiers.values()]
-                .filter(lvglIdentifier => lvglIdentifier.index == -1)
-                .map(lvglIdentifier => lvglIdentifier.identifier);
-
-            identifiers.sort((a, b) =>
-                a.toLowerCase().localeCompare(b.toLowerCase())
-            );
-
-            identifiers.forEach((identifier, index) => {
-                const lvglIdentifier = lvglIdentifiers.get(identifier)!;
-                lvglIdentifier.index = startIndex + index;
-            });
-        }
-
-        const allLvglIdentifiers = new Map<
-            string,
-            Map<string, LvglIdentifier>
-        >();
-
-        for (const page of this.pages) {
-            if (page.isUsedAsUserWidget) {
-                const localWidgetIdentifiers = new Map<
-                    string,
-                    LvglIdentifier
-                >();
-
-                page._lvglWidgets.forEach(widget => {
-                    if (widget.identifier) {
-                        const lvglIdentifier = localWidgetIdentifiers.get(
-                            widget.identifier
-                        );
-
-                        if (!lvglIdentifier) {
-                            localWidgetIdentifiers.set(widget.identifier, {
-                                identifier: widget.identifier,
-                                object: widget,
-                                index: -1,
-                                duplicate: false
-                            });
-                        } else {
-                            lvglIdentifier.duplicate = true;
-                        }
-                    }
-                });
-
-                sort(0, localWidgetIdentifiers);
-
-                allLvglIdentifiers.set(
-                    LVGL_IDENTIFIERS_PAGE_PREFIX + page.name,
-                    localWidgetIdentifiers
-                );
-            }
-        }
-
-        const globalWidgetIdentifiers = new Map<string, LvglIdentifier>();
-
-        let globalStartIndex = 0;
-
-        for (const page of this.pages) {
-            globalWidgetIdentifiers.set(page.name, {
-                identifier: page.name,
-                object: page,
-                index: globalStartIndex++,
-                duplicate: false
-            });
-        }
-
-        for (const page of this.pages) {
-            if (page.isUsedAsUserWidget) {
-                continue;
-            }
-
-            page._lvglWidgets.forEach(widget => {
-                if (widget.identifier) {
-                    const lvglIdentifier = globalWidgetIdentifiers.get(
-                        widget.identifier
-                    );
-                    if (!lvglIdentifier) {
-                        globalWidgetIdentifiers.set(widget.identifier, {
-                            identifier: widget.identifier,
-                            object: widget,
-                            index: -1,
-                            duplicate: false
-                        });
-
-                        if (
-                            widget instanceof
-                            ProjectEditor.LVGLUserWidgetWidgetClass
-                        ) {
-                            const userWidgetPage = widget.userWidgetPage;
-                            if (userWidgetPage) {
-                                const lvglIdentifiers = allLvglIdentifiers.get(
-                                    LVGL_IDENTIFIERS_PAGE_PREFIX +
-                                        userWidgetPage.name
-                                );
-                                if (lvglIdentifiers) {
-                                    lvglIdentifiers.forEach(lvglIdentifier => {
-                                        const identifier =
-                                            widget.identifier +
-                                            "__" +
-                                            lvglIdentifier.identifier;
-
-                                        globalWidgetIdentifiers.set(
-                                            identifier,
-                                            {
-                                                identifier,
-                                                object: lvglIdentifier.object,
-                                                index: -1,
-                                                duplicate: false
-                                            }
-                                        );
-                                    });
-                                }
-                            }
-                        }
-                    } else {
-                        lvglIdentifier.duplicate = true;
-                    }
-                }
-            });
-        }
-
-        sort(globalStartIndex, globalWidgetIdentifiers);
-
-        for (const page of this.pages) {
-            if (!page.isUsedAsUserWidget) {
-                allLvglIdentifiers.set(
-                    LVGL_IDENTIFIERS_PAGE_PREFIX + page.name,
-                    globalWidgetIdentifiers
-                );
-            }
-        }
-
-        for (const action of this.actions) {
-            allLvglIdentifiers.set(
-                LVGL_IDENTIFIERS_ACTION_PREFIX + action.name,
-                globalWidgetIdentifiers
-            );
-        }
-
-        return allLvglIdentifiers;
-    }
-
     constructor() {
         super();
 
@@ -1738,8 +1578,7 @@ export class Project extends EezObject {
             colorToIndexMap: computed,
             buildColors: computed({ keepAlive: true }),
             projectTypeTraits: computed,
-            _objectsMap: computed,
-            _lvglIdentifiers: computed({ keepAlive: true })
+            _objectsMap: computed
         });
     }
 
@@ -2136,22 +1975,5 @@ export function checkAssetId(
                 messages.push(propertyNotUniqueMessage(asset, "id"));
             }
         }
-    }
-}
-
-export function getLvglIdentifiers(object: IEezObject) {
-    const project = getProject(object);
-
-    while (true) {
-        if (object instanceof ProjectEditor.PageClass) {
-            return project._lvglIdentifiers.get(
-                LVGL_IDENTIFIERS_PAGE_PREFIX + object.name
-            )!;
-        } else if (object instanceof ProjectEditor.ActionClass) {
-            return project._lvglIdentifiers.get(
-                LVGL_IDENTIFIERS_ACTION_PREFIX + object.name
-            )!;
-        }
-        object = getParent(object);
     }
 }

@@ -25,7 +25,7 @@ void flowOnPageLoadedStudio(unsigned pageIndex);
 
 void addTimelineKeyframe(
     lv_obj_t *obj,
-    unsigned page_index,
+    void *flowState,
     float start, float end,
     uint32_t enabledProperties,
     int16_t x, uint8_t xEasingFunc,
@@ -52,7 +52,7 @@ void clearTimeline();
 #define LV_EVENT_UNCHECKED 0x7F
 
 struct FlowEventCallbackData {
-    int32_t *flow_state_address_index;
+    void *flow_state;
     unsigned component_index;
     unsigned output_or_property_index;
 };
@@ -91,6 +91,6 @@ enum UpdateTaskType {
     UPDATE_TASK_TYPE_METER_INDICATOR_END_VALUE,
 };
 
-void addUpdateTask(enum UpdateTaskType updateTaskType, lv_obj_t *obj, int32_t *flow_state_address_index, unsigned component_index, unsigned property_index, void *subobj);
+void addUpdateTask(enum UpdateTaskType updateTaskType, lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index, void *subobj);
 
 void setObjectIndex(lv_obj_t *obj, int32_t index);

@@ -31,8 +31,7 @@ import {
     findReferencedObject,
     getNameProperty,
     checkObjectReference,
-    checkAssetId,
-    getLvglIdentifiers
+    checkAssetId
 } from "project-editor/project/project";
 
 import { extensions } from "eez-studio-shared/extensions/extensions";
@@ -120,6 +119,7 @@ import {
 } from "project-editor/lvgl/widgets";
 import { LVGLStyle } from "project-editor/lvgl/style";
 import { Property } from "./ui-components/PropertyGrid/Property";
+import { getProjectStore } from "project-editor/store";
 
 let extensionsInitialized = false;
 
@@ -216,6 +216,7 @@ export async function initProjectEditor(
         LVGLUserWidgetWidgetClass: LVGLUserWidgetWidget,
         LVGLStyleClass: LVGLStyle,
         getProject,
+        getProjectStore,
         getFlow,
         getNameProperty,
         getObjectVariableTypeFromType,
@@ -236,7 +237,6 @@ export async function initProjectEditor(
         createEditorState,
         browseGlyph,
         checkAssetId,
-        getLvglIdentifiers,
         Property,
         ArrayProperty,
         EmbeddedPropertyGrid

@@ -843,7 +843,7 @@ registerObjectVariableType("Instrument", {
         constructorParams?: InstrumentConstructorParams
     ): Promise<IObjectVariableValueConstructorParams | undefined> => {
         let instrument = await showSelectInstrumentDialog(
-            ProjectEditor.getProject(variable as any)?._store,
+            ProjectEditor.getProjectStore(variable as any),
             variable.description || humanize(variable.name),
             getInstrumentIdFromConstructorParams(constructorParams)
         );

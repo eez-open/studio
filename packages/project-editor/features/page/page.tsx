@@ -220,6 +220,7 @@ export class Page extends Flow {
             lvglLocalStyles: observable,
             _lvglRuntime: observable,
             _lvglObj: observable,
+            _lvglWidgetsIncludingUserWidgets: computed({ keepAlive: true }),
             _lvglWidgets: computed({ keepAlive: true }),
             _refreshCounter: observable
         });
@@ -257,7 +258,10 @@ export class Page extends Flow {
                         }
 
                         if (
-                            ProjectEditor.getLvglIdentifiers(page).get(
+                            ProjectEditor.getProjectStore(
+                                page
+                            ).lvglIdentifiers.getIdentifierByName(
+                                page,
                                 newIdentifer
                             ) == undefined
                         ) {
@@ -931,7 +935,7 @@ export class Page extends Flow {
             .filter(component => component instanceof Widget)
             .map((widget: Widget) => widget.lvglCreate(runtime, obj));
 
-        this._lvglWidgets.forEach(lvglWidget =>
+        this._lvglWidgetsIncludingUserWidgets.forEach(lvglWidget =>
             lvglWidget.lvglPostCreate(runtime)
         );
 
@@ -939,22 +943,22 @@ export class Page extends Flow {
     }
 
     lvglBuild(build: LVGLBuild) {
-        this._lvglWidgets.find(lvglWidget => {
-            if (lvglWidget.timeline.length > 0) {
-                // all widgets with timeline must be in screen objects struct
-                build.getLvglObjectIdentifierInSourceCode(lvglWidget, true);
-            }
-        });
+        if (!this.isUsedAsUserWidget) {
+            let flowIndex = build.assets.getFlowIndex(this);
+            build.line(`void *flowState = getFlowState(0, ${flowIndex});`);
 
-        build.line(`lv_obj_t *obj = lv_obj_create(0);`);
-        build.line(`${build.getLvglObjectAccessor(this)} = obj;`);
+            build.line(`lv_obj_t *obj = lv_obj_create(0);`);
+            build.line(`${build.getLvglObjectAccessor(this)} = obj;`);
 
-        build.line(`lv_obj_set_pos(obj, ${this.left}, ${this.top});`);
-        build.line(`lv_obj_set_size(obj, ${this.width}, ${this.height});`);
+            build.line(`lv_obj_set_pos(obj, ${this.left}, ${this.top});`);
+            build.line(`lv_obj_set_size(obj, ${this.width}, ${this.height});`);
 
-        build.line(`lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);`);
+            build.line(`lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);`);
 
-        this.lvglLocalStyles.lvglBuild(build);
+            this.lvglLocalStyles.lvglBuild(build);
+        } else {
+            build.line(`lv_obj_t *obj = parent_obj;`);
+        }
 
         build.line(`{`);
         build.indent();
@@ -982,6 +986,11 @@ export class Page extends Flow {
     }
 
     lvglBuildTick(build: LVGLBuild) {
+        if (!this.isUsedAsUserWidget) {
+            let flowIndex = build.assets.getFlowIndex(this);
+            build.line(`void *flowState = getFlowState(0, ${flowIndex});`);
+        }
+
         for (const widget of this.components) {
             if (widget instanceof ProjectEditor.LVGLWidgetClass) {
                 widget.lvglBuildTick(build);
@@ -992,6 +1001,22 @@ export class Page extends Flow {
     }
 
     get _lvglWidgets() {
+        const widgets: LVGLWidget[] = [];
+
+        function addWidgets(page: Page) {
+            for (const widget of visitObjects(page.components)) {
+                if (widget instanceof ProjectEditor.LVGLWidgetClass) {
+                    widgets.push(widget);
+                }
+            }
+        }
+
+        addWidgets(this);
+
+        return widgets;
+    }
+
+    get _lvglWidgetsIncludingUserWidgets() {
         const widgets: LVGLWidget[] = [];
 
         function addWidgets(page: Page) {

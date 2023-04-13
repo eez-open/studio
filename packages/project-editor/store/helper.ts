@@ -78,7 +78,7 @@ export function isValue(object: IEezObject | PropertyInfo | undefined) {
 }
 
 export function getProjectStore(object: IEezObject) {
-    return (getRootObject(object) as Project)._store;
+    return (getRootObject(object) as Project)?._store;
 }
 
 export function getChildOfObject(
