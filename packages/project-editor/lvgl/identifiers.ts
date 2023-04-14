@@ -172,7 +172,9 @@ export class LVGLIdentifiers {
                 index++;
 
                 if (identifier.userWidgetIdentifiers) {
-                    index += setIndexes(identifier.userWidgetIdentifiers, 0);
+                    index +=
+                        setIndexes(identifier.userWidgetIdentifiers, index) -
+                        index;
                 }
             });
 
@@ -233,21 +235,17 @@ export class LVGLIdentifiers {
             const arr: LVGLIdentifier[] = [];
 
             function addIdentifiers(
-                identifiers: Map<LVGLWidget | Page, LVGLIdentifier>,
-                startIndex: number
+                identifiers: Map<LVGLWidget | Page, LVGLIdentifier>
             ) {
                 identifiers.forEach(identifier => {
-                    arr[startIndex + identifier.index] = identifier;
+                    arr[identifier.index] = identifier;
                     if (identifier.userWidgetIdentifiers) {
-                        addIdentifiers(
-                            identifier.userWidgetIdentifiers,
-                            identifier.index + 1
-                        );
+                        addIdentifiers(identifier.userWidgetIdentifiers);
                     }
                 });
             }
 
-            addIdentifiers(identifiers, 0);
+            addIdentifiers(identifiers);
 
             map.set(flow, arr);
         });
@@ -309,11 +307,20 @@ export class LVGLIdentifiers {
 
         let foundIdentifier;
 
-        identifiers!.forEach(identifier => {
-            if (identifier.identifier == name) {
-                foundIdentifier = identifier;
-            }
-        });
+        function findIdentifier(
+            identifiers: Map<LVGLWidget | Page, LVGLIdentifier>
+        ) {
+            identifiers.forEach(identifier => {
+                if (identifier.identifier == name) {
+                    foundIdentifier = identifier;
+                }
+                if (identifier.userWidgetIdentifiers) {
+                    findIdentifier(identifier.userWidgetIdentifiers);
+                }
+            });
+        }
+
+        findIdentifier(identifiers!);
 
         return foundIdentifier;
     }

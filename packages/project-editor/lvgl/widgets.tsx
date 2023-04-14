@@ -829,7 +829,7 @@ export class LVGLWidget extends Widget {
                 this,
                 ProjectEditor.PageClass.classInfo
             ) as Page;
-            if (page._lvglRuntime) {
+            if (page._lvglRuntime && page._lvglRuntime.isMounted) {
                 return {
                     left: page._lvglRuntime.wasm._lvglGetObjRelX(this._lvglObj),
                     top: page._lvglRuntime.wasm._lvglGetObjRelY(this._lvglObj)
@@ -845,7 +845,7 @@ export class LVGLWidget extends Widget {
                 this,
                 ProjectEditor.PageClass.classInfo
             ) as Page;
-            if (page._lvglRuntime) {
+            if (page._lvglRuntime && page._lvglRuntime.isMounted) {
                 return {
                     left: Math.round(
                         left - this.relativePosition.left + this.left
@@ -878,7 +878,7 @@ export class LVGLWidget extends Widget {
                 this,
                 ProjectEditor.PageClass.classInfo
             ) as Page;
-            if (page._lvglRuntime) {
+            if (page._lvglRuntime && page._lvglRuntime.isMounted) {
                 return page._lvglRuntime.wasm._lvglGetObjWidth(this._lvglObj);
             }
         }
@@ -892,7 +892,7 @@ export class LVGLWidget extends Widget {
                 this,
                 ProjectEditor.PageClass.classInfo
             ) as Page;
-            if (page._lvglRuntime) {
+            if (page._lvglRuntime && page._lvglRuntime.isMounted) {
                 return page._lvglRuntime.wasm._lvglGetObjHeight(this._lvglObj);
             }
         }
@@ -1256,6 +1256,15 @@ export class LVGLWidget extends Widget {
         }
 
         if (this.eventHandlers.length > 0 || this.hasEventHandler) {
+            return true;
+        }
+
+        if (
+            this.checkedStateType == "expression" ||
+            this.disabledStateType == "expression" ||
+            this.hiddenFlagType == "expression" ||
+            this.clickableFlagType == "expression"
+        ) {
             return true;
         }
 

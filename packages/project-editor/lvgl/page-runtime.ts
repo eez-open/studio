@@ -257,10 +257,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
     }
 
     mount() {
-        console.log("mount");
-
         const wasm = lvgl_flow_runtime_constructor(() => {
-            console.log("mount constructor");
             if (this.wasm != wasm) {
                 return;
             }
