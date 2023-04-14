@@ -376,6 +376,17 @@ export class Page extends Flow {
             return label;
         },
         beforeLoadHook: (page: Page, jsObject: any) => {
+            /*
+            // MIGRATION TO LOW RES
+            if (!jsObject.isUsedAsUserWidget) {
+                jsObject.width = 480;
+                jsObject.height = 272;
+            } else {
+                jsObject.width = Math.floor((jsObject.width * 480) / 800);
+                jsObject.height = Math.floor((jsObject.height * 480) / 800);
+            }
+            */
+
             if (jsObject.widgets) {
                 jsObject.components = jsObject.widgets;
                 delete jsObject.widgets;

@@ -911,6 +911,12 @@ export class General extends EezObject {
                     jsObject.displayHeight = 272;
                 }
             }
+
+            /*
+            // MIGRATION TO LOW RES
+            jsObject.displayWidth = 480;
+            jsObject.displayHeight = 272;
+            */
         }
     };
 

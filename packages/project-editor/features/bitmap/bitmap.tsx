@@ -7,6 +7,7 @@ import {
     action,
     makeObservable,
     runInAction
+    //,autorun
 } from "mobx";
 import { observer } from "mobx-react";
 import { dialog, getCurrentWindow } from "@electron/remote";
@@ -322,6 +323,42 @@ export class Bitmap extends EezObject {
                 }
             }
         }
+
+        /*,
+        // MIGRATION TO LOW RES
+        beforeLoadHook: (bitmap: Bitmap, jsWidget: Partial<Bitmap>) => {
+            const dispose = autorun(() => {
+                const image = bitmap.imageElement;
+                if (image) {
+                    dispose();
+
+                    setTimeout(() => {
+                        let canvas = document.createElement("canvas");
+                        canvas.width = Math.floor((image.width * 480) / 800);
+                        canvas.height = Math.floor((image.height * 480) / 800);
+
+                        let ctx = canvas.getContext("2d");
+                        if (ctx == null) {
+                            return;
+                        }
+
+                        if (bitmap.backgroundColor !== "transparent") {
+                            ctx.fillStyle = bitmap.backgroundColor;
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        } else {
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        }
+
+                        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+                        runInAction(() => {
+                            bitmap.image = canvas.toDataURL();
+                        });
+                    }, 1000);
+                }
+            });
+        }
+        */
     };
 
     private _imageElement: HTMLImageElement | null | undefined = undefined;

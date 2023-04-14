@@ -601,6 +601,14 @@ export class LVGLWidget extends Widget {
         ],
 
         beforeLoadHook: (widget: LVGLWidget, jsWidget: Partial<LVGLWidget>) => {
+            /*
+            // MIGRATION TO LOW RES
+            jsWidget.left = Math.floor((jsWidget.left * 480) / 800);
+            jsWidget.top = Math.floor((jsWidget.top * 480) / 800);
+            jsWidget.width = Math.floor((jsWidget.width * 480) / 800);
+            jsWidget.height = Math.floor((jsWidget.height * 480) / 800);
+            */
+
             if (jsWidget.leftUnit == undefined) {
                 jsWidget.leftUnit = "px";
             }
