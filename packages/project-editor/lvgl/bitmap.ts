@@ -18,7 +18,7 @@ import {
 } from "project-editor/features/bitmap/bitmap";
 
 export async function getLvglBitmapSourceFile(bitmap: Bitmap) {
-    const { convertImageBlob } = await import("./lv_img_conv/lib/convert");
+    const { convertImage } = await import("./lv_img_conv/lib/convert");
     const { ImageMode, OutputMode } = await import("./lv_img_conv/lib/enums");
 
     const TO_IMAGE_MODE = {
@@ -52,19 +52,37 @@ export async function getLvglBitmapSourceFile(bitmap: Bitmap) {
         });
     }
 
-    const result = await loadImage(bitmap.image);
-
-    if (!result) {
+    const image = await loadImage(bitmap.image);
+    if (!image) {
         return "";
     }
 
-    return (await convertImageBlob(result, {
-        cf: TO_IMAGE_MODE[bitmap.bpp.toString()],
-        outName: "img_" + bitmap.name,
-        swapEndian: false,
-        outputFormat: OutputMode.C,
-        binaryFormat: undefined,
-        overrideWidth: result.width,
-        overrideHeight: result.height
-    })) as string;
+    const cf = TO_IMAGE_MODE[bitmap.bpp.toString()];
+
+    if (cf == ImageMode.CF_RAW_CHROMA || cf == ImageMode.CF_RAW_ALPHA) {
+        // for example: data:image/png;base64,
+        const data: Uint8Array = Buffer.from(
+            bitmap.image.substring(bitmap.image.indexOf(",") + 1),
+            "base64"
+        );
+        return (await convertImage(data, {
+            cf,
+            outName: "img_" + bitmap.name,
+            swapEndian: false,
+            outputFormat: OutputMode.C,
+            binaryFormat: undefined,
+            overrideWidth: image.width,
+            overrideHeight: image.height
+        })) as string;
+    } else {
+        return (await convertImage(image, {
+            cf,
+            outName: "img_" + bitmap.name,
+            swapEndian: false,
+            outputFormat: OutputMode.C,
+            binaryFormat: undefined,
+            overrideWidth: image.width,
+            overrideHeight: image.height
+        })) as string;
+    }
 }

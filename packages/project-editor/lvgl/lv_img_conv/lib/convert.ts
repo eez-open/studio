@@ -913,8 +913,8 @@ export function isNotRaw(options: { cf: ImageMode }): boolean {
     ); /* && options.cf != ImageMode.CF_RAW_CHROMA; */
 }
 
-async function convertImageBlob(
-    img: HTMLImageElement,
+async function convertImage(
+    img: HTMLImageElement | Uint8Array,
     options: Partial<ConverterOptions>
 ): Promise<string | ArrayBuffer> {
     function isImage(img: any, options: any): img is HTMLImageElement {
@@ -1004,4 +1004,4 @@ async function convertImageBlob(
         );
 }
 
-export { convertImageBlob, Converter };
+export { convertImage, Converter };
