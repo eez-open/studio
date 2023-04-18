@@ -5509,6 +5509,10 @@ export class LVGLKeyboardWidget extends LVGLWidget {
         });
     }
 
+    getIsAccessibleFromSourceCode() {
+        return true;
+    }
+
     override lvglCreateObj(
         runtime: LVGLPageRuntime,
         parentObj: number
