@@ -103,6 +103,7 @@ export const ActionComponents = observer(
         onFocus = () => {
             this.context.navigationStore.setSelectedPanel(this);
         };
+        //
 
         renderItem = (itemId: string) => {
             if (!this.treeAdapter) {
