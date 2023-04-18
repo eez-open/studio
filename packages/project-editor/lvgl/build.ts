@@ -462,6 +462,29 @@ extern const ext_img_desc_t images[${this.project.bitmaps.length}];
         return this.result;
     }
 
+    async buildActionsArrayDef() {
+        this.result = "";
+        this.indentation = "";
+        const build = this;
+
+        build.line("ActionExecFunc actions[] = {");
+        build.indent();
+
+        for (const action of this.project.actions) {
+            if (
+                !this.assets.projectStore.projectTypeTraits.hasFlowSupport ||
+                action.implementationType === "native"
+            ) {
+                build.line(`${this.getActionFunctionName(action.name)},`);
+            }
+        }
+
+        build.unindent();
+        build.line(`};`);
+
+        return this.result;
+    }
+
     async buildVariablesDecl() {
         this.result = "";
         this.indentation = "";

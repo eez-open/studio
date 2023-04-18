@@ -1539,6 +1539,14 @@ export async function buildAssets(
 
             if (
                 !sectionNames ||
+                sectionNames.indexOf("LVGL_ACTIONS_ARRAY_DEF") !== -1
+            ) {
+                result.LVGL_ACTIONS_ARRAY_DEF =
+                    await lvglBuild.buildActionsArrayDef();
+            }
+
+            if (
+                !sectionNames ||
                 sectionNames.indexOf("LVGL_VARS_DECL") !== -1
             ) {
                 result.LVGL_VARS_DECL = await lvglBuild.buildVariablesDecl();
