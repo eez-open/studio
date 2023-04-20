@@ -30,7 +30,8 @@ import {
     PropertyInfo,
     IOnSelectParams,
     setParent,
-    PropertyProps
+    PropertyProps,
+    IMessage
 } from "project-editor/core/object";
 import {
     getLabel,
@@ -65,6 +66,7 @@ import {
     serializePixelArray
 } from "project-editor/features/font/utils";
 import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
+import type { ProjectEditorFeature } from "project-editor/store/features";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1136,14 +1138,10 @@ export class Font extends EezObject {
                 font.loadLvglGlyphs(project._store);
             } catch (err) {}
         },
-        check: (font: Font) => {
-            let messages: Message[] = [];
-
+        check: (font: Font, messages: IMessage[]) => {
             const projectStore = getProjectStore(font);
 
             ProjectEditor.checkAssetId(projectStore, "fonts", font, messages);
-
-            return messages;
         },
         newItem: async (parent: IEezObject) => {
             function is1BitPerPixel(obj: IEezObject) {
@@ -1573,7 +1571,7 @@ export function rebuildLvglFonts(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default {
+const feature: ProjectEditorFeature = {
     name: "eezstudio-project-feature-font",
     version: "0.1.0",
     description: "Fonts support for your project",
@@ -1586,9 +1584,7 @@ export default {
     typeClass: Font,
     icon: "material:font_download",
     create: () => [],
-    check: (object: EezObject[]) => {
-        let messages: Message[] = [];
-
+    check: (object: EezObject[], messages: IMessage[]) => {
         if (object.length > 255) {
             messages.push(
                 new Message(
@@ -1598,8 +1594,6 @@ export default {
                 )
             );
         }
-
-        return messages;
     },
     toJsHook: (jsObject: Project, project: Project) => {
         jsObject.fonts?.forEach(font => {
@@ -1616,3 +1610,5 @@ export default {
         });
     }
 };
+
+export default feature;

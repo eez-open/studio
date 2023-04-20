@@ -3,8 +3,7 @@ import {
     autorun,
     runInAction,
     makeObservable,
-    computed,
-    reaction
+    computed
 } from "mobx";
 
 import type { Page } from "project-editor/features/page/page";
@@ -225,8 +224,6 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
     autorRunDispose: IReactionDisposer | undefined;
     requestAnimationFrameId: number | undefined;
 
-    dispose1: IReactionDisposer | undefined;
-
     constructor(page: Page, public ctx: CanvasRenderingContext2D) {
         super(page);
 
@@ -257,6 +254,10 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
     }
 
     mount() {
+        if (this.isMounted) {
+            return;
+        }
+
         const wasm = lvgl_flow_runtime_constructor(() => {
             if (this.wasm != wasm) {
                 return;
@@ -318,22 +319,6 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
 
         this.wasm = wasm;
         this.isMounted = true;
-
-        if (this.dispose1) {
-            this.dispose1();
-            this.dispose1 = undefined;
-        }
-
-        this.dispose1 = reaction(
-            () => ({
-                width: this.displayWidth,
-                height: this.displayHeight
-            }),
-            size => {
-                this.unmount();
-                this.mount();
-            }
-        );
     }
 
     tick = () => {
@@ -369,9 +354,8 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
     };
 
     unmount() {
-        if (this.dispose1) {
-            this.dispose1();
-            this.dispose1 = undefined;
+        if (!this.isMounted) {
+            return;
         }
 
         if (this.requestAnimationFrameId != undefined) {

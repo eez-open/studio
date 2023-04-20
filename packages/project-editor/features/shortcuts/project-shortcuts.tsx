@@ -39,6 +39,7 @@ import { ProjectContext } from "project-editor/project/context";
 
 import { EditorComponent } from "project-editor/project/ui/EditorComponent";
 import { showDialog } from "eez-studio-ui/dialog";
+import type { ProjectEditorFeature } from "project-editor/store/features";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -300,7 +301,7 @@ registerClass("Shortcuts", Shortcuts);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default {
+const feature: ProjectEditorFeature = {
     name: "eezstudio-project-feature-shortcuts",
     version: "0.1.0",
     description:
@@ -342,3 +343,5 @@ export default {
         properties.shortcuts.forEach((shortcut: any) => delete shortcut.usedIn);
     }
 };
+
+export default feature;

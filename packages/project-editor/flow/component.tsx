@@ -27,7 +27,8 @@ import {
     MessageType,
     registerClass,
     FlowPropertyType,
-    setParent
+    setParent,
+    IMessage
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -1927,9 +1928,7 @@ export class Component extends EezObject {
             return true;
         },
 
-        check: (component: Component) => {
-            let messages: Message[] = [];
-
+        check: (component: Component, messages: IMessage[]) => {
             const connectionLines =
                 ProjectEditor.getFlow(component).connectionLines;
 
@@ -2199,8 +2198,6 @@ export class Component extends EezObject {
                     }
                 }
             }
-
-            return messages;
         },
 
         updateObjectValueHook: (object: Component, values: any) => {
@@ -2684,9 +2681,7 @@ export class Widget extends Component {
             }
         },
 
-        check: (object: Component) => {
-            let messages: Message[] = [];
-
+        check: (object: Component, messages: IMessage[]) => {
             if (
                 object instanceof Widget &&
                 !(object instanceof ProjectEditor.LVGLWidgetClass) &&
@@ -2754,8 +2749,6 @@ export class Widget extends Component {
                 "action",
                 messages
             );
-
-            return messages;
         },
         showSelectedObjectsParent: () => {
             return true;
@@ -3820,9 +3813,7 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                               migrateProperties(jsObject)
                         : undefined,
 
-                    check: (item: ListItem) => {
-                        let messages: Message[] = [];
-
+                    check: (item: ListItem, messages: IMessage[]) => {
                         for (const propertyInfo of listItemProperties) {
                             if (propertyInfo.type == "expression") {
                                 try {
@@ -3867,8 +3858,6 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                                 }
                             }
                         }
-
-                        return messages;
                     }
                 };
 

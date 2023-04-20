@@ -9,6 +9,8 @@ import { ChangesState } from "./state";
 
 import { CHANGES_ICON } from "project-editor/ui-components/icons";
 
+import type { ProjectEditorFeature } from "project-editor/store/features";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Changes extends EezObject {
@@ -24,7 +26,7 @@ registerClass("Changes", Changes);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default {
+const feature: ProjectEditorFeature = {
     name: "eezstudio-project-feature-changes",
     version: "0.1.0",
     description: "Compare project with previous versions",
@@ -38,3 +40,5 @@ export default {
     icon: CHANGES_ICON,
     create: () => ({})
 };
+
+export default feature;

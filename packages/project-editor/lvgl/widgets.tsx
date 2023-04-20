@@ -23,7 +23,8 @@ import {
     getClassInfoLvglProperties,
     EezObject,
     ClassInfo,
-    setParent
+    setParent,
+    IMessage
 } from "project-editor/core/object";
 
 import {
@@ -738,9 +739,7 @@ export class LVGLWidget extends Widget {
             projectStore.updateObject(widget, props);
         },
 
-        check: (widget: LVGLWidget) => {
-            let messages: Message[] = [];
-
+        check: (widget: LVGLWidget, messages: IMessage[]) => {
             const projectStore = getProjectStore(widget);
 
             if (widget.identifier) {
@@ -776,9 +775,7 @@ export class LVGLWidget extends Widget {
                 }
             }
 
-            messages.push(...widget.localStyles.check());
-
-            return messages;
+            widget.localStyles.check(messages);
         },
 
         showTreeCollapseIcon: "has-children"
@@ -1806,14 +1803,10 @@ export class LVGLLabelWidget extends LVGLWidget {
             </svg>
         ),
 
-        check: (widget: LVGLLabelWidget) => {
-            let messages: Message[] = [];
-
+        check: (widget: LVGLLabelWidget, messages: IMessage[]) => {
             if (!widget.text) {
                 messages.push(propertyNotSetMessage(widget, "text"));
             }
-
-            return messages;
         },
 
         lvgl: {
@@ -2226,9 +2219,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
             states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
         },
 
-        check: (widget: LVGLUserWidgetWidget) => {
-            let messages: Message[] = [];
-
+        check: (widget: LVGLUserWidgetWidget, messages: IMessage[]) => {
             if (!widget.userWidgetPageName) {
                 messages.push(
                     propertyNotSetMessage(widget, "userWidgetPageName")
@@ -2265,8 +2256,6 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
                     }
                 }
             }
-
-            return messages;
         }
     });
 
@@ -2723,9 +2712,7 @@ export class LVGLImageWidget extends LVGLWidget {
             </svg>
         ),
 
-        check: (widget: LVGLImageWidget) => {
-            let messages: Message[] = [];
-
+        check: (widget: LVGLImageWidget, messages: IMessage[]) => {
             if (widget.image) {
                 const bitmap = ProjectEditor.findBitmap(
                     ProjectEditor.getProject(widget),
@@ -2736,8 +2723,6 @@ export class LVGLImageWidget extends LVGLWidget {
                     messages.push(propertyNotFoundMessage(widget, "image"));
                 }
             }
-
-            return messages;
         },
 
         lvgl: {
@@ -4422,12 +4407,6 @@ export class LVGLTextareaWidget extends LVGLWidget {
             </svg>
         ),
 
-        check: (widget: LVGLLabelWidget) => {
-            let messages: Message[] = [];
-
-            return messages;
-        },
-
         lvgl: {
             parts: ["MAIN", "SELECTED", "CURSOR"],
             flags: [
@@ -4660,9 +4639,7 @@ export class LVGLCalendarWidget extends LVGLWidget {
             </svg>
         ),
 
-        check: (widget: LVGLCalendarWidget) => {
-            let messages: Message[] = [];
-
+        check: (widget: LVGLCalendarWidget, messages: IMessage[]) => {
             function dateIsValid(date: any) {
                 return date instanceof Date && !isNaN(date as any);
             }
@@ -4706,8 +4683,6 @@ export class LVGLCalendarWidget extends LVGLWidget {
                     }
                 }
             }
-
-            return messages;
         },
 
         lvgl: {
@@ -4855,11 +4830,6 @@ export class LVGLColorwheelWidget extends LVGLWidget {
                 <circle cx="16.5" cy="10.5" r=".5" fill="currentColor" />
             </svg>
         ),
-
-        check: (widget: LVGLLabelWidget) => {
-            let messages: Message[] = [];
-            return messages;
-        },
 
         lvgl: {
             parts: ["MAIN", "KNOB"],
@@ -5035,9 +5005,7 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
             </svg>
         ),
 
-        check: (widget: LVGLImgbuttonWidget) => {
-            let messages: Message[] = [];
-
+        check: (widget: LVGLImgbuttonWidget, messages: IMessage[]) => {
             if (widget.imageReleased) {
                 const bitmap = ProjectEditor.findBitmap(
                     ProjectEditor.getProject(widget),
@@ -5115,7 +5083,6 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
                     );
                 }
             }
-            return messages;
         },
 
         lvgl: {
@@ -5454,9 +5421,7 @@ export class LVGLKeyboardWidget extends LVGLWidget {
             </svg>
         ),
 
-        check: (widget: LVGLKeyboardWidget) => {
-            let messages: Message[] = [];
-
+        check: (widget: LVGLKeyboardWidget, messages: IMessage[]) => {
             if (widget.textarea) {
                 if (
                     !ProjectEditor.getProjectStore(
@@ -5469,8 +5434,6 @@ export class LVGLKeyboardWidget extends LVGLWidget {
                     messages.push(propertyNotFoundMessage(widget, "textarea"));
                 }
             }
-
-            return messages;
         },
 
         lvgl: {
@@ -5629,11 +5592,6 @@ export class LVGLChartWidget extends LVGLWidget {
                 <polyline points="4 15 8 9 12 11 16 6 20 10"></polyline>
             </svg>
         ),
-
-        check: (widget: LVGLLabelWidget) => {
-            let messages: Message[] = [];
-            return messages;
-        },
 
         lvgl: {
             parts: ["MAIN", "ITEMS", "INDICATOR"],
@@ -5971,9 +5929,10 @@ export class LVGLMeterIndicatorNeedleImg extends LVGLMeterIndicator {
             valueType: "literal"
         },
 
-        check: (indicator: LVGLMeterIndicatorNeedleImg) => {
-            let messages: Message[] = [];
-
+        check: (
+            indicator: LVGLMeterIndicatorNeedleImg,
+            messages: IMessage[]
+        ) => {
             if (indicator.image) {
                 const bitmap = ProjectEditor.findBitmap(
                     ProjectEditor.getProject(indicator),
@@ -6003,8 +5962,6 @@ export class LVGLMeterIndicatorNeedleImg extends LVGLMeterIndicator {
                     );
                 }
             }
-
-            return messages;
         }
     });
 
@@ -6156,9 +6113,10 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
             valueType: "literal"
         },
 
-        check: (indicator: LVGLMeterIndicatorNeedleLine) => {
-            let messages: Message[] = [];
-
+        check: (
+            indicator: LVGLMeterIndicatorNeedleLine,
+            messages: IMessage[]
+        ) => {
             if (indicator.valueType == "expression") {
                 try {
                     const widget = getAncestorOfType<LVGLWidget>(
@@ -6177,8 +6135,6 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
                     );
                 }
             }
-
-            return messages;
         }
     });
 
@@ -6341,9 +6297,7 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
             endValueType: "literal"
         },
 
-        check: (indicator: LVGLMeterIndicatorArc) => {
-            let messages: Message[] = [];
-
+        check: (indicator: LVGLMeterIndicatorArc, messages: IMessage[]) => {
             if (indicator.startValueType == "expression") {
                 try {
                     const widget = getAncestorOfType<LVGLWidget>(
@@ -6381,8 +6335,6 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
                     );
                 }
             }
-
-            return messages;
         }
     });
 
@@ -6567,9 +6519,7 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
             endValueType: "literal"
         },
 
-        check: (indicator: LVGLMeterIndicatorArc) => {
-            let messages: Message[] = [];
-
+        check: (indicator: LVGLMeterIndicatorArc, messages: IMessage[]) => {
             if (indicator.startValueType == "expression") {
                 try {
                     const widget = getAncestorOfType<LVGLWidget>(
@@ -6607,8 +6557,6 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
                     );
                 }
             }
-
-            return messages;
         }
     });
 
@@ -6818,9 +6766,7 @@ class LVGLMeterScale extends EezObject {
             ]
         },
 
-        check: (scale: LVGLMeterScale) => {
-            let messages: Message[] = [];
-
+        check: (scale: LVGLMeterScale, messages: IMessage[]) => {
             if (scale.label) {
                 try {
                     const widget = getAncestorOfType<LVGLWidget>(
@@ -6839,8 +6785,6 @@ class LVGLMeterScale extends EezObject {
                     );
                 }
             }
-
-            return messages;
         }
     };
 
@@ -6912,11 +6856,6 @@ export class LVGLMeterWidget extends LVGLWidget {
                 />
             </svg>
         ),
-
-        check: (widget: LVGLLabelWidget) => {
-            let messages: Message[] = [];
-            return messages;
-        },
 
         lvgl: {
             parts: ["MAIN", "TICKS", "INDICATOR", "ITEMS"],

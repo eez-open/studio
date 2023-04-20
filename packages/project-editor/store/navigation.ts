@@ -1,4 +1,4 @@
-import { makeObservable, runInAction } from "mobx";
+import { computed, makeObservable, runInAction } from "mobx";
 import { observable, action } from "mobx";
 
 import { IEezObject, getParent } from "project-editor/core/object";
@@ -64,6 +64,7 @@ export class NavigationStore {
         makeObservable(this, {
             selectedPanel: observable,
             subnavigationSelectedItems: observable,
+            propertyGridObjects: computed,
             setSelectedPanel: action,
             showObjects: action
         });

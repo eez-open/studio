@@ -175,7 +175,7 @@ export interface PropertyInfo {
           ) => Promise<string | null> | string | null);
     skipSearch?: boolean;
     childLabel?: (childObject: IEezObject, childLabel: string) => string;
-    check?: (object: IEezObject) => IMessage[];
+    check?: (object: IEezObject, messages: IMessage[]) => void;
     interceptAddObject?: (
         parentObject: IEezObject,
         object: EezObject
@@ -326,7 +326,7 @@ export interface ClassInfo {
         editable: boolean
     ) => void;
 
-    check?: (object: IEezObject) => IMessage[];
+    check?: (object: IEezObject, messages: IMessage[]) => void;
 
     getRect?: (object: IEezObject) => Rect;
     setRect?: (object: IEezObject, rect: Partial<Rect>) => void;
@@ -443,8 +443,12 @@ export function makeDerivedClassInfo(
     const baseCheck = baseClassInfo.check;
     const derivedCheck = derivedClassInfoProperties.check;
     if (baseCheck && derivedCheck) {
-        derivedClassInfoProperties.check = (object: IEezObject) => {
-            return baseCheck(object).concat(derivedCheck(object));
+        derivedClassInfoProperties.check = (
+            object: IEezObject,
+            messages: IMessage[]
+        ) => {
+            baseCheck(object, messages);
+            derivedCheck(object, messages);
         };
     }
 

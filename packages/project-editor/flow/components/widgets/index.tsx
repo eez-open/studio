@@ -28,7 +28,8 @@ import {
     getId,
     EezObject,
     ClassInfo,
-    RectObject
+    RectObject,
+    IMessage
 } from "project-editor/core/object";
 import {
     ProjectStore,
@@ -298,12 +299,8 @@ export class ContainerWidget extends Widget {
             </svg>
         ),
 
-        check: (object: ContainerWidget) => {
-            let messages: Message[] = [];
-
+        check: (object: ContainerWidget, messages: IMessage[]) => {
             checkObjectReference(object, "overlay", messages);
-
-            return messages;
         }
     });
 
@@ -581,9 +578,7 @@ export class ListWidget extends Widget {
             </svg>
         ),
 
-        check: (object: ListWidget) => {
-            let messages: Message[] = [];
-
+        check: (object: ListWidget, messages: IMessage[]) => {
             if (!object.data) {
                 messages.push(propertyNotSetMessage(object, "data"));
             }
@@ -597,8 +592,6 @@ export class ListWidget extends Widget {
                     )
                 );
             }
-
-            return messages;
         }
     });
 
@@ -783,9 +776,7 @@ export class GridWidget extends Widget {
             </svg>
         ),
 
-        check: (object: GridWidget) => {
-            let messages: Message[] = [];
-
+        check: (object: GridWidget, messages: IMessage[]) => {
             if (!object.data) {
                 messages.push(propertyNotSetMessage(object, "data"));
             }
@@ -799,8 +790,6 @@ export class GridWidget extends Widget {
                     )
                 );
             }
-
-            return messages;
         }
     });
 
@@ -1000,9 +989,7 @@ export class SelectWidget extends Widget {
             </svg>
         ),
 
-        check: (object: SelectWidget) => {
-            let messages: Message[] = [];
-
+        check: (object: SelectWidget, messages: IMessage[]) => {
             if (!object.data) {
                 messages.push(propertyNotSetMessage(object, "data"));
             } else {
@@ -1065,8 +1052,6 @@ export class SelectWidget extends Widget {
                     );
                 }
             });
-
-            return messages;
         }
     });
 
@@ -1339,9 +1324,7 @@ export class UserWidgetWidget extends Widget {
 
         icon: USER_WIDGET_ICON,
 
-        check: (object: UserWidgetWidget) => {
-            let messages: Message[] = [];
-
+        check: (object: UserWidgetWidget, messages: IMessage[]) => {
             if (!object.data && !object.userWidgetPageName) {
                 messages.push(
                     new Message(
@@ -1401,8 +1384,6 @@ export class UserWidgetWidget extends Widget {
             }
 
             checkObjectReference(object, "context", messages);
-
-            return messages;
         },
 
         open: (object: UserWidgetWidget) => {
@@ -1847,9 +1828,7 @@ export class DisplayDataWidget extends Widget {
             </svg>
         ),
 
-        check: (object: DisplayDataWidget) => {
-            let messages: Message[] = [];
-
+        check: (object: DisplayDataWidget, messages: IMessage[]) => {
             if (!object.data) {
                 messages.push(propertyNotSetMessage(object, "data"));
             }
@@ -1863,8 +1842,6 @@ export class DisplayDataWidget extends Widget {
                     );
                 }
             }
-
-            return messages;
         }
     });
 
@@ -2146,9 +2123,7 @@ export class TextWidget extends Widget {
             </svg>
         ),
 
-        check: (widget: TextWidget) => {
-            let messages: Message[] = [];
-
+        check: (widget: TextWidget, messages: IMessage[]) => {
             const project = ProjectEditor.getProject(widget);
 
             if (!project.projectTypeTraits.hasFlowSupport) {
@@ -2160,8 +2135,6 @@ export class TextWidget extends Widget {
                     messages.push(propertyNotSetMessage(widget, "data"));
                 }
             }
-
-            return messages;
         }
     });
 
@@ -2639,9 +2612,7 @@ export class MultilineTextWidget extends Widget {
             </svg>
         ),
 
-        check: (widget: MultilineTextWidget) => {
-            let messages: Message[] = [];
-
+        check: (widget: MultilineTextWidget, messages: IMessage[]) => {
             const project = ProjectEditor.getProject(widget);
 
             if (!project.projectTypeTraits.hasFlowSupport) {
@@ -2653,8 +2624,6 @@ export class MultilineTextWidget extends Widget {
                     messages.push(propertyNotSetMessage(widget, "text"));
                 }
             }
-
-            return messages;
         }
     });
 
@@ -2780,14 +2749,10 @@ export class RectangleWidget extends Widget {
             </svg>
         ),
 
-        check: (object: RectangleWidget) => {
-            let messages: Message[] = [];
-
+        check: (object: RectangleWidget, messages: IMessage[]) => {
             if (object.data) {
                 messages.push(propertySetButNotUsedMessage(object, "data"));
             }
-
-            return messages;
         }
     });
 
@@ -2965,9 +2930,7 @@ export class BitmapWidget extends Widget {
             </svg>
         ),
 
-        check: (object: BitmapWidget) => {
-            let messages: Message[] = [];
-
+        check: (object: BitmapWidget, messages: IMessage[]) => {
             if (!object.data && !object.bitmap) {
                 messages.push(
                     new Message(
@@ -2996,8 +2959,6 @@ export class BitmapWidget extends Widget {
                     }
                 }
             }
-
-            return messages;
         }
     });
 
@@ -3252,9 +3213,7 @@ export class ButtonWidget extends Widget {
             </svg>
         ),
 
-        check: (widget: ButtonWidget) => {
-            let messages: Message[] = [];
-
+        check: (widget: ButtonWidget, messages: IMessage[]) => {
             const project = ProjectEditor.getProject(widget);
 
             if (!project.projectTypeTraits.hasFlowSupport) {
@@ -3272,8 +3231,6 @@ export class ButtonWidget extends Widget {
                     messages.push(propertyNotSetMessage(widget, "text"));
                 }
             }
-
-            return messages;
         }
     });
 
@@ -3427,9 +3384,7 @@ export class ToggleButtonWidget extends Widget {
             </svg>
         ),
 
-        check: (object: ToggleButtonWidget) => {
-            let messages: Message[] = [];
-
+        check: (object: ToggleButtonWidget, messages: IMessage[]) => {
             if (!object.data) {
                 messages.push(propertyNotSetMessage(object, "data"));
             }
@@ -3441,8 +3396,6 @@ export class ToggleButtonWidget extends Widget {
             if (!object.text2) {
                 messages.push(propertyNotSetMessage(object, "text2"));
             }
-
-            return messages;
         }
     });
 
@@ -3530,14 +3483,10 @@ export class ButtonGroupWidget extends Widget {
             </svg>
         ),
 
-        check: (object: ButtonGroupWidget) => {
-            let messages: Message[] = [];
-
+        check: (object: ButtonGroupWidget, messages: IMessage[]) => {
             if (!object.data) {
                 messages.push(propertyNotSetMessage(object, "data"));
             }
-
-            return messages;
         }
     });
 
@@ -3755,9 +3704,7 @@ export class BarGraphWidget extends Widget {
             </svg>
         ),
 
-        check: (object: BarGraphWidget) => {
-            let messages: Message[] = [];
-
+        check: (object: BarGraphWidget, messages: IMessage[]) => {
             if (!object.data) {
                 messages.push(propertyNotSetMessage(object, "data"));
             }
@@ -3779,8 +3726,6 @@ export class BarGraphWidget extends Widget {
             } else {
                 messages.push(propertyNotSetMessage(object, "line2Data"));
             }
-
-            return messages;
         }
     });
 
@@ -4121,9 +4066,7 @@ export class YTGraphWidget extends Widget {
             </svg>
         ),
 
-        check: (object: YTGraphWidget) => {
-            let messages: Message[] = [];
-
+        check: (object: YTGraphWidget, messages: IMessage[]) => {
             if (!object.data) {
                 messages.push(propertyNotSetMessage(object, "data"));
             }
@@ -4141,8 +4084,6 @@ export class YTGraphWidget extends Widget {
                     messages.push(propertyNotSetMessage(object, "y2Data"));
                 }
             }
-
-            return messages;
         }
     });
 
@@ -4234,9 +4175,7 @@ export class UpDownWidget extends Widget {
             </svg>
         ),
 
-        check: (object: UpDownWidget) => {
-            let messages: Message[] = [];
-
+        check: (object: UpDownWidget, messages: IMessage[]) => {
             if (!object.data) {
                 messages.push(propertyNotSetMessage(object, "data"));
             }
@@ -4248,8 +4187,6 @@ export class UpDownWidget extends Widget {
             if (!object.upButtonText) {
                 messages.push(propertyNotSetMessage(object, "upButtonText"));
             }
-
-            return messages;
         }
     });
 
@@ -4396,9 +4333,7 @@ export class ListGraphWidget extends Widget {
             </svg>
         ),
 
-        check: (object: ListGraphWidget) => {
-            let messages: Message[] = [];
-
+        check: (object: ListGraphWidget, messages: IMessage[]) => {
             if (!object.data) {
                 messages.push(propertyNotSetMessage(object, "data"));
             }
@@ -4438,8 +4373,6 @@ export class ListGraphWidget extends Widget {
             } else {
                 messages.push(propertyNotSetMessage(object, "cursorData"));
             }
-
-            return messages;
         }
     });
 
@@ -4540,14 +4473,10 @@ export class AppViewWidget extends Widget {
             </svg>
         ),
 
-        check: (object: AppViewWidget) => {
-            let messages: Message[] = [];
-
+        check: (object: AppViewWidget, messages: IMessage[]) => {
             if (!object.data) {
                 messages.push(propertyNotSetMessage(object, "data"));
             }
-
-            return messages;
         }
     });
 
@@ -4651,9 +4580,7 @@ export class ScrollBarWidget extends Widget {
             </svg>
         ),
 
-        check: (object: ScrollBarWidget) => {
-            let messages: Message[] = [];
-
+        check: (object: ScrollBarWidget, messages: IMessage[]) => {
             if (!object.data) {
                 messages.push(propertyNotSetMessage(object, "data"));
             }
@@ -4665,8 +4592,6 @@ export class ScrollBarWidget extends Widget {
             if (!object.rightButtonText) {
                 messages.push(propertyNotSetMessage(object, "rightButtonText"));
             }
-
-            return messages;
         }
     });
 
@@ -5093,14 +5018,10 @@ export class CanvasWidget extends Widget {
             </svg>
         ),
 
-        check: (object: CanvasWidget) => {
-            let messages: Message[] = [];
-
+        check: (object: CanvasWidget, messages: IMessage[]) => {
             if (!object.data) {
                 messages.push(propertyNotSetMessage(object, "data"));
             }
-
-            return messages;
         }
     });
 
@@ -5173,9 +5094,7 @@ class LineChartLine extends EezObject {
                 jsObject.width = 1.5;
             }
         },
-        check: (lineChartTrace: LineChartLine) => {
-            let messages: Message[] = [];
-
+        check: (lineChartTrace: LineChartLine, messages: IMessage[]) => {
             try {
                 checkExpression(
                     getParent(
@@ -5209,8 +5128,6 @@ class LineChartLine extends EezObject {
                     )
                 );
             }
-
-            return messages;
         },
         defaultValue: {
             color: "#333333",
@@ -6224,14 +6141,10 @@ export class GaugeEmbeddedWidget extends Widget {
 
         icon: GAUGE_ICON,
 
-        check: (object: CanvasWidget) => {
-            let messages: Message[] = [];
-
+        check: (object: CanvasWidget, messages: IMessage[]) => {
             if (!object.data) {
                 messages.push(propertyNotSetMessage(object, "data"));
             }
-
-            return messages;
         }
     });
 
@@ -6727,9 +6640,7 @@ export class InputEmbeddedWidget extends Widget {
             </svg>
         ),
 
-        check: (widget: InputEmbeddedWidget) => {
-            let messages: Message[] = [];
-
+        check: (widget: InputEmbeddedWidget, messages: IMessage[]) => {
             if (!widget.data) {
                 messages.push(propertyNotSetMessage(widget, "data"));
             }
@@ -6753,8 +6664,6 @@ export class InputEmbeddedWidget extends Widget {
                     messages.push(propertyNotSetMessage(widget, "unit"));
                 }
             }
-
-            return messages;
         }
     });
 

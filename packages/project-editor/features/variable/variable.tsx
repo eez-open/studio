@@ -18,7 +18,8 @@ import {
     IEezObject,
     EezObject,
     PropertyType,
-    MessageType
+    MessageType,
+    IMessage
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -64,6 +65,7 @@ import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { parseIdentifier } from "project-editor/flow/expression/helper";
 import { RenderVariableStatusPropertyUI } from "project-editor/features/variable/global-variable-status";
 import { VARIABLE_ICON } from "project-editor/ui-components/icons";
+import type { ProjectEditorFeature } from "project-editor/store/features";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -278,9 +280,7 @@ export class Variable extends EezObject {
 
             return variable;
         },
-        check: (variable: Variable) => {
-            let messages: Message[] = [];
-
+        check: (variable: Variable, messages: IMessage[]) => {
             const projectStore = getProjectStore(variable);
 
             if (isGlobalVariable(variable)) {
@@ -345,8 +345,6 @@ export class Variable extends EezObject {
                     }
                 }
             }
-
-            return messages;
         }
     };
 }
@@ -792,9 +790,7 @@ export class StructureField extends EezObject implements IStructureField {
             },
             variableTypeProperty
         ],
-        check: (structureField: StructureField) => {
-            let messages: Message[] = [];
-
+        check: (structureField: StructureField, messages: IMessage[]) => {
             if (!structureField.name) {
                 messages.push(propertyNotSetMessage(structureField, "name"));
             }
@@ -826,8 +822,6 @@ export class StructureField extends EezObject implements IStructureField {
                     )
                 );
             }
-
-            return messages;
         },
         beforeLoadHook: (object: Variable, objectJS: any) => {
             migrateType(objectJS);
@@ -984,9 +978,7 @@ export class EnumMember extends EezObject {
                 type: PropertyType.Number
             }
         ],
-        check: (enumMember: EnumMember) => {
-            let messages: Message[] = [];
-
+        check: (enumMember: EnumMember, messages: IMessage[]) => {
             if (!enumMember.name) {
                 messages.push(propertyNotSetMessage(enumMember, "name"));
             }
@@ -994,8 +986,6 @@ export class EnumMember extends EezObject {
             if (enumMember.value == undefined) {
                 messages.push(propertyNotSetMessage(enumMember, "value"));
             }
-
-            return messages;
         },
         defaultValue: {},
         newItem: async (parent: IEezObject) => {
@@ -1201,7 +1191,7 @@ export function findVariable(project: Project, variableName: string) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default {
+const feature: ProjectEditorFeature = {
     name: "eezstudio-project-feature-variables",
     version: "0.1.0",
     description: "Variables, Structures and Enums",
@@ -1220,9 +1210,7 @@ export default {
             enums: []
         };
     },
-    check: (object: EezObject[]) => {
-        let messages: Message[] = [];
-
+    check: (object: EezObject[], messages: IMessage[]) => {
         if (object.length > 32000) {
             messages.push(
                 new Message(
@@ -1232,10 +1220,10 @@ export default {
                 )
             );
         }
-
-        return messages;
     }
 };
+
+export default feature;
 
 ////////////////////////////////////////////////////////////////////////////////
 

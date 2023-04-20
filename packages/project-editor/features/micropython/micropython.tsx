@@ -15,6 +15,7 @@ import { updateObject } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { showSelectInstrumentDialog } from "project-editor/flow/components/actions/instrument";
 import { EditorComponent } from "project-editor/project/ui/EditorComponent";
+import type { ProjectEditorFeature } from "project-editor/store/features";
 
 const ICON = (
     <svg
@@ -227,7 +228,7 @@ registerClass("MicroPython", MicroPython);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default {
+const feature: ProjectEditorFeature = {
     name: "eezstudio-project-feature-micropython",
     version: "0.1.0",
     description: "MicroPython",
@@ -245,3 +246,5 @@ export default {
         };
     }
 };
+
+export default feature;

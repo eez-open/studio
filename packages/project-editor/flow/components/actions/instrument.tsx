@@ -35,7 +35,8 @@ import {
     PropertyType,
     makeDerivedClassInfo,
     MessageType,
-    ProjectType
+    ProjectType,
+    IMessage
 } from "project-editor/core/object";
 
 import {
@@ -147,9 +148,7 @@ export class SCPIActionComponent extends ActionComponent {
                 }
             }
         },
-        check: (component: SCPIActionComponent) => {
-            let messages: Message[] = [];
-
+        check: (component: SCPIActionComponent, messages: IMessage[]) => {
             try {
                 const parts = parseScpi(component.scpi);
                 for (const part of parts) {
@@ -199,8 +198,6 @@ export class SCPIActionComponent extends ActionComponent {
                     )
                 );
             }
-
-            return messages;
         },
         label: (component: SCPIActionComponent) => {
             const project = getProjectStore(component).project;

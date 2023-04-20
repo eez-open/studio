@@ -20,7 +20,8 @@ import {
     PropertyType,
     PropertyInfo,
     getParent,
-    MessageType
+    MessageType,
+    IMessage
 } from "project-editor/core/object";
 import {
     getProjectStore,
@@ -38,6 +39,7 @@ import {
     getScpiEnumsAsDialogEnumItems
 } from "project-editor/features/scpi/enum";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import type { ProjectEditorFeature } from "project-editor/store/features";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -78,9 +80,7 @@ export class ScpiParameterType extends EezObject implements IParameterType {
         });
     }
 
-    check(object: IEezObject) {
-        const messages: Message[] = [];
-
+    check(object: IEezObject, messages: IMessage[]) {
         if (!this.type) {
             messages.push(propertyNotSetMessage(this, "type"));
         } else if (this.type === "discrete") {
@@ -92,8 +92,6 @@ export class ScpiParameterType extends EezObject implements IParameterType {
                 }
             }
         }
-
-        return messages;
     }
 }
 
@@ -345,9 +343,7 @@ export class ScpiParameter extends EezObject {
         });
     }
 
-    check(object: IEezObject) {
-        const messages: Message[] = [];
-
+    check(object: IEezObject, messages: IMessage[]) {
         if (this.name) {
             const arr = getParent(this) as ScpiParameter[];
             let thisIndex = -1;
@@ -391,8 +387,6 @@ export class ScpiParameter extends EezObject {
         if (!this.type || this.type.length === 0) {
             messages.push(propertyNotSetMessage(this, "type"));
         }
-
-        return messages;
     }
 }
 
@@ -435,9 +429,7 @@ export class ScpiResponseType extends EezObject implements IResponseType {
         });
     }
 
-    check(object: IEezObject) {
-        const messages: Message[] = [];
-
+    check(object: IEezObject, messages: IMessage[]) {
         if (!this.type) {
             messages.push(propertyNotSetMessage(this, "type"));
         } else if (this.type === "discrete") {
@@ -449,8 +441,6 @@ export class ScpiResponseType extends EezObject implements IResponseType {
                 }
             }
         }
-
-        return messages;
     }
 }
 
@@ -670,17 +660,13 @@ export class ScpiResponse extends EezObject {
         });
     }
 
-    check(object: IEezObject) {
-        const messages: Message[] = [];
-
+    check(object: IEezObject, messages: IMessage[]) {
         const command: ScpiCommand = getParent(this) as ScpiCommand;
         if (command.isQuery) {
             if (!this.type || this.type.length === 0) {
                 messages.push(propertyNotSetMessage(this, "type"));
             }
         }
-
-        return messages;
     }
 }
 
@@ -926,7 +912,7 @@ registerClass("Scpi", Scpi);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default {
+const feature: ProjectEditorFeature = {
     name: "eezstudio-project-feature-scpi",
     version: "0.1.0",
     description: "This feature adds SCPI support for your project",
@@ -945,3 +931,5 @@ export default {
         };
     }
 };
+
+export default feature;

@@ -10,14 +10,14 @@ import {
     EezObject,
     registerClass,
     PropertyType,
-    getParent
+    getParent,
+    IMessage
 } from "project-editor/core/object";
 import {
     ProjectStore,
     IContextMenuContext,
     getProjectStore,
     LayoutModels,
-    Message,
     createObject
 } from "project-editor/store";
 import { validators } from "eez-studio-shared/validation";
@@ -332,9 +332,7 @@ export class Color extends EezObject {
                 unique: true
             }
         ],
-        check: (color: Color) => {
-            let messages: Message[] = [];
-
+        check: (color: Color, messages: IMessage[]) => {
             const projectStore = getProjectStore(color);
 
             ProjectEditor.checkAssetId(
@@ -345,8 +343,6 @@ export class Color extends EezObject {
                 0,
                 1000
             );
-
-            return messages;
         },
         newItem: async (parent: IEezObject) => {
             const result = await showGenericDialog({

@@ -9,7 +9,8 @@ import {
     ClassInfo,
     MessageType,
     getId,
-    getParent
+    getParent,
+    IMessage
 } from "project-editor/core/object";
 
 import { ActionComponent } from "project-editor/flow/component";
@@ -245,9 +246,7 @@ export class LVGLChangeScreenActionType extends LVGLActionType {
                 action.screen
             )}, Speed=${action.speed} ms, Delay=${action.delay} ms`;
         },
-        check: (object: LVGLChangeScreenActionType) => {
-            let messages: Message[] = [];
-
+        check: (object: LVGLChangeScreenActionType, messages: IMessage[]) => {
             if (!object.screen) {
                 messages.push(propertyNotSetMessage(object, "screen"));
             } else {
@@ -256,8 +255,6 @@ export class LVGLChangeScreenActionType extends LVGLActionType {
                     messages.push(propertyNotFoundMessage(object, "screen"));
                 }
             }
-
-            return messages;
         }
     });
 
@@ -414,9 +411,7 @@ export class LVGLPlayAnimationActionType extends LVGLActionType {
                 action.relative ? "On" : "Off"
             }, Instant=${action.instant ? "On" : "Off"} ${action.path}`;
         },
-        check: (object: LVGLPlayAnimationActionType) => {
-            let messages: Message[] = [];
-
+        check: (object: LVGLPlayAnimationActionType, messages: IMessage[]) => {
             if (!object.target) {
                 messages.push(propertyNotSetMessage(object, "target"));
             } else {
@@ -431,8 +426,6 @@ export class LVGLPlayAnimationActionType extends LVGLActionType {
                     messages.push(propertyNotFoundMessage(object, "target"));
                 }
             }
-
-            return messages;
         }
     });
 
@@ -844,9 +837,7 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
                 }
             }
         },
-        check: (object: LVGLSetPropertyActionType) => {
-            let messages: Message[] = [];
-
+        check: (object: LVGLSetPropertyActionType, messages: IMessage[]) => {
             if (!object.target) {
                 messages.push(propertyNotSetMessage(object, "target"));
             } else {
@@ -928,8 +919,6 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
                     }
                 }
             }
-
-            return messages;
         }
     });
 

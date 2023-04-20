@@ -15,7 +15,8 @@ import {
     getProperty,
     MessageType,
     PropertyProps,
-    getParent
+    getParent,
+    IMessage
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -45,6 +46,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import { MenuItem } from "@electron/remote";
 import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
+import type { ProjectEditorFeature } from "project-editor/store/features";
 
 export type BorderRadiusSpec = {
     topLeftX: number;
@@ -1048,13 +1050,11 @@ export class Style extends EezObject {
             getInheritedValue(styleObject, propertyName, [], false),
         icon: "material:format_color_fill",
         defaultValue: {},
-        check: (style: Style) => {
-            let messages: Message[] = [];
-
+        check: (style: Style, messages: IMessage[]) => {
             const projectStore = getProjectStore(style);
 
             if (projectStore.projectTypeTraits.isLVGL) {
-                return [];
+                return;
             }
 
             function checkColor(propertyName: string) {
@@ -1268,8 +1268,6 @@ export class Style extends EezObject {
                     }
                 }
             }
-
-            return messages;
         }
     };
 
@@ -2044,7 +2042,7 @@ export function findStyle(project: Project, styleName: string | undefined) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default {
+const feature: ProjectEditorFeature = {
     name: "eezstudio-project-feature-style",
     version: "0.1.0",
     description: "Styles support for your project",
@@ -2078,3 +2076,5 @@ export default {
         });
     }
 };
+
+export default feature;

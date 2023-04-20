@@ -2,9 +2,9 @@ import {
     IEezObject,
     EezClass,
     PropertyType,
-    PropertyInfo
+    PropertyInfo,
+    IMessage
 } from "project-editor/core/object";
-import type { Message } from "project-editor/store";
 
 import type { Project } from "project-editor/project/project";
 
@@ -40,7 +40,7 @@ export interface ProjectEditorFeature {
     typeClass: EezClass;
     icon: string | React.ReactNode;
     create: () => any;
-    check?: (object: IEezObject) => Message[];
+    check?: (object: IEezObject, messages: IMessage[]) => void;
     collectExtensionDefinitions?: (
         project: Project,
         extensionDefinition: ExtensionDefinition,

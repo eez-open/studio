@@ -37,7 +37,8 @@ import {
     getProperty,
     getRootObject,
     ProjectType,
-    MessageType
+    MessageType,
+    IMessage
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -166,9 +167,7 @@ export class BuildConfiguration extends EezObject {
 
             return buildConfiguration;
         },
-        check: (object: BuildConfiguration) => {
-            let messages: Message[] = [];
-
+        check: (object: BuildConfiguration, messages: IMessage[]) => {
             if (object.properties) {
                 try {
                     JSON.parse(object.properties);
@@ -178,8 +177,6 @@ export class BuildConfiguration extends EezObject {
                     );
                 }
             }
-
-            return messages;
         }
     };
 
@@ -607,9 +604,7 @@ export class ImportDirective extends EezObject {
             }
         ],
         defaultValue: {},
-        check: (object: ImportDirective) => {
-            let messages: Message[] = [];
-
+        check: (object: ImportDirective, messages: IMessage[]) => {
             if (object.projectFilePath) {
                 if (
                     !fileExistsSync(
@@ -629,8 +624,6 @@ export class ImportDirective extends EezObject {
             } else {
                 messages.push(propertyNotSetMessage(object, "projectFilePath"));
             }
-
-            return messages;
         },
 
         getImportedProject: (importDirective: ImportDirective) => ({
@@ -830,9 +823,7 @@ export class General extends EezObject {
                 hideInPropertyGrid: isNotDashboardProject
             }
         ],
-        check: (general: General) => {
-            let messages: Message[] = [];
-
+        check: (general: General, messages: IMessage[]) => {
             if (general.masterProject) {
                 const projectStore = getProjectStore(general);
                 if (
@@ -876,8 +867,6 @@ export class General extends EezObject {
                     );
                 }
             }
-
-            return messages;
         },
         beforeLoadHook(object: IEezObject, jsObject: any) {
             if (!jsObject.projectType) {
@@ -1889,7 +1878,7 @@ export function findReferencedObject(
 export function checkObjectReference(
     object: IEezObject,
     propertyName: string,
-    messages: Message[],
+    messages: IMessage[],
     mandatory?: boolean
 ) {
     const value = getProperty(object, propertyName);
@@ -1959,7 +1948,7 @@ export function checkAssetId(
     asset: EezObject & {
         id: number | undefined;
     },
-    messages: Message[],
+    messages: IMessage[],
     min: number = 1,
     max: number = 1000
 ) {

@@ -17,7 +17,8 @@ import {
     MessageType,
     PropertyInfo,
     getProperty,
-    LVGL_FLAG_CODES
+    LVGL_FLAG_CODES,
+    IMessage
 } from "project-editor/core/object";
 import {
     createObject,
@@ -73,6 +74,7 @@ import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
 import { getCode } from "project-editor/lvgl/widget-common";
 import { lvglBuildPageTimeline } from "project-editor/flow/timeline";
+import type { ProjectEditorFeature } from "project-editor/store/features";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -468,9 +470,7 @@ export class Page extends Flow {
             return page;
         },
         icon: "svg:page",
-        check: (page: Page) => {
-            let messages: Message[] = [];
-
+        check: (page: Page, messages: IMessage[]) => {
             const projectStore = getProjectStore(page);
 
             ProjectEditor.checkAssetId(projectStore, "pages", page, messages);
@@ -560,10 +560,8 @@ export class Page extends Flow {
             }
 
             if (projectStore.projectTypeTraits.isLVGL) {
-                messages.push(...page.lvglLocalStyles.check());
+                page.lvglLocalStyles.check(messages);
             }
-
-            return messages;
         },
         isMoveable: (object: Page) => {
             return true;
@@ -1070,7 +1068,7 @@ export function findPage(project: Project, pageName: string) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default {
+const feature: ProjectEditorFeature = {
     name: "eezstudio-project-feature-page",
     version: "0.1.0",
     description: "Pages support for your project",
@@ -1084,3 +1082,5 @@ export default {
     icon: "svg:pages",
     create: () => []
 };
+
+export default feature;

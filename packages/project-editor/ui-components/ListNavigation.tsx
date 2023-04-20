@@ -247,6 +247,9 @@ export const ListNavigation = observer(
         get selectedObject() {
             return this.props.selectedObject.get();
         }
+        get selectedObjects() {
+            return this.listAdapter.rootItem.selectedObjects;
+        }
         cutSelection() {
             if (this.editable) {
                 this.listAdapter.cutSelection();

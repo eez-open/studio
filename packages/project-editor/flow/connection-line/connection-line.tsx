@@ -3,6 +3,7 @@ import {
     ClassInfo,
     EezObject,
     getParent,
+    IMessage,
     MessageType,
     PropertyType,
     registerClass
@@ -92,9 +93,7 @@ export class ConnectionLine extends EezObject {
             return page.connectionLines.indexOf(connectionLine) != -1;
         },
 
-        check: (connectionLine: ConnectionLine) => {
-            let messages: Message[] = [];
-
+        check: (connectionLine: ConnectionLine, messages: IMessage[]) => {
             if (
                 !connectionLine.sourceComponent &&
                 !connectionLine.targetComponent
@@ -182,8 +181,6 @@ export class ConnectionLine extends EezObject {
                     }
                 }
             }
-
-            return messages;
         },
 
         objectsToClipboardData: (components: Component[]) => {

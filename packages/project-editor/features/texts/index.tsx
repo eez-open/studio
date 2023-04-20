@@ -6,6 +6,7 @@ import {
     EezObject,
     getParent,
     IEezObject,
+    IMessage,
     MessageType,
     PropertyInfo,
     PropertyProps,
@@ -32,6 +33,7 @@ import {
 } from "project-editor/ui-components/PropertyGrid/utils";
 import { LabelWithProgress } from "./LabelWithProgress";
 import { LANGUAGE_ICON } from "project-editor/ui-components/icons";
+import type { ProjectEditorFeature } from "project-editor/store/features";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -173,9 +175,7 @@ class Translation extends EezObject {
             languageID: "",
             text: ""
         },
-        check: (translation: Translation) => {
-            let messages: Message[] = [];
-
+        check: (translation: Translation, messages: IMessage[]) => {
             if (!translation.text?.trim()) {
                 const textResource = getParent(
                     getParent(translation)
@@ -189,8 +189,6 @@ class Translation extends EezObject {
                     )
                 );
             }
-
-            return messages;
         }
     };
 
@@ -424,7 +422,7 @@ export class Texts extends EezObject {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default {
+const feature: ProjectEditorFeature = {
     name: "eezstudio-project-feature-texts",
     version: "0.1.0",
     description: "Localized texts support for your project",
@@ -441,3 +439,5 @@ export default {
         texts: []
     })
 };
+
+export default feature;

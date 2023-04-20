@@ -22,7 +22,8 @@ import {
     registerClass,
     PropertyType,
     MessageType,
-    PropertyProps
+    PropertyProps,
+    IMessage
 } from "project-editor/core/object";
 import { validators } from "eez-studio-shared/validation";
 
@@ -49,6 +50,7 @@ import {
     isLVGLProject
 } from "project-editor/project/project-type-traits";
 import { IFieldProperties } from "eez-studio-types";
+import type { ProjectEditorFeature } from "project-editor/store/features";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -237,9 +239,7 @@ export class Bitmap extends EezObject {
                         : true
             }
         ],
-        check: (bitmap: Bitmap) => {
-            let messages: Message[] = [];
-
+        check: (bitmap: Bitmap, messages: IMessage[]) => {
             const projectStore = getProjectStore(bitmap);
 
             ProjectEditor.checkAssetId(
@@ -248,8 +248,6 @@ export class Bitmap extends EezObject {
                 bitmap,
                 messages
             );
-
-            return messages;
         },
         newItem: async (parent: IEezObject) => {
             const projectStore = getProjectStore(parent);
@@ -641,7 +639,7 @@ export function findBitmap(project: Project, bitmapName: any) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default {
+const feature: ProjectEditorFeature = {
     name: "eezstudio-project-feature-bitmap",
     version: "0.1.0",
     description: "Bitmaps support for your project",
@@ -654,9 +652,7 @@ export default {
     typeClass: Bitmap,
     icon: "material:image",
     create: () => [],
-    check: (object: EezObject[]) => {
-        let messages: Message[] = [];
-
+    check: (object: EezObject[], messages: IMessage[]) => {
         if (object.length > 255) {
             messages.push(
                 new Message(
@@ -680,7 +676,7 @@ export default {
                 )
             );
         }
-
-        return messages;
     }
 };
+
+export default feature;

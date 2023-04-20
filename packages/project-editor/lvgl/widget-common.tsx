@@ -9,6 +9,7 @@ import {
     getClassInfoLvglProperties,
     getParent,
     getProperty,
+    IMessage,
     IPropertyGridGroupDefinition,
     LVGL_FLAG_CODES,
     LVGL_REACTIVE_FLAGS,
@@ -23,7 +24,6 @@ import {
     createObject,
     getAncestorOfType,
     getObjectPathAsString,
-    Message,
     propertyNotSetMessage
 } from "project-editor/store";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
@@ -252,9 +252,7 @@ export class EventHandler extends EezObject {
             return eventHandler;
         },
 
-        check: (eventHandler: EventHandler) => {
-            let messages: Message[] = [];
-
+        check: (eventHandler: EventHandler, messages: IMessage[]) => {
             if (eventHandler.handlerType == "action") {
                 if (!eventHandler.action) {
                     messages.push(
@@ -267,7 +265,6 @@ export class EventHandler extends EezObject {
                     messages
                 );
             }
-            return messages;
         }
     };
 

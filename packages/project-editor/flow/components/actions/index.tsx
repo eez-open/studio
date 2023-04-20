@@ -14,7 +14,8 @@ import {
     ClassInfo,
     getParent,
     MessageType,
-    getId
+    getId,
+    IMessage
 } from "project-editor/core/object";
 import {
     getAncestorOfType,
@@ -177,8 +178,10 @@ export class InputActionComponent extends ActionComponent {
                 propertyGridGroup: specificGroup
             }
         ],
-        check: (inputActionComponent: InputActionComponent) => {
-            let messages: Message[] = [];
+        check: (
+            inputActionComponent: InputActionComponent,
+            messages: IMessage[]
+        ) => {
             if (!inputActionComponent.name) {
                 messages.push(
                     propertyNotSetMessage(inputActionComponent, "name")
@@ -189,7 +192,6 @@ export class InputActionComponent extends ActionComponent {
                     propertyNotSetMessage(inputActionComponent, "inputType")
                 );
             }
-            return messages;
         },
         label: (component: InputActionComponent) => {
             if (!component.name) {
@@ -265,8 +267,10 @@ export class OutputActionComponent extends ActionComponent {
                 propertyGridGroup: specificGroup
             }
         ],
-        check: (outputActionComponent: OutputActionComponent) => {
-            let messages: Message[] = [];
+        check: (
+            outputActionComponent: OutputActionComponent,
+            messages: IMessage[]
+        ) => {
             if (!outputActionComponent.name) {
                 messages.push(
                     propertyNotSetMessage(outputActionComponent, "name")
@@ -277,7 +281,6 @@ export class OutputActionComponent extends ActionComponent {
                     propertyNotSetMessage(outputActionComponent, "outputType")
                 );
             }
-            return messages;
         },
         label: (component: OutputActionComponent) => {
             if (!component.name) {
@@ -523,9 +526,7 @@ export class EvalJSExprActionComponent extends ActionComponent {
                 ] as any;
             }
         },
-        check: (component: EvalJSExprActionComponent) => {
-            let messages: Message[] = [];
-
+        check: (component: EvalJSExprActionComponent, messages: IMessage[]) => {
             const { valueExpressions } = component.expandExpressionForBuild();
 
             valueExpressions.forEach(valueExpression => {
@@ -541,8 +542,6 @@ export class EvalJSExprActionComponent extends ActionComponent {
                     );
                 }
             });
-
-            return messages;
         },
         icon: (
             <svg viewBox="0 0 22.556997299194336 17.176000595092773">
@@ -717,9 +716,7 @@ class SetVariableEntry extends EezObject {
                 "any"
             )
         ],
-        check: (setVariableItem: SetVariableEntry) => {
-            let messages: Message[] = [];
-
+        check: (setVariableItem: SetVariableEntry, messages: IMessage[]) => {
             try {
                 checkAssignableExpression(
                     getParent(getParent(setVariableItem)!)! as Component,
@@ -749,8 +746,6 @@ class SetVariableEntry extends EezObject {
                     )
                 );
             }
-
-            return messages;
         },
         defaultValue: {},
         listLabel: (entry: SetVariableEntry, collapsed) =>
@@ -928,8 +923,7 @@ class SwitchTest extends EezObject {
                       test.outputValue ? ` WITH VALUE ${test.outputValue}` : ""
                   }`,
 
-        check: (switchTest: SwitchTest) => {
-            let messages: Message[] = [];
+        check: (switchTest: SwitchTest, messages: IMessage[]) => {
             try {
                 checkExpression(
                     getParent(getParent(switchTest)!)! as Component,
@@ -961,8 +955,6 @@ class SwitchTest extends EezObject {
                     );
                 }
             }
-
-            return messages;
         },
 
         updateObjectValueHook: (switchTest: SwitchTest, values: any) => {
@@ -1679,9 +1671,7 @@ export class SortArrayActionComponent extends ActionComponent {
             ignoreCase: true,
             ascending: true
         },
-        check: (component: SortArrayActionComponent) => {
-            let messages: Message[] = [];
-
+        check: (component: SortArrayActionComponent, messages: IMessage[]) => {
             if (component.structureName) {
                 const project = ProjectEditor.getProject(component);
                 const struct = getStructureFromType(
@@ -1704,8 +1694,6 @@ export class SortArrayActionComponent extends ActionComponent {
                     );
                 }
             }
-
-            return messages;
         }
     });
 
@@ -2058,9 +2046,7 @@ export class CallActionActionComponent extends ActionComponent {
         open: (object: CallActionActionComponent) => {
             object.open();
         },
-        check: (component: CallActionActionComponent) => {
-            let messages: Message[] = [];
-
+        check: (component: CallActionActionComponent, messages: IMessage[]) => {
             if (!component.action) {
                 messages.push(propertyNotSetMessage(component, "action"));
             } else {
@@ -2078,8 +2064,6 @@ export class CallActionActionComponent extends ActionComponent {
                     );
                 }
             }
-
-            return messages;
         }
     });
 
@@ -2807,9 +2791,7 @@ export class ShowPageActionComponent extends ActionComponent {
                 referencedObjectCollectionPath: "pages"
             }
         ],
-        check: (object: ShowPageActionComponent) => {
-            let messages: Message[] = [];
-
+        check: (object: ShowPageActionComponent, messages: IMessage[]) => {
             if (!object.page) {
                 messages.push(propertyNotSetMessage(object, "page"));
             } else {
@@ -2821,8 +2803,6 @@ export class ShowPageActionComponent extends ActionComponent {
                     messages.push(propertyNotFoundMessage(object, "page"));
                 }
             }
-
-            return messages;
         },
         icon: (
             <svg viewBox="0 0 36 36">
@@ -3602,14 +3582,15 @@ export class NoopActionComponent extends ActionComponent {
                 propertyGridGroup: specificGroup
             }
         ],
-        check: (inputActionComponent: InputActionComponent) => {
-            let messages: Message[] = [];
+        check: (
+            inputActionComponent: InputActionComponent,
+            messages: IMessage[]
+        ) => {
             if (!inputActionComponent.name) {
                 messages.push(
                     propertyNotSetMessage(inputActionComponent, "name")
                 );
             }
-            return messages;
         },
         label: (component: InputActionComponent) => {
             if (!component.name) {

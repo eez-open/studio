@@ -14,7 +14,8 @@ import {
     EezObject,
     PropertyType,
     getParent,
-    MessageType
+    MessageType,
+    IMessage
 } from "project-editor/core/object";
 import {
     createObject,
@@ -46,9 +47,7 @@ export class ScpiEnumMember extends EezObject {
 
         defaultValue: {},
 
-        check: (object: ScpiEnumMember) => {
-            const messages: Message[] = [];
-
+        check: (object: ScpiEnumMember, messages: IMessage[]) => {
             if (object.name) {
                 const arr = getParent(object) as ScpiEnumMember[];
                 let thisIndex = -1;
@@ -75,8 +74,6 @@ export class ScpiEnumMember extends EezObject {
             } else {
                 messages.push(propertyNotSetMessage(object, "name"));
             }
-
-            return messages;
         }
     };
 
@@ -146,17 +143,13 @@ export class ScpiEnum extends EezObject {
 
             return scpiEnum;
         },
-        check: (object: ScpiEnum) => {
-            const messages: Message[] = [];
-
+        check: (object: ScpiEnum, messages: IMessage[]) => {
             // TODO this check is removed because it is too slow
             // if (!isReferenced(this)) {
             //     messages.push(
             //         new output.Message(output.Type.WARNING, "enum not used in the project", this)
             //     );
             // }
-
-            return messages;
         }
     };
 

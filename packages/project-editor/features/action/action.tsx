@@ -8,7 +8,8 @@ import {
     IEezObject,
     PropertyType,
     MessageType,
-    EezObject
+    EezObject,
+    IMessage
 } from "project-editor/core/object";
 import { createObject, Message } from "project-editor/store";
 import {
@@ -27,6 +28,7 @@ import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { ComponentsContainerEnclosure } from "project-editor/flow/editor/render";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
+import type { ProjectEditorFeature } from "project-editor/store/features";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -100,9 +102,7 @@ export class Action extends Flow {
                     isAppletProject(object)
             }
         ],
-        check: (action: Action) => {
-            let messages: Message[] = [];
-
+        check: (action: Action, messages: IMessage[]) => {
             const projectStore = getProjectStore(action);
 
             ProjectEditor.checkAssetId(
@@ -111,8 +111,6 @@ export class Action extends Flow {
                 action,
                 messages
             );
-
-            return messages;
         },
         label: (action: Action) => {
             if (action.implementationType == "native") {
@@ -209,7 +207,7 @@ export function findAction(project: Project, actionName: string) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default {
+const feature: ProjectEditorFeature = {
     name: "eezstudio-project-feature-action",
     version: "0.1.0",
     description: "Project actions",
@@ -222,9 +220,7 @@ export default {
     typeClass: Action,
     icon: "material:code",
     create: () => [],
-    check: (object: EezObject[]) => {
-        let messages: Message[] = [];
-
+    check: (object: EezObject[], messages: IMessage[]) => {
         if (object.length > 32000) {
             messages.push(
                 new Message(
@@ -234,7 +230,7 @@ export default {
                 )
             );
         }
-
-        return messages;
     }
 };
+
+export default feature;

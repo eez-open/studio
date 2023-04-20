@@ -11,7 +11,8 @@ import {
     IEezObject,
     EezObject,
     PropertyType,
-    MessageType
+    MessageType,
+    IMessage
 } from "project-editor/core/object";
 import {
     createObject,
@@ -26,6 +27,7 @@ import {
 import { ProjectContext } from "project-editor/project/context";
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { fileExistsSync } from "eez-studio-shared/util-electron";
+import type { ProjectEditorFeature } from "project-editor/store/features";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -65,9 +67,7 @@ export class UseDashboardProject extends EezObject {
             }
         ],
         defaultValue: {},
-        check: (object: UseDashboardProject) => {
-            let messages: Message[] = [];
-
+        check: (object: UseDashboardProject, messages: IMessage[]) => {
             if (object.projectFilePath) {
                 if (
                     !fileExistsSync(
@@ -87,8 +87,6 @@ export class UseDashboardProject extends EezObject {
             } else {
                 messages.push(propertyNotSetMessage(object, "projectFilePath"));
             }
-
-            return messages;
         }
     };
 
@@ -291,9 +289,7 @@ export class ExtensionDefinition extends EezObject {
         },
         hideInProperties: true,
         icon: "material:extension",
-        check: (object: ExtensionDefinition) => {
-            let messages: Message[] = [];
-
+        check: (object: ExtensionDefinition, messages: IMessage[]) => {
             if (!object.extensionName) {
                 messages.push(propertyNotSetMessage(object, "extensionName"));
             }
@@ -335,8 +331,6 @@ export class ExtensionDefinition extends EezObject {
                     );
                 }
             }
-
-            return messages;
         }
     };
 
@@ -372,7 +366,7 @@ registerClass("ExtensionDefinition", ExtensionDefinition);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default {
+const feature: ProjectEditorFeature = {
     name: "eezstudio-project-feature-extension-definitions",
     version: "0.1.0",
     description:
@@ -387,8 +381,7 @@ export default {
     icon: "material:extension",
     create: () => {
         return [];
-    },
-    check: (object: IEezObject) => {
-        return [];
     }
 };
+
+export default feature;

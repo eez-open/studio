@@ -7,6 +7,7 @@ import {
     PropertyType,
     registerClass
 } from "project-editor/core/object";
+import type { ProjectEditorFeature } from "project-editor/store/features";
 
 const README_ICON = (
     <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -47,7 +48,7 @@ registerClass("Readme", Readme);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default {
+const feature: ProjectEditorFeature = {
     name: "eezstudio-project-feature-readme",
     version: "0.1.0",
     description: "Readme file",
@@ -61,3 +62,5 @@ export default {
     icon: README_ICON,
     create: () => ({})
 };
+
+export default feature;

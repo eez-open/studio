@@ -587,7 +587,7 @@ var checkTransformer: (object: IEezObject) => IMessage[] = createTransformer(
         if (!isArray(object)) {
             const classCheckMethod = getClassInfo(object).check;
             if (classCheckMethod) {
-                messages = messages.concat(classCheckMethod(object));
+                classCheckMethod(object, messages);
             }
         }
 
@@ -595,7 +595,7 @@ var checkTransformer: (object: IEezObject) => IMessage[] = createTransformer(
         const propertyCheckMethod =
             getPropertyInfo(object) && getPropertyInfo(object).check;
         if (propertyCheckMethod) {
-            messages = messages.concat(propertyCheckMethod(object));
+            propertyCheckMethod(object, messages);
         }
 
         if (isArray(object)) {

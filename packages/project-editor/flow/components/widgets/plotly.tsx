@@ -16,7 +16,8 @@ import {
     EezObject,
     ClassInfo,
     getParent,
-    MessageType
+    MessageType,
+    IMessage
 } from "project-editor/core/object";
 
 import {
@@ -301,9 +302,7 @@ class LineChartLine extends EezObject {
                 "double"
             )
         ],
-        check: (lineChartTrace: LineChartLine) => {
-            let messages: Message[] = [];
-
+        check: (lineChartTrace: LineChartLine, messages: IMessage[]) => {
             try {
                 checkExpression(
                     getParent(getParent(lineChartTrace)!)! as LineChartWidget,
@@ -333,8 +332,6 @@ class LineChartLine extends EezObject {
                     )
                 );
             }
-
-            return messages;
         },
         defaultValue: {
             color: "#333333"

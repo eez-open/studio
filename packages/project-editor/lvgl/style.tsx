@@ -25,6 +25,7 @@ import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 import { LVGLStylesEditorRuntime } from "project-editor/lvgl/page-runtime";
 import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
 import { Icon } from "eez-studio-ui/icon";
+import type { ProjectEditorFeature } from "project-editor/store/features";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -404,7 +405,7 @@ export function findLvglStyle(project: Project, styleName: string | undefined) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default {
+const feature: ProjectEditorFeature = {
     name: "eezstudio-project-feature-lvgl-style",
     version: "0.1.0",
     description: "Styles support for your project",
@@ -420,3 +421,5 @@ export default {
         styles: [];
     }
 };
+
+export default feature;

@@ -3,6 +3,7 @@ import { makeObservable, observable, runInAction } from "mobx";
 import {
     ClassInfo,
     EezObject,
+    IMessage,
     MessageType,
     PropertyType,
     registerClass
@@ -139,9 +140,7 @@ export class LVGLStylesDefinition extends EezObject {
         return copy;
     }
 
-    check() {
-        let messages: Message[] = [];
-
+    check(messages: IMessage[]) {
         if (this.definition) {
             Object.keys(this.definition).forEach(part => {
                 Object.keys(this.definition[part]).forEach(state => {
@@ -210,8 +209,6 @@ export class LVGLStylesDefinition extends EezObject {
                 });
             });
         }
-
-        return messages;
     }
 
     lvglCreate(
@@ -546,9 +543,7 @@ export class LVGLStylesPicasoDefinition extends EezObject {
         return copy;
     }
 
-    check() {
-        let messages: Message[] = [];
-
+    check(messages: IMessage[]) {
         if (this.definition) {
             Object.keys(this.definition).forEach(part => {
                 Object.keys(this.definition[part]).forEach(state => {
@@ -617,8 +612,6 @@ export class LVGLStylesPicasoDefinition extends EezObject {
                 });
             });
         }
-
-        return messages;
     }
 
     lvglCreate(
