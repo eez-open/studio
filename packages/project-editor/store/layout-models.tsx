@@ -32,7 +32,8 @@ export class LayoutModels {
     static VARIABLES_TAB_ID = "VARIABLES";
     static CHECKS_TAB_ID = "CHECKS";
     static OUTPUT_TAB_ID = "OUTPUT";
-    static SEARCH_RESULTS_TAB_ID = "SEARCH_RESULTS";
+    static SEARCH_TAB_ID = "SEARCH";
+    static REFERENCES_TAB_ID = "REFERENCES";
     static EDITOR_MODE_EDITORS_TABSET_ID = "EDITORS";
     static RUNTIME_MODE_EDITORS_TABSET_ID = "RUNTIME-EDITORS";
     static PROPERTIES_TAB_ID = "PROPERTIES";
@@ -238,9 +239,16 @@ export class LayoutModels {
                 {
                     type: "tab",
                     enableClose: false,
-                    name: "Search Results",
-                    id: LayoutModels.SEARCH_RESULTS_TAB_ID,
-                    component: "searchResultsMessages"
+                    name: "Search",
+                    id: LayoutModels.SEARCH_TAB_ID,
+                    component: "search"
+                },
+                {
+                    type: "tab",
+                    enableClose: false,
+                    name: "References",
+                    id: LayoutModels.REFERENCES_TAB_ID,
+                    component: "references"
                 }
             ]
         });
@@ -270,7 +278,7 @@ export class LayoutModels {
         return [
             {
                 name: "rootEditor",
-                version: 87,
+                version: 91,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: this.borders,

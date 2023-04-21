@@ -5,11 +5,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import type { ProjectEditorTab, Tabs } from "home/tabs-store";
 
 import { getProjectFeatures } from "project-editor/store/features";
-import {
-    CurrentSearch,
-    findAllReferences,
-    isReferenced
-} from "project-editor/core/search";
+import { CurrentSearch, isReferenced } from "project-editor/core/search";
 import { DataContext } from "project-editor/features/variable/variable";
 
 import {
@@ -179,7 +175,6 @@ export async function initProjectEditor(
         extensions: getProjectFeatures(),
         documentSearch: {
             CurrentSearch,
-            findAllReferences,
             isReferenced,
             findReferencedObject,
             checkObjectReference

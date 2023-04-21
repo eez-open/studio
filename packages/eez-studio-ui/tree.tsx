@@ -10,6 +10,7 @@ export interface ITreeNode<T = any> {
     label: React.ReactNode;
     children: ITreeNode[];
     selected: boolean;
+    selectable?: boolean;
     expanded: boolean;
     data?: T;
     className?: string;
@@ -90,6 +91,10 @@ export const TreeRow = observer(
                     "EezStudio_TreeRow",
                     this.props.node.className,
                     {
+                        selectable:
+                            this.props.node.selectable != undefined
+                                ? this.props.node.selectable
+                                : true,
                         EezStudio_Selected: this.props.node.selected
                     }
                 );

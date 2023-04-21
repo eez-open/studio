@@ -23,7 +23,9 @@ import {
     getArrayAndObjectProperties,
     getClassInfo,
     Section,
-    getJSON
+    getJSON,
+    Message,
+    getLabel
 } from "project-editor/store";
 
 import type { BuildConfiguration } from "project-editor/project/project";
@@ -342,11 +344,11 @@ export async function build(
             ) {
                 for (const configuration of project.settings.build
                     .configurations) {
-                    OutputSections.write(
+                    OutputSections.openGroup(
                         Section.OUTPUT,
-                        MessageType.INFO,
-                        `Building ${configuration.name} configuration`
+                        `Configuration: ${configuration.name}`
                     );
+
                     configurationBuildResults[configuration.name] =
                         await getBuildResults(
                             projectStore,
@@ -354,6 +356,8 @@ export async function build(
                             configuration,
                             option
                         );
+
+                    OutputSections.closeGroup(Section.OUTPUT, false);
                 }
             } else {
                 const selectedBuildConfiguration =
@@ -362,7 +366,7 @@ export async function build(
                 if (selectedBuildConfiguration) {
                     OutputSections.write(
                         Section.OUTPUT,
-                        MessageType.INFO,
+                        MessageType.GROUP,
                         `Building ${selectedBuildConfiguration.name} configuration`
                     );
                     configurationBuildResults[selectedBuildConfiguration.name] =
@@ -613,7 +617,18 @@ var checkTransformer: (object: IEezObject) => IMessage[] = createTransformer(
             }
         }
 
-        return messages;
+        if (messages.length == 0) {
+            return messages;
+        }
+
+        return [
+            new Message(
+                MessageType.GROUP,
+                getLabel(object),
+                undefined,
+                messages as Message[]
+            )
+        ];
     }
 );
 
@@ -631,7 +646,10 @@ export function backgroundCheck(projectStore: ProjectStore) {
     }
 
     setMessagesTimeoutId = setTimeout(() => {
-        projectStore.outputSectionsStore.setMessages(Section.CHECKS, messages);
+        projectStore.outputSectionsStore.setMessages(
+            Section.CHECKS,
+            messages.length == 1 ? messages[0].messages! : messages
+        );
         projectStore.outputSectionsStore.setLoading(Section.CHECKS, false);
     }, 100);
 

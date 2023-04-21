@@ -74,7 +74,6 @@ import type { MicroPython } from "project-editor/features/micropython/micropytho
 
 import {
     usage,
-    startSearch,
     SearchCallbackMessage,
     visitObjects
 } from "project-editor/core/search";
@@ -532,12 +531,8 @@ function showUsage(importDirective: ImportDirective) {
                         assetsUsage.selectedAsset;
                     projectStore.uiStateStore.searchMatchCase = true;
                     projectStore.uiStateStore.searchMatchWholeWord = true;
-                    startSearch(
-                        projectStore,
-                        assetsUsage.selectedAsset,
-                        true,
-                        true
-                    );
+                    projectStore.uiStateStore.replaceEnabled = false;
+                    projectStore.startSearch();
                 }
             })
         )

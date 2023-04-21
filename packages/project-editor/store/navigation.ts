@@ -60,6 +60,8 @@ export class NavigationStore {
 
     editable = true;
 
+    selectedLocalVariable = observable.box<IEezObject>();
+
     constructor(public projectStore: ProjectStore) {
         makeObservable(this, {
             selectedPanel: observable,

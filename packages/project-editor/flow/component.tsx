@@ -2670,15 +2670,7 @@ export class Widget extends Component {
                 );
             }
 
-            if (additionalMenuItems.length > 0) {
-                additionalMenuItems.push(
-                    new MenuItem({
-                        type: "separator"
-                    })
-                );
-
-                menuItems.unshift(...additionalMenuItems);
-            }
+            menuItems.unshift(...additionalMenuItems);
         },
 
         check: (object: Component, messages: IMessage[]) => {

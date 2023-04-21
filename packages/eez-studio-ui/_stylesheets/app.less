@@ -186,11 +186,6 @@ input::placeholder {
     &:focus {
         .EezStudio_TreeRowEnclosure {
             .EezStudio_TreeRow {
-                &:hover {
-                    background-color: @hoverBackgroundColor;
-                    color: @hoverColor;
-                }
-
                 &.EezStudio_Focused {
                     background-color: @focusBackgroundColor;
                     color: @focusColor;
@@ -204,11 +199,21 @@ input::placeholder {
         }
     }
 
+    .EezStudio_TreeRow.selectable {
+        &:hover {
+            background-color: @hoverBackgroundColor;
+            color: @hoverColor;
+        }
+    }
+
     .EezStudio_TreeRow {
-        cursor: pointer;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+    }
+
+    .EezStudio_TreeRow.selectable {
+        cursor: pointer;
     }
 
     .EezStudio_TreeRowLabel {
@@ -2567,48 +2572,9 @@ button.EezStudio_Action {
     flex-grow: 1;
     overflow: auto;
     height: 100%;
-
-    table {
-        tr {
-            cursor: pointer;
-
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-
-            &.selected {
-                background-color: @nonFocusedSelectionBackgroundColor;
-                color: @nonFocusedSelectionColor;
-            }
-
-            td:nth-child(1) {
-                overflow: hidden;
-                display: flex;
-                align-items: center;
-            }
-
-            td:nth-child(2) {
-                padding-left: 20px;
-            }
-        }
-    }
-
-    &:focus {
-        tr {
-            &:hover {
-                background-color: @hoverBackgroundColor;
-                color: @hoverColor;
-            }
-
-            &.selected {
-                background-color: @selectionBackgroundColor;
-                color: @selectionColor;
-                * {
-                    background-color: @selectionBackgroundColor;
-                    color: @selectionColor;
-                }
-            }
-        }
+    font-size: 90%;
+    .EezStudio_Icon {
+        font-size: 18px !important;
     }
 }
 
@@ -3657,12 +3623,87 @@ button.EezStudio_Action {
     }
 }
 
-.EezStudio_ToolbarSearchInput {
-    width: 200px;
-    &.empty {
-        font-family: "Material Icons";
+.EezStudio_ProjectEditor_Search {
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    .EezStudio_ToolbarSearch {
+        background-color: @panelHeaderColor;
+        padding: 6px 6px;
+
+        display: flex;
+        align-items: flex-start;
+
+        border-bottom: 1px solid @panelBorderColor;
+
+        .btn-group {
+            margin-right: 5px;
+            &:last-child {
+                margin-right: 0;
+            }
+        }
+
+        .EezStudio_ToolbarSearch_Sections {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+
+            .EezStudio_ToolbarSearch_SearchSection {
+                display: flex;
+
+                & > input.search-input,
+                & > input.search-replace-input {
+                    margin-right: 10px;
+                }
+
+                & > input.search-input.empty {
+                    font-family: "Material Icons";
+                }
+            }
+
+            .EezStudio_ToolbarSearch_ReplaceSection {
+                display: flex;
+                margin-top: 4px;
+                & > input.replace-input {
+                    margin-right: 10px;
+                }
+            }
+        }
     }
-    margin-right: 5px;
+
+    .EezStudio_Messages {
+        overflow: auto;
+    }
+}
+
+.EezStudio_ProjectEditor_References {
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    .EezStudio_ToolbarReferences {
+        background-color: @panelHeaderColor;
+        padding: 6px 6px;
+
+        display: flex;
+        justify-content: flex-end;
+
+        border-bottom: 1px solid @panelBorderColor;
+
+        .btn-group {
+            margin-right: 5px;
+            &:last-child {
+                margin-right: 0;
+            }
+        }
+    }
+
+    .EezStudio_Messages {
+        overflow: auto;
+    }
 }
 
 .EezStudio_PanelHeader {

@@ -75,6 +75,10 @@ export function getNavigationObject(
 
     ancestor = getAncestorOfType(object, Page.classInfo);
     if (ancestor) {
+        const variable = getAncestorOfType(object, Variable.classInfo);
+        if (variable) {
+            return variable;
+        }
         return ancestor;
     }
 
@@ -149,6 +153,18 @@ export const navigateTo = action((object: IEezObject) => {
             LayoutModels.PAGES_TAB_ID
         );
 
+        const variable = getAncestorOfType(object, Variable.classInfo);
+        if (variable) {
+            projectStore.layoutModels.selectTab(
+                projectStore.layoutModels.root,
+                LayoutModels.VARIABLES_TAB_ID
+            );
+
+            projectStore.navigationStore.subnavigationSelectedItems[
+                NavigationStore.VARIABLES_SUB_NAVIGATION_ID
+            ] = NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_LOCAL;
+        }
+
         return;
     }
 
@@ -212,6 +228,9 @@ export const navigateTo = action((object: IEezObject) => {
             projectStore.layoutModels.root,
             LayoutModels.VARIABLES_TAB_ID
         );
+        projectStore.navigationStore.subnavigationSelectedItems[
+            NavigationStore.VARIABLES_SUB_NAVIGATION_ID
+        ] = NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_GLOBAL;
         return;
     }
 
@@ -221,6 +240,9 @@ export const navigateTo = action((object: IEezObject) => {
             projectStore.layoutModels.root,
             LayoutModels.VARIABLES_TAB_ID
         );
+        projectStore.navigationStore.subnavigationSelectedItems[
+            NavigationStore.VARIABLES_SUB_NAVIGATION_ID
+        ] = NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_STRUCTS;
         return;
     }
 
@@ -230,6 +252,9 @@ export const navigateTo = action((object: IEezObject) => {
             projectStore.layoutModels.root,
             LayoutModels.VARIABLES_TAB_ID
         );
+        projectStore.navigationStore.subnavigationSelectedItems[
+            NavigationStore.VARIABLES_SUB_NAVIGATION_ID
+        ] = NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_ENUMS;
         return;
     }
 
@@ -281,7 +306,22 @@ export function selectObject(object: IEezObject) {
 
     ancestor = getAncestorOfType(object, Page.classInfo);
     if (ancestor) {
-        projectStore.navigationStore.selectedPageObject.set(ancestor);
+        const variable = getAncestorOfType(object, Variable.classInfo);
+        if (variable) {
+            projectStore.layoutModels.selectTab(
+                projectStore.layoutModels.root,
+                LayoutModels.VARIABLES_TAB_ID
+            );
+
+            projectStore.navigationStore.selectedLocalVariable.set(variable);
+
+            projectStore.navigationStore.subnavigationSelectedItems[
+                NavigationStore.VARIABLES_SUB_NAVIGATION_ID
+            ] = NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_LOCAL;
+        } else {
+            projectStore.navigationStore.selectedPageObject.set(ancestor);
+        }
+
         return;
     }
 

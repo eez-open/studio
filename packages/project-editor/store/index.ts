@@ -27,9 +27,10 @@ import {
     isEezObject,
     EezObject,
     PropertyInfo,
-    setParent
+    setParent,
+    MessageType
 } from "project-editor/core/object";
-import type { CurrentSearch } from "project-editor/core/search";
+import { CurrentSearch, startNewSearch } from "project-editor/core/search";
 
 import type { DataContext } from "project-editor/features/variable/variable";
 
@@ -43,7 +44,8 @@ import {
     findPropertyByNameInObject,
     getClassInfo,
     getObjectFromPath,
-    getObjectFromStringPath
+    getObjectFromStringPath,
+    objectToString
 } from "project-editor/store/helper";
 
 import { NavigationStore } from "project-editor/store/navigation";
@@ -413,7 +415,63 @@ export class ProjectStore {
         );
     }
 
+    startSearch() {
+        startNewSearch(
+            this,
+            this.uiStateStore.searchPattern,
+            this.uiStateStore.searchMatchCase,
+            this.uiStateStore.searchMatchWholeWord,
+            message => {
+                if (message.type == "clear") {
+                    this.outputSectionsStore.clear(Section.SEARCH);
+                } else if (message.type == "start") {
+                    this.outputSectionsStore.setLoading(Section.SEARCH, true);
+                } else if (message.type == "value") {
+                    this.outputSectionsStore.writeAsTree(
+                        Section.SEARCH,
+                        MessageType.SEARCH_RESULT,
+                        objectToString(message.valueObject),
+                        message.valueObject
+                    );
+                } else if (message.type == "finish") {
+                    this.outputSectionsStore.setLoading(Section.SEARCH, false);
+                }
+
+                return true;
+            }
+        );
+    }
+
+    findAllReferences(object: IEezObject) {
+        startNewSearch(this, object, true, true, message => {
+            if (message.type == "clear") {
+                this.outputSectionsStore.clear(Section.REFERENCES);
+            } else if (message.type == "start") {
+                this.layoutModels.selectTab(
+                    this.layoutModels.root,
+                    LayoutModels.REFERENCES_TAB_ID
+                );
+                this.outputSectionsStore.setLoading(Section.REFERENCES, true);
+            } else if (message.type == "value") {
+                this.outputSectionsStore.writeAsTree(
+                    Section.REFERENCES,
+                    MessageType.SEARCH_RESULT,
+                    objectToString(message.valueObject),
+                    message.valueObject
+                );
+            } else if (message.type == "finish") {
+                this.outputSectionsStore.setLoading(Section.REFERENCES, false);
+            }
+
+            return true;
+        });
+    }
+
     startBackgroundCheck() {
+        if (this.uiStateStore.searchPattern) {
+            this.startSearch();
+        }
+
         this.dispose6 = autorun(() => this.typesStore.reset());
 
         this.dispose4 = autorun(

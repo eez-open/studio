@@ -76,13 +76,16 @@ export interface EnumItem {
 export enum MessageType {
     INFO,
     ERROR,
-    WARNING
+    WARNING,
+    SEARCH_RESULT,
+    GROUP
 }
 
 export interface IMessage {
     type: MessageType;
     text: string;
     object?: IEezObject;
+    messages?: IMessage[];
 }
 
 export interface IPropertyGridGroupDefinition {

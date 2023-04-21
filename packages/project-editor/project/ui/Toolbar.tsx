@@ -1,14 +1,11 @@
 import React from "react";
 import { action, computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
-import classNames from "classnames";
-import { startSearch } from "project-editor/core/search";
 import { ButtonAction, IconAction } from "eez-studio-ui/action";
 import { BuildConfiguration } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 import { PageTabState } from "project-editor/features/page/PageEditor";
 import {
-    LayoutModels,
     getChildren,
     getClassInfo,
     objectToString
@@ -51,7 +48,7 @@ export const Toolbar = observer(
                     {this.context.runtime ? (
                         <GlobalVariableStatuses />
                     ) : (
-                        <Search />
+                        <div style={{ width: 0, justifyContent: "flex-end" }} />
                     )}
                 </nav>
             );
@@ -494,131 +491,3 @@ const RunEditSwitchControls = observer(
 );
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const Search = observer(
-    class Search extends React.Component {
-        static contextType = ProjectContext;
-        declare context: React.ContextType<typeof ProjectContext>;
-
-        constructor(props: any) {
-            super(props);
-
-            makeObservable(this, {
-                onSearchPatternChange: action.bound,
-                toggleMatchCase: action.bound,
-                toggleMatchWholeWord: action.bound
-            });
-        }
-
-        startSearch() {
-            this.context.layoutModels.selectTab(
-                this.context.layoutModels.root,
-                LayoutModels.SEARCH_RESULTS_TAB_ID
-            );
-
-            startSearch(
-                this.context,
-                this.context.uiStateStore.searchPattern,
-                this.context.uiStateStore.searchMatchCase,
-                this.context.uiStateStore.searchMatchWholeWord
-            );
-        }
-
-        onSearchPatternChange(event: any) {
-            this.context.uiStateStore.searchPattern = event.target.value;
-            this.startSearch();
-        }
-
-        toggleMatchCase() {
-            this.context.uiStateStore.searchMatchCase =
-                !this.context.uiStateStore.searchMatchCase;
-            this.startSearch();
-        }
-
-        toggleMatchWholeWord() {
-            this.context.uiStateStore.searchMatchWholeWord =
-                !this.context.uiStateStore.searchMatchWholeWord;
-            this.startSearch();
-        }
-
-        render() {
-            return (
-                <div
-                    className="btn-group"
-                    style={{
-                        visibility: this.context.runtime ? "hidden" : "inherit",
-                        width: 0,
-                        justifyContent: "flex-end"
-                    }}
-                >
-                    <input
-                        className={classNames(
-                            "form-control EezStudio_ToolbarSearchInput",
-                            {
-                                empty: !this.context.uiStateStore.searchPattern
-                            }
-                        )}
-                        type="text"
-                        placeholder="&#xe8b6;"
-                        value={this.context.uiStateStore.searchPattern ?? ""}
-                        onChange={this.onSearchPatternChange}
-                    />
-                    <div className="btn-group" role="group">
-                        <IconAction
-                            icon={
-                                <svg
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 16 16"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <path
-                                        fillRule="evenodd"
-                                        clipRule="evenodd"
-                                        d="M7.495 9.052l.891 2.35h1.091L6.237 3h-1.02L2 11.402h1.095l.838-2.35h3.562zM5.811 4.453l.044.135 1.318 3.574H4.255l1.307-3.574.044-.135.038-.156.032-.152.021-.126h.023l.024.126.029.152.038.156zm7.984 6.011v.936h.96V7.498c0-.719-.18-1.272-.539-1.661-.359-.389-.889-.583-1.588-.583-.199 0-.401.019-.606.056a4.875 4.875 0 0 0-1.078.326 2.081 2.081 0 0 0-.343.188v.984c.266-.23.566-.411.904-.54a2.927 2.927 0 0 1 1.052-.193c.188 0 .358.028.513.085a.98.98 0 0 1 .396.267c.109.121.193.279.252.472.059.193.088.427.088.7l-1.811.252c-.344.047-.64.126-.888.237a1.947 1.947 0 0 0-.615.419 1.6 1.6 0 0 0-.36.58 2.134 2.134 0 0 0-.117.721c0 .246.042.475.124.688.082.213.203.397.363.551.16.154.36.276.598.366.238.09.513.135.826.135.402 0 .76-.092 1.075-.278.315-.186.572-.454.771-.806h.023zm-2.128-1.743c.176-.064.401-.114.674-.149l1.465-.205v.609c0 .246-.041.475-.123.688a1.727 1.727 0 0 1-.343.557 1.573 1.573 0 0 1-.524.372 1.63 1.63 0 0 1-.668.135c-.187 0-.353-.025-.495-.076a1.03 1.03 0 0 1-.357-.211.896.896 0 0 1-.22-.316A1.005 1.005 0 0 1 11 9.732a1.6 1.6 0 0 1 .055-.44.739.739 0 0 1 .202-.334 1.16 1.16 0 0 1 .41-.237z"
-                                        fill="%23007bff"
-                                    />
-                                </svg>
-                            }
-                            title="Match case"
-                            iconSize={20}
-                            enabled={true}
-                            selected={this.context.uiStateStore.searchMatchCase}
-                            onClick={this.toggleMatchCase}
-                        />
-                        <IconAction
-                            icon={
-                                <svg
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 16 16"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <path
-                                        fillRule="evenodd"
-                                        clipRule="evenodd"
-                                        d="M1 2h14v1H1V2zm13 2h-1v8h1V4zm-2.728 4.387a2.353 2.353 0 0 0-.36-.786 1.746 1.746 0 0 0-.609-.53 1.832 1.832 0 0 0-.866-.193c-.198 0-.38.024-.547.073a1.76 1.76 0 0 0-.453.205 1.724 1.724 0 0 0-.365.318l-.179.258V4.578H7V12h.893v-.575l.126.175c.087.102.189.19.304.269.117.078.249.14.398.186.149.046.314.068.498.068.353 0 .666-.071.937-.212.272-.143.499-.338.682-.586.183-.25.321-.543.414-.879.093-.338.14-.703.14-1.097a3.756 3.756 0 0 0-.12-.962zM9.793 7.78c.151.071.282.176.39.314.109.14.194.313.255.517.051.174.082.371.089.587l-.007.125c0 .327-.033.62-.1.869a1.886 1.886 0 0 1-.278.614c-.117.162-.26.285-.421.366-.322.162-.76.166-1.069.015a1.264 1.264 0 0 1-.393-.296 1.273 1.273 0 0 1-.218-.367s-.179-.447-.179-.947c0-.5.179-1.002.179-1.002.062-.177.136-.318.224-.43.114-.143.256-.259.424-.345.168-.086.365-.129.587-.129.19 0 .364.037.517.109zM15 13H1v1h14v-1zM2.813 10l-.728 2.031H1l.025-.072 2.441-7.086h.941l2.485 7.158H5.81L5.032 10H2.813zm1.121-3.578h-.022l-.905 2.753h1.841l-.914-2.753z"
-                                        fill="%23007bff"
-                                    />
-                                </svg>
-                            }
-                            title="Match whole word"
-                            iconSize={20}
-                            enabled={true}
-                            selected={
-                                this.context.uiStateStore.searchMatchWholeWord
-                            }
-                            onClick={this.toggleMatchWholeWord}
-                        />
-                        <IconAction
-                            title="Refresh search results"
-                            icon="material:refresh"
-                            enabled={true}
-                            onClick={() => this.startSearch()}
-                        />
-                    </div>
-                </div>
-            );
-        }
-    }
-);

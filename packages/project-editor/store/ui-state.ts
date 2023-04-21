@@ -19,9 +19,13 @@ export class UIStateStore {
     selectedBuildConfiguration: string;
     features: any;
     savedState: any;
+
     searchPattern: string;
     searchMatchCase: boolean;
     searchMatchWholeWord: boolean;
+    replaceEnabled: boolean;
+    replaceText: string;
+
     activeOutputSection = Section.CHECKS;
     _pageEditorFrontFace: boolean = false;
     _pageRuntimeFrontFace: boolean = true;
@@ -62,6 +66,8 @@ export class UIStateStore {
             searchPattern: observable,
             searchMatchCase: observable,
             searchMatchWholeWord: observable,
+            replaceEnabled: observable,
+            replaceText: observable,
             activeOutputSection: observable,
             _pageEditorFrontFace: observable,
             _pageRuntimeFrontFace: observable,
@@ -130,6 +136,12 @@ export class UIStateStore {
 
             this.activeOutputSection =
                 uiState.activeOutputSection ?? Section.CHECKS;
+
+            this.searchPattern = uiState.searchPattern ?? "";
+            this.searchMatchCase = uiState.searchMatchCase ?? false;
+            this.searchMatchWholeWord = uiState.searchMatchWholeWord ?? false;
+            this.replaceEnabled = uiState.replaceEnabled ?? false;
+            this.replaceText = uiState.replaceText ?? "";
 
             this._pageEditorFrontFace = uiState.pageEditorFrontFace;
 
@@ -220,6 +232,11 @@ export class UIStateStore {
             features: this.featuresJS,
             objects: this.objectsJS,
             activeOutputSection: this.activeOutputSection,
+            searchPattern: this.searchPattern,
+            searchMatchCase: this.searchMatchCase,
+            searchMatchWholeWord: this.searchMatchWholeWord,
+            replaceEnabled: this.replaceEnabled,
+            replaceText: this.replaceText,
             pageEditorFrontFace: this._pageEditorFrontFace,
             pageRuntimeFrontFace: this._pageRuntimeFrontFace,
             breakpoints: Array.from(this.breakpoints).reduce(

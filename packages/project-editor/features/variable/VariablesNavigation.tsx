@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, observable, makeObservable } from "mobx";
+import { computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
@@ -10,7 +10,6 @@ import {
 import { ProjectContext } from "project-editor/project/context";
 import { Page } from "project-editor/features/page/page";
 import { Action } from "project-editor/features/action/action";
-import { IEezObject } from "project-editor/core/object";
 import { NavigationStore } from "project-editor/store/navigation";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -19,8 +18,6 @@ export const VariablesTab = observer(
     class VariablesTab extends React.Component {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
-
-        selectedLocalVariable = observable.box<IEezObject>();
 
         constructor(props: any) {
             super(props);
@@ -67,7 +64,10 @@ export const VariablesTab = observer(
                         <ListNavigation
                             id="local-variables"
                             navigationObject={this.localVariables}
-                            selectedObject={this.selectedLocalVariable}
+                            selectedObject={
+                                this.context.navigationStore
+                                    .selectedLocalVariable
+                            }
                         />
                     ) : null
                 });

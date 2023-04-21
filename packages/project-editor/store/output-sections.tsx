@@ -1,6 +1,5 @@
 import React from "react";
-import { makeObservable } from "mobx";
-import { observable, computed, action } from "mobx";
+import { makeObservable, observable, computed, action } from "mobx";
 
 import { guid } from "eez-studio-shared/guid";
 import { Icon } from "eez-studio-ui/icon";
@@ -9,23 +8,31 @@ import {
     IEezObject,
     getProperty,
     MessageType,
-    IMessage
+    IMessage,
+    PropertyInfo,
+    getParent,
+    getKey,
+    EezObject
 } from "project-editor/core/object";
 
 import {
+    EezValueObject,
     getChildOfObject,
+    getObjectPath,
     humanizePropertyName
 } from "project-editor/store/helper";
 
 import { IPanel } from "project-editor/store/navigation";
-import type { ProjectStore } from "project-editor/store";
+import { ProjectStore, getLabel } from "project-editor/store";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export enum Section {
     CHECKS,
     OUTPUT,
-    SEARCH
+    SEARCH,
+    REFERENCES
 }
 
 export class Message implements IMessage {
@@ -35,10 +42,12 @@ export class Message implements IMessage {
     constructor(
         public type: MessageType,
         public text: string,
-        public object?: IEezObject
+        public object?: IEezObject,
+        public messages?: Message[]
     ) {
         makeObservable(this, {
-            selected: observable
+            selected: observable,
+            messages: observable
         });
     }
 }
@@ -108,29 +117,215 @@ export function propertyInvalidValueMessage(
     );
 }
 
+export class MessagesCollection {
+    messages: Message[] = [];
+
+    groupMessagesStack: Message[] = [];
+
+    constructor() {
+        makeObservable(this, {
+            messages: observable,
+            searchResults: computed,
+            numErrors: computed,
+            numWarnings: computed,
+            openGroup: action,
+            push: action,
+            closeGroup: action,
+            pushAsTree: action,
+            setMessages: action,
+            clear: action
+        });
+    }
+
+    get searchResults() {
+        const searchResults: Message[] = [];
+
+        function findAll(messages: Message[]) {
+            for (const message of messages) {
+                if (message.type == MessageType.GROUP) {
+                    findAll(message.messages!);
+                } else if (message.type == MessageType.SEARCH_RESULT) {
+                    searchResults.push(message);
+                }
+            }
+        }
+
+        findAll(this.messages);
+
+        return searchResults;
+    }
+
+    get numErrors(): number {
+        let n = 0;
+
+        function count(messages: Message[]) {
+            for (const message of messages) {
+                if (message.type == MessageType.GROUP) {
+                    count(message.messages!);
+                } else if (message.type == MessageType.ERROR) {
+                    n++;
+                }
+            }
+        }
+
+        count(this.messages);
+
+        return n;
+    }
+
+    get numWarnings() {
+        let n = 0;
+
+        function count(messages: Message[]) {
+            for (const message of messages) {
+                if (message.type == MessageType.GROUP) {
+                    count(message.messages!);
+                } else if (message.type == MessageType.WARNING) {
+                    n++;
+                }
+            }
+        }
+
+        count(this.messages);
+
+        return n;
+    }
+
+    openGroup(message: Message) {
+        this.groupMessagesStack.push(message);
+    }
+
+    push(message: Message) {
+        if (this.groupMessagesStack.length > 0) {
+            this.groupMessagesStack[
+                this.groupMessagesStack.length - 1
+            ].messages!.push(message);
+        } else {
+            this.messages.push(message);
+        }
+    }
+
+    closeGroup(showEmptyGroup: boolean) {
+        const groupMessage =
+            this.groupMessagesStack[this.groupMessagesStack.length - 1];
+
+        this.groupMessagesStack.splice(this.groupMessagesStack.length - 1, 1);
+
+        if (groupMessage.messages!.length > 0 || showEmptyGroup) {
+            this.push(groupMessage);
+        }
+    }
+
+    pushAsTree(message: Message) {
+        const messageObject = message.object;
+        if (!messageObject) {
+            this.push(message);
+            return;
+        }
+
+        let messages = this.messages;
+
+        const project = ProjectEditor.getProject(messageObject);
+
+        const path = getObjectPath(
+            messageObject instanceof EezValueObject
+                ? getParent(messageObject)
+                : messageObject
+        );
+
+        let groupObject: any = project;
+        for (const part of path) {
+            groupObject = groupObject[part];
+            if (!groupObject) {
+                break;
+            }
+
+            if (
+                groupObject instanceof EezValueObject ||
+                !(
+                    Array.isArray(groupObject) ||
+                    groupObject instanceof EezObject
+                )
+            ) {
+                break;
+            }
+
+            const groupMessage = messages.find(
+                message =>
+                    message.type == MessageType.GROUP &&
+                    message.object == groupObject
+            );
+
+            if (groupMessage) {
+                messages = groupMessage.messages!;
+            } else {
+                let label = getLabel(groupObject);
+
+                const message = new Message(
+                    MessageType.GROUP,
+                    label,
+                    groupObject,
+                    []
+                );
+
+                messages.push(message);
+                messages = message.messages!;
+            }
+        }
+
+        messages.push(message);
+    }
+
+    setMessages(messages: Message[]) {
+        this.messages = messages;
+    }
+
+    clear() {
+        this.messages = [];
+    }
+
+    isPropertyInError(object: IEezObject, propertyInfo: PropertyInfo) {
+        function test(messages: Message[]) {
+            for (const message of messages) {
+                if (message.type == MessageType.GROUP) {
+                    if (test(message.messages!)) {
+                        return true;
+                    }
+                } else if (
+                    message.object &&
+                    getParent(message.object) === object &&
+                    getKey(message.object) === propertyInfo.name
+                ) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        return test(this.messages);
+    }
+}
+
 export class OutputSection implements IPanel {
     permanent: boolean = true;
 
     loading = false;
 
-    messages: Message[] = [];
+    messages = new MessagesCollection();
     selectedMessage: Message | undefined;
 
     constructor(
         public projectStore: ProjectStore,
         public id: number,
         public name: string,
-        public scrollToBottom: boolean,
         public tabId: string
     ) {
         makeObservable(this, {
             loading: observable,
-            messages: observable,
             selectedMessage: observable,
             active: computed,
             title: computed,
-            numErrors: computed,
-            numWarnings: computed,
             clear: action,
             selectedObject: computed,
             selectMessage: action
@@ -176,44 +371,36 @@ export class OutputSection implements IPanel {
         if (
             this.id == Section.SEARCH &&
             (this.projectStore.uiStateStore.searchPattern ||
-                this.messages.length > 0)
+                this.messages.searchResults.length > 0)
         ) {
-            return `${this.name} (${this.messages.length})`;
+            return `${this.name} (${this.messages.searchResults.length})`;
+        }
+
+        if (
+            this.id == Section.REFERENCES &&
+            this.messages.searchResults.length > 0
+        ) {
+            return `${this.name} (${this.messages.searchResults.length})`;
         }
 
         return this.name;
     }
 
     get numErrors() {
-        let n = 0;
-        for (let i = 0; i < this.messages.length; i++) {
-            if (this.messages[i].type == MessageType.ERROR) {
-                n++;
-            }
-        }
-        return n;
+        return this.messages.numErrors;
     }
 
     get numWarnings() {
-        let n = 0;
-        for (let i = 0; i < this.messages.length; i++) {
-            if (this.messages[i].type == MessageType.WARNING) {
-                n++;
-            }
-        }
-        return n;
+        return this.messages.numWarnings;
     }
 
     clear() {
-        this.messages = [];
+        this.messages.clear();
         this.selectedMessage = undefined;
     }
 
     get selectedObject(): IEezObject | undefined {
-        return this.selectedMessage &&
-            this.messages.indexOf(this.selectedMessage) !== -1
-            ? this.selectedMessage.object
-            : undefined;
+        return this.selectedMessage?.object;
     }
 
     cutSelection() {
@@ -267,22 +454,25 @@ export class OutputSections {
             projectStore,
             Section.CHECKS,
             "Checks",
-            false,
             "CHECKS"
         );
         this.sections[Section.OUTPUT] = new OutputSection(
             projectStore,
             Section.OUTPUT,
             "Output",
-            true,
             "OUTPUT"
         );
         this.sections[Section.SEARCH] = new OutputSection(
             projectStore,
             Section.SEARCH,
-            "Search results",
-            false,
-            "SEARCH_RESULTS"
+            "Search",
+            "SEARCH"
+        );
+        this.sections[Section.REFERENCES] = new OutputSection(
+            projectStore,
+            Section.REFERENCES,
+            "References",
+            "REFERENCES"
         );
     }
 
@@ -299,6 +489,14 @@ export class OutputSections {
         section.clear();
     }
 
+    openGroup(sectionType: Section, text: string) {
+        let section = this.sections[sectionType];
+
+        section.messages.openGroup(
+            new Message(MessageType.GROUP, text, undefined, [])
+        );
+    }
+
     write(
         sectionType: Section,
         type: MessageType,
@@ -309,8 +507,23 @@ export class OutputSections {
         section.messages.push(new Message(type, text, object));
     }
 
+    closeGroup(sectionType: Section, showEmptyGroup: boolean) {
+        let section = this.sections[sectionType];
+        section.messages.closeGroup(showEmptyGroup);
+    }
+
+    writeAsTree(
+        sectionType: Section,
+        type: MessageType,
+        text: string,
+        object?: IEezObject
+    ) {
+        let section = this.sections[sectionType];
+        section.messages.pushAsTree(new Message(type, text, object));
+    }
+
     setMessages(sectionType: Section, messages: IMessage[]) {
         let section = this.sections[sectionType];
-        section.messages = messages as Message[];
+        section.messages.setMessages(messages as Message[]);
     }
 }

@@ -7,8 +7,7 @@ import {
     getProperty,
     getParent,
     getKey,
-    getRootObject,
-    MessageType
+    getRootObject
 } from "project-editor/core/object";
 import {
     getObjectPropertyAsObject,
@@ -16,10 +15,8 @@ import {
     getObjectPath,
     getClassInfo,
     EezValueObject,
-    Section,
     ProjectStore,
-    getProjectStore,
-    objectToString
+    getProjectStore
 } from "project-editor/store";
 
 import type {
@@ -345,6 +342,14 @@ export function* searchForAllReferences(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+interface SearchCallbackMessageClear {
+    type: "clear";
+}
+
+interface SearchCallbackMessageStart {
+    type: "start";
+}
+
 interface SearchCallbackMessageValue {
     type: "value";
     valueObject: EezValueObject;
@@ -355,6 +360,8 @@ interface SearchCallbackMessageFinish {
 }
 
 export type SearchCallbackMessage =
+    | SearchCallbackMessageClear
+    | SearchCallbackMessageStart
     | SearchCallbackMessageValue
     | SearchCallbackMessageFinish;
 
@@ -363,7 +370,7 @@ export type SearchCallback = (message: SearchCallbackMessage) => boolean;
 export class CurrentSearch {
     interval: any;
 
-    searchCallback?: SearchCallback;
+    searchCallback: SearchCallback | undefined;
 
     constructor(public projectStore: ProjectStore) {}
 
@@ -377,17 +384,15 @@ export class CurrentSearch {
             clearInterval(this.interval);
             this.interval = undefined;
         }
-
-        this.projectStore.outputSectionsStore.setLoading(Section.SEARCH, false);
     }
 
     startNewSearch(
         patternOrObject: string | IEezObject | undefined,
         matchCase: boolean,
         matchWholeWord: boolean,
-        searchCallback?: SearchCallback
+        searchCallback: SearchCallback
     ) {
-        this.projectStore.outputSectionsStore.clear(Section.SEARCH);
+        searchCallback({ type: "clear" });
 
         this.finishSearch();
 
@@ -401,6 +406,8 @@ export class CurrentSearch {
                 typeof patternOrObject != "string" ||
                 patternOrObject.length > 0)
         ) {
+            searchCallback({ type: "start" });
+
             let searchResultsGenerator =
                 typeof patternOrObject == "string"
                     ? searchForPattern(
@@ -414,11 +421,6 @@ export class CurrentSearch {
                     ? searchForReference(root, patternOrObject, true)
                     : searchForAllReferences(root, true);
 
-            this.projectStore.outputSectionsStore.setLoading(
-                Section.SEARCH,
-                true
-            );
-
             this.interval = setInterval(() => {
                 let startTime = new Date().getTime();
 
@@ -431,20 +433,9 @@ export class CurrentSearch {
 
                     let valueObject = searchResult.value;
                     if (valueObject) {
-                        if (searchCallback) {
-                            if (
-                                !searchCallback({ type: "value", valueObject })
-                            ) {
-                                this.finishSearch();
-                                return;
-                            }
-                        } else {
-                            this.projectStore.outputSectionsStore.write(
-                                Section.SEARCH,
-                                MessageType.INFO,
-                                objectToString(valueObject),
-                                valueObject
-                            );
+                        if (!searchCallback({ type: "value", valueObject })) {
+                            this.finishSearch();
+                            return;
                         }
                     }
 
@@ -459,7 +450,6 @@ export class CurrentSearch {
 
 export interface IDocumentSearch {
     CurrentSearch: typeof CurrentSearch;
-    findAllReferences: typeof findAllReferences;
     isReferenced: typeof isReferenced;
     findReferencedObject: typeof findReferencedObject;
     checkObjectReference: typeof checkObjectReference;
@@ -467,12 +457,12 @@ export interface IDocumentSearch {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function startNewSearch(
+export function startNewSearch(
     projectStore: ProjectStore,
     patternOrObject: string | IEezObject | undefined,
     matchCase: boolean,
     matchWholeWord: boolean,
-    searchCallback?: SearchCallback
+    searchCallback: SearchCallback
 ) {
     projectStore.currentSearch.startNewSearch(
         patternOrObject || "",
@@ -480,20 +470,6 @@ function startNewSearch(
         matchWholeWord,
         searchCallback
     );
-}
-
-export function startSearch(
-    projectStore: ProjectStore,
-    pattern: string,
-    matchCase: boolean,
-    matchWholeWord: boolean
-) {
-    startNewSearch(projectStore, pattern, matchCase, matchWholeWord);
-}
-
-export function findAllReferences(object: IEezObject) {
-    const projectStore = getProjectStore(object);
-    startNewSearch(projectStore, object, true, true);
 }
 
 export function usage(

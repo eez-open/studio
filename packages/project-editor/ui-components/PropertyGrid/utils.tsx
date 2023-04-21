@@ -102,16 +102,9 @@ export function isPropertyInError(
     object: IEezObject,
     propertyInfo: PropertyInfo
 ) {
-    return (
-        getProjectStore(object)
-            .outputSectionsStore.getSection(Section.CHECKS)
-            .messages.find(
-                message =>
-                    message.object &&
-                    getParent(message.object) === object &&
-                    getKey(message.object) === propertyInfo.name
-            ) != undefined
-    );
+    return getProjectStore(object)
+        .outputSectionsStore.getSection(Section.CHECKS)
+        .messages.isPropertyInError(object, propertyInfo);
 }
 
 export function isArrayElementPropertyVisible(

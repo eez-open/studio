@@ -51,13 +51,16 @@ import {
     getClassInfo,
     getLabel,
     createObject,
-    getClass
+    getClass,
+    canAdd,
+    addItem
 } from "project-editor/store";
 
 import { DragAndDropManager } from "project-editor/core/dd";
 
 import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
 import { onAfterPaste } from "project-editor/core/util";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -580,6 +583,39 @@ export class TreeObjectAdapter {
             editable = true;
         }
 
+        const selectedObject = (() => {
+            let selectedObjects = this.selectedObjects;
+            if (selectedObjects.length > 0) {
+                let i: number;
+                for (i = 1; i < selectedObjects.length; i++) {
+                    if (
+                        getParent(selectedObjects[i]) !==
+                        getParent(selectedObjects[0])
+                    ) {
+                        break;
+                    }
+                }
+                if (i == selectedObjects.length) {
+                    return selectedObjects[0];
+                }
+            }
+            return undefined;
+        })();
+
+        if (editable && selectedObject && canAdd(selectedObject)) {
+            menuItems.push(
+                new MenuItem({
+                    label: "Add",
+                    click: async () => {
+                        const aNewObject = await addItem(selectedObject!);
+                        if (aNewObject) {
+                            ProjectEditor.navigateTo(aNewObject);
+                        }
+                    }
+                })
+            );
+        }
+
         if (editable && this.canDuplicate()) {
             menuItems.push(
                 new MenuItem({
@@ -590,6 +626,27 @@ export class TreeObjectAdapter {
                         } else {
                             this.duplicateSelection();
                         }
+                    }
+                })
+            );
+        }
+
+        if (selectedObject && isArrayElement(selectedObject)) {
+            if (menuItems.length > 0) {
+                menuItems.push(
+                    new MenuItem({
+                        type: "separator"
+                    })
+                );
+            }
+
+            menuItems.push(
+                new MenuItem({
+                    label: "Find All References",
+                    click: () => {
+                        ProjectEditor.getProjectStore(
+                            selectedObject
+                        ).findAllReferences(selectedObject);
                     }
                 })
             );
@@ -664,26 +721,14 @@ export class TreeObjectAdapter {
             );
         }
 
-        let selectedObjects = this.selectedObjects;
-        if (selectedObjects.length > 0) {
-            let i: number;
-            for (i = 1; i < selectedObjects.length; i++) {
-                if (
-                    getParent(selectedObjects[i]) !==
-                    getParent(selectedObjects[0])
-                ) {
-                    break;
-                }
-            }
-            if (i == selectedObjects.length) {
-                extendContextMenu(
-                    this,
-                    selectedObjects[0],
-                    selectedObjects,
-                    menuItems,
-                    editable
-                );
-            }
+        if (selectedObject) {
+            extendContextMenu(
+                this,
+                selectedObject,
+                this.selectedObjects,
+                menuItems,
+                editable
+            );
         }
 
         if (menuItems.length > 0) {
@@ -852,7 +897,10 @@ export class TreeAdapter {
         if (classInfo.showTreeCollapseIcon == "never") {
             return false;
         }
-        return item.children.length > 0;
+        return (
+            (Array.isArray(item.children) && item.children.length > 0) ||
+            Object.keys(item.children).length > 0
+        );
     }
 
     getItemId(item: TreeObjectAdapter) {

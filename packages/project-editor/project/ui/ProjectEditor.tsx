@@ -36,6 +36,8 @@ import { ExtensionDefinitionsTab } from "project-editor/features/extension-defin
 import { ChangesTab } from "project-editor/features/changes/navigation";
 import classNames from "classnames";
 import { runInAction } from "mobx";
+import { SearchPanel } from "project-editor/project/ui/SearchPanel";
+import { ReferencesPanel } from "project-editor/project/ui/ReferencesPanel";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -193,15 +195,12 @@ const Content = observer(
                 );
             }
 
-            if (component === "searchResultsMessages") {
-                return (
-                    <Messages
-                        section={this.context.outputSectionsStore.getSection(
-                            Section.SEARCH
-                        )}
-                        showObjectIcon={true}
-                    />
-                );
+            if (component === "search") {
+                return <SearchPanel />;
+            }
+
+            if (component === "references") {
+                return <ReferencesPanel />;
             }
 
             if (component === "editor") {
@@ -268,9 +267,14 @@ const Content = observer(
 
                 renderValues.content =
                     section.name + (numMessages > 0 ? ` (${numMessages})` : "");
-            } else if (node.getId() == LayoutModels.SEARCH_RESULTS_TAB_ID) {
+            } else if (
+                node.getId() == LayoutModels.SEARCH_TAB_ID ||
+                node.getId() == LayoutModels.REFERENCES_TAB_ID
+            ) {
                 const section = this.context.outputSectionsStore.getSection(
-                    Section.SEARCH
+                    node.getId() == LayoutModels.SEARCH_TAB_ID
+                        ? Section.SEARCH
+                        : Section.REFERENCES
                 );
 
                 renderValues.leading = section.loading ? (
@@ -279,8 +283,8 @@ const Content = observer(
 
                 renderValues.content =
                     section.name +
-                    (section.messages.length > 0
-                        ? ` (${section.messages.length})`
+                    (section.messages.searchResults.length > 0
+                        ? ` (${section.messages.searchResults.length})`
                         : "");
             } else if (node.getId() == LayoutModels.DEBUGGER_LOGS_TAB_ID) {
                 if (this.context.runtime && this.context.runtime.error) {
@@ -405,7 +409,6 @@ const Content = observer(
             );
             checksSection.numErrors;
             checksSection.numWarnings;
-            checksSection.messages.length;
             checksSection.loading;
 
             const sectionOutput = this.context.outputSectionsStore.getSection(
@@ -413,14 +416,18 @@ const Content = observer(
             );
             sectionOutput.numErrors;
             sectionOutput.numWarnings;
-            sectionOutput.messages.length;
             sectionOutput.loading;
 
             const sectionSearch = this.context.outputSectionsStore.getSection(
                 Section.SEARCH
             );
-            sectionSearch.messages.length;
+            sectionSearch.messages.searchResults.length;
             sectionSearch.loading;
+
+            const sectionReferences =
+                this.context.outputSectionsStore.getSection(Section.REFERENCES);
+            sectionReferences.messages.searchResults.length;
+            sectionReferences.loading;
 
             this.context.runtime && this.context.runtime.error;
 
