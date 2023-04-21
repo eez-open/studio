@@ -2576,6 +2576,19 @@ button.EezStudio_Action {
     .EezStudio_Icon {
         font-size: 18px !important;
     }
+
+    .EezStudio_Message {
+        span.added {
+            background-color: #bbffbb;
+            color: #212529;
+        }
+
+        span.removed {
+            background-color: #ffbbbb;
+            color: #212529;
+            text-decoration: line-through;
+        }
+    }
 }
 
 .EezStudio_TabsViewContainer {
@@ -3631,7 +3644,7 @@ button.EezStudio_Action {
 
     .EezStudio_ToolbarSearch {
         background-color: @panelHeaderColor;
-        padding: 6px 6px;
+        padding: 5px 5px 5px 2px;
 
         display: flex;
         align-items: flex-start;
@@ -3655,7 +3668,7 @@ button.EezStudio_Action {
 
                 & > input.search-input,
                 & > input.search-replace-input {
-                    margin-right: 10px;
+                    margin-right: 5px;
                 }
 
                 & > input.search-input.empty {
@@ -3667,7 +3680,7 @@ button.EezStudio_Action {
                 display: flex;
                 margin-top: 4px;
                 & > input.replace-input {
-                    margin-right: 10px;
+                    margin-right: 5px;
                 }
             }
         }
@@ -3686,7 +3699,7 @@ button.EezStudio_Action {
 
     .EezStudio_ToolbarReferences {
         background-color: @panelHeaderColor;
-        padding: 6px 6px;
+        padding: 5px 5px;
 
         display: flex;
         justify-content: flex-end;
@@ -6113,4 +6126,9 @@ button.EezStudio_Action {
 .flexlayout__tab_button_leading .EezStudio_Icon {
     fill: @textColor;
     opacity: 0.7;
+}
+
+.EezStudio_ProjectEditor_RunEditSwitchControls {
+    background-color: @panelHeaderColor;
+    z-index: 10;
 }

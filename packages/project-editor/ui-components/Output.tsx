@@ -3,6 +3,8 @@ import React from "react";
 
 import { Icon } from "eez-studio-ui/icon";
 
+import { humanize } from "eez-studio-shared/string";
+
 import {
     IPanel,
     Message as OutputMessage,
@@ -11,10 +13,17 @@ import {
 } from "project-editor/store";
 
 import { ProjectContext } from "project-editor/project/context";
-import { MessageType } from "project-editor/core/object";
+import {
+    MessageType,
+    getParent,
+    getProperty,
+    getKey
+} from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
-import { Message } from "project-editor/store/output-sections";
+import { Message, Section } from "project-editor/store/output-sections";
+import { findAllOccurrences } from "project-editor/core/search";
+import { EezValueObject } from "project-editor/store";
 
 const MAX_OUTPUT_MESSAGE_TEXT_SIZE = 100;
 
@@ -24,7 +33,6 @@ export const Messages = observer(
     class Messages
         extends React.Component<{
             section: OutputSection;
-            showSearchResults?: boolean;
         }>
         implements IPanel
     {
@@ -79,24 +87,21 @@ export const Messages = observer(
         //
 
         get rootNode(): ITreeNode<Message> {
-            const showSearchResults = this.props.showSearchResults;
+            const section = this.props.section;
             const selectedItemID = this.props.section.selectedMessage?.id;
 
             function getChildren(messages: Message[]): ITreeNode<Message>[] {
                 return messages.map(message => ({
                     id: message.id,
                     label: (
-                        <MessageContent
-                            message={message}
-                            showSearchResults={showSearchResults}
-                        />
+                        <MessageContent section={section} message={message} />
                     ),
                     children: message.messages
                         ? getChildren(message.messages)
                         : [],
                     selected: selectedItemID == message.id,
                     selectable:
-                        !showSearchResults ||
+                        !section.showsSearchResults ||
                         message.type == MessageType.SEARCH_RESULT,
                     expanded: true,
                     data: message
@@ -117,7 +122,7 @@ export const Messages = observer(
         selectNode = (node: ITreeNode<Message>) => {
             if (
                 node.data &&
-                (!this.props.showSearchResults ||
+                (!this.props.section.showsSearchResults ||
                     node.data.type == MessageType.SEARCH_RESULT)
             ) {
                 this.onSelectMessage(node.data);
@@ -148,15 +153,15 @@ export const Messages = observer(
 const MessageContent = observer(
     class MessageContent extends React.Component<
         {
+            section: OutputSection;
             message: OutputMessage;
-            showSearchResults?: boolean;
         },
         {}
     > {
         render() {
             let icon;
 
-            if (this.props.showSearchResults) {
+            if (this.props.section.showsSearchResults) {
                 if (this.props.message.object) {
                     let iconName;
 
@@ -206,15 +211,82 @@ const MessageContent = observer(
             const style: React.CSSProperties = {};
 
             if (
-                this.props.showSearchResults &&
+                this.props.section.showsSearchResults &&
                 this.props.message.type != MessageType.SEARCH_RESULT
             ) {
                 style.opacity = "0.7";
             }
 
+            let textNode: React.ReactNode = text;
+
+            const uiStateStore = this.props.section.projectStore.uiStateStore;
+            if (
+                this.props.section.id == Section.SEARCH &&
+                uiStateStore.replaceEnabled &&
+                this.props.message.object &&
+                this.props.message.object instanceof EezValueObject
+            ) {
+                const pattern = uiStateStore.searchPattern;
+                const replace = uiStateStore.replaceText;
+
+                const key = getKey(this.props.message.object);
+
+                const str = `${getProperty(
+                    getParent(this.props.message.object),
+                    key
+                )}`;
+
+                const occurrences = findAllOccurrences(
+                    str,
+                    pattern,
+                    uiStateStore.searchMatchCase,
+                    uiStateStore.searchMatchWholeWord
+                );
+
+                let parts: {
+                    type: "same" | "removed" | "added";
+                    str: string;
+                }[] = [];
+
+                parts.unshift({
+                    type: "same",
+                    str: humanize(key) + ": "
+                });
+
+                let end = 0;
+
+                for (const occurrence of occurrences) {
+                    if (end < occurrence.start) {
+                        parts.push({
+                            type: "same",
+                            str: str.substring(end, occurrence.start)
+                        });
+                    }
+
+                    parts.push({
+                        type: "removed",
+                        str: str.substring(occurrence.start, occurrence.end)
+                    });
+
+                    parts.push({ type: "added", str: replace });
+
+                    end = occurrence.end;
+                }
+
+                if (end < str.length) {
+                    parts.push({ type: "same", str: str.substring(end) });
+                }
+
+                textNode = parts.map((part, i) => (
+                    <span key={i} className={part.type}>
+                        {part.str}
+                    </span>
+                ));
+            }
+
             return (
-                <span style={style}>
-                    {icon} {text}
+                <span className="EezStudio_Message" style={style}>
+                    {icon} {textNode}
                 </span>
             );
         }

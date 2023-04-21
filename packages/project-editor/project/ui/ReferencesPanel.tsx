@@ -21,7 +21,6 @@ export const ReferencesPanel = observer(
                         section={this.context.outputSectionsStore.getSection(
                             Section.REFERENCES
                         )}
-                        showSearchResults={true}
                     />
                 </div>
             );

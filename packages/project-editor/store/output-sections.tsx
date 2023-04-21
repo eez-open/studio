@@ -317,7 +317,7 @@ export class OutputSection implements IPanel {
 
     constructor(
         public projectStore: ProjectStore,
-        public id: number,
+        public id: Section,
         public name: string,
         public tabId: string
     ) {
@@ -330,6 +330,10 @@ export class OutputSection implements IPanel {
             selectedObject: computed,
             selectMessage: action
         });
+    }
+
+    get showsSearchResults() {
+        return this.id == Section.SEARCH || this.id == Section.REFERENCES;
     }
 
     get active() {

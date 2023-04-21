@@ -172,7 +172,7 @@ export function objectToString(object: IEezObject) {
     let label: string;
 
     if (isValue(object)) {
-        label = `${getKey(object)}: ${getProperty(
+        label = `${humanize(getKey(object))}: ${getProperty(
             getParent(object),
             getKey(object)
         )}`;

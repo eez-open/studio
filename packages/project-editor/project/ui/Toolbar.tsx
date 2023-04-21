@@ -426,7 +426,7 @@ const RunEditSwitchControls = observer(
         render() {
             const iconSize = 30;
             return (
-                <div className="d-flex">
+                <div className="EezStudio_ProjectEditor_RunEditSwitchControls d-flex">
                     <ButtonAction
                         text="Edit"
                         title="Enter edit mode (Shift+F5)"

@@ -13,7 +13,9 @@ import {
     REPLACE_ALL_ICON,
     REPLACE_SELECTED_ICON
 } from "project-editor/ui-components/icons";
-import { Section } from "project-editor/store";
+import { Message, Section } from "project-editor/store";
+import { findAllOccurrences } from "project-editor/core/search";
+import { getKey, getParent, getProperty } from "project-editor/core/object";
 
 export const SearchPanel = observer(
     class SearchPanel extends React.Component {
@@ -28,7 +30,6 @@ export const SearchPanel = observer(
                         section={this.context.outputSectionsStore.getSection(
                             Section.SEARCH
                         )}
-                        showSearchResults={true}
                     />
                 </div>
             );
@@ -52,7 +53,7 @@ const Toolbar = observer(
                 previousResult: action.bound,
                 toggleReplace: action.bound,
                 onReplaceTextChange: action.bound,
-                replace: action.bound,
+                replaceSelected: action.bound,
                 replaceAll: action.bound
             });
         }
@@ -174,6 +175,47 @@ const Toolbar = observer(
             this.context.uiStateStore.replaceText = event.target.value;
         }
 
+        replaceMessage(message: Message) {
+            const uiStateStore = this.context.uiStateStore;
+
+            const pattern = uiStateStore.searchPattern;
+            const replace = uiStateStore.replaceText;
+
+            const key = getKey(message.object!);
+            const str = getProperty(getParent(message.object!), key);
+            if (typeof str != "string") {
+                // TODO
+                return;
+            }
+
+            const occurrences = findAllOccurrences(
+                str,
+                pattern,
+                uiStateStore.searchMatchCase,
+                uiStateStore.searchMatchWholeWord
+            );
+
+            let newStr = "";
+
+            let end = 0;
+            for (const occurrence of occurrences) {
+                if (end < occurrence.start) {
+                    newStr += str.substring(end, occurrence.start);
+                }
+                newStr += replace;
+
+                end = occurrence.end;
+            }
+
+            if (end < str.length) {
+                newStr += str.substring(end);
+            }
+
+            this.context.updateObject(getParent(message.object!), {
+                [key]: newStr
+            });
+        }
+
         get replaceSelectedEnabled() {
             return (
                 this.context.outputSectionsStore.getSection(Section.SEARCH)
@@ -181,8 +223,16 @@ const Toolbar = observer(
             );
         }
 
-        replace() {
-            // TODO
+        replaceSelected() {
+            const selectedMessage = this.context.outputSectionsStore.getSection(
+                Section.SEARCH
+            ).selectedMessage;
+
+            if (selectedMessage) {
+                this.replaceMessage(selectedMessage);
+            }
+
+            this.startSearch();
         }
 
         get replaceAllEnabled() {
@@ -194,7 +244,23 @@ const Toolbar = observer(
         }
 
         replaceAll() {
-            // TODO
+            if (!this.replaceAllEnabled) {
+                return;
+            }
+
+            const section = this.context.outputSectionsStore.getSection(
+                Section.SEARCH
+            );
+
+            this.context.undoManager.setCombineCommands(true);
+
+            for (const message of section.messages.searchResults) {
+                this.replaceMessage(message);
+            }
+
+            this.context.undoManager.setCombineCommands(false);
+
+            this.startSearch();
         }
 
         render() {
@@ -308,7 +374,7 @@ const Toolbar = observer(
                                         title="Replace Selected"
                                         icon={REPLACE_SELECTED_ICON}
                                         iconSize={20}
-                                        onClick={() => this.replace()}
+                                        onClick={() => this.replaceSelected()}
                                         enabled={this.replaceSelectedEnabled}
                                     />
                                     <IconAction

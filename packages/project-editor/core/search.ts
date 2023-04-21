@@ -1,5 +1,4 @@
 import { _isEqual } from "eez-studio-shared/algorithm";
-import { humanize } from "eez-studio-shared/string";
 
 import {
     IEezObject,
@@ -120,12 +119,6 @@ export function* visitObjects(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function testMatchWholeWord(value: string, pattern: string) {
-    return new RegExp("\\b" + pattern + "\\b").test(value);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 type SearchResult = EezValueObject | null;
 
 export function* searchForPattern(
@@ -135,19 +128,15 @@ export function* searchForPattern(
     matchWholeWord: boolean,
     withPause: boolean
 ): IterableIterator<SearchResult> {
+    function testMatchWholeWord(value: string, pattern: string) {
+        return new RegExp("\\b" + pattern + "\\b").test(value);
+    }
+
     let v = withPause ? visitWithPause(root) : visitWithoutPause(root);
 
     if (!matchCase) {
         pattern = pattern.toLowerCase();
     }
-
-    const [namePattern, valuePattern] = pattern.split("=").map(pattern => {
-        pattern = pattern.trim();
-        if (!matchCase) {
-            pattern = pattern.toLowerCase();
-        }
-        return pattern;
-    });
 
     while (true) {
         let visitResult = v.next();
@@ -158,32 +147,18 @@ export function* searchForPattern(
         if (visitResult.value) {
             let valueObject = visitResult.value;
             if (valueObject.value != undefined) {
-                let name = humanize(valueObject.propertyInfo.name);
                 let value = valueObject.value.toString();
 
                 if (!matchCase) {
-                    name = name.toLowerCase();
                     value = value.toLowerCase();
                 }
 
                 if (matchWholeWord) {
-                    if (
-                        testMatchWholeWord(value, pattern) ||
-                        (namePattern &&
-                            valuePattern &&
-                            name === namePattern &&
-                            testMatchWholeWord(value, valuePattern))
-                    ) {
+                    if (testMatchWholeWord(value, pattern)) {
                         yield valueObject;
                     }
                 } else {
-                    if (
-                        value.indexOf(pattern) != -1 ||
-                        (namePattern &&
-                            valuePattern &&
-                            name.indexOf(namePattern) != -1 &&
-                            value.indexOf(valuePattern) != -1)
-                    ) {
+                    if (value.indexOf(pattern) != -1) {
                         yield valueObject;
                     }
                 }
@@ -539,4 +514,52 @@ export function replaceObjectReference(object: IEezObject, newValue: string) {
             }
         }
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function findAllOccurrences(
+    str: string,
+    pattern: string,
+    matchCase: boolean,
+    matchWholeWord: boolean
+) {
+    const occurrences: { start: number; end: number }[] = [];
+
+    if (!matchCase) {
+        str = str.toLowerCase();
+    }
+
+    if (matchWholeWord) {
+        const re = new RegExp("\\b" + pattern + "\\b", "g");
+
+        while (true) {
+            const result = re.exec(str);
+
+            if (!result) {
+                break;
+            }
+
+            occurrences.push({
+                start: result.index,
+                end: result.index + pattern.length
+            });
+        }
+    } else {
+        let end = 0;
+
+        while (true) {
+            let start = str.indexOf(pattern, end);
+
+            if (start == -1) {
+                break;
+            }
+
+            end = start + pattern.length;
+
+            occurrences.push({ start, end });
+        }
+    }
+
+    return occurrences;
 }
