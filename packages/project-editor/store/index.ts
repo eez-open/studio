@@ -416,12 +416,15 @@ export class ProjectStore {
     }
 
     startSearch() {
-        startNewSearch(
-            this,
-            this.uiStateStore.searchPattern,
-            this.uiStateStore.searchMatchCase,
-            this.uiStateStore.searchMatchWholeWord,
-            message => {
+        startNewSearch(this, {
+            type: "pattern",
+            pattern: this.uiStateStore.searchPattern,
+            matchCase: this.uiStateStore.searchMatchCase,
+            matchWholeWord: this.uiStateStore.searchMatchWholeWord,
+            replace: this.uiStateStore.replaceEnabled
+                ? this.uiStateStore.replaceText
+                : undefined,
+            searchCallback: message => {
                 if (message.type == "clear") {
                     this.outputSectionsStore.clear(Section.SEARCH);
                 } else if (message.type == "start") {
@@ -439,31 +442,41 @@ export class ProjectStore {
 
                 return true;
             }
-        );
+        });
     }
 
     findAllReferences(object: IEezObject) {
-        startNewSearch(this, object, true, true, message => {
-            if (message.type == "clear") {
-                this.outputSectionsStore.clear(Section.REFERENCES);
-            } else if (message.type == "start") {
-                this.layoutModels.selectTab(
-                    this.layoutModels.root,
-                    LayoutModels.REFERENCES_TAB_ID
-                );
-                this.outputSectionsStore.setLoading(Section.REFERENCES, true);
-            } else if (message.type == "value") {
-                this.outputSectionsStore.writeAsTree(
-                    Section.REFERENCES,
-                    MessageType.SEARCH_RESULT,
-                    objectToString(message.valueObject),
-                    message.valueObject
-                );
-            } else if (message.type == "finish") {
-                this.outputSectionsStore.setLoading(Section.REFERENCES, false);
-            }
+        startNewSearch(this, {
+            type: "object",
+            object,
+            searchCallback: message => {
+                if (message.type == "clear") {
+                    this.outputSectionsStore.clear(Section.REFERENCES);
+                } else if (message.type == "start") {
+                    this.layoutModels.selectTab(
+                        this.layoutModels.root,
+                        LayoutModels.REFERENCES_TAB_ID
+                    );
+                    this.outputSectionsStore.setLoading(
+                        Section.REFERENCES,
+                        true
+                    );
+                } else if (message.type == "value") {
+                    this.outputSectionsStore.writeAsTree(
+                        Section.REFERENCES,
+                        MessageType.SEARCH_RESULT,
+                        objectToString(message.valueObject),
+                        message.valueObject
+                    );
+                } else if (message.type == "finish") {
+                    this.outputSectionsStore.setLoading(
+                        Section.REFERENCES,
+                        false
+                    );
+                }
 
-            return true;
+                return true;
+            }
         });
     }
 

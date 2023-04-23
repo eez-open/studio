@@ -93,7 +93,8 @@ export class GlyphSource extends EezObject {
         properties: [
             {
                 name: "filePath",
-                type: PropertyType.String
+                type: PropertyType.String,
+                skipSearch: true
             },
             {
                 name: "size",

@@ -6,7 +6,8 @@ import {
     getProperty,
     getParent,
     getKey,
-    getRootObject
+    getRootObject,
+    isPropertyHidden
 } from "project-editor/core/object";
 import {
     getObjectPropertyAsObject,
@@ -123,9 +124,7 @@ type SearchResult = EezValueObject | null;
 
 export function* searchForPattern(
     root: IEezObject,
-    pattern: string,
-    matchCase: boolean,
-    matchWholeWord: boolean,
+    searchParams: SearchParamsPattern,
     withPause: boolean
 ): IterableIterator<SearchResult> {
     function testMatchWholeWord(value: string, pattern: string) {
@@ -134,8 +133,34 @@ export function* searchForPattern(
 
     let v = withPause ? visitWithPause(root) : visitWithoutPause(root);
 
-    if (!matchCase) {
+    let pattern = searchParams.pattern;
+    if (!searchParams.matchCase) {
         pattern = pattern.toLowerCase();
+    }
+
+    const canReplaceNumber =
+        searchParams.replace == undefined ||
+        !isNaN(Number.parseFloat(searchParams.replace));
+
+    function canReplace(valueObject: EezValueObject) {
+        if (
+            valueObject.propertyInfo.readOnlyInPropertyGrid ||
+            isPropertyHidden(getParent(valueObject), valueObject.propertyInfo)
+        ) {
+            return false;
+        }
+
+        let value = valueObject.value;
+
+        if (typeof value == "string") {
+            return true;
+        }
+
+        if (typeof value == "number") {
+            return canReplaceNumber;
+        }
+
+        return false;
     }
 
     while (true) {
@@ -149,17 +174,21 @@ export function* searchForPattern(
             if (valueObject.value != undefined) {
                 let value = valueObject.value.toString();
 
-                if (!matchCase) {
+                if (!searchParams.matchCase) {
                     value = value.toLowerCase();
                 }
 
-                if (matchWholeWord) {
+                if (searchParams.matchWholeWord) {
                     if (testMatchWholeWord(value, pattern)) {
-                        yield valueObject;
+                        if (canReplace(valueObject)) {
+                            yield valueObject;
+                        }
                     }
                 } else {
                     if (value.indexOf(pattern) != -1) {
-                        yield valueObject;
+                        if (canReplace(valueObject)) {
+                            yield valueObject;
+                        }
                     }
                 }
             }
@@ -172,13 +201,15 @@ export function* searchForPattern(
 
 export function* searchForReference(
     root: IEezObject,
-    object: IEezObject,
+    searchParams: SearchParamsObject,
     withPause: boolean
 ): IterableIterator<SearchResult> {
     let v = withPause ? visitWithPause(root) : visitWithoutPause(root);
 
     let objectName;
     let objectParentPath;
+
+    const object = searchParams.object;
 
     const classInfo = getClassInfo(object);
 
@@ -342,6 +373,31 @@ export type SearchCallbackMessage =
 
 export type SearchCallback = (message: SearchCallbackMessage) => boolean;
 
+export interface SearchParamsPattern {
+    type: "pattern";
+    pattern: string;
+    matchCase: boolean;
+    matchWholeWord: boolean;
+    replace: string | undefined;
+}
+
+export interface SearchParamsObject {
+    type: "object";
+    object: IEezObject;
+}
+
+export interface SearchParamsReferences {
+    type: "references";
+}
+
+export type SearchParams = (
+    | SearchParamsPattern
+    | SearchParamsObject
+    | SearchParamsReferences
+) & {
+    searchCallback: SearchCallback;
+};
+
 export class CurrentSearch {
     interval: any;
 
@@ -361,39 +417,26 @@ export class CurrentSearch {
         }
     }
 
-    startNewSearch(
-        patternOrObject: string | IEezObject | undefined,
-        matchCase: boolean,
-        matchWholeWord: boolean,
-        searchCallback: SearchCallback
-    ) {
-        searchCallback({ type: "clear" });
+    startNewSearch(searchParams: SearchParams) {
+        searchParams.searchCallback({ type: "clear" });
 
         this.finishSearch();
 
-        this.searchCallback = searchCallback;
+        this.searchCallback = searchParams.searchCallback;
 
         const root = this.projectStore.project;
 
         if (
             root &&
-            (patternOrObject == undefined ||
-                typeof patternOrObject != "string" ||
-                patternOrObject.length > 0)
+            (searchParams.type != "pattern" || searchParams.pattern != "")
         ) {
-            searchCallback({ type: "start" });
+            searchParams.searchCallback({ type: "start" });
 
             let searchResultsGenerator =
-                typeof patternOrObject == "string"
-                    ? searchForPattern(
-                          root,
-                          patternOrObject,
-                          matchCase,
-                          matchWholeWord,
-                          true
-                      )
-                    : patternOrObject
-                    ? searchForReference(root, patternOrObject, true)
+                searchParams.type == "pattern"
+                    ? searchForPattern(root, searchParams, true)
+                    : searchParams.type == "object"
+                    ? searchForReference(root, searchParams, true)
                     : searchForAllReferences(root, true);
 
             this.interval = setInterval(() => {
@@ -408,7 +451,12 @@ export class CurrentSearch {
 
                     let valueObject = searchResult.value;
                     if (valueObject) {
-                        if (!searchCallback({ type: "value", valueObject })) {
+                        if (
+                            !searchParams.searchCallback({
+                                type: "value",
+                                valueObject
+                            })
+                        ) {
                             this.finishSearch();
                             return;
                         }
@@ -434,24 +482,19 @@ export interface IDocumentSearch {
 
 export function startNewSearch(
     projectStore: ProjectStore,
-    patternOrObject: string | IEezObject | undefined,
-    matchCase: boolean,
-    matchWholeWord: boolean,
-    searchCallback: SearchCallback
+    searchParams: SearchParams
 ) {
-    projectStore.currentSearch.startNewSearch(
-        patternOrObject || "",
-        matchCase,
-        matchWholeWord,
-        searchCallback
-    );
+    projectStore.currentSearch.startNewSearch(searchParams);
 }
 
 export function usage(
     projectStore: ProjectStore,
     searchCallback: SearchCallback
 ) {
-    startNewSearch(projectStore, undefined, true, true, searchCallback);
+    startNewSearch(projectStore, {
+        type: "references",
+        searchCallback
+    });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -459,7 +502,7 @@ export function usage(
 export function isReferenced(object: IEezObject) {
     let resultsGenerator = searchForReference(
         getRootObject(object),
-        object,
+        { type: "object", object },
         false
     );
 
@@ -477,7 +520,11 @@ export function isReferenced(object: IEezObject) {
 
 export function replaceObjectReference(object: IEezObject, newValue: string) {
     const rootObject = getRootObject(object);
-    let resultsGenerator = searchForReference(rootObject, object, false);
+    let resultsGenerator = searchForReference(
+        rootObject,
+        { type: "object", object },
+        false
+    );
 
     while (true) {
         let searchResult = resultsGenerator.next();
@@ -533,7 +580,7 @@ export function findAllOccurrences(
     if (matchWholeWord) {
         const re = new RegExp("\\b" + pattern + "\\b", "g");
 
-        while (true) {
+        for (let i = 0; i < 1000; i++) {
             const result = re.exec(str);
 
             if (!result) {
@@ -548,7 +595,7 @@ export function findAllOccurrences(
     } else {
         let end = 0;
 
-        while (true) {
+        for (let i = 0; i < 1000; i++) {
             let start = str.indexOf(pattern, end);
 
             if (start == -1) {

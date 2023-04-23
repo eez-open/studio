@@ -169,10 +169,14 @@ const Toolbar = observer(
         toggleReplace() {
             this.context.uiStateStore.replaceEnabled =
                 !this.context.uiStateStore.replaceEnabled;
+
+            this.startSearch();
         }
 
         onReplaceTextChange(event: any) {
             this.context.uiStateStore.replaceText = event.target.value;
+
+            this.startSearch();
         }
 
         replaceMessage(message: Message) {
@@ -181,12 +185,12 @@ const Toolbar = observer(
             const pattern = uiStateStore.searchPattern;
             const replace = uiStateStore.replaceText;
 
-            const key = getKey(message.object!);
-            const str = getProperty(getParent(message.object!), key);
-            if (typeof str != "string") {
-                // TODO
-                return;
-            }
+            const object = message.object!;
+
+            const key = getKey(object);
+            const value = getProperty(getParent(object), key);
+
+            const str = value.toString();
 
             const occurrences = findAllOccurrences(
                 str,
@@ -211,9 +215,20 @@ const Toolbar = observer(
                 newStr += str.substring(end);
             }
 
-            this.context.updateObject(getParent(message.object!), {
-                [key]: newStr
-            });
+            const parent = getParent(object);
+
+            if (typeof value == "string") {
+                this.context.updateObject(parent, {
+                    [key]: newStr
+                });
+            } else if (typeof value == "number") {
+                const newValue = Number.parseFloat(newStr);
+                if (!isNaN(newValue)) {
+                    this.context.updateObject(parent, {
+                        [key]: newValue
+                    });
+                }
+            }
         }
 
         get replaceSelectedEnabled() {
