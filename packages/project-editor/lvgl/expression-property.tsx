@@ -14,6 +14,7 @@ import {
 } from "project-editor/core/object";
 import { ProjectContext } from "project-editor/project/context";
 import { getClassInfo } from "project-editor/store";
+import { findBitmap } from "project-editor/project/project";
 import { Property } from "project-editor/ui-components/PropertyGrid/Property";
 import { expressionBuilder } from "project-editor/flow/expression/ExpressionBuilder";
 import type { LVGLLabelWidget, LVGLWidget } from "project-editor/lvgl/widgets";
@@ -117,7 +118,7 @@ const LVGLProperty = observer(
                     propertyInfo
                 );
                 if (getPropertyValueResult) {
-                    bitmap = ProjectEditor.findBitmap(
+                    bitmap = findBitmap(
                         this.context.project,
                         getPropertyValueResult.value
                     );

@@ -91,8 +91,6 @@ export class DashboardProject {
                 await projectStore.newProject();
             }
 
-            await projectStore.loadAllExternalProjects();
-
             runInAction(() => {
                 projectStore.project._fullyLoaded = true;
             });

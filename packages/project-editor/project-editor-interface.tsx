@@ -13,11 +13,10 @@ import type {
 import type {
     checkAssetId,
     getFlow,
-    getNameProperty,
     getProject,
     Project
 } from "project-editor/project/project";
-import type { findPage, Page } from "project-editor/features/page/page";
+import type { Page } from "project-editor/features/page/page";
 import type {
     ActionComponent,
     Component,
@@ -25,22 +24,18 @@ import type {
     getWidgetParent
 } from "project-editor/flow/component";
 import type {
-    findFont,
     Glyph,
     rebuildLvglFonts
 } from "project-editor/features/font/font";
 import type { Flow, FlowFragment } from "project-editor/flow/flow";
 import type { ConnectionLine } from "project-editor/flow/connection-line";
-import type { Action, findAction } from "project-editor/features/action/action";
+import type { Action } from "project-editor/features/action/action";
 import type {
     ScpiCommand,
     ScpiSubsystem
 } from "project-editor/features/scpi/scpi";
 import type { getObjectVariableTypeFromType } from "project-editor/features/variable/value-type";
-import type {
-    findBitmap,
-    getBitmapData
-} from "project-editor/features/bitmap/bitmap";
+import type { getBitmapData } from "project-editor/features/bitmap/bitmap";
 import type {
     migrateProjectVersion,
     migrateProjectType
@@ -118,13 +113,8 @@ export interface IProjectEditor {
     getProject: typeof getProject;
     getProjectStore: typeof getProjectStore;
     getFlow: typeof getFlow;
-    getNameProperty: typeof getNameProperty;
     getObjectVariableTypeFromType: typeof getObjectVariableTypeFromType;
     getWidgetParent: typeof getWidgetParent;
-    findPage: typeof findPage;
-    findAction: typeof findAction;
-    findBitmap: typeof findBitmap;
-    findFont: typeof findFont;
     rebuildLvglFonts: typeof rebuildLvglFonts;
     getBitmapData: typeof getBitmapData;
     migrateProjectVersion: typeof migrateProjectVersion;

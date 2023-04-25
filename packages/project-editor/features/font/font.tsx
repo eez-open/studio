@@ -1550,17 +1550,6 @@ registerClass("Font", Font);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function findFont(project: Project, fontName: string | undefined) {
-    if (fontName == undefined) {
-        return undefined;
-    }
-    return ProjectEditor.documentSearch.findReferencedObject(
-        project,
-        "fonts",
-        fontName
-    ) as Font | undefined;
-}
-
 export function rebuildLvglFonts(
     projectStore: ProjectStore,
     lvglInclude: string

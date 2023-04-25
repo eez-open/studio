@@ -213,9 +213,7 @@ export function* searchForReference(
 
     const classInfo = getClassInfo(object);
 
-    let importedProject = classInfo.getImportedProject
-        ? classInfo.getImportedProject(object)
-        : undefined;
+    let importedProject;
 
     if (classInfo.getImportedProject) {
         importedProject = classInfo.getImportedProject(object);

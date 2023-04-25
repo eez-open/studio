@@ -2,7 +2,7 @@ import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 import type { Bitmap } from "project-editor/features/bitmap/bitmap";
 import { Page } from "project-editor/features/page/page";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import type { Project } from "project-editor/project/project";
+import { Project, findAction } from "project-editor/project/project";
 import { getAncestorOfType } from "project-editor/store";
 import type { LVGLWidget } from "./widgets";
 import type { Assets } from "project-editor/build/assets";
@@ -232,7 +232,7 @@ export class LVGLBuild {
 
                         build.indent();
                         if (eventHandler.handlerType == "action") {
-                            const action = ProjectEditor.findAction(
+                            const action = findAction(
                                 this.project,
                                 eventHandler.action
                             );

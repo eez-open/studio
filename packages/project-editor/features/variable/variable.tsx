@@ -34,7 +34,7 @@ import {
     isLVGLProject,
     isAppletProject
 } from "project-editor/project/project-type-traits";
-import type { Project } from "project-editor/project/project";
+import { Project, findVariable } from "project-editor/project/project";
 import type {
     IDataContext,
     IVariable
@@ -418,7 +418,7 @@ export class DataContext implements IDataContext {
                         throw err;
                     }
                     if (!this.project.projectTypeTraits.hasFlowSupport) {
-                        const value = this.project._assetsMap[
+                        const value = this.project._assets.maps[
                             "name"
                         ].allAssets.get(variable.defaultValue);
                         if (value) {
@@ -1178,16 +1178,6 @@ export class ProjectVariables extends EezObject {
 }
 
 registerClass("ProjectVariables", ProjectVariables);
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function findVariable(project: Project, variableName: string) {
-    return ProjectEditor.documentSearch.findReferencedObject(
-        project,
-        "variables/globalVariables",
-        variableName
-    ) as Variable | undefined;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

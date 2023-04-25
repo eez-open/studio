@@ -3,14 +3,14 @@ import ReactDOM from "react-dom";
 import { action, observable, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
+import { closest } from "eez-studio-shared/dom";
+
 import { SearchInput } from "eez-studio-ui/search-input";
 
 import { ProjectContext } from "project-editor/project/context";
 import { IEezObject, PropertyInfo } from "project-editor/core/object";
-import { getNameProperty } from "project-editor/project/project";
+import { findBitmap } from "project-editor/project/project";
 import { SortDirectionType } from "project-editor/core/objectAdapter";
-import { closest } from "eez-studio-shared/dom";
-import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,21 +52,21 @@ export const ObjectReferenceInput = observer(
         getObjectNames() {
             const { propertyInfo } = this.props;
 
-            let objects: IEezObject[] = this.context.project._assetsMap[
+            let assets = this.context.project._assets.maps[
                 "name"
             ].getAllObjectsOfType(propertyInfo.referencedObjectCollectionPath!);
 
-            return objects
+            return assets
                 .slice()
-                .filter(object =>
+                .filter(asset =>
                     propertyInfo.filterReferencedObjectCollection
                         ? propertyInfo.filterReferencedObjectCollection(
                               this.props.objects,
-                              object
+                              asset.object
                           )
                         : true
                 )
-                .map(object => getNameProperty(object))
+                .map(asset => asset.name)
                 .filter(
                     objectName =>
                         !this.searchText ||
@@ -209,10 +209,7 @@ export const ObjectReferenceInput = observer(
                 this.props.propertyInfo.referencedObjectCollectionPath ===
                     "bitmaps"
             ) {
-                bitmap = ProjectEditor.findBitmap(
-                    this.context.project,
-                    this.props.value
-                );
+                bitmap = findBitmap(this.context.project, this.props.value);
             }
 
             const placeholder =

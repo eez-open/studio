@@ -155,11 +155,14 @@ export function getObjectFromStringPath(
     stringPath: string
 ): IEezObject {
     if (stringPath.startsWith("[")) {
-        const i = stringPath.indexOf(":");
-        const absoluteFilePath = stringPath.substring(1, i - 1);
+        const i = stringPath.indexOf("]:");
+        const absoluteFilePath = stringPath.substring(1, i);
         const projectStore = getProjectStore(rootObject);
-        const project = projectStore.externalProjects.get(absoluteFilePath);
-        stringPath = stringPath.substring(stringPath.indexOf(":") + 1);
+        const project =
+            projectStore.externalProjects.getExternalProjectFromAbsoluteFilePath(
+                absoluteFilePath
+            );
+        stringPath = stringPath.substring(i + 2);
         return getObjectFromStringPath(project!, stringPath);
     }
     if (stringPath == "/") {
@@ -411,7 +414,9 @@ export function getObjectPathAsString(object: IEezObject) {
     const project = getProject(object);
     const projectStore = project._store;
     const absoluteFilePath =
-        projectStore.mapExternalProjectToAbsolutePath.get(project);
+        projectStore.externalProjects.getExternalProjectAbsoluteFilePath(
+            project
+        );
     if (absoluteFilePath != undefined) {
         return `[${absoluteFilePath}]:/${path}`;
     }

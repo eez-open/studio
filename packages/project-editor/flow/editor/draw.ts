@@ -2,6 +2,7 @@ import tinycolor from "tinycolor2";
 
 import { getColorRGB, to16bitsColor } from "eez-studio-shared/color";
 
+import { findBitmap } from "project-editor/project/project";
 import type {
     BorderRadiusSpec,
     Style
@@ -504,7 +505,7 @@ export function drawBackground(
         fillRect(ctx, x1, y1, x2, y2);
 
         if (style.backgroundImageProperty) {
-            const bitmap = ProjectEditor.findBitmap(
+            const bitmap = findBitmap(
                 ProjectEditor.getProject(style),
                 style.backgroundImageProperty
             );

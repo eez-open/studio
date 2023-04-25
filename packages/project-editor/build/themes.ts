@@ -1,10 +1,13 @@
 import { strToColor16 } from "eez-studio-shared/color";
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
-import type { Theme } from "project-editor/features/style/theme";
+import {
+    Theme,
+    getProjectWithThemes
+} from "project-editor/features/style/theme";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
 
 export function buildGuiThemesEnum(assets: Assets) {
-    let themes = assets.rootProject.themes.map(
+    let themes = getProjectWithThemes(assets.projectStore).themes.map(
         (theme, i) =>
             `${TAB}${getName(
                 "THEME_ID_",
@@ -55,7 +58,10 @@ export function buildGuiColors(assets: Assets, dataBuffer: DataBuffer) {
     if (!assets.projectStore.masterProject) {
         dataBuffer.writeObjectOffset(() => {
             // themes
-            dataBuffer.writeArray(assets.rootProject.themes, buildTheme);
+            dataBuffer.writeArray(
+                getProjectWithThemes(assets.projectStore).themes,
+                buildTheme
+            );
 
             // colors
             dataBuffer.writeNumberArray(assets.colors, buildColor);

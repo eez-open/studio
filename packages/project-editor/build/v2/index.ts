@@ -11,28 +11,23 @@ import {
 import {
     Project,
     BuildConfiguration,
-    getProject
+    getProject,
+    findBitmap,
+    findStyle,
+    findPage,
+    findFont,
+    findAction,
+    findVariable
 } from "project-editor/project/project";
 
-import {
-    Variable,
-    findVariable
-} from "project-editor/features/variable/variable";
+import { Variable } from "project-editor/features/variable/variable";
 
-import {
-    getBitmapData,
-    Bitmap,
-    findBitmap
-} from "project-editor/features/bitmap/bitmap";
-import {
-    Style,
-    getStyleProperty,
-    findStyle
-} from "project-editor/features/style/style";
-import { Page, findPage } from "project-editor/features/page/page";
-import { Font, findFont } from "project-editor/features/font/font";
+import { getBitmapData, Bitmap } from "project-editor/features/bitmap/bitmap";
+import { Style, getStyleProperty } from "project-editor/features/style/style";
+import { Page } from "project-editor/features/page/page";
+import { Font } from "project-editor/features/font/font";
 import { Theme } from "project-editor/features/style/theme";
-import { Action, findAction } from "project-editor/features/action/action";
+import { Action } from "project-editor/features/action/action";
 import { Widget } from "project-editor/flow/component";
 import {
     BarGraphWidget,

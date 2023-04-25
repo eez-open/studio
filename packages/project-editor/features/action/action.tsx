@@ -19,7 +19,6 @@ import {
     isLVGLProject,
     isNotV1Project
 } from "project-editor/project/project-type-traits";
-import type { Project } from "project-editor/project/project";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { getProjectStore } from "project-editor/store";
 
@@ -194,16 +193,6 @@ export class Action extends Flow {
 }
 
 registerClass("Action", Action);
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function findAction(project: Project, actionName: string) {
-    return ProjectEditor.documentSearch.findReferencedObject(
-        project,
-        "actions",
-        actionName
-    ) as Action | undefined;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

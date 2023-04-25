@@ -517,7 +517,6 @@ export class ProjectEditorTab implements IHomeTab {
                 await projectStore.newProject();
             }
 
-            await projectStore.loadAllExternalProjects();
             runInAction(() => {
                 projectStore.project._fullyLoaded = true;
             });

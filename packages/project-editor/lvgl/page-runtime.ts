@@ -19,7 +19,7 @@ import {
 } from "project-editor/store";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
-import type { Project } from "project-editor/project/project";
+import { Project, findBitmap } from "project-editor/project/project";
 import { getClassesDerivedFrom, setParent } from "project-editor/core/object";
 import type { LVGLStyle } from "./style";
 import { PageTabState } from "project-editor/features/page/PageEditor";
@@ -555,7 +555,7 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
     }
 
     getBitmap(bitmapName: string) {
-        const bitmap = ProjectEditor.findBitmap(
+        const bitmap = findBitmap(
             this.runtime.projectStore.project,
             bitmapName
         );

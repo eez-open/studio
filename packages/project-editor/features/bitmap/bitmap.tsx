@@ -35,13 +35,12 @@ import {
     ProjectStore
 } from "project-editor/store";
 
-import { findStyle } from "project-editor/features/style/style";
 import { getThemedColor } from "project-editor/features/style/theme";
 
 import { showGenericDialog } from "project-editor/core/util";
 
 import { AbsoluteFileInput } from "project-editor/ui-components/FileInput";
-import { getProject, Project } from "project-editor/project/project";
+import { getProject, findStyle } from "project-editor/project/project";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
@@ -625,16 +624,6 @@ export async function getBitmapData(
         }
         await new Promise(resolve => setTimeout(resolve, 10));
     }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function findBitmap(project: Project, bitmapName: any) {
-    return ProjectEditor.documentSearch.findReferencedObject(
-        project,
-        "bitmaps",
-        bitmapName
-    ) as Bitmap | undefined;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

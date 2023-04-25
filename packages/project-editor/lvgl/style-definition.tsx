@@ -13,6 +13,7 @@ import { humanize } from "eez-studio-shared/string";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Message } from "project-editor/store";
+import { findBitmap, findFont } from "project-editor/project/project";
 
 import type { Page } from "project-editor/features/page/page";
 
@@ -161,7 +162,7 @@ export class LVGLStylesDefinition extends EezObject {
                                 const value =
                                     this.definition[part][state][propertyName];
 
-                                const bitmap = ProjectEditor.findBitmap(
+                                const bitmap = findBitmap(
                                     ProjectEditor.getProject(this),
                                     value
                                 );
@@ -184,7 +185,7 @@ export class LVGLStylesDefinition extends EezObject {
                                 const value =
                                     this.definition[part][state][propertyName];
 
-                                const font = ProjectEditor.findFont(
+                                const font = findFont(
                                     ProjectEditor.getProject(this),
                                     value
                                 );
@@ -257,7 +258,7 @@ export class LVGLStylesDefinition extends EezObject {
                                         selectorCode
                                     );
                                 } else {
-                                    const font = ProjectEditor.findFont(
+                                    const font = findFont(
                                         ProjectEditor.getProject(this),
                                         value
                                     );
@@ -318,7 +319,7 @@ export class LVGLStylesDefinition extends EezObject {
                             propertyInfo.referencedObjectCollectionPath ==
                                 "bitmaps"
                         ) {
-                            const bitmap = ProjectEditor.findBitmap(
+                            const bitmap = findBitmap(
                                 ProjectEditor.getProject(this),
                                 value
                             );
@@ -564,7 +565,7 @@ export class LVGLStylesPicasoDefinition extends EezObject {
                                 const value =
                                     this.definition[part][state][propertyName];
 
-                                const bitmap = ProjectEditor.findBitmap(
+                                const bitmap = findBitmap(
                                     ProjectEditor.getProject(this),
                                     value
                                 );
@@ -587,7 +588,7 @@ export class LVGLStylesPicasoDefinition extends EezObject {
                                 const value =
                                     this.definition[part][state][propertyName];
 
-                                const font = ProjectEditor.findFont(
+                                const font = findFont(
                                     ProjectEditor.getProject(this),
                                     value
                                 );
@@ -660,7 +661,7 @@ export class LVGLStylesPicasoDefinition extends EezObject {
                                         selectorCode
                                     );
                                 } else {
-                                    const font = ProjectEditor.findFont(
+                                    const font = findFont(
                                         ProjectEditor.getProject(this),
                                         value
                                     );
@@ -721,7 +722,7 @@ export class LVGLStylesPicasoDefinition extends EezObject {
                             propertyInfo.referencedObjectCollectionPath ==
                                 "bitmaps"
                         ) {
-                            const bitmap = ProjectEditor.findBitmap(
+                            const bitmap = findBitmap(
                                 ProjectEditor.getProject(this),
                                 value
                             );

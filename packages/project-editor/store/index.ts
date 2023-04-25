@@ -8,11 +8,9 @@ import {
     observable,
     computed,
     action,
-    reaction,
     autorun,
     runInAction
 } from "mobx";
-import type { FSWatcher } from "chokidar";
 import Mousetrap from "mousetrap";
 
 import { confirmSave } from "eez-studio-shared/util-renderer";
@@ -83,6 +81,7 @@ import { installExtension } from "eez-studio-shared/extensions/extensions";
 import type { InstrumentObject } from "instrument/instrument-object";
 
 import { LVGLIdentifiers } from "project-editor/lvgl/identifiers";
+import { ExternalProjects } from "project-editor/store/external";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -119,6 +118,7 @@ export class ProjectStore {
     outputSectionsStore = new OutputSections(this);
     typesStore = new TypesStore(this);
     lvglIdentifiers = new LVGLIdentifiers(this);
+    externalProjects = new ExternalProjects(this);
 
     runtime: RuntimeBase | undefined;
 
@@ -134,18 +134,11 @@ export class ProjectStore {
     objects = new Map<string, IEezObject>();
     lastChildId = 0;
 
-    externalProjects = new Map<string, Project>();
-    mapExternalProjectToAbsolutePath = new Map<Project, string>();
-    externalProjectsLoading = new Map<string, boolean>();
-
     dispose1: mobx.IReactionDisposer;
     dispose2: mobx.IReactionDisposer;
     dispose3: mobx.IReactionDisposer;
     dispose4: mobx.IReactionDisposer;
     dispose5: mobx.IReactionDisposer;
-    dispose6: mobx.IReactionDisposer;
-
-    watcher: FSWatcher | undefined = undefined;
 
     dashboardInstrument?: InstrumentObject;
     standalone: boolean = false;
@@ -171,8 +164,6 @@ export class ProjectStore {
             modified: observable,
             filePath: observable,
             backgroundCheckEnabled: observable,
-            externalProjects: observable,
-            mapExternalProjectToAbsolutePath: observable,
             selectedBuildConfiguration: computed,
             masterProjectEnabled: computed,
             masterProject: computed,
@@ -209,42 +200,7 @@ export class ProjectStore {
             }
         );
 
-        this.watch();
-    }
-
-    async watch() {
-        const chokidarModuleName = "chokidar";
-        const { watch } = require(chokidarModuleName);
-        this.dispose3 = autorun(() => {
-            if (this.watcher) {
-                this.watcher.close();
-            }
-            if (this.project) {
-                const importedProjectFiles =
-                    this.project.settings.general.imports
-                        .filter(
-                            importDirective => !!importDirective.projectFilePath
-                        )
-                        .map(importDirective =>
-                            this.getAbsoluteFilePath(
-                                importDirective.projectFilePath
-                            )
-                        );
-                this.watcher = watch(importedProjectFiles) as FSWatcher;
-                this.watcher.on("change", path => {
-                    const project = this.externalProjects.get(path);
-                    if (project) {
-                        runInAction(() => {
-                            this.externalProjects.delete(path);
-                            this.mapExternalProjectToAbsolutePath.delete(
-                                project
-                            );
-                            this.loadExternalProject(path);
-                        });
-                    }
-                });
-            }
-        });
+        this.externalProjects.mount();
     }
 
     onActivate() {
@@ -358,61 +314,18 @@ export class ProjectStore {
         if (this.dispose3) {
             this.dispose3();
         }
-        if (this.watcher) {
-            this.watcher.close();
-        }
         if (this.dispose4) {
             this.dispose4();
         }
         if (this.dispose5) {
             this.dispose5();
         }
-        if (this.dispose6) {
-            this.dispose6();
-        }
+
+        this.externalProjects.unmount();
 
         if (this.changingRuntimeMode) {
             clearTimeout(this.changingRuntimeMode);
         }
-    }
-
-    async loadMasterProject() {
-        const project = this.project!;
-
-        if (project.settings.general.masterProject) {
-            try {
-                await project.loadMasterProject();
-            } catch (err) {
-                notification.error(
-                    `Failed to load project ${project.settings.general.masterProject}`
-                );
-            }
-        }
-    }
-
-    async loadAllExternalProjects() {
-        const project = this.project!;
-
-        // load master project
-        await this.loadMasterProject();
-
-        // load imported projects
-        for (let i = 0; i < project.settings.general.imports.length; i++) {
-            try {
-                await project.settings.general.imports[i].loadProject();
-            } catch (err) {
-                notification.error(
-                    `Failed to load project ${project.settings.general.imports[i].projectFilePath}`
-                );
-            }
-        }
-
-        this.dispose5 = reaction(
-            () => this.project.settings.general.masterProject,
-            masterProject => {
-                this.loadMasterProject();
-            }
-        );
     }
 
     startSearch() {
@@ -485,9 +398,9 @@ export class ProjectStore {
             this.startSearch();
         }
 
-        this.dispose6 = autorun(() => this.typesStore.reset());
+        this.dispose5 = autorun(() => this.typesStore.reset());
 
-        this.dispose4 = autorun(
+        this.dispose3 = autorun(
             () => {
                 // check the project in the background
                 if (
@@ -576,7 +489,9 @@ export class ProjectStore {
         if (project == this.project) {
             return this.filePath;
         } else {
-            return this.mapExternalProjectToAbsolutePath.get(project);
+            return this.externalProjects.getExternalProjectAbsoluteFilePath(
+                project
+            );
         }
     }
 
@@ -696,7 +611,7 @@ export class ProjectStore {
 
     async openFile(filePath: string) {
         this.filePath = filePath;
-        const project = await load(this, filePath);
+        const project = await this.externalProjects.loadProject(filePath);
         await this.setProject(project, filePath);
     }
 
@@ -833,31 +748,6 @@ export class ProjectStore {
 
     get masterProject() {
         return this.project.masterProject;
-    }
-
-    async loadExternalProject(filePath: string) {
-        if (
-            filePath == this.filePath ||
-            this.externalProjects.get(filePath) ||
-            this.externalProjectsLoading.get(filePath)
-        ) {
-            // already loaded or loading
-            return;
-        }
-
-        this.externalProjectsLoading.set(filePath, true);
-
-        const project = await load(this, filePath);
-
-        project._isReadOnly = true;
-        project._store = this;
-
-        runInAction(() => {
-            this.externalProjects.set(filePath, project);
-            this.mapExternalProjectToAbsolutePath.set(project, filePath);
-        });
-
-        this.externalProjectsLoading.set(filePath, false);
     }
 
     getChildId() {
@@ -1232,32 +1122,6 @@ export class ProjectStore {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-export async function load(projectStore: ProjectStore, filePath: string) {
-    let fileData: Buffer;
-    try {
-        fileData = await fs.promises.readFile(filePath);
-    } catch (err) {
-        throw new Error(`File read error: ${err.toString()}`);
-    }
-
-    const isDashboardBuild = filePath.endsWith(".eez-dashboard");
-
-    let projectJs;
-    if (isDashboardBuild) {
-        const decompress = require("decompress");
-        const files = await decompress(fileData);
-        projectJs = files[0].data.toString("utf8");
-    } else {
-        projectJs = fileData.toString("utf8");
-    }
-
-    const project: Project = loadProject(projectStore, projectJs) as Project;
-
-    project._isDashboardBuild = isDashboardBuild;
-
-    return project;
-}
 
 export function getJSON(projectStore: ProjectStore, tabWidth: number = 2) {
     const toJsHook = (jsObject: any, object: IEezObject) => {

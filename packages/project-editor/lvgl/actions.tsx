@@ -29,8 +29,13 @@ import {
     propertyNotFoundMessage,
     propertyNotSetMessage
 } from "project-editor/store";
-import { getProject, ProjectType } from "project-editor/project/project";
-import { findPage, Page } from "project-editor/features/page/page";
+import {
+    getProject,
+    ProjectType,
+    findPage,
+    findBitmap
+} from "project-editor/project/project";
+import { Page } from "project-editor/features/page/page";
 import { Assets, DataBuffer } from "project-editor/build/assets";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
@@ -872,7 +877,7 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
             if (object.valueType == "literal") {
                 if (object.propertyInfo.type == "image") {
                     if (object.value) {
-                        const bitmap = ProjectEditor.findBitmap(
+                        const bitmap = findBitmap(
                             ProjectEditor.getProject(object),
                             object.value
                         );

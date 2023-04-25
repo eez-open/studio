@@ -95,24 +95,24 @@ export const ComponentsPalette = observer(
 
             const userWidgets: IObjectClassInfo[] = [];
             if (!showOnlyActions) {
-                for (const page of this.context.project.pages) {
-                    if (page.isUsedAsUserWidget) {
+                for (const pageAsset of this.context.project._assets.pages) {
+                    if (pageAsset.page.isUsedAsUserWidget) {
                         const widgetName = this.context.projectTypeTraits.isLVGL
                             ? "LVGLUserWidgetWidget"
                             : "UserWidgetWidget";
 
                         userWidgets.push({
-                            id: `${widgetName}<${page.name}>`,
+                            id: `${widgetName}<${pageAsset.name}>`,
                             name: widgetName,
                             objectClass: this.context.projectTypeTraits.isLVGL
                                 ? ProjectEditor.LVGLUserWidgetWidgetClass
                                 : ProjectEditor.UserWidgetWidgetClass,
-                            displayName: page.name,
+                            displayName: pageAsset.name,
                             componentPaletteGroupName: "!7User Widgets",
                             props: {
-                                layout: page.name,
-                                width: page.width,
-                                height: page.height
+                                layout: pageAsset.name,
+                                width: pageAsset.page.width,
+                                height: pageAsset.page.height
                             }
                         });
                     }
@@ -121,16 +121,17 @@ export const ComponentsPalette = observer(
 
             const userActions: IObjectClassInfo[] = [];
             if (this.context.projectTypeTraits.hasFlowSupport) {
-                for (const action of this.context.project.actions) {
+                for (const actionAsset of this.context.project._assets
+                    .actions) {
                     userActions.push({
-                        id: `CallActionActionComponent<${action.name}>`,
+                        id: `CallActionActionComponent<${actionAsset.name}>`,
                         name: "CallActionActionComponent",
                         objectClass:
                             ProjectEditor.CallActionActionComponentClass,
-                        displayName: action.name,
+                        displayName: actionAsset.name,
                         componentPaletteGroupName: "!8User Actions",
                         props: {
-                            action: action.name
+                            action: actionAsset.name
                         }
                     });
                 }

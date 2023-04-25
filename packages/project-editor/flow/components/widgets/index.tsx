@@ -54,7 +54,10 @@ import {
     checkObjectReference,
     getProject,
     Project,
-    ProjectType
+    ProjectType,
+    findPage,
+    findBitmap,
+    findVariable
 } from "project-editor/project/project";
 
 import type {
@@ -67,9 +70,8 @@ import {
     ComponentCanvas
 } from "project-editor/flow/editor/render";
 
-import { Bitmap, findBitmap } from "project-editor/features/bitmap/bitmap";
+import { Bitmap } from "project-editor/features/bitmap/bitmap";
 import { Style } from "project-editor/features/style/style";
-import { findVariable } from "project-editor/features/variable/variable";
 import {
     FLOW_ITERATOR_INDEXES_VARIABLE,
     FLOW_ITERATOR_INDEX_VARIABLE
@@ -1282,7 +1284,7 @@ export class UserWidgetWidget extends Widget {
 
                     const project = getProject(widget);
 
-                    const userWidgetPage = ProjectEditor.findPage(
+                    const userWidgetPage = findPage(
                         project,
                         widget.userWidgetPageName
                     );
@@ -1345,7 +1347,7 @@ export class UserWidgetWidget extends Widget {
                 }
 
                 if (object.userWidgetPageName) {
-                    let userWidgetPage = ProjectEditor.findPage(
+                    let userWidgetPage = findPage(
                         getProject(object),
                         object.userWidgetPageName
                     );
@@ -1447,18 +1449,12 @@ export class UserWidgetWidget extends Widget {
         if (this.data) {
             const userWidgetPageName = dataContext.get(this.data);
             if (userWidgetPageName) {
-                userWidgetPage = ProjectEditor.findPage(
-                    project,
-                    userWidgetPageName
-                );
+                userWidgetPage = findPage(project, userWidgetPageName);
             }
         }
 
         if (!userWidgetPage) {
-            userWidgetPage = ProjectEditor.findPage(
-                project,
-                this.userWidgetPageName
-            );
+            userWidgetPage = findPage(project, this.userWidgetPageName);
         }
 
         return userWidgetPage;
@@ -1477,7 +1473,7 @@ export class UserWidgetWidget extends Widget {
             for (const widget of visitObjects(page)) {
                 if (widget instanceof ProjectEditor.UserWidgetWidgetClass) {
                     if (widget.userWidgetPageName) {
-                        const userWidgetPage = ProjectEditor.findPage(
+                        const userWidgetPage = findPage(
                             project,
                             widget.userWidgetPageName
                         );
@@ -1502,10 +1498,7 @@ export class UserWidgetWidget extends Widget {
 
         const project = getProject(this);
 
-        const userWidgetPage = ProjectEditor.findPage(
-            project,
-            this.userWidgetPageName
-        );
+        const userWidgetPage = findPage(project, this.userWidgetPageName);
         if (!userWidgetPage) {
             return false;
         }
@@ -1519,10 +1512,7 @@ export class UserWidgetWidget extends Widget {
     }
 
     getInputs() {
-        const page = ProjectEditor.findPage(
-            getProject(this),
-            this.userWidgetPageName
-        );
+        const page = findPage(getProject(this), this.userWidgetPageName);
         if (!page) {
             return super.getInputs();
         }
@@ -1551,10 +1541,7 @@ export class UserWidgetWidget extends Widget {
     }
 
     getOutputs() {
-        const page = ProjectEditor.findPage(
-            getProject(this),
-            this.userWidgetPageName
-        );
+        const page = findPage(getProject(this), this.userWidgetPageName);
         if (!page) {
             return super.getOutputs();
         }
@@ -4494,7 +4481,7 @@ export class AppViewWidget extends Widget {
         if (this.data) {
             const pageName = flowContext.dataContext.get(this.data);
             if (pageName) {
-                const page = ProjectEditor.findPage(getProject(this), pageName);
+                const page = findPage(getProject(this), pageName);
                 if (page) {
                     element = (
                         <ComponentEnclosure

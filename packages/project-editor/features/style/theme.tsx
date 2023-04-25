@@ -612,7 +612,7 @@ export function getThemedColor(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getProjectWithThemes(projectStore: ProjectStore) {
+export function getProjectWithThemes(projectStore: ProjectStore) {
     if (projectStore.masterProject) {
         return projectStore.masterProject;
     }

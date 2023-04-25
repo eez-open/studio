@@ -72,7 +72,6 @@ export const PropertyGrid = observer(
         }
 
         updateObject = (propertyValues: Object) => {
-            console.log(propertyValues);
             const wasCombineCommands = this.context.undoManager.combineCommands;
             if (!wasCombineCommands) {
                 this.context.undoManager.setCombineCommands(true);

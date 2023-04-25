@@ -25,7 +25,6 @@ import {
     getFlow,
     Project,
     findReferencedObject,
-    getNameProperty,
     checkObjectReference,
     checkAssetId
 } from "project-editor/project/project";
@@ -39,16 +38,12 @@ import {
     getWidgetParent
 } from "project-editor/flow/component";
 
-import { findPage, Page } from "project-editor/features/page/page";
+import { Page } from "project-editor/features/page/page";
 import { Widget } from "project-editor/flow/component";
-import {
-    findFont,
-    Glyph,
-    rebuildLvglFonts
-} from "project-editor/features/font/font";
+import { Glyph, rebuildLvglFonts } from "project-editor/features/font/font";
 import { Flow, FlowFragment } from "project-editor/flow/flow";
 import { ConnectionLine } from "project-editor/flow/connection-line";
-import { Action, findAction } from "project-editor/features/action/action";
+import { Action } from "project-editor/features/action/action";
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import {
     getObjectVariableTypeFromType,
@@ -76,10 +71,7 @@ import type {
     IActionComponentDefinition,
     IObjectVariableType
 } from "eez-studio-types";
-import {
-    findBitmap,
-    getBitmapData
-} from "project-editor/features/bitmap/bitmap";
+import { getBitmapData } from "project-editor/features/bitmap/bitmap";
 import {
     migrateProjectVersion,
     migrateProjectType
@@ -213,13 +205,8 @@ export async function initProjectEditor(
         getProject,
         getProjectStore,
         getFlow,
-        getNameProperty,
         getObjectVariableTypeFromType,
         getWidgetParent,
-        findPage,
-        findAction,
-        findBitmap,
-        findFont,
         rebuildLvglFonts,
         getBitmapData,
         migrateProjectVersion,

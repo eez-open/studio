@@ -34,6 +34,7 @@ import {
     isLVGLProject,
     isNotLVGLProject
 } from "project-editor/project/project-type-traits";
+import { findStyle } from "project-editor/project/project";
 
 import type {
     IResizeHandler,
@@ -45,8 +46,6 @@ import {
     ComponentCanvas
 } from "project-editor/flow/editor/render";
 
-import type { Project } from "project-editor/project/project";
-
 import { AutoSize, Component, Widget } from "project-editor/flow/component";
 import {
     generalGroup,
@@ -54,7 +53,6 @@ import {
     geometryGroup
 } from "project-editor/ui-components/PropertyGrid/groups";
 
-import { findStyle } from "project-editor/features/style/style";
 import { getThemedColor } from "project-editor/features/style/theme";
 import { Flow } from "project-editor/flow/flow";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
@@ -1055,16 +1053,6 @@ export class Page extends Flow {
 }
 
 registerClass("Page", Page);
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function findPage(project: Project, pageName: string) {
-    return ProjectEditor.documentSearch.findReferencedObject(
-        project,
-        "pages",
-        pageName
-    ) as Page | undefined;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

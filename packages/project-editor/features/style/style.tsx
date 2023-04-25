@@ -38,10 +38,14 @@ import { getProjectStore } from "project-editor/store";
 import { validators } from "eez-studio-shared/validation";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import { findFont } from "project-editor/features/font/font";
 import { getThemedColor, ITheme } from "project-editor/features/style/theme";
 import type { Font } from "project-editor/features/font/font";
-import type { Project } from "project-editor/project/project";
+import {
+    Project,
+    findFont,
+    findStyle,
+    findBitmap
+} from "project-editor/project/project";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import { MenuItem } from "@electron/remote";
@@ -1891,10 +1895,7 @@ export class Style extends EezObject {
 
         if (this.backgroundImageProperty) {
             const project = ProjectEditor.getProject(this);
-            const bitmap = ProjectEditor.findBitmap(
-                project,
-                this.backgroundImageProperty
-            );
+            const bitmap = findBitmap(project, this.backgroundImageProperty);
             if (bitmap) {
                 spec[0].attrs.push([
                     "background-image",
@@ -2024,20 +2025,6 @@ export function getStyleProperty(
     }
 
     return propertiesMap[propertyName].defaultValue;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function findStyle(project: Project, styleName: string | undefined) {
-    if (styleName == undefined) {
-        return undefined;
-    }
-
-    return ProjectEditor.documentSearch.findReferencedObject(
-        project,
-        "styles",
-        styleName
-    ) as Style | undefined;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

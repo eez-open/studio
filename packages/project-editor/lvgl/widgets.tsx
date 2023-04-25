@@ -41,7 +41,13 @@ import {
     clipboardDataToObject
 } from "project-editor/store";
 
-import { getProject, ProjectType } from "project-editor/project/project";
+import {
+    getProject,
+    ProjectType,
+    findBitmap,
+    findAction,
+    findPage
+} from "project-editor/project/project";
 
 import type {
     IFlowContext,
@@ -1067,10 +1073,7 @@ export class LVGLWidget extends Widget {
                             }
                         }
                     } else if (eventHandler.action) {
-                        const action = ProjectEditor.findAction(
-                            project,
-                            eventHandler.action
-                        );
+                        const action = findAction(project, eventHandler.action);
                         if (action) {
                             const actionPath = getObjectPathAsString(action);
                             const actionFlowIndex =
@@ -2151,7 +2154,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
         properties: [
             {
                 name: "userWidgetPageName",
-                displayName: "User widget page",
+                displayName: "User widget",
                 type: PropertyType.ObjectReference,
                 propertyGridGroup: userWidgetGroup,
                 referencedObjectCollectionPath: "pages"
@@ -2169,7 +2172,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
 
                     const project = getProject(widget);
 
-                    const userWidgetPage = ProjectEditor.findPage(
+                    const userWidgetPage = findPage(
                         project,
                         widget.userWidgetPageName
                     );
@@ -2225,7 +2228,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
                     propertyNotSetMessage(widget, "userWidgetPageName")
                 );
             } else {
-                let userWidgetPage = ProjectEditor.findPage(
+                let userWidgetPage = findPage(
                     getProject(widget),
                     widget.userWidgetPageName
                 );
@@ -2279,10 +2282,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
             return undefined;
         }
 
-        return ProjectEditor.findPage(
-            getProject(this),
-            this.userWidgetPageName
-        );
+        return findPage(getProject(this), this.userWidgetPageName);
     }
 
     get isCycleDetected() {
@@ -2298,7 +2298,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
             for (const widget of visitObjects(page)) {
                 if (widget instanceof ProjectEditor.LVGLUserWidgetWidgetClass) {
                     if (widget.userWidgetPageName) {
-                        const userWidgetPage = ProjectEditor.findPage(
+                        const userWidgetPage = findPage(
                             project,
                             widget.userWidgetPageName
                         );
@@ -2323,10 +2323,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
 
         const project = getProject(this);
 
-        const userWidgetPage = ProjectEditor.findPage(
-            project,
-            this.userWidgetPageName
-        );
+        const userWidgetPage = findPage(project, this.userWidgetPageName);
         if (!userWidgetPage) {
             return false;
         }
@@ -2377,10 +2374,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
     }
 
     getInputs() {
-        const page = ProjectEditor.findPage(
-            getProject(this),
-            this.userWidgetPageName
-        );
+        const page = findPage(getProject(this), this.userWidgetPageName);
         if (!page) {
             return super.getInputs();
         }
@@ -2409,10 +2403,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
     }
 
     getOutputs() {
-        const page = ProjectEditor.findPage(
-            getProject(this),
-            this.userWidgetPageName
-        );
+        const page = findPage(getProject(this), this.userWidgetPageName);
         if (!page) {
             return super.getOutputs();
         }
@@ -2518,7 +2509,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
             `lv_obj_set_local_style_prop(obj, LV_STYLE_BORDER_WIDTH, value, LV_PART_MAIN);`
         );
 
-        const userWidgetPage = ProjectEditor.findPage(
+        const userWidgetPage = findPage(
             getProject(this),
             this.userWidgetPageName
         );
@@ -2547,7 +2538,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
     }
 
     override lvglBuildTickSpecific(build: LVGLBuild) {
-        const userWidgetPage = ProjectEditor.findPage(
+        const userWidgetPage = findPage(
             getProject(this),
             this.userWidgetPageName
         );
@@ -2714,7 +2705,7 @@ export class LVGLImageWidget extends LVGLWidget {
 
         check: (widget: LVGLImageWidget, messages: IMessage[]) => {
             if (widget.image) {
-                const bitmap = ProjectEditor.findBitmap(
+                const bitmap = findBitmap(
                     ProjectEditor.getProject(widget),
                     widget.image
                 );
@@ -2783,10 +2774,7 @@ export class LVGLImageWidget extends LVGLWidget {
             this.angle
         );
 
-        const bitmap = ProjectEditor.findBitmap(
-            ProjectEditor.getProject(this),
-            this.image
-        );
+        const bitmap = findBitmap(ProjectEditor.getProject(this), this.image);
 
         if (bitmap && bitmap.image) {
             (async () => {
@@ -5007,7 +4995,7 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
 
         check: (widget: LVGLImgbuttonWidget, messages: IMessage[]) => {
             if (widget.imageReleased) {
-                const bitmap = ProjectEditor.findBitmap(
+                const bitmap = findBitmap(
                     ProjectEditor.getProject(widget),
                     widget.imageReleased
                 );
@@ -5020,7 +5008,7 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
             }
 
             if (widget.imagePressed) {
-                const bitmap = ProjectEditor.findBitmap(
+                const bitmap = findBitmap(
                     ProjectEditor.getProject(widget),
                     widget.imagePressed
                 );
@@ -5033,7 +5021,7 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
             }
 
             if (widget.imageDisabled) {
-                const bitmap = ProjectEditor.findBitmap(
+                const bitmap = findBitmap(
                     ProjectEditor.getProject(widget),
                     widget.imageDisabled
                 );
@@ -5046,7 +5034,7 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
             }
 
             if (widget.imageCheckedReleased) {
-                const bitmap = ProjectEditor.findBitmap(
+                const bitmap = findBitmap(
                     ProjectEditor.getProject(widget),
                     widget.imageCheckedReleased
                 );
@@ -5059,7 +5047,7 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
             }
 
             if (widget.imageCheckedPressed) {
-                const bitmap = ProjectEditor.findBitmap(
+                const bitmap = findBitmap(
                     ProjectEditor.getProject(widget),
                     widget.imageCheckedPressed
                 );
@@ -5072,7 +5060,7 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
             }
 
             if (widget.imageCheckedDisabled) {
-                const bitmap = ProjectEditor.findBitmap(
+                const bitmap = findBitmap(
                     ProjectEditor.getProject(widget),
                     widget.imageCheckedDisabled
                 );
@@ -5140,7 +5128,7 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
         );
 
         if (this.imageReleased) {
-            const bitmap = ProjectEditor.findBitmap(
+            const bitmap = findBitmap(
                 ProjectEditor.getProject(this),
                 this.imageReleased
             );
@@ -5161,7 +5149,7 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
         }
 
         if (this.imagePressed) {
-            const bitmap = ProjectEditor.findBitmap(
+            const bitmap = findBitmap(
                 ProjectEditor.getProject(this),
                 this.imagePressed
             );
@@ -5182,7 +5170,7 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
         }
 
         if (this.imageDisabled) {
-            const bitmap = ProjectEditor.findBitmap(
+            const bitmap = findBitmap(
                 ProjectEditor.getProject(this),
                 this.imageDisabled
             );
@@ -5203,7 +5191,7 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
         }
 
         if (this.imageCheckedReleased) {
-            const bitmap = ProjectEditor.findBitmap(
+            const bitmap = findBitmap(
                 ProjectEditor.getProject(this),
                 this.imageCheckedReleased
             );
@@ -5224,7 +5212,7 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
         }
 
         if (this.imageCheckedPressed) {
-            const bitmap = ProjectEditor.findBitmap(
+            const bitmap = findBitmap(
                 ProjectEditor.getProject(this),
                 this.imageCheckedPressed
             );
@@ -5245,7 +5233,7 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
         }
 
         if (this.imageCheckedDisabled) {
-            const bitmap = ProjectEditor.findBitmap(
+            const bitmap = findBitmap(
                 ProjectEditor.getProject(this),
                 this.imageCheckedDisabled
             );
@@ -5934,7 +5922,7 @@ export class LVGLMeterIndicatorNeedleImg extends LVGLMeterIndicator {
             messages: IMessage[]
         ) => {
             if (indicator.image) {
-                const bitmap = ProjectEditor.findBitmap(
+                const bitmap = findBitmap(
                     ProjectEditor.getProject(indicator),
                     indicator.image
                 );
@@ -5983,10 +5971,7 @@ export class LVGLMeterIndicatorNeedleImg extends LVGLMeterIndicator {
             `scales[${scaleIndex}].indicators[${indicatorIndex}].value`
         );
 
-        const bitmap = ProjectEditor.findBitmap(
-            ProjectEditor.getProject(this),
-            this.image
-        );
+        const bitmap = findBitmap(ProjectEditor.getProject(this), this.image);
 
         const pivotX = this.pivotX;
         const pivotY = this.pivotY;

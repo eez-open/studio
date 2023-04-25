@@ -9,22 +9,21 @@ import {
 import {
     Project,
     BuildConfiguration,
-    getProject
+    getProject,
+    findAction,
+    findPage,
+    findBitmap,
+    findStyle,
+    findFont,
+    findVariable
 } from "project-editor/project/project";
 
-import {
-    Style,
-    getStyleProperty,
-    findStyle
-} from "project-editor/features/style/style";
-import { Page, findPage } from "project-editor/features/page/page";
-import { findFont, Font } from "project-editor/features/font/font";
-import { Bitmap, findBitmap } from "project-editor/features/bitmap/bitmap";
-import { Action, findAction } from "project-editor/features/action/action";
-import {
-    Variable,
-    findVariable
-} from "project-editor/features/variable/variable";
+import { Style, getStyleProperty } from "project-editor/features/style/style";
+import { Page } from "project-editor/features/page/page";
+import { Font } from "project-editor/features/font/font";
+import { Bitmap } from "project-editor/features/bitmap/bitmap";
+import { Action } from "project-editor/features/action/action";
+import { Variable } from "project-editor/features/variable/variable";
 import { Flow } from "project-editor/flow/flow";
 import {
     Component,
@@ -167,8 +166,7 @@ export class Assets {
     collectProjects(project: Project) {
         if (this.projects.indexOf(project) === -1) {
             this.projects.push(project);
-            for (const importDirective of this.rootProject.settings.general
-                .imports) {
+            for (const importDirective of project.settings.general.imports) {
                 if (importDirective.project) {
                     this.collectProjects(importDirective.project);
                 }
@@ -372,66 +370,60 @@ export class Assets {
         // styles
         //
         this.styles = [];
-        if (!this.projectStore.projectTypeTraits.isDashboard) {
-            this.getAssets<Style>(
-                project => project.styles,
-                style => style.id != undefined
-            ).forEach(style => (this.styles[style.id! - 1] = style));
-            this.getAssets<Style>(
-                project => project.styles,
-                style => style.id == undefined && style.alwaysBuild
-            ).forEach(style => this.styles.push(style));
-            const missingIDs: number[] = [];
-            for (let i = 0; i < this.styles.length; i++) {
-                if (!this.styles[i]) {
-                    missingIDs.push(i + 1);
-                    for (let j = 0; j < this.styles.length; j++) {
-                        if (this.styles[j]) {
-                            this.styles[i] = this.styles[j];
-                            break;
-                        }
+        this.getAssets<Style>(
+            project => project.styles,
+            style => style.id != undefined
+        ).forEach(style => (this.styles[style.id! - 1] = style));
+        this.getAssets<Style>(
+            project => project.styles,
+            style => style.id == undefined && style.alwaysBuild
+        ).forEach(style => this.styles.push(style));
+        const missingIDs: number[] = [];
+        for (let i = 0; i < this.styles.length; i++) {
+            if (!this.styles[i]) {
+                missingIDs.push(i + 1);
+                for (let j = 0; j < this.styles.length; j++) {
+                    if (this.styles[j]) {
+                        this.styles[i] = this.styles[j];
+                        break;
                     }
                 }
             }
+        }
 
-            if (missingIDs.length > 0) {
-                this.projectStore.outputSectionsStore.write(
-                    Section.OUTPUT,
-                    MessageType.WARNING,
-                    `Missing styles with following ID's: ${missingIDs.join(
-                        ", "
-                    )}`,
-                    this.rootProject.styles
-                );
-            }
+        if (missingIDs.length > 0) {
+            this.projectStore.outputSectionsStore.write(
+                Section.OUTPUT,
+                MessageType.WARNING,
+                `Missing styles with following ID's: ${missingIDs.join(", ")}`,
+                this.rootProject.styles
+            );
         }
 
         //
         // fonts
         //
         this.fonts = [];
-        if (!this.projectStore.projectTypeTraits.isDashboard) {
-            this.getAssets<Font>(
-                project => project.fonts,
-                font => font.id != undefined
-            ).forEach(font => (this.fonts[font.id! - 1] = font));
-            this.getAssets<Font>(
-                project => project.fonts,
-                font => font.id == undefined && font.alwaysBuild
-            ).forEach(font => this.fonts.push(font));
-            for (let i = 0; i < this.fonts.length; i++) {
-                if (!this.fonts[i]) {
-                    this.projectStore.outputSectionsStore.write(
-                        Section.OUTPUT,
-                        MessageType.WARNING,
-                        `Missing font with ID = ${i + 1}`,
-                        this.rootProject.fonts
-                    );
-                    for (let j = 0; j < this.fonts.length; j++) {
-                        if (this.fonts[j]) {
-                            this.fonts[i] = this.fonts[j];
-                            break;
-                        }
+        this.getAssets<Font>(
+            project => project.fonts,
+            font => font.id != undefined
+        ).forEach(font => (this.fonts[font.id! - 1] = font));
+        this.getAssets<Font>(
+            project => project.fonts,
+            font => font.id == undefined && font.alwaysBuild
+        ).forEach(font => this.fonts.push(font));
+        for (let i = 0; i < this.fonts.length; i++) {
+            if (!this.fonts[i]) {
+                this.projectStore.outputSectionsStore.write(
+                    Section.OUTPUT,
+                    MessageType.WARNING,
+                    `Missing font with ID = ${i + 1}`,
+                    this.rootProject.fonts
+                );
+                for (let j = 0; j < this.fonts.length; j++) {
+                    if (this.fonts[j]) {
+                        this.fonts[i] = this.fonts[j];
+                        break;
                     }
                 }
             }
@@ -440,28 +432,26 @@ export class Assets {
         // bitmaps
         //
         this.bitmaps = [];
-        if (!this.projectStore.projectTypeTraits.isDashboard) {
-            this.getAssets<Bitmap>(
-                project => project.bitmaps,
-                bitmap => bitmap.id != undefined
-            ).forEach(bitmap => (this.bitmaps[bitmap.id! - 1] = bitmap));
-            this.getAssets<Bitmap>(
-                project => project.bitmaps,
-                bitmap => bitmap.id == undefined && bitmap.alwaysBuild
-            ).forEach(bitmap => this.bitmaps.push(bitmap));
-            for (let i = 0; i < this.bitmaps.length; i++) {
-                if (!this.bitmaps[i]) {
-                    this.projectStore.outputSectionsStore.write(
-                        Section.OUTPUT,
-                        MessageType.WARNING,
-                        `Missing bitmap with ID = ${i + 1}`,
-                        this.rootProject.bitmaps
-                    );
-                    for (let j = 0; j < this.bitmaps.length; j++) {
-                        if (this.bitmaps[j]) {
-                            this.bitmaps[i] = this.bitmaps[j];
-                            break;
-                        }
+        this.getAssets<Bitmap>(
+            project => project.bitmaps,
+            bitmap => bitmap.id != undefined
+        ).forEach(bitmap => (this.bitmaps[bitmap.id! - 1] = bitmap));
+        this.getAssets<Bitmap>(
+            project => project.bitmaps,
+            bitmap => bitmap.id == undefined && bitmap.alwaysBuild
+        ).forEach(bitmap => this.bitmaps.push(bitmap));
+        for (let i = 0; i < this.bitmaps.length; i++) {
+            if (!this.bitmaps[i]) {
+                this.projectStore.outputSectionsStore.write(
+                    Section.OUTPUT,
+                    MessageType.WARNING,
+                    `Missing bitmap with ID = ${i + 1}`,
+                    this.rootProject.bitmaps
+                );
+                for (let j = 0; j < this.bitmaps.length; j++) {
+                    if (this.bitmaps[j]) {
+                        this.bitmaps[i] = this.bitmaps[j];
+                        break;
                     }
                 }
             }
