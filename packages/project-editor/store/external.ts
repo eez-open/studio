@@ -121,6 +121,8 @@ export class ExternalProjects {
     }
 
     async loadProject(filePath: string) {
+        console.log("loadProject", filePath);
+
         let fileData: Buffer;
         try {
             fileData = await fs.promises.readFile(filePath);
@@ -207,6 +209,13 @@ export class ExternalProjects {
         if (reload) {
             if (loading) {
                 loading.canceled = true;
+
+                loading = {
+                    canceled: false,
+                    paramsList: [...loading.paramsList, params]
+                };
+
+                this._externalProjectsLoading.set(params.filePath, loading);
             }
         } else {
             const project =
