@@ -26,8 +26,8 @@ export const LVGLPage = observer(
                 this.runtime = new LVGLNonActivePageViewerRuntime(
                     this.context,
                     this.props.page,
-                    this.context.project.settings.general.displayWidth,
-                    this.context.project.settings.general.displayHeight,
+                    this.props.page.width,
+                    this.props.page.height,
                     this.canvasRef.current!.getContext("2d")!
                 );
             } else {

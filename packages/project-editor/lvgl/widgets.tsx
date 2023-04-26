@@ -46,7 +46,8 @@ import {
     ProjectType,
     findBitmap,
     findAction,
-    findPage
+    findPage,
+    findLvglStyle
 } from "project-editor/project/project";
 
 import type {
@@ -101,7 +102,7 @@ import {
     LVGLPropertyType,
     makeLvglExpressionProperty
 } from "project-editor/lvgl/expression-property";
-import { findLvglStyle, LVGLStyle } from "project-editor/lvgl/style";
+import { LVGLStyle } from "project-editor/lvgl/style";
 import {
     colorRgbToHexNumStr,
     colorRgbToNum
@@ -1363,7 +1364,13 @@ export class LVGLWidget extends Widget {
 
         const useStyle = this.styleTemplate;
         if (useStyle) {
-            build.line(`${build.getStyleFunctionName(useStyle)}(obj);`);
+            const style = findLvglStyle(
+                ProjectEditor.getProject(this),
+                useStyle
+            );
+            if (style) {
+                build.line(`${build.getStyleFunctionName(style)}(obj);`);
+            }
         }
         this.localStyles.lvglBuild(build);
 
@@ -2343,7 +2350,8 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
             return undefined;
         }
 
-        const projectStore = ProjectEditor.getProjectStore(this);
+        const project = ProjectEditor.getProject(page);
+        const projectStore = project._store;
 
         let userWidgetPageCopy: Page | undefined = undefined;
 
@@ -2356,7 +2364,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
                 projectStore,
                 objectToClipboardData(projectStore, page)
             ).object as Page;
-            setParent(userWidgetPageCopy, projectStore.project.pages);
+            setParent(userWidgetPageCopy, project.pages);
         });
 
         return userWidgetPageCopy;
@@ -2805,7 +2813,18 @@ export class LVGLImageWidget extends LVGLWidget {
 
     override lvglBuildSpecific(build: LVGLBuild) {
         if (this.image) {
-            build.line(`lv_img_set_src(obj, &img_${this.image});`);
+            const bitmap = findBitmap(
+                ProjectEditor.getProject(this),
+                this.image
+            );
+
+            if (bitmap && bitmap.image) {
+                build.line(
+                    `lv_img_set_src(obj, &${build.getImageVariableName(
+                        bitmap
+                    )});`
+                );
+            }
         }
 
         if (this.pivotX != 0 || this.pivotY != 0) {

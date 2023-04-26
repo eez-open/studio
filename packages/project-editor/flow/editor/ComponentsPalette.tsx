@@ -110,7 +110,7 @@ export const ComponentsPalette = observer(
                             displayName: pageAsset.name,
                             componentPaletteGroupName: "!7User Widgets",
                             props: {
-                                layout: pageAsset.name,
+                                userWidgetPageName: pageAsset.name,
                                 width: pageAsset.page.width,
                                 height: pageAsset.page.height
                             }

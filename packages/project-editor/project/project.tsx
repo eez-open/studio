@@ -333,7 +333,9 @@ export class ImportDirective extends EezObject {
                 name: "importAs",
                 type: PropertyType.String,
                 unique: true,
-                hideInPropertyGrid: isNotDashboardProject
+                hideInPropertyGrid: (importObject: ImportDirective) =>
+                    isNotDashboardProject(importObject) &&
+                    isNotLVGLProject(importObject)
             },
             {
                 name: "customUI",
@@ -346,7 +348,10 @@ export class ImportDirective extends EezObject {
             }
         ],
         listLabel: (importDirective: ImportDirective, collapsed: boolean) => {
-            if (isDashboardProject(importDirective)) {
+            if (
+                isDashboardProject(importDirective) ||
+                isLVGLProject(importDirective)
+            ) {
                 if (importDirective.importAs) {
                     return `"${importDirective.projectFilePath}" As ${importDirective.importAs}`;
                 }
@@ -512,8 +517,7 @@ export class General extends EezObject {
                     const projectStore = getProjectStore(general);
                     return (
                         !!getProject(general).masterProject ||
-                        projectStore.projectTypeTraits.isApplet ||
-                        projectStore.projectTypeTraits.isLVGL
+                        projectStore.projectTypeTraits.isApplet
                     );
                 }
             },

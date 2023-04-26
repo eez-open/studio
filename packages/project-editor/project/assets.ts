@@ -6,9 +6,9 @@ import type { Bitmap } from "project-editor/features/bitmap/bitmap";
 import type { Font } from "project-editor/features/font/font";
 import type { Page } from "project-editor/features/page/page";
 import type { Style } from "project-editor/features/style/style";
+import type { LVGLStyle } from "project-editor/lvgl/style";
 import type { Color } from "project-editor/features/style/theme";
 import type { Variable } from "project-editor/features/variable/variable";
-import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Project } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -23,6 +23,7 @@ export type AssetType =
     | "actions"
     | "variables/globalVariables"
     | "styles"
+    | "lvglStyles/styles"
     | "fonts"
     | "bitmaps"
     | "colors";
@@ -38,11 +39,14 @@ function findAsset<T>(
         return undefined;
     }
 
-    return ProjectEditor.documentSearch.findReferencedObject(
-        project,
-        assetType,
-        name
-    ) as T | undefined;
+    let objects = project._assets.maps["name"].allAssets.get(
+        assetType + "/" + name
+    );
+
+    if (objects && objects.length === 1) {
+        return objects[0] as T;
+    }
+    return undefined;
 }
 
 export function findPage(project: Project, name: string) {
@@ -63,6 +67,10 @@ export function findBitmap(project: Project, name: any) {
 
 export function findStyle(project: Project, name: string | undefined) {
     return findAsset<Style>(project, "styles", name);
+}
+
+export function findLvglStyle(project: Project, name: string | undefined) {
+    return findAsset<LVGLStyle>(project, "lvglStyles/styles", name);
 }
 
 export function findFont(project: Project, name: string | undefined) {
@@ -97,6 +105,7 @@ class AssetsMap {
             actionsMap: computed,
             pagesMap: computed,
             stylesMap: computed,
+            lvglStylesMap: computed,
             fontsMap: computed,
             bitmapsMap: computed,
             colorsMap: computed
@@ -119,6 +128,7 @@ class AssetsMap {
             { path: "actions", map: this.actionsMap },
             { path: "pages", map: this.pagesMap },
             { path: "styles", map: this.stylesMap },
+            { path: "lvglStyles/styles", map: this.lvglStylesMap },
             { path: "fonts", map: this.fontsMap },
             { path: "bitmaps", map: this.bitmapsMap },
             { path: "colors", map: this.colorsMap }
@@ -216,7 +226,7 @@ class AssetsMap {
 
     addToMap<
         T extends EezObject & {
-            id: number | undefined;
+            id?: number;
             name: string;
         }
     >(map: BuildAssetsMap<T>, asset: T) {
@@ -265,6 +275,16 @@ class AssetsMap {
         const buildAssets = new BuildAssetsMap<Style>();
         if (this.project.styles) {
             this.project.styles.forEach(style =>
+                this.addToMap(buildAssets, style)
+            );
+        }
+        return buildAssets.assets;
+    }
+
+    get lvglStylesMap() {
+        const buildAssets = new BuildAssetsMap<LVGLStyle>();
+        if (this.project.lvglStyles) {
+            this.project.lvglStyles.styles.forEach(style =>
                 this.addToMap(buildAssets, style)
             );
         }

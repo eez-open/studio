@@ -31,20 +31,6 @@ export function findAllReferencedObjects(
     );
 }
 
-export function findReferencedObject(
-    project: Project,
-    referencedObjectCollectionPath: string,
-    referencedObjectName: string
-) {
-    let objects = project._assets.maps["name"].allAssets.get(
-        referencedObjectCollectionPath + "/" + referencedObjectName
-    );
-    if (objects && objects.length === 1) {
-        return objects[0];
-    }
-    return undefined;
-}
-
 export function checkObjectReference(
     object: IEezObject,
     propertyName: string,

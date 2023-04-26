@@ -17,7 +17,10 @@ import {
     CF_RGB565A8
 } from "project-editor/features/bitmap/bitmap";
 
-export async function getLvglBitmapSourceFile(bitmap: Bitmap) {
+export async function getLvglBitmapSourceFile(
+    bitmap: Bitmap,
+    fileName: string
+) {
     const { convertImage } = await import("./lv_img_conv/lib/convert");
     const { ImageMode, OutputMode } = await import("./lv_img_conv/lib/enums");
 
@@ -67,7 +70,7 @@ export async function getLvglBitmapSourceFile(bitmap: Bitmap) {
         );
         return (await convertImage(data, {
             cf,
-            outName: "img_" + bitmap.name,
+            outName: fileName,
             swapEndian: false,
             outputFormat: OutputMode.C,
             binaryFormat: undefined,
@@ -77,7 +80,7 @@ export async function getLvglBitmapSourceFile(bitmap: Bitmap) {
     } else {
         return (await convertImage(image, {
             cf,
-            outName: "img_" + bitmap.name,
+            outName: fileName,
             swapEndian: false,
             outputFormat: OutputMode.C,
             binaryFormat: undefined,

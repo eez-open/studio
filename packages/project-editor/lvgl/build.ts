@@ -1,5 +1,6 @@
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 import type { Bitmap } from "project-editor/features/bitmap/bitmap";
+import type { Font } from "project-editor/features/font/font";
 import { Page } from "project-editor/features/page/page";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Project, findAction } from "project-editor/project/project";
@@ -8,16 +9,157 @@ import type { LVGLWidget } from "./widgets";
 import type { Assets } from "project-editor/build/assets";
 import { writeTextFile } from "eez-studio-shared/util-electron";
 import { getLvglBitmapSourceFile } from "project-editor/lvgl/bitmap";
+import type { LVGLStyle } from "project-editor/lvgl/style";
 
 export class LVGLBuild {
     project: Project;
 
-    constructor(public assets: Assets) {
-        this.project = assets.projectStore.project;
-    }
+    pages: Page[];
+
+    styles: LVGLStyle[];
+    styleNames = new Map<string, string>();
+
+    fonts: Font[];
+    fontNames = new Map<string, string>();
+
+    bitmaps: Bitmap[];
+    bitmapNames = new Map<string, string>();
 
     result: string;
     indentation: string;
+
+    constructor(public assets: Assets) {
+        this.project = assets.projectStore.project;
+
+        this.enumPages();
+
+        this.enumStyles();
+        this.buildStyleNames();
+
+        this.enumFonts();
+        this.buildFontNames();
+
+        this.enumBitmaps();
+        this.buildBitmapNames();
+    }
+
+    enumPages() {
+        const pages: Page[] = [];
+
+        pages.push(...this.project.pages);
+
+        for (const project of this.project._store.externalProjects.externalProjects.values()) {
+            pages.push(...project.pages);
+        }
+
+        this.pages = pages;
+    }
+
+    enumStyles() {
+        const styles: LVGLStyle[] = [];
+
+        styles.push(...this.project.lvglStyles.styles);
+
+        for (const project of this.project._store.externalProjects.externalProjects.values()) {
+            styles.push(...project.lvglStyles.styles);
+        }
+
+        this.styles = styles;
+    }
+
+    buildStyleNames() {
+        const names = new Set<string>();
+
+        for (const style of this.styles) {
+            let name = getName("", style, NamingConvention.UnderscoreLowerCase);
+
+            // make sure that name is unique
+            if (names.has(name)) {
+                for (let i = 1; ; i++) {
+                    const newName = name + i.toString();
+                    if (!names.has(newName)) {
+                        name = newName;
+                        break;
+                    }
+                }
+            }
+
+            this.styleNames.set(style.objID, name);
+            names.add(name);
+        }
+    }
+
+    enumFonts() {
+        const fonts: Font[] = [];
+
+        fonts.push(...this.project.fonts);
+
+        for (const project of this.project._store.externalProjects.externalProjects.values()) {
+            fonts.push(...project.fonts);
+        }
+
+        this.fonts = fonts;
+    }
+
+    buildFontNames() {
+        const names = new Set<string>();
+
+        for (const font of this.fonts) {
+            let name = getName("", font, NamingConvention.UnderscoreLowerCase);
+
+            // make sure that name is unique
+            if (names.has(name)) {
+                for (let i = 1; ; i++) {
+                    const newName = name + i.toString();
+                    if (!names.has(newName)) {
+                        name = newName;
+                        break;
+                    }
+                }
+            }
+
+            this.fontNames.set(font.objID, name);
+            names.add(name);
+        }
+    }
+
+    enumBitmaps() {
+        const bitmaps: Bitmap[] = [];
+
+        bitmaps.push(...this.project.bitmaps);
+
+        for (const project of this.project._store.externalProjects.externalProjects.values()) {
+            bitmaps.push(...project.bitmaps);
+        }
+
+        this.bitmaps = bitmaps;
+    }
+
+    buildBitmapNames() {
+        const names = new Set<string>();
+
+        for (const bitmap of this.bitmaps) {
+            let name = getName(
+                "",
+                bitmap,
+                NamingConvention.UnderscoreLowerCase
+            );
+
+            // make sure that name is unique
+            if (names.has(name)) {
+                for (let i = 1; ; i++) {
+                    const newName = name + i.toString();
+                    if (!names.has(newName)) {
+                        name = newName;
+                        break;
+                    }
+                }
+            }
+
+            this.bitmapNames.set(bitmap.objID, name);
+            names.add(name);
+        }
+    }
 
     indent() {
         this.indentation += TAB;
@@ -55,7 +197,7 @@ export class LVGLBuild {
     }
 
     getImageVariableName(bitmap: Bitmap) {
-        return getName("img_", bitmap, NamingConvention.UnderscoreLowerCase);
+        return "img_" + this.bitmapNames.get(bitmap.objID)!;
     }
 
     getActionFunctionName(actionName: string) {
@@ -123,20 +265,12 @@ export class LVGLBuild {
         )}_${this.getLvglObjectIdentifierInSourceCode(widget)}`;
     }
 
-    getFontVariableName(fontName: string) {
-        return getName(
-            "ui_font_",
-            fontName,
-            NamingConvention.UnderscoreLowerCase
-        );
+    getFontVariableName(font: Font) {
+        return "ui_font_" + this.fontNames.get(font.objID)!;
     }
 
-    getStyleFunctionName(lvglStyleName: string) {
-        return getName(
-            "apply_style_",
-            lvglStyleName,
-            NamingConvention.UnderscoreLowerCase
-        );
+    getStyleFunctionName(style: LVGLStyle) {
+        return "apply_style_" + this.styleNames.get(style.objID)!;
     }
 
     async buildScreensDecl() {
@@ -158,7 +292,7 @@ export class LVGLBuild {
         build.line("");
         build.line(`extern objects_t objects;`);
 
-        for (const page of this.project.pages) {
+        for (const page of this.pages) {
             build.line("");
             if (page.isUsedAsUserWidget) {
                 build.line(
@@ -189,7 +323,7 @@ export class LVGLBuild {
         build.line(`lv_obj_t *tick_value_change_obj;`);
         build.line("");
 
-        for (const page of this.project.pages) {
+        for (const page of this.pages) {
             page._lvglWidgets.forEach(widget => {
                 if (widget.eventHandlers.length > 0 || widget.hasEventHandler) {
                     build.line(
@@ -282,7 +416,7 @@ export class LVGLBuild {
             });
         }
 
-        for (const page of this.project.pages) {
+        for (const page of this.pages) {
             if (page.isUsedAsUserWidget) {
                 build.line(
                     `void ${this.getScreenCreateFunctionName(
@@ -385,7 +519,7 @@ void tick_screen(int screen_index) {
         this.indentation = "";
         const build = this;
 
-        for (const bitmap of this.project.bitmaps) {
+        for (const bitmap of this.bitmaps) {
             build.line(
                 `extern const lv_img_dsc_t ${this.getImageVariableName(
                     bitmap
@@ -402,7 +536,7 @@ typedef struct _ext_img_desc_t {
 } ext_img_desc_t;
 #endif
 
-extern const ext_img_desc_t images[${this.project.bitmaps.length}];
+extern const ext_img_desc_t images[${this.bitmaps.length}];
 `);
 
         return this.result;
@@ -413,11 +547,9 @@ extern const ext_img_desc_t images[${this.project.bitmaps.length}];
         this.indentation = "";
         const build = this;
 
-        build.line(
-            `const ext_img_desc_t images[${this.project.bitmaps.length}] = {`
-        );
+        build.line(`const ext_img_desc_t images[${this.bitmaps.length}] = {`);
         build.indent();
-        for (const bitmap of this.project.bitmaps) {
+        for (const bitmap of this.bitmaps) {
             const varName = this.getImageVariableName(bitmap);
             build.line(`{ "${bitmap.name}", &${varName} },`);
         }
@@ -432,9 +564,9 @@ extern const ext_img_desc_t images[${this.project.bitmaps.length}];
         this.indentation = "";
         const build = this;
 
-        for (const font of this.project.fonts) {
+        for (const font of this.fonts) {
             build.line(
-                `extern const lv_font_t ${this.getFontVariableName(font.name)};`
+                `extern const lv_font_t ${this.getFontVariableName(font)};`
             );
         }
 
@@ -563,10 +695,10 @@ extern const ext_img_desc_t images[${this.project.bitmaps.length}];
         this.indentation = "";
         const build = this;
 
-        for (const lvglStyle of this.project.lvglStyles.styles) {
+        for (const lvglStyle of this.styles) {
             build.line(
                 `extern void ${this.getStyleFunctionName(
-                    lvglStyle.name
+                    lvglStyle
                 )}(lv_obj_t *obj);`
             );
         }
@@ -579,11 +711,9 @@ extern const ext_img_desc_t images[${this.project.bitmaps.length}];
         this.indentation = "";
         const build = this;
 
-        for (const lvglStyle of this.project.lvglStyles.styles) {
+        for (const lvglStyle of this.styles) {
             build.line(
-                `void ${this.getStyleFunctionName(
-                    lvglStyle.name
-                )}(lv_obj_t *obj) {`
+                `void ${this.getStyleFunctionName(lvglStyle)}(lv_obj_t *obj) {`
             );
             build.indent();
 
@@ -600,12 +730,8 @@ extern const ext_img_desc_t images[${this.project.bitmaps.length}];
         if (!this.project.settings.build.destinationFolder) {
             return;
         }
-        for (const bitmap of this.project.bitmaps) {
-            const output = getName(
-                "ui_image_",
-                bitmap.name || "",
-                NamingConvention.UnderscoreLowerCase
-            );
+        for (const bitmap of this.bitmaps) {
+            const output = "ui_image_" + this.bitmapNames.get(bitmap.objID)!;
 
             try {
                 await writeTextFile(
@@ -615,7 +741,10 @@ extern const ext_img_desc_t images[${this.project.bitmaps.length}];
                         "/" +
                         output +
                         ".c",
-                    await getLvglBitmapSourceFile(bitmap)
+                    await getLvglBitmapSourceFile(
+                        bitmap,
+                        this.getImageVariableName(bitmap)
+                    )
                 );
             } catch (err) {
                 console.error(err);
@@ -627,7 +756,7 @@ extern const ext_img_desc_t images[${this.project.bitmaps.length}];
         if (!this.project.settings.build.destinationFolder) {
             return;
         }
-        for (const font of this.project.fonts) {
+        for (const font of this.fonts) {
             if (font.lvglSourceFile) {
                 const output = getName(
                     "ui_font_",

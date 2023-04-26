@@ -24,7 +24,6 @@ import {
     getProject,
     getFlow,
     Project,
-    findReferencedObject,
     checkObjectReference,
     checkAssetId
 } from "project-editor/project/project";
@@ -168,7 +167,6 @@ export async function initProjectEditor(
         documentSearch: {
             CurrentSearch,
             isReferenced,
-            findReferencedObject,
             checkObjectReference
         },
         RemoteRuntimeClass: RemoteRuntime,

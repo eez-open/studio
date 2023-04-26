@@ -503,7 +503,7 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         this.widgetIndex =
             this.runtime.projectStore.lvglIdentifiers.maxWidgetIndex + 1;
 
-        runtime.projectStore.project.pages.forEach(page =>
+        this.pages.forEach(page =>
             this.pageStates.set(page, {
                 page,
                 nonActivePageViewerRuntime: undefined,
@@ -511,6 +511,23 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
                 nonActiveObjects: undefined
             })
         );
+    }
+
+    get pages() {
+        const pages: Page[] = [];
+
+        function enumInProject(project: Project) {
+            pages.push(...project.pages);
+            for (const importDirective of project.settings.general.imports) {
+                if (importDirective.project) {
+                    enumInProject(importDirective.project);
+                }
+            }
+        }
+
+        enumInProject(this.runtime.projectStore.project);
+
+        return pages;
     }
 
     get isEditor() {
@@ -737,9 +754,8 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
             });
 
             this.wasm = wasm;
+            this.isMounted = true;
         });
-
-        this.isMounted = true;
     }
 
     unmount() {

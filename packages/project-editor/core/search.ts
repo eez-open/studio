@@ -19,10 +19,7 @@ import {
     getProjectStore
 } from "project-editor/store";
 
-import type {
-    checkObjectReference,
-    findReferencedObject
-} from "project-editor/project/project";
+import type { checkObjectReference } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -472,7 +469,6 @@ export class CurrentSearch {
 export interface IDocumentSearch {
     CurrentSearch: typeof CurrentSearch;
     isReferenced: typeof isReferenced;
-    findReferencedObject: typeof findReferencedObject;
     checkObjectReference: typeof checkObjectReference;
 }
 

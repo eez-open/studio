@@ -20,7 +20,6 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { createObject } from "project-editor/store";
-import type { Project } from "project-editor/project/project";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 import { LVGLStylesEditorRuntime } from "project-editor/lvgl/page-runtime";
 import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
@@ -390,18 +389,6 @@ export const LVGLSelectedStyleEditor = observer(
         }
     }
 );
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function findLvglStyle(project: Project, styleName: string | undefined) {
-    if (styleName == undefined) {
-        return undefined;
-    }
-
-    return project.lvglStyles.styles.find(
-        lvglStyle => lvglStyle.name == styleName
-    );
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
