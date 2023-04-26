@@ -3,6 +3,7 @@ import { underscore } from "eez-studio-shared/string";
 import { formatNumber } from "eez-studio-shared/util";
 import { EezObject } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { Project } from "project-editor/project/project";
 
 export const TAB = "    ";
 
@@ -24,20 +25,55 @@ export function getName<
     if (typeof objectOrName == "string") {
         name = objectOrName;
     } else {
-        const project = ProjectEditor.getProject(objectOrName);
+        const objectName = objectOrName.name;
 
-        for (const importDirective of project._store.project.settings.general
-            .imports) {
-            if (importDirective.project == project) {
-                name = importDirective.importAs
-                    ? importDirective.importAs + "_" + objectOrName.name
-                    : objectOrName.name;
-                break;
+        const objectProject = ProjectEditor.getProject(objectOrName);
+        const rootProject = objectProject._store.project;
+        if (objectProject != rootProject) {
+            const visitedProjects = new Set<Project>();
+
+            function findImportDirective(
+                project: Project,
+                accumulatedPrefix: string
+            ): string | undefined {
+                if (visitedProjects.has(project)) {
+                    return undefined;
+                }
+                visitedProjects.add(project);
+                for (const importDirective of project.settings.general
+                    .imports) {
+                    if (importDirective.project) {
+                        const importDirectivePrefix = importDirective.importAs
+                            ? importDirective.importAs + "_"
+                            : "";
+
+                        if (importDirective.project == objectProject) {
+                            return importDirective.importAs
+                                ? accumulatedPrefix +
+                                      importDirectivePrefix +
+                                      objectName
+                                : objectName;
+                        } else {
+                            const name = findImportDirective(
+                                importDirective.project,
+                                accumulatedPrefix + importDirectivePrefix
+                            );
+
+                            if (name) {
+                                return name;
+                            }
+                        }
+                    }
+                }
+
+                return undefined;
             }
+
+            name = findImportDirective(rootProject, "");
         }
 
         if (!name) {
-            name = objectOrName.name;
+            name = objectName;
         }
     }
     name = name.replace(/[^a-zA-Z_0-9]/g, " ");

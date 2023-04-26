@@ -47,7 +47,11 @@ import type { ExtensionDefinition } from "project-editor/features/extension-defi
 import type { MicroPython } from "project-editor/features/micropython/micropython";
 
 import { visitObjects } from "project-editor/core/search";
-import { Color, Theme } from "project-editor/features/style/theme";
+import {
+    Color,
+    Theme,
+    getProjectWithThemes
+} from "project-editor/features/style/theme";
 import type { Page } from "project-editor/features/page/page";
 import type { Style } from "project-editor/features/style/style";
 import type { Font } from "project-editor/features/font/font";
@@ -1127,25 +1131,27 @@ export class Project extends EezObject {
     get buildColors() {
         const colors: Color[] = [];
 
-        for (let i = 0; i < this.colors.length; i++) {
-            const id = this.colors[i].id;
+        const projectWithThemes = getProjectWithThemes(this._store);
+
+        for (const color of projectWithThemes.colors) {
+            const id = color.id;
             if (id != undefined) {
-                colors[id] = this.colors[i];
+                colors[id] = color;
             }
         }
 
-        for (let i = 0; i < this.colors.length; i++) {
-            const id = this.colors[i].id;
+        for (const color of projectWithThemes.colors) {
+            const id = color.id;
             if (id == undefined) {
                 let j;
                 for (j = 0; j < colors.length; j++) {
                     if (colors[j] == undefined) {
-                        colors[j] = this.colors[i];
+                        colors[j] = color;
                         break;
                     }
                 }
                 if (j == colors.length) {
-                    colors.push(this.colors[i]);
+                    colors.push(color);
                 }
             }
         }
