@@ -25,9 +25,20 @@ export function getName<
         name = objectOrName;
     } else {
         const project = ProjectEditor.getProject(objectOrName);
-        name = project.namespace
-            ? project.namespace + "_" + objectOrName.name
-            : objectOrName.name;
+
+        for (const importDirective of project._store.project.settings.general
+            .imports) {
+            if (importDirective.project == project) {
+                name = importDirective.importAs
+                    ? importDirective.importAs + "_" + objectOrName.name
+                    : objectOrName.name;
+                break;
+            }
+        }
+
+        if (!name) {
+            name = objectOrName.name;
+        }
     }
     name = name.replace(/[^a-zA-Z_0-9]/g, " ");
 

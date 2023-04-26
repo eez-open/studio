@@ -13,7 +13,6 @@ import type { Project } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const NAMESPACE_PREFIX = "::";
 export const IMPORT_AS_PREFIX = ".";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -173,10 +172,7 @@ class AssetsMap {
                                     buildAssets.addAsset(
                                         path +
                                             "/" +
-                                            (project.namespace
-                                                ? project.namespace +
-                                                  NAMESPACE_PREFIX
-                                                : importDirective.importAs
+                                            (importDirective.importAs
                                                 ? importDirective.importAs +
                                                   IMPORT_AS_PREFIX
                                                 : "") +

@@ -273,8 +273,6 @@ export class LVGLStylesDefinition extends EezObject {
                                                     (!runtime.isEditor ||
                                                         obj == widget._lvglObj)
                                                 ) {
-                                                    console.log("font", font);
-
                                                     runtime.wasm._lvglObjSetLocalStylePropPtr(
                                                         obj,
                                                         propertyInfo

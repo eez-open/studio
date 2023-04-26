@@ -33,7 +33,6 @@ import {
     createObject
 } from "project-editor/store";
 import {
-    isDashboardProject,
     isLVGLProject,
     isNotDashboardProject,
     isNotLVGLProject,
@@ -324,18 +323,9 @@ export class ImportDirective extends EezObject {
                 isOptional: false
             },
             {
-                name: "namespace",
-                type: PropertyType.String,
-                computed: true,
-                hideInPropertyGrid: isDashboardProject
-            },
-            {
                 name: "importAs",
                 type: PropertyType.String,
-                unique: true,
-                hideInPropertyGrid: (importObject: ImportDirective) =>
-                    isNotDashboardProject(importObject) &&
-                    isNotLVGLProject(importObject)
+                unique: true
             },
             {
                 name: "customUI",
@@ -348,17 +338,8 @@ export class ImportDirective extends EezObject {
             }
         ],
         listLabel: (importDirective: ImportDirective, collapsed: boolean) => {
-            if (
-                isDashboardProject(importDirective) ||
-                isLVGLProject(importDirective)
-            ) {
-                if (importDirective.importAs) {
-                    return `"${importDirective.projectFilePath}" As ${importDirective.importAs}`;
-                }
-                return importDirective.projectFilePath;
-            }
-            if (importDirective.namespace) {
-                return `"${importDirective.projectFilePath}" Into Namespace ${importDirective.namespace}`;
+            if (importDirective.importAs) {
+                return `"${importDirective.projectFilePath}" As ${importDirective.importAs}`;
             }
             return importDirective.projectFilePath;
         },
@@ -411,8 +392,7 @@ export class ImportDirective extends EezObject {
         makeObservable(this, {
             projectFilePath: observable,
             project: computed,
-            importAs: observable,
-            namespace: computed
+            importAs: observable
         });
     }
 
@@ -421,10 +401,6 @@ export class ImportDirective extends EezObject {
         return this.projectFilePath
             ? projectStore.externalProjects.getImportDirectiveProject(this)
             : undefined;
-    }
-
-    get namespace() {
-        return this.project?.namespace;
     }
 }
 
@@ -1055,7 +1031,6 @@ export class Project extends EezObject {
             themes: observable,
             projectName: computed,
             importDirective: computed,
-            namespace: computed,
             masterProject: computed({ keepAlive: true }),
             allGlobalVariables: computed({ keepAlive: true }),
             _themeColors: observable,
@@ -1103,10 +1078,6 @@ export class Project extends EezObject {
 
     static get classInfo(): ClassInfo {
         return getProjectClassInfo();
-    }
-
-    get namespace() {
-        return this.settings.general.namespace;
     }
 
     get masterProject(): Project | undefined {

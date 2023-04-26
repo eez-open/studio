@@ -151,13 +151,15 @@ export class ExternalProjects {
     async loadExternalProjects(project: Project, filePath: string) {
         // load master project
         if (project.settings.general.masterProject) {
+            const absoluteFilePath = this.getAbsoluteFilePath(
+                filePath,
+                project.settings.general.masterProject
+            );
+
             try {
                 await this.loadExternalProject(
                     {
-                        filePath: this.getAbsoluteFilePath(
-                            filePath,
-                            project.settings.general.masterProject
-                        ),
+                        filePath: absoluteFilePath,
                         type: "master",
                         project
                     },
@@ -165,21 +167,23 @@ export class ExternalProjects {
                 );
             } catch (err) {
                 notification.error(
-                    `Failed to load project ${project.settings.general.masterProject}`
+                    `Failed to load project ${absoluteFilePath}`
                 );
             }
         }
 
         // load imported projects
         for (const importDirective of project.settings.general.imports) {
+            const absoluteFilePath = this.getAbsoluteFilePath(
+                filePath,
+                importDirective.projectFilePath
+            );
+
             try {
                 if (importDirective.projectFilePath) {
                     await this.projectStore.externalProjects.loadExternalProject(
                         {
-                            filePath: this.getAbsoluteFilePath(
-                                filePath,
-                                importDirective.projectFilePath
-                            ),
+                            filePath: absoluteFilePath,
                             type: "import-directive",
                             importDirective
                         },
@@ -188,7 +192,7 @@ export class ExternalProjects {
                 }
             } catch (err) {
                 notification.error(
-                    `Failed to load project ${importDirective.projectFilePath}`
+                    `Failed to load project ${absoluteFilePath}`
                 );
             }
         }
@@ -205,10 +209,19 @@ export class ExternalProjects {
                 loading.canceled = true;
             }
         } else {
-            const project = this.externalProjects.get(params.filePath);
+            const project =
+                this.externalProjects.get(params.filePath) ||
+                (params.filePath ==
+                this.projectStore.filePath!.replace(/(\\|\/)/g, "/")
+                    ? this.projectStore.project
+                    : undefined);
+
             if (project) {
                 const result = this.mapProjectToPath.get(project);
-                result?.paramsList.push(params);
+
+                if (result) {
+                    result.paramsList.push(params);
+                }
 
                 if (params.type == "master") {
                     this.masterProjects.set(params.project, project);
@@ -220,6 +233,7 @@ export class ExternalProjects {
                         );
                     });
                 }
+
                 return;
             }
 
@@ -234,6 +248,8 @@ export class ExternalProjects {
                 canceled: false,
                 paramsList: [params]
             };
+
+            this._externalProjectsLoading.set(params.filePath, loading);
         }
 
         const project = await this.loadProject(params.filePath);
