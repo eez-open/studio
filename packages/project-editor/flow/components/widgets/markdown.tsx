@@ -11,13 +11,11 @@ import {
 
 import { makeDataPropertyInfo, Widget } from "project-editor/flow/component";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
-import {
-    evalConstantExpression,
-    evalExpression
-} from "project-editor/flow/expression";
+import { evalConstantExpression } from "project-editor/flow/expression";
 import { observable, makeObservable } from "mobx";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
+import { evalProperty } from "project-editor/flow/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -77,11 +75,7 @@ export class MarkdownWidget extends Widget {
             if (this.text) {
                 if (flowContext.flowState) {
                     try {
-                        const value = evalExpression(
-                            flowContext,
-                            this,
-                            this.text
-                        );
+                        const value = evalProperty(flowContext, this, "text");
 
                         if (value != null && value != undefined) {
                             return value;

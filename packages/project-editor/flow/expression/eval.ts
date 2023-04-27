@@ -168,7 +168,7 @@ export function evalAssignableExpression(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function evalConstantExpressionNode(
+function evalConstantExpressionNode(
     project: Project,
     rootNode: ExpressionNode
 ) {

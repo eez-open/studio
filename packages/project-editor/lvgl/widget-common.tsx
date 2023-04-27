@@ -620,7 +620,6 @@ export function getExpressionPropertyData(
     const component = flow.components[componentIndex];
     const propertyIndex = component.propertyIndexes[propertyName];
     if (propertyIndex == undefined) {
-        console.log(3, getProperty(widget, propertyName));
         return undefined;
     }
 

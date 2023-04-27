@@ -63,15 +63,49 @@ export const LVGLPage = observer(
 
         render() {
             return (
-                <canvas
+                <LVGLPageCanvasWithForwardedRef
                     ref={this.canvasRef}
                     width={this.props.page.width}
                     height={this.props.page.height}
+                    flowContext={this.props.flowContext}
+                ></LVGLPageCanvasWithForwardedRef>
+            );
+        }
+    }
+);
+
+interface LVGLPageCanvasProps {
+    forwardedRef: React.Ref<HTMLCanvasElement>;
+    width: number;
+    height: number;
+    flowContext: IFlowContext;
+}
+
+const LVGLPageCanvas = observer(
+    class LVGLPageCanvas extends React.Component<LVGLPageCanvasProps> {
+        render() {
+            return (
+                <canvas
+                    ref={this.props.forwardedRef}
+                    width={this.props.width}
+                    height={this.props.height}
                     style={{
-                        imageRendering: "pixelated"
+                        imageRendering:
+                            this.props.flowContext.viewState.transform.scale > 2
+                                ? "pixelated"
+                                : "auto"
                     }}
                 ></canvas>
             );
         }
+    }
+);
+
+const LVGLPageCanvasWithForwardedRef = React.forwardRef(
+    (
+        props: Omit<LVGLPageCanvasProps, "forwardedRef">,
+        ref: React.Ref<HTMLCanvasElement>
+    ) => {
+        return <LVGLPageCanvas {...props} forwardedRef={ref} />;
     }
 );

@@ -4325,12 +4325,6 @@ button.EezStudio_Action {
                 .EezStudio_ListItem {
                     margin-bottom: 10px;
 
-                    > div:nth-child(2) {
-                        overflow: hidden;
-                        white-space: nowrap;
-                        text-overflow: ellipsis;
-                    }
-
                     .EezStudio_HomeTab_ProjectItem {
                         position: relative;
                         display: flex;
@@ -4345,9 +4339,8 @@ button.EezStudio_Action {
 
                         div.text-secondary {
                             color: @actionDisabledColor;
-                            overflow: hidden;
-                            white-space: nowrap;
-                            text-overflow: ellipsis;
+                            white-space: normal;
+                            font-size: 90%;
                         }
 
                         .remove-icon {
