@@ -100,7 +100,7 @@ export function buildVariableNames(assets: Assets, dataBuffer: DataBuffer) {
     dataBuffer.writeArray(
         assets.projectStore.masterProject ? assets.globalVariables : [],
         variable => {
-            dataBuffer.writeString(variable.name);
+            dataBuffer.writeString(variable.fullName);
         }
     );
 }

@@ -222,8 +222,10 @@ const SelectItemDialog = observer(
         }
 
         get globalVariables() {
-            const vars = [...this.context.project.allGlobalVariables.slice()];
-            vars.sort((a, b) => stringCompare(a.name, b.name));
+            const vars = [
+                ...this.context.project.allVisibleGlobalVariables.slice()
+            ];
+            vars.sort((a, b) => stringCompare(a.fullName, b.fullName));
             return vars;
         }
 
@@ -430,20 +432,20 @@ const SelectItemDialog = observer(
                     id: "global-variables",
                     label: "Global variables",
                     children: this.globalVariables.map(globalVariable => ({
-                        id: globalVariable.name,
+                        id: globalVariable.fullName,
                         label: (
                             <VariableLabel
-                                name={globalVariable.name}
+                                name={globalVariable.fullName}
                                 type={humanizeVariableType(globalVariable.type)}
                             />
                         ),
                         children: this.getTypeChildren(
                             globalVariable.type,
-                            globalVariable.name
+                            globalVariable.fullName
                         ),
-                        selected: this.selection == globalVariable.name,
+                        selected: this.selection == globalVariable.fullName,
                         expanded: true,
-                        data: globalVariable.name
+                        data: globalVariable.fullName
                     })),
                     selected: false,
                     expanded: true

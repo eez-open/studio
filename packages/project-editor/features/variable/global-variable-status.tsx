@@ -40,12 +40,12 @@ export const GlobalVariableStatuses = observer(
                     const objectVariableValue:
                         | IObjectVariableValue
                         | undefined = this.context.dataContext.get(
-                        variable.name
+                        variable.fullName
                     );
 
                     globalVariablesStatus.push(
                         <RenderVariableStatus
-                            key={variable.name}
+                            key={variable.fullName}
                             variable={variable}
                             value={objectVariableValue}
                             onClick={async () => {
@@ -58,7 +58,7 @@ export const GlobalVariableStatuses = observer(
                                         );
                                     if (constructorParams !== undefined) {
                                         this.context.runtime!.setObjectVariableValue(
-                                            variable.name,
+                                            variable.fullName,
                                             objectVariableType.createValue(
                                                 constructorParams,
                                                 true
@@ -134,7 +134,7 @@ export const RenderVariableStatusPropertyUI = observer(
 
             return (
                 <RenderVariableStatus
-                    key={variable.name}
+                    key={variable.fullName}
                     variable={variable}
                     value={objectVariableValue}
                     onClick={async () => {
@@ -195,7 +195,7 @@ export const RenderVariableStatus = observer(
             label =
                 value?.status.label ||
                 variable.description ||
-                humanize(variable.name);
+                humanize(variable.fullName);
         }
 
         const element = (

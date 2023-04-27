@@ -30,6 +30,7 @@ import {
     checkArity
 } from "project-editor/flow/expression/type";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { IMPORT_AS_PREFIX, findVariable } from "project-editor/project/assets";
 
 export function buildExpression(
     assets: Assets,
@@ -197,11 +198,15 @@ function buildExpressionNode(
             return [makePushLocalVariableInstruction(localVariableIndex)];
         }
 
-        let globalVariableIndex = assets.globalVariables.findIndex(
-            globalVariable => globalVariable.name == node.name
+        let globalVariableIndex = assets.getAssetIndexByAssetName(
+            component,
+            node.name,
+            findVariable,
+            assets.globalVariables
         );
-        if (globalVariableIndex != -1) {
-            return [makePushGlobalVariableInstruction(globalVariableIndex)];
+
+        if (globalVariableIndex != undefined) {
+            return [makePushGlobalVariableInstruction(globalVariableIndex - 1)];
         }
 
         if (node.name == FLOW_ITERATOR_INDEX_VARIABLE) {
@@ -367,6 +372,24 @@ function buildExpressionNode(
                     )
                 ];
             }
+
+            const importAs = node.object.name;
+            const variableName = node.property.name;
+
+            let globalVariableIndex = assets.getAssetIndexByAssetName(
+                component,
+                `${importAs}${IMPORT_AS_PREFIX}${variableName}`,
+                findVariable,
+                assets.globalVariables
+            );
+
+            if (globalVariableIndex != undefined) {
+                return [
+                    makePushGlobalVariableInstruction(globalVariableIndex - 1)
+                ];
+            }
+
+            throw `Unknown variable '${variableName}' in import '${importAs}'`;
         }
 
         if (node.computed) {

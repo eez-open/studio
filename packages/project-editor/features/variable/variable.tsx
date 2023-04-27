@@ -34,7 +34,11 @@ import {
     isLVGLProject,
     isAppletProject
 } from "project-editor/project/project-type-traits";
-import { Project, findVariable } from "project-editor/project/project";
+import {
+    Project,
+    findVariableDeep,
+    getAssetFullName
+} from "project-editor/project/project";
 import type {
     IDataContext,
     IVariable
@@ -107,7 +111,8 @@ export class Variable extends EezObject {
             defaultMaxValue: observable,
             usedIn: observable,
             persistent: observable,
-            native: observable
+            native: observable,
+            fullName: computed
         });
     }
 
@@ -347,6 +352,10 @@ export class Variable extends EezObject {
             }
         }
     };
+
+    get fullName() {
+        return getAssetFullName<Variable>(this);
+    }
 }
 
 registerClass("Variable", Variable);
@@ -381,19 +390,19 @@ export class DataContext implements IDataContext {
         if (this.localVariables) {
             this.localVariables.forEach(variable => {
                 if (this.project._store.runtime) {
-                    this.runtimeValues.set(variable.name, undefined);
+                    this.runtimeValues.set(variable.fullName, undefined);
                 } else {
                     try {
                         const { value } = evalConstantExpression(
                             project,
                             variable.defaultValue
                         );
-                        this.runtimeValues.set(variable.name, value);
+                        this.runtimeValues.set(variable.fullName, value);
                     } catch (err) {
                         if (project._store.runtime) {
                             throw err;
                         }
-                        this.runtimeValues.set(variable.name, undefined);
+                        this.runtimeValues.set(variable.fullName, undefined);
                     }
                 }
             });
@@ -412,7 +421,7 @@ export class DataContext implements IDataContext {
                         this.project,
                         variable.defaultValue
                     );
-                    this.runtimeValues.set(variable.name, value);
+                    this.runtimeValues.set(variable.fullName, value);
                 } catch (err) {
                     if (this.project._store.runtime) {
                         throw err;
@@ -422,15 +431,15 @@ export class DataContext implements IDataContext {
                             "name"
                         ].allAssets.get(variable.defaultValue);
                         if (value) {
-                            this.runtimeValues.set(variable.name, value);
+                            this.runtimeValues.set(variable.fullName, value);
                         } else {
                             this.runtimeValues.set(
-                                variable.name,
+                                variable.fullName,
                                 variable.defaultValue
                             );
                         }
                     } else {
-                        this.runtimeValues.set(variable.name, null);
+                        this.runtimeValues.set(variable.fullName, null);
                     }
                 }
             });
@@ -444,7 +453,7 @@ export class DataContext implements IDataContext {
     createWithLocalVariables(variablesArray: IVariable[]) {
         const localVariables = new Map<string, any>();
         variablesArray.forEach(variable => {
-            localVariables.set(variable.name, variable);
+            localVariables.set(variable.fullName, variable);
         });
         return new DataContext(this.project, this, undefined, localVariables);
     }
@@ -468,7 +477,7 @@ export class DataContext implements IDataContext {
     } {
         if (variable) {
             if (this.defaultValueOverrides) {
-                const value = this.defaultValueOverrides[variable.name];
+                const value = this.defaultValueOverrides[variable.fullName];
                 if (value != undefined) {
                     return {
                         hasValue: true,
@@ -477,10 +486,10 @@ export class DataContext implements IDataContext {
                 }
             }
 
-            if (this.runtimeValues.has(variable.name)) {
+            if (this.runtimeValues.has(variable.fullName)) {
                 return {
-                    hasValue: this.runtimeValues.has(variable.name),
-                    value: this.runtimeValues.get(variable.name)
+                    hasValue: this.runtimeValues.has(variable.fullName),
+                    value: this.runtimeValues.get(variable.fullName)
                 };
             }
 
@@ -499,7 +508,7 @@ export class DataContext implements IDataContext {
             if (this.parentDataContext) {
                 this.parentDataContext.setRuntimeValue(variableName, value);
             } else {
-                const variable = findVariable(this.project, variableName);
+                const variable = findVariableDeep(this.project, variableName);
                 if (variable) {
                     this.runtimeValues.set(variableName, value);
                 } else {
@@ -562,7 +571,7 @@ export class DataContext implements IDataContext {
 
         if (!variable) {
             // find global variable
-            variable = findVariable(this.project, variableName);
+            variable = findVariableDeep(this.project, variableName);
         }
 
         return variable;

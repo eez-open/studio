@@ -490,7 +490,7 @@ export class WasmRuntime extends RemoteRuntime {
             const globalVariableInAssetsMap =
                 this.assetsMap.globalVariables.find(
                     globalVariableInAssetsMap =>
-                        globalVariableInAssetsMap.name == variable.name
+                        globalVariableInAssetsMap.name == variable.fullName
                 );
 
             const globalVariableIndex = globalVariableInAssetsMap!.index;
@@ -500,7 +500,7 @@ export class WasmRuntime extends RemoteRuntime {
                 firstDashboardInstrument &&
                 this.projectStore.dashboardInstrument
                     ? this.projectStore.dashboardInstrument
-                    : this.projectStore.dataContext.get(variable.name);
+                    : this.projectStore.dataContext.get(variable.fullName);
 
             if (variable.type == "object:Instrument") {
                 firstDashboardInstrument = false;
@@ -525,7 +525,7 @@ export class WasmRuntime extends RemoteRuntime {
                             );
 
                             this.projectStore.dataContext.set(
-                                variable.name,
+                                variable.fullName,
                                 value
                             );
                         }

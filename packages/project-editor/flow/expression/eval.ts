@@ -600,14 +600,14 @@ function evalAssignableExpressionWithContext(
 
             let globalVariable =
                 expressionContext.projectStore.project.allGlobalVariables.find(
-                    globalVariable => globalVariable.name == node.name
+                    globalVariable => globalVariable.fullName == node.name
                 );
             if (globalVariable) {
                 node.valueType = globalVariable.type as ValueType;
                 return new AssignableValue(
                     "global-variable",
                     globalVariable.type,
-                    globalVariable.name
+                    globalVariable.fullName
                 );
             }
 

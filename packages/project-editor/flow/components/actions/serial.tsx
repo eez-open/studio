@@ -654,7 +654,7 @@ async function showConnectDialog(
 
         const result = await showGenericDialog({
             dialogDefinition: {
-                title: variable.description || variable.name,
+                title: variable.description || variable.fullName,
                 size: "medium",
                 fields: [
                     {

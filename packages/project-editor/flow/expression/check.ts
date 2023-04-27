@@ -140,6 +140,13 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                 return;
             }
 
+            let importIndex = project.importAsList.findIndex(
+                importPrefix => importPrefix == node.name
+            );
+            if (importIndex != -1) {
+                return;
+            }
+
             if (
                 node.name == FLOW_ITERATOR_INDEX_VARIABLE ||
                 node.name == FLOW_ITERATOR_INDEXES_VARIABLE
@@ -248,6 +255,8 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                     }
                 } else {
                     const project = ProjectEditor.getProject(component);
+
+                    // check if it is a built-in constant
                     const builtInConstantName = `${node.object.name}.${node.property.name}`;
                     const buildInConstantValue = builtInConstants(
                         project._store
@@ -255,6 +264,35 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                     if (buildInConstantValue != undefined) {
                         return;
                     }
+
+                    // check if it is a global variable from imports
+                    const importAs = node.object.name;
+                    const variableName = node.property.name;
+
+                    const importDirective =
+                        project.settings.general.imports.find(
+                            importDirective =>
+                                importDirective.importAs == importAs
+                        );
+
+                    if (!importDirective || !importDirective.project) {
+                        throw `Unknown import '${importAs}'`;
+                    }
+
+                    if (!importDirective.project.variables) {
+                        throw `Import '${importAs}' does not have any variables`;
+                    }
+
+                    if (
+                        !importDirective.project.variables.globalVariables.find(
+                            globalVariable =>
+                                globalVariable.name == variableName
+                        )
+                    ) {
+                        throw `Unknown variable '${variableName}' in import '${importAs}'`;
+                    }
+
+                    return;
                 }
             }
 
@@ -316,7 +354,7 @@ function checkAssignableExpressionNode(
             }
 
             let globalVariableIndex = project.allGlobalVariables.findIndex(
-                globalVariable => globalVariable.name == node.name
+                globalVariable => globalVariable.fullName == node.name
             );
             if (globalVariableIndex != -1) {
                 return;

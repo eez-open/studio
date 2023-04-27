@@ -31,7 +31,7 @@ export class RuntimeSettings {
             return undefined;
         }
 
-        let value = persistentVariables[variable.name];
+        let value = persistentVariables[variable.fullName];
         if (!value) {
             return undefined;
         }
@@ -63,7 +63,7 @@ export class RuntimeSettings {
             if (!this.settings.__persistentVariables) {
                 this.settings.__persistentVariables = {};
             }
-            this.settings.__persistentVariables[variable.name] = value;
+            this.settings.__persistentVariables[variable.fullName] = value;
         });
         this.modified = true;
     }
@@ -76,7 +76,7 @@ export class RuntimeSettings {
             if (variable.persistent) {
                 const value = this.getVariableValue(variable);
                 if (value !== undefined) {
-                    dataContext.set(variable.name, value);
+                    dataContext.set(variable.fullName, value);
                 }
             }
         }
@@ -86,7 +86,9 @@ export class RuntimeSettings {
         const globalVariables = this.projectStore.project.allGlobalVariables;
         for (const variable of globalVariables) {
             if (variable.persistent) {
-                const value = this.projectStore.dataContext.get(variable.name);
+                const value = this.projectStore.dataContext.get(
+                    variable.fullName
+                );
                 if (value != null) {
                     const objectVariableType =
                         ProjectEditor.getObjectVariableTypeFromType(

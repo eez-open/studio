@@ -22,6 +22,7 @@ export interface IFlowContext {
 
 export interface IVariable {
     name: string;
+    fullName: string;
     description?: string;
     type: string;
     defaultValue: any;

@@ -79,7 +79,7 @@ export function findValueTypeInExpressionNode(
         }
 
         let globalVariable = project.allGlobalVariables.find(
-            globalVariable => globalVariable.name == node.name
+            globalVariable => globalVariable.fullName == node.name
         );
         if (globalVariable) {
             node.valueType = getType(project, globalVariable.type);
@@ -89,6 +89,14 @@ export function findValueTypeInExpressionNode(
         let enumDef = project.variables.enumsMap.get(node.name);
         if (enumDef) {
             node.valueType = `enum:${node.name}` as ValueType;
+            return;
+        }
+
+        let importIndex = project.importAsList.findIndex(
+            importPrefix => importPrefix == node.name
+        );
+        if (importIndex != -1) {
+            node.valueType = `importedProject`;
             return;
         }
 
@@ -230,7 +238,31 @@ export function findValueTypeInExpressionNode(
             node.property,
             assignable
         );
-        if (isEnumType(node.object.valueType)) {
+
+        if (node.object.valueType == "importedProject") {
+            node.valueType = "any";
+            if (
+                node.object.type == "Identifier" &&
+                node.property.type == "Identifier"
+            ) {
+                const importAs = node.object.name;
+                const variableName = node.property.name;
+
+                const importDirective = project.settings.general.imports.find(
+                    importDirective => importDirective.importAs == importAs
+                );
+                if (importDirective && importDirective.project) {
+                    const globalVariable =
+                        importDirective.project.variables.globalVariables.find(
+                            globalVariable =>
+                                globalVariable.name == variableName
+                        );
+                    if (globalVariable) {
+                        node.valueType = globalVariable.type;
+                    }
+                }
+            }
+        } else if (isEnumType(node.object.valueType)) {
             const enumName = getEnumTypeNameFromType(node.object.valueType)!;
             const enumDef = project.variables.enumsMap.get(enumName)!;
             if (node.property.type != "Identifier") {

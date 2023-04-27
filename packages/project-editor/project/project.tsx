@@ -1037,6 +1037,8 @@ export class Project extends EezObject {
             importDirective: computed,
             masterProject: computed({ keepAlive: true }),
             allGlobalVariables: computed({ keepAlive: true }),
+            allVisibleGlobalVariables: computed({ keepAlive: true }),
+            importAsList: computed({ keepAlive: true }),
             _themeColors: observable,
             setThemeColor: action,
             colorToIndexMap: computed,
@@ -1092,6 +1094,20 @@ export class Project extends EezObject {
         let allVariables = this.variables
             ? [...this.variables.globalVariables]
             : [];
+
+        for (const project of this._store.externalProjects.externalProjects.values()) {
+            if (project.variables) {
+                allVariables.push(...project.variables.globalVariables);
+            }
+        }
+
+        return allVariables;
+    }
+
+    get allVisibleGlobalVariables() {
+        let allVariables = this.variables
+            ? [...this.variables.globalVariables]
+            : [];
         for (const importDirective of this.settings.general.imports) {
             if (importDirective.project) {
                 allVariables.push(
@@ -1100,6 +1116,12 @@ export class Project extends EezObject {
             }
         }
         return allVariables;
+    }
+
+    get importAsList() {
+        return this.settings.general.imports
+            .filter(importDirective => !!importDirective.importAs)
+            .map(importDirective => importDirective.importAs);
     }
 
     get allActions() {

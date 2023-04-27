@@ -429,7 +429,7 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
             assets.map.globalVariables = assets.globalVariables.map(
                 (globalVariable, index) => ({
                     index,
-                    name: globalVariable.name
+                    name: globalVariable.fullName
                 })
             );
             dataBuffer.writeArray(

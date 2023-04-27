@@ -26,10 +26,12 @@ export type ValueType =
     | `array:object:${string}`
     | `array:struct:${string}`
     | `array:enum:${string}`
-    | `array:dynamic:${string}`;
+    | `array:dynamic:${string}`
+    | `importedProject`;
 
 export interface IVariable {
     name: string;
+    fullName: string;
     description?: string;
     type: ValueType;
     defaultValue: any;

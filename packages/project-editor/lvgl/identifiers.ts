@@ -11,10 +11,9 @@ import type { Flow } from "project-editor/flow/flow";
 import { Page } from "project-editor/features/page/page";
 
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
-import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 import { NamingConvention, getName } from "project-editor/build/helper";
 
-const GENERATED_NAME_PREFIX = "_obj_";
+const GENERATED_NAME_PREFIX = "obj";
 
 interface LVGLIdentifier {
     identifier: string;
@@ -37,6 +36,30 @@ export class LVGLIdentifiers {
         });
     }
 
+    get pages() {
+        const pages = [];
+
+        pages.push(...this.store.project.pages);
+
+        for (const externalProject of this.store.externalProjects.externalProjects.values()) {
+            pages.push(...externalProject.pages);
+        }
+
+        return pages;
+    }
+
+    get actions() {
+        const actions = [];
+
+        actions.push(...this.store.project.actions);
+
+        for (const externalProject of this.store.externalProjects.externalProjects.values()) {
+            actions.push(...externalProject.actions);
+        }
+
+        return actions;
+    }
+
     get identifiersMap(): Map<Flow, Map<LVGLWidget | Page, LVGLIdentifier>> {
         const map = new Map<Flow, Map<LVGLWidget | Page, LVGLIdentifier>>();
 
@@ -45,15 +68,7 @@ export class LVGLIdentifiers {
         function generateName(widget: LVGLWidget) {
             let name = generatedNames.get(widget);
             if (!name) {
-                name =
-                    GENERATED_NAME_PREFIX +
-                    getName(
-                        "",
-                        getComponentName(widget.type),
-                        NamingConvention.UnderscoreLowerCase
-                    ) +
-                    "_" +
-                    generatedNames.size;
+                name = GENERATED_NAME_PREFIX + generatedNames.size;
                 generatedNames.set(widget, name);
             }
             return name;
@@ -185,7 +200,7 @@ export class LVGLIdentifiers {
             return index;
         }
 
-        for (const page of this.store.project.pages) {
+        for (const page of this.pages) {
             getPageIdentifiers(page);
         }
 
@@ -193,7 +208,7 @@ export class LVGLIdentifiers {
 
         let pageIndex = 0;
 
-        for (const page of this.store.project.pages) {
+        for (const page of this.pages) {
             if (!page.isUsedAsUserWidget) {
                 globalMap.set(page, {
                     identifier: getName(
@@ -221,7 +236,7 @@ export class LVGLIdentifiers {
         flattenMap(globalMap);
         setIndexes(globalMap, pageIndex);
 
-        for (const page of this.store.project.pages) {
+        for (const page of this.pages) {
             if (page.isUsedAsUserWidget) {
                 const identifiers = getPageIdentifiers(page);
                 flattenMap(identifiers);
@@ -229,7 +244,7 @@ export class LVGLIdentifiers {
             }
         }
 
-        for (const action of this.store.project.actions) {
+        for (const action of this.actions) {
             map.set(action, globalMap);
         }
 
@@ -262,9 +277,7 @@ export class LVGLIdentifiers {
     }
 
     get maxWidgetIndex(): number {
-        const page = this.store.project.pages.find(
-            page => !page.isUsedAsUserWidget
-        );
+        const page = this.pages.find(page => !page.isUsedAsUserWidget);
 
         if (!page) {
             return 0;

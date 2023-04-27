@@ -420,7 +420,7 @@ const WatchTable = observer(
 
         getVariableTreeNodes = (id: string, variables: Variable[]) => {
             variables = variables.slice();
-            variables.sort((a, b) => stringCompare(a.name, b.name));
+            variables.sort((a, b) => stringCompare(a.fullName, b.fullName));
             return variables.map(variable => {
                 const flowState = this.props.runtime.selectedFlowState;
 
@@ -431,7 +431,9 @@ const WatchTable = observer(
                     dataContext = this.props.runtime.projectStore.dataContext;
                 }
 
-                const value = dataContext.get(variable.name);
+                const name = variable.fullName;
+
+                const value = dataContext.get(name);
                 const valueLabel = getValueLabel(
                     this.props.runtime.projectStore.project,
                     value,
@@ -439,20 +441,20 @@ const WatchTable = observer(
                 );
 
                 return observable({
-                    id: id + variable.name,
+                    id: id + name,
 
-                    name: variable.name,
+                    name: name,
                     value: valueLabel,
                     valueTitle: valueLabel,
                     type: variable.type,
 
                     children: this.getValueChildren(
-                        id + variable.name,
+                        id + name,
                         value,
                         variable.type
                     ),
                     selected: false,
-                    expanded: this.expanded(id + variable.name, false)
+                    expanded: this.expanded(id + name, false)
                 });
             });
         };

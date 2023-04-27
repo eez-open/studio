@@ -473,14 +473,13 @@ export class Assets {
         return this.projectStore.projectTypeTraits.hasFlowSupport;
     }
 
-    getAssetIndex<T extends EezObject>(
+    getAssetIndexByAssetName<T extends EezObject>(
         object: any,
-        propertyName: string,
+        assetName: string,
         findAsset: (project: Project, assetName: string) => T | undefined,
         collection: (T | undefined)[]
     ) {
         const project = getProject(object);
-        const assetName = object[propertyName];
         const asset = findAsset(project, assetName);
 
         if (asset) {
@@ -502,7 +501,24 @@ export class Assets {
             return this.projectStore.masterProject ? -assetIndex : assetIndex;
         }
 
-        if (assetName != undefined) {
+        return undefined;
+    }
+
+    getAssetIndex<T extends EezObject>(
+        object: any,
+        propertyName: string,
+        findAsset: (project: Project, assetName: string) => T | undefined,
+        collection: (T | undefined)[]
+    ) {
+        const assetName = object[propertyName];
+        const assetIndex = this.getAssetIndexByAssetName(
+            object,
+            assetName,
+            findAsset,
+            collection
+        );
+
+        if (assetIndex == undefined) {
             const message = propertyNotFoundMessage(object, propertyName);
             this.projectStore.outputSectionsStore.write(
                 Section.OUTPUT,
@@ -510,9 +526,10 @@ export class Assets {
                 message.text,
                 message.object
             );
+            return 0;
         }
 
-        return 0;
+        return assetIndex;
     }
 
     getWidgetDataItemIndex(object: any, propertyName: string) {

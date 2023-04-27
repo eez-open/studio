@@ -22,7 +22,6 @@ import {
     IFlowState,
     LogItemType
 } from "project-editor/flow/flow-interfaces";
-import { getProject } from "project-editor/project/project";
 import {
     StateMachineAction,
     ComponentState,
@@ -422,22 +421,27 @@ export class RemoteRuntime extends RuntimeBase {
         let componentIndex = -1;
 
         const flow = ProjectEditor.getFlow(component);
-        const project = getProject(flow);
+        const projectStore = ProjectEditor.getProjectStore(flow);
 
-        const flowInAssetsMap = this.assetsMap.flows.find(
-            flowInAssetsMap =>
-                getObjectFromStringPath(project, flowInAssetsMap.path) == flow
-        );
+        const flowInAssetsMap = this.assetsMap.flows.find(flowInAssetsMap => {
+            const obj = getObjectFromStringPath(
+                projectStore.project,
+                flowInAssetsMap.path
+            );
+            return obj == flow;
+        });
 
         if (flowInAssetsMap) {
             flowIndex = flowInAssetsMap.flowIndex;
 
             const componentInAssetsMap = flowInAssetsMap.components.find(
-                componentInAssetsMap =>
-                    getObjectFromStringPath(
-                        project,
+                componentInAssetsMap => {
+                    const obj = getObjectFromStringPath(
+                        projectStore.project,
                         componentInAssetsMap.path
-                    ) == component
+                    );
+                    return obj == component;
+                }
             );
 
             if (componentInAssetsMap) {
@@ -969,7 +973,7 @@ export abstract class DebuggerConnectionBase {
                         const globalVariable =
                             runtime.projectStore.project.allGlobalVariables.find(
                                 globalVariable =>
-                                    globalVariable.name ==
+                                    globalVariable.fullName ==
                                     globalVariableInAssetsMap.name
                             );
                         if (!globalVariable) {

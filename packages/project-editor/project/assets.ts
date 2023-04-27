@@ -10,6 +10,7 @@ import type { LVGLStyle } from "project-editor/lvgl/style";
 import type { Color } from "project-editor/features/style/theme";
 import type { Variable } from "project-editor/features/variable/variable";
 import type { Project } from "project-editor/project/project";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -48,6 +49,33 @@ function findAsset<T>(
     return undefined;
 }
 
+function findAssetDeep<T>(
+    project: Project,
+    assetType: AssetType,
+    name: string | undefined
+) {
+    if (name == undefined) {
+        return undefined;
+    }
+
+    const importAsList = name.split(IMPORT_AS_PREFIX);
+    for (let i = 0; i < importAsList.length - 1; i++) {
+        const importDirective = project.settings.general.imports.find(
+            importDirective => importDirective.importAs == importAsList[i]
+        );
+        if (!importDirective || !importDirective.project) {
+            return undefined;
+        }
+        project = importDirective.project;
+    }
+
+    return findAsset<T>(
+        project,
+        assetType,
+        importAsList[importAsList.length - 1]
+    );
+}
+
 export function findPage(project: Project, name: string) {
     return findAsset<Page>(project, "pages", name);
 }
@@ -58,6 +86,10 @@ export function findAction(project: Project, name: string) {
 
 export function findVariable(project: Project, name: string) {
     return findAsset<Variable>(project, "variables/globalVariables", name);
+}
+
+export function findVariableDeep(project: Project, name: string) {
+    return findAssetDeep<Variable>(project, "variables/globalVariables", name);
 }
 
 export function findBitmap(project: Project, name: any) {
@@ -74,6 +106,69 @@ export function findLvglStyle(project: Project, name: string | undefined) {
 
 export function findFont(project: Project, name: string | undefined) {
     return findAsset<Font>(project, "fonts", name);
+}
+
+export function getAssetFullName<T extends EezObject & { name: string }>(
+    object: T,
+    separator?: string
+): string {
+    if (separator == undefined) {
+        separator = IMPORT_AS_PREFIX;
+    }
+
+    const objectName = object.name;
+
+    let objectFullName;
+
+    const objectProject = ProjectEditor.getProject(object);
+    const rootProject = objectProject._store.project;
+    if (objectProject != rootProject) {
+        const visitedProjects = new Set<Project>();
+
+        function findImportDirective(
+            project: Project,
+            accumulatedPrefix: string
+        ): string | undefined {
+            if (visitedProjects.has(project)) {
+                return undefined;
+            }
+            visitedProjects.add(project);
+            for (const importDirective of project.settings.general.imports) {
+                if (importDirective.project) {
+                    const importDirectivePrefix = importDirective.importAs
+                        ? importDirective.importAs + separator
+                        : "";
+
+                    if (importDirective.project == objectProject) {
+                        return importDirective.importAs
+                            ? accumulatedPrefix +
+                                  importDirectivePrefix +
+                                  objectName
+                            : objectName;
+                    } else {
+                        const name = findImportDirective(
+                            importDirective.project,
+                            accumulatedPrefix + importDirectivePrefix
+                        );
+
+                        if (name) {
+                            return name;
+                        }
+                    }
+                }
+            }
+
+            return undefined;
+        }
+
+        objectFullName = findImportDirective(rootProject, "");
+    }
+
+    if (!objectFullName) {
+        objectFullName = objectName;
+    }
+
+    return objectFullName;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
