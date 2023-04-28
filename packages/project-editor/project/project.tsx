@@ -403,7 +403,7 @@ export class ImportDirective extends EezObject {
     get project(): Project | undefined {
         const projectStore = getProjectStore(this);
         return this.projectFilePath
-            ? projectStore.externalProjects.getImportDirectiveProject(this)
+            ? projectStore.openProjectsManager.getImportDirectiveProject(this)
             : undefined;
     }
 }
@@ -418,7 +418,6 @@ export class General extends EezObject {
     projectVersion: ProjectVersion = "v3";
     projectType: ProjectType;
     scpiDocFolder?: string;
-    namespace: string;
     masterProject: string;
     imports: ImportDirective[];
     flowSupport: boolean;
@@ -463,15 +462,6 @@ export class General extends EezObject {
                 type: PropertyType.RelativeFolder,
                 hideInPropertyGrid: (object: IEezObject) =>
                     !getProject(object).scpi
-            },
-            {
-                name: "namespace",
-                type: PropertyType.String,
-                hideInPropertyGrid: (general: General) => {
-                    return !(
-                        general.projectType == ProjectType.FIRMWARE_MODULE
-                    );
-                }
             },
             {
                 name: "masterProject",
@@ -638,7 +628,6 @@ export class General extends EezObject {
             projectVersion: observable,
             projectType: observable,
             scpiDocFolder: observable,
-            namespace: observable,
             masterProject: observable,
             imports: observable,
             flowSupport: observable,
@@ -1087,15 +1076,13 @@ export class Project extends EezObject {
     }
 
     get masterProject(): Project | undefined {
-        return this._store.externalProjects.getMasterProject(this);
+        return this._store.openProjectsManager.getMasterProject(this);
     }
 
     get allGlobalVariables() {
-        let allVariables = this.variables
-            ? [...this.variables.globalVariables]
-            : [];
+        let allVariables = [];
 
-        for (const project of this._store.externalProjects.externalProjects.values()) {
+        for (const project of this._store.openProjectsManager.projects) {
             if (project.variables) {
                 allVariables.push(...project.variables.globalVariables);
             }

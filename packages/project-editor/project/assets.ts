@@ -1,5 +1,7 @@
 import { makeObservable, computed } from "mobx";
 
+import { underscore } from "eez-studio-shared/string";
+
 import { EezObject, IEezObject } from "project-editor/core/object";
 import type { Action } from "project-editor/features/action/action";
 import type { Bitmap } from "project-editor/features/bitmap/bitmap";
@@ -169,6 +171,39 @@ export function getAssetFullName<T extends EezObject & { name: string }>(
     }
 
     return objectFullName;
+}
+
+export enum NamingConvention {
+    UnderscoreUpperCase,
+    UnderscoreLowerCase
+}
+
+export function getName<
+    T extends EezObject & {
+        name: string;
+    }
+>(
+    prefix: string,
+    objectOrName: T | string,
+    namingConvention: NamingConvention
+) {
+    let name;
+    if (typeof objectOrName == "string") {
+        name = objectOrName;
+    } else {
+        name = getAssetFullName<T>(objectOrName, "_");
+    }
+    name = name.replace(/[^a-zA-Z_0-9]/g, " ");
+
+    if (namingConvention == NamingConvention.UnderscoreUpperCase) {
+        name = underscore(name).toUpperCase();
+    } else if (namingConvention == NamingConvention.UnderscoreLowerCase) {
+        name = underscore(name).toLowerCase();
+    }
+
+    name = prefix + name;
+
+    return name;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

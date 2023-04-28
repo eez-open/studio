@@ -46,9 +46,8 @@ export class LVGLBuild {
     enumPages() {
         const pages: Page[] = [];
 
-        pages.push(...this.project.pages);
-
-        for (const project of this.project._store.externalProjects.externalProjects.values()) {
+        for (const project of this.project._store.openProjectsManager
+            .projects) {
             pages.push(...project.pages);
         }
 
@@ -60,7 +59,8 @@ export class LVGLBuild {
 
         styles.push(...this.project.lvglStyles.styles);
 
-        for (const project of this.project._store.externalProjects.externalProjects.values()) {
+        for (const project of this.project._store.openProjectsManager
+            .projects) {
             styles.push(...project.lvglStyles.styles);
         }
 
@@ -92,9 +92,8 @@ export class LVGLBuild {
     enumFonts() {
         const fonts: Font[] = [];
 
-        fonts.push(...this.project.fonts);
-
-        for (const project of this.project._store.externalProjects.externalProjects.values()) {
+        for (const project of this.project._store.openProjectsManager
+            .projects) {
             fonts.push(...project.fonts);
         }
 
@@ -126,9 +125,8 @@ export class LVGLBuild {
     enumBitmaps() {
         const bitmaps: Bitmap[] = [];
 
-        bitmaps.push(...this.project.bitmaps);
-
-        for (const project of this.project._store.externalProjects.externalProjects.values()) {
+        for (const project of this.project._store.openProjectsManager
+            .projects) {
             bitmaps.push(...project.bitmaps);
         }
 

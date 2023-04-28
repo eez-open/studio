@@ -39,9 +39,7 @@ export class LVGLIdentifiers {
     get pages() {
         const pages = [];
 
-        pages.push(...this.store.project.pages);
-
-        for (const externalProject of this.store.externalProjects.externalProjects.values()) {
+        for (const externalProject of this.store.openProjectsManager.projects) {
             pages.push(...externalProject.pages);
         }
 
@@ -51,9 +49,7 @@ export class LVGLIdentifiers {
     get actions() {
         const actions = [];
 
-        actions.push(...this.store.project.actions);
-
-        for (const externalProject of this.store.externalProjects.externalProjects.values()) {
+        for (const externalProject of this.store.openProjectsManager.projects) {
             actions.push(...externalProject.actions);
         }
 

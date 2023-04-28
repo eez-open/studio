@@ -1,43 +1,9 @@
 import { _map } from "eez-studio-shared/algorithm";
-import { underscore } from "eez-studio-shared/string";
 import { formatNumber } from "eez-studio-shared/util";
-import { EezObject } from "project-editor/core/object";
-import { getAssetFullName } from "project-editor/project/project";
 
 export const TAB = "    ";
 
-export enum NamingConvention {
-    UnderscoreUpperCase,
-    UnderscoreLowerCase
-}
-
-export function getName<
-    T extends EezObject & {
-        name: string;
-    }
->(
-    prefix: string,
-    objectOrName: T | string,
-    namingConvention: NamingConvention
-) {
-    let name;
-    if (typeof objectOrName == "string") {
-        name = objectOrName;
-    } else {
-        name = getAssetFullName<T>(objectOrName, "_");
-    }
-    name = name.replace(/[^a-zA-Z_0-9]/g, " ");
-
-    if (namingConvention == NamingConvention.UnderscoreUpperCase) {
-        name = underscore(name).toUpperCase();
-    } else if (namingConvention == NamingConvention.UnderscoreLowerCase) {
-        name = underscore(name).toLowerCase();
-    }
-
-    name = prefix + name;
-
-    return name;
-}
+export { NamingConvention, getName } from "project-editor/project/assets";
 
 export function dumpData(data: number[] | Buffer) {
     const NUMBERS_PER_LINE = 16;

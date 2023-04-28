@@ -769,6 +769,12 @@ export class ProjectEditorTab implements IHomeTab {
         } else {
             this.tabs.removeTab(this);
         }
+
+        if (this.removeListeners) {
+            this.removeListeners();
+            this.removeListeners = undefined;
+        }
+
         this.closed = true;
     }
 

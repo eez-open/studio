@@ -1841,63 +1841,6 @@ export class DisplayDataWidget extends Widget {
         });
     }
 
-    getText(
-        flowContext: IFlowContext
-    ): { text: string; node: React.ReactNode } | string {
-        if (flowContext.projectStore.projectTypeTraits.hasFlowSupport) {
-            if (this.data) {
-                if (flowContext.flowState) {
-                    try {
-                        const value = evalProperty(flowContext, this, "data");
-
-                        if (value != null && value != undefined) {
-                            return value;
-                        }
-                        return "";
-                    } catch (err) {
-                        //console.error(err);
-                        return "";
-                    }
-                }
-
-                if (flowContext.projectStore.runtime) {
-                    return "";
-                }
-
-                try {
-                    const result = evalConstantExpression(
-                        ProjectEditor.getProject(this),
-                        this.data
-                    );
-                    if (typeof result.value === "string") {
-                        return result.value;
-                    }
-                } catch (err) {}
-
-                return {
-                    text: this.data,
-                    node: <span className="expression">{this.data}</span>
-                };
-            }
-
-            if (flowContext.flowState) {
-                return "";
-            }
-
-            return "<no text>";
-        }
-
-        if (this.data) {
-            const result = flowContext.dataContext.get(this.data);
-            if (result != undefined) {
-                return result;
-            }
-            return this.data;
-        }
-
-        return "<no text>";
-    }
-
     applyDisplayOption(text: string) {
         text = text.toString();
 
@@ -1959,7 +1902,13 @@ export class DisplayDataWidget extends Widget {
     }
 
     render(flowContext: IFlowContext, width: number, height: number) {
-        const result = this.getText(flowContext);
+        const result = getTextValue(
+            flowContext,
+            this,
+            "data",
+            undefined,
+            undefined
+        );
         let text: string;
         let node: React.ReactNode | null;
         if (typeof result == "object") {
@@ -2136,88 +2085,18 @@ export class TextWidget extends Widget {
         });
     }
 
-    getText(
-        flowContext: IFlowContext
-    ): { text: string; node: React.ReactNode } | string {
-        if (flowContext.projectStore.projectTypeTraits.hasFlowSupport) {
-            if (this.data) {
-                if (flowContext.flowState) {
-                    try {
-                        const value = evalProperty(flowContext, this, "data");
-
-                        if (
-                            typeof value == "string" ||
-                            typeof value == "number"
-                        ) {
-                            return value.toString();
-                        }
-                        return "";
-                    } catch (err) {
-                        //console.error(err);
-                        return "";
-                    }
-                }
-
-                if (flowContext.projectStore.runtime) {
-                    return "";
-                }
-
-                if (this.name) {
-                    return this.name;
-                }
-
-                try {
-                    const result = evalConstantExpression(
-                        flowContext.projectStore.project,
-                        this.data
-                    );
-                    if (typeof result.value === "string") {
-                        return result.value;
-                    }
-                } catch (err) {}
-
-                return {
-                    text: `{${this.data}}`,
-                    node: <span className="expression">{`{${this.data}}`}</span>
-                };
-            }
-
-            if (flowContext.flowState) {
-                return "";
-            }
-
-            if (this.name) {
-                return this.name;
-            }
-
-            return "<no text>";
-        }
-
-        if (this.text) {
-            return this.text;
-        }
-
-        if (this.name) {
-            return this.name;
-        }
-
-        if (this.data) {
-            const result = flowContext.dataContext.get(this.data);
-            if (result != undefined) {
-                return result;
-            }
-            return this.data;
-        }
-
-        return "<no text>";
-    }
-
     getClassName() {
         return classNames("eez-widget-component", this.type);
     }
 
     render(flowContext: IFlowContext, width: number, height: number) {
-        const result = this.getText(flowContext);
+        const result = getTextValue(
+            flowContext,
+            this,
+            "data",
+            this.name,
+            this.text
+        );
         let text: string;
         let node: React.ReactNode | null;
         if (typeof result == "object") {

@@ -159,9 +159,11 @@ export function getTextValue(
                 }
             } catch (err) {}
 
+            const text = `{${data}}`;
+
             return {
-                text: data,
-                node: <span className="expression">{data}</span>
+                text,
+                node: <span className="expression">{text}</span>
             };
         }
 

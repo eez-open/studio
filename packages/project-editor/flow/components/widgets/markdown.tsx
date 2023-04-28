@@ -11,11 +11,8 @@ import {
 
 import { makeDataPropertyInfo, Widget } from "project-editor/flow/component";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
-import { evalConstantExpression } from "project-editor/flow/expression";
 import { observable, makeObservable } from "mobx";
-import { ProjectEditor } from "project-editor/project-editor-interface";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
-import { evalProperty } from "project-editor/flow/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -68,50 +65,6 @@ export class MarkdownWidget extends Widget {
         makeObservable(this, {
             text: observable
         });
-    }
-
-    getText(flowContext: IFlowContext): { __html: string } | string {
-        if (flowContext.projectStore.projectTypeTraits.isDashboard) {
-            if (this.text) {
-                if (flowContext.flowState) {
-                    try {
-                        const value = evalProperty(flowContext, this, "text");
-
-                        if (value != null && value != undefined) {
-                            return value;
-                        }
-                        return "";
-                    } catch (err) {
-                        console.error(err);
-                        return "";
-                    }
-                }
-
-                if (flowContext.projectStore.runtime) {
-                    return "";
-                }
-
-                try {
-                    const result = evalConstantExpression(
-                        ProjectEditor.getProject(this),
-                        this.text
-                    );
-                    if (typeof result.value === "string") {
-                        return result.value;
-                    }
-                } catch (err) {}
-
-                return {
-                    __html: '<span className="expression">{this.text}</span>'
-                };
-            }
-
-            if (flowContext.flowState) {
-                return "";
-            }
-        }
-
-        return "<no text>";
     }
 
     render(

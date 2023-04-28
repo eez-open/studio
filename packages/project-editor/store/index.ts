@@ -81,7 +81,7 @@ import { installExtension } from "eez-studio-shared/extensions/extensions";
 import type { InstrumentObject } from "instrument/instrument-object";
 
 import { LVGLIdentifiers } from "project-editor/lvgl/identifiers";
-import { ExternalProjects } from "project-editor/store/external";
+import { OpenProjectsManager } from "project-editor/store/open-projects-manager";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -118,7 +118,7 @@ export class ProjectStore {
     outputSectionsStore = new OutputSections(this);
     typesStore = new TypesStore(this);
     lvglIdentifiers = new LVGLIdentifiers(this);
-    externalProjects = new ExternalProjects(this);
+    openProjectsManager = new OpenProjectsManager(this);
 
     runtime: RuntimeBase | undefined;
 
@@ -199,8 +199,6 @@ export class ProjectStore {
                 delay: 100
             }
         );
-
-        this.externalProjects.mount();
     }
 
     onActivate() {
@@ -321,7 +319,7 @@ export class ProjectStore {
             this.dispose5();
         }
 
-        this.externalProjects.unmount();
+        this.openProjectsManager.unmount();
 
         if (this.changingRuntimeMode) {
             clearTimeout(this.changingRuntimeMode);
@@ -489,9 +487,7 @@ export class ProjectStore {
         if (project == this.project) {
             return this.filePath;
         } else {
-            return this.externalProjects.getExternalProjectAbsoluteFilePath(
-                project
-            );
+            return this.openProjectsManager.getProjectAbsoluteFilePath(project);
         }
     }
 
@@ -611,8 +607,14 @@ export class ProjectStore {
 
     async openFile(filePath: string) {
         this.filePath = filePath;
-        const project = await this.externalProjects.loadProject(filePath);
+
+        const project = await this.openProjectsManager.openMainProject(
+            filePath
+        );
+
         await this.setProject(project, filePath);
+
+        this.openProjectsManager.mount();
     }
 
     async saveModified() {
