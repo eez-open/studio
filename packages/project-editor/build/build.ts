@@ -349,33 +349,39 @@ export async function build(
                         `Configuration: ${configuration.name}`
                     );
 
-                    configurationBuildResults[configuration.name] =
-                        await getBuildResults(
-                            projectStore,
-                            sectionNames,
-                            configuration,
-                            option
-                        );
-
-                    OutputSections.closeGroup(Section.OUTPUT, false);
+                    try {
+                        configurationBuildResults[configuration.name] =
+                            await getBuildResults(
+                                projectStore,
+                                sectionNames,
+                                configuration,
+                                option
+                            );
+                    } finally {
+                        OutputSections.closeGroup(Section.OUTPUT, false);
+                    }
                 }
             } else {
                 const selectedBuildConfiguration =
                     projectStore.selectedBuildConfiguration ||
                     project.settings.build.configurations[0];
                 if (selectedBuildConfiguration) {
-                    OutputSections.write(
+                    OutputSections.openGroup(
                         Section.OUTPUT,
-                        MessageType.GROUP,
-                        `Building ${selectedBuildConfiguration.name} configuration`
+                        `Configuration: ${selectedBuildConfiguration.name}`
                     );
-                    configurationBuildResults[selectedBuildConfiguration.name] =
-                        await getBuildResults(
+                    try {
+                        configurationBuildResults[
+                            selectedBuildConfiguration.name
+                        ] = await getBuildResults(
                             projectStore,
                             sectionNames,
                             selectedBuildConfiguration,
                             option
                         );
+                    } finally {
+                        OutputSections.closeGroup(Section.OUTPUT, false);
+                    }
                 } else {
                     configurationBuildResults["default"] =
                         await getBuildResults(

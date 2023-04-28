@@ -63,14 +63,6 @@ export class OpenProjectsManager {
 
             projects.push(project);
 
-            if (
-                project.settings.general.masterProject &&
-                project.masterProject
-            ) {
-                if (projects.indexOf(project.masterProject) == -1) {
-                    enumProjects(project.masterProject);
-                }
-            }
             for (const importDirective of project.settings.general.imports) {
                 if (
                     importDirective.projectFilePath &&

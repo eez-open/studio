@@ -191,7 +191,7 @@ function buildComponent(
                 assets.projectStore.outputSectionsStore.write(
                     Section.OUTPUT,
                     MessageType.ERROR,
-                    err,
+                    err.toString(),
                     getChildOfObject(component, propertyInfo.name)
                 );
 

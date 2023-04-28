@@ -265,34 +265,36 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                         return;
                     }
 
-                    // check if it is a global variable from imports
-                    const importAs = node.object.name;
-                    const variableName = node.property.name;
+                    if (node.object.valueType == "importedProject") {
+                        // check if it is a global variable from imports
+                        const importAs = node.object.name;
+                        const variableName = node.property.name;
 
-                    const importDirective =
-                        project.settings.general.imports.find(
-                            importDirective =>
-                                importDirective.importAs == importAs
-                        );
+                        const importDirective =
+                            project.settings.general.imports.find(
+                                importDirective =>
+                                    importDirective.importAs == importAs
+                            );
 
-                    if (!importDirective || !importDirective.project) {
-                        throw `Unknown import '${importAs}'`;
+                        if (!importDirective || !importDirective.project) {
+                            throw `Unknown import '${importAs}'`;
+                        }
+
+                        if (!importDirective.project.variables) {
+                            throw `Import '${importAs}' does not have any variables`;
+                        }
+
+                        if (
+                            !importDirective.project.variables.globalVariables.find(
+                                globalVariable =>
+                                    globalVariable.name == variableName
+                            )
+                        ) {
+                            throw `Unknown variable '${variableName}' in import '${importAs}'`;
+                        }
+
+                        return;
                     }
-
-                    if (!importDirective.project.variables) {
-                        throw `Import '${importAs}' does not have any variables`;
-                    }
-
-                    if (
-                        !importDirective.project.variables.globalVariables.find(
-                            globalVariable =>
-                                globalVariable.name == variableName
-                        )
-                    ) {
-                        throw `Unknown variable '${variableName}' in import '${importAs}'`;
-                    }
-
-                    return;
                 }
             }
 

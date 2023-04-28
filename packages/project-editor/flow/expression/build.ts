@@ -206,6 +206,10 @@ function buildExpressionNode(
         );
 
         if (globalVariableIndex != undefined) {
+            if (globalVariableIndex < 0) {
+                globalVariableIndex = -globalVariableIndex;
+            }
+
             return [makePushGlobalVariableInstruction(globalVariableIndex - 1)];
         }
 
@@ -373,23 +377,30 @@ function buildExpressionNode(
                 ];
             }
 
-            const importAs = node.object.name;
-            const variableName = node.property.name;
+            if (node.object.valueType == "importedProject") {
+                const importAs = node.object.name;
+                const variableName = node.property.name;
 
-            let globalVariableIndex = assets.getAssetIndexByAssetName(
-                component,
-                `${importAs}${IMPORT_AS_PREFIX}${variableName}`,
-                findVariable,
-                assets.globalVariables
-            );
+                let globalVariableIndex = assets.getAssetIndexByAssetName(
+                    component,
+                    `${importAs}${IMPORT_AS_PREFIX}${variableName}`,
+                    findVariable,
+                    assets.globalVariables
+                );
 
-            if (globalVariableIndex != undefined) {
-                return [
-                    makePushGlobalVariableInstruction(globalVariableIndex - 1)
-                ];
+                if (globalVariableIndex != undefined) {
+                    if (globalVariableIndex < 0) {
+                        globalVariableIndex = -globalVariableIndex;
+                    }
+                    return [
+                        makePushGlobalVariableInstruction(
+                            globalVariableIndex - 1
+                        )
+                    ];
+                }
+
+                throw `Unknown variable '${variableName}' in import '${importAs}'`;
             }
-
-            throw `Unknown variable '${variableName}' in import '${importAs}'`;
         }
 
         if (node.computed) {
