@@ -341,7 +341,8 @@ export function* searchForReference(
                                     if (objectIsLocalVariable) {
                                         if (
                                             node.identifierType ===
-                                            "local-variable"
+                                                "local-variable" &&
+                                            node.name == objectName
                                         ) {
                                             if (node.name == objectName) {
                                                 foundExpressionNodes.push(node);
@@ -350,7 +351,8 @@ export function* searchForReference(
                                     } else {
                                         if (
                                             node.identifierType ===
-                                            "global-variable"
+                                                "global-variable" &&
+                                            node.name == objectName
                                         ) {
                                             foundExpressionNodes.push(node);
                                         }
