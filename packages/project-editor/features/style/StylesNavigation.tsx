@@ -62,11 +62,22 @@ const StylesNavigation = observer(
                     navigationStore.selectedPanel.selectedObject instanceof
                     Style
                 ) {
-                    return navigationStore.selectedPanel.selectedObject;
+                    if (
+                        navigationStore.selectedPanel.selectedObject instanceof
+                        Style
+                    ) {
+                        return navigationStore.selectedPanel.selectedObject;
+                    } else {
+                        return undefined;
+                    }
                 }
             }
 
-            return navigationStore.selectedStyleObject.get() as Style;
+            if (navigationStore.selectedStyleObject.get() instanceof Style) {
+                return navigationStore.selectedStyleObject.get();
+            }
+
+            return undefined;
         }
 
         factory = (node: FlexLayout.TabNode) => {

@@ -45,6 +45,7 @@ export const ObjectReferenceInput = observer(
                 dropDownWidth: observable,
                 sortDirection: observable,
                 searchText: observable,
+                onSearchChange: action.bound,
                 setDropDownOpen: action
             });
         }
@@ -81,9 +82,9 @@ export const ObjectReferenceInput = observer(
             this.props.onChange(event.target.value);
         };
 
-        onSearchChange = action((event: any) => {
+        onSearchChange(event: any) {
             this.searchText = ($(event.target).val() as string).trim();
-        });
+        }
 
         setDropDownOpen(open: boolean) {
             if (this.dropDownOpen === false) {

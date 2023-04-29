@@ -434,6 +434,7 @@ export class Page extends Flow {
                             type: "string",
                             validators: [
                                 validators.required,
+                                validators.invalidCharacters("."),
                                 validators.unique({}, parent)
                             ]
                         }

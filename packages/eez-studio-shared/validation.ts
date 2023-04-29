@@ -21,6 +21,7 @@ const VALIDATION_MESSAGE_RANGE_EXCLUSIVE =
 const VALIDATION_MESSAGE_RANGE_EXCLUSIVE_WITHOUT_MAX =
     "Please enter value greater than ${min}.";
 const VALIDATION_MESSAGE_NOT_UNIQUE = "This field has no unique value.";
+const VALIDATION_MESSAGE_INVALID_CHAR = 'Character "${char}" is not allowed.';
 
 export type Rule = (
     object: any,
@@ -129,6 +130,29 @@ export const validators = {
             if (typeof value !== "number" || isNaN(value)) {
                 return VALIDATION_MESSAGE_INVALID_VALUE;
             }
+            return null;
+        };
+    },
+
+    invalidCharacters: (chars: string) => {
+        return function (object: any, ruleName: string) {
+            const value = object[ruleName];
+
+            let invalidCharFound: string | undefined;
+            for (const char of chars) {
+                if (value.indexOf(char) !== -1) {
+                    invalidCharFound = char;
+                    break;
+                }
+            }
+
+            if (invalidCharFound) {
+                return VALIDATION_MESSAGE_INVALID_CHAR.replace(
+                    "${char}",
+                    invalidCharFound
+                );
+            }
+
             return null;
         };
     }

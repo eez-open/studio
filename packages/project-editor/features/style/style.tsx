@@ -1,3 +1,4 @@
+import path from "path";
 import { observable, computed, makeObservable } from "mobx";
 import { css } from "@emotion/css";
 
@@ -38,7 +39,11 @@ import { getProjectStore } from "project-editor/store";
 import { validators } from "eez-studio-shared/validation";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import { getThemedColor, ITheme } from "project-editor/features/style/theme";
+import {
+    getAllProjectsWithThemes,
+    getThemedColor,
+    ITheme
+} from "project-editor/features/style/theme";
 import type { Font } from "project-editor/features/font/font";
 import {
     Project,
@@ -1028,6 +1033,7 @@ export class Style extends EezObject {
                             type: "string",
                             validators: [
                                 validators.required,
+                                validators.invalidCharacters("."),
                                 validators.unique({}, parent)
                             ]
                         }
@@ -2042,6 +2048,27 @@ const feature: ProjectEditorFeature = {
     typeClass: Style,
     icon: "material:format_color_fill",
     create: () => [],
+    check: (projectStore, object: EezObject[], messages: IMessage[]) => {
+        const projects = getAllProjectsWithThemes(projectStore);
+        if (projects.length > 1) {
+            const projectNames = projects.map(project =>
+                path.basename(
+                    projectStore.openProjectsManager.getProjectAbsoluteFilePath(
+                        project
+                    )!
+                )
+            );
+
+            messages.push(
+                new Message(
+                    MessageType.ERROR,
+                    `Themes are defined in multiple projects: ${projectNames.join(
+                        ", "
+                    )}`
+                )
+            );
+        }
+    },
     afterLoadProject: (project: Project) => {
         if (project.themes) {
             const themes = project.themes;

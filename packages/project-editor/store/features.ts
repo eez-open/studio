@@ -7,6 +7,7 @@ import {
 } from "project-editor/core/object";
 
 import type { Project } from "project-editor/project/project";
+import type { ProjectStore } from "project-editor/store";
 
 import type { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 
@@ -40,7 +41,11 @@ export interface ProjectEditorFeature {
     typeClass: EezClass;
     icon: string | React.ReactNode;
     create: () => any;
-    check?: (object: IEezObject, messages: IMessage[]) => void;
+    check?: (
+        projectStore: ProjectStore,
+        object: IEezObject,
+        messages: IMessage[]
+    ) => void;
     collectExtensionDefinitions?: (
         project: Project,
         extensionDefinition: ExtensionDefinition,

@@ -945,7 +945,15 @@ function getProjectClassInfo() {
                     return !projectFeature.mandatory;
                 },
                 hideInPropertyGrid: true,
-                check: projectFeature.check,
+                check: (object: IEezObject, messages: IMessage[]) => {
+                    if (projectFeature.check) {
+                        projectFeature.check(
+                            getProjectStore(object),
+                            object,
+                            messages
+                        );
+                    }
+                },
                 enumerable: projectFeature.enumerable
             } as PropertyInfo;
         });

@@ -260,6 +260,7 @@ export class Bitmap extends EezObject {
                             type: "string",
                             validators: [
                                 validators.required,
+                                validators.invalidCharacters("."),
                                 validators.unique({}, parent)
                             ]
                         },
@@ -641,7 +642,7 @@ const feature: ProjectEditorFeature = {
     typeClass: Bitmap,
     icon: "material:image",
     create: () => [],
-    check: (object: EezObject[], messages: IMessage[]) => {
+    check: (projectStore, object: EezObject[], messages: IMessage[]) => {
         if (object.length > 255) {
             messages.push(
                 new Message(
@@ -653,9 +654,9 @@ const feature: ProjectEditorFeature = {
         }
 
         if (
-            !ProjectEditor.getProject(object).projectTypeTraits.isDashboard &&
-            !ProjectEditor.getProject(object).projectTypeTraits.isLVGL &&
-            !findStyle(getProjectStore(object).project, "default")
+            !projectStore.projectTypeTraits.isDashboard &&
+            !projectStore.projectTypeTraits.isLVGL &&
+            !findStyle(projectStore.project, "default")
         ) {
             messages.push(
                 new Message(

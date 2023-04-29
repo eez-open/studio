@@ -1209,7 +1209,7 @@ const feature: ProjectEditorFeature = {
             enums: []
         };
     },
-    check: (object: EezObject[], messages: IMessage[]) => {
+    check: (projectStore, object: EezObject[], messages: IMessage[]) => {
         if (object.length > 32000) {
             messages.push(
                 new Message(

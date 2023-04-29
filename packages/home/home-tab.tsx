@@ -591,7 +591,8 @@ const Projects = observer(
                 searchText: observable,
                 sortAlphabetically: observable,
                 mru: computed,
-                mruAlpha: computed
+                mruAlpha: computed,
+                onSearchChange: action.bound
             });
         }
 
@@ -622,9 +623,9 @@ const Projects = observer(
             );
         };
 
-        onSearchChange = (event: any) => {
+        onSearchChange(event: any) {
             this.searchText = ($(event.target).val() as string).trim();
-        };
+        }
 
         render() {
             return (

@@ -1210,6 +1210,7 @@ export class Font extends EezObject {
                                     type: "string",
                                     validators: [
                                         validators.required,
+                                        validators.invalidCharacters("."),
                                         validators.unique(undefined, parent)
                                     ]
                                 },
@@ -1574,7 +1575,7 @@ const feature: ProjectEditorFeature = {
     typeClass: Font,
     icon: "material:font_download",
     create: () => [],
-    check: (object: EezObject[], messages: IMessage[]) => {
+    check: (projectStore, object: EezObject[], messages: IMessage[]) => {
         if (object.length > 255) {
             messages.push(
                 new Message(

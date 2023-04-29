@@ -135,6 +135,7 @@ export class Action extends Flow {
                             type: "string",
                             validators: [
                                 validators.required,
+                                validators.invalidCharacters("."),
                                 validators.unique({}, parent)
                             ]
                         }
@@ -209,7 +210,7 @@ const feature: ProjectEditorFeature = {
     typeClass: Action,
     icon: "material:code",
     create: () => [],
-    check: (object: EezObject[], messages: IMessage[]) => {
+    check: (projectStore, object: EezObject[], messages: IMessage[]) => {
         if (object.length > 32000) {
             messages.push(
                 new Message(

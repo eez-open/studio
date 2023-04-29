@@ -354,6 +354,7 @@ export class Color extends EezObject {
                             type: "string",
                             validators: [
                                 validators.required,
+                                validators.invalidCharacters("."),
                                 validators.unique({}, parent),
                                 function (object: any, ruleName: string) {
                                     const name = getName(
@@ -631,4 +632,27 @@ export function getProjectWithThemes(projectStore: ProjectStore) {
     }
 
     return projectStore.project;
+}
+
+export function getAllProjectsWithThemes(projectStore: ProjectStore) {
+    const projects = [];
+
+    if (projectStore.masterProject) {
+        projects.push(projectStore.masterProject);
+    }
+
+    if (projectStore.project.themes.length > 0) {
+        projects.push(projectStore.project);
+    }
+
+    for (const importDirective of projectStore.project.settings.general
+        .imports) {
+        if (importDirective.project) {
+            if (importDirective.project.themes.length > 0) {
+                projects.push(importDirective.project);
+            }
+        }
+    }
+
+    return projects;
 }

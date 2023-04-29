@@ -14,7 +14,7 @@ import {
     LVGLPropertiesGroup
 } from "project-editor/lvgl/style-catalog";
 import { SearchInput } from "eez-studio-ui/search-input";
-import { makeObservable, observable } from "mobx";
+import { action, makeObservable, observable } from "mobx";
 import { IListNode, List, ListContainer, ListItem } from "eez-studio-ui/list";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,7 +93,8 @@ const LVGLStylePropertiesDialog = observer(
             super(props);
 
             makeObservable(this, {
-                searchText: observable
+                searchText: observable,
+                onSearchChange: action.bound
             });
         }
 
@@ -122,9 +123,9 @@ const LVGLStylePropertiesDialog = observer(
             return nodes;
         }
 
-        onSearchChange = (event: any) => {
+        onSearchChange(event: any) {
             this.searchText = ($(event.target).val() as string).trim();
-        };
+        }
 
         onOkEnabled = () => {
             return true;
