@@ -37,6 +37,8 @@ import {
     SCPI_PART_QUERY_WITH_ASSIGNMENT
 } from "eez-studio-shared/scpi-parser";
 
+import type { Component } from "project-editor/flow/component";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 type VisitResult = EezValueObject | null;
@@ -341,8 +343,11 @@ export function* searchForReference(
                 flowProperty == "scpi-template-literal"
             ) {
                 if (objectIsVariable) {
-                    const component = getParent(valueObject);
-                    if (component instanceof ProjectEditor.ComponentClass) {
+                    const component = getAncestorOfType<Component>(
+                        valueObject,
+                        ProjectEditor.ComponentClass.classInfo
+                    );
+                    if (component) {
                         let expressions;
 
                         if (

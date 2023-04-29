@@ -310,8 +310,8 @@ function getScpiTokens(input: string) {
                     tag: "input",
                     value: token,
                     offset: savedOffset,
-                    line,
-                    column
+                    line: savedLine,
+                    column: savedColumn
                 });
                 state = "other";
             } else {
