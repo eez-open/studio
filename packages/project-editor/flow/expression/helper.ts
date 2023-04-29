@@ -60,3 +60,37 @@ export function templateLiteralToExpression(templateLiteral: string) {
 
     return result;
 }
+
+export function* visitExpressionNodes(
+    node: ExpressionNode
+): IterableIterator<ExpressionNode> {
+    yield node;
+
+    if (node.type == "BinaryExpression" || node.type == "LogicalExpression") {
+        yield* visitExpressionNodes(node.left);
+        yield* visitExpressionNodes(node.right);
+    } else if (node.type == "UnaryExpression") {
+        yield* visitExpressionNodes(node.argument);
+    } else if (node.type == "ConditionalExpression") {
+        yield* visitExpressionNodes(node.test);
+        yield* visitExpressionNodes(node.consequent);
+        yield* visitExpressionNodes(node.alternate);
+    } else if (node.type == "ArrayExpression") {
+        for (const element of node.elements) {
+            yield* visitExpressionNodes(element);
+        }
+    } else if (node.type == "ObjectExpression") {
+        for (const property of node.properties) {
+            yield* visitExpressionNodes(property.key);
+            yield* visitExpressionNodes(property.value);
+        }
+    } else if (node.type == "MemberExpression") {
+        yield* visitExpressionNodes(node.object);
+        yield* visitExpressionNodes(node.property);
+    } else if (node.type == "CallExpression") {
+        yield* visitExpressionNodes(node.callee);
+        for (const argument of node.arguments) {
+            yield* visitExpressionNodes(argument);
+        }
+    }
+}

@@ -8,6 +8,7 @@ import classNames from "classnames";
 export interface SubNavigationItem {
     name: string;
     component: React.ReactNode;
+    numItems: number;
 }
 
 interface SubNavigationProps {
@@ -68,6 +69,19 @@ export const SubNavigation = observer(
                                     href="#"
                                 >
                                     {item.name}
+                                    {item.numItems > 0 ? (
+                                        <span
+                                            className="badge rounded-pill bg-secondary ms-1"
+                                            style={{
+                                                opacity: 0.7,
+                                                transform: "translateY(-1px)"
+                                            }}
+                                        >
+                                            {item.numItems}
+                                        </span>
+                                    ) : (
+                                        ""
+                                    )}
                                 </a>
                             </li>
                         ))}

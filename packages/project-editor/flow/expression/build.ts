@@ -478,11 +478,15 @@ function buildExpressionNode(
         const fieldValues: ExpressionNode[] = [];
 
         node.properties.forEach(property => {
-            const fieldIndex = type.fieldIndexes[property.key.name];
-            if (fieldIndex == undefined) {
-                throw `Field ${property.key.name} not in ${node.valueType}`;
+            if (property.key.type == "Identifier") {
+                const fieldIndex = type.fieldIndexes[property.key.name];
+                if (fieldIndex == undefined) {
+                    throw `Field ${property.key.name} not in ${node.valueType}`;
+                }
+                fieldValues[fieldIndex] = property.value;
+            } else {
+                throw `invalid field node "${property.key.type}"`;
             }
-            fieldValues[fieldIndex] = property.value;
         });
 
         for (let i = 0; i < type.fields.length; i++) {

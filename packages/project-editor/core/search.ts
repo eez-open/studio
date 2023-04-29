@@ -16,10 +16,17 @@ import {
     getClassInfo,
     EezValueObject,
     ProjectStore,
-    getProjectStore
+    getProjectStore,
+    getAncestorOfType
 } from "project-editor/store";
 
 import type { checkObjectReference } from "project-editor/project/project";
+import { ProjectEditor } from "project-editor/project-editor-interface";
+
+import { expressionParser } from "project-editor/flow/expression/parser";
+import { findValueTypeInExpressionNode } from "project-editor/flow/expression/type";
+import { visitExpressionNodes } from "project-editor/flow/expression/helper";
+import type { IdentifierExpressionNode } from "project-editor/flow/expression/node";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -201,12 +208,28 @@ export function* searchForReference(
     searchParams: SearchParamsObject,
     withPause: boolean
 ): IterableIterator<SearchResult> {
-    let v = withPause ? visitWithPause(root) : visitWithoutPause(root);
+    const object = searchParams.object;
+    const objectParent = getParent(object);
+
+    const project = ProjectEditor.getProject(object);
+
+    const objectIsVariable = object instanceof ProjectEditor.VariableClass;
+
+    let flow;
+    let objectIsLocalVariable;
+    if (objectIsVariable) {
+        flow = getAncestorOfType(object, ProjectEditor.FlowClass.classInfo);
+        objectIsLocalVariable = flow != undefined;
+    } else {
+        objectIsLocalVariable = false;
+    }
+
+    let v = (withPause ? visitWithPause : visitWithoutPause)(
+        flow ? flow : root
+    );
 
     let objectName;
     let objectParentPath;
-
-    const object = searchParams.object;
 
     const classInfo = getClassInfo(object);
 
@@ -218,7 +241,6 @@ export function* searchForReference(
             return;
         }
     } else {
-        let objectParent = getParent(object);
         if (!objectParent) {
             return;
         }
@@ -239,65 +261,115 @@ export function* searchForReference(
 
         let valueObject = visitResult.value;
         if (valueObject) {
-            if (!valueObject.propertyInfo.skipSearch) {
-                if (valueObject.value) {
-                    let match = false;
+            if (valueObject.propertyInfo.skipSearch || !valueObject.value) {
+                continue;
+            }
 
+            let match = false;
+
+            if (
+                (valueObject.propertyInfo.type ===
+                    PropertyType.ObjectReference &&
+                    (!project.settings.general.flowSupport ||
+                        valueObject.propertyInfo
+                            .referencedObjectCollectionPath !=
+                            "variables/globalVariables")) ||
+                valueObject.propertyInfo.type === PropertyType.ThemedColor
+            ) {
+                if (importedProject) {
                     if (
-                        valueObject.propertyInfo.type ===
-                            PropertyType.ObjectReference ||
-                        valueObject.propertyInfo.type ===
-                            PropertyType.ThemedColor
-                    ) {
-                        if (importedProject) {
-                            if (
-                                valueObject.propertyInfo
-                                    .referencedObjectCollectionPath
-                            ) {
-                                if (
-                                    importedProject.findReferencedObject(
-                                        root,
-                                        valueObject.propertyInfo
-                                            .referencedObjectCollectionPath,
-                                        valueObject.value
-                                    )
-                                ) {
-                                    match = true;
-                                }
-                            }
-                        } else {
-                            if (
-                                valueObject.propertyInfo
-                                    .referencedObjectCollectionPath ==
-                                    objectParentPath &&
-                                valueObject.value === objectName
-                            ) {
-                                match = true;
-                            }
-                        }
-                    } else if (
-                        valueObject.propertyInfo.type ===
-                        PropertyType.ConfigurationReference
+                        valueObject.propertyInfo.referencedObjectCollectionPath
                     ) {
                         if (
-                            valueObject.propertyInfo
-                                .referencedObjectCollectionPath ==
-                                objectParentPath &&
-                            valueObject.value
+                            importedProject.findReferencedObject(
+                                root,
+                                valueObject.propertyInfo
+                                    .referencedObjectCollectionPath,
+                                valueObject.value
+                            )
                         ) {
-                            for (let i = 0; i < valueObject.value.length; i++) {
-                                if (valueObject.value[i] === objectName) {
-                                    match = true;
-                                    break;
-                                }
-                            }
+                            match = true;
                         }
                     }
-
-                    if (match) {
-                        yield valueObject;
+                } else {
+                    if (
+                        valueObject.propertyInfo
+                            .referencedObjectCollectionPath ==
+                            objectParentPath &&
+                        valueObject.value === objectName
+                    ) {
+                        match = true;
                     }
                 }
+            } else if (
+                valueObject.propertyInfo.type ===
+                PropertyType.ConfigurationReference
+            ) {
+                if (
+                    valueObject.propertyInfo.referencedObjectCollectionPath ==
+                        objectParentPath &&
+                    valueObject.value
+                ) {
+                    for (let i = 0; i < valueObject.value.length; i++) {
+                        if (valueObject.value[i] === objectName) {
+                            match = true;
+                            break;
+                        }
+                    }
+                }
+            } else if (valueObject.propertyInfo.expressionType != undefined) {
+                if (objectIsVariable) {
+                    const component = getParent(valueObject);
+                    if (component instanceof ProjectEditor.ComponentClass) {
+                        try {
+                            const rootNode = expressionParser.parse(
+                                valueObject.value
+                            );
+
+                            findValueTypeInExpressionNode(
+                                project,
+                                component,
+                                rootNode,
+                                false
+                            );
+
+                            const foundExpressionNodes: IdentifierExpressionNode[] =
+                                [];
+
+                            for (const node of visitExpressionNodes(rootNode)) {
+                                if (node.type == "Identifier") {
+                                    if (objectIsLocalVariable) {
+                                        if (
+                                            node.identifierType ===
+                                            "local-variable"
+                                        ) {
+                                            if (node.name == objectName) {
+                                                foundExpressionNodes.push(node);
+                                            }
+                                        }
+                                    } else {
+                                        if (
+                                            node.identifierType ===
+                                            "global-variable"
+                                        ) {
+                                            foundExpressionNodes.push(node);
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (foundExpressionNodes.length) {
+                                match = true;
+                                valueObject.expressionNodes =
+                                    foundExpressionNodes;
+                            }
+                        } catch (err) {}
+                    }
+                }
+            }
+
+            if (match) {
+                yield valueObject;
             }
         } else if (withPause) {
             // pause
@@ -528,9 +600,42 @@ export function replaceObjectReference(object: IEezObject, newValue: string) {
 
         let searchValue = searchResult.value;
         if (searchValue) {
+            let parent = getParent(searchValue);
+            if (!parent) {
+                continue;
+            }
+
+            let key = getKey(searchValue);
+            if (!key || !(typeof key == "string")) {
+                continue;
+            }
+
             let value: string | string[] = newValue;
 
-            if (
+            if (searchValue.expressionNodes) {
+                const oldValue = getProperty(parent, key);
+
+                value = "";
+
+                let prevEnd = 0;
+
+                for (const node of searchValue.expressionNodes) {
+                    let start = node.location.start.offset;
+                    let end = node.location.end.offset;
+
+                    if (prevEnd < start) {
+                        value += oldValue.substring(prevEnd, start);
+                    }
+
+                    value += newValue;
+
+                    prevEnd = end;
+                }
+
+                if (prevEnd < oldValue.length) {
+                    value += oldValue.substring(prevEnd);
+                }
+            } else if (
                 searchValue.propertyInfo.type ===
                 PropertyType.ConfigurationReference
             ) {
@@ -544,15 +649,9 @@ export function replaceObjectReference(object: IEezObject, newValue: string) {
                 }
             }
 
-            let parent = getParent(searchValue);
-            if (parent) {
-                let key = getKey(searchValue);
-                if (parent && key && typeof key == "string") {
-                    getProjectStore(rootObject).updateObject(parent, {
-                        [key]: value
-                    });
-                }
-            }
+            getProjectStore(rootObject).updateObject(parent, {
+                [key]: value
+            });
         }
     }
 }

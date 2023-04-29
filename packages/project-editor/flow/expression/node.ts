@@ -1,9 +1,25 @@
 import type { ValueType } from "project-editor/features/variable/value-type";
 
+import type { LocationRange } from "peggy";
+
 export type IdentifierExpressionNode = {
     type: "Identifier";
     name: string;
     valueType: ValueType;
+    identifierType:
+        | "input"
+        | "output"
+        | "local-variable"
+        | "global-variable"
+        | "system-variable"
+        | "enum"
+        | "enum-member"
+        | "builtin-constant-namespace"
+        | "builtin-constant-member"
+        | "imported-project"
+        | "member"
+        | "unknown";
+    location: LocationRange;
 };
 
 export type ExpressionNode =
@@ -40,10 +56,7 @@ export type ExpressionNode =
     | {
           type: "ObjectExpression";
           properties: {
-              key: {
-                  type: "Identifier";
-                  name: string;
-              };
+              key: ExpressionNode;
               value: ExpressionNode;
               kind: "init";
           }[];

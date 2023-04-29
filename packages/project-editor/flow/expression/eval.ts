@@ -314,7 +314,11 @@ function evalConstantExpressionNode(
             const object: any = {};
 
             for (const property of node.properties) {
-                object[property.key.name] = evalNode(property.value);
+                if (property.key.type == "Identifier") {
+                    object[property.key.name] = evalNode(property.value);
+                } else {
+                    throw `invalid field node "${property.key.type}"`;
+                }
             }
 
             return object;
@@ -490,7 +494,11 @@ function evalExpressionWithContext(
             const object: any = {};
 
             for (const property of node.properties) {
-                object[property.key.name] = evalNode(property.value);
+                if (property.key.type == "Identifier") {
+                    object[property.key.name] = evalNode(property.value);
+                } else {
+                    throw `invalid field node "${property.key.type}"`;
+                }
             }
 
             return object;

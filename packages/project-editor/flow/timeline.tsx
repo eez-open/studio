@@ -2939,7 +2939,6 @@ export function getTimelineProperty(
                     stylePropertyInfo
                 ) as number;
             }
-            console.log(value);
 
             if (propertyName == "opacity") {
                 value /= 255;

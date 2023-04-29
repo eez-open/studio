@@ -53,7 +53,9 @@ export const VariablesTab = observer(
                                     .selectedGlobalVariableObject
                             }
                         />
-                    )
+                    ),
+                    numItems:
+                        this.context.project.variables.globalVariables.length
                 }
             ];
 
@@ -69,7 +71,8 @@ export const VariablesTab = observer(
                                     .selectedLocalVariable
                             }
                         />
-                    ) : null
+                    ) : null,
+                    numItems: this.localVariables?.length ?? 0
                 });
 
                 items.push({
@@ -85,7 +88,8 @@ export const VariablesTab = observer(
                                     .selectedStructureObject
                             }
                         />
-                    )
+                    ),
+                    numItems: this.context.project.variables.structures.length
                 });
             }
 
@@ -102,7 +106,8 @@ export const VariablesTab = observer(
                                 this.context.navigationStore.selectedEnumObject
                             }
                         />
-                    )
+                    ),
+                    numItems: this.context.project.variables.enums.length
                 });
             }
 

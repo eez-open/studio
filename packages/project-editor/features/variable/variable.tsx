@@ -24,7 +24,6 @@ import {
 import {
     getChildOfObject,
     Message,
-    propertyInvalidValueMessage,
     propertyNotSetMessage,
     createObject
 } from "project-editor/store";
@@ -342,9 +341,10 @@ export class Variable extends EezObject {
                         }
                     } catch (err) {
                         messages.push(
-                            propertyInvalidValueMessage(
-                                variable,
-                                "defaultValue"
+                            new Message(
+                                MessageType.ERROR,
+                                err.toString(),
+                                getChildOfObject(variable, "defaultValue")
                             )
                         );
                     }

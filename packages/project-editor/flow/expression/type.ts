@@ -57,6 +57,7 @@ export function findValueTypeInExpressionNode(
             );
             if (output) {
                 node.valueType = getType(project, output.type);
+                node.identifierType = "output";
                 return;
             }
         }
@@ -64,6 +65,7 @@ export function findValueTypeInExpressionNode(
         const input = component?.inputs.find(input => input.name == node.name);
         if (input) {
             node.valueType = getType(project, input.type);
+            node.identifierType = "input";
             return;
         }
 
@@ -74,6 +76,7 @@ export function findValueTypeInExpressionNode(
             );
             if (localVariable) {
                 node.valueType = getType(project, localVariable.type);
+                node.identifierType = "local-variable";
                 return;
             }
         }
@@ -83,12 +86,14 @@ export function findValueTypeInExpressionNode(
         );
         if (globalVariable) {
             node.valueType = getType(project, globalVariable.type);
+            node.identifierType = "global-variable";
             return;
         }
 
         let enumDef = project.variables.enumsMap.get(node.name);
         if (enumDef) {
             node.valueType = `enum:${node.name}` as ValueType;
+            node.identifierType = "enum";
             return;
         }
 
@@ -97,16 +102,19 @@ export function findValueTypeInExpressionNode(
         );
         if (importIndex != -1) {
             node.valueType = `importedProject`;
+            node.identifierType = "imported-project";
             return;
         }
 
         if (node.name == FLOW_ITERATOR_INDEX_VARIABLE) {
             node.valueType = `integer`;
+            node.identifierType = "system-variable";
             return;
         }
 
         if (node.name == FLOW_ITERATOR_INDEXES_VARIABLE) {
             node.valueType = `array:integer`;
+            node.identifierType = "system-variable";
             return;
         }
 
@@ -114,6 +122,7 @@ export function findValueTypeInExpressionNode(
         // throw `identifier '${node.name}' is neither input or local or global variable or enum`;
 
         node.valueType = "any";
+        node.identifierType = "unknown";
         return;
     } else if (node.type == "BinaryExpression") {
         let operator = binaryOperators[node.operator];
@@ -259,6 +268,7 @@ export function findValueTypeInExpressionNode(
                         );
                     if (globalVariable) {
                         node.valueType = globalVariable.type;
+                        node.property.identifierType = "global-variable";
                     }
                 }
             }
@@ -273,6 +283,7 @@ export function findValueTypeInExpressionNode(
                 throw `Enum member '${node.property.name}' not found in enum '${enumName}'`;
             }
             node.valueType = "integer";
+            node.property.identifierType = "enum-member";
         } else {
             if (node.computed) {
                 if (node.object.valueType == "any") {
@@ -306,6 +317,7 @@ export function findValueTypeInExpressionNode(
                         );
                         if (enumMember) {
                             node.valueType = "integer";
+                            node.property.identifierType = "enum-member";
                             return;
                         }
                     } else {
@@ -315,6 +327,10 @@ export function findValueTypeInExpressionNode(
                         )[builtInConstantName];
                         if (buildInConstantValue != undefined) {
                             node.valueType = buildInConstantValue.valueType;
+                            node.object.identifierType =
+                                "builtin-constant-namespace";
+                            node.property.identifierType =
+                                "builtin-constant-member";
                             return;
                         }
                     }
@@ -329,6 +345,7 @@ export function findValueTypeInExpressionNode(
                 }
 
                 node.valueType = type;
+                node.property.identifierType = "member";
             }
         }
     } else if (node.type == "ArrayExpression") {
