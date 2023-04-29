@@ -174,7 +174,17 @@ function buildComponent(
         if (!isPropertyHidden(component, propertyInfo)) {
             try {
                 let expression = getProperty(component, propertyInfo.name);
-                if (propertyInfo.flowProperty == "assignable") {
+
+                let flowProperty;
+                if (propertyInfo.flowProperty) {
+                    if (typeof propertyInfo.flowProperty == "string") {
+                        flowProperty = propertyInfo.flowProperty;
+                    } else {
+                        flowProperty = propertyInfo.flowProperty(component);
+                    }
+                }
+
+                if (flowProperty == "assignable") {
                     buildAssignableExpression(
                         assets,
                         dataBuffer,
@@ -182,7 +192,7 @@ function buildComponent(
                         expression
                     );
                 } else {
-                    if (propertyInfo.flowProperty == "template-literal") {
+                    if (flowProperty == "template-literal") {
                         expression = templateLiteralToExpression(expression);
                     }
                     buildExpression(assets, dataBuffer, component, expression);

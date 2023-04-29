@@ -26,6 +26,25 @@ export function toStringLiteral(str: string) {
     return `"${result}"`;
 }
 
+export function templateLiteralToExpressions(templateLiteral: string) {
+    const expressions: { start: number; end: number }[] = [];
+
+    const re = /\{[^\}]+\}/g;
+    while (true) {
+        let result = re.exec(templateLiteral);
+        if (!result) {
+            break;
+        }
+
+        expressions.push({
+            start: result.index,
+            end: result.index + result[0].length
+        });
+    }
+
+    return expressions;
+}
+
 export function templateLiteralToExpression(templateLiteral: string) {
     let result = "";
 
@@ -37,25 +56,30 @@ export function templateLiteralToExpression(templateLiteral: string) {
         }
     }
 
-    let str = templateLiteral;
-    while (true) {
-        let matches = str.match(/\{[^\}]+\}/);
-        if (!matches) {
-            if (str) {
-                appendToResult(toStringLiteral(str));
-            }
-            break;
+    const expressions = templateLiteralToExpressions(templateLiteral);
+
+    let prevEnd = 0;
+    for (const expression of expressions) {
+        if (prevEnd < expression.start) {
+            appendToResult(
+                toStringLiteral(
+                    templateLiteral.substring(prevEnd, expression.start)
+                )
+            );
         }
 
-        const idx = matches.index!;
-        const len = matches[0].length;
+        appendToResult(
+            `(${templateLiteral.substring(
+                expression.start + 1,
+                expression.end - 1
+            )})`
+        );
 
-        if (idx > 0) {
-            appendToResult(toStringLiteral(str.substring(0, idx)));
-        }
-        appendToResult(`(${str.substring(idx + 1, idx + len - 1)})`);
+        prevEnd = expression.end;
+    }
 
-        str = str.substring(idx + len);
+    if (prevEnd < templateLiteral.length) {
+        appendToResult(toStringLiteral(templateLiteral.substring(prevEnd)));
     }
 
     return result;

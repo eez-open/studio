@@ -98,7 +98,8 @@ export class SCPIActionComponent extends ActionComponent {
                 type: PropertyType.MultilineText,
                 propertyGridGroup: specificGroup,
                 monospaceFont: true,
-                disableSpellcheck: true
+                disableSpellcheck: true,
+                flowProperty: "scpi-template-literal"
             }
         ],
         beforeLoadHook: (component: SCPIActionComponent, jsObject: any) => {

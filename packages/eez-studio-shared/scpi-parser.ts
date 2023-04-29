@@ -42,6 +42,7 @@ type TokenTag =
 interface Token {
     tag: TokenTag;
     value: string;
+    offset: number;
     line: number;
     column: number;
 }
@@ -70,11 +71,16 @@ function getScpiTokens(input: string) {
 
     let token = "";
 
+    let offset = 0;
     let line = 0;
     let column = 0;
 
-    for (let i = 0; i < input.length; ) {
-        const ch = input[i];
+    let savedOffset = offset;
+    let savedLine = offset;
+    let savedColumn = offset;
+
+    for (offset = 0; offset < input.length; ) {
+        const ch = input[offset];
 
         if (state === "mnemonic") {
             if (
@@ -88,6 +94,7 @@ function getScpiTokens(input: string) {
                 tokens.push({
                     tag: "mnemonic",
                     value: token,
+                    offset,
                     line,
                     column
                 });
@@ -115,6 +122,7 @@ function getScpiTokens(input: string) {
                     tokens.push({
                         tag: "numeric",
                         value: token,
+                        offset,
                         line,
                         column
                     });
@@ -146,6 +154,7 @@ function getScpiTokens(input: string) {
                         tokens.push({
                             tag: "numeric",
                             value: token,
+                            offset,
                             line,
                             column
                         });
@@ -178,6 +187,7 @@ function getScpiTokens(input: string) {
                         tokens.push({
                             tag: "numeric",
                             value: token,
+                            offset,
                             line,
                             column
                         });
@@ -193,6 +203,7 @@ function getScpiTokens(input: string) {
                     tokens.push({
                         tag: "numeric_with_unit",
                         value: token,
+                        offset,
                         line,
                         column
                     });
@@ -206,14 +217,18 @@ function getScpiTokens(input: string) {
         } else if (state === "string") {
             if (ch == token[0]) {
                 token += ch;
-                if (i + 1 < input.length && input[i + 1] == token[0]) {
+                if (
+                    offset + 1 < input.length &&
+                    input[offset + 1] == token[0]
+                ) {
                     token += ch;
-                    i++;
+                    offset++;
                     column++;
                 } else {
                     tokens.push({
                         tag: "string",
                         value: token,
+                        offset,
                         line,
                         column
                     });
@@ -248,6 +263,7 @@ function getScpiTokens(input: string) {
                             tokens.push({
                                 tag: "binary",
                                 value: token,
+                                offset,
                                 line,
                                 column
                             });
@@ -263,6 +279,7 @@ function getScpiTokens(input: string) {
                 tokens.push({
                     tag: "binary",
                     value: token,
+                    offset,
                     line,
                     column
                 });
@@ -279,6 +296,7 @@ function getScpiTokens(input: string) {
                 tokens.push({
                     tag: "hexnum",
                     value: token,
+                    offset,
                     line,
                     column
                 });
@@ -291,6 +309,7 @@ function getScpiTokens(input: string) {
                 tokens.push({
                     tag: "input",
                     value: token,
+                    offset: savedOffset,
                     line,
                     column
                 });
@@ -313,6 +332,7 @@ function getScpiTokens(input: string) {
                 tokens.push({
                     tag: "channels",
                     value: token,
+                    offset,
                     line,
                     column
                 });
@@ -322,6 +342,7 @@ function getScpiTokens(input: string) {
             tokens.push({
                 tag: "newline",
                 value: "\n",
+                offset,
                 line,
                 column
             });
@@ -343,6 +364,7 @@ function getScpiTokens(input: string) {
                 tokens.push({
                     tag: "space",
                     value: " ",
+                    offset,
                     line,
                     column
                 });
@@ -375,6 +397,9 @@ function getScpiTokens(input: string) {
             } else if (ch === "{") {
                 token = ch;
                 state = "input";
+                savedOffset = offset;
+                savedLine = line;
+                savedColumn = column;
             } else if (ch === "\n" || ch === "\r") {
                 token = ch;
                 state = "newline";
@@ -397,6 +422,7 @@ function getScpiTokens(input: string) {
                 tokens.push({
                     tag: "symbol",
                     value: ch,
+                    offset,
                     line,
                     column
                 });
@@ -406,7 +432,7 @@ function getScpiTokens(input: string) {
                 }`;
             }
         }
-        i++;
+        offset++;
         column++;
     }
 
@@ -414,6 +440,7 @@ function getScpiTokens(input: string) {
         tokens.push({
             tag: "mnemonic",
             value: token,
+            offset,
             line,
             column
         });
@@ -429,6 +456,7 @@ function getScpiTokens(input: string) {
             tokens.push({
                 tag: "numeric",
                 value: token,
+                offset,
                 line,
                 column
             });
@@ -440,6 +468,7 @@ function getScpiTokens(input: string) {
             tokens.push({
                 tag: "numeric",
                 value: token,
+                offset,
                 line,
                 column
             });
@@ -454,6 +483,7 @@ function getScpiTokens(input: string) {
             tokens.push({
                 tag: "numeric",
                 value: token,
+                offset,
                 line,
                 column
             });
@@ -461,6 +491,7 @@ function getScpiTokens(input: string) {
             tokens.push({
                 tag: "numeric_with_unit",
                 value: token,
+                offset,
                 line,
                 column
             });
@@ -479,6 +510,7 @@ function getScpiTokens(input: string) {
         tokens.push({
             tag: "newline",
             value: "\n",
+            offset,
             line,
             column
         });
@@ -486,6 +518,7 @@ function getScpiTokens(input: string) {
         tokens.push({
             tag: "space",
             value: " ",
+            offset,
             line,
             column
         });
@@ -494,6 +527,7 @@ function getScpiTokens(input: string) {
     tokens.push({
         tag: "end",
         value: "",
+        offset,
         line,
         column
     });
@@ -522,10 +556,12 @@ export function parseScpi(input: string) {
     let parts: {
         tag: ScpiPartTag;
         value: string | undefined;
+        token: Token;
     }[] = [];
 
     let backtrackTerm: "query-with-assignment" | "query" | "command" =
         "command";
+    let backtrackToken: Token;
     let backtrack = -1;
     let backtrackTokens: Token[] | undefined = undefined;
 
@@ -538,7 +574,8 @@ export function parseScpi(input: string) {
         } else {
             parts.push({
                 tag: SCPI_PART_STRING,
-                value: token.value
+                value: token.value,
+                token
             });
         }
     }
@@ -546,35 +583,40 @@ export function parseScpi(input: string) {
     function emitExpression(token: Token) {
         parts.push({
             tag: SCPI_PART_EXPR,
-            value: token.value
+            value: token.value,
+            token
         });
     }
 
-    function emitExecuteQueryWithAssignment(output: string) {
+    function emitExecuteQueryWithAssignment(output: string, token: Token) {
         parts.push({
             tag: SCPI_PART_QUERY_WITH_ASSIGNMENT,
-            value: output
+            value: output,
+            token
         });
     }
 
-    function emitExecuteQuery() {
+    function emitExecuteQuery(token: Token) {
         parts.push({
             tag: SCPI_PART_QUERY,
-            value: undefined
+            value: undefined,
+            token
         });
     }
 
-    function emitExecuteCommand() {
+    function emitExecuteCommand(token: Token) {
         parts.push({
             tag: SCPI_PART_COMMAND,
-            value: undefined
+            value: undefined,
+            token
         });
     }
 
     function emitEnd(token: Token) {
         parts.push({
             tag: SCPI_PART_END,
-            value: undefined
+            value: undefined,
+            token
         });
     }
 
@@ -601,6 +643,7 @@ export function parseScpi(input: string) {
         term: "query-with-assignment" | "query" | "command"
     ) {
         backtrackTerm = term;
+        backtrackToken = tokens[index];
         backtrack = index;
         backtrackTokens = [];
     }
@@ -642,11 +685,11 @@ export function parseScpi(input: string) {
         }
 
         if (backtrackTerm == "query-with-assignment") {
-            emitExecuteQueryWithAssignment(output!);
+            emitExecuteQueryWithAssignment(output!, backtrackToken);
         } else if (backtrackTerm == "query") {
-            emitExecuteQuery();
+            emitExecuteQuery(backtrackToken);
         } else {
-            emitExecuteCommand();
+            emitExecuteCommand(backtrackToken);
         }
     }
 

@@ -114,7 +114,8 @@ export type FlowPropertyType =
     | "input"
     | "output"
     | "assignable"
-    | "template-literal";
+    | "template-literal"
+    | "scpi-template-literal";
 
 export interface PropertyInfo {
     name: string;

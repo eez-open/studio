@@ -25,8 +25,17 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import { expressionParser } from "project-editor/flow/expression/parser";
 import { findValueTypeInExpressionNode } from "project-editor/flow/expression/type";
-import { visitExpressionNodes } from "project-editor/flow/expression/helper";
+import {
+    templateLiteralToExpressions,
+    visitExpressionNodes
+} from "project-editor/flow/expression/helper";
 import type { IdentifierExpressionNode } from "project-editor/flow/expression/node";
+
+import {
+    parseScpi,
+    SCPI_PART_EXPR,
+    SCPI_PART_QUERY_WITH_ASSIGNMENT
+} from "eez-studio-shared/scpi-parser";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -267,6 +276,16 @@ export function* searchForReference(
 
             let match = false;
 
+            let flowProperty;
+            if (valueObject.propertyInfo.flowProperty) {
+                if (typeof valueObject.propertyInfo.flowProperty == "string") {
+                    flowProperty = valueObject.propertyInfo.flowProperty;
+                } else {
+                    flowProperty =
+                        valueObject.propertyInfo.flowProperty(object);
+                }
+            }
+
             if (
                 (valueObject.propertyInfo.type ===
                     PropertyType.ObjectReference &&
@@ -317,55 +336,145 @@ export function* searchForReference(
                         }
                     }
                 }
-            } else if (valueObject.propertyInfo.expressionType != undefined) {
+            } else if (
+                valueObject.propertyInfo.expressionType != undefined ||
+                flowProperty == "scpi-template-literal"
+            ) {
                 if (objectIsVariable) {
                     const component = getParent(valueObject);
                     if (component instanceof ProjectEditor.ComponentClass) {
-                        try {
-                            const rootNode = expressionParser.parse(
+                        let expressions;
+
+                        if (
+                            flowProperty &&
+                            flowProperty == "template-literal"
+                        ) {
+                            expressions = templateLiteralToExpressions(
                                 valueObject.value
-                            );
+                            ).map(expression => ({
+                                start: expression.start + 1,
+                                end: expression.end - 1
+                            }));
+                        } else if (
+                            flowProperty &&
+                            flowProperty == "scpi-template-literal"
+                        ) {
+                            console.log(flowProperty);
 
-                            findValueTypeInExpressionNode(
-                                project,
-                                component,
-                                rootNode,
-                                false
-                            );
+                            expressions = [];
 
-                            const foundExpressionNodes: IdentifierExpressionNode[] =
-                                [];
+                            try {
+                                const parts = parseScpi(valueObject.value);
+                                for (const part of parts) {
+                                    const tag = part.tag;
+                                    const str = part.value!;
 
-                            for (const node of visitExpressionNodes(rootNode)) {
-                                if (node.type == "Identifier") {
-                                    if (objectIsLocalVariable) {
-                                        if (
-                                            node.identifierType ===
-                                                "local-variable" &&
-                                            node.name == objectName
-                                        ) {
-                                            if (node.name == objectName) {
-                                                foundExpressionNodes.push(node);
-                                            }
-                                        }
-                                    } else {
-                                        if (
-                                            node.identifierType ===
-                                                "global-variable" &&
-                                            node.name == objectName
-                                        ) {
-                                            foundExpressionNodes.push(node);
+                                    if (tag == SCPI_PART_EXPR) {
+                                        expressions.push({
+                                            start: part.token.offset + 1,
+                                            end:
+                                                part.token.offset +
+                                                str.length -
+                                                1
+                                        });
+                                    } else if (
+                                        tag == SCPI_PART_QUERY_WITH_ASSIGNMENT
+                                    ) {
+                                        if (str[0] == "{") {
+                                            expressions.push({
+                                                start: part.token.offset + 1,
+                                                end:
+                                                    part.token.offset +
+                                                    str.length -
+                                                    1
+                                            });
+                                        } else {
+                                            expressions.push({
+                                                start: part.token.offset,
+                                                end:
+                                                    part.token.offset +
+                                                    str.length
+                                            });
                                         }
                                     }
                                 }
+                            } catch (err) {
+                                expressions = [];
                             }
+                        } else {
+                            expressions = [
+                                { start: 0, end: valueObject.value.length }
+                            ];
+                        }
 
-                            if (foundExpressionNodes.length) {
-                                match = true;
-                                valueObject.expressionNodes =
-                                    foundExpressionNodes;
-                            }
-                        } catch (err) {}
+                        for (const expression of expressions) {
+                            try {
+                                const rootNode = expressionParser.parse(
+                                    valueObject.value.substring(
+                                        expression.start,
+                                        expression.end
+                                    )
+                                );
+
+                                findValueTypeInExpressionNode(
+                                    project,
+                                    component,
+                                    rootNode,
+                                    false
+                                );
+
+                                const foundExpressionNodes: IdentifierExpressionNode[] =
+                                    [];
+
+                                for (const node of visitExpressionNodes(
+                                    rootNode
+                                )) {
+                                    if (node.type == "Identifier") {
+                                        node.location.start.offset +=
+                                            expression.start;
+
+                                        node.location.end.offset +=
+                                            expression.start;
+
+                                        if (objectIsLocalVariable) {
+                                            if (
+                                                node.identifierType ===
+                                                    "local-variable" &&
+                                                node.name == objectName
+                                            ) {
+                                                if (node.name == objectName) {
+                                                    foundExpressionNodes.push(
+                                                        node
+                                                    );
+                                                }
+                                            }
+                                        } else {
+                                            if (
+                                                node.identifierType ===
+                                                    "global-variable" &&
+                                                node.name == objectName
+                                            ) {
+                                                foundExpressionNodes.push(node);
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (foundExpressionNodes.length > 0) {
+                                    match = true;
+
+                                    if (!valueObject.expressionNodes) {
+                                        valueObject.expressionNodes =
+                                            foundExpressionNodes;
+                                    } else {
+                                        valueObject.expressionNodes = [
+                                            ...valueObject.expressionNodes,
+                                            ...foundExpressionNodes
+                                        ];
+                                    }
+                                }
+                            } catch (err) {}
+                        }
                     }
                 }
             }
