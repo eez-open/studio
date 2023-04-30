@@ -29,7 +29,10 @@ import {
     templateLiteralToExpressions,
     visitExpressionNodes
 } from "project-editor/flow/expression/helper";
-import type { IdentifierExpressionNode } from "project-editor/flow/expression/node";
+import type {
+    IdentifierExpressionNode,
+    IdentifierType
+} from "project-editor/flow/expression/node";
 
 import {
     parseScpi,
@@ -38,6 +41,12 @@ import {
 } from "eez-studio-shared/scpi-parser";
 
 import type { Component } from "project-editor/flow/component";
+
+import {
+    ValueType,
+    variableTypeProperty
+} from "project-editor/features/variable/value-type";
+import type { Structure } from "project-editor/features/variable/variable";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -224,20 +233,44 @@ export function* searchForReference(
 
     const project = ProjectEditor.getProject(object);
 
-    const objectIsVariable = object instanceof ProjectEditor.VariableClass;
+    let identifierType: IdentifierType | undefined;
+    let structType: ValueType | undefined;
 
-    let flow;
-    let objectIsLocalVariable;
-    if (objectIsVariable) {
-        flow = getAncestorOfType(object, ProjectEditor.FlowClass.classInfo);
-        objectIsLocalVariable = flow != undefined;
-    } else {
-        objectIsLocalVariable = false;
+    if (object instanceof ProjectEditor.VariableClass) {
+        let flow = getAncestorOfType(object, ProjectEditor.FlowClass.classInfo);
+        if (flow) {
+            identifierType = "local-variable";
+            root = flow;
+        } else {
+            identifierType = "global-variable";
+        }
+    } else if (object instanceof ProjectEditor.StructureFieldClass) {
+        const struct = getAncestorOfType<Structure>(
+            object,
+            ProjectEditor.StructureClass.classInfo
+        );
+        structType = `struct:${struct!.name}`;
+    } else if (object instanceof ProjectEditor.EnumClass) {
+        identifierType = "enum";
+    } else if (object instanceof ProjectEditor.EnumMemberClass) {
+        identifierType = "enum-member";
+    } else if (object instanceof ProjectEditor.CustomInputClass) {
+        identifierType = "input";
+        root = getAncestorOfType(
+            object,
+            ProjectEditor.ComponentClass.classInfo
+        )!;
+    } else if (object instanceof ProjectEditor.CustomOutputClass) {
+        identifierType = "output";
+        root = getAncestorOfType(
+            object,
+            ProjectEditor.ComponentClass.classInfo
+        )!;
+    } else if (object instanceof ProjectEditor.ImportDirectiveClass) {
+        identifierType = "imported-project";
     }
 
-    let v = (withPause ? visitWithPause : visitWithoutPause)(
-        flow ? flow : root
-    );
+    let v = (withPause ? visitWithPause : visitWithoutPause)(root);
 
     let objectName;
     let objectParentPath;
@@ -256,7 +289,10 @@ export function* searchForReference(
             return;
         }
 
-        objectName = getProperty(object, "name");
+        objectName = getProperty(
+            object,
+            identifierType == "imported-project" ? "importAs" : "name"
+        );
         if (!objectName || objectName.length == 0) {
             return;
         }
@@ -313,13 +349,25 @@ export function* searchForReference(
                         }
                     }
                 } else {
-                    if (
-                        valueObject.propertyInfo
-                            .referencedObjectCollectionPath ==
-                            objectParentPath &&
-                        valueObject.value === objectName
-                    ) {
-                        match = true;
+                    if (identifierType == "imported-project") {
+                        if (valueObject.value.startsWith(objectName + ".")) {
+                            valueObject.foundPositions = [
+                                {
+                                    start: 0,
+                                    end: objectName.length
+                                }
+                            ];
+                            match = true;
+                        }
+                    } else {
+                        if (
+                            valueObject.propertyInfo
+                                .referencedObjectCollectionPath ==
+                                objectParentPath &&
+                            valueObject.value === objectName
+                        ) {
+                            match = true;
+                        }
                     }
                 }
             } else if (
@@ -342,39 +390,41 @@ export function* searchForReference(
                 valueObject.propertyInfo.expressionType != undefined ||
                 flowProperty == "scpi-template-literal"
             ) {
-                if (objectIsVariable) {
+                if (identifierType || structType) {
                     const component = getAncestorOfType<Component>(
                         valueObject,
                         ProjectEditor.ComponentClass.classInfo
                     );
-                    if (component) {
-                        let expressions;
+                    let expressions;
 
-                        if (
-                            flowProperty &&
-                            flowProperty == "template-literal"
-                        ) {
-                            expressions = templateLiteralToExpressions(
-                                valueObject.value
-                            ).map(expression => ({
-                                start: expression.start + 1,
-                                end: expression.end - 1
-                            }));
-                        } else if (
-                            flowProperty &&
-                            flowProperty == "scpi-template-literal"
-                        ) {
-                            console.log(flowProperty);
+                    if (flowProperty && flowProperty == "template-literal") {
+                        expressions = templateLiteralToExpressions(
+                            valueObject.value
+                        ).map(expression => ({
+                            start: expression.start + 1,
+                            end: expression.end - 1
+                        }));
+                    } else if (
+                        flowProperty &&
+                        flowProperty == "scpi-template-literal"
+                    ) {
+                        expressions = [];
 
-                            expressions = [];
+                        try {
+                            const parts = parseScpi(valueObject.value);
+                            for (const part of parts) {
+                                const tag = part.tag;
+                                const str = part.value!;
 
-                            try {
-                                const parts = parseScpi(valueObject.value);
-                                for (const part of parts) {
-                                    const tag = part.tag;
-                                    const str = part.value!;
-
-                                    if (tag == SCPI_PART_EXPR) {
+                                if (tag == SCPI_PART_EXPR) {
+                                    expressions.push({
+                                        start: part.token.offset + 1,
+                                        end: part.token.offset + str.length - 1
+                                    });
+                                } else if (
+                                    tag == SCPI_PART_QUERY_WITH_ASSIGNMENT
+                                ) {
+                                    if (str[0] == "{") {
                                         expressions.push({
                                             start: part.token.offset + 1,
                                             end:
@@ -382,104 +432,139 @@ export function* searchForReference(
                                                 str.length -
                                                 1
                                         });
-                                    } else if (
-                                        tag == SCPI_PART_QUERY_WITH_ASSIGNMENT
-                                    ) {
-                                        if (str[0] == "{") {
-                                            expressions.push({
-                                                start: part.token.offset + 1,
-                                                end:
-                                                    part.token.offset +
-                                                    str.length -
-                                                    1
-                                            });
-                                        } else {
-                                            expressions.push({
-                                                start: part.token.offset,
-                                                end:
-                                                    part.token.offset +
-                                                    str.length
-                                            });
-                                        }
+                                    } else {
+                                        expressions.push({
+                                            start: part.token.offset,
+                                            end: part.token.offset + str.length
+                                        });
                                     }
                                 }
-                            } catch (err) {
-                                expressions = [];
                             }
-                        } else {
-                            expressions = [
-                                { start: 0, end: valueObject.value.length }
-                            ];
+                        } catch (err) {
+                            expressions = [];
                         }
+                    } else {
+                        expressions = [
+                            { start: 0, end: valueObject.value.length }
+                        ];
+                    }
 
-                        for (const expression of expressions) {
-                            try {
-                                const rootNode = expressionParser.parse(
-                                    valueObject.value.substring(
-                                        expression.start,
-                                        expression.end
-                                    )
-                                );
+                    for (const expression of expressions) {
+                        try {
+                            const rootNode = expressionParser.parse(
+                                valueObject.value.substring(
+                                    expression.start,
+                                    expression.end
+                                )
+                            );
 
-                                findValueTypeInExpressionNode(
-                                    project,
-                                    component,
-                                    rootNode,
-                                    false
-                                );
+                            findValueTypeInExpressionNode(
+                                project,
+                                component,
+                                rootNode,
+                                flowProperty == "assignable"
+                            );
 
-                                const foundExpressionNodes: IdentifierExpressionNode[] =
-                                    [];
+                            const foundExpressionNodes: IdentifierExpressionNode[] =
+                                [];
 
-                                for (const node of visitExpressionNodes(
-                                    rootNode
-                                )) {
-                                    if (node.type == "Identifier") {
+                            for (const node of visitExpressionNodes(rootNode)) {
+                                if (node.type == "Identifier") {
+                                    if (
+                                        node.identifierType ===
+                                            identifierType &&
+                                        node.name == objectName
+                                    ) {
                                         node.location.start.offset +=
                                             expression.start;
 
                                         node.location.end.offset +=
                                             expression.start;
 
-                                        if (objectIsLocalVariable) {
-                                            if (
-                                                node.identifierType ===
-                                                    "local-variable" &&
-                                                node.name == objectName
-                                            ) {
-                                                if (node.name == objectName) {
-                                                    foundExpressionNodes.push(
-                                                        node
-                                                    );
-                                                }
-                                            }
-                                        } else {
-                                            if (
-                                                node.identifierType ===
-                                                    "global-variable" &&
-                                                node.name == objectName
-                                            ) {
-                                                foundExpressionNodes.push(node);
-                                            }
-                                        }
+                                        foundExpressionNodes.push(node);
+                                    }
+                                } else if (node.type == "MemberExpression") {
+                                    if (
+                                        node.object.type == "Identifier" &&
+                                        node.object.valueType == structType &&
+                                        node.property.type == "Identifier" &&
+                                        node.property.name == objectName
+                                    ) {
+                                        node.property.location.start.offset +=
+                                            expression.start;
+
+                                        node.property.location.end.offset +=
+                                            expression.start;
+
+                                        foundExpressionNodes.push(
+                                            node.property
+                                        );
                                     }
                                 }
+                            }
 
-                                if (foundExpressionNodes.length > 0) {
-                                    match = true;
+                            if (foundExpressionNodes.length > 0) {
+                                match = true;
 
-                                    if (!valueObject.expressionNodes) {
-                                        valueObject.expressionNodes =
-                                            foundExpressionNodes;
-                                    } else {
-                                        valueObject.expressionNodes = [
-                                            ...valueObject.expressionNodes,
-                                            ...foundExpressionNodes
-                                        ];
-                                    }
+                                const foundPositions = foundExpressionNodes.map(
+                                    node => ({
+                                        start: node.location.start.offset,
+                                        end: node.location.end.offset
+                                    })
+                                );
+
+                                if (!valueObject.foundPositions) {
+                                    valueObject.foundPositions = foundPositions;
+                                } else {
+                                    valueObject.foundPositions = [
+                                        ...valueObject.foundPositions,
+                                        ...foundPositions
+                                    ];
                                 }
-                            } catch (err) {}
-                        }
+                            }
+                        } catch (err) {}
+                    }
+                }
+            } else if (valueObject.propertyInfo == variableTypeProperty) {
+                if (object instanceof ProjectEditor.StructureClass) {
+                    if (valueObject.value == `struct:${objectName}`) {
+                        valueObject.foundPositions = [
+                            {
+                                start: "struct:".length,
+                                end: valueObject.value.length
+                            }
+                        ];
+                        match = true;
+                    } else if (
+                        valueObject.value == `array:struct:${objectName}`
+                    ) {
+                        valueObject.foundPositions = [
+                            {
+                                start: "array:struct:".length,
+                                end: valueObject.value.length
+                            }
+                        ];
+                        match = true;
+                    }
+                } else if (object instanceof ProjectEditor.EnumClass) {
+                    if (valueObject.value == `enum:${objectName}`) {
+                        valueObject.foundPositions = [
+                            {
+                                start: "enum:".length,
+                                end: valueObject.value.length
+                            }
+                        ];
+                        match = true;
+                    } else if (
+                        valueObject.value == `array:enum:${objectName}`
+                    ) {
+                        valueObject.foundPositions = [
+                            {
+                                start: "array:enum:".length,
+                                end: valueObject.value.length
+                            }
+                        ];
+                        match = true;
                     }
                 }
             }
@@ -728,16 +813,16 @@ export function replaceObjectReference(object: IEezObject, newValue: string) {
 
             let value: string | string[] = newValue;
 
-            if (searchValue.expressionNodes) {
+            if (searchValue.foundPositions) {
                 const oldValue = getProperty(parent, key);
 
                 value = "";
 
                 let prevEnd = 0;
 
-                for (const node of searchValue.expressionNodes) {
-                    let start = node.location.start.offset;
-                    let end = node.location.end.offset;
+                for (const position of searchValue.foundPositions) {
+                    let start = position.start;
+                    let end = position.end;
 
                     if (prevEnd < start) {
                         value += oldValue.substring(prevEnd, start);

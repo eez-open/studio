@@ -25,7 +25,8 @@ import {
     getFlow,
     Project,
     checkObjectReference,
-    checkAssetId
+    checkAssetId,
+    ImportDirective
 } from "project-editor/project/project";
 
 import { extensions } from "eez-studio-shared/extensions/extensions";
@@ -34,7 +35,9 @@ import {
     ActionComponent,
     Component,
     registerActionComponent,
-    getWidgetParent
+    getWidgetParent,
+    CustomInput,
+    CustomOutput
 } from "project-editor/flow/component";
 
 import { Page } from "project-editor/features/page/page";
@@ -107,6 +110,13 @@ import {
 import { LVGLStyle } from "project-editor/lvgl/style";
 import { Property } from "./ui-components/PropertyGrid/Property";
 import { getProjectStore } from "project-editor/store";
+
+import {
+    Structure,
+    StructureField,
+    Enum,
+    EnumMember
+} from "project-editor/features/variable/variable";
 
 let extensionsInitialized = false;
 
@@ -219,7 +229,14 @@ export async function initProjectEditor(
         checkAssetId,
         Property,
         ArrayProperty,
-        EmbeddedPropertyGrid
+        EmbeddedPropertyGrid,
+        StructureClass: Structure,
+        StructureFieldClass: StructureField,
+        EnumClass: Enum,
+        EnumMemberClass: EnumMember,
+        CustomInputClass: CustomInput,
+        CustomOutputClass: CustomOutput,
+        ImportDirectiveClass: ImportDirective
     };
 
     Object.assign(ProjectEditor, projectEditor);

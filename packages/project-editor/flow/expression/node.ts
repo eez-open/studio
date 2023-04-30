@@ -2,23 +2,25 @@ import type { ValueType } from "project-editor/features/variable/value-type";
 
 import type { LocationRange } from "peggy";
 
+export type IdentifierType =
+    | "input"
+    | "output"
+    | "local-variable"
+    | "global-variable"
+    | "system-variable"
+    | "enum"
+    | "enum-member"
+    | "builtin-constant-namespace"
+    | "builtin-constant-member"
+    | "imported-project"
+    | "member"
+    | "unknown";
+
 export type IdentifierExpressionNode = {
     type: "Identifier";
     name: string;
     valueType: ValueType;
-    identifierType:
-        | "input"
-        | "output"
-        | "local-variable"
-        | "global-variable"
-        | "system-variable"
-        | "enum"
-        | "enum-member"
-        | "builtin-constant-namespace"
-        | "builtin-constant-member"
-        | "imported-project"
-        | "member"
-        | "unknown";
+    identifierType: IdentifierType;
     location: LocationRange;
 };
 

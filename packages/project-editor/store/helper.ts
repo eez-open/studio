@@ -41,8 +41,6 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import { createObject, objectToJson } from "project-editor/store/serialization";
 import { confirm } from "project-editor/core/util";
 
-import type { IdentifierExpressionNode } from "project-editor/flow/expression/node";
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class EezValueObject extends EezObject {
@@ -55,7 +53,8 @@ export class EezValueObject extends EezObject {
 
     public propertyInfo: PropertyInfo;
     public value: any;
-    public expressionNodes: IdentifierExpressionNode[] | undefined;
+
+    public foundPositions: { start: number; end: number }[] | undefined;
 
     static create(object: IEezObject, propertyInfo: PropertyInfo, value: any) {
         const valueObject = new EezValueObject();

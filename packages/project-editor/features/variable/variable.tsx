@@ -147,6 +147,9 @@ export class Variable extends EezObject {
             {
                 name: "defaultValue",
                 type: PropertyType.MultilineText,
+                expressionType: "any",
+                expressionIsConstant: true,
+                flowProperty: "input",
                 monospaceFont: true,
                 disableSpellcheck: true,
                 hideInPropertyGrid: object => {

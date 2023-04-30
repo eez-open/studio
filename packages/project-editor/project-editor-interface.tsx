@@ -14,14 +14,17 @@ import type {
     checkAssetId,
     getFlow,
     getProject,
-    Project
+    Project,
+    ImportDirective
 } from "project-editor/project/project";
 import type { Page } from "project-editor/features/page/page";
 import type {
     ActionComponent,
     Component,
     Widget,
-    getWidgetParent
+    getWidgetParent,
+    CustomInput,
+    CustomOutput
 } from "project-editor/flow/component";
 import type {
     Glyph,
@@ -72,6 +75,13 @@ import type {
 import type { LVGLStyle } from "project-editor/lvgl/style";
 import type { Property } from "project-editor/ui-components/PropertyGrid/Property";
 import type { getProjectStore } from "project-editor/store";
+
+import type {
+    Structure,
+    StructureField,
+    Enum,
+    EnumMember
+} from "project-editor/features/variable/variable";
 
 export interface IProjectEditor {
     homeTabs?: Tabs;
@@ -130,6 +140,13 @@ export interface IProjectEditor {
     Property: typeof Property;
     ArrayProperty: typeof ArrayProperty;
     EmbeddedPropertyGrid: typeof EmbeddedPropertyGrid;
+    StructureClass: typeof Structure;
+    StructureFieldClass: typeof StructureField;
+    EnumClass: typeof Enum;
+    EnumMemberClass: typeof EnumMember;
+    CustomInputClass: typeof CustomInput;
+    CustomOutputClass: typeof CustomOutput;
+    ImportDirectiveClass: typeof ImportDirective;
 }
 
 export const ProjectEditor: IProjectEditor = {} as any;
