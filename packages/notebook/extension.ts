@@ -20,6 +20,7 @@ const notebookExtension: IExtensionDefinition = {
             id: "notebooks",
             title: "Notebooks",
             icon: "material:library_books",
+            category: "instrument" as const,
             renderContent: () => {
                 const { renderContent } =
                     require("notebook/section") as typeof SectionModule;

@@ -2,7 +2,7 @@ import React from "react";
 import { observer } from "mobx-react";
 
 import { confirm } from "eez-studio-ui/dialog-electron";
-import { ButtonAction, TextAction, IconAction } from "eez-studio-ui/action";
+import { TextAction, IconAction } from "eez-studio-ui/action";
 import { IAppStore } from "instrument/window/history/history";
 import { computed, makeObservable } from "mobx";
 
@@ -51,11 +51,10 @@ export const SessionInfo = observer(
                     <React.Fragment>
                         <span>Active session:</span>
                         <span>{this.activeSessionName}</span>
-                        <ButtonAction
+                        <TextAction
                             text="Close"
                             title="Close active session"
                             onClick={this.onClose}
-                            className="btn-sm"
                         />
                         {viewSessionsList}
                     </React.Fragment>

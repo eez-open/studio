@@ -62,12 +62,11 @@ const AppComponent = observer(
                                 }
                             )}
                         />
-                        {tabs.instrumentsVisible &&
-                            appStore.history.sessions.activeSession && (
-                                <div className="EezStudio_SessionInfoContainer">
-                                    <SessionInfo appStore={appStore} />
-                                </div>
-                            )}
+                        {tabs.instrumentsVisible && (
+                            <div className="EezStudio_SessionInfoContainer">
+                                <SessionInfo appStore={appStore} />
+                            </div>
+                        )}
                     </Header>
                     <Body>
                         <Tabs />

@@ -33,11 +33,14 @@ export interface IExtensionProperties {
     dashboards?: IDashboard[];
 }
 
+export type HomeTabCategory = "none" | "common" | "instrument";
+
 export interface IHomeSection {
     id: string;
     name?: string;
     title: string;
     icon: string;
+    category: HomeTabCategory;
     renderContent: () => JSX.Element;
     selectItem?: (itemId: string) => void;
 }

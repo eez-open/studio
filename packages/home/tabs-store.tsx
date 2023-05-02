@@ -46,6 +46,7 @@ import { firstTime } from "./first-time";
 import { initProjectEditor } from "project-editor/project-editor-bootstrap";
 import { PROJECT_TAB_ID_PREFIX } from "home/tabs-store-conf";
 import { getProjectIcon } from "home/helper";
+import type { HomeTabCategory } from "eez-studio-shared/extensions/extension";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -55,6 +56,7 @@ export interface IHomeTab extends ITab {
     attention?: boolean;
     beforeAppClose?(): Promise<boolean>;
     titleStr: string;
+    category: HomeTabCategory;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,6 +77,7 @@ class HomeTab implements IHomeTab {
     id = "home";
     title = "Home";
     icon = "material:home";
+    category: HomeTabCategory = "none";
 
     get titleStr() {
         return this.title;
@@ -116,6 +119,7 @@ class HistoryTab implements IHomeTab {
     id = "history";
     title = "History";
     icon = "material:history";
+    category: HomeTabCategory = "instrument";
 
     get titleStr() {
         return this.title;
@@ -191,6 +195,7 @@ class ShortcutsAndGroupsTab implements IHomeTab {
     id = "shortcutsAndGroups";
     title = "Shortcuts and Groups";
     icon = "material:playlist_play";
+    category: HomeTabCategory = "instrument";
 
     get titleStr() {
         return this.title;
@@ -228,6 +233,7 @@ class ExtensionManagerTab implements IHomeTab {
 
     id = "extensions";
     title = "Extension Manager";
+    category: HomeTabCategory = "common";
 
     get titleStr() {
         return this.title;
@@ -296,6 +302,7 @@ class SettingsTab implements IHomeTab {
 
     id = "settings";
     title = "Settings";
+    category: HomeTabCategory = "common";
 
     get titleStr() {
         return this.title;
@@ -348,6 +355,9 @@ class HomeSectionTab implements IHomeTab {
     permanent: boolean = true;
     active: boolean = false;
     loading: boolean = false;
+    get category() {
+        return this.homeSection.category;
+    }
 
     get id() {
         return "homeSection_" + this.homeSection.id;
@@ -395,6 +405,8 @@ export class InstrumentTab implements IHomeTab {
     _active: boolean = false;
 
     loading = false;
+
+    category: HomeTabCategory = "none";
 
     get active() {
         return this._active;
@@ -500,6 +512,8 @@ export class ProjectEditorTab implements IHomeTab {
     ProjectEditor: typeof ProjectEditorView;
 
     closed: boolean = false;
+
+    category: HomeTabCategory = "none";
 
     async loadProject() {
         try {
@@ -795,7 +809,7 @@ export class ProjectEditorTab implements IHomeTab {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface ITabDefinition {
+export interface ITabDefinition {
     instance: IHomeTab;
     open: () => IHomeTab;
     selectItem?: (itemId: string) => void;
@@ -807,6 +821,8 @@ interface ISavedTab {
     id: string;
     active: boolean;
 }
+
+type HomeSectionVisibilityOption = "both" | "projects" | "instruments";
 
 export class Tabs {
     tabs: IHomeTab[] = [];
@@ -860,11 +876,10 @@ export class Tabs {
     }
 
     constructor() {
-        this._instrumentsVisible =
-            localStorage.getItem(LOCAL_STORAGE_INSTRUMENT_VISIBLE_SETTING) ==
-            "false"
-                ? false
-                : true ?? true;
+        this._homeSectionsVisibilityOption =
+            (localStorage.getItem(
+                LOCAL_STORAGE_HOME_SECTION_VISIBILITY_OPTION
+            ) as HomeSectionVisibilityOption) ?? "both";
 
         makeObservable(this, {
             tabs: observable,
@@ -878,7 +893,7 @@ export class Tabs {
             navigateToHistory: action.bound,
             navigateToDeletedHistoryItems: action.bound,
             navigateToSessionsList: action.bound,
-            _instrumentsVisible: observable
+            _homeSectionsVisibilityOption: observable
         });
 
         loadPreinstalledExtension("instrument").then(async () => {
@@ -1118,20 +1133,34 @@ export class Tabs {
         );
     }
 
-    _instrumentsVisible: boolean;
+    _homeSectionsVisibilityOption: HomeSectionVisibilityOption;
 
-    get instrumentsVisible() {
-        return this._instrumentsVisible;
+    get homeSectionsVisibilityOption() {
+        return this._homeSectionsVisibilityOption;
     }
 
-    set instrumentsVisible(value: boolean) {
+    set homeSectionsVisibilityOption(value: HomeSectionVisibilityOption) {
         runInAction(() => {
-            this._instrumentsVisible = value;
+            this._homeSectionsVisibilityOption = value;
         });
 
         localStorage.setItem(
-            LOCAL_STORAGE_INSTRUMENT_VISIBLE_SETTING,
-            this._instrumentsVisible ? "true" : "false"
+            LOCAL_STORAGE_HOME_SECTION_VISIBILITY_OPTION,
+            this._homeSectionsVisibilityOption
+        );
+    }
+
+    get projectsVisible() {
+        return (
+            this._homeSectionsVisibilityOption == "both" ||
+            this._homeSectionsVisibilityOption == "projects"
+        );
+    }
+
+    get instrumentsVisible() {
+        return (
+            this._homeSectionsVisibilityOption == "both" ||
+            this._homeSectionsVisibilityOption == "instruments"
         );
     }
 }
@@ -1142,10 +1171,11 @@ export function loadTabs() {
     tabs = new Tabs();
 }
 
-export const LOCAL_STORAGE_INSTRUMENT_VISIBLE_SETTING = "instrumentsVisible";
+export const LOCAL_STORAGE_HOME_SECTION_VISIBILITY_OPTION =
+    "homeSectionVisibilityOption";
 
 export function onSetupSkip() {
-    tabs.instrumentsVisible = false;
+    tabs.homeSectionsVisibilityOption = "projects";
     runInAction(() => firstTime.set(false));
     tabs.openTabById("home", true);
 }
