@@ -57,8 +57,6 @@ export class LVGLBuild {
     enumStyles() {
         const styles: LVGLStyle[] = [];
 
-        styles.push(...this.project.lvglStyles.styles);
-
         for (const project of this.project._store.openProjectsManager
             .projects) {
             styles.push(...project.lvglStyles.styles);
