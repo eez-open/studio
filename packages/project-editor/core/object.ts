@@ -210,6 +210,8 @@ export interface PropertyInfo {
     disableBitmapPreview?: boolean;
     inputPlaceholder?: (object: IEezObject) => string;
     embeddedImage?: boolean;
+
+    propertyGridColSpan?: boolean;
 }
 
 export type InheritedValue =

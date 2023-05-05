@@ -159,7 +159,7 @@ export class InstrumentObject {
 
         this.custom = props.custom || {};
 
-        if (this.instrumentExtensionId) {
+        if (this.instrumentExtensionId && isRenderer()) {
             this.commandsTree = getCommandsTree(this.instrumentExtensionId);
         } else {
             this.commandsTree = new CommandsTree();

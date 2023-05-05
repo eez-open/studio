@@ -161,6 +161,7 @@ export const PropertyGrid = observer(
 
             for (let propertyInfo of properties) {
                 const colSpan =
+                    propertyInfo.propertyGridColSpan ||
                     (propertyInfo.type === PropertyType.Boolean &&
                         !propertyInfo.checkboxStyleSwitch) ||
                     (propertyInfo.type === PropertyType.Any &&
@@ -171,7 +172,6 @@ export const PropertyGrid = observer(
                             propertyInfo
                         ) ||
                             !propertyInfo.propertyGridCollapsableDefaultPropertyName)) ||
-                    propertyInfo.type === PropertyType.Array ||
                     propertyInfo.propertyGridRowComponent;
 
                 const propertyReadOnly = isAnyPropertyReadOnly(

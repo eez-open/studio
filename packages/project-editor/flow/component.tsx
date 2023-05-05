@@ -1704,7 +1704,7 @@ export class Component extends EezObject {
                             }}
                         />
                     )}
-                    {label}
+                    <span title={label}>{label}</span>
                 </>
             );
         },

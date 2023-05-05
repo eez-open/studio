@@ -168,7 +168,6 @@ function TabButton({ tab }: { tab: ITabDefinition }) {
     }
     return (
         <button
-            key={tab.instance.id}
             className="btn btn btn-secondary"
             onClick={() => tab.open().makeActive()}
             title={
@@ -179,7 +178,9 @@ function TabButton({ tab }: { tab: ITabDefinition }) {
             style={{ display: "inline-flex", alignItems: "center" }}
         >
             {icon}
-            <span style={{ paddingLeft: 5 }}>{tab.instance.title}</span>
+            <span style={{ paddingLeft: 5, whiteSpace: "nowrap" }}>
+                {tab.instance.title}
+            </span>
         </button>
     );
 }
@@ -352,7 +353,7 @@ export const WorkbenchToolbar = observer(
                                 tab => tab.instance.category == "instrument"
                             )
                             .map(tab => (
-                                <TabButton tab={tab} />
+                                <TabButton key={tab.instance.id} tab={tab} />
                             ))}
                         {tabs.homeSectionsVisibilityOption == "both" && (
                             <IconAction
@@ -825,7 +826,7 @@ export const Home = observer(
                     {tabs.allTabs
                         .filter(tab => tab.instance.category == "common")
                         .map(tab => (
-                            <TabButton tab={tab} />
+                            <TabButton key={tab.instance.id} tab={tab} />
                         ))}
                 </div>
             );

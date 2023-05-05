@@ -60,8 +60,7 @@ export const ArrayProperty = observer(
         constructor(props: PropertyProps) {
             super(props);
 
-            this.selectedObject =
-                this.value && this.value.length > 0 ? this.value[0] : undefined;
+            this.selectedObject = undefined;
 
             makeObservable(this, {
                 value: computed,
@@ -242,7 +241,11 @@ export const ArrayProperty = observer(
 
             const toolbar = (
                 <div className="d-flex justify-content-between EezStudio_ArrayPropertyToolbar">
-                    <PropertyName {...this.props} />
+                    {propertyInfo.propertyGridColSpan === true ? (
+                        <PropertyName {...this.props} />
+                    ) : (
+                        <span>&nbsp;</span>
+                    )}
                     <Toolbar>
                         <IconAction
                             icon="material:add"
