@@ -27,6 +27,8 @@ export class TerminalWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.DASHBOARD,
 
+        componentPaletteGroupName: "!1Input",
+
         defaultValue: {
             left: 0,
             top: 0,

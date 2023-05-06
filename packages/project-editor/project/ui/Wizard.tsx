@@ -133,8 +133,6 @@ interface TemplateProject {
     _image_url: string;
 }
 
-const RESOURCE_PROJECT_NAME = "BB3 MicroPython Script";
-
 const NewProjectWizard = observer(
     class NewProjectWizard extends React.Component {
         open = true;
@@ -283,21 +281,21 @@ const NewProjectWizard = observer(
                 children: [
                     {
                         id: "_standard",
-                        label: "Builtin templates",
+                        label: "Builtin Templates",
                         children: [
-                            {
-                                id: "firmware",
-                                label: "EEZ-GUI",
-                                children: [],
-                                selected: this.type === "firmware",
-                                expanded: false,
-                                data: undefined
-                            },
                             {
                                 id: "dashboard",
                                 label: "Dashboard",
                                 children: [],
                                 selected: this.type === "dashboard",
+                                expanded: false,
+                                data: undefined
+                            },
+                            {
+                                id: "firmware",
+                                label: "EEZ-GUI",
+                                children: [],
+                                selected: this.type === "firmware",
                                 expanded: false,
                                 data: undefined
                             },
@@ -308,10 +306,19 @@ const NewProjectWizard = observer(
                                 selected: this.type === "LVGL",
                                 expanded: false,
                                 data: undefined
-                            },
+                            }
+                        ],
+                        selected: false,
+                        expanded: true,
+                        data: undefined
+                    },
+                    {
+                        id: "_bb3",
+                        label: "BB3 Script Templates",
+                        children: [
                             {
                                 id: "applet",
-                                label: "BB3 Applet",
+                                label: "Applet",
                                 children: [],
                                 selected: this.type === "applet",
                                 expanded: false,
@@ -319,17 +326,9 @@ const NewProjectWizard = observer(
                             },
                             {
                                 id: "resource",
-                                label: RESOURCE_PROJECT_NAME,
+                                label: "MicroPython Script",
                                 children: [],
                                 selected: this.type === "resource",
-                                expanded: false,
-                                data: undefined
-                            },
-                            {
-                                id: "empty",
-                                label: "Empty",
-                                children: [],
-                                selected: this.type === "empty",
                                 expanded: false,
                                 data: undefined
                             }
@@ -375,6 +374,23 @@ const NewProjectWizard = observer(
                         ),
                         selected: false,
                         expanded: true,
+                        data: undefined
+                    },
+                    {
+                        id: "_advanced",
+                        label: "Advanced",
+                        children: [
+                            {
+                                id: "empty",
+                                label: "Empty",
+                                children: [],
+                                selected: this.type === "empty",
+                                expanded: false,
+                                data: undefined
+                            }
+                        ],
+                        selected: false,
+                        expanded: false,
                         data: undefined
                     }
                 ],
@@ -1197,7 +1213,7 @@ const NewProjectWizard = observer(
                                 <h6>
                                     {this.type == "applet"
                                         ? "BB3 Applet"
-                                        : RESOURCE_PROJECT_NAME}{" "}
+                                        : "BB3 MicroPython Script"}{" "}
                                     project requires BB3 project file. We have
                                     the following options:
                                 </h6>

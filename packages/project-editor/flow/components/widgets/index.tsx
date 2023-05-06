@@ -209,6 +209,8 @@ export class ContainerWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
 
+        componentPaletteGroupName: "!1Containers",
+
         flowComponentId: WIDGET_TYPE_CONTAINER,
 
         label: (widget: ContainerWidget) => {
@@ -518,6 +520,8 @@ export class ListWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
 
+        componentPaletteGroupName: "!1Containers",
+
         flowComponentId: WIDGET_TYPE_LIST,
 
         properties: [
@@ -719,6 +723,8 @@ export class GridWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
             projectType !== ProjectType.DASHBOARD,
+
+        componentPaletteGroupName: "!1Containers",
 
         flowComponentId: WIDGET_TYPE_GRID,
 
@@ -931,6 +937,8 @@ export class SelectWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
+
+        componentPaletteGroupName: "!1Containers",
 
         flowComponentId: WIDGET_TYPE_SELECT,
 
@@ -1259,6 +1267,8 @@ export class UserWidgetWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
+
+        componentPaletteGroupName: "!1Containers",
 
         flowComponentId: WIDGET_TYPE_USER_WIDGET,
 
@@ -3505,6 +3515,8 @@ export class BarGraphWidget extends Widget {
             projectType !== ProjectType.LVGL &&
             projectType !== ProjectType.DASHBOARD,
 
+        componentPaletteGroupName: "!1Visualiser",
+
         flowComponentId: WIDGET_TYPE_BAR_GRAPH,
 
         properties: [
@@ -3891,6 +3903,8 @@ export class YTGraphWidget extends Widget {
             projectType !== ProjectType.LVGL &&
             projectType !== ProjectType.DASHBOARD,
 
+        componentPaletteGroupName: "!1Visualiser",
+
         flowComponentId: WIDGET_TYPE_YT_GRAPH,
 
         properties: [
@@ -4160,6 +4174,7 @@ export class ListGraphWidget extends Widget {
             projectType !== ProjectType.LVGL &&
             projectType !== ProjectType.DASHBOARD,
 
+        componentPaletteGroupName: "!1Visualiser",
         flowComponentId: WIDGET_TYPE_LIST_GRAPH,
 
         properties: [
@@ -4314,6 +4329,8 @@ export class AppViewWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
             projectType !== ProjectType.DASHBOARD,
+
+        componentPaletteGroupName: "!1Containers",
 
         flowComponentId: WIDGET_TYPE_APP_VIEW,
 
@@ -4619,6 +4636,8 @@ export class ProgressWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
 
+        componentPaletteGroupName: "!1Visualiser",
+
         flowComponentId: WIDGET_TYPE_PROGRESS,
 
         properties: [
@@ -4853,6 +4872,8 @@ export class CanvasWidget extends Widget {
             projectType !== ProjectType.LVGL &&
             projectType !== ProjectType.DASHBOARD,
 
+        componentPaletteGroupName: "!1Visualiser",
+
         flowComponentId: WIDGET_TYPE_CANVAS,
 
         defaultValue: {
@@ -5018,6 +5039,8 @@ export class LineChartEmbeddedWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
             projectType !== ProjectType.DASHBOARD,
+
+        componentPaletteGroupName: "!1Visualiser",
 
         flowComponentId: WIDGET_TYPE_LINE_CHART,
 
@@ -5985,6 +6008,8 @@ export class GaugeEmbeddedWidget extends Widget {
             projectType !== ProjectType.LVGL &&
             projectType !== ProjectType.DASHBOARD,
 
+        componentPaletteGroupName: "!1Visualiser",
+
         flowComponentId: WIDGET_TYPE_GAUGE,
 
         properties: [
@@ -6431,6 +6456,8 @@ export class InputEmbeddedWidget extends Widget {
             projectType !== ProjectType.LVGL &&
             projectType !== ProjectType.DASHBOARD,
 
+        componentPaletteGroupName: "!1Input",
+
         flowComponentId: WIDGET_TYPE_INPUT,
 
         properties: [
@@ -6735,6 +6762,8 @@ export class TextInputWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType == ProjectType.DASHBOARD,
 
+        componentPaletteGroupName: "!1Input",
+
         properties: [
             makeDataPropertyInfo("data", {
                 displayName: "Value"
@@ -6861,6 +6890,8 @@ export class CheckboxWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.DASHBOARD,
+
+        componentPaletteGroupName: "!1Input",
 
         properties: [
             makeDataPropertyInfo("data", {
@@ -7055,6 +7086,8 @@ export class RollerWidget extends Widget {
             projectType !== ProjectType.LVGL &&
             projectType !== ProjectType.DASHBOARD,
 
+        componentPaletteGroupName: "!1Input",
+
         flowComponentId: WIDGET_TYPE_ROLLER,
 
         properties: [
@@ -7222,6 +7255,8 @@ export class SwitchWidget extends Widget {
             projectType !== ProjectType.LVGL &&
             projectType !== ProjectType.DASHBOARD,
 
+        componentPaletteGroupName: "!1Input",
+
         flowComponentId: WIDGET_TYPE_SWITCH,
 
         properties: [],
@@ -7351,6 +7386,8 @@ export class SliderWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
             projectType !== ProjectType.DASHBOARD,
+
+        componentPaletteGroupName: "!1Input",
 
         flowComponentId: WIDGET_TYPE_SLIDER,
 
@@ -7524,6 +7561,8 @@ export class DropDownListWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
+
+        componentPaletteGroupName: "!1Input",
 
         flowComponentId: WIDGET_TYPE_DROP_DOWN_LIST,
 
@@ -7700,6 +7739,8 @@ export class QRCodeWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
+
+        componentPaletteGroupName: "!1Visualiser",
 
         flowComponentId: WIDGET_TYPE_QR_CODE,
 

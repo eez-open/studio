@@ -1014,7 +1014,7 @@ export class LVGLActionComponent extends ActionComponent {
 
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_LVGLACTION,
-        componentPaletteGroupName: "!2LVGL Actions",
+        componentPaletteGroupName: "!2LVGL",
         componentPaletteLabel: "LVGL",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,

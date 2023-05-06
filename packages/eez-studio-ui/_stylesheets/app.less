@@ -3514,15 +3514,22 @@ button.EezStudio_Action {
             display: flex;
             flex-direction: row;
             align-items: center;
+            width: 120px;
+            border-radius: 3px;
+
             & > img,
             & > svg {
+                flex-shrink: 0;
                 height: 20px;
                 object-fit: contain;
                 margin-right: 4px;
             }
-            white-space: nowrap;
-            min-width: 120px;
-            border-radius: 3px;
+
+            & > span {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
 
             &.selected {
                 background-color: @nonFocusedSelectionBackgroundColor;

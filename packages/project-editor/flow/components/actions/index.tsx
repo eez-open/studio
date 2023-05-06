@@ -2710,7 +2710,7 @@ export class OnEventActionComponent extends ActionComponent {
 
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_ON_EVENT_ACTION,
-        componentPaletteGroupName: "GUI Actions",
+        componentPaletteGroupName: "GUI",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
 
@@ -2785,7 +2785,7 @@ export class OnEventActionComponent extends ActionComponent {
 export class ShowPageActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SHOW_PAGE_ACTION,
-        componentPaletteGroupName: "GUI Actions",
+        componentPaletteGroupName: "GUI",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
         properties: [
@@ -2875,7 +2875,7 @@ const MESSAGE_BOX_TYPE_QUESTION = 3;
 export class ShowMessageBoxActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SHOW_MESSAGE_BOX_ACTION,
-        componentPaletteGroupName: "GUI Actions",
+        componentPaletteGroupName: "GUI",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
         properties: [
@@ -2991,7 +2991,7 @@ export class ShowMessageBoxActionComponent extends ActionComponent {
 export class ShowKeyboardActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SHOW_KEYBOARD_ACTION,
-        componentPaletteGroupName: "GUI Actions",
+        componentPaletteGroupName: "GUI",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
         properties: [
@@ -3119,7 +3119,7 @@ export class ShowKeyboardActionComponent extends ActionComponent {
 export class ShowKeypadActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SHOW_KEYPAD_ACTION,
-        componentPaletteGroupName: "GUI Actions",
+        componentPaletteGroupName: "GUI",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
         properties: [
@@ -3247,7 +3247,7 @@ export class ShowKeypadActionComponent extends ActionComponent {
 export class SelectLanguageActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SELECT_LANGUAGE_ACTION,
-        componentPaletteGroupName: "GUI Actions",
+        componentPaletteGroupName: "GUI",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
         properties: [
@@ -3304,7 +3304,7 @@ export class SelectLanguageActionComponent extends ActionComponent {
 export class SetPageDirectionActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SET_PAGE_DIRECTION_ACTION,
-        componentPaletteGroupName: "GUI Actions",
+        componentPaletteGroupName: "GUI",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
         properties: [
@@ -3372,7 +3372,7 @@ export class SetPageDirectionActionComponent extends ActionComponent {
 export class OverrideStyleActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_OVERRIDE_STYLE_ACTION,
-        componentPaletteGroupName: "GUI Actions",
+        componentPaletteGroupName: "GUI",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
             projectType !== ProjectType.DASHBOARD,
@@ -3455,7 +3455,7 @@ export class OverrideStyleActionComponent extends ActionComponent {
 export class AnimateActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_ANIMATE_ACTION,
-        componentPaletteGroupName: "GUI Actions",
+        componentPaletteGroupName: "GUI",
         properties: [
             makeExpressionProperty(
                 {

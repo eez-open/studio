@@ -1,5 +1,12 @@
 import React from "react";
-import { observable, action, computed, makeObservable } from "mobx";
+import {
+    observable,
+    action,
+    computed,
+    makeObservable,
+    IReactionDisposer,
+    reaction
+} from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 import tinycolor from "tinycolor2";
@@ -16,12 +23,61 @@ import { DragAndDropManager } from "project-editor/core/dd";
 import {
     createObject,
     getClass,
+    NavigationStore,
     objectToClipboardData,
     setClipboardData
 } from "project-editor/store";
 import type { Component } from "project-editor/flow/component";
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import {
+    SubNavigation,
+    SubNavigationItem
+} from "project-editor/ui-components/SubNavigation";
+
+export const ComponentsPalette = observer(
+    class ComponentsPalette extends React.Component {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        get items(): SubNavigationItem[] {
+            return [
+                {
+                    name: NavigationStore.COMPONENTS_PALETTE_SUB_NAVIGATION_ITEM_WIDGETS,
+                    component: <ComponentsPalette1 type="widgets" />,
+                    numItems: 0
+                },
+                {
+                    name: NavigationStore.COMPONENTS_PALETTE_SUB_NAVIGATION_ITEM_ACTIONS,
+                    component: <ComponentsPalette1 type="actions" />,
+                    numItems: 0
+                }
+            ];
+        }
+
+        render() {
+            if (!this.context.projectTypeTraits.hasFlowSupport) {
+                return <ComponentsPalette1 type="widgets" />;
+            }
+
+            const activeEditor = this.context.editorsStore.activeEditor;
+            const showOnlyActions =
+                activeEditor &&
+                activeEditor.object instanceof ProjectEditor.ActionClass;
+
+            if (showOnlyActions) {
+                return <ComponentsPalette1 type="actions" />;
+            }
+
+            return (
+                <SubNavigation
+                    id={NavigationStore.COMPONENTS_PALETTE_SUB_NAVIGATION_ID}
+                    items={this.items}
+                />
+            );
+        }
+    }
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -35,15 +91,23 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 //  !7 -> "User Widgets"
 //  !8 -> "User Actions"
 
-export const ComponentsPalette = observer(
-    class ComponentsPalette extends React.Component {
+export const ComponentsPalette1 = observer(
+    class ComponentsPalette1 extends React.Component<{
+        type: "widgets" | "actions";
+    }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
         selectedComponentClass: IObjectClassInfo | undefined;
 
+        searchText = "";
+
+        dispose: IReactionDisposer;
+
         constructor(props: any) {
             super(props);
+
+            this.readFromLocalStorage();
 
             makeObservable(this, {
                 selectedComponentClass: observable,
@@ -51,8 +115,36 @@ export const ComponentsPalette = observer(
                 allComponentClasses: computed,
                 groups: computed,
                 searchText: observable,
-                onSearchChange: action.bound
+                onSearchChange: action.bound,
+                readFromLocalStorage: action
             });
+
+            this.dispose = reaction(
+                () => ({
+                    searchText: this.searchText
+                }),
+                arg => {
+                    localStorage.setItem(
+                        "ComponentsPaletteSearchText_" + this.props.type,
+                        arg.searchText
+                    );
+                }
+            );
+        }
+
+        readFromLocalStorage() {
+            this.searchText =
+                localStorage.getItem(
+                    "ComponentsPaletteSearchText_" + this.props.type
+                ) || "";
+        }
+
+        componentDidUpdate() {
+            this.readFromLocalStorage();
+        }
+
+        componentWillUnmount() {
+            this.dispose();
         }
 
         onSelect(widgetClass: IObjectClassInfo | undefined) {
@@ -60,20 +152,10 @@ export const ComponentsPalette = observer(
         }
 
         get allComponentClasses() {
-            const activeEditor = this.context.editorsStore.activeEditor;
-
             let baseClass;
 
-            const showOnlyActions =
-                activeEditor &&
-                activeEditor.object instanceof ProjectEditor.ActionClass;
-
-            if (this.context.projectTypeTraits.hasFlowSupport) {
-                if (showOnlyActions) {
-                    baseClass = ProjectEditor.ActionComponentClass;
-                } else {
-                    baseClass = ProjectEditor.ComponentClass;
-                }
+            if (this.props.type == "actions") {
+                baseClass = ProjectEditor.ActionComponentClass;
             } else {
                 baseClass = ProjectEditor.WidgetClass;
             }
@@ -94,7 +176,7 @@ export const ComponentsPalette = observer(
             );
 
             const userWidgets: IObjectClassInfo[] = [];
-            if (!showOnlyActions) {
+            if (this.props.type == "widgets") {
                 for (const pageAsset of this.context.project._assets.pages) {
                     if (pageAsset.page.isUsedAsUserWidget) {
                         const widgetName = this.context.projectTypeTraits.isLVGL
@@ -120,7 +202,7 @@ export const ComponentsPalette = observer(
             }
 
             const userActions: IObjectClassInfo[] = [];
-            if (this.context.projectTypeTraits.hasFlowSupport) {
+            if (this.props.type == "actions") {
                 for (const actionAsset of this.context.project._assets
                     .actions) {
                     userActions.push({
@@ -178,11 +260,11 @@ export const ComponentsPalette = observer(
                         }
                     } else {
                         if (componentClass.name.endsWith("Widget")) {
-                            groupName = "!1Common Widgets";
+                            groupName = "!1Basic";
                         } else if (
                             componentClass.name.endsWith("ActionComponent")
                         ) {
-                            groupName = "!3Common Actions";
+                            groupName = "!3Basic";
                         } else {
                             groupName = "!5Other components";
                         }
@@ -202,8 +284,6 @@ export const ComponentsPalette = observer(
             });
             return groups;
         }
-
-        searchText = "";
 
         onSearchChange(event: any) {
             this.searchText = ($(event.target).val() as string).trim();
@@ -443,7 +523,7 @@ const PaletteItem = observer(
                     style={titleStyle}
                 >
                     {typeof icon === "string" ? <img src={icon} /> : icon}
-                    {label}
+                    <span>{label}</span>
                 </div>
             );
         }

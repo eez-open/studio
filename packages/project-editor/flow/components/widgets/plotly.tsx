@@ -354,6 +354,8 @@ export class LineChartWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.DASHBOARD,
 
+        componentPaletteGroupName: "!1Visualiser",
+
         properties: [
             Object.assign(makeDataPropertyInfo("data"), {
                 hideInPropertyGrid: true
@@ -818,6 +820,8 @@ export class GaugeWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.DASHBOARD,
+
+        componentPaletteGroupName: "!1Visualiser",
 
         properties: [
             {

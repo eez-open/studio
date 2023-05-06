@@ -141,23 +141,25 @@ const DeleteButton = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+interface ListNavigationProps {
+    id: string;
+    title?: string;
+    navigationObject: IEezObject;
+    selectedObject: IObservableValue<IEezObject | undefined>;
+    onClickItem?: (item: IEezObject) => void;
+    onDoubleClickItem?: (item: IEezObject) => void;
+    additionalButtons?: JSX.Element[];
+    onEditItem?: (itemId: string) => void;
+    renderItem?: (itemId: string) => React.ReactNode;
+    dragAndDropManager?: DragAndDropManagerClass;
+    searchInput?: boolean;
+    editable?: boolean;
+    onFilesDrop?: (files: DropFile[]) => void;
+}
+
 export const ListNavigation = observer(
     class ListNavigation
-        extends React.Component<{
-            id: string;
-            title?: string;
-            navigationObject: IEezObject;
-            selectedObject: IObservableValue<IEezObject | undefined>;
-            onClickItem?: (item: IEezObject) => void;
-            onDoubleClickItem?: (item: IEezObject) => void;
-            additionalButtons?: JSX.Element[];
-            onEditItem?: (itemId: string) => void;
-            renderItem?: (itemId: string) => React.ReactNode;
-            dragAndDropManager?: DragAndDropManagerClass;
-            searchInput?: boolean;
-            editable?: boolean;
-            onFilesDrop?: (files: DropFile[]) => void;
-        }>
+        extends React.Component<ListNavigationProps>
         implements IPanel
     {
         static contextType = ProjectContext;
@@ -168,8 +170,10 @@ export const ListNavigation = observer(
 
         dispose: IReactionDisposer;
 
-        constructor(props: any) {
+        constructor(props: ListNavigationProps) {
             super(props);
+
+            this.readFromLocalStorage();
 
             makeObservable(this, {
                 sortDirection: observable,
@@ -177,9 +181,29 @@ export const ListNavigation = observer(
                 editable: computed,
                 selectedObject: computed,
                 onSearchChange: action.bound,
-                listAdapter: computed
+                listAdapter: computed,
+                readFromLocalStorage: action
             });
 
+            this.dispose = reaction(
+                () => ({
+                    sortDirection: this.sortDirection,
+                    searchText: this.searchText
+                }),
+                arg => {
+                    localStorage.setItem(
+                        "ListNavigationSortDirection" + this.props.id,
+                        arg.sortDirection
+                    );
+                    localStorage.setItem(
+                        "ListNavigationSearchText" + this.props.id,
+                        arg.searchText
+                    );
+                }
+            );
+        }
+
+        readFromLocalStorage() {
             const sortDirectionStr = localStorage.getItem(
                 "ListNavigationSortDirection" + this.props.id
             );
@@ -187,18 +211,22 @@ export const ListNavigation = observer(
                 this.sortDirection = sortDirectionStr as SortDirectionType;
             }
 
-            this.dispose = reaction(
-                () => this.sortDirection,
-                sortDirection =>
-                    localStorage.setItem(
-                        "ListNavigationSortDirection" + this.props.id,
-                        sortDirection
-                    )
-            );
+            this.searchText =
+                localStorage.getItem(
+                    "ListNavigationSearchText" + this.props.id
+                ) || "";
         }
 
         componentDidMount() {
             this.context.navigationStore.setInitialSelectedPanel(this);
+        }
+
+        componentDidUpdate() {
+            this.readFromLocalStorage();
+        }
+
+        componentWillUnmount() {
+            this.dispose();
         }
 
         get listAdapter() {
@@ -273,10 +301,6 @@ export const ListNavigation = observer(
             if (isPartOfNavigation(this.props.navigationObject)) {
                 navigationStore.setSelectedPanel(this);
             }
-        }
-
-        componentWillUnmount() {
-            this.dispose();
         }
 
         onSearchChange(event: any) {

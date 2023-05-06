@@ -1740,7 +1740,7 @@ export class LVGLLabelWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
-        componentPaletteGroupName: "!1Basic Widgets",
+        componentPaletteGroupName: "!1Basic",
 
         label: (widget: LVGLLabelWidget) => {
             let name = getComponentName(widget.type);
@@ -1940,7 +1940,7 @@ export class LVGLButtonWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
-        componentPaletteGroupName: "!1Basic Widgets",
+        componentPaletteGroupName: "!1Basic",
 
         properties: [],
 
@@ -2022,7 +2022,7 @@ export class LVGLPanelWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
-        componentPaletteGroupName: "!1Basic Widgets",
+        componentPaletteGroupName: "!1Basic",
 
         properties: [],
 
@@ -2142,7 +2142,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
 
         flowComponentId: COMPONENT_TYPE_LVGL_USER_WIDGET,
 
-        componentPaletteGroupName: "!1Basic Widgets",
+        componentPaletteGroupName: "!1Basic",
 
         label: (widget: LVGLUserWidgetWidget) => {
             let name = getComponentName(widget.type);
@@ -2645,7 +2645,7 @@ export class LVGLImageWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
-        componentPaletteGroupName: "!1Basic Widgets",
+        componentPaletteGroupName: "!1Basic",
 
         properties: [
             {
@@ -2870,7 +2870,7 @@ export class LVGLSliderWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
-        componentPaletteGroupName: "!1Input Widgets",
+        componentPaletteGroupName: "!1Input",
 
         properties: [
             {
@@ -3172,7 +3172,7 @@ export class LVGLRollerWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
-        componentPaletteGroupName: "!1Input Widgets",
+        componentPaletteGroupName: "!1Input",
 
         properties: [
             {
@@ -3378,7 +3378,7 @@ export class LVGLSwitchWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
-        componentPaletteGroupName: "!1Input Widgets",
+        componentPaletteGroupName: "!1Input",
 
         properties: [],
 
@@ -3481,7 +3481,7 @@ export class LVGLBarWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
-        componentPaletteGroupName: "!1Visualiser Widgets",
+        componentPaletteGroupName: "!1Visualiser",
 
         properties: [
             {
@@ -3717,7 +3717,7 @@ export class LVGLDropdownWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
-        componentPaletteGroupName: "!1Input Widgets",
+        componentPaletteGroupName: "!1Input",
 
         properties: [
             {
@@ -3917,7 +3917,7 @@ export class LVGLArcWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
-        componentPaletteGroupName: "!1Basic Widgets",
+        componentPaletteGroupName: "!1Basic",
 
         properties: [
             {
@@ -4157,7 +4157,7 @@ export class LVGLSpinnerWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
-        componentPaletteGroupName: "!1Visualiser Widgets",
+        componentPaletteGroupName: "!1Visualiser",
 
         properties: [],
 
@@ -4241,7 +4241,7 @@ export class LVGLCheckboxWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
-        componentPaletteGroupName: "!1Input Widgets",
+        componentPaletteGroupName: "!1Input",
 
         properties: [
             {
@@ -4348,7 +4348,7 @@ export class LVGLTextareaWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
-        componentPaletteGroupName: "!1Basic Widgets",
+        componentPaletteGroupName: "!1Basic",
 
         properties: [
             ...makeLvglExpressionProperty(
@@ -4596,7 +4596,7 @@ export class LVGLCalendarWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
-        componentPaletteGroupName: "!1Input Widgets",
+        componentPaletteGroupName: "!1Input",
 
         properties: [
             {
@@ -4788,7 +4788,7 @@ export class LVGLColorwheelWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
-        componentPaletteGroupName: "!1Input Widgets",
+        componentPaletteGroupName: "!1Input",
 
         properties: [
             {
@@ -4938,7 +4938,7 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
-        componentPaletteGroupName: "!1Input Widgets",
+        componentPaletteGroupName: "!1Input",
 
         properties: [
             {
@@ -5340,7 +5340,7 @@ export class LVGLKeyboardWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
-        componentPaletteGroupName: "!1Input Widgets",
+        componentPaletteGroupName: "!1Input",
 
         properties: [
             {
@@ -5571,7 +5571,7 @@ export class LVGLChartWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
-        componentPaletteGroupName: "!1Visualiser Widgets",
+        componentPaletteGroupName: "!1Visualiser",
 
         properties: [],
 
@@ -6824,7 +6824,7 @@ export class LVGLMeterWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
-        componentPaletteGroupName: "!1Visualiser Widgets",
+        componentPaletteGroupName: "!1Visualiser",
 
         properties: [
             {
