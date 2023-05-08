@@ -1,10 +1,12 @@
 {
   "navigation": {
-    "selectedPageObject": "/pages/0",
-    "selectedStyleObject": "/styles/1",
-    "selectedThemeObject": "/themes/0",
-    "selectedThemeColorObject": "/colors/0",
-    "subnavigationSelectedItems": {}
+    "selectedPageObject": "[C:/work/eez/studio/resources/project-templates/dashboard.eez-project]:/pages/0",
+    "selectedStyleObject": "[C:/work/eez/studio/resources/project-templates/dashboard.eez-project]:/styles/1",
+    "selectedThemeObject": "[C:/work/eez/studio/resources/project-templates/dashboard.eez-project]:/themes/0",
+    "selectedThemeColorObject": "[C:/work/eez/studio/resources/project-templates/dashboard.eez-project]:/colors/0",
+    "subnavigationSelectedItems": {
+      "variables-tab/sub-navigation/selected-item": "Actions"
+    }
   },
   "layoutModel": {
     "rootEditor": {
@@ -99,75 +101,49 @@
           "id": "#c9a6f2d7-4db0-4b2f-9a49-06a0c99d517c",
           "children": [
             {
-              "type": "row",
-              "id": "#56057a05-ce0f-4c99-96b0-fc25390f023b",
-              "weight": 20,
+              "type": "tabset",
+              "id": "#23c861d1-db57-4322-8db4-bacb4b15b911",
+              "weight": 12.496513249651326,
+              "selected": 1,
+              "enableClose": false,
               "children": [
                 {
-                  "type": "tabset",
-                  "id": "#23c861d1-db57-4322-8db4-bacb4b15b911",
-                  "weight": 1,
+                  "type": "tab",
+                  "id": "PAGES",
+                  "name": "Pages",
+                  "component": "pages",
                   "enableClose": false,
-                  "children": [
-                    {
-                      "type": "tab",
-                      "id": "PAGES",
-                      "name": "Pages",
-                      "component": "pages",
-                      "enableClose": false,
-                      "icon": "svg:pages"
-                    },
-                    {
-                      "type": "tab",
-                      "id": "ACTIONS",
-                      "name": "Actions",
-                      "component": "actions",
-                      "enableClose": false,
-                      "icon": "material:code"
-                    }
-                  ]
+                  "icon": "svg:pages"
                 },
                 {
-                  "type": "tabset",
-                  "id": "#a4a58e1b-87fd-49fd-be31-5c594be78605",
-                  "weight": 1,
+                  "type": "tab",
+                  "id": "ACTIONS",
+                  "name": "Actions",
+                  "component": "actions",
                   "enableClose": false,
-                  "children": [
-                    {
-                      "type": "tab",
-                      "id": "#ff0ab082-9dc4-4479-954b-03f3067fb77d",
-                      "name": "Page Structure",
-                      "component": "flow-structure",
-                      "enableClose": false,
-                      "icon": "svg:hierarchy"
-                    }
-                  ]
-                },
-                {
-                  "type": "tabset",
-                  "id": "#0e163d9c-9e3d-4c50-99df-381c1d468c84",
-                  "weight": 1,
-                  "enableClose": false,
-                  "children": [
-                    {
-                      "type": "tab",
-                      "id": "VARIABLES",
-                      "name": "Variables",
-                      "component": "variables",
-                      "enableClose": false,
-                      "icon": "svg:variable"
-                    }
-                  ]
+                  "icon": "material:code"
                 }
               ]
             },
             {
               "type": "tabset",
               "id": "EDITORS",
-              "weight": 60,
+              "weight": 67.50348675034867,
               "enableDeleteWhenEmpty": false,
               "enableClose": false,
               "children": [
+                {
+                  "type": "tab",
+                  "id": "#b3ccd007-5081-49f6-81e7-66c1cfb69693",
+                  "name": "Settings",
+                  "component": "editor",
+                  "config": {
+                    "objectPath": "[C:/work/eez/studio/resources/project-templates/dashboard.eez-project]:/settings",
+                    "subObjectPath": "[C:/work/eez/studio/resources/project-templates/dashboard.eez-project]:/settings",
+                    "permanent": false
+                  },
+                  "icon": "material:settings"
+                },
                 {
                   "type": "tab",
                   "id": "#013f0527-d7d1-4d57-aed0-366c1fdf3f11",
@@ -190,7 +166,7 @@
                 {
                   "type": "tabset",
                   "id": "#d2fc92fc-cc63-443a-9a85-384282544174",
-                  "weight": 2,
+                  "weight": 0.5,
                   "children": [
                     {
                       "type": "tab",
@@ -207,6 +183,31 @@
                       "component": "breakpointsPanel",
                       "enableClose": false,
                       "icon": "svg:breakpoints_panel"
+                    }
+                  ]
+                },
+                {
+                  "type": "tabset",
+                  "id": "#a4a58e1b-87fd-49fd-be31-5c594be78605",
+                  "weight": 0.5,
+                  "selected": 1,
+                  "enableClose": false,
+                  "children": [
+                    {
+                      "type": "tab",
+                      "id": "#ff0ab082-9dc4-4479-954b-03f3067fb77d",
+                      "name": "Page Structure",
+                      "component": "flow-structure",
+                      "enableClose": false,
+                      "icon": "svg:hierarchy"
+                    },
+                    {
+                      "type": "tab",
+                      "id": "VARIABLES",
+                      "name": "Variables",
+                      "component": "variables",
+                      "enableClose": false,
+                      "icon": "svg:variable"
                     }
                   ]
                 },
@@ -309,10 +310,22 @@
               "type": "tabset",
               "id": "RUNTIME-EDITORS",
               "weight": 50,
-              "selected": -1,
               "enableDeleteWhenEmpty": false,
               "enableClose": false,
-              "children": []
+              "children": [
+                {
+                  "type": "tab",
+                  "id": "#e4e49729-61d4-4e57-8426-cf76fcd81430",
+                  "name": "Main",
+                  "component": "editor",
+                  "config": {
+                    "objectPath": "[C:/work/eez/studio/resources/project-templates/dashboard.eez-project]:/pages/0",
+                    "permanent": false
+                  },
+                  "icon": "svg:page"
+                }
+              ],
+              "active": true
             },
             {
               "type": "row",
@@ -729,6 +742,22 @@
         "secondToPx": 200,
         "scrollLeft": 0
       }
+    },
+    "[C:/work/eez/studio/resources/project-templates/dashboard.eez-project]:/pages/0[flow-state]": {
+      "selection": {},
+      "transform": {
+        "translate": {
+          "x": -400,
+          "y": -225
+        },
+        "scale": 1
+      },
+      "timeline": {
+        "isEditorActive": false,
+        "position": 0,
+        "secondToPx": 200,
+        "scrollLeft": 0
+      }
     }
   },
   "activeOutputSection": 0,
@@ -737,7 +766,7 @@
   "searchMatchWholeWord": false,
   "replaceEnabled": false,
   "replaceText": "",
-  "pageRuntimeFrontFace": true,
+  "pageRuntimeFrontFace": false,
   "breakpoints": {},
   "watchExpressions": [],
   "showComponentDescriptions": true,

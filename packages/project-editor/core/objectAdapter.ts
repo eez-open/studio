@@ -53,7 +53,8 @@ import {
     createObject,
     getClass,
     canAdd,
-    addItem
+    addItem,
+    isObjectReferencable
 } from "project-editor/store";
 
 import { DragAndDropManager } from "project-editor/core/dd";
@@ -631,7 +632,11 @@ export class TreeObjectAdapter {
             );
         }
 
-        if (selectedObject && isArrayElement(selectedObject)) {
+        if (
+            selectedObject &&
+            isArrayElement(selectedObject) &&
+            isObjectReferencable(selectedObject)
+        ) {
             if (menuItems.length > 0) {
                 menuItems.push(
                     new MenuItem({

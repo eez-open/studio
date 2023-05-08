@@ -80,8 +80,6 @@ Lista stranica:
 
 -   Duplicate
 
--   Find all references za widgete baš i nema smisla i možda bi ga trebalo izbaciti, ali za druge objekte ovo nalazi gdje se sve taj objekt koristi. Npr. za style može pronaći gdje se sve određeni style koristi.
-
 -   Cut, Copy i Delete
 
 # User widgeti

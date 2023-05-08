@@ -516,6 +516,10 @@ export function getClassName(eezClass: EezClass) {
     return eezClassToClassNameMap.get(eezClass);
 }
 
+export function getAllClasses() {
+    return [...classNameToEezClassMap.values()];
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export function isEezObject(object: any): object is IEezObject {

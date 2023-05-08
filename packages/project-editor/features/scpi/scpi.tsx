@@ -95,6 +95,8 @@ export class ScpiParameterType extends EezObject implements IParameterType {
     }
 }
 
+registerClass("ScpiParameterType", ScpiParameterType);
+
 function getScpiType(
     object: ScpiParameter | ScpiResponse,
     type: IParameterTypeType | IResponseTypeType
@@ -443,6 +445,8 @@ export class ScpiResponseType extends EezObject implements IResponseType {
         }
     }
 }
+
+registerClass("ScpiResponseType", ScpiResponseType);
 
 ////////////////////////////////////////////////////////////////////////////////
 

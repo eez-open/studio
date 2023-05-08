@@ -25,7 +25,8 @@ import {
     getRootObject,
     getClassByName,
     setId,
-    isPropertyOptional
+    isPropertyOptional,
+    getAllClasses
 } from "project-editor/core/object";
 
 import { getProject, Project } from "project-editor/project/project";
@@ -847,4 +848,46 @@ export function deleteItems(objects: IEezObject[], callback?: () => void) {
 
 export function objectToJS(object: IEezObject): any {
     return JSON.parse(objectToJson(object));
+}
+
+export function isObjectReferencable(object: IEezObject) {
+    const objectClassInfo = getClassInfo(object);
+
+    if (ProjectEditor.EnumClass.classInfo == objectClassInfo) {
+        return true;
+    }
+
+    const referencedObjectCollectionPathSet = new Set<string>();
+
+    for (const eezClass of getAllClasses()) {
+        for (const propertyInfo of eezClass.classInfo.properties) {
+            if (propertyInfo.referencedObjectCollectionPath) {
+                referencedObjectCollectionPathSet.add(
+                    propertyInfo.referencedObjectCollectionPath
+                );
+            }
+        }
+    }
+
+    const referencedObjectClassInfoSet = new Set<ClassInfo>();
+
+    let projectClassInfo = getClassInfo(getProject(object));
+
+    for (const referencedObjectCollectionPath of referencedObjectCollectionPathSet) {
+        let classInfo = projectClassInfo;
+        for (const part of referencedObjectCollectionPath.split("/")) {
+            const propertyInfo = classInfo.properties.find(
+                propertyInfo => propertyInfo.name === part
+            );
+            if (!propertyInfo || !propertyInfo.typeClass) {
+                console.log(classInfo.properties, part, propertyInfo);
+                break;
+            }
+            classInfo = propertyInfo.typeClass.classInfo;
+        }
+
+        referencedObjectClassInfoSet.add(classInfo);
+    }
+
+    return referencedObjectClassInfoSet.has(objectClassInfo);
 }
