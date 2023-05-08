@@ -356,10 +356,7 @@ export const Tree = observer(
             const treeAdapter = this.props.treeAdapter;
             const draggableAdapter = treeAdapter.draggableAdapter!;
 
-            if (
-                this.props.treeAdapter.sortDirection == undefined ||
-                this.props.treeAdapter.sortDirection === "none"
-            ) {
+            if (this.props.treeAdapter.draggable) {
                 const $treeDiv = $(this.treeDiv);
                 const $allRows = $treeDiv.find("[data-object-id]");
 
@@ -601,6 +598,15 @@ export const Tree = observer(
                             return;
                         }
                     }
+                } else {
+                    this.dropMarkTop = 0;
+                    this.dropMarkWidth = $treeDiv.width() || 100;
+                    this.dropPosition = DropPosition.DROP_POSITION_INSIDE;
+                    draggableAdapter.onDragOver(
+                        this.props.treeAdapter.rootItem,
+                        event
+                    );
+                    return;
                 }
             }
 
@@ -855,7 +861,10 @@ export const Tree = observer(
                                 treeAdapter={treeAdapter}
                                 item={row.item}
                                 level={row.level}
-                                draggable={row.draggable}
+                                draggable={
+                                    this.props.treeAdapter.draggable &&
+                                    row.draggable
+                                }
                                 onDragStart={this.onRowDragStart}
                                 onDrag={this.onRowDrag}
                                 onDragEnd={this.onRowDragEnd}

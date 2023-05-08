@@ -797,6 +797,14 @@ export class TreeAdapter {
     onClickCallback: ((object: IEezObject) => void) | undefined;
     onDoubleClickCallback: ((object: IEezObject) => void) | undefined;
 
+    get draggable() {
+        return (
+            (this.sortDirection === undefined ||
+                this.sortDirection === "none") &&
+            !this.searchText
+        );
+    }
+
     get allRows() {
         const { filter, collapsable, sortDirection, maxLevel, searchText } =
             this;
