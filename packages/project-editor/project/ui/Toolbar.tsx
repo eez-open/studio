@@ -353,18 +353,25 @@ const EditorButtons = observer(
 
                                 let icon = getClassInfo(featureItem).icon!;
 
+                                const editorComponent = getEditorComponent(
+                                    featureItem,
+                                    undefined
+                                )!;
+
                                 const onClick = action(() => {
-                                    const result = getEditorComponent(
-                                        featureItem,
-                                        undefined
-                                    );
-                                    if (result) {
+                                    if (editorComponent) {
                                         this.context.editorsStore.openEditor(
-                                            result.object,
-                                            result.subObject
+                                            editorComponent.object,
+                                            editorComponent.subObject
                                         );
                                     }
                                 });
+
+                                const isActive =
+                                    editorComponent &&
+                                    this.context.editorsStore.getEditorByObject(
+                                        editorComponent.object
+                                    ) == this.context.editorsStore.activeEditor;
 
                                 return (
                                     <IconAction
@@ -372,6 +379,7 @@ const EditorButtons = observer(
                                         title={title}
                                         icon={icon}
                                         onClick={onClick}
+                                        enabled={!isActive}
                                     />
                                 );
                             })}

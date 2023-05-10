@@ -248,10 +248,21 @@ export const ObjectReferenceInput = observer(
                         )}
                     </div>
                     {bitmap && bitmap.imageSrc && (
-                        <img
-                            className="EezStudio_Property_BitmapPreview"
-                            src={bitmap.imageSrc}
-                        />
+                        <div>
+                            {bitmap.imageElement && (
+                                <div
+                                    className="ms-1"
+                                    style={{ whiteSpace: "nowrap" }}
+                                >
+                                    Dimension: {bitmap.imageElement.width} x{" "}
+                                    {bitmap.imageElement.height} px
+                                </div>
+                            )}
+                            <img
+                                className="EezStudio_Property_BitmapPreview"
+                                src={bitmap.imageSrc}
+                            />
+                        </div>
                     )}
                 </>
             );
