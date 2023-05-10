@@ -1,20 +1,27 @@
 {
+  "objID": "6666cd76-f969-5646-9e7b-e39d750cc7d9",
   "settings": {
+    "objID": "e007d988-9fba-797d-72e9-efc33ca6d05c",
     "general": {
+      "objID": "fd434352-2277-c4a8-e87e-e96cfcbf2305",
       "projectVersion": "v3",
       "projectType": "dashboard",
       "imports": []
     },
     "build": {
+      "objID": "72794a43-a0fc-13c2-7eb5-67dd952141a4",
       "configurations": [
         {
+          "objID": "bba0546c-06b8-604d-c43e-ecf1963e7492",
           "name": "Default"
         }
       ],
-      "files": []
+      "files": [],
+      "lvglInclude": "lvgl/lvgl.h"
     }
   },
   "variables": {
+    "objID": "c6c71e16-53e1-217f-d03b-cef56c6b037a",
     "globalVariables": [],
     "structures": [],
     "enums": []
@@ -22,14 +29,15 @@
   "actions": [],
   "pages": [
     {
+      "objID": "f7f15531-2f0d-6247-72af-17ad3967f8e0",
       "components": [
         {
+          "objID": "1a331409-37d5-13ac-651e-26eb227b18b1",
           "type": "TextWidget",
           "left": 0,
           "top": 0,
           "width": 160,
           "height": 56,
-          "wireID": "ea7eb013-6c4a-4647-ff9f-0f2f5df1d137",
           "customInputs": [],
           "customOutputs": [],
           "asOutputProperties": [
@@ -37,25 +45,28 @@
           ],
           "data": "\"Albert Einstein\"",
           "style": {
+            "objID": "759e70f7-0da0-ee89-4fb3-c9fe64b200c5",
             "inheritFrom": "tab"
           },
           "timeline": []
         },
         {
+          "objID": "b1d5a0ef-dd40-0055-2de1-a16cf1b7597e",
           "type": "TextWidget",
           "left": 142,
           "top": 82,
           "width": 400,
           "height": 60,
-          "wireID": "871bc7ce-c53e-479a-89e8-41306e538877",
           "customInputs": [],
           "customOutputs": [],
           "data": "\"“Two things are infinite: the universe and human stupidity; and I'm not sure about the universe.”\"",
           "style": {
+            "objID": "f9a6ee82-e3c1-75b8-043a-a2ee56bd7bdc",
             "inheritFrom": "quote"
           },
           "timeline": [
             {
+              "objID": "b9a1977f-0993-f759-3890-faa20526dc8e",
               "start": 0,
               "end": 0,
               "left": {
@@ -75,7 +86,11 @@
               },
               "height": {
                 "enabled": true,
-                "value": 360,
+                "value": 300,
+                "easingFunction": "linear"
+              },
+              "scale": {
+                "enabled": false,
                 "easingFunction": "linear"
               },
               "scaleX": {
@@ -97,149 +112,31 @@
               }
             },
             {
+              "objID": "ee0279b5-5b3b-82e9-f7a3-dd92ef890885",
               "start": 0,
               "end": 0.5,
               "left": {
-                "enabled": true,
+                "enabled": false,
                 "value": 200,
                 "easingFunction": "linear"
               },
               "top": {
-                "enabled": true,
+                "enabled": false,
                 "value": 90,
                 "easingFunction": "linear"
               },
               "width": {
-                "enabled": true,
+                "enabled": false,
                 "value": 400,
                 "easingFunction": "linear"
               },
               "height": {
-                "enabled": true,
+                "enabled": false,
                 "value": 360,
                 "easingFunction": "linear"
               },
-              "scaleX": {
+              "scale": {
                 "enabled": false,
-                "easingFunction": "linear"
-              },
-              "scaleY": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "rotate": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "opacity": {
-                "enabled": true,
-                "value": 0,
-                "easingFunction": "linear"
-              }
-            },
-            {
-              "start": 0.5,
-              "end": 1,
-              "left": {
-                "enabled": true,
-                "value": 200,
-                "easingFunction": "linear"
-              },
-              "top": {
-                "enabled": true,
-                "value": 90,
-                "easingFunction": "linear"
-              },
-              "width": {
-                "enabled": true,
-                "value": 400,
-                "easingFunction": "linear"
-              },
-              "height": {
-                "enabled": true,
-                "value": 360,
-                "easingFunction": "linear"
-              },
-              "scaleX": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "scaleY": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "rotate": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "opacity": {
-                "enabled": true,
-                "value": 0,
-                "easingFunction": "linear"
-              }
-            },
-            {
-              "start": 1,
-              "end": 1.5,
-              "left": {
-                "enabled": true,
-                "value": 200,
-                "easingFunction": "linear"
-              },
-              "top": {
-                "enabled": true,
-                "value": 90,
-                "easingFunction": "linear"
-              },
-              "width": {
-                "enabled": true,
-                "value": 400,
-                "easingFunction": "linear"
-              },
-              "height": {
-                "enabled": true,
-                "value": 360,
-                "easingFunction": "linear"
-              },
-              "scaleX": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "scaleY": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "rotate": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "opacity": {
-                "enabled": true,
-                "value": 0,
-                "easingFunction": "linear"
-              }
-            },
-            {
-              "start": 1.5,
-              "end": 2,
-              "left": {
-                "enabled": true,
-                "value": 200,
-                "easingFunction": "linear"
-              },
-              "top": {
-                "enabled": true,
-                "value": 90,
-                "easingFunction": "linear"
-              },
-              "width": {
-                "enabled": true,
-                "value": 400,
-                "easingFunction": "linear"
-              },
-              "height": {
-                "enabled": true,
-                "value": 360,
                 "easingFunction": "linear"
               },
               "scaleX": {
@@ -263,12 +160,12 @@
           ]
         },
         {
+          "objID": "58d84e03-0aa1-9a55-2f99-b308ea38dba0",
           "type": "TextWidget",
           "left": 160,
           "top": 0,
           "width": 160,
           "height": 56,
-          "wireID": "cfb4e34b-21a5-4673-ff2b-9e8491fdad17",
           "customInputs": [],
           "customOutputs": [],
           "asOutputProperties": [
@@ -276,27 +173,30 @@
           ],
           "data": "\"Marilyn Monroe\"",
           "style": {
+            "objID": "cdbcd671-bbcc-389e-954e-de0c2ea9c9dc",
             "inheritFrom": "tab"
           },
           "timeline": [],
           "name": ""
         },
         {
+          "objID": "ad6d7962-be1f-dc32-3dac-0c8c6052db45",
           "type": "TextWidget",
           "left": 142,
           "top": 142,
           "width": 400,
           "height": 60,
-          "wireID": "867cb574-8d88-4dd9-baaf-e3d6b219ce27",
           "customInputs": [],
           "customOutputs": [],
           "data": "\"“I'm selfish, impatient and a little insecure. I make mistakes, I am out of control and at times hard to handle. But if you can't handle me at my worst, then you sure as hell don't deserve me at my best.”\"",
           "style": {
+            "objID": "ba5a759e-2822-af12-0dfa-0a34816facd6",
             "inheritFrom": "quote",
             "opacity": 0
           },
           "timeline": [
             {
+              "objID": "a005465a-ce02-8290-2158-d6592ad5d9cf",
               "start": 0,
               "end": 0,
               "left": {
@@ -316,7 +216,11 @@
               },
               "height": {
                 "enabled": true,
-                "value": 360,
+                "value": 300,
+                "easingFunction": "linear"
+              },
+              "scale": {
+                "enabled": false,
                 "easingFunction": "linear"
               },
               "scaleX": {
@@ -338,26 +242,31 @@
               }
             },
             {
+              "objID": "7307bc7a-938d-d70d-3409-e3e63c41ad55",
               "start": 0,
               "end": 0.5,
               "left": {
-                "enabled": true,
+                "enabled": false,
                 "value": 200,
                 "easingFunction": "linear"
               },
               "top": {
-                "enabled": true,
+                "enabled": false,
                 "value": 90,
                 "easingFunction": "linear"
               },
               "width": {
-                "enabled": true,
+                "enabled": false,
                 "value": 400,
                 "easingFunction": "linear"
               },
               "height": {
-                "enabled": true,
+                "enabled": false,
                 "value": 360,
+                "easingFunction": "linear"
+              },
+              "scale": {
+                "enabled": false,
                 "easingFunction": "linear"
               },
               "scaleX": {
@@ -379,108 +288,31 @@
               }
             },
             {
+              "objID": "f859b33f-e039-764d-ff7d-c6e5dfa86c10",
               "start": 0.5,
               "end": 1,
               "left": {
-                "enabled": true,
+                "enabled": false,
                 "value": 200,
                 "easingFunction": "linear"
               },
               "top": {
-                "enabled": true,
+                "enabled": false,
                 "value": 90,
                 "easingFunction": "linear"
               },
               "width": {
-                "enabled": true,
+                "enabled": false,
                 "value": 400,
                 "easingFunction": "linear"
               },
               "height": {
-                "enabled": true,
+                "enabled": false,
                 "value": 360,
                 "easingFunction": "linear"
               },
-              "scaleX": {
+              "scale": {
                 "enabled": false,
-                "easingFunction": "linear"
-              },
-              "scaleY": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "rotate": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "opacity": {
-                "enabled": true,
-                "value": 0,
-                "easingFunction": "linear"
-              }
-            },
-            {
-              "start": 1,
-              "end": 1.5,
-              "left": {
-                "enabled": true,
-                "value": 200,
-                "easingFunction": "linear"
-              },
-              "top": {
-                "enabled": true,
-                "value": 90,
-                "easingFunction": "linear"
-              },
-              "width": {
-                "enabled": true,
-                "value": 400,
-                "easingFunction": "linear"
-              },
-              "height": {
-                "enabled": true,
-                "value": 360,
-                "easingFunction": "linear"
-              },
-              "scaleX": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "scaleY": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "rotate": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "opacity": {
-                "enabled": true,
-                "value": 0,
-                "easingFunction": "linear"
-              }
-            },
-            {
-              "start": 1.5,
-              "end": 2,
-              "left": {
-                "enabled": true,
-                "value": 200,
-                "easingFunction": "linear"
-              },
-              "top": {
-                "enabled": true,
-                "value": 90,
-                "easingFunction": "linear"
-              },
-              "width": {
-                "enabled": true,
-                "value": 400,
-                "easingFunction": "linear"
-              },
-              "height": {
-                "enabled": true,
-                "value": 360,
                 "easingFunction": "linear"
               },
               "scaleX": {
@@ -504,12 +336,12 @@
           ]
         },
         {
+          "objID": "c489d6a8-f950-d778-2e3e-90bd3017c953",
           "type": "TextWidget",
           "left": 320,
           "top": 0,
           "width": 160,
           "height": 56,
-          "wireID": "f074da15-1c5c-4a7e-fde5-aa877523682c",
           "customInputs": [],
           "customOutputs": [],
           "asOutputProperties": [
@@ -517,26 +349,29 @@
           ],
           "data": "\"Albert Camus\"",
           "style": {
+            "objID": "72862002-7fbd-278c-4a47-f5102d88d446",
             "inheritFrom": "tab"
           },
           "timeline": []
         },
         {
+          "objID": "fb4b3fa1-d53b-75a6-c45d-c41ad06c4923",
           "type": "TextWidget",
           "left": 142,
           "top": 202,
           "width": 400,
           "height": 60,
-          "wireID": "c081a593-c6b6-4c60-856e-ef7aaf5ed334",
           "customInputs": [],
           "customOutputs": [],
           "data": "\"“Don’t walk in front of me… I may not follow Don’t walk behind me… I may not lead Walk beside me… just be my friend”\"",
           "style": {
+            "objID": "9770ac8c-3842-2571-d0a9-dfe61d2abbc7",
             "inheritFrom": "quote",
             "opacity": 0
           },
           "timeline": [
             {
+              "objID": "076e0c3b-42b8-4bd0-082f-cc7a6080212c",
               "start": 0,
               "end": 0,
               "left": {
@@ -556,7 +391,11 @@
               },
               "height": {
                 "enabled": true,
-                "value": 360,
+                "value": 300,
+                "easingFunction": "linear"
+              },
+              "scale": {
+                "enabled": false,
                 "easingFunction": "linear"
               },
               "scaleX": {
@@ -578,67 +417,31 @@
               }
             },
             {
-              "start": 0,
-              "end": 0.5,
-              "left": {
-                "enabled": true,
-                "value": 200,
-                "easingFunction": "linear"
-              },
-              "top": {
-                "enabled": true,
-                "value": 90,
-                "easingFunction": "linear"
-              },
-              "width": {
-                "enabled": true,
-                "value": 400,
-                "easingFunction": "linear"
-              },
-              "height": {
-                "enabled": true,
-                "value": 360,
-                "easingFunction": "linear"
-              },
-              "scaleX": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "scaleY": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "rotate": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "opacity": {
-                "enabled": true,
-                "value": 0,
-                "easingFunction": "linear"
-              }
-            },
-            {
+              "objID": "307e8d29-16d8-5db5-9133-7d2c26669923",
               "start": 0.5,
               "end": 1,
               "left": {
-                "enabled": true,
+                "enabled": false,
                 "value": 200,
                 "easingFunction": "linear"
               },
               "top": {
-                "enabled": true,
+                "enabled": false,
                 "value": 90,
                 "easingFunction": "linear"
               },
               "width": {
-                "enabled": true,
+                "enabled": false,
                 "value": 400,
                 "easingFunction": "linear"
               },
               "height": {
-                "enabled": true,
+                "enabled": false,
                 "value": 360,
+                "easingFunction": "linear"
+              },
+              "scale": {
+                "enabled": false,
                 "easingFunction": "linear"
               },
               "scaleX": {
@@ -660,67 +463,31 @@
               }
             },
             {
+              "objID": "072c29d5-ed72-fc0d-21a0-03821f6a8782",
               "start": 1,
               "end": 1.5,
               "left": {
-                "enabled": true,
+                "enabled": false,
                 "value": 200,
                 "easingFunction": "linear"
               },
               "top": {
-                "enabled": true,
+                "enabled": false,
                 "value": 90,
                 "easingFunction": "linear"
               },
               "width": {
-                "enabled": true,
+                "enabled": false,
                 "value": 400,
                 "easingFunction": "linear"
               },
               "height": {
-                "enabled": true,
+                "enabled": false,
                 "value": 360,
                 "easingFunction": "linear"
               },
-              "scaleX": {
+              "scale": {
                 "enabled": false,
-                "easingFunction": "linear"
-              },
-              "scaleY": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "rotate": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "opacity": {
-                "enabled": true,
-                "value": 0,
-                "easingFunction": "linear"
-              }
-            },
-            {
-              "start": 1.5,
-              "end": 2,
-              "left": {
-                "enabled": true,
-                "value": 200,
-                "easingFunction": "linear"
-              },
-              "top": {
-                "enabled": true,
-                "value": 90,
-                "easingFunction": "linear"
-              },
-              "width": {
-                "enabled": true,
-                "value": 400,
-                "easingFunction": "linear"
-              },
-              "height": {
-                "enabled": true,
-                "value": 360,
                 "easingFunction": "linear"
               },
               "scaleX": {
@@ -744,12 +511,12 @@
           ]
         },
         {
+          "objID": "da721dd5-7a45-4d91-0d3f-bb4336957e03",
           "type": "TextWidget",
           "left": 480,
           "top": 0,
           "width": 160,
           "height": 56,
-          "wireID": "f8a61bce-986c-4de0-ac3a-ede4989b0b14",
           "customInputs": [],
           "customOutputs": [],
           "asOutputProperties": [
@@ -757,26 +524,29 @@
           ],
           "data": "\"Oscar Wilde\"",
           "style": {
+            "objID": "f8322731-da0e-c354-7dfe-25934a164257",
             "inheritFrom": "tab"
           },
           "timeline": []
         },
         {
+          "objID": "65ed2992-be4b-7a4c-f423-578e05f582f3",
           "type": "TextWidget",
           "left": 142,
           "top": 262,
           "width": 400,
           "height": 60,
-          "wireID": "515c0944-9b6b-48aa-f6b1-43b9c35656cd",
           "customInputs": [],
           "customOutputs": [],
           "data": "\"“I am so clever that sometimes I don't understand a single word of what I am saying.”\"",
           "style": {
+            "objID": "78b3006b-a456-de9a-dccc-1ae4c3fea106",
             "inheritFrom": "quote",
             "opacity": 0
           },
           "timeline": [
             {
+              "objID": "1c044b13-5b21-94a1-0af3-98dc0ec815fd",
               "start": 0,
               "end": 0,
               "left": {
@@ -796,7 +566,11 @@
               },
               "height": {
                 "enabled": true,
-                "value": 360,
+                "value": 300,
+                "easingFunction": "linear"
+              },
+              "scale": {
+                "enabled": false,
                 "easingFunction": "linear"
               },
               "scaleX": {
@@ -818,108 +592,31 @@
               }
             },
             {
-              "start": 0,
-              "end": 0.5,
-              "left": {
-                "enabled": true,
-                "value": 200,
-                "easingFunction": "linear"
-              },
-              "top": {
-                "enabled": true,
-                "value": 90,
-                "easingFunction": "linear"
-              },
-              "width": {
-                "enabled": true,
-                "value": 400,
-                "easingFunction": "linear"
-              },
-              "height": {
-                "enabled": true,
-                "value": 360,
-                "easingFunction": "linear"
-              },
-              "scaleX": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "scaleY": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "rotate": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "opacity": {
-                "enabled": true,
-                "value": 0,
-                "easingFunction": "linear"
-              }
-            },
-            {
-              "start": 0.5,
-              "end": 1,
-              "left": {
-                "enabled": true,
-                "value": 200,
-                "easingFunction": "linear"
-              },
-              "top": {
-                "enabled": true,
-                "value": 90,
-                "easingFunction": "linear"
-              },
-              "width": {
-                "enabled": true,
-                "value": 400,
-                "easingFunction": "linear"
-              },
-              "height": {
-                "enabled": true,
-                "value": 360,
-                "easingFunction": "linear"
-              },
-              "scaleX": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "scaleY": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "rotate": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "opacity": {
-                "enabled": true,
-                "value": 0,
-                "easingFunction": "linear"
-              }
-            },
-            {
+              "objID": "b8892cfc-2ae0-2d45-dc83-3b7c19b7697a",
               "start": 1,
               "end": 1.5,
               "left": {
-                "enabled": true,
+                "enabled": false,
                 "value": 200,
                 "easingFunction": "linear"
               },
               "top": {
-                "enabled": true,
+                "enabled": false,
                 "value": 90,
                 "easingFunction": "linear"
               },
               "width": {
-                "enabled": true,
+                "enabled": false,
                 "value": 400,
                 "easingFunction": "linear"
               },
               "height": {
-                "enabled": true,
+                "enabled": false,
                 "value": 360,
+                "easingFunction": "linear"
+              },
+              "scale": {
+                "enabled": false,
                 "easingFunction": "linear"
               },
               "scaleX": {
@@ -941,26 +638,31 @@
               }
             },
             {
+              "objID": "665739d2-5fec-9a52-c485-defe2f177f2e",
               "start": 1.5,
               "end": 2,
               "left": {
-                "enabled": true,
+                "enabled": false,
                 "value": 200,
                 "easingFunction": "linear"
               },
               "top": {
-                "enabled": true,
+                "enabled": false,
                 "value": 90,
                 "easingFunction": "linear"
               },
               "width": {
-                "enabled": true,
+                "enabled": false,
                 "value": 400,
                 "easingFunction": "linear"
               },
               "height": {
-                "enabled": true,
+                "enabled": false,
                 "value": 360,
+                "easingFunction": "linear"
+              },
+              "scale": {
+                "enabled": false,
                 "easingFunction": "linear"
               },
               "scaleX": {
@@ -984,12 +686,12 @@
           ]
         },
         {
+          "objID": "3328b57f-35e8-5239-09f8-bcc795169cb9",
           "type": "TextWidget",
           "left": 640,
           "top": 0,
           "width": 160,
           "height": 56,
-          "wireID": "bd34555d-f94b-48ef-e2a8-6cef2344e8fa",
           "customInputs": [],
           "customOutputs": [],
           "asOutputProperties": [
@@ -997,27 +699,30 @@
           ],
           "data": "\"Mark Twain\"",
           "style": {
+            "objID": "64f56a8a-f576-a4a1-f1f4-0f06bb21dbc6",
             "inheritFrom": "tab"
           },
           "timeline": []
         },
         {
+          "objID": "9928539e-ace8-3aa6-dcc9-ffdf62bf6708",
           "type": "TextWidget",
           "left": 142,
           "top": 322,
           "width": 400,
           "height": 60,
-          "wireID": "db82426c-2b64-4344-b72b-a2e335d75ea7",
           "customInputs": [],
           "customOutputs": [],
           "data": "\"“If you tell the truth, you don't have to remember anything.”\"",
           "style": {
+            "objID": "fa929cc3-bae0-69ec-accd-edf569a711d7",
             "inheritFrom": "quote",
             "opacity": 0
           },
           "locked": false,
           "timeline": [
             {
+              "objID": "271734fd-7f41-2c5c-ef06-5b460629dd7f",
               "start": 0,
               "end": 0,
               "left": {
@@ -1037,7 +742,11 @@
               },
               "height": {
                 "enabled": true,
-                "value": 360,
+                "value": 300,
+                "easingFunction": "linear"
+              },
+              "scale": {
+                "enabled": false,
                 "easingFunction": "linear"
               },
               "scaleX": {
@@ -1059,149 +768,31 @@
               }
             },
             {
-              "start": 0,
-              "end": 0.5,
-              "left": {
-                "enabled": true,
-                "value": 200,
-                "easingFunction": "linear"
-              },
-              "top": {
-                "enabled": true,
-                "value": 90,
-                "easingFunction": "linear"
-              },
-              "width": {
-                "enabled": true,
-                "value": 400,
-                "easingFunction": "linear"
-              },
-              "height": {
-                "enabled": true,
-                "value": 360,
-                "easingFunction": "linear"
-              },
-              "scaleX": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "scaleY": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "rotate": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "opacity": {
-                "enabled": true,
-                "value": 0,
-                "easingFunction": "linear"
-              }
-            },
-            {
-              "start": 0.5,
-              "end": 1,
-              "left": {
-                "enabled": true,
-                "value": 200,
-                "easingFunction": "linear"
-              },
-              "top": {
-                "enabled": true,
-                "value": 90,
-                "easingFunction": "linear"
-              },
-              "width": {
-                "enabled": true,
-                "value": 400,
-                "easingFunction": "linear"
-              },
-              "height": {
-                "enabled": true,
-                "value": 360,
-                "easingFunction": "linear"
-              },
-              "scaleX": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "scaleY": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "rotate": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "opacity": {
-                "enabled": true,
-                "value": 0,
-                "easingFunction": "linear"
-              }
-            },
-            {
-              "start": 1,
-              "end": 1.5,
-              "left": {
-                "enabled": true,
-                "value": 200,
-                "easingFunction": "linear"
-              },
-              "top": {
-                "enabled": true,
-                "value": 90,
-                "easingFunction": "linear"
-              },
-              "width": {
-                "enabled": true,
-                "value": 400,
-                "easingFunction": "linear"
-              },
-              "height": {
-                "enabled": true,
-                "value": 360,
-                "easingFunction": "linear"
-              },
-              "scaleX": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "scaleY": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "rotate": {
-                "enabled": false,
-                "easingFunction": "linear"
-              },
-              "opacity": {
-                "enabled": true,
-                "value": 0,
-                "easingFunction": "linear"
-              }
-            },
-            {
+              "objID": "8d0d0b79-98e8-a9e5-060b-c0e75f58cf86",
               "start": 1.5,
               "end": 2,
               "left": {
-                "enabled": true,
+                "enabled": false,
                 "value": 200,
                 "easingFunction": "linear"
               },
               "top": {
-                "enabled": true,
+                "enabled": false,
                 "value": 90,
                 "easingFunction": "linear"
               },
               "width": {
-                "enabled": true,
+                "enabled": false,
                 "value": 400,
                 "easingFunction": "linear"
               },
               "height": {
-                "enabled": true,
+                "enabled": false,
                 "value": 360,
+                "easingFunction": "linear"
+              },
+              "scale": {
+                "enabled": false,
                 "easingFunction": "linear"
               },
               "scaleX": {
@@ -1225,12 +816,12 @@
           ]
         },
         {
+          "objID": "99e9c249-06b1-5559-9a34-fe49f3d52d4e",
           "type": "AnimateActionComponent",
           "left": 892,
           "top": -340,
           "width": 410,
           "height": 55,
-          "wireID": "bfac3c4c-58da-4686-fa0f-095f7a3c3fc0",
           "customInputs": [],
           "customOutputs": [],
           "from": "Flow.pageTimelinePosition()",
@@ -1238,12 +829,12 @@
           "speed": "Math.abs(Flow.pageTimelinePosition() - 0) / 0.25"
         },
         {
+          "objID": "d0b96dee-f004-1f63-44e4-c4c2a4fcfe06",
           "type": "AnimateActionComponent",
           "left": 892,
           "top": -269,
           "width": 435,
           "height": 55,
-          "wireID": "9c9efb9a-7600-424b-e636-06a64a256192",
           "customInputs": [],
           "customOutputs": [],
           "from": "Flow.pageTimelinePosition()",
@@ -1251,12 +842,12 @@
           "speed": "Math.abs(Flow.pageTimelinePosition() - 0.5) / 0.25"
         },
         {
+          "objID": "629c9db1-9301-9dd6-7aa2-63da25ece3c9",
           "type": "AnimateActionComponent",
           "left": 892,
           "top": -196,
           "width": 435,
           "height": 55,
-          "wireID": "d2eabd82-2dc9-4862-a82d-25741005e835",
           "customInputs": [],
           "customOutputs": [],
           "from": "Flow.pageTimelinePosition()",
@@ -1264,12 +855,12 @@
           "speed": "Math.abs(Flow.pageTimelinePosition() - 1.0) / 0.25"
         },
         {
+          "objID": "449dea31-af3a-6a20-5c48-ba9d732e4a81",
           "type": "AnimateActionComponent",
           "left": 892,
           "top": -126,
           "width": 435,
           "height": 55,
-          "wireID": "87a59ce7-b51d-4baf-8b4b-db0d81190aeb",
           "customInputs": [],
           "customOutputs": [],
           "from": "Flow.pageTimelinePosition()",
@@ -1277,12 +868,12 @@
           "speed": "Math.abs(Flow.pageTimelinePosition() - 1.5) / 0.25"
         },
         {
+          "objID": "daf4ac76-bcf6-9b56-1291-fc1007cfe998",
           "type": "AnimateActionComponent",
           "left": 892,
           "top": -55,
           "width": 435,
           "height": 55,
-          "wireID": "fbf9c2a0-1747-40e2-83c3-7f252e11ec55",
           "customInputs": [],
           "customOutputs": [],
           "from": "Flow.pageTimelinePosition()",
@@ -1290,30 +881,32 @@
           "speed": "Math.abs(Flow.pageTimelinePosition() - 2.0) / 0.25"
         },
         {
+          "objID": "549175fd-887d-109c-46e8-cba52082face",
           "type": "StartActionComponent",
           "left": -130,
           "top": -67,
           "width": 87,
           "height": 25,
-          "wireID": "d4e5eba1-7162-4e49-a46b-9298e1f569c4",
           "customInputs": [],
           "customOutputs": []
         },
         {
+          "objID": "2d5b054e-7a98-2e69-f3f6-6585448970e5",
           "type": "RectangleWidget",
           "left": 0,
           "top": 56,
           "width": 160,
           "height": 4,
-          "wireID": "3c231220-8d99-4d2a-cdcc-25bf313bfd97",
           "customInputs": [],
           "customOutputs": [],
           "style": {
+            "objID": "5f41eeca-92bb-3e58-14de-afeaecf63504",
             "inheritFrom": "default",
             "backgroundColor": "#4a27e9"
           },
           "timeline": [
             {
+              "objID": "3694a048-a1be-1524-931a-b0d675205185",
               "start": 0,
               "end": 0,
               "left": {
@@ -1336,6 +929,10 @@
                 "value": 4,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -1354,6 +951,7 @@
               }
             },
             {
+              "objID": "a8854b08-428d-d528-26a3-20cca17fc4b2",
               "start": 0,
               "end": 0.5,
               "left": {
@@ -1376,6 +974,10 @@
                 "value": 4,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -1394,6 +996,7 @@
               }
             },
             {
+              "objID": "a4f269f0-7a1c-8424-239d-171251007575",
               "start": 0.5,
               "end": 0.5,
               "left": {
@@ -1416,6 +1019,10 @@
                 "value": 4,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -1434,6 +1041,7 @@
               }
             },
             {
+              "objID": "6ca4500e-c9cf-627d-530d-cfd042c9a668",
               "start": 0.5,
               "end": 1,
               "left": {
@@ -1456,6 +1064,10 @@
                 "value": 4,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -1474,6 +1086,7 @@
               }
             },
             {
+              "objID": "d15dd301-ad08-d691-866a-c61118767fca",
               "start": 1,
               "end": 1.5,
               "left": {
@@ -1496,6 +1109,10 @@
                 "value": 4,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -1514,6 +1131,7 @@
               }
             },
             {
+              "objID": "7e149274-06ab-e673-2beb-f10c00f2eec6",
               "start": 1.5,
               "end": 2,
               "left": {
@@ -1536,6 +1154,10 @@
                 "value": 4,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -1556,12 +1178,12 @@
           ]
         },
         {
+          "objID": "54371a09-2ea7-3b31-d3fe-6ae13d4a779a",
           "type": "ButtonWidget",
           "left": 4,
           "top": 414,
           "width": 92,
           "height": 32,
-          "wireID": "26a87451-1428-49c8-daa8-403bbb0d18fe",
           "customInputs": [],
           "customOutputs": [],
           "asOutputProperties": [
@@ -1569,31 +1191,33 @@
           ],
           "data": "\"Animation 1\"",
           "style": {
+            "objID": "94aa3041-770f-3c73-0ea9-de9cd0587031",
             "inheritFrom": "default"
           },
           "timeline": [],
           "disabledStyle": {
+            "objID": "11143b08-07ce-6c57-0635-79b1ae5ad6ee",
             "inheritFrom": "default"
           }
         },
         {
+          "objID": "93cb1310-33e7-6e75-a0b7-c7d82025ee90",
           "type": "ShowPageActionComponent",
           "left": 119,
           "top": 489,
-          "width": 97,
+          "width": 92,
           "height": 55,
-          "wireID": "4ede99ef-45da-426b-eab3-3e9cf3f31b18",
           "customInputs": [],
           "customOutputs": [],
           "page": "Page2"
         },
         {
+          "objID": "b0bb8639-9df8-9c1e-91bf-78c650de7eed",
           "type": "ButtonWidget",
           "left": 119,
           "top": 414,
           "width": 92,
           "height": 32,
-          "wireID": "61bfd469-7161-49f0-91e2-0b6b1bb63799",
           "customInputs": [],
           "customOutputs": [],
           "asOutputProperties": [
@@ -1601,27 +1225,31 @@
           ],
           "data": "\"Animation 2\"",
           "style": {
+            "objID": "d251d759-a0a6-aa61-0b4b-86c2f5c714c4",
             "inheritFrom": "default"
           },
           "timeline": [],
           "disabledStyle": {
+            "objID": "f5e776ad-e24e-69ca-d896-45fcc863ff09",
             "inheritFrom": "default"
           }
         },
         {
-          "type": "LayoutViewWidget",
+          "objID": "a85eb993-fba6-740b-95c0-9ca8e70d4b3c",
+          "type": "UserWidgetWidget",
           "left": 24,
           "top": 182,
           "width": 30,
           "height": 20,
-          "wireID": "b3052593-ba78-4365-f5bd-9517893b7390",
           "customInputs": [],
           "customOutputs": [],
           "style": {
+            "objID": "763985f5-6a29-d272-7b65-324226f6ff88",
             "inheritFrom": "default"
           },
           "timeline": [
             {
+              "objID": "0e04a4d8-32f4-ed30-d948-a7459a867f97",
               "start": 0,
               "end": 0,
               "left": {
@@ -1644,6 +1272,10 @@
                 "value": 20,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -1662,22 +1294,24 @@
               }
             }
           ],
-          "layout": "anim1"
+          "userWidgetPageName": "anim1"
         },
         {
-          "type": "LayoutViewWidget",
+          "objID": "ed407b62-90e5-743f-af61-417ab465d6b9",
+          "type": "UserWidgetWidget",
           "left": 24,
           "top": 108,
           "width": 30,
           "height": 20,
-          "wireID": "5bf8d6a8-0b7d-4c92-866a-41549b908530",
           "customInputs": [],
           "customOutputs": [],
           "style": {
+            "objID": "e0185459-3d41-c11f-b2b3-0e041d80296c",
             "inheritFrom": "default"
           },
           "timeline": [
             {
+              "objID": "648060fd-8663-1d1b-c566-3e3c355ccbe6",
               "start": 0,
               "end": 0,
               "left": {
@@ -1700,6 +1334,10 @@
                 "value": 20,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -1718,26 +1356,26 @@
               }
             }
           ],
-          "layout": "anim1"
+          "userWidgetPageName": "anim1"
         },
         {
+          "objID": "3160b828-503c-11b5-c11e-8189721a3a28",
           "type": "ShowPageActionComponent",
           "left": 262,
           "top": 489,
-          "width": 97,
+          "width": 92,
           "height": 55,
-          "wireID": "9d443ecd-e221-4789-bbdb-e5632defde81",
           "customInputs": [],
           "customOutputs": [],
           "page": "Page3"
         },
         {
+          "objID": "9919be3e-b754-12b2-ee54-e2938c9042a2",
           "type": "DelayActionComponent",
           "left": -126,
           "top": 125,
           "width": 87,
           "height": 55,
-          "wireID": "e220797a-d59a-4a31-a2f5-a30abdd3cbf0",
           "customInputs": [],
           "customOutputs": [],
           "milliseconds": "500"
@@ -1745,69 +1383,80 @@
       ],
       "connectionLines": [
         {
-          "source": "ea7eb013-6c4a-4647-ff9f-0f2f5df1d137",
+          "objID": "e01fb943-1840-a801-55ed-ff0cc445981d",
+          "source": "1a331409-37d5-13ac-651e-26eb227b18b1",
           "output": "action",
-          "target": "bfac3c4c-58da-4686-fa0f-095f7a3c3fc0",
+          "target": "99e9c249-06b1-5559-9a34-fe49f3d52d4e",
           "input": "@seqin"
         },
         {
-          "source": "cfb4e34b-21a5-4673-ff2b-9e8491fdad17",
+          "objID": "27777050-79d0-0a5f-9fa1-ee264738518b",
+          "source": "58d84e03-0aa1-9a55-2f99-b308ea38dba0",
           "output": "action",
-          "target": "9c9efb9a-7600-424b-e636-06a64a256192",
+          "target": "d0b96dee-f004-1f63-44e4-c4c2a4fcfe06",
           "input": "@seqin"
         },
         {
-          "source": "f074da15-1c5c-4a7e-fde5-aa877523682c",
+          "objID": "b8f91348-5463-3225-833b-8aad757d9d9f",
+          "source": "c489d6a8-f950-d778-2e3e-90bd3017c953",
           "output": "action",
-          "target": "d2eabd82-2dc9-4862-a82d-25741005e835",
+          "target": "629c9db1-9301-9dd6-7aa2-63da25ece3c9",
           "input": "@seqin"
         },
         {
-          "source": "f8a61bce-986c-4de0-ac3a-ede4989b0b14",
+          "objID": "cbf2af9b-a321-ac06-1db5-4503f162563f",
+          "source": "da721dd5-7a45-4d91-0d3f-bb4336957e03",
           "output": "action",
-          "target": "87a59ce7-b51d-4baf-8b4b-db0d81190aeb",
+          "target": "449dea31-af3a-6a20-5c48-ba9d732e4a81",
           "input": "@seqin"
         },
         {
-          "source": "bd34555d-f94b-48ef-e2a8-6cef2344e8fa",
+          "objID": "e784d719-7e9e-1948-89d2-73af1be51500",
+          "source": "3328b57f-35e8-5239-09f8-bcc795169cb9",
           "output": "action",
-          "target": "fbf9c2a0-1747-40e2-83c3-7f252e11ec55",
+          "target": "daf4ac76-bcf6-9b56-1291-fc1007cfe998",
           "input": "@seqin"
         },
         {
-          "source": "d4e5eba1-7162-4e49-a46b-9298e1f569c4",
+          "objID": "c2ea86ab-6bbd-c44d-c245-85e3289a9065",
+          "source": "549175fd-887d-109c-46e8-cba52082face",
           "output": "@seqout",
-          "target": "bfac3c4c-58da-4686-fa0f-095f7a3c3fc0",
+          "target": "99e9c249-06b1-5559-9a34-fe49f3d52d4e",
           "input": "@seqin"
         },
         {
-          "source": "26a87451-1428-49c8-daa8-403bbb0d18fe",
+          "objID": "2a171df8-8240-43aa-8997-d1da30af5fc0",
+          "source": "54371a09-2ea7-3b31-d3fe-6ae13d4a779a",
           "output": "action",
-          "target": "4ede99ef-45da-426b-eab3-3e9cf3f31b18",
+          "target": "93cb1310-33e7-6e75-a0b7-c7d82025ee90",
           "input": "@seqin"
         },
         {
-          "source": "d4e5eba1-7162-4e49-a46b-9298e1f569c4",
+          "objID": "7e21fbf7-268f-8b13-fe15-4e0bb0505101",
+          "source": "549175fd-887d-109c-46e8-cba52082face",
           "output": "@seqout",
-          "target": "e220797a-d59a-4a31-a2f5-a30abdd3cbf0",
+          "target": "9919be3e-b754-12b2-ee54-e2938c9042a2",
           "input": "@seqin"
         },
         {
-          "source": "d4e5eba1-7162-4e49-a46b-9298e1f569c4",
+          "objID": "1da7cb50-2758-8f34-e7a0-d1c3b785f611",
+          "source": "549175fd-887d-109c-46e8-cba52082face",
           "output": "@seqout",
-          "target": "5bf8d6a8-0b7d-4c92-866a-41549b908530",
+          "target": "ed407b62-90e5-743f-af61-417ab465d6b9",
           "input": "@seqin"
         },
         {
-          "source": "61bfd469-7161-49f0-91e2-0b6b1bb63799",
+          "objID": "d3992b47-17a5-0a70-c32e-c1b3f167b7b9",
+          "source": "b0bb8639-9df8-9c1e-91bf-78c650de7eed",
           "output": "action",
-          "target": "9d443ecd-e221-4789-bbdb-e5632defde81",
+          "target": "3160b828-503c-11b5-c11e-8189721a3a28",
           "input": "@seqin"
         },
         {
-          "source": "e220797a-d59a-4a31-a2f5-a30abdd3cbf0",
+          "objID": "d1f5e68c-4378-e75c-2e81-4a30c0c9cb03",
+          "source": "9919be3e-b754-12b2-ee54-e2938c9042a2",
           "output": "@seqout",
-          "target": "b3052593-ba78-4365-f5bd-9517893b7390",
+          "target": "a85eb993-fba6-740b-95c0-9ca8e70d4b3c",
           "input": "@seqin"
         }
       ],
@@ -1817,24 +1466,30 @@
       "left": 0,
       "top": 0,
       "width": 800,
-      "height": 450
+      "height": 450,
+      "lvglLocalStyles": {
+        "objID": "e85dbd5d-8325-1629-003b-86fd654ae635"
+      }
     },
     {
+      "objID": "d954a6ff-3b79-7777-14ac-b6d185dffb04",
       "components": [
         {
+          "objID": "812dc31e-3071-5f18-7cb4-e84ab934c2e4",
           "type": "RectangleWidget",
           "left": 44,
           "top": 28,
           "width": 64,
           "height": 32,
-          "wireID": "3b6b1b91-7afb-4eff-da22-8164096e2097",
           "customInputs": [],
           "customOutputs": [],
           "style": {
+            "objID": "9a7eeabb-69a9-c5cf-20cd-9b9d8792a155",
             "inheritFrom": "rect"
           },
           "timeline": [
             {
+              "objID": "d38f2e89-174f-2164-3bfe-466e3bc8b0a8",
               "start": 0,
               "end": 0,
               "left": {
@@ -1857,6 +1512,10 @@
                 "value": 32,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -1875,6 +1534,7 @@
               }
             },
             {
+              "objID": "9de98d76-36f0-e000-419f-36cec4b0c6e7",
               "start": 0,
               "end": 0.5,
               "left": {
@@ -1897,6 +1557,10 @@
                 "value": 32,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -1915,6 +1579,7 @@
               }
             },
             {
+              "objID": "63f36fc6-1a8d-4e52-e0c7-cfa81c0dd920",
               "start": 0.5,
               "end": 1,
               "left": {
@@ -1937,6 +1602,10 @@
                 "value": 32,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -1957,20 +1626,22 @@
           ]
         },
         {
+          "objID": "d0abee38-201a-e0f8-ed88-f73da1b42587",
           "type": "RectangleWidget",
           "left": 366,
           "top": 34,
           "width": 64,
           "height": 32,
-          "wireID": "a93bf88a-4883-4d97-82ee-d7249b3291a2",
           "customInputs": [],
           "customOutputs": [],
           "style": {
+            "objID": "a7d5472f-6dc7-f53e-f1a2-5a4a008bb2de",
             "inheritFrom": "rect",
             "backgroundColor": "#af4dda"
           },
           "timeline": [
             {
+              "objID": "237aee52-195a-dbed-7300-6aa3947a5ada",
               "start": 0,
               "end": 0,
               "left": {
@@ -1993,6 +1664,10 @@
                 "value": 32,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -2011,6 +1686,7 @@
               }
             },
             {
+              "objID": "ce2996cd-4073-145d-6cf1-f551b98e625d",
               "start": 0,
               "end": 0.5,
               "left": {
@@ -2033,6 +1709,10 @@
                 "value": 32,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -2051,6 +1731,7 @@
               }
             },
             {
+              "objID": "7f1e97c0-1bbe-fd07-1ebc-884e405a2363",
               "start": 0.5,
               "end": 1,
               "left": {
@@ -2073,6 +1754,10 @@
                 "value": 32,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -2093,20 +1778,22 @@
           ]
         },
         {
+          "objID": "e189cfc8-d71f-252a-52f6-9e191a51cf4b",
           "type": "RectangleWidget",
           "left": 52,
           "top": 168,
           "width": 64,
           "height": 32,
-          "wireID": "ace26090-d2d3-4404-bd31-e04a085a8f10",
           "customInputs": [],
           "customOutputs": [],
           "style": {
+            "objID": "4c5c9d40-f79b-c5e1-c9f5-008f146cfb6f",
             "inheritFrom": "rect",
             "backgroundColor": "#9fdaa7"
           },
           "timeline": [
             {
+              "objID": "3a0f393d-1b27-e999-f537-5d968b31045e",
               "start": 0,
               "end": 0,
               "left": {
@@ -2129,6 +1816,10 @@
                 "value": 32,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -2147,6 +1838,7 @@
               }
             },
             {
+              "objID": "70b17d03-1cb1-9511-859d-4778fd621dde",
               "start": 0,
               "end": 0.5,
               "left": {
@@ -2169,6 +1861,10 @@
                 "value": 32,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -2187,6 +1883,7 @@
               }
             },
             {
+              "objID": "ed98a097-bbbf-5f1d-50ed-4a554aeef53e",
               "start": 0.5,
               "end": 1,
               "left": {
@@ -2209,6 +1906,10 @@
                 "value": 32,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -2229,20 +1930,22 @@
           ]
         },
         {
+          "objID": "8e4b81c1-a981-1f33-cc14-be3ba170e740",
           "type": "RectangleWidget",
           "left": 359,
           "top": 168,
           "width": 64,
           "height": 32,
-          "wireID": "c2100a4c-f218-4780-f9e7-f41f97f4d3b8",
           "customInputs": [],
           "customOutputs": [],
           "style": {
+            "objID": "bd257e64-3739-9b0d-d69f-d83d328b0638",
             "inheritFrom": "rect",
             "backgroundColor": "#759aeb"
           },
           "timeline": [
             {
+              "objID": "49b3c6fd-3469-2654-dda2-00034784f6b8",
               "start": 0,
               "end": 0,
               "left": {
@@ -2265,6 +1968,10 @@
                 "value": 32,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -2283,6 +1990,7 @@
               }
             },
             {
+              "objID": "48428c65-5996-43f4-7942-5f2dafb88c62",
               "start": 0,
               "end": 0.5,
               "left": {
@@ -2305,6 +2013,10 @@
                 "value": 32,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -2323,6 +2035,7 @@
               }
             },
             {
+              "objID": "cfd1d4da-659a-0047-3904-24ece471bb80",
               "start": 0.5,
               "end": 1,
               "left": {
@@ -2345,6 +2058,10 @@
                 "value": 32,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -2365,34 +2082,34 @@
           ]
         },
         {
+          "objID": "1260f902-e8e1-fc91-ffd2-db1b050f51a3",
           "type": "ShowPageActionComponent",
           "left": 391,
           "top": 317,
           "width": 97,
           "height": 55,
-          "wireID": "b4ec4588-9b3f-4490-f641-1facd6af85a6",
           "customInputs": [],
           "customOutputs": [],
           "page": "Main"
         },
         {
+          "objID": "4282bcfd-c5cc-8182-e640-9a3f5822346b",
           "type": "OnEventActionComponent",
           "left": 65,
           "top": -145,
           "width": 87,
           "height": 55,
-          "wireID": "e4166b6a-7bb2-4841-8870-30dcb69e414b",
           "customInputs": [],
           "customOutputs": [],
           "event": "page_open"
         },
         {
+          "objID": "c3d3c921-14a2-d3d0-93bd-8ebcea342a09",
           "type": "AnimateActionComponent",
           "left": 263,
           "top": -145,
           "width": 87,
           "height": 55,
-          "wireID": "7938bfbc-e8df-4aff-b12c-54f77342bcd3",
           "customInputs": [],
           "customOutputs": [],
           "from": "Flow.pageTimelinePosition()",
@@ -2400,23 +2117,23 @@
           "speed": "1"
         },
         {
+          "objID": "a42134df-2176-52c0-c21c-4d0a54559c34",
           "type": "OnEventActionComponent",
           "left": 65,
           "top": -76,
           "width": 87,
           "height": 55,
-          "wireID": "73d91d80-fc0f-4c32-9e4a-9fb8c5c31896",
           "customInputs": [],
           "customOutputs": [],
           "event": "page_close"
         },
         {
+          "objID": "258924eb-500d-ad60-f1a9-7edf17ea56d9",
           "type": "AnimateActionComponent",
           "left": 263,
           "top": -76,
           "width": 127,
           "height": 55,
-          "wireID": "451fa467-bbf7-4f54-e657-5f83cae0a141",
           "customInputs": [],
           "customOutputs": [],
           "from": "0",
@@ -2424,27 +2141,28 @@
           "speed": "1"
         },
         {
-          "type": "LayoutViewWidget",
+          "objID": "49c2362a-7802-b78c-487a-66eb91c350b0",
+          "type": "UserWidgetWidget",
           "left": 225,
           "top": 126,
           "width": 30,
           "height": 20,
-          "wireID": "30a7caf5-fd8a-4380-b6d7-1e010b07c58b",
           "customInputs": [],
           "customOutputs": [],
           "style": {
+            "objID": "a83842a4-aeeb-dab1-0586-d97d97ebf73d",
             "inheritFrom": "default"
           },
           "timeline": [],
-          "layout": "anim1"
+          "userWidgetPageName": "anim1"
         },
         {
+          "objID": "f88c3278-f1c7-1310-b2bb-fe6f746e9c71",
           "type": "ButtonWidget",
           "left": 176,
           "top": 239,
           "width": 106,
           "height": 32,
-          "wireID": "e5979d5e-65c2-4175-8263-25df0726e66f",
           "customInputs": [],
           "customOutputs": [],
           "asOutputProperties": [
@@ -2452,10 +2170,12 @@
           ],
           "data": "\"Main Page\"",
           "style": {
+            "objID": "76a3044f-be61-7916-3005-d1786ee371d1",
             "inheritFrom": "default"
           },
           "timeline": [
             {
+              "objID": "ebf90faf-f76b-34e2-eceb-21da4aa463a9",
               "start": 0,
               "end": 0,
               "left": {
@@ -2478,6 +2198,10 @@
                 "value": 32,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -2497,6 +2221,7 @@
               }
             },
             {
+              "objID": "48913130-2a08-ea69-68c5-ee69be6cdf06",
               "start": 0.8,
               "end": 1,
               "left": {
@@ -2519,6 +2244,10 @@
                 "value": 32,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -2539,43 +2268,48 @@
             }
           ],
           "disabledStyle": {
+            "objID": "2f1fbe1e-9722-71aa-db8f-25a9c0a9dab4",
             "inheritFrom": "default"
           }
         },
         {
+          "objID": "d07682f7-89e7-cc5e-b4d1-6fdd2f6e0415",
           "type": "StartActionComponent",
           "left": -123,
           "top": 121,
           "width": 87,
           "height": 25,
-          "wireID": "aa9d6f39-58a9-4512-86e8-19da2f3e1397",
           "customInputs": [],
           "customOutputs": []
         }
       ],
       "connectionLines": [
         {
-          "source": "e5979d5e-65c2-4175-8263-25df0726e66f",
+          "objID": "2dba8798-b9cc-e60c-f23c-756914a96d1c",
+          "source": "f88c3278-f1c7-1310-b2bb-fe6f746e9c71",
           "output": "action",
-          "target": "b4ec4588-9b3f-4490-f641-1facd6af85a6",
+          "target": "1260f902-e8e1-fc91-ffd2-db1b050f51a3",
           "input": "@seqin"
         },
         {
-          "source": "e4166b6a-7bb2-4841-8870-30dcb69e414b",
+          "objID": "4d88b2c9-0f33-93d0-619a-8c966de5fe3c",
+          "source": "4282bcfd-c5cc-8182-e640-9a3f5822346b",
           "output": "@seqout",
-          "target": "7938bfbc-e8df-4aff-b12c-54f77342bcd3",
+          "target": "c3d3c921-14a2-d3d0-93bd-8ebcea342a09",
           "input": "@seqin"
         },
         {
-          "source": "73d91d80-fc0f-4c32-9e4a-9fb8c5c31896",
+          "objID": "def9daf5-76fc-a5fe-2675-7bd702d6dd03",
+          "source": "a42134df-2176-52c0-c21c-4d0a54559c34",
           "output": "@seqout",
-          "target": "451fa467-bbf7-4f54-e657-5f83cae0a141",
+          "target": "258924eb-500d-ad60-f1a9-7edf17ea56d9",
           "input": "@seqin"
         },
         {
-          "source": "aa9d6f39-58a9-4512-86e8-19da2f3e1397",
+          "objID": "f30447c3-9b86-7037-6ff2-3f54af966e5f",
+          "source": "d07682f7-89e7-cc5e-b4d1-6fdd2f6e0415",
           "output": "@seqout",
-          "target": "30a7caf5-fd8a-4380-b6d7-1e010b07c58b",
+          "target": "49c2362a-7802-b78c-487a-66eb91c350b0",
           "input": "@seqin"
         }
       ],
@@ -2585,39 +2319,43 @@
       "left": 0,
       "top": 0,
       "width": 480,
-      "height": 272
+      "height": 272,
+      "lvglLocalStyles": {
+        "objID": "0b0b71d3-0870-92cd-01b2-c2f1a0f04583"
+      }
     },
     {
+      "objID": "f438fe7c-fe4e-003b-00df-8fa9d1169b6a",
       "components": [
         {
+          "objID": "c39fc4e7-4c7a-f23f-fbeb-7e94cf329e66",
           "type": "ShowPageActionComponent",
           "left": 391,
           "top": 317,
           "width": 97,
           "height": 55,
-          "wireID": "b4ec4588-9b3f-4490-f641-1facd6af85a6",
           "customInputs": [],
           "customOutputs": [],
           "page": "Main"
         },
         {
+          "objID": "c385b6be-2dfa-572d-5b86-e2135ccfe94a",
           "type": "OnEventActionComponent",
           "left": 65,
           "top": -145,
           "width": 87,
           "height": 55,
-          "wireID": "e4166b6a-7bb2-4841-8870-30dcb69e414b",
           "customInputs": [],
           "customOutputs": [],
           "event": "page_open"
         },
         {
+          "objID": "41af81d1-5381-1a07-3094-f29e67866b0e",
           "type": "AnimateActionComponent",
           "left": 263,
           "top": -145,
           "width": 87,
           "height": 55,
-          "wireID": "7938bfbc-e8df-4aff-b12c-54f77342bcd3",
           "customInputs": [],
           "customOutputs": [],
           "from": "Flow.pageTimelinePosition()",
@@ -2625,23 +2363,23 @@
           "speed": "1"
         },
         {
+          "objID": "13a51c15-f473-fbd9-3f53-49b5454e7e26",
           "type": "OnEventActionComponent",
           "left": 65,
           "top": -76,
           "width": 87,
           "height": 55,
-          "wireID": "73d91d80-fc0f-4c32-9e4a-9fb8c5c31896",
           "customInputs": [],
           "customOutputs": [],
           "event": "page_close"
         },
         {
+          "objID": "ac01131a-6695-9c79-5eb0-0a83f59fc01c",
           "type": "AnimateActionComponent",
           "left": 263,
           "top": -76,
           "width": 127,
           "height": 55,
-          "wireID": "451fa467-bbf7-4f54-e657-5f83cae0a141",
           "customInputs": [],
           "customOutputs": [],
           "from": "0",
@@ -2649,20 +2387,22 @@
           "speed": "1"
         },
         {
+          "objID": "ccc34daf-a0df-ee7f-44ef-5e14555ca1ee",
           "type": "RectangleWidget",
           "left": 208,
           "top": 120,
           "width": 64,
           "height": 32,
-          "wireID": "cc89a040-5ef9-4401-b094-d7a1667aafb4",
           "customInputs": [],
           "customOutputs": [],
           "style": {
+            "objID": "cb908129-d500-86f0-eb82-69f0b1012d0d",
             "inheritFrom": "default",
             "backgroundColor": "#21c045"
           },
           "timeline": [
             {
+              "objID": "bc134068-cc61-a94d-a663-612a5d786e49",
               "start": 0,
               "end": 1,
               "left": {
@@ -2683,6 +2423,10 @@
               "height": {
                 "enabled": false,
                 "value": 32,
+                "easingFunction": "linear"
+              },
+              "scale": {
+                "enabled": false,
                 "easingFunction": "linear"
               },
               "scaleX": {
@@ -2706,12 +2450,12 @@
           ]
         },
         {
+          "objID": "419af47f-8de7-a7ee-5201-d36940fa90ea",
           "type": "ButtonWidget",
           "left": 187,
           "top": 239,
           "width": 106,
           "height": 32,
-          "wireID": "e5979d5e-65c2-4175-8263-25df0726e66f",
           "customInputs": [],
           "customOutputs": [],
           "asOutputProperties": [
@@ -2719,10 +2463,12 @@
           ],
           "data": "\"Main Page\"",
           "style": {
+            "objID": "be6d2b33-725e-b8ae-03b5-8c4d8ddf2535",
             "inheritFrom": "default"
           },
           "timeline": [
             {
+              "objID": "38decb34-72b0-6f2b-b1f0-40fab91c3168",
               "start": 0,
               "end": 0,
               "left": {
@@ -2745,6 +2491,10 @@
                 "value": 32,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -2764,6 +2514,7 @@
               }
             },
             {
+              "objID": "025a93c4-fa05-5e7f-a454-6151d2bf424f",
               "start": 0.8,
               "end": 1,
               "left": {
@@ -2786,6 +2537,10 @@
                 "value": 32,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -2806,27 +2561,31 @@
             }
           ],
           "disabledStyle": {
+            "objID": "f236da06-ffcf-ba0c-7f5d-b4bcd3fc04f6",
             "inheritFrom": "default"
           }
         }
       ],
       "connectionLines": [
         {
-          "source": "e5979d5e-65c2-4175-8263-25df0726e66f",
+          "objID": "20af5fc4-354e-9914-30b2-4ed4343015be",
+          "source": "419af47f-8de7-a7ee-5201-d36940fa90ea",
           "output": "action",
-          "target": "b4ec4588-9b3f-4490-f641-1facd6af85a6",
+          "target": "c39fc4e7-4c7a-f23f-fbeb-7e94cf329e66",
           "input": "@seqin"
         },
         {
-          "source": "e4166b6a-7bb2-4841-8870-30dcb69e414b",
+          "objID": "84b70f7d-fd7a-a058-6d21-c8532abf3b15",
+          "source": "c385b6be-2dfa-572d-5b86-e2135ccfe94a",
           "output": "@seqout",
-          "target": "7938bfbc-e8df-4aff-b12c-54f77342bcd3",
+          "target": "41af81d1-5381-1a07-3094-f29e67866b0e",
           "input": "@seqin"
         },
         {
-          "source": "73d91d80-fc0f-4c32-9e4a-9fb8c5c31896",
+          "objID": "8b621a9f-77bb-8768-7cfa-3aa8ca333200",
+          "source": "13a51c15-f473-fbd9-3f53-49b5454e7e26",
           "output": "@seqout",
-          "target": "451fa467-bbf7-4f54-e657-5f83cae0a141",
+          "target": "ac01131a-6695-9c79-5eb0-0a83f59fc01c",
           "input": "@seqin"
         }
       ],
@@ -2836,24 +2595,30 @@
       "left": 0,
       "top": 0,
       "width": 480,
-      "height": 272
+      "height": 272,
+      "lvglLocalStyles": {
+        "objID": "2f3b9c50-98ea-faae-1079-4df1658d67d6"
+      }
     },
     {
+      "objID": "9569f446-8ed5-2d0b-bb13-8a3d5808f620",
       "components": [
         {
+          "objID": "e9da3a7c-2908-592f-d3a9-00b2fb3d1ec5",
           "type": "RectangleWidget",
           "left": 0,
           "top": 0,
           "width": 8,
           "height": 20,
-          "wireID": "17541954-3e22-48af-866a-62fa2d1da19c",
           "customInputs": [],
           "customOutputs": [],
           "style": {
+            "objID": "a2b15f79-a3dc-53a1-8f19-0ce6c7876c93",
             "inheritFrom": "block"
           },
           "timeline": [
             {
+              "objID": "4e93688d-0c5f-133e-e1b7-8e14ac21117f",
               "start": 0,
               "end": 0,
               "left": {
@@ -2874,6 +2639,10 @@
                 "value": 0,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -2892,6 +2661,7 @@
               }
             },
             {
+              "objID": "ec7de59e-96a7-7b55-6e96-54a3c63ace7b",
               "start": 0,
               "end": 0.5,
               "left": {
@@ -2912,6 +2682,10 @@
                 "value": 20,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -2930,6 +2704,7 @@
               }
             },
             {
+              "objID": "efecaeb1-4b2a-bf3c-64d8-bb6c44a25317",
               "start": 1.5,
               "end": 3,
               "left": {
@@ -2945,6 +2720,10 @@
                 "easingFunction": "linear"
               },
               "height": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "scale": {
                 "enabled": false,
                 "easingFunction": "linear"
               },
@@ -2969,6 +2748,7 @@
               }
             },
             {
+              "objID": "d1c1682c-0f9f-1d88-6427-244b21445773",
               "start": 3,
               "end": 4.5,
               "left": {
@@ -2984,6 +2764,10 @@
                 "easingFunction": "linear"
               },
               "height": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "scale": {
                 "enabled": false,
                 "easingFunction": "linear"
               },
@@ -3008,6 +2792,7 @@
               }
             },
             {
+              "objID": "55540be0-5b5a-28fe-6952-d877680a4738",
               "start": 5.5,
               "end": 6,
               "left": {
@@ -3028,6 +2813,10 @@
                 "value": 0,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -3048,19 +2837,21 @@
           ]
         },
         {
+          "objID": "cc60e1ed-5374-e61c-b012-a66b5d8a49f5",
           "type": "RectangleWidget",
           "left": 11,
           "top": 0,
           "width": 8,
           "height": 20,
-          "wireID": "9ed45c07-f3ca-4127-cf64-fac57bb00432",
           "customInputs": [],
           "customOutputs": [],
           "style": {
+            "objID": "a258e106-99f1-7538-91bc-15e634c23925",
             "inheritFrom": "block"
           },
           "timeline": [
             {
+              "objID": "59bfcb55-7d02-ed50-ad25-b4fab13afb67",
               "start": 0,
               "end": 0,
               "left": {
@@ -3081,6 +2872,10 @@
                 "value": 0,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -3099,6 +2894,7 @@
               }
             },
             {
+              "objID": "66c72168-4cd5-898f-2400-a089595d4c6f",
               "start": 0.5,
               "end": 1,
               "left": {
@@ -3119,6 +2915,10 @@
                 "value": 20,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -3137,6 +2937,7 @@
               }
             },
             {
+              "objID": "1d5331f5-c0e0-cc3c-47eb-fbf6cbc7efd7",
               "start": 1.5,
               "end": 3,
               "left": {
@@ -3152,6 +2953,10 @@
                 "easingFunction": "linear"
               },
               "height": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "scale": {
                 "enabled": false,
                 "easingFunction": "linear"
               },
@@ -3176,6 +2981,7 @@
               }
             },
             {
+              "objID": "0873b1bb-c4df-e5dc-fe19-405662d2261a",
               "start": 3,
               "end": 4.5,
               "left": {
@@ -3191,6 +2997,10 @@
                 "easingFunction": "linear"
               },
               "height": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "scale": {
                 "enabled": false,
                 "easingFunction": "linear"
               },
@@ -3215,6 +3025,7 @@
               }
             },
             {
+              "objID": "cb1ef7bb-a609-f763-83af-9887fb357bb7",
               "start": 5,
               "end": 5.5,
               "left": {
@@ -3233,6 +3044,10 @@
               "height": {
                 "enabled": true,
                 "value": 0,
+                "easingFunction": "linear"
+              },
+              "scale": {
+                "enabled": false,
                 "easingFunction": "linear"
               },
               "scaleX": {
@@ -3255,19 +3070,21 @@
           ]
         },
         {
+          "objID": "164d74cc-1cc4-df91-41e4-6ef76f8c1282",
           "type": "RectangleWidget",
           "left": 22,
           "top": 0,
           "width": 8,
           "height": 20,
-          "wireID": "0a636500-228c-4b5a-d596-b9c3168cb12f",
           "customInputs": [],
           "customOutputs": [],
           "style": {
+            "objID": "77eded15-9545-00f6-5397-98e243e932ba",
             "inheritFrom": "block"
           },
           "timeline": [
             {
+              "objID": "862d1814-c1d6-41d3-b558-70123f9eb265",
               "start": 0,
               "end": 0,
               "left": {
@@ -3288,6 +3105,10 @@
                 "value": 0,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -3306,6 +3127,7 @@
               }
             },
             {
+              "objID": "cf9cb637-d364-9b0a-85ad-fb984f9a796e",
               "start": 1,
               "end": 1.5,
               "left": {
@@ -3328,6 +3150,10 @@
                 "value": 20,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -3346,6 +3172,7 @@
               }
             },
             {
+              "objID": "929a3831-01a1-403d-4997-dbacfa233731",
               "start": 1.5,
               "end": 3,
               "left": {
@@ -3361,6 +3188,10 @@
                 "easingFunction": "linear"
               },
               "height": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "scale": {
                 "enabled": false,
                 "easingFunction": "linear"
               },
@@ -3385,6 +3216,7 @@
               }
             },
             {
+              "objID": "e4670830-6956-add2-a50d-a09a3215a942",
               "start": 3,
               "end": 4.5,
               "left": {
@@ -3400,6 +3232,10 @@
                 "easingFunction": "linear"
               },
               "height": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
+              "scale": {
                 "enabled": false,
                 "easingFunction": "linear"
               },
@@ -3424,6 +3260,7 @@
               }
             },
             {
+              "objID": "cb775e0d-6db4-1440-0a95-a385b128213b",
               "start": 4.5,
               "end": 5,
               "left": {
@@ -3442,6 +3279,10 @@
               "height": {
                 "enabled": true,
                 "value": 0,
+                "easingFunction": "linear"
+              },
+              "scale": {
+                "enabled": false,
                 "easingFunction": "linear"
               },
               "scaleX": {
@@ -3464,12 +3305,12 @@
           ]
         },
         {
+          "objID": "467b607a-f041-acca-18d6-253b9fa04722",
           "type": "AnimateActionComponent",
           "left": -8,
           "top": -106,
           "width": 188,
           "height": 55,
-          "wireID": "d3aeebcc-d506-4db8-91bb-72885c1fe4d7",
           "customInputs": [],
           "customOutputs": [],
           "from": "0",
@@ -3477,27 +3318,29 @@
           "speed": "3"
         },
         {
+          "objID": "0c3a74ff-643f-dc15-4899-22ca9d38ca8d",
           "type": "StartActionComponent",
           "left": -139,
           "top": -106,
           "width": 87,
           "height": 25,
-          "wireID": "f117265e-3305-4b78-fc87-d761dfe1b184",
           "customInputs": [],
           "customOutputs": []
         }
       ],
       "connectionLines": [
         {
-          "source": "f117265e-3305-4b78-fc87-d761dfe1b184",
+          "objID": "eefef559-60f2-dd85-e513-f9f554c87f0e",
+          "source": "0c3a74ff-643f-dc15-4899-22ca9d38ca8d",
           "output": "@seqout",
-          "target": "d3aeebcc-d506-4db8-91bb-72885c1fe4d7",
+          "target": "467b607a-f041-acca-18d6-253b9fa04722",
           "input": "@seqin"
         },
         {
-          "source": "d3aeebcc-d506-4db8-91bb-72885c1fe4d7",
+          "objID": "600906e9-b5c7-0564-a88e-dd60294b4fdd",
+          "source": "467b607a-f041-acca-18d6-253b9fa04722",
           "output": "@seqout",
-          "target": "d3aeebcc-d506-4db8-91bb-72885c1fe4d7",
+          "target": "467b607a-f041-acca-18d6-253b9fa04722",
           "input": "@seqin"
         }
       ],
@@ -3507,20 +3350,26 @@
       "top": 0,
       "width": 30,
       "height": 20,
-      "isUsedAsCustomWidget": true
+      "isUsedAsUserWidget": true,
+      "lvglLocalStyles": {
+        "objID": "98ddbfd2-1c09-f096-11c3-570db8dfc3ba"
+      }
     }
   ],
   "styles": [
     {
+      "objID": "04157789-da53-2f4a-e658-4ca10aa5fbef",
       "name": "default"
     },
     {
+      "objID": "c49c1adf-a610-28c0-027c-0e452dadb32b",
       "name": "page",
       "inheritFrom": "",
       "backgroundColor": "page_color",
       "css": "\n"
     },
     {
+      "objID": "750ffa5d-b570-569b-df50-29dff86462d7",
       "name": "tab",
       "inheritFrom": "default",
       "alignHorizontal": "center",
@@ -3528,15 +3377,18 @@
       "activeBackgroundColor": "#b9b9b9"
     },
     {
+      "objID": "61d144a6-aa0b-0380-12be-a3ba9a3eca5a",
       "name": "quote",
       "inheritFrom": "default",
       "fontWeight": "normal"
     },
     {
+      "objID": "9c3e7c3c-c78b-4665-5c15-e5d13624249e",
       "name": "rect",
       "backgroundColor": "#f1bd0f"
     },
     {
+      "objID": "6552f7e4-f8d4-ec0a-e94c-fc7dc04d0902",
       "name": "block",
       "inheritFrom": "default",
       "backgroundColor": "#3a3a3a"
@@ -3544,11 +3396,13 @@
   ],
   "colors": [
     {
+      "objID": "e6c28e5a-fe7f-09ed-9223-17769968ebea",
       "name": "page_color"
     }
   ],
   "themes": [
     {
+      "objID": "a7943c4e-90c6-cf58-2c43-9f24cf4b097c",
       "name": "default",
       "colors": [
         "#f0f0f0"

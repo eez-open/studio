@@ -133,11 +133,9 @@ import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 
 import {
     getTimelineEditorState,
-    getTimelineProperty,
     getTimelineRect,
     isTimelineEditorActive,
     TimelineKeyframe,
-    TimelineKeyframeProperty,
     TimelineKeyframePropertyUI,
     timelineStyleHook
 } from "project-editor/flow/timeline";
@@ -306,8 +304,6 @@ function getClassFromType(type: string) {
             return componentClass;
         }
     }
-
-    console.log(type);
 
     return NotFoundComponent;
 }
@@ -3288,13 +3284,6 @@ export class Widget extends Component {
 
     getTimelineRect(timelinePosition: number): Rect {
         return getTimelineRect(this, timelinePosition);
-    }
-
-    getTimelineProperty(
-        timelinePosition: number,
-        propertyName: TimelineKeyframeProperty
-    ) {
-        return getTimelineProperty(this, timelinePosition, propertyName);
     }
 
     lvglCreate(runtime: LVGLPageRuntime, parentObj: number) {

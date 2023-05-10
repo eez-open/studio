@@ -2117,6 +2117,9 @@ export class TextWidget extends Widget {
             node = null;
         }
 
+        const style: React.CSSProperties = {};
+        this.styleHook(style, flowContext);
+
         return (
             <>
                 {flowContext.projectStore.projectTypeTraits.isDashboard ? (
@@ -2136,6 +2139,7 @@ export class TextWidget extends Widget {
                                 );
                             }
                         }}
+                        style={{ opacity: style.opacity }}
                     >
                         {node || text}
                     </span>
@@ -3149,13 +3153,17 @@ export class ButtonWidget extends Widget {
             flowContext.flowState ? !this.enabled : true
         );
 
-        let style = buttonEnabled ? this.style : this.disabledStyle;
+        let buttonStyle = buttonEnabled ? this.style : this.disabledStyle;
+
+        const style: React.CSSProperties = {};
+        this.styleHook(style, flowContext);
 
         return (
             <>
                 {flowContext.projectStore.projectTypeTraits.isDashboard ? (
                     <button
-                        className={classNames(style.classNames)}
+                        className={classNames(buttonStyle.classNames)}
+                        style={{ opacity: style.opacity }}
                         disabled={!buttonEnabled}
                         onClick={event => {
                             event.preventDefault();
@@ -3187,7 +3195,7 @@ export class ButtonWidget extends Widget {
                                 0,
                                 width,
                                 height,
-                                style,
+                                buttonStyle,
                                 false
                             );
                         }}
@@ -7021,10 +7029,14 @@ export class CheckboxWidget extends Widget {
             id = id + "-" + index;
         }
 
+        const style: React.CSSProperties = {};
+        this.styleHook(style, flowContext);
+
         return (
             <>
                 <div
                     className={classNames("form-check", this.style.classNames)}
+                    style={{ opacity: style.opacity }}
                 >
                     <input
                         type="checkbox"
