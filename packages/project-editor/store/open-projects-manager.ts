@@ -241,7 +241,9 @@ export class OpenProjectsManager {
 
         map.set(absoluteFilePath, newOpenProject);
 
-        await this._openExternalProjects(project, absoluteFilePath, map);
+        if (params.type != "master") {
+            await this._openExternalProjects(project, absoluteFilePath, map);
+        }
 
         return project;
     }
