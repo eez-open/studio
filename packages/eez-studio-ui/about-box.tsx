@@ -169,14 +169,8 @@ const AboutBox = observer(
                 <Dialog cancelButtonText="Close">
                     <div className="EezStudio_AboutBox">
                         <div className="EezStudio_Logo">
-                            <img
-                                src="../eez-studio-ui/_images/eez_logo.png"
-                                width={48}
-                                height={48}
-                            ></img>
+                            <img src="../eez-studio-ui/_images/eez_studio_logo_with_title.png"></img>
                         </div>
-
-                        <h5 className="EezStudio_AppName">EEZ Studio</h5>
 
                         <div className="EezStudio_Version">
                             Version {this.packageJSON.version} (

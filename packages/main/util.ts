@@ -8,7 +8,7 @@ export function getIcon() {
         return path.resolve(`${sourceRootDir()}/../icon.ico`);
     } else {
         return path.resolve(
-            `${sourceRootDir()}/eez-studio-ui/_images/eez_logo.png`
+            `${sourceRootDir()}/eez-studio-ui/_images/eez_studio_logo.png`
         );
     }
 }
