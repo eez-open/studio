@@ -871,7 +871,7 @@ const NewProjectWizard = observer(
                         } else {
                             projectTemplate.settings.general.masterProject =
                                 path.relative(
-                                    projectFilePath,
+                                    path.dirname(projectFilePath),
                                     this.bb3ProjectFile!
                                 );
                         }
