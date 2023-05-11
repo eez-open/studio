@@ -1103,6 +1103,16 @@ export const FlowEditor = observer(
         render() {
             const flow = this.props.tabState.widgetContainer.object as Flow;
 
+            const lvglCreateInProgress =
+                this.flowContext.projectStore.projectTypeTraits.isLVGL &&
+                this.flowContext.flow instanceof ProjectEditor.PageClass &&
+                (!this.flowContext.flow._lvglRuntime ||
+                    !this.flowContext.flow._lvglObj ||
+                    this.flowContext.flow._lvglRuntime.isAnyAsyncOperation);
+
+            const drawConnectionLines =
+                !this.props.tabState.frontFace && !lvglCreateInProgress;
+
             return (
                 <div
                     className={classNames(
@@ -1139,7 +1149,7 @@ export const FlowEditor = observer(
 
                                 {
                                     // render connection lines
-                                    !this.props.tabState.frontFace && (
+                                    drawConnectionLines && (
                                         <AllConnectionLines
                                             flowContext={this.flowContext}
                                         />

@@ -264,15 +264,10 @@ export class LVGLStylesDefinition extends EezObject {
                                     );
 
                                     if (font) {
-                                        (async () => {
-                                            const fontPtr =
-                                                await runtime.loadFont(font);
-                                            if (fontPtr != 0) {
-                                                if (
-                                                    runtime.isMounted &&
-                                                    (!runtime.isEditor ||
-                                                        obj == widget._lvglObj)
-                                                ) {
+                                        runtime.executeAsyncOperation(
+                                            () => runtime.loadFont(font),
+                                            fontPtr => {
+                                                if (fontPtr) {
                                                     runtime.wasm._lvglObjSetLocalStylePropPtr(
                                                         obj,
                                                         propertyInfo
@@ -287,7 +282,7 @@ export class LVGLStylesDefinition extends EezObject {
                                                     );
                                                 }
                                             }
-                                        })();
+                                        );
                                     }
                                 }
                             } else {
@@ -324,16 +319,10 @@ export class LVGLStylesDefinition extends EezObject {
                                 value
                             );
                             if (bitmap && bitmap.image) {
-                                (async () => {
-                                    const bitmapPtr = await runtime.loadBitmap(
-                                        bitmap
-                                    );
-                                    if (bitmapPtr) {
-                                        if (
-                                            runtime.isMounted &&
-                                            (!runtime.isEditor ||
-                                                obj == widget._lvglObj)
-                                        ) {
+                                runtime.executeAsyncOperation(
+                                    () => runtime.loadBitmap(bitmap),
+                                    bitmapPtr => {
+                                        if (bitmapPtr) {
                                             runtime.wasm._lvglObjSetLocalStylePropPtr(
                                                 obj,
                                                 propertyInfo.lvglStyleProp.code,
@@ -346,7 +335,7 @@ export class LVGLStylesDefinition extends EezObject {
                                             );
                                         }
                                     }
-                                })();
+                                );
                             }
                         }
                     }

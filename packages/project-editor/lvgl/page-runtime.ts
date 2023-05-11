@@ -197,6 +197,30 @@ export abstract class LVGLPageRuntime {
         this.strings = [];
     }
 
+    numAsyncOperations: number;
+    refreshCounter: number = 0;
+
+    async executeAsyncOperation<T>(
+        getAsyncParams: () => Promise<T>,
+        executeOperationWithAsyncParams: (params: T) => void
+    ) {
+        this.numAsyncOperations++;
+
+        const refreshCounter = this.refreshCounter;
+
+        const params = await getAsyncParams();
+
+        if (this.isMounted && refreshCounter == this.refreshCounter) {
+            executeOperationWithAsyncParams(params);
+        }
+
+        this.numAsyncOperations--;
+    }
+
+    get isAnyAsyncOperation() {
+        return this.numAsyncOperations > 0;
+    }
+
     static detachRuntimeFromPage(page: Page) {
         runInAction(() => {
             const runtime = page._lvglRuntime;
@@ -274,47 +298,50 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                 this.tick
             );
 
-            this.autorRunDispose = autorun(
-                () => {
-                    // set all _lvglObj to undefined
-                    runInAction(() => {
-                        this.page._lvglWidgetsIncludingUserWidgets.forEach(
-                            widget => (widget._lvglObj = undefined)
+            this.autorRunDispose = autorun(() => {
+                this.refreshCounter++;
+
+                if (!this.isMounted) {
+                    return;
+                }
+
+                // set all _lvglObj to undefined
+                runInAction(() => {
+                    this.page._lvglWidgetsIncludingUserWidgets.forEach(
+                        widget => (widget._lvglObj = undefined)
+                    );
+                });
+
+                this.wasm._lvglClearTimeline();
+
+                this.freeStrings();
+
+                const pageObj = this.page.lvglCreate(this, 0);
+                if (!pageObj) {
+                    console.error("pageObj is undefined");
+                }
+
+                const editor = getProjectStore(
+                    this.page
+                ).editorsStore.getEditorByObject(this.page);
+                if (editor) {
+                    const pageTabState = editor.state as PageTabState;
+                    if (pageTabState?.timeline?.isEditorActive) {
+                        this.wasm._lvglSetTimelinePosition(
+                            pageTabState.timeline.position
                         );
-                    });
-
-                    this.wasm._lvglClearTimeline();
-
-                    this.freeStrings();
-
-                    const pageObj = this.page.lvglCreate(this, 0);
-                    if (!pageObj) {
-                        console.error("pageObj is undefined");
                     }
+                }
 
-                    const editor = getProjectStore(
-                        this.page
-                    ).editorsStore.getEditorByObject(this.page);
-                    if (editor) {
-                        const pageTabState = editor.state as PageTabState;
-                        if (pageTabState?.timeline?.isEditorActive) {
-                            this.wasm._lvglSetTimelinePosition(
-                                pageTabState.timeline.position
-                            );
-                        }
+                this.wasm._lvglScreenLoad(-1, pageObj);
+
+                runInAction(() => {
+                    if (this.page._lvglObj != undefined) {
+                        this.wasm._lvglDeleteObject(this.page._lvglObj);
                     }
-
-                    this.wasm._lvglScreenLoad(-1, pageObj);
-
-                    runInAction(() => {
-                        if (this.page._lvglObj != undefined) {
-                            this.wasm._lvglDeleteObject(this.page._lvglObj);
-                        }
-                        this.page._lvglObj = pageObj;
-                    });
-                },
-                { delay: 1 }
-            );
+                    this.page._lvglObj = pageObj;
+                });
+            });
         });
 
         this.wasm = wasm;
