@@ -369,9 +369,12 @@ const EditorButtons = observer(
 
                                 const isActive =
                                     editorComponent &&
+                                    this.context.editorsStore.activeEditor &&
                                     this.context.editorsStore.getEditorByObject(
                                         editorComponent.object
                                     ) == this.context.editorsStore.activeEditor;
+
+                                console.log(isActive);
 
                                 return (
                                     <IconAction
