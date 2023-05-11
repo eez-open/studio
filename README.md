@@ -104,7 +104,7 @@ that provides that derivation. It can be used to install the project using
 #### Only Linux:
 
 ```
-sudo apt-get install build-essential libudev-dev
+sudo apt-get install build-essential libudev-dev libnss3
 ```
 
 #### Only Raspbian:
