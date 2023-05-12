@@ -108,15 +108,22 @@ const BitmapEditor = observer(
             }
 
             return (
-                <div className="EezStudio_BitmapEditorContainer">
-                    <p>
+                <div
+                    className="EezStudio_BitmapEditorContainer"
+                    style={{ padding: 10 }}
+                >
+                    <div style={{ marginBottom: 10 }}>
                         Dimension: {bitmap.imageElement.width} x{" "}
                         {bitmap.imageElement.height} px
-                    </p>
-                    <img
-                        src={bitmap.imageSrc}
-                        style={{ backgroundColor: bitmap.backgroundColor }}
-                    />
+                    </div>
+                    <div>
+                        <img
+                            src={bitmap.imageSrc}
+                            style={{
+                                backgroundColor: bitmap.backgroundColor
+                            }}
+                        />
+                    </div>
                 </div>
             );
         }

@@ -206,7 +206,8 @@ export class LayoutModels {
         const rightBorderChildren = [
             LayoutModels.STYLES_TAB,
             LayoutModels.FONTS_TAB,
-            LayoutModels.BITMAPS_TAB
+            LayoutModels.BITMAPS_TAB,
+            LayoutModels.BREAKPOINTS_TAB
         ];
         if (!this.projectStore.projectTypeTraits.isLVGL) {
             rightBorderChildren.push(LayoutModels.THEMES_TAB);
@@ -278,7 +279,7 @@ export class LayoutModels {
         return [
             {
                 name: "rootEditor",
-                version: 91,
+                version: 92,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: this.borders,
@@ -352,8 +353,7 @@ export class LayoutModels {
                                                 id: LayoutModels.PROPERTIES_TAB_ID,
                                                 component: "propertiesPanel",
                                                 icon: "svg:properties"
-                                            },
-                                            LayoutModels.BREAKPOINTS_TAB
+                                            }
                                         ]
                                     },
                                     {

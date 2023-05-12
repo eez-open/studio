@@ -171,7 +171,7 @@ export function* searchForPattern(
             valueObject.propertyInfo.readOnlyInPropertyGrid ||
             isPropertyHidden(getParent(valueObject), valueObject.propertyInfo)
         ) {
-            return false;
+            return searchParams.replace == undefined;
         }
 
         let value = valueObject.value;

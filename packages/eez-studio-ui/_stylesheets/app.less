@@ -3110,11 +3110,20 @@ button.EezStudio_Action {
 }
 
 .EezStudio_BitmapEditorContainer {
-    & > img {
-        background-color: transparent;
-        max-width: 100%;
-        max-height: calc(100% - 50px);
-        margin-bottom: 25px;
+    & > div:nth-child(2) {
+        background-image: url("../_images/image_background.png");
+        float: left;
+        & > img {
+            background-color: transparent;
+            max-width: 100%;
+            max-height: calc(100% - 50px);
+        }
+    }
+
+    &::after {
+        content: "";
+        clear: both;
+        display: table;
     }
 }
 
