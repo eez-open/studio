@@ -41,6 +41,7 @@ import {
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { createObject, objectToJson } from "project-editor/store/serialization";
 import { confirm } from "project-editor/core/util";
+import type { Flow } from "project-editor/flow/flow";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -890,4 +891,16 @@ export function isObjectReferencable(object: IEezObject) {
     }
 
     return referencedObjectClassInfoSet.has(objectClassInfo);
+}
+
+export function isLVGLCreateInProgress(flow: Flow) {
+    const projectStore = getProjectStore(flow);
+
+    return (
+        projectStore.projectTypeTraits.isLVGL &&
+        flow instanceof ProjectEditor.PageClass &&
+        (!flow._lvglRuntime ||
+            !flow._lvglObj ||
+            flow._lvglRuntime.isAnyAsyncOperation)
+    );
 }

@@ -1,0 +1,2947 @@
+{
+  "objID": "6666cd76-f969-5646-9e7b-e39d750cc7d9",
+  "settings": {
+    "objID": "e007d988-9fba-797d-72e9-efc33ca6d05c",
+    "general": {
+      "objID": "fd434352-2277-c4a8-e87e-e96cfcbf2305",
+      "projectVersion": "v3",
+      "projectType": "firmware-module",
+      "imports": [
+        {
+          "objID": "70e48ba1-a593-86b0-e5d5-53724a68d9a2",
+          "projectFilePath": "MultiLanguage-Embedded.eez-project"
+        }
+      ],
+      "flowSupport": true,
+      "displayWidth": 480,
+      "displayHeight": 272
+    },
+    "build": {
+      "objID": "72794a43-a0fc-13c2-7eb5-67dd952141a4",
+      "configurations": [
+        {
+          "objID": "e983be1c-ebd7-890f-b662-bbce244c3ec2",
+          "name": "stm32"
+        },
+        {
+          "objID": "a62ada2e-942d-3e8b-b6ef-e1a713efccae",
+          "name": "simulator"
+        }
+      ],
+      "files": [],
+      "lvglInclude": "lvgl/lvgl.h"
+    }
+  },
+  "variables": {
+    "objID": "c6c71e16-53e1-217f-d03b-cef56c6b037a",
+    "globalVariables": [
+      {
+        "objID": "8d036022-3aa0-8665-e250-e5f72b7daf0a",
+        "id": 1,
+        "name": "alert_message",
+        "description": "Message in alert dialog",
+        "type": "string",
+        "defaultValue": "\"Are you sure?\"",
+        "native": true
+      },
+      {
+        "objID": "3a97f1e1-382e-748a-0464-65aa6c78c5c6",
+        "id": 2,
+        "name": "touch_calibration_point",
+        "type": "enum:Touch_calibration_point",
+        "defaultValue": "0",
+        "native": true
+      },
+      {
+        "objID": "6af90499-33d5-cf55-96b4-db69069d3284",
+        "id": 3,
+        "name": "keypad_text",
+        "type": "string",
+        "defaultValue": "\"\"",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "d1301c3b-9e1e-885d-6671-44ee2c4d759a",
+        "id": 4,
+        "name": "keypad_edit_unit",
+        "type": "string",
+        "defaultValue": "\"\"",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "4dfc5687-39dc-2a76-7ef3-7796cb573be6",
+        "id": 5,
+        "name": "keypad_sign_enabled",
+        "type": "boolean",
+        "defaultValue": "false",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "22643b89-b5ae-33e4-0c8d-becfd2a6cc74",
+        "id": 6,
+        "name": "keypad_unit_enabled",
+        "type": "boolean",
+        "defaultValue": "false",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "8dad11cd-415e-31ab-3989-e10c5ae8151a",
+        "id": 7,
+        "name": "keypad_dot_enabled",
+        "type": "boolean",
+        "defaultValue": "false",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "ed8a505e-9009-4686-16a6-8ba0f363465e",
+        "id": 8,
+        "name": "keypad_option1_enabled",
+        "type": "boolean",
+        "defaultValue": "false",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "224ec51a-5d39-358b-f50b-5be9796ba7ef",
+        "id": 9,
+        "name": "keypad_option1_text",
+        "type": "string",
+        "defaultValue": "\"\"",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "6d8f87c0-fc47-e042-f8d1-f4d1e6edf055",
+        "id": 10,
+        "name": "keypad_option2_enabled",
+        "type": "boolean",
+        "defaultValue": "false",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "676f335a-43cd-122b-8938-8a72aaacb7b0",
+        "id": 11,
+        "name": "keypad_option2_text",
+        "type": "string",
+        "defaultValue": "\"\"",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "f679ba87-a685-fc14-dafd-6e0a6e464a3e",
+        "id": 12,
+        "name": "keypad_option3_enabled",
+        "type": "boolean",
+        "defaultValue": "false",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "34c63b5a-68b7-d8c7-c563-8ed9d108f95a",
+        "id": 13,
+        "name": "keypad_option3_text",
+        "type": "string",
+        "defaultValue": "\"\"",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "59c64ca6-dfd0-67d4-7324-393999afe18b",
+        "id": 14,
+        "name": "keypad_mode",
+        "type": "integer",
+        "defaultValue": "0",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "8ccc0106-722d-72ce-8d20-334820cc6644",
+        "id": 15,
+        "name": "keypad_ok_enabled",
+        "type": "boolean",
+        "defaultValue": "false",
+        "persistent": false,
+        "native": true
+      }
+    ],
+    "structures": [],
+    "enums": [
+      {
+        "objID": "c615d7ed-3432-5763-0a60-57afe9f020f2",
+        "name": "Touch_calibration_point",
+        "members": [
+          {
+            "objID": "6a0223cc-0999-18f9-f441-302aaed391b0",
+            "name": "Top left",
+            "value": 0
+          },
+          {
+            "objID": "49192d54-22d2-26e9-a8b8-1f8c508e9f82",
+            "name": "Bottom right",
+            "value": 1
+          },
+          {
+            "objID": "62fde715-7608-a75b-30f2-6c843881ab09",
+            "name": "Top right",
+            "value": 2
+          }
+        ]
+      }
+    ]
+  },
+  "actions": [
+    {
+      "objID": "e13c0f62-502f-17cd-d0e3-a300a502f073",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 1,
+      "name": "yes",
+      "implementationType": "native"
+    },
+    {
+      "objID": "7ad510ea-d6c4-38dd-09da-d70ef31bab9e",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 2,
+      "name": "no",
+      "implementationType": "native"
+    },
+    {
+      "objID": "5a04afe3-77bd-1878-f284-ca3a25f01520",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 3,
+      "name": "cancel",
+      "implementationType": "native"
+    },
+    {
+      "objID": "61b6227f-f3d0-cbf6-549d-cae5987f02e6",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 4,
+      "name": "edit",
+      "implementationType": "native"
+    },
+    {
+      "objID": "9b576a19-f686-f158-9451-f514c22448d3",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 5,
+      "name": "drag_overlay",
+      "implementationType": "native"
+    },
+    {
+      "objID": "9269c8bc-ac3c-b7aa-19b4-a364e82778ac",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 6,
+      "name": "scroll",
+      "implementationType": "native"
+    },
+    {
+      "objID": "508f8fa5-826c-0fba-ef1e-acf0626c1694",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 7,
+      "name": "keypad_key",
+      "implementationType": "native"
+    },
+    {
+      "objID": "241eeb71-6fd1-e075-d41f-bee6dc247adc",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 8,
+      "name": "keypad_back",
+      "implementationType": "native"
+    },
+    {
+      "objID": "64eafa46-8872-588c-10a5-2704e686258b",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 9,
+      "name": "keypad_unit",
+      "implementationType": "native"
+    },
+    {
+      "objID": "542e0eab-9584-85a7-98e2-06544340eb94",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 10,
+      "name": "keypad_option1",
+      "implementationType": "native"
+    },
+    {
+      "objID": "53f8524e-f4e1-3f38-f592-af055d1dea9f",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 11,
+      "name": "keypad_option2",
+      "implementationType": "native"
+    },
+    {
+      "objID": "6e7661ab-6573-2029-6880-27c63043f82a",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 12,
+      "name": "keypad_option3",
+      "implementationType": "native"
+    },
+    {
+      "objID": "0ddfcc89-cf62-a985-072a-2108485186a6",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 13,
+      "name": "keypad_sign",
+      "implementationType": "native"
+    },
+    {
+      "objID": "e5f3bed4-6d95-2038-559e-ea4d91549a89",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 14,
+      "name": "keypad_ok",
+      "implementationType": "native"
+    },
+    {
+      "objID": "6dee0c45-d549-e3f0-ba9e-a67ed216dfeb",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 15,
+      "name": "keypad_cancel",
+      "implementationType": "native"
+    },
+    {
+      "objID": "6bfa8fd7-148e-8fcc-097d-9e5a7974a4b2",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 16,
+      "name": "toggle_keypad_mode",
+      "implementationType": "native"
+    },
+    {
+      "objID": "9f0938e1-3e59-41f0-89e5-2ec241915746",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 17,
+      "name": "keypad_space",
+      "implementationType": "native"
+    }
+  ],
+  "pages": [
+    {
+      "objID": "cc770cc7-8a02-9c65-15ed-40ad1465a439",
+      "components": [
+        {
+          "objID": "1a331409-37d5-13ac-651e-26eb227b18b1",
+          "type": "Select",
+          "left": 0,
+          "top": 0,
+          "width": 480,
+          "height": 272,
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "touch_calibration_point",
+          "style": {
+            "objID": "759e70f7-0da0-ee89-4fb3-c9fe64b200c5",
+            "inheritFrom": "touch_calibration"
+          },
+          "timeline": [],
+          "widgets": [
+            {
+              "objID": "407b782f-cff5-93c1-0091-71654064d96d",
+              "type": "Container",
+              "left": 0,
+              "top": 0,
+              "width": 480,
+              "height": 272,
+              "customInputs": [],
+              "customOutputs": [],
+              "style": {
+                "objID": "70479d97-ad20-6d59-31c0-a390828ebd7e",
+                "inheritFrom": "touch_calibration"
+              },
+              "timeline": [],
+              "widgets": [
+                {
+                  "objID": "7aee1642-9199-38eb-ff5d-8443ef10bb46",
+                  "type": "MultilineText",
+                  "left": 95,
+                  "top": 98,
+                  "width": 290,
+                  "height": 76,
+                  "customInputs": [],
+                  "customOutputs": [],
+                  "data": "\"Touch top-left cross in the center until change color\"",
+                  "style": {
+                    "objID": "1466e989-bc80-e2b2-2dc4-eaca706535f0",
+                    "inheritFrom": "note_M"
+                  },
+                  "timeline": []
+                },
+                {
+                  "objID": "52739229-1126-2816-2f1b-560691679677",
+                  "type": "Text",
+                  "left": 0,
+                  "top": 0,
+                  "width": 35,
+                  "height": 35,
+                  "customInputs": [],
+                  "customOutputs": [],
+                  "data": "\"+\"",
+                  "action": "",
+                  "style": {
+                    "objID": "292978de-3f0d-14b6-01c7-25930873ba6d",
+                    "inheritFrom": "touch_calibration_point",
+                    "activeBackgroundColor": "#000000"
+                  },
+                  "timeline": []
+                }
+              ],
+              "layout": "static"
+            },
+            {
+              "objID": "e3f3f516-6f8f-e5ed-1614-5c1ce059a24e",
+              "type": "Container",
+              "left": 0,
+              "top": 0,
+              "width": 480,
+              "height": 272,
+              "customInputs": [],
+              "customOutputs": [],
+              "style": {
+                "objID": "cb3f06c5-4a53-de37-ec5b-f82cf28149bc",
+                "inheritFrom": "touch_calibration"
+              },
+              "timeline": [],
+              "widgets": [
+                {
+                  "objID": "1c65981e-bfe7-ffab-ab80-9f4b6a18ea84",
+                  "type": "MultilineText",
+                  "left": 95,
+                  "top": 98,
+                  "width": 290,
+                  "height": 76,
+                  "customInputs": [],
+                  "customOutputs": [],
+                  "data": "\"Touch bottom-right cross in the center until change color\"",
+                  "style": {
+                    "objID": "b2e5d82e-9cf3-de82-8ed6-516ee10d9a47",
+                    "inheritFrom": "note_M"
+                  },
+                  "timeline": []
+                },
+                {
+                  "objID": "0a991563-65de-072a-d314-def0107d049e",
+                  "type": "Text",
+                  "left": 445,
+                  "top": 237,
+                  "width": 35,
+                  "height": 35,
+                  "customInputs": [],
+                  "customOutputs": [],
+                  "data": "\"+\"",
+                  "action": "",
+                  "style": {
+                    "objID": "8a57ce8b-27cf-0255-dae8-204f313e2b86",
+                    "inheritFrom": "touch_calibration_point"
+                  },
+                  "timeline": []
+                }
+              ],
+              "layout": "static"
+            },
+            {
+              "objID": "3c28659c-fc91-def8-0624-d8f1b19a0d05",
+              "type": "Container",
+              "left": 0,
+              "top": 0,
+              "width": 480,
+              "height": 272,
+              "customInputs": [],
+              "customOutputs": [],
+              "style": {
+                "objID": "b8fb5773-d23b-87ec-2f90-fd18f550edad",
+                "inheritFrom": "touch_calibration"
+              },
+              "timeline": [],
+              "widgets": [
+                {
+                  "objID": "620e4fa6-e72f-4230-490e-d590e7072aa0",
+                  "type": "MultilineText",
+                  "left": 95,
+                  "top": 98,
+                  "width": 290,
+                  "height": 76,
+                  "customInputs": [],
+                  "customOutputs": [],
+                  "data": "\"Touch top-right cross in the center until change color\"",
+                  "style": {
+                    "objID": "36f95711-2a73-9b6d-36aa-8fe4c731e5bf",
+                    "inheritFrom": "note_M"
+                  },
+                  "timeline": []
+                },
+                {
+                  "objID": "40b246f6-f02b-7b14-df7e-cf5771f44162",
+                  "type": "Text",
+                  "left": 445,
+                  "top": 0,
+                  "width": 35,
+                  "height": 35,
+                  "customInputs": [],
+                  "customOutputs": [],
+                  "data": "\"+\"",
+                  "action": "",
+                  "style": {
+                    "objID": "b428c1eb-5f9a-43f4-81fa-f7dcd19dfb4f",
+                    "inheritFrom": "touch_calibration_point"
+                  },
+                  "timeline": []
+                }
+              ],
+              "layout": "static"
+            }
+          ]
+        }
+      ],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 2,
+      "name": "touch_calibration",
+      "style": "background",
+      "left": 0,
+      "top": 0,
+      "width": 480,
+      "height": 272,
+      "lvglLocalStyles": {
+        "objID": "f9cacf6f-8d21-9b56-0d22-2405675fdd6e"
+      }
+    },
+    {
+      "objID": "7368d0ef-45af-e892-104c-1013431c8201",
+      "components": [
+        {
+          "objID": "812dc31e-3071-5f18-7cb4-e84ab934c2e4",
+          "type": "DisplayData",
+          "left": 0,
+          "top": 82,
+          "width": 480,
+          "height": 40,
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "alert_message",
+          "style": {
+            "objID": "9a7eeabb-69a9-c5cf-20cd-9b9d8792a155",
+            "inheritFrom": "default"
+          },
+          "timeline": [],
+          "displayOption": 0
+        },
+        {
+          "objID": "d0abee38-201a-e0f8-ed88-f73da1b42587",
+          "type": "Text",
+          "left": 90,
+          "top": 176,
+          "width": 140,
+          "height": 40,
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "\"Yes\"",
+          "action": "yes",
+          "style": {
+            "objID": "a7d5472f-6dc7-f53e-f1a2-5a4a008bb2de",
+            "inheritFrom": "button"
+          },
+          "timeline": []
+        },
+        {
+          "objID": "e189cfc8-d71f-252a-52f6-9e191a51cf4b",
+          "type": "Text",
+          "left": 250,
+          "top": 176,
+          "width": 140,
+          "height": 40,
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "\"Start again\"",
+          "action": "no",
+          "style": {
+            "objID": "4c5c9d40-f79b-c5e1-c9f5-008f146cfb6f",
+            "inheritFrom": "button"
+          },
+          "timeline": []
+        }
+      ],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 3,
+      "name": "touch_calibration_yes_no",
+      "description": "Touchscreen calibration confirmation",
+      "style": "background",
+      "left": 0,
+      "top": 0,
+      "width": 480,
+      "height": 272,
+      "lvglLocalStyles": {
+        "objID": "134e5c07-2c00-a6b5-adff-fac4551ef335"
+      }
+    }
+  ],
+  "styles": [
+    {
+      "objID": "04157789-da53-2f4a-e658-4ca10aa5fbef",
+      "id": 1,
+      "name": "default",
+      "description": "",
+      "inheritFrom": "",
+      "font": "medium",
+      "alignHorizontal": "center",
+      "alignVertical": "center",
+      "color": "text",
+      "backgroundColor": "background",
+      "activeColor": "background",
+      "activeBackgroundColor": "text",
+      "borderColor": "border",
+      "padding": "0"
+    },
+    {
+      "objID": "d9630995-549b-27a2-06c2-a2794496b85a",
+      "id": 2,
+      "name": "info_alert",
+      "inheritFrom": "default",
+      "alwaysBuild": true,
+      "padding": "20",
+      "margin": "20"
+    },
+    {
+      "objID": "596e02a3-c281-63d5-74de-a9f10915ecad",
+      "id": 3,
+      "name": "error_alert",
+      "inheritFrom": "default",
+      "alwaysBuild": true,
+      "color": "dark_text",
+      "backgroundColor": "error",
+      "activeColor": "error",
+      "activeBackgroundColor": "dark_text",
+      "padding": "20",
+      "margin": "20"
+    },
+    {
+      "objID": "47f65ab6-cfa3-09b2-b3b4-4260adc98ef5",
+      "id": 4,
+      "name": "error_alert_button",
+      "inheritFrom": "button",
+      "alwaysBuild": true,
+      "padding": "8 16 8 16"
+    },
+    {
+      "objID": "99524f6d-f187-67b3-070c-f68da187ac56",
+      "id": 5,
+      "name": "select_enum_item_popup_container",
+      "inheritFrom": "default",
+      "alwaysBuild": true,
+      "color": "drop_down_list_color",
+      "backgroundColor": "drop_down_list_background",
+      "activeColor": "drop_down_list_background",
+      "activeBackgroundColor": "drop_down_list_color",
+      "padding": "12"
+    },
+    {
+      "objID": "451ff6d3-0da3-8dd3-54cc-5630b8a68c1f",
+      "id": 6,
+      "name": "select_enum_item_popup_container_S",
+      "inheritFrom": "select_enum_item_popup_container",
+      "alwaysBuild": true
+    },
+    {
+      "objID": "0d0344fa-33c2-0b11-7d16-e298ad85df1a",
+      "id": 7,
+      "name": "select_enum_item_popup_item",
+      "inheritFrom": "select_enum_item_popup_container",
+      "alwaysBuild": true,
+      "padding": "6"
+    },
+    {
+      "objID": "eccd5f27-3959-bf9b-36e6-401768a0cbd2",
+      "id": 8,
+      "name": "select_enum_item_popup_item_S",
+      "inheritFrom": "select_enum_item_popup_container_S",
+      "alwaysBuild": true,
+      "alignHorizontal": "left",
+      "padding": "6"
+    },
+    {
+      "objID": "15c183e7-e541-10d2-dc96-701adca53473",
+      "id": 9,
+      "name": "select_enum_item_popup_disabled_item",
+      "inheritFrom": "select_enum_item_popup_item",
+      "alwaysBuild": true,
+      "color": "drop_down_list_color_disabled"
+    },
+    {
+      "objID": "32fc2d2f-db93-8b71-6883-195f498d5977",
+      "id": 10,
+      "name": "select_enum_item_popup_disabled_item_S",
+      "inheritFrom": "select_enum_item_popup_item_S",
+      "alwaysBuild": true,
+      "color": "drop_down_list_color_disabled"
+    },
+    {
+      "objID": "896bb373-355d-40b9-8386-4332390ce115",
+      "id": 11,
+      "name": "menu_with_buttons_message",
+      "inheritFrom": "default",
+      "alwaysBuild": true,
+      "alignVertical": "top",
+      "color": "text",
+      "backgroundColor": "background",
+      "activeColor": "background",
+      "activeBackgroundColor": "text",
+      "padding": "0 0 10 0",
+      "margin": "0"
+    },
+    {
+      "objID": "c8203187-878b-1452-d8ff-9425dede499b",
+      "id": 12,
+      "name": "menu_with_buttons_container",
+      "inheritFrom": "default",
+      "alwaysBuild": true,
+      "padding": "20",
+      "margin": "20"
+    },
+    {
+      "objID": "85f44e5f-3da1-407e-57a2-aee66a4c68aa",
+      "id": 13,
+      "name": "menu_with_buttons_button",
+      "inheritFrom": "button",
+      "alwaysBuild": true,
+      "padding": "0 4",
+      "margin": "0"
+    },
+    {
+      "objID": "b250a172-d01b-d54f-3d84-891f3c6c48ab",
+      "id": 14,
+      "name": "fps_graph",
+      "inheritFrom": "default",
+      "alwaysBuild": true,
+      "color": "#00ff1e",
+      "backgroundColor": "#000000",
+      "borderSize": "1",
+      "borderColor": "backdrop"
+    },
+    {
+      "objID": "196d3137-46d6-a552-f1bc-80c98098e3ce",
+      "name": "slider_widget",
+      "inheritFrom": "default",
+      "color": "slider_widget_color",
+      "backgroundColor": "slider_widget_background"
+    },
+    {
+      "objID": "b1aa1e30-6a2d-4fe1-8880-b4fecf686ed2",
+      "name": "background",
+      "inheritFrom": "default",
+      "backgroundColor": "background",
+      "backgroundImage": ""
+    },
+    {
+      "objID": "07d83b2f-14da-b1c3-ea6e-d277fb3355be",
+      "name": "button",
+      "inheritFrom": "default",
+      "color": "button_text",
+      "backgroundColor": "button_background",
+      "activeColor": "button_text",
+      "activeBackgroundColor": "button_active_background",
+      "borderSize": "2",
+      "borderRadius": "8",
+      "borderColor": "button_border"
+    },
+    {
+      "objID": "fa680b00-5a77-f63a-7aad-b774279a1c8c",
+      "name": "button_disabled",
+      "inheritFrom": "button",
+      "color": "button_disabled_text",
+      "backgroundColor": "button_disabled_background",
+      "activeColor": "button_disabled_text",
+      "activeBackgroundColor": "button_disabled_background",
+      "borderColor": "button_disabled_border"
+    },
+    {
+      "objID": "c13ab120-d5bc-6c6d-1184-fd34af7994e0",
+      "name": "touch_calibration",
+      "inheritFrom": "default",
+      "font": "gui_icons",
+      "color": "#ffffff",
+      "backgroundColor": "#000000",
+      "activeColor": "#000000",
+      "activeBackgroundColor": "#ffffff"
+    },
+    {
+      "objID": "9b7e1598-0dc1-ef51-826f-5c0e8901f118",
+      "name": "touch_calibration_point",
+      "inheritFrom": "touch_calibration",
+      "activeColor": "#00ff00",
+      "activeBackgroundColor": "#000000"
+    },
+    {
+      "objID": "00947574-0f82-d1c9-419a-ee1680384ec4",
+      "name": "note_M",
+      "inheritFrom": "default",
+      "color": "dark_text",
+      "backgroundColor": "note"
+    },
+    {
+      "objID": "54647aad-d4fe-9b42-6da6-1bb8452131c0",
+      "name": "drop_down_list",
+      "inheritFrom": "default",
+      "color": "drop_down_list_color",
+      "backgroundColor": "drop_down_list_background",
+      "activeColor": "drop_down_list_color",
+      "activeBackgroundColor": "drop_down_list_active_background",
+      "borderSize": "2",
+      "borderRadius": "8",
+      "borderColor": "drop_down_list_border"
+    }
+  ],
+  "fonts": [
+    {
+      "objID": "aa34f362-9500-1f1b-2be2-f0535fdfbe4d",
+      "id": 2,
+      "name": "shadow",
+      "renderingEngine": "freetype",
+      "source": {
+        "objID": "e3c49d01-bca2-3963-6242-2f5cec60b3e9",
+        "filePath": "fonts\\fontawesome-webfont.ttf",
+        "size": 14
+      },
+      "bpp": 8,
+      "height": 20,
+      "ascent": 20,
+      "descent": 0,
+      "glyphs": [
+        {
+          "objID": "c13db248-e083-dd86-7c18-09141de00788",
+          "encoding": 32,
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20,
+          "dx": 20,
+          "glyphBitmap": {
+            "width": 20,
+            "height": 20,
+            "pixelArray": "0000000000000000000303030303060606060606000000000000030606060a0a0a0a0a0a0a0a0a0a000000000306060a10101010171717171717171700000003060a10171b1e21212828282828282828000003060a101b000000000000000000000000000000060a101b280000000000000000000000000000030a101b28390000000000000000000000000000060a1721364e000000000000000000000000000006101b2c445f000000000000000000000000000306101e324e7000000000000000000000000000030a102139587a00000000000000000000000000060a10213d5f8400000000000000000000000000060a1728405f8b00000000000000000000000000060a172844668b00000000000000000000000000060a172844668b00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000"
+          },
+          "source": {
+            "objID": "825eebea-7729-0600-bda1-43baa59a0583",
+            "filePath": "fonts\\fontawesome-webfont.ttf",
+            "size": 14,
+            "encoding": 32
+          }
+        },
+        {
+          "objID": "52b81039-b415-663b-fed0-4f6e23030c3f",
+          "encoding": 33,
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20,
+          "dx": 20,
+          "glyphBitmap": {
+            "width": 20,
+            "height": 20,
+            "pixelArray": "06060606060606060606060606060606060606060a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a171717171717171717171717171717171717171728282828282828282828282828282828282828280000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+          },
+          "source": {
+            "objID": "6880ac38-4984-87b3-4209-17bcb3b61c48",
+            "filePath": "fonts\\fontawesome-webfont.ttf",
+            "size": 14,
+            "encoding": 33
+          }
+        },
+        {
+          "objID": "dd7a3e8e-4dd4-9b9a-c3ad-53e8a10beaf6",
+          "encoding": 34,
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20,
+          "dx": 20,
+          "glyphBitmap": {
+            "width": 20,
+            "height": 20,
+            "pixelArray": "06060606060603030303030000000000000000000a0a0a0a0a0a0a0a0a0a060606030000000000001717171717171717101010100a06060300000000282828282828282821211e1b17100a0603000000000000000000000000000000001b100a0603000000000000000000000000000000281b100a0600000000000000000000000000000039281b100a0300000000000000000000000000004e3621170a0600000000000000000000000000005f442c1b10060000000000000000000000000000704e321e100603000000000000000000000000007a583921100a0300000000000000000000000000845f3d21100a06000000000000000000000000008b5f4028170a06000000000000000000000000008b664428170a06000000000000000000000000008b664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06"
+          },
+          "source": {
+            "objID": "dea65f18-9b65-293b-7aae-0efc6c2dcbf0",
+            "filePath": "fonts\\fontawesome-webfont.ttf",
+            "size": 14,
+            "encoding": 34
+          }
+        },
+        {
+          "objID": "95f97611-fe89-6dbc-c76c-107818670066",
+          "encoding": 35,
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20,
+          "dx": 20,
+          "glyphBitmap": {
+            "width": 20,
+            "height": 20,
+            "pixelArray": "060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000"
+          },
+          "source": {
+            "objID": "98ce5e50-fc4b-52ed-583b-1345585688cd",
+            "filePath": "fonts\\fontawesome-webfont.ttf",
+            "size": 14,
+            "encoding": 35
+          }
+        },
+        {
+          "objID": "50196bf3-3ff7-a034-9c4c-ebae748e607b",
+          "encoding": 36,
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20,
+          "dx": 20,
+          "glyphBitmap": {
+            "width": 20,
+            "height": 20,
+            "pixelArray": "000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06"
+          },
+          "source": {
+            "objID": "565f62b7-6197-e685-369d-24d9679d1541",
+            "filePath": "fonts\\fontawesome-webfont.ttf",
+            "size": 14,
+            "encoding": 36
+          }
+        },
+        {
+          "objID": "d03b903b-919c-8fe0-49ab-741e869a50f0",
+          "encoding": 37,
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20,
+          "dx": 20,
+          "glyphBitmap": {
+            "width": 20,
+            "height": 20,
+            "pixelArray": "060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668b00000000000000000000000000060a172844668b00000000000000000000000000060a1728405f8b00000000000000000000000000060a10213d5f84f8000000000000000000000000030a102139587ac5fb00000000000000000000000306101e324e708eb0c8ddeaf4f4fbfbfbfbfbfb0006101b2c445f7a99adbeccd2d6dddddddddddd00060a1721364e667a8e9faab0b4b4b4b4b4b4b400030a101b28394e5f707a84888b8b8b8e8e8e8e0000060a101b2836444e585f5f66666666666666000003060a101b212c32393d404444444444444400000003060a10171b1e21212828282828282828000000000306060a101010101717171717171b1b000000000000030606060a0a0a0a0a0a0a0d0d0d000000000000000000030303030306060a0a0a0a"
+          },
+          "source": {
+            "objID": "c5d053d7-24d9-3ff0-d481-4f01a6e61220",
+            "filePath": "fonts\\fontawesome-webfont.ttf",
+            "size": 14,
+            "encoding": 37
+          }
+        },
+        {
+          "objID": "3a079f88-c08a-e41e-b19a-ff37f058a5ba",
+          "encoding": 38,
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20,
+          "dx": 20,
+          "glyphBitmap": {
+            "width": 20,
+            "height": 20,
+            "pixelArray": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000fbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbddddddddddddddddddddddddddddddddddddddddb4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b48e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e6666666666666666666666666666666666666666444444444444444444444444444444444444444428282828282828282828282828282828282828281b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a"
+          },
+          "source": {
+            "objID": "40b3f463-bffa-41bc-25b9-6f4c58753e52",
+            "filePath": "fonts\\fontawesome-webfont.ttf",
+            "size": 14,
+            "encoding": 38
+          }
+        },
+        {
+          "objID": "bde9e599-1b0d-06a8-ee22-94e885996f1d",
+          "encoding": 39,
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20,
+          "dx": 20,
+          "glyphBitmap": {
+            "width": 20,
+            "height": 20,
+            "pixelArray": "000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008b664428170a06000000000000000000000000008b664428170a06000000000000000000000000008b5f4028170a06000000000000000000000000f8845f3d21100a060000000000000000000000fbc57a583921100a03fbfbfbfbfbfbf4f4eaddc8b08e704e321e100603ddddddddddddd6d2ccbead997a5f442c1b100600b4b4b4b4b4b4b4b0aa9f8e7a664e3621170a06008e8e8e8e8b8b8b88847a705f4e39281b100a0300666666666666665f5f584e4436281b100a06000044444444444444403d39322c211b100a06030000282828282828282821211e1b17100a06030000001b17171717171717101010100a060603000000000d0d0a0a0a0a0a0a0a0a060606030000000000000a0a0a0606060303030303000000000000000000"
+          },
+          "source": {
+            "objID": "586b9d34-76da-9a22-528f-91467462915e",
+            "filePath": "fonts\\fontawesome-webfont.ttf",
+            "size": 14,
+            "encoding": 39
+          }
+        }
+      ],
+      "alwaysBuild": true
+    },
+    {
+      "objID": "9f2514d5-867e-ec56-97fe-5b142d47b66c",
+      "name": "gui_icons",
+      "renderingEngine": "freetype",
+      "source": {
+        "objID": "f50b1549-6648-f30e-7368-9c42c69487f8",
+        "filePath": "..\\fonts\\Oswald-Medium.ttf",
+        "size": 14
+      },
+      "bpp": 8,
+      "height": 35,
+      "ascent": 35,
+      "descent": 0,
+      "glyphs": [
+        {
+          "objID": "8fb39532-9e59-6f09-a15a-e6daeba399c8",
+          "encoding": 32,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "f021861e-1c5d-eb4d-327b-35a6a77030c8",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 32
+          }
+        },
+        {
+          "objID": "83083f66-6acd-f448-d22e-305278ed4770",
+          "encoding": 33,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "6ef9536f-869f-3edf-6636-4bb212b37820",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 33
+          }
+        },
+        {
+          "objID": "4dc20a75-949c-57b4-054b-fa895e44867a",
+          "encoding": 34,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "52548ae0-ae4f-3d9b-c3f7-fe4983bd7b28",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 34
+          }
+        },
+        {
+          "objID": "1792de56-41e3-aae8-b7b3-3fb735fa876e",
+          "encoding": 35,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "c0c9ece1-91d0-e9e6-f89d-6f6af70dc63f",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 35
+          }
+        },
+        {
+          "objID": "9c6eb1e8-5394-f7b1-a665-4b495454e1e4",
+          "encoding": 36,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "d32ffb58-5d98-b7ac-9775-c433285d6b8f",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 36
+          }
+        },
+        {
+          "objID": "839fae3b-6fa3-1410-0563-630b0c08332f",
+          "encoding": 37,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "22cccb1f-f6ed-a528-5118-4692a325fb66",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 37
+          }
+        },
+        {
+          "objID": "0b803246-4200-293b-44fb-25768d66b010",
+          "encoding": 38,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "8eeb542b-bb83-cb2f-f35a-a6a33559b805",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 38
+          }
+        },
+        {
+          "objID": "01908cb6-7e64-e8a2-2e70-8a665297f0af",
+          "encoding": 39,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "2cf56cb7-0360-7f2f-bf09-fad80385ded2",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 39
+          }
+        },
+        {
+          "objID": "a9db7f63-e7d4-7806-75e5-a949dc7052a9",
+          "encoding": 40,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "1a1aa2a2-70a7-1b87-166f-e703068d67b1",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 40
+          }
+        },
+        {
+          "objID": "63d1a2e6-3838-5f7e-4c89-6cc11aedf818",
+          "encoding": 41,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "0f3f64b9-bd7a-ece0-37f4-431bd91bc0b4",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 41
+          }
+        },
+        {
+          "objID": "5cedd9e7-36c2-6535-305d-6598905fea4b",
+          "encoding": 42,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "733a83e2-9ae1-5408-7152-3ad8e4990928",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 42
+          }
+        },
+        {
+          "objID": "ec0741c3-d7f7-6eba-9c4f-7b374b00cd31",
+          "encoding": 43,
+          "x": 0,
+          "y": 0,
+          "width": 35,
+          "height": 35,
+          "dx": 35,
+          "glyphBitmap": {
+            "width": 35,
+            "height": 35,
+            "pixelArray": "00000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffff0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000ffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000404040404040404040404000000ffffff0000040404040404040404040100000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff0000000000000000000000000000000000000000000000000000000000000000ffffff00000000000000000000000000000000"
+          },
+          "source": {
+            "objID": "6346b93c-9314-878b-48d0-e491a10d109f",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 43
+          }
+        },
+        {
+          "objID": "aeedd219-52ef-166e-a618-f06a79fea266",
+          "encoding": 44,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "21f92044-9c7a-1e4b-db73-2290ff20a262",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 44
+          }
+        },
+        {
+          "objID": "277e28b5-8c2e-84c3-282d-d56c5258bee9",
+          "encoding": 45,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "c861de5b-53f9-b971-96cb-cca6c16236af",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 45
+          }
+        },
+        {
+          "objID": "a9519a5e-d3e4-2606-18bc-4ac89882cdb8",
+          "encoding": 46,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "040e9204-ba58-97f3-bee0-f1ffdee9f3ab",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 46
+          }
+        },
+        {
+          "objID": "928febe6-8b6e-fa9d-6307-8e565a92a69f",
+          "encoding": 47,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "627c0f8b-c76b-114d-fad7-1b07d5ce393b",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 47
+          }
+        },
+        {
+          "objID": "1fd7c397-efd1-6fce-91cc-156dabac8d02",
+          "encoding": 48,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "6dd43716-2e3f-f261-d3dd-952cde465348",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 48
+          }
+        },
+        {
+          "objID": "153edf5b-8482-6e6b-6f86-727fd3e0b916",
+          "encoding": 49,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "683e92b9-4f2f-dd8c-cca1-622a936803bb",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 49
+          }
+        },
+        {
+          "objID": "246e6499-94f7-7c97-a69e-ae30abe7dd8b",
+          "encoding": 50,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "e810fe37-87c7-3558-8444-a9aaafbda15f",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 50
+          }
+        },
+        {
+          "objID": "ab9e060e-f09f-ab67-5810-e4111d874a35",
+          "encoding": 51,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "d3df714f-a789-fe65-523a-165c20991e65",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 51
+          }
+        },
+        {
+          "objID": "72b8fb9b-0ca4-c448-8c28-67bfac98bbf8",
+          "encoding": 52,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "e0c33838-2bb3-0c72-36c3-ed60a28f4028",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 52
+          }
+        },
+        {
+          "objID": "290e308e-23ca-a35b-8703-0c239107433f",
+          "encoding": 53,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "702b73ad-c9ba-8403-8402-9d2b8f841fcb",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 53
+          }
+        },
+        {
+          "objID": "c8c7fa4a-63cf-681c-0db0-b224724edfa0",
+          "encoding": 54,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "ce8e762a-b108-23d6-9566-7f3e28e4d850",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 54
+          }
+        },
+        {
+          "objID": "1ed7a934-2ebb-4bfe-223f-7d9ab725a091",
+          "encoding": 55,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "20978979-b10e-ea12-432a-cb18407e3bc6",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 55
+          }
+        },
+        {
+          "objID": "5642734f-1b58-92ad-2ae6-36878f2c773a",
+          "encoding": 56,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "815208f0-ac31-bb9d-9901-8e02c7a8323e",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 56
+          }
+        },
+        {
+          "objID": "138293e5-e681-aded-14e8-7216122a5b1d",
+          "encoding": 57,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "e5b022d7-c48e-12c3-326b-80884d5b6b9d",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 57
+          }
+        },
+        {
+          "objID": "5af17a6f-7f00-c22a-8dbf-3f97bba993cd",
+          "encoding": 58,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "e6ac0e84-3c3a-f27c-6fd2-a9ebb8089f59",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 58
+          }
+        },
+        {
+          "objID": "3877816c-2a6d-0651-3ab1-9f79a93328e5",
+          "encoding": 59,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "9b40e060-4315-77c3-11b8-387b65278c1f",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 59
+          }
+        },
+        {
+          "objID": "2c924984-a043-8bfa-ce9e-70959e74f3e3",
+          "encoding": 60,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "ea679f33-aabe-c7db-3797-13cba90c3ca3",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 60
+          }
+        },
+        {
+          "objID": "b7ee90d0-a0de-067d-7d89-35d464799524",
+          "encoding": 61,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "98b5a7c7-1088-9597-9422-0d4076031eb6",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 61
+          }
+        },
+        {
+          "objID": "a7d65ebf-9999-4d3c-459d-389ef23422d1",
+          "encoding": 62,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "ec7254c2-8f35-04a6-8244-34101331559b",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 62
+          }
+        },
+        {
+          "objID": "2fba283d-2292-c643-aea7-55b3ddc6ee3b",
+          "encoding": 63,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "f558e7e1-1cdb-f7bf-2b58-45a5b792e313",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 63
+          }
+        },
+        {
+          "objID": "6a4e9dcf-f03a-4226-3a72-dfb3bc66cea7",
+          "encoding": 64,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "bef58bba-0bbf-4759-71d9-1907d6a12f2a",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 64
+          }
+        },
+        {
+          "objID": "52302275-9261-e1e7-890f-2362bde437b2",
+          "encoding": 65,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "d54582f7-ddd7-b84e-ae5c-17441c1a24df",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 65
+          }
+        },
+        {
+          "objID": "78e332d7-4354-8654-b0a4-3c76eaf8fb2e",
+          "encoding": 66,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "ca773238-2c31-7c21-a512-79f92a6e848a",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 66
+          }
+        },
+        {
+          "objID": "a8c4a778-4b6b-8d74-8109-c1468d1197e3",
+          "encoding": 67,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "acb012a8-a9c9-a3f1-e6c1-9c95b483bafe",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 67
+          }
+        },
+        {
+          "objID": "bc7d43ed-1f1f-f075-cf2c-19cb196eebb5",
+          "encoding": 68,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "fd9da90b-7fb6-e1d0-0ad0-90da70e5e9cf",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 68
+          }
+        },
+        {
+          "objID": "255edd4e-620b-59a4-3bd4-3c8d4bbe1362",
+          "encoding": 69,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "3822a017-a644-b5d6-5ae9-270aca49fb92",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 69
+          }
+        },
+        {
+          "objID": "5d8744fb-2d2a-4fe3-b963-0a3e56b179c6",
+          "encoding": 70,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "c99ebd4b-2822-e0a3-5e05-ab284d49e7b7",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 70
+          }
+        },
+        {
+          "objID": "44361002-cc85-15c1-28b0-ec612882e314",
+          "encoding": 71,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "3055ee06-0e5a-0224-9279-a9dea68e593b",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 71
+          }
+        },
+        {
+          "objID": "56da276e-efdc-4131-03fa-b2a5eae146d8",
+          "encoding": 72,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "134cf1b9-66b7-9ef2-3679-eec13fda56d4",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 72
+          }
+        },
+        {
+          "objID": "78149a8f-0c86-ad4a-367c-9a2ec172bb07",
+          "encoding": 73,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "a9f6045e-4648-0352-0efb-e7f08f4dc62f",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 73
+          }
+        },
+        {
+          "objID": "2773ffee-9b04-a27d-d1d8-11822136e6a8",
+          "encoding": 74,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "f9064a88-c990-30ef-468e-625565f61a9c",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 74
+          }
+        },
+        {
+          "objID": "804318aa-b7f4-8590-a2be-c339be90b900",
+          "encoding": 75,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "8d1b940a-12a7-2533-9ee7-22dd4982012b",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 75
+          }
+        },
+        {
+          "objID": "82a1980f-7993-0584-5cee-9806d2941183",
+          "encoding": 76,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "8b7b4118-7e78-1e82-75e5-769cd0328b49",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 76
+          }
+        },
+        {
+          "objID": "b4102973-2e49-a9a0-ed75-b6eaca420023",
+          "encoding": 77,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "e426142b-6241-6c27-c7fb-78d19740f567",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 77
+          }
+        },
+        {
+          "objID": "ed133a87-b53a-44f5-7e84-41c507116fe2",
+          "encoding": 78,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "8daba0a7-6d30-3d2f-8388-066f4b81647a",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 78
+          }
+        },
+        {
+          "objID": "82a47a16-c79a-e574-f772-fda5edc0d9dc",
+          "encoding": 79,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "6975e3e7-7b4b-6903-3191-dea069008342",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 79
+          }
+        },
+        {
+          "objID": "964076c5-d88c-dc0e-0fea-f8982b7a2ad6",
+          "encoding": 80,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "17f0466a-7620-14db-60d0-5f1e02f23cbb",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 80
+          }
+        },
+        {
+          "objID": "cd4c6bc0-0d2d-4134-fca6-aeaa9dea92c1",
+          "encoding": 81,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "dc3405ed-67f8-8d50-63e4-7b84cbae6d9a",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 81
+          }
+        },
+        {
+          "objID": "68e27bf5-7783-55d6-54a5-3e5cfbfb81e3",
+          "encoding": 82,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "6cf1f0f4-47b0-819b-1203-1cd307740ec9",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 82
+          }
+        },
+        {
+          "objID": "3611e857-1cdf-4bd6-8219-500e2cb3e363",
+          "encoding": 83,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "707005a6-24e8-1f1b-3a25-94f02ff290fc",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 83
+          }
+        },
+        {
+          "objID": "284e5bd3-b125-fbc1-401f-5ab5087deb46",
+          "encoding": 84,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "ec93027a-f9bc-ea23-644f-5ba557257f59",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 84
+          }
+        },
+        {
+          "objID": "44f69bcd-2768-a06e-2348-8d294f40ff97",
+          "encoding": 85,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "46c756c4-a3a0-d7d1-0463-3b9b821634dd",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 85
+          }
+        },
+        {
+          "objID": "76c3be5a-b25e-6792-360c-8974c46817cd",
+          "encoding": 86,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "17fb8967-cc3f-6861-ee45-01a0c5582f63",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 86
+          }
+        },
+        {
+          "objID": "233a5f34-d919-b723-ecaa-d198d96c833a",
+          "encoding": 87,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "60a02ffc-d250-9927-449c-dc19b8c7feef",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 87
+          }
+        },
+        {
+          "objID": "07e8c262-7caa-3cab-efab-5019d3bf78f1",
+          "encoding": 88,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "6ff5d42d-0653-52ec-e1da-5a86e68d98f2",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 88
+          }
+        },
+        {
+          "objID": "ac2562bb-a64f-33dc-5614-4cabd413a011",
+          "encoding": 89,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "a6b6df91-17f2-0947-acb6-47d283c1d6d7",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 89
+          }
+        },
+        {
+          "objID": "8d344cfc-517f-0bc6-48f7-131fb72a10e0",
+          "encoding": 90,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "26b2e8c8-219d-e04f-9838-76ff0aca7cc6",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 90
+          }
+        },
+        {
+          "objID": "871f0e3a-db87-e626-7bd8-cde753635462",
+          "encoding": 91,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "1480c897-b675-5c8e-80a8-4b4b26c4496c",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 91
+          }
+        },
+        {
+          "objID": "b971a275-0545-4868-0a5b-612ce16632c1",
+          "encoding": 92,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "91b5904e-8c16-8797-4c0b-6d5b50a0805f",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 92
+          }
+        },
+        {
+          "objID": "3bfa2efd-ccb2-9c6c-86b5-ba3255e5fcce",
+          "encoding": 93,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "f04afb89-74f4-0014-7b8d-ab64b62f9b52",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 93
+          }
+        },
+        {
+          "objID": "6f2e9aed-0bb1-a499-9b57-9a543681eb01",
+          "encoding": 94,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "7f2d2637-366f-a131-da66-812d8f04b958",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 94
+          }
+        },
+        {
+          "objID": "282f2172-e341-913d-60b5-96e2f3b958a0",
+          "encoding": 95,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "cd44e87d-b54d-89d3-c0c1-eecda0c142f0",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 95
+          }
+        },
+        {
+          "objID": "5f1ec763-bc9c-7c50-dd4d-9443eb02cd38",
+          "encoding": 96,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "14c457f1-5a4b-0156-59ba-c25d94d4b6bd",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 96
+          }
+        },
+        {
+          "objID": "5d0f1930-b202-e333-faf8-3133d74f1e3c",
+          "encoding": 97,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "c41fce45-cb07-aa75-9d9b-2b2e2c7f04c4",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 97
+          }
+        },
+        {
+          "objID": "9a050d1a-52b4-5dbb-24c6-9c40e7af3ee5",
+          "encoding": 98,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "fbb3fa88-1ebf-70e6-35cf-53f76b8cdb46",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 98
+          }
+        },
+        {
+          "objID": "c350f37a-c220-90e0-6b3f-a12b2d4915d5",
+          "encoding": 99,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "4bf79592-2bbc-7482-f28d-df8f240793e6",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 99
+          }
+        },
+        {
+          "objID": "c651784b-de99-7bfa-2832-42d350a4ba85",
+          "encoding": 100,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "de52986b-22d6-5e04-0e69-eeec0bc8eed9",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 100
+          }
+        },
+        {
+          "objID": "2d4e0839-6634-c1c9-c00b-c06301ccbc65",
+          "encoding": 101,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "f6da7b07-c492-2dfa-850b-40979cf52a4b",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 101
+          }
+        },
+        {
+          "objID": "1288b066-8f3c-4aab-e22b-a09c88f3382b",
+          "encoding": 102,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "e6cccad0-a639-2294-e75a-b7348b388c51",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 102
+          }
+        },
+        {
+          "objID": "ebc70c79-42eb-c5da-d37e-00f45ce992bb",
+          "encoding": 103,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "6dccc03e-d0ce-6917-c526-6dc398cda08d",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 103
+          }
+        },
+        {
+          "objID": "fe8c82f4-6eb7-e85e-3fa8-27e638003766",
+          "encoding": 104,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "081c45e8-2322-84f3-cc78-6d3b670dcbe0",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 104
+          }
+        },
+        {
+          "objID": "8164aafd-37c2-e380-e294-02e021eec7b2",
+          "encoding": 105,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "bacd0d24-837a-2ac4-e5ea-624d5e114e71",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 105
+          }
+        },
+        {
+          "objID": "34c98e4f-bef5-d963-8590-9a7f921f5654",
+          "encoding": 106,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "f5c1d963-4b80-05ee-aebb-d83f9cd430f5",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 106
+          }
+        },
+        {
+          "objID": "482244ab-f4c3-539e-0beb-0efc776f7908",
+          "encoding": 107,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "d265ad8f-c0e2-e05f-6179-b27fdaea514c",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 107
+          }
+        },
+        {
+          "objID": "78610843-7fde-72d5-ee72-d738d64b4e14",
+          "encoding": 108,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "faee04a9-4166-7ba5-21c9-162cee35be9c",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 108
+          }
+        },
+        {
+          "objID": "31d048b7-728f-ba85-ccef-4ab648d3a0cd",
+          "encoding": 109,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "d4d6cefe-88ff-b74d-c42b-1c98e19f7d17",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 109
+          }
+        },
+        {
+          "objID": "26a88290-c17c-206c-ec90-285acab6489f",
+          "encoding": 110,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "0e373cff-86f3-515e-4a15-8a3defa2c71a",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 110
+          }
+        },
+        {
+          "objID": "b7377b90-c175-1451-7742-eab897e612bd",
+          "encoding": 111,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "9c637e45-96bf-550a-2324-489727a5c1ea",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 111
+          }
+        },
+        {
+          "objID": "6b8d3134-4f7b-723d-40f5-4c1be3f0fc63",
+          "encoding": 112,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "e89a6caf-198b-a4f7-9ae1-409f50dfd40a",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 112
+          }
+        },
+        {
+          "objID": "a8cc9fc7-4870-aec8-0e26-05f573d165c4",
+          "encoding": 113,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "b6a8d787-2741-f546-3c83-a8207d08acaf",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 113
+          }
+        },
+        {
+          "objID": "ba8a0033-935a-2142-ba63-65c679edd983",
+          "encoding": 114,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "78c49193-2581-ad22-aade-98db81a378a1",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 114
+          }
+        },
+        {
+          "objID": "732a059b-ea3c-139b-0ac3-f0cc57581799",
+          "encoding": 115,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "a7c8be3c-63cb-78dd-0023-0e47f62493b3",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 115
+          }
+        },
+        {
+          "objID": "482ce4a9-a0f3-9778-b856-560e361f2eb9",
+          "encoding": 116,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "4de6400e-15da-5210-aa9c-c7c7cce95d57",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 116
+          }
+        },
+        {
+          "objID": "4a070109-cf5d-239c-70ed-f013afbe2500",
+          "encoding": 117,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "8ab34354-2c26-d591-5f17-9d61d98173ca",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 117
+          }
+        },
+        {
+          "objID": "e8e25e79-c598-3f82-f1ca-c5f6c2dc37df",
+          "encoding": 118,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "86b64c25-18d0-cff6-e621-6ffcdb803804",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 118
+          }
+        },
+        {
+          "objID": "e0bd7592-c637-f2b3-fabd-fcfb97cce415",
+          "encoding": 119,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "2915337c-6264-6994-65e2-825a9e862f2c",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 119
+          }
+        },
+        {
+          "objID": "7695a5e1-5981-779b-ebb4-cf8bb303ed60",
+          "encoding": 120,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "e7aa3fdc-5a07-40d4-ebec-8de8e45cb3b9",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 120
+          }
+        },
+        {
+          "objID": "8654a829-6389-da07-96af-bc883e3b2bde",
+          "encoding": 121,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "bdd128b8-0fa5-9275-ef2d-d5470915aba9",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 121
+          }
+        },
+        {
+          "objID": "29f9a342-0926-aa41-87a7-91713b36a6af",
+          "encoding": 122,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "07b24c51-4715-8a02-1c50-103ac193b6e8",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 122
+          }
+        },
+        {
+          "objID": "50e9a549-4e50-6503-9d51-ec35151e3e99",
+          "encoding": 123,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "98c55e93-e982-d4e6-769c-b75f116dc57c",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 123
+          }
+        },
+        {
+          "objID": "3017d0b5-498b-0e21-5ae4-deb84088decc",
+          "encoding": 124,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "88c2d563-7fa9-c525-05db-8afac34c7e45",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 124
+          }
+        },
+        {
+          "objID": "fbf65d85-60d0-5c9c-6cb1-fe818b6a7e74",
+          "encoding": 125,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "84adbde6-4603-dfd4-0f09-dcc7b6e3b174",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 125
+          }
+        },
+        {
+          "objID": "12ad724a-603d-a2dd-6552-ce1dff93b84a",
+          "encoding": 126,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "67e44ef4-3267-d1d7-ab4b-7496c12d3cbd",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 126
+          }
+        },
+        {
+          "objID": "0ade6e10-3726-1200-6d1b-3c3325c8a2cc",
+          "encoding": 127,
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "dx": 0,
+          "glyphBitmap": {
+            "width": 0,
+            "height": 0,
+            "pixelArray": ""
+          },
+          "source": {
+            "objID": "98a9da4c-0281-4897-629b-dcf11b0185cb",
+            "filePath": "..\\fonts\\Oswald-Medium.ttf",
+            "size": 14,
+            "encoding": 127
+          }
+        }
+      ]
+    }
+  ],
+  "bitmaps": [],
+  "colors": [],
+  "themes": []
+}

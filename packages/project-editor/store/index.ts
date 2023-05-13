@@ -434,21 +434,6 @@ export class ProjectStore {
             return;
         }
 
-        let title = "";
-
-        if (this.project) {
-            if (this.modified) {
-                title += "\u25CF ";
-            }
-            title += this.title + " - ";
-        }
-
-        title += "EEZ Studio";
-
-        if (title != document.title) {
-            document.title = title;
-        }
-
         ipcRenderer.send("windowSetState", {
             modified: this.modified,
             projectFilePath: this.filePath,
@@ -625,6 +610,7 @@ export class ProjectStore {
         if (this.project && this.modified) {
             return new Promise<boolean>(resolve => {
                 confirmSave({
+                    description: `Project "${this.title}" has been modified.\n`,
                     saveCallback: async () => {
                         resolve(await this.saveToFile(false));
                     },

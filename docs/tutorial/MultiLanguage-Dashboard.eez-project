@@ -1,0 +1,323 @@
+{
+  "settings": {
+    "general": {
+      "projectVersion": "v3",
+      "projectType": "dashboard",
+      "imports": []
+    },
+    "build": {
+      "configurations": [
+        {
+          "name": "Default"
+        }
+      ],
+      "files": []
+    }
+  },
+  "variables": {
+    "globalVariables": [
+      {
+        "name": "selected_language_index",
+        "type": "integer",
+        "defaultValue": "0",
+        "persistent": true
+      }
+    ],
+    "structures": [
+      {
+        "name": "Result",
+        "fields": [
+          {
+            "name": "a",
+            "type": "string"
+          }
+        ]
+      }
+    ],
+    "enums": []
+  },
+  "actions": [],
+  "pages": [
+    {
+      "components": [
+        {
+          "type": "TextWidget",
+          "left": 0,
+          "top": 182,
+          "width": 800,
+          "height": 32,
+          "wireID": "ea7eb013-6c4a-4647-ff9f-0f2f5df1d137",
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "T\"Hello, world!\"",
+          "style": {
+            "inheritFrom": "default",
+            "alignHorizontal": "center"
+          }
+        },
+        {
+          "type": "ButtonWidget",
+          "left": 331,
+          "top": 333,
+          "width": 145,
+          "height": 32,
+          "wireID": "4448fbf0-b73a-4205-f065-efd32b155653",
+          "customInputs": [],
+          "customOutputs": [],
+          "asOutputProperties": [
+            "action"
+          ],
+          "data": "T\"Execute\"",
+          "style": {
+            "inheritFrom": "default"
+          },
+          "disabledStyle": {
+            "inheritFrom": "default"
+          }
+        },
+        {
+          "type": "NoopActionComponent",
+          "left": 569,
+          "top": 463,
+          "width": 87,
+          "height": 25,
+          "wireID": "4ff4eeb9-35dd-447a-822b-fc2a4e86d1bd",
+          "customInputs": [],
+          "customOutputs": [],
+          "name": "Ignore"
+        },
+        {
+          "type": "DropDownListWidget",
+          "left": 391,
+          "top": 37,
+          "width": 71,
+          "height": 32,
+          "wireID": "c650ad8f-f1c2-4948-e3d6-6a6eb175ecf8",
+          "customInputs": [],
+          "customOutputs": [],
+          "asOutputProperties": [
+            "action"
+          ],
+          "data": "selected_language_index",
+          "style": {
+            "inheritFrom": "default"
+          },
+          "options": "Flow.languages()"
+        },
+        {
+          "type": "TextWidget",
+          "left": 234,
+          "top": 37,
+          "width": 144,
+          "height": 32,
+          "wireID": "e7a613ac-61f2-4288-c345-73c33ba295ae",
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "T\"Select language:\"",
+          "style": {
+            "inheritFrom": "default",
+            "alignHorizontal": "right"
+          }
+        },
+        {
+          "type": "SelectLanguageActionComponent",
+          "left": 547,
+          "top": -76,
+          "width": 131,
+          "height": 54,
+          "wireID": "0264645d-dba1-4e61-f95e-e1a01fb34b0e",
+          "customInputs": [
+            {
+              "name": "params",
+              "type": "struct:$DropDownListActionParams"
+            }
+          ],
+          "customOutputs": [],
+          "language": "Flow.languages()[params.selectedIndex]"
+        },
+        {
+          "type": "StartActionComponent",
+          "left": 0,
+          "top": -76,
+          "width": 87,
+          "height": 25,
+          "wireID": "a9769419-f7f4-418e-fb1d-4d3113fe858f",
+          "customInputs": [],
+          "customOutputs": []
+        },
+        {
+          "type": "SelectLanguageActionComponent",
+          "left": 141,
+          "top": -76,
+          "width": 131,
+          "height": 25,
+          "wireID": "ad36b9cf-575b-4199-9b52-047b86dd081a",
+          "customInputs": [],
+          "customOutputs": [],
+          "language": "Flow.languages()[selected_language_index]"
+        },
+        {
+          "type": "TextWidget",
+          "left": 476,
+          "top": 37,
+          "width": 230,
+          "height": 32,
+          "wireID": "ee406afb-47ca-4723-ef9f-5ed813ae80fd",
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "Flow.languages()[selected_language_index]",
+          "style": {
+            "inheritFrom": "default"
+          }
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "4448fbf0-b73a-4205-f065-efd32b155653",
+          "output": "action",
+          "target": "4ff4eeb9-35dd-447a-822b-fc2a4e86d1bd",
+          "input": "@seqin"
+        },
+        {
+          "source": "c650ad8f-f1c2-4948-e3d6-6a6eb175ecf8",
+          "output": "action",
+          "target": "0264645d-dba1-4e61-f95e-e1a01fb34b0e",
+          "input": "params"
+        },
+        {
+          "source": "a9769419-f7f4-418e-fb1d-4d3113fe858f",
+          "output": "@seqout",
+          "target": "ad36b9cf-575b-4199-9b52-047b86dd081a",
+          "input": "@seqin"
+        }
+      ],
+      "localVariables": [],
+      "name": "Main",
+      "style": "page",
+      "left": 0,
+      "top": 0,
+      "width": 800,
+      "height": 450
+    }
+  ],
+  "styles": [
+    {
+      "name": "default"
+    },
+    {
+      "name": "page",
+      "inheritFrom": "",
+      "backgroundColor": "page_color",
+      "css": "\n"
+    }
+  ],
+  "texts": {
+    "languages": [
+      {
+        "languageID": "GB"
+      },
+      {
+        "languageID": "FR"
+      },
+      {
+        "languageID": "HR"
+      },
+      {
+        "languageID": "CN"
+      },
+      {
+        "languageID": "GR"
+      }
+    ],
+    "resources": [
+      {
+        "resourceID": "Execute",
+        "translations": [
+          {
+            "languageID": "GB",
+            "text": "Execute"
+          },
+          {
+            "languageID": "HR",
+            "text": "Izvrši"
+          },
+          {
+            "languageID": "FR",
+            "text": "Exécuter"
+          },
+          {
+            "languageID": "CN",
+            "text": "执行"
+          },
+          {
+            "languageID": "GR",
+            "text": "Ausführen"
+          }
+        ]
+      },
+      {
+        "resourceID": "Hello, world!",
+        "translations": [
+          {
+            "languageID": "GB",
+            "text": "Hello, world!"
+          },
+          {
+            "languageID": "HR",
+            "text": "Pozdrav svijete!"
+          },
+          {
+            "languageID": "FR",
+            "text": "Bonjour le monde!"
+          },
+          {
+            "languageID": "CN",
+            "text": "你好世界"
+          },
+          {
+            "languageID": "GR",
+            "text": "Hallo Welt!"
+          }
+        ]
+      },
+      {
+        "resourceID": "Select language:",
+        "translations": [
+          {
+            "languageID": "GB",
+            "text": "Select language:"
+          },
+          {
+            "languageID": "HR",
+            "text": "Odaberi jezik:"
+          },
+          {
+            "languageID": "FR",
+            "text": "Choisir la langue:"
+          },
+          {
+            "languageID": "CN",
+            "text": "选择语言"
+          },
+          {
+            "languageID": "GR",
+            "text": "Sprache auswählen:"
+          }
+        ]
+      }
+    ]
+  },
+  "colors": [
+    {
+      "name": "page_color"
+    }
+  ],
+  "themes": [
+    {
+      "name": "default",
+      "colors": [
+        "#f0f0f0"
+      ]
+    }
+  ]
+}

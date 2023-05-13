@@ -28,7 +28,11 @@ import { setParent, getId } from "project-editor/core/object";
 import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { DragAndDropManager } from "project-editor/core/dd";
 
-import { IPanel, isObjectInstanceOf } from "project-editor/store";
+import {
+    IPanel,
+    isObjectInstanceOf,
+    isLVGLCreateInProgress
+} from "project-editor/store";
 
 import type { IEditorOptions } from "project-editor/flow/flow-interfaces";
 import type { Flow } from "project-editor/flow/flow";
@@ -735,10 +739,12 @@ export const Canvas = observer(
                             )}
                         {this.props.children}
                     </div>
-                    <Selection
-                        context={this.props.flowContext}
-                        mouseHandler={this.mouseHandler}
-                    />
+                    {!isLVGLCreateInProgress(this.props.flowContext.flow) && (
+                        <Selection
+                            context={this.props.flowContext}
+                            mouseHandler={this.mouseHandler}
+                        />
+                    )}
 
                     {this.mouseHandler &&
                         this.mouseHandler.render &&
@@ -1103,16 +1109,6 @@ export const FlowEditor = observer(
         render() {
             const flow = this.props.tabState.widgetContainer.object as Flow;
 
-            const lvglCreateInProgress =
-                this.flowContext.projectStore.projectTypeTraits.isLVGL &&
-                this.flowContext.flow instanceof ProjectEditor.PageClass &&
-                (!this.flowContext.flow._lvglRuntime ||
-                    !this.flowContext.flow._lvglObj ||
-                    this.flowContext.flow._lvglRuntime.isAnyAsyncOperation);
-
-            const drawConnectionLines =
-                !this.props.tabState.frontFace && !lvglCreateInProgress;
-
             return (
                 <div
                     className={classNames(
@@ -1149,11 +1145,14 @@ export const FlowEditor = observer(
 
                                 {
                                     // render connection lines
-                                    drawConnectionLines && (
-                                        <AllConnectionLines
-                                            flowContext={this.flowContext}
-                                        />
-                                    )
+                                    !this.props.tabState.frontFace &&
+                                        !isLVGLCreateInProgress(
+                                            this.flowContext.flow
+                                        ) && (
+                                            <AllConnectionLines
+                                                flowContext={this.flowContext}
+                                            />
+                                        )
                                 }
 
                                 {

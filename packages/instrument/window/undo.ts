@@ -60,6 +60,7 @@ export class UndoManager {
         return new Promise<boolean>(resolve => {
             if (this.modified) {
                 confirmSave({
+                    description: "",
                     saveCallback: () => {
                         this.commit();
                         resolve(true);

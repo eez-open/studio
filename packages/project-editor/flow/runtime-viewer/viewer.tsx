@@ -19,7 +19,7 @@ import {
 
 import { Draggable } from "eez-studio-ui/draggable";
 
-import { IPanel } from "project-editor/store";
+import { IPanel, isLVGLCreateInProgress } from "project-editor/store";
 
 import { ProjectContext } from "project-editor/project/context";
 
@@ -528,6 +528,12 @@ export const Canvas = observer(
                 style.visibility = "hidden";
             }
 
+            const lvglCreateInProgress =
+                this.props.flowContext.flowState &&
+                this.props.flowContext.flowState.flow instanceof
+                    ProjectEditor.PageClass &&
+                isLVGLCreateInProgress(this.props.flowContext.flowState.flow);
+
             return (
                 <div
                     ref={(ref: any) => (this.div = ref!)}
@@ -543,12 +549,14 @@ export const Canvas = observer(
                     >
                         {this.props.children}
                     </div>
-                    {!runMode && (runtime.isPaused || runtime.isStopped) && (
-                        <Selection
-                            context={this.props.flowContext}
-                            mouseHandler={undefined}
-                        />
-                    )}
+                    {!runMode &&
+                        (runtime.isPaused || runtime.isStopped) &&
+                        !lvglCreateInProgress && (
+                            <Selection
+                                context={this.props.flowContext}
+                                mouseHandler={undefined}
+                            />
+                        )}
                 </div>
             );
         }
@@ -724,6 +732,13 @@ export const FlowViewer = observer(
                 this.flowContext.flow instanceof ProjectEditor.ActionClass ||
                 this.flowContext.projectStore.projectTypeTraits.isLVGL;
 
+            const lvglCreateInProgress = isLVGLCreateInProgress(
+                this.flowContext.flow
+            );
+
+            const drawConnectionLines =
+                !this.props.tabState.frontFace && !lvglCreateInProgress;
+
             return (
                 <div
                     className={classNames(
@@ -782,12 +797,11 @@ export const FlowViewer = observer(
 
                                 {
                                     // render connection line debug values
-                                    renderParts &&
-                                        !this.props.tabState.frontFace && (
-                                            <AllConnectionLineDebugValues
-                                                flowContext={this.flowContext}
-                                            />
-                                        )
+                                    renderParts && drawConnectionLines && (
+                                        <AllConnectionLineDebugValues
+                                            flowContext={this.flowContext}
+                                        />
+                                    )
                                 }
                             </>
                         )}

@@ -374,8 +374,6 @@ const EditorButtons = observer(
                                         editorComponent.object
                                     ) == this.context.editorsStore.activeEditor;
 
-                                console.log(isActive);
-
                                 return (
                                     <IconAction
                                         key={getId(featureItem)}

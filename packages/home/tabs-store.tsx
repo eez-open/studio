@@ -48,12 +48,15 @@ import { PROJECT_TAB_ID_PREFIX } from "home/tabs-store-conf";
 import { getProjectIcon } from "home/helper";
 import type { HomeTabCategory } from "eez-studio-shared/extensions/extension";
 
+const MODIFED_MARK = "\u002A ";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface IHomeTab extends ITab {
     editor?: IEditor;
     render(): React.ReactNode;
     attention?: boolean;
+    modified?: boolean;
     beforeAppClose?(): Promise<boolean>;
     titleStr: string;
     category: HomeTabCategory;
@@ -73,6 +76,7 @@ class HomeTab implements IHomeTab {
     dragDisabled: boolean = true;
     active: boolean = false;
     loading: boolean = false;
+    modified: boolean = false;
 
     id = "home";
     title = "Home";
@@ -115,6 +119,7 @@ class HistoryTab implements IHomeTab {
     permanent: boolean = true;
     _active: boolean = false;
     loading: boolean = false;
+    modified: boolean = false;
 
     id = "history";
     title = "History";
@@ -191,6 +196,7 @@ class ShortcutsAndGroupsTab implements IHomeTab {
     permanent: boolean = true;
     active: boolean = false;
     loading: boolean = false;
+    modified: boolean = false;
 
     id = "shortcutsAndGroups";
     title = "Shortcuts and Groups";
@@ -230,6 +236,7 @@ class ExtensionManagerTab implements IHomeTab {
     permanent: boolean = true;
     active: boolean = false;
     loading: boolean = false;
+    modified: boolean = false;
 
     id = "extensions";
     title = "Extension Manager";
@@ -299,6 +306,7 @@ class SettingsTab implements IHomeTab {
     permanent: boolean = true;
     active: boolean = false;
     loading: boolean = false;
+    modified: boolean = false;
 
     id = "settings";
     title = "Settings";
@@ -355,6 +363,7 @@ class HomeSectionTab implements IHomeTab {
     permanent: boolean = true;
     active: boolean = false;
     loading: boolean = false;
+    modified: boolean = false;
     get category() {
         return this.homeSection.category;
     }
@@ -405,6 +414,7 @@ export class InstrumentTab implements IHomeTab {
     _active: boolean = false;
 
     loading = false;
+    modified: boolean = false;
 
     category: HomeTabCategory = "none";
 
@@ -503,6 +513,10 @@ export class ProjectEditorTab implements IHomeTab {
     permanent: boolean = true;
     _active: boolean = false;
     loading: boolean = false;
+
+    get modified() {
+        return this.projectStore && this.projectStore.modified;
+    }
 
     projectStore: ProjectStore | undefined;
 
@@ -682,6 +696,10 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     get title() {
+        return (this.modified ? MODIFED_MARK : "") + this.titleStr;
+    }
+
+    get titleStr() {
         if (this.projectStore) {
             return this.projectStore.title;
         }
@@ -696,10 +714,6 @@ export class ProjectEditorTab implements IHomeTab {
         }
 
         return "Untitled project";
-    }
-
-    get titleStr() {
-        return this.title;
     }
 
     get tooltipTitle() {
@@ -974,11 +988,17 @@ export class Tabs {
             );
 
             autorun(() => {
+                let title;
+
                 if (this.activeTab) {
-                    document.title = `${this.activeTab.titleStr} - EEZ Studio`;
+                    title = `${this.activeTab.modified ? MODIFED_MARK : ""}${
+                        this.activeTab.titleStr
+                    } - EEZ Studio`;
                 } else {
-                    document.title = `EEZ Studio`;
+                    title = `EEZ Studio`;
                 }
+
+                document.title = title;
             });
 
             onSimpleMessage(

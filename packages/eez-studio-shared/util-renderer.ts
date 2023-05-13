@@ -12,10 +12,12 @@ function mnemonicLabel(label: string): string {
 }
 
 export async function confirmSave({
+    description,
     saveCallback,
     dontSaveCallback,
     cancelCallback
 }: {
+    description: string;
     saveCallback: () => void;
     dontSaveCallback: () => void;
     cancelCallback: () => void;
@@ -49,9 +51,10 @@ export async function confirmSave({
 
     let opts: Electron.MessageBoxOptions = {
         type: "warning",
-        title: document.title,
+        title: "EEZ Studio",
         message: "Do you want to save changes?",
-        detail: "Your changes will be lost if you don't save them.",
+        detail:
+            description + "Your changes will be lost if you don't save them.",
         noLink: true,
         buttons: buttons.map(b => b.label),
         cancelId: buttons.indexOf(cancelButton)
