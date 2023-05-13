@@ -140,10 +140,11 @@ export const ListContainer = observer(
         tabIndex: any;
         minHeight?: number;
         maxHeight?: number;
+        maxWidth?: number;
         className?: string;
     }> {
         render() {
-            const { minHeight, maxHeight } = this.props;
+            const { minHeight, maxHeight, maxWidth } = this.props;
             return (
                 <div
                     className={classNames(
@@ -151,7 +152,7 @@ export const ListContainer = observer(
                         this.props.className
                     )}
                     tabIndex={this.props.tabIndex}
-                    style={{ minHeight, maxHeight }}
+                    style={{ minHeight, maxHeight, maxWidth }}
                 >
                     {this.props.children}
                 </div>

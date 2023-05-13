@@ -272,10 +272,13 @@ export class EditorsStore {
             editors.push(editor);
             tabIdToEditorMap.set(tabId, editor);
 
-            const parentNode = tab.getParent() as FlexLayout.TabSetNode;
+            const parentNode = tab.getParent();
             if (
-                (!activeEditor && parentNode.getSelectedNode() == tab) ||
-                (parentNode.isActive() && parentNode.getSelectedNode() == tab)
+                parentNode &&
+                parentNode instanceof FlexLayout.TabSetNode &&
+                ((!activeEditor && parentNode.getSelectedNode() == tab) ||
+                    (parentNode.isActive() &&
+                        parentNode.getSelectedNode() == tab))
             ) {
                 activeEditor = editor;
             }

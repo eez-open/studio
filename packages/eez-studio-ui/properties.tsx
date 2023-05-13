@@ -549,6 +549,7 @@ export const SelectFromListProperty = observer(
                             tabIndex={0}
                             minHeight={240}
                             maxHeight={400}
+                            maxWidth={466}
                         >
                             <List
                                 nodes={this.props.nodes}
