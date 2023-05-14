@@ -355,6 +355,10 @@ export const PageTimelineEditor = observer(
                     this.horizontalScrollBarRef.current
                 );
             }
+
+            if (this.context.navigationStore.selectedPanel === this) {
+                this.context.navigationStore.setSelectedPanel(undefined);
+            }
         }
 
         onVerticalScroll = action(() => {

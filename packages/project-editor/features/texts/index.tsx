@@ -218,7 +218,7 @@ const TranslationsEditorPropertyUI = observer(
             return (
                 <table className="EezStudio_TextResource_Translations">
                     <tbody>
-                        {this.context.project.texts.languages.map(language => {
+                        {this.context.project.texts?.languages.map(language => {
                             const translation = textResource.translations.find(
                                 translation =>
                                     translation.languageID ==
@@ -295,7 +295,10 @@ export class TextResource extends EezObject {
                 <LabelWithProgress
                     label={textResource.resourceID}
                     progress={
-                        textResource.translated / project.texts.languages.length
+                        project.texts.languages.length > 0
+                            ? textResource.translated /
+                              project.texts.languages.length
+                            : 0
                     }
                 ></LabelWithProgress>
             );

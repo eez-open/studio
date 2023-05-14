@@ -147,6 +147,12 @@ export const PageStructure = observer(
             this.context.navigationStore.setSelectedPanel(this);
         };
 
+        componentWillUnmount() {
+            if (this.context.navigationStore.selectedPanel === this) {
+                this.context.navigationStore.setSelectedPanel(undefined);
+            }
+        }
+
         get isAnyLocked() {
             if (!this.treeAdapter) {
                 return false;
@@ -479,6 +485,12 @@ export const ActionComponents = observer(
         onFocus = () => {
             this.context.navigationStore.setSelectedPanel(this);
         };
+
+        componentWillUnmount() {
+            if (this.context.navigationStore.selectedPanel === this) {
+                this.context.navigationStore.setSelectedPanel(undefined);
+            }
+        }
 
         renderItem = (itemId: string) => {
             if (!this.treeAdapter) {

@@ -462,6 +462,10 @@ export const ChangesEditor = observer(
             if (this.dispose) {
                 this.dispose();
             }
+
+            if (this.context.navigationStore.selectedPanel === this) {
+                this.context.navigationStore.setSelectedPanel(undefined);
+            }
         }
 
         get isRevertChangesEnabled() {

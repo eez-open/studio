@@ -118,6 +118,8 @@ export class UndoManager {
             this.redoStack.push(undoItem);
 
             this.projectStore.setModified(true);
+
+            this.projectStore.project.enableTabs();
         }
     }
 
@@ -148,6 +150,8 @@ export class UndoManager {
             this.undoStack.push(redoItem);
 
             this.projectStore.setModified(true);
+
+            this.projectStore.project.enableTabs();
         }
     }
 }

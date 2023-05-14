@@ -86,6 +86,12 @@ export const Messages = observer(
         };
         //
 
+        componentWillUnmount() {
+            if (this.context.navigationStore.selectedPanel === this) {
+                this.context.navigationStore.setSelectedPanel(undefined);
+            }
+        }
+
         get rootNode(): ITreeNode<Message> {
             const section = this.props.section;
             const selectedItemID = this.props.section.selectedMessage?.id;

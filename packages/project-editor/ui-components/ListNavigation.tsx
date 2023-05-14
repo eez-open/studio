@@ -227,6 +227,9 @@ export const ListNavigation = observer(
 
         componentWillUnmount() {
             this.dispose();
+            if (this.context.navigationStore.selectedPanel === this) {
+                this.context.navigationStore.setSelectedPanel(undefined);
+            }
         }
 
         get listAdapter() {

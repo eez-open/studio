@@ -105,6 +105,12 @@ export const ActionComponents = observer(
         };
         //
 
+        componentWillUnmount() {
+            if (this.context.navigationStore.selectedPanel === this) {
+                this.context.navigationStore.setSelectedPanel(undefined);
+            }
+        }
+
         renderItem = (itemId: string) => {
             if (!this.treeAdapter) {
                 return null;

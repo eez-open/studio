@@ -44,6 +44,10 @@ export const ReadmeEditor = observer(
             if (this.divRef.current) {
                 $(this.divRef.current).find("a").off("click", this.onClick);
             }
+
+            if (this.context.navigationStore.selectedPanel === this) {
+                this.context.navigationStore.setSelectedPanel(undefined);
+            }
         }
 
         onClick = (event: JQuery.ClickEvent<HTMLAnchorElement>) => {

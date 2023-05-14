@@ -106,6 +106,12 @@ export const Glyphs = observer(
             }
         };
 
+        componentWillUnmount() {
+            if (this.context.navigationStore.selectedPanel === this) {
+                this.context.navigationStore.setSelectedPanel(undefined);
+            }
+        }
+
         render() {
             const glyphs: JSX.Element[] = this.props.glyphs
                 .slice()

@@ -115,6 +115,12 @@ export const FlowViewer = observer(
             this.context.navigationStore.setSelectedPanel(this);
         };
 
+        componentWillUnmount() {
+            if (this.context.navigationStore.selectedPanel === this) {
+                this.context.navigationStore.setSelectedPanel(undefined);
+            }
+        }
+
         getDragComponent(event: React.DragEvent) {
             return undefined;
         }

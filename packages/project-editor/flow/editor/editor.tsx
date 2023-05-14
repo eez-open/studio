@@ -819,6 +819,10 @@ export const FlowEditor = observer(
                 "ensure-selection-visible",
                 this.ensureSelectionVisible
             );
+
+            if (this.context.navigationStore.selectedPanel === this) {
+                this.context.navigationStore.setSelectedPanel(undefined);
+            }
         }
 
         ensureSelectionVisible = () => {

@@ -131,6 +131,12 @@ export const FontEditor = observer(
             this.context.navigationStore.setSelectedPanel(this);
         };
 
+        componentWillUnmount() {
+            if (this.context.navigationStore.selectedPanel === this) {
+                this.context.navigationStore.setSelectedPanel(undefined);
+            }
+        }
+
         onAddGlyph() {
             function is1BitPerPixel(obj: IEezObject) {
                 return getProperty(obj, "bpp") === 1;
