@@ -76,11 +76,15 @@ export class UndoManager {
         }
 
         command.execute();
+
+        command.revision = Symbol();
+        command.previousRevision = this.projectStore.setModified(
+            command.revision
+        );
+
         this.commands.push(command);
 
         this.redoStack = [];
-
-        this.projectStore.setModified(true);
     }
 
     static getCommandsDescription(commands: ICommand[]) {
@@ -111,13 +115,14 @@ export class UndoManager {
         if (undoItem) {
             for (let i = undoItem.commands.length - 1; i >= 0; i--) {
                 undoItem.commands[i].undo();
+                this.projectStore.setModified(
+                    undoItem.commands[i].previousRevision!
+                );
             }
 
             // TODO select undoItem.selectionBefore
 
             this.redoStack.push(undoItem);
-
-            this.projectStore.setModified(true);
 
             this.projectStore.project.enableTabs();
         }
@@ -143,13 +148,12 @@ export class UndoManager {
         if (redoItem) {
             for (let i = 0; i < redoItem.commands.length; i++) {
                 redoItem.commands[i].execute();
+                this.projectStore.setModified(redoItem.commands[i].revision!);
             }
 
             // TODO select redoItem.selectionAfter
 
             this.undoStack.push(redoItem);
-
-            this.projectStore.setModified(true);
 
             this.projectStore.project.enableTabs();
         }
@@ -160,6 +164,8 @@ export interface ICommand {
     execute(): void;
     undo(): void;
     description: string;
+    revision?: symbol;
+    previousRevision?: symbol;
 }
 
 export interface IUndoManager {

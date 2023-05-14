@@ -122,7 +122,8 @@ export class ProjectStore {
 
     runtime: RuntimeBase | undefined;
 
-    modified: boolean = false;
+    savedRevision: symbol;
+    lastRevision: symbol;
 
     filePath: string | undefined;
     backgroundCheckEnabled = true;
@@ -158,15 +159,18 @@ export class ProjectStore {
     }
 
     constructor() {
+        this.savedRevision = this.lastRevision = Symbol();
+
         makeObservable<ProjectStore>(this, {
             runtime: observable,
             project: observable,
-            modified: observable,
             filePath: observable,
             backgroundCheckEnabled: observable,
             selectedBuildConfiguration: computed,
             masterProjectEnabled: computed,
             masterProject: computed,
+            savedRevision: observable,
+            lastRevision: observable,
             isModified: computed,
             setModified: action,
             setProject: action,
@@ -435,7 +439,7 @@ export class ProjectStore {
         }
 
         ipcRenderer.send("windowSetState", {
-            modified: this.modified,
+            modified: this.isModified,
             projectFilePath: this.filePath,
             undo:
                 (this.undoManager &&
@@ -524,7 +528,10 @@ export class ProjectStore {
         if (!this.project._isDashboardBuild) {
             await save(this, this.filePath!);
         }
-        this.setModified(false);
+
+        runInAction(() => {
+            this.savedRevision = this.lastRevision;
+        });
     }
 
     async saveToFile(saveAs: boolean) {
@@ -607,7 +614,7 @@ export class ProjectStore {
             return true;
         }
 
-        if (this.project && this.modified) {
+        if (this.project && this.isModified) {
             return new Promise<boolean>(resolve => {
                 confirmSave({
                     description: `Project "${this.title}" has been modified.\n`,
@@ -755,11 +762,13 @@ export class ProjectStore {
     }
 
     get isModified() {
-        return this.modified;
+        return this.lastRevision != this.savedRevision;
     }
 
-    setModified(modified_: boolean) {
-        this.modified = modified_;
+    setModified(revision: symbol) {
+        const previousRevision = this.lastRevision;
+        this.lastRevision = revision;
+        return previousRevision;
     }
 
     async setProject(project: Project, projectFilePath: string | undefined) {
@@ -777,7 +786,7 @@ export class ProjectStore {
     }
 
     canSave() {
-        return this.modified;
+        return this.isModified;
     }
 
     addObject(parentObject: IEezObject, object: EezObject) {

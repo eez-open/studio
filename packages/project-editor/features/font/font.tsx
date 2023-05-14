@@ -1512,7 +1512,7 @@ export class Font extends EezObject {
             this.embeddedFontFile = fontProperties.embeddedFontFile;
             this.lvglBinFile = fontProperties.lvglBinFile;
             this.lvglSourceFile = fontProperties.lvglSourceFile;
-            projectStore.modified = true;
+            projectStore.setModified(Symbol());
         });
     }
 

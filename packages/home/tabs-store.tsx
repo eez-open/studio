@@ -515,7 +515,7 @@ export class ProjectEditorTab implements IHomeTab {
     loading: boolean = false;
 
     get modified() {
-        return this.projectStore && this.projectStore.modified;
+        return this.projectStore && this.projectStore.isModified;
     }
 
     projectStore: ProjectStore | undefined;

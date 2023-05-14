@@ -531,7 +531,7 @@ export class Bitmap extends EezObject {
 
         runInAction(() => {
             this.image = `data:${fileType};base64,` + imageData;
-            projectStore.modified = true;
+            projectStore.setModified(Symbol());
         });
     }
 }
