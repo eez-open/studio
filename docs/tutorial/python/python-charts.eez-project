@@ -16,7 +16,8 @@
           "name": "Default"
         }
       ],
-      "files": []
+      "files": [],
+      "lvglInclude": "lvgl/lvgl.h"
     }
   },
   "variables": {
@@ -36,7 +37,7 @@
           "left": -636,
           "top": -276,
           "width": 87,
-          "height": 25,
+          "height": 24,
           "customInputs": [],
           "customOutputs": []
         },
@@ -45,8 +46,8 @@
           "type": "PythonRun",
           "left": -503,
           "top": -276,
-          "width": 290,
-          "height": 73,
+          "width": 311,
+          "height": 68,
           "customInputs": [],
           "customOutputs": [],
           "catchError": false,
@@ -112,7 +113,7 @@
               "widgets": [
                 {
                   "objID": "4c871b8e-4dd0-4418-9ad7-d9129ddfa36f",
-                  "type": "LayoutViewWidget",
+                  "type": "UserWidgetWidget",
                   "left": 210,
                   "top": 210,
                   "width": 200,
@@ -124,7 +125,7 @@
                     "inheritFrom": "default"
                   },
                   "timeline": [],
-                  "layout": "Loader"
+                  "userWidgetPageName": "Loader"
                 }
               ],
               "layout": "static"
@@ -226,10 +227,10 @@
         {
           "objID": "10620670-161a-40fe-b996-a996a402add0",
           "type": "SetVariableActionComponent",
-          "left": -231,
-          "top": 67,
-          "width": 116,
-          "height": 56,
+          "left": -142,
+          "top": 55,
+          "width": 122,
+          "height": 55,
           "customInputs": [],
           "customOutputs": [],
           "description": "Hide loader",
@@ -245,9 +246,9 @@
           "objID": "f0df6f29-45b9-4eea-dfe4-1935d7e6b96a",
           "type": "SetVariableActionComponent",
           "left": 245,
-          "top": -137,
-          "width": 315,
-          "height": 76,
+          "top": -208,
+          "width": 335,
+          "height": 75,
           "customInputs": [
             {
               "objID": "345d8651-3aee-4215-d8b7-918f7a02d8c1",
@@ -275,8 +276,8 @@
           "type": "PythonSendMessage",
           "left": 645,
           "top": -276,
-          "width": 349,
-          "height": 66,
+          "width": 359,
+          "height": 55,
           "customInputs": [
             {
               "objID": "76839800-db44-4917-e14b-666c3149a199",
@@ -317,7 +318,7 @@
           "left": 145,
           "top": -331,
           "width": 87,
-          "height": 55,
+          "height": 53,
           "customInputs": [],
           "customOutputs": [],
           "milliseconds": "2000"
@@ -326,9 +327,9 @@
           "objID": "ec6de092-a552-441e-c86b-77ef860f4d53",
           "type": "SwitchActionComponent",
           "left": -819,
-          "top": 252,
-          "width": 588,
-          "height": 74,
+          "top": 109,
+          "width": 632,
+          "height": 71,
           "customInputs": [
             {
               "objID": "c1ec294a-8665-4457-cdad-b8ef8724872b",
@@ -356,13 +357,24 @@
         {
           "objID": "aeaefeeb-3860-4615-8bb6-6a892c39f3ca",
           "type": "StartActionComponent",
-          "left": 217,
-          "top": 491,
+          "left": 245,
+          "top": 475,
           "width": 87,
-          "height": 25,
+          "height": 24,
           "customInputs": [],
           "customOutputs": [],
           "description": "Turn on loader animation loop"
+        },
+        {
+          "objID": "4a411acf-b2cb-4ef8-a95b-c7e41a2f2a21",
+          "type": "CommentActionComponent",
+          "left": -636,
+          "top": -387,
+          "width": 435,
+          "height": 103,
+          "customInputs": [],
+          "customOutputs": [],
+          "text": "<div><!--block-->matplotlib is required for this project. Install it from command prompt&nbsp; using:<br><br></div><pre><!--block-->pip3 install matplotlib </pre><div><!--block--><br></div>"
         }
       ],
       "connectionLines": [
@@ -472,7 +484,10 @@
       "left": 0,
       "top": 0,
       "width": 800,
-      "height": 450
+      "height": 450,
+      "lvglLocalStyles": {
+        "objID": "e85dbd5d-8325-1629-003b-86fd654ae635"
+      }
     },
     {
       "objID": "a60c7e89-5b20-4fb8-bd67-83079ecd1672",
@@ -515,6 +530,10 @@
                 "value": 20,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -554,6 +573,10 @@
                 "enabled": false,
                 "easingFunction": "linear"
               },
+              "scale": {
+                "enabled": false,
+                "easingFunction": "linear"
+              },
               "scaleX": {
                 "enabled": false,
                 "easingFunction": "linear"
@@ -576,20 +599,20 @@
         {
           "objID": "1a6ae309-b830-4fa4-b5cf-4eb6f579fbfb",
           "type": "StartActionComponent",
-          "left": -87,
-          "top": -76,
+          "left": -85,
+          "top": -115,
           "width": 87,
-          "height": 25,
+          "height": 24,
           "customInputs": [],
           "customOutputs": []
         },
         {
           "objID": "73b50248-a916-43e1-e194-ce68c39acb35",
           "type": "AnimateActionComponent",
-          "left": 148,
+          "left": 99,
           "top": -115,
-          "width": 127,
-          "height": 55,
+          "width": 137,
+          "height": 53,
           "customInputs": [],
           "customOutputs": [],
           "from": "0",
@@ -621,7 +644,10 @@
       "width": 400,
       "height": 20,
       "scaleToFit": true,
-      "isUsedAsCustomWidget": true
+      "isUsedAsUserWidget": true,
+      "lvglLocalStyles": {
+        "objID": "aad0b50d-d19d-168c-efef-f3616f1c900b"
+      }
     }
   ],
   "styles": [
