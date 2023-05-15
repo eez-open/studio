@@ -1,5 +1,12 @@
+import path from "path";
 import React from "react";
-import { makeObservable, observable, runInAction } from "mobx";
+import {
+    autorun,
+    makeObservable,
+    observable,
+    runInAction,
+    IReactionDisposer
+} from "mobx";
 import { observer } from "mobx-react";
 
 import { ProjectContext } from "project-editor/project/context";
@@ -14,6 +21,8 @@ export const ReadmeEditor = observer(
 
         divRef = React.createRef<HTMLDivElement>();
 
+        dispose: IReactionDisposer | undefined;
+
         text: string | undefined;
 
         constructor(props: any) {
@@ -24,12 +33,15 @@ export const ReadmeEditor = observer(
             });
         }
 
-        async componentDidMount() {
+        componentDidMount() {
             if (this.divRef.current) {
                 this.divRef.current.focus();
             }
 
-            this.loadText();
+            this.dispose = autorun(() => {
+                this.context.project.readme?.readmeFile;
+                this.loadText();
+            });
 
             this.context.navigationStore.setInitialSelectedPanel(this);
         }
@@ -37,6 +49,28 @@ export const ReadmeEditor = observer(
         componentDidUpdate() {
             if (this.divRef.current) {
                 $(this.divRef.current).find("a").on("click", this.onClick);
+
+                // fix image paths
+                let readmeFile = this.context.project.readme.readmeFile;
+                if (readmeFile) {
+                    const imageSrcPrefix =
+                        "file://" +
+                        path.dirname(
+                            this.context.getAbsoluteFilePath(readmeFile)
+                        );
+
+                    $.each($(this.divRef.current).find("img"), function () {
+                        let src = $(this).attr("src");
+                        if (
+                            typeof src == "string" &&
+                            !src.startsWith("http://") &&
+                            !src.startsWith("https://")
+                        ) {
+                            src = imageSrcPrefix + "/" + src;
+                            $(this).attr("src", src);
+                        }
+                    });
+                }
             }
         }
 
@@ -47,6 +81,10 @@ export const ReadmeEditor = observer(
 
             if (this.context.navigationStore.selectedPanel === this) {
                 this.context.navigationStore.setSelectedPanel(undefined);
+            }
+
+            if (this.dispose) {
+                this.dispose();
             }
         }
 
@@ -59,7 +97,7 @@ export const ReadmeEditor = observer(
         async loadText() {
             let text: string | undefined;
 
-            if (this.context.project.readme.readmeFile) {
+            if (this.context.project.readme?.readmeFile) {
                 try {
                     text = await readTextFile(
                         this.context.getAbsoluteFilePath(

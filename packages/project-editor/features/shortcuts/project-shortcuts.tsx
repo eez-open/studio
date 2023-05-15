@@ -1,5 +1,6 @@
 import React from "react";
 import { observable, computed, action, makeObservable } from "mobx";
+import { observer } from "mobx-react";
 
 import { guid } from "eez-studio-shared/guid";
 
@@ -43,117 +44,125 @@ import type { ProjectEditorFeature } from "project-editor/store/features";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ShortcutsEditor extends EditorComponent {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
+export const ShortcutsEditor = observer(
+    class ShortcutsEditor extends EditorComponent {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
 
-    constructor(props: any) {
-        super(props);
+        constructor(props: any) {
+            super(props);
 
-        makeObservable(this, {
-            shortcutsStore: computed
-        });
-    }
+            makeObservable(this, {
+                shortcutsStore: computed
+            });
+        }
 
-    get shortcutsStore() {
-        const shortcuts = this.context.project.shortcuts.shortcuts;
+        get shortcutsStore() {
+            const shortcuts = this.context.project.shortcuts.shortcuts;
 
-        let shortcutsMap = new Map<string, Shortcut>();
-        shortcuts.forEach(shortcut => shortcutsMap.set(shortcut.id, shortcut));
+            let shortcutsMap = new Map<string, Shortcut>();
+            shortcuts.forEach(shortcut =>
+                shortcutsMap.set(shortcut.id, shortcut)
+            );
 
-        const projectStore = this.context;
+            const projectStore = this.context;
 
-        return {
-            shortcuts: observable.map(shortcutsMap),
+            return {
+                shortcuts: observable.map(shortcutsMap),
 
-            addShortcut(shortcut: Partial<IShortcut>) {
-                shortcut.id = guid();
-                projectStore.addObject(
-                    shortcuts,
-                    createObject<Shortcut>(
-                        projectStore,
-                        shortcut as any,
-                        Shortcut
-                    )
-                );
-                return shortcut.id;
-            },
+                addShortcut(shortcut: Partial<IShortcut>) {
+                    shortcut.id = guid();
+                    projectStore.addObject(
+                        shortcuts,
+                        createObject<Shortcut>(
+                            projectStore,
+                            shortcut as any,
+                            Shortcut
+                        )
+                    );
+                    return shortcut.id;
+                },
 
-            updateShortcut(shortcut: Partial<IShortcut>): void {
-                let shortcutObject = shortcutsMap.get(shortcut.id!);
-                if (shortcutObject) {
-                    projectStore.updateObject(shortcutObject, shortcut);
-                }
-            },
+                updateShortcut(shortcut: Partial<IShortcut>): void {
+                    let shortcutObject = shortcutsMap.get(shortcut.id!);
+                    if (shortcutObject) {
+                        projectStore.updateObject(shortcutObject, shortcut);
+                    }
+                },
 
-            deleteShortcut(shortcut: Partial<IShortcut>): void {
-                let shortcutObject = shortcutsMap.get(shortcut.id!);
-                if (shortcutObject) {
-                    projectStore.deleteObject(shortcutObject);
-                }
-            },
+                deleteShortcut(shortcut: Partial<IShortcut>): void {
+                    console.log("deleteShortcut", shortcut);
+                    let shortcutObject = shortcutsMap.get(shortcut.id!);
+                    if (shortcutObject) {
+                        projectStore.deleteObject(shortcutObject);
+                    }
+                },
 
-            renderUsedInProperty(shortcut: Partial<IShortcut>) {
-                return (
-                    <tr>
-                        <td>Used in</td>
-                        <td>
-                            <ConfigurationReferencesPropertyValue
-                                value={shortcut.usedIn}
-                                onChange={value => {
-                                    action(() => (shortcut.usedIn = value))();
-                                }}
-                                readOnly={false}
+                renderUsedInProperty(shortcut: Partial<IShortcut>) {
+                    return (
+                        <tr>
+                            <td>Used in</td>
+                            <td>
+                                <ConfigurationReferencesPropertyValue
+                                    value={shortcut.usedIn}
+                                    onChange={value => {
+                                        action(
+                                            () => (shortcut.usedIn = value)
+                                        )();
+                                    }}
+                                    readOnly={false}
+                                />
+                            </td>
+                        </tr>
+                    );
+                },
+
+                showShortcutDialog: (
+                    shortcutsStore: IShortcutsStore,
+                    groupsStore: IGroupsStore | undefined,
+                    shortcut: Partial<IShortcut>,
+                    callback: (shortcut: Partial<IShortcut>) => void,
+                    codeError?: string,
+                    codeErrorLineNumber?: number,
+                    codeErrorColumnNumber?: number,
+                    hideCodeEditor?: boolean
+                ) => {
+                    showDialog(
+                        <ProjectContext.Provider value={projectStore}>
+                            <ShortcutDialog
+                                shortcutsStore={shortcutsStore}
+                                groupsStore={groupsStore}
+                                shortcut={shortcut}
+                                callback={callback}
+                                codeError={codeError}
+                                codeErrorLineNumber={codeErrorLineNumber}
+                                codeErrorColumnNumber={codeErrorColumnNumber}
+                                hideCodeEditor={hideCodeEditor}
                             />
-                        </td>
-                    </tr>
-                );
-            },
+                        </ProjectContext.Provider>
+                    );
+                }
+            };
+        }
 
-            showShortcutDialog: (
-                shortcutsStore: IShortcutsStore,
-                groupsStore: IGroupsStore | undefined,
-                shortcut: Partial<IShortcut>,
-                callback: (shortcut: Partial<IShortcut>) => void,
-                codeError?: string,
-                codeErrorLineNumber?: number,
-                codeErrorColumnNumber?: number,
-                hideCodeEditor?: boolean
-            ) => {
-                showDialog(
-                    <ProjectContext.Provider value={projectStore}>
-                        <ShortcutDialog
-                            shortcutsStore={shortcutsStore}
-                            groupsStore={groupsStore}
-                            shortcut={shortcut}
-                            callback={callback}
-                            codeError={codeError}
-                            codeErrorLineNumber={codeErrorLineNumber}
-                            codeErrorColumnNumber={codeErrorColumnNumber}
-                            hideCodeEditor={hideCodeEditor}
+        render() {
+            return (
+                <VerticalHeaderWithBody className="EezStudio_ProjectEditor_Shortcuts">
+                    <ToolbarHeader>
+                        <ShortcutsToolbarButtons
+                            shortcutsStore={this.shortcutsStore}
                         />
-                    </ProjectContext.Provider>
-                );
-            }
-        };
+                    </ToolbarHeader>
+                    <Body tabIndex={0}>
+                        <ShortcutsComponent
+                            shortcutsStore={this.shortcutsStore}
+                        />
+                    </Body>
+                </VerticalHeaderWithBody>
+            );
+        }
     }
-
-    render() {
-        return (
-            <VerticalHeaderWithBody className="EezStudio_ProjectEditor_Shortcuts">
-                <ToolbarHeader>
-                    <ShortcutsToolbarButtons
-                        shortcutsStore={this.shortcutsStore}
-                    />
-                </ToolbarHeader>
-                <Body tabIndex={0}>
-                    <ShortcutsComponent shortcutsStore={this.shortcutsStore} />
-                </Body>
-            </VerticalHeaderWithBody>
-        );
-    }
-}
-
+);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ShortcutAction extends EezObject {
