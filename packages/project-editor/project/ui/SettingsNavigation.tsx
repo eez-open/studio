@@ -353,6 +353,13 @@ export const SettingsContent = observer(
                             );
                         }
 
+                        if (extension.key == "texts") {
+                            return (
+                                this.context.projectTypeTraits.hasFlowSupport &&
+                                !this.context.projectTypeTraits.isLVGL
+                            );
+                        }
+
                         if (this.context.projectTypeTraits.isLVGL) {
                             if (
                                 extension.key == "styles" ||

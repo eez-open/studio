@@ -70,8 +70,8 @@ let features: ProjectEditorFeature[] = [
     extensionDefinitionsFeature,
     scpiFeature,
     shortcutsFeature,
-    diffFeature,
     microPythonFeature,
+    diffFeature,
     readmeFeature
 ];
 
