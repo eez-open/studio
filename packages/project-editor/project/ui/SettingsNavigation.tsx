@@ -14,7 +14,11 @@ import {
 import { confirm } from "project-editor/core/util";
 import type { ProjectEditorFeature } from "project-editor/store/features";
 
-import { BuildFile, ImportDirective } from "project-editor/project/project";
+import {
+    BuildFile,
+    ImportDirective,
+    ProjectType
+} from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 import { Panel } from "project-editor/ui-components/Panel";
 import { PropertyGrid } from "project-editor/ui-components/PropertyGrid";
@@ -67,9 +71,19 @@ const ProjectFeature = observer(
                 undefined,
                 () => {
                     if (this.context.project) {
-                        this.context.updateObject(this.context.project, {
+                        const values = {
                             [this.props.projectFeature.key]: undefined
-                        });
+                        };
+
+                        if (
+                            this.props.projectFeature.key ==
+                            "extensionDefinitions"
+                        ) {
+                            values["scpi"] = undefined;
+                            values["shortcuts"] = undefined;
+                        }
+
+                        this.context.updateObject(this.context.project, values);
 
                         this.context.project.enableTabs();
                     }
@@ -318,6 +332,27 @@ export const SettingsContent = observer(
             if (this.object === this.context.project.settings.general) {
                 let projectFeatures = ProjectEditor.extensions
                     .filter(extension => {
+                        if (extension.key == "micropython") {
+                            return this.context.projectTypeTraits.isResource;
+                        }
+
+                        if (extension.key == "extensionDefinitions") {
+                            return (
+                                this.context.project.settings.general
+                                    .projectType == ProjectType.FIRMWARE
+                            );
+                        }
+
+                        if (
+                            extension.key == "scpi" ||
+                            extension.key == "shortcuts"
+                        ) {
+                            return (
+                                this.context.project.extensionDefinitions !=
+                                undefined
+                            );
+                        }
+
                         if (this.context.projectTypeTraits.isLVGL) {
                             if (
                                 extension.key == "styles" ||

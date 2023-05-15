@@ -67,10 +67,10 @@ let features: ProjectEditorFeature[] = [
     fontFeature,
     bitmapFeature,
     textsFeature,
-    scpiFeature,
     extensionDefinitionsFeature,
-    diffFeature,
+    scpiFeature,
     shortcutsFeature,
+    diffFeature,
     microPythonFeature,
     readmeFeature
 ];
