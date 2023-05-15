@@ -16,27 +16,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import { showSelectInstrumentDialog } from "project-editor/flow/components/actions/instrument";
 import { EditorComponent } from "project-editor/project/ui/EditorComponent";
 import type { ProjectEditorFeature } from "project-editor/store/features";
-
-const ICON = (
-    <svg
-        viewBox="0 0 40 40"
-        width="24"
-        height="24"
-        stroke="currentColor"
-        fill="currentColor"
-    >
-        <rect x="10" width="20" height="40" rx="10" ry="5" />
-        <rect y="10" width="40" height="20" rx="5" ry="10" />
-        <circle cx="14.5" cy="5" r="1.85" fill="#aaa" />
-        <circle cx="25.5" cy="35" r="1.85" fill="#aaa" />
-        <path stroke="#aaa" d="M10 9.5h10M20 30.5h10" />
-        <path
-            d="M9.5 30c0-10 2.5-10 10-10 8.5 0 11 0 11-10"
-            stroke="#aaa"
-            fill="none"
-        />
-    </svg>
-);
+import { MICROPYTHON_ICON } from "project-editor/ui-components/icons";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -73,7 +53,7 @@ export class MicroPython extends EezObject {
                 hideInPropertyGrid: true
             }
         ],
-        icon: ICON
+        icon: MICROPYTHON_ICON(24)
     };
 
     constructor() {
@@ -239,7 +219,7 @@ const feature: ProjectEditorFeature = {
     key: "micropython",
     type: PropertyType.Object,
     typeClass: MicroPython,
-    icon: ICON,
+    icon: MICROPYTHON_ICON(24),
     create: () => {
         return {
             code: ""
