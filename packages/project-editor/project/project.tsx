@@ -432,26 +432,46 @@ export class General extends EezObject {
         label: () => "General",
         properties: [
             {
-                name: "projectVersion",
-                type: PropertyType.Enum,
-                enumItems: [{ id: "v1" }, { id: "v2" }, { id: "v3" }],
-                hideInPropertyGrid: (general: General) =>
-                    general.projectType != ProjectType.FIRMWARE &&
-                    general.projectType != ProjectType.FIRMWARE_MODULE &&
-                    general.projectType != ProjectType.RESOURCE
-            },
-            {
                 name: "projectType",
                 type: PropertyType.Enum,
                 enumItems: [
-                    { id: ProjectType.FIRMWARE },
-                    { id: ProjectType.FIRMWARE_MODULE },
-                    { id: ProjectType.RESOURCE },
+                    { id: ProjectType.FIRMWARE, label: "EEZ-GUI" },
+                    {
+                        id: ProjectType.FIRMWARE_MODULE,
+                        label: "EEZ-GUI Library"
+                    },
+                    {
+                        id: ProjectType.RESOURCE,
+                        label: "BB3 MicroPython Script"
+                    },
                     { id: ProjectType.APPLET, label: "BB3 Applet" },
                     { id: ProjectType.DASHBOARD },
                     { id: ProjectType.LVGL, label: "LVGL" }
                 ],
                 readOnlyInPropertyGrid: (general: General) =>
+                    general.projectType != ProjectType.FIRMWARE &&
+                    general.projectType != ProjectType.FIRMWARE_MODULE
+            },
+            {
+                name: "projectVersion",
+                displayName: (object: General) => {
+                    if (object.projectType == ProjectType.RESOURCE) {
+                        return "Target BB3 firmware";
+                    }
+                    return "Project version";
+                },
+                type: PropertyType.Enum,
+                enumItems: (object: General) => {
+                    if (object.projectType == ProjectType.RESOURCE) {
+                        return [
+                            { id: "v2", label: "1.7.X or older" },
+                            { id: "v3", label: "1.8 or newer" }
+                        ];
+                    } else {
+                        return [{ id: "v1" }, { id: "v2" }, { id: "v3" }];
+                    }
+                },
+                hideInPropertyGrid: (general: General) =>
                     general.projectType != ProjectType.FIRMWARE &&
                     general.projectType != ProjectType.FIRMWARE_MODULE &&
                     general.projectType != ProjectType.RESOURCE
