@@ -54,7 +54,10 @@ export const SubNavigation = observer(
 
         render() {
             return (
-                <div className="EezStudio_SubNavigation">
+                <div
+                    className="EezStudio_SubNavigation"
+                    onContextMenu={e => e.preventDefault()}
+                >
                     <ul className="nav nav-pills">
                         {this.props.items.map(item => (
                             <li

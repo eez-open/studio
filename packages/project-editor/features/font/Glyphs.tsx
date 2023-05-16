@@ -191,6 +191,7 @@ export const Glyphs = observer(
                     className="EezStudio_Glyphs"
                     onFocus={this.onFocus}
                     tabIndex={0}
+                    onContextMenu={e => e.preventDefault()}
                 >
                     <div>
                         <div className="btn-toolbar" role="toolbar">

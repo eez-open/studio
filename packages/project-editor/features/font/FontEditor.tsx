@@ -756,6 +756,7 @@ const GlyphEditor = observer(
                     onMouseDown={this.onMouseDown}
                     onMouseMove={this.onMouseMove}
                     onMouseUp={this.onMouseUp}
+                    onContextMenu={e => e.preventDefault()}
                 >
                     {glyphImage}
                     {hitTest}

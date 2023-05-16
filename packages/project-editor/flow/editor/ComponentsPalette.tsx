@@ -291,7 +291,10 @@ export const ComponentsPalette1 = observer(
 
         render() {
             return (
-                <div className="EezStudio_ComponentsPalette_Enclosure">
+                <div
+                    className="EezStudio_ComponentsPalette_Enclosure"
+                    onContextMenu={e => e.preventDefault()}
+                >
                     <div className="EezStudio_Title">
                         <SearchInput
                             key="search-input"

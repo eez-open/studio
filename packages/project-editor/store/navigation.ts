@@ -57,7 +57,7 @@ export class NavigationStore {
     static COMPONENTS_PALETTE_SUB_NAVIGATION_ID =
         "variables-tab/sub-navigation/selected-item";
     static COMPONENTS_PALETTE_SUB_NAVIGATION_ITEM_WIDGETS = "Widgets";
-    static COMPONENTS_PALETTE_SUB_NAVIGATION_ITEM_ACTIONS = "Actions";
+    static COMPONENTS_PALETTE_SUB_NAVIGATION_ITEM_ACTIONS = "Action Components";
 
     subnavigationSelectedItems: {
         [id: string]: string;
