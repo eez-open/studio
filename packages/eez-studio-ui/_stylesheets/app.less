@@ -210,6 +210,7 @@ input::placeholder {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        display: inline-flex;
     }
 
     .EezStudio_TreeRow.selectable {
@@ -2578,6 +2579,8 @@ button.EezStudio_Action {
     }
 
     .EezStudio_Message {
+        display: inline-flex;
+
         span.added {
             background-color: #bbffbb;
             color: #212529;
@@ -4154,7 +4157,7 @@ button.EezStudio_Action {
         transform-origin: 50% 50%;
 
         &.EezStudio_Expanded {
-            transform: translate(5px, 3px) rotate(90deg);
+            transform: rotate(90deg);
         }
     }
 

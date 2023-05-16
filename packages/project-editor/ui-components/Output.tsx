@@ -182,7 +182,7 @@ const MessageContent = observer(
                             <Icon
                                 icon={iconName}
                                 className={"info"}
-                                size={20}
+                                size={18}
                             />
                         );
                     }
@@ -292,7 +292,8 @@ const MessageContent = observer(
 
             return (
                 <span className="EezStudio_Message" style={style}>
-                    {icon} {textNode}
+                    {icon}
+                    <span>{textNode}</span>
                 </span>
             );
         }
