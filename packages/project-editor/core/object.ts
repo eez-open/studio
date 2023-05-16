@@ -59,6 +59,7 @@ export const enum PropertyType {
 }
 
 export const enum ProjectType {
+    UNDEFINED = "undefined",
     FIRMWARE = "firmware",
     FIRMWARE_MODULE = "firmware-module",
     RESOURCE = "resource",

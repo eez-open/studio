@@ -40,7 +40,7 @@ export function getEditorComponent(
     | undefined {
     const project = getProject(object);
 
-    if (object instanceof Action) {
+    if (object instanceof Action && project.projectTypeTraits.hasFlowSupport) {
         return { object, EditorComponent: ActionEditor };
     }
 

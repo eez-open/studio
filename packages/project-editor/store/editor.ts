@@ -178,8 +178,13 @@ export class EditorsStore {
 
         // close editor if editor object doesn't exists anymore
         this.dispose1 = autorun(() => {
+            this.projectStore.lastRevision;
             this.editors.slice().forEach(editor => {
-                if (!editor.object || !isObjectExists(editor.object)) {
+                if (
+                    !editor.object ||
+                    !isObjectExists(editor.object) ||
+                    (editor.subObject && !isObjectExists(editor.subObject))
+                ) {
                     this.closeEditor(editor);
                 }
             });

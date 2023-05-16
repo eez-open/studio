@@ -4,7 +4,7 @@ import { observer } from "mobx-react";
 
 import { ProjectContext } from "project-editor/project/context";
 import { getParent } from "project-editor/core/object";
-import { EezValueObject, getLabel } from "project-editor/store";
+import { EezValueObject, getLabel, isObjectExists } from "project-editor/store";
 import { PropertyGrid } from "project-editor/ui-components/PropertyGrid";
 
 export const PropertiesPanel = observer(
@@ -27,9 +27,13 @@ export const PropertiesPanel = observer(
         }
 
         render() {
+            this.context.lastRevision;
+
             let title;
 
-            const objects = this.objects.filter(object => object != undefined);
+            const objects = this.objects
+                .filter(object => object != undefined)
+                .filter(object => isObjectExists(object));
 
             if (objects.length == 0) {
                 title = "Nothing selected";

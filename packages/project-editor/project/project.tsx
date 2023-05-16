@@ -435,6 +435,7 @@ export class General extends EezObject {
                 name: "projectType",
                 type: PropertyType.Enum,
                 enumItems: [
+                    { id: ProjectType.UNDEFINED, label: "Undefined" },
                     { id: ProjectType.FIRMWARE, label: "EEZ-GUI" },
                     {
                         id: ProjectType.FIRMWARE_MODULE,
@@ -449,8 +450,7 @@ export class General extends EezObject {
                     { id: ProjectType.LVGL, label: "LVGL" }
                 ],
                 readOnlyInPropertyGrid: (general: General) =>
-                    general.projectType != ProjectType.FIRMWARE &&
-                    general.projectType != ProjectType.FIRMWARE_MODULE
+                    general.projectType != ProjectType.UNDEFINED
             },
             {
                 name: "projectVersion",
@@ -472,8 +472,7 @@ export class General extends EezObject {
                     }
                 },
                 hideInPropertyGrid: (general: General) =>
-                    general.projectType != ProjectType.FIRMWARE &&
-                    general.projectType != ProjectType.FIRMWARE_MODULE &&
+                    general.projectType != ProjectType.UNDEFINED &&
                     general.projectType != ProjectType.RESOURCE
             },
             {

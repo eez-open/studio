@@ -3,8 +3,7 @@ import {
     autorun,
     runInAction,
     makeObservable,
-    computed,
-    trace
+    computed
 } from "mobx";
 
 import type { Page } from "project-editor/features/page/page";
@@ -748,8 +747,6 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
             );
 
             this.autorRunDispose = autorun(() => {
-                console.log("autorun");
-                trace();
                 this.refreshCounter++;
 
                 if (!this.isMounted) {
@@ -854,7 +851,6 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
         selectedStyle: LVGLStyle | undefined,
         canvas: HTMLCanvasElement | null
     ) {
-        console.log("setSelectedStyle START", selectedStyle);
         this.canvas = canvas;
 
         runInAction(() => {
@@ -880,7 +876,6 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                 lvglWidget.flags = flags.join("|");
             }
         });
-        console.log("setSelectedStyle END");
     }
 }
 
