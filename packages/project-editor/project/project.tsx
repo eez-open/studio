@@ -473,7 +473,8 @@ export class General extends EezObject {
                 },
                 hideInPropertyGrid: (general: General) =>
                     general.projectType != ProjectType.UNDEFINED &&
-                    general.projectType != ProjectType.RESOURCE
+                    general.projectType != ProjectType.RESOURCE &&
+                    general.projectVersion == "v3"
             },
             {
                 name: "scpiDocFolder",

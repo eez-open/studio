@@ -375,7 +375,7 @@ const NewProjectWizard = observer(
                         selected: false,
                         expanded: true,
                         data: undefined
-                    },
+                    } /*,
                     {
                         id: "_advanced",
                         label: "Advanced",
@@ -392,7 +392,7 @@ const NewProjectWizard = observer(
                         selected: false,
                         expanded: false,
                         data: undefined
-                    }
+                    }*/
                 ],
                 selected: false,
                 expanded: false,
