@@ -105,12 +105,12 @@ export class ProjectStore {
     layoutModels = new LayoutModels(this);
     editorModeEditorsStore = new EditorsStore(
         this,
-        () => this.layoutModels.rootEditor,
+        () => this.layoutModels.editors,
         LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID
     );
     runtimeModeEditorsStore = new EditorsStore(
         this,
-        () => this.layoutModels.rootRuntime,
+        () => this.layoutModels.viewers,
         LayoutModels.RUNTIME_MODE_EDITORS_TABSET_ID
     );
     uiStateStore = new UIStateStore(this);

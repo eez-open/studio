@@ -178,6 +178,8 @@ export class LayoutModels {
     themes: FlexLayout.Model;
     scpi: FlexLayout.Model;
     texts: FlexLayout.Model;
+    editors: FlexLayout.Model;
+    viewers: FlexLayout.Model;
 
     constructor(public projectStore: ProjectStore) {
         makeObservable(this, {
@@ -279,7 +281,7 @@ export class LayoutModels {
         return [
             {
                 name: "rootEditor",
-                version: 92,
+                version: 98,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: this.borders,
@@ -334,9 +336,14 @@ export class LayoutModels {
                                 type: "tabset",
                                 weight: 60,
                                 enableClose: false,
-                                enableDeleteWhenEmpty: false,
-                                id: LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID,
-                                children: []
+                                enableTabStrip: false,
+                                children: [
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        component: "editors"
+                                    }
+                                ]
                             },
                             {
                                 type: "row",
@@ -380,7 +387,7 @@ export class LayoutModels {
             },
             {
                 name: "rootRuntime",
-                version: 45,
+                version: 50,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     layout: {
@@ -428,11 +435,16 @@ export class LayoutModels {
                             },
                             {
                                 type: "tabset",
-                                weight: 50,
+                                weight: 60,
                                 enableClose: false,
-                                enableDeleteWhenEmpty: false,
-                                id: LayoutModels.RUNTIME_MODE_EDITORS_TABSET_ID,
-                                children: []
+                                enableTabStrip: false,
+                                children: [
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        component: "editors"
+                                    }
+                                ]
                             },
                             {
                                 type: "row",
@@ -775,6 +787,50 @@ export class LayoutModels {
                 },
                 get: () => this.texts,
                 set: action(model => (this.texts = model))
+            },
+            {
+                name: "editors",
+                version: 3,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "tabset",
+                                enableClose: false,
+                                enableDeleteWhenEmpty: false,
+                                id: LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID,
+                                children: []
+                            }
+                        ]
+                    }
+                },
+                get: () => this.editors,
+                set: action(model => (this.editors = model))
+            },
+            {
+                name: "viewers",
+                version: 3,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "tabset",
+                                enableClose: false,
+                                enableDeleteWhenEmpty: false,
+                                id: LayoutModels.RUNTIME_MODE_EDITORS_TABSET_ID,
+                                children: []
+                            }
+                        ]
+                    }
+                },
+                get: () => this.viewers,
+                set: action(model => (this.viewers = model))
             }
         ];
     }
