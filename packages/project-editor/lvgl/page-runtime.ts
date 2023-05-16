@@ -3,7 +3,8 @@ import {
     autorun,
     runInAction,
     makeObservable,
-    computed
+    computed,
+    trace
 } from "mobx";
 
 import type { Page } from "project-editor/features/page/page";
@@ -676,12 +677,9 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
     autorRunDispose: IReactionDisposer | undefined;
     requestAnimationFrameId: number | undefined;
 
-    wasmInitialized = false;
-
     lvglWidgetsMap = new Map<string, LVGLWidget>();
 
     canvas: HTMLCanvasElement | null = null;
-    selectedStyle: LVGLStyle | undefined;
 
     constructor(public project: Project) {
         const page = createObject<Page>(
@@ -716,102 +714,77 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
         this.mount();
     }
 
-    get displayWidth() {
-        return this.project.settings.general.displayWidth;
-    }
-
-    get displayHeight() {
-        return this.project.settings.general.displayHeight;
-    }
-
     get isEditor() {
         return true;
     }
 
+    get displayWidth() {
+        return 400;
+    }
+
+    get displayHeight() {
+        return 400;
+    }
+
     mount() {
-        autorun(() => {
-            this.displayWidth;
-            this.displayHeight;
+        if (this.isMounted) {
+            return;
+        }
 
-            this.unmount();
+        const wasm = lvgl_flow_runtime_constructor(() => {
+            if (this.wasm != wasm) {
+                return;
+            }
 
-            const wasm = lvgl_flow_runtime_constructor(() => {
-                if (this.wasm != wasm) {
+            runInAction(() => {
+                this.page._lvglRuntime = this;
+                this.page._lvglObj = undefined;
+            });
+
+            this.wasm._init(0, 0, 0, this.displayWidth, this.displayHeight);
+
+            this.requestAnimationFrameId = window.requestAnimationFrame(
+                this.tick
+            );
+
+            this.autorRunDispose = autorun(() => {
+                console.log("autorun");
+                trace();
+                this.refreshCounter++;
+
+                if (!this.isMounted) {
                     return;
                 }
 
+                // set all _lvglObj to undefined
                 runInAction(() => {
-                    this.page._lvglRuntime = this;
-                    this.page._lvglObj = undefined;
+                    this.page._lvglWidgetsIncludingUserWidgets.forEach(
+                        widget => (widget._lvglObj = undefined)
+                    );
                 });
 
-                this.wasm._init(0, 0, 0, this.displayWidth, this.displayHeight);
-                this.wasmInitialized = true;
-
-                this.requestAnimationFrameId = window.requestAnimationFrame(
-                    this.tick
-                );
-
-                if (this.autorRunDispose) {
-                    this.autorRunDispose();
+                const pageObj = this.page.lvglCreate(this, 0);
+                if (!pageObj) {
+                    console.error("pageObj is undefined");
                 }
 
-                this.autorRunDispose = autorun(() => {
-                    // set all _lvglObj to undefined
-                    runInAction(() => {
-                        this.page._lvglWidgetsIncludingUserWidgets.forEach(
-                            widget => (widget._lvglObj = undefined)
-                        );
-                    });
+                this.wasm._lvglScreenLoad(-1, pageObj);
 
-                    const pageObj = this.page.lvglCreate(this, 0);
-                    if (!pageObj) {
-                        console.error("pageObj is undefined");
+                runInAction(() => {
+                    if (this.page._lvglObj != undefined) {
+                        this.wasm._lvglDeleteObject(this.page._lvglObj);
                     }
-
-                    this.wasm._lvglScreenLoad(-1, pageObj);
-
-                    runInAction(() => {
-                        if (this.page._lvglObj != undefined) {
-                            this.wasm._lvglDeleteObject(this.page._lvglObj);
-                        }
-                        this.page._lvglObj = pageObj;
-                    });
+                    this.page._lvglObj = pageObj;
                 });
             });
-
-            this.wasm = wasm;
-            this.isMounted = true;
         });
-    }
 
-    unmount() {
-        if (this.requestAnimationFrameId) {
-            window.cancelAnimationFrame(this.requestAnimationFrameId);
-            this.requestAnimationFrameId = undefined;
-        }
-
-        if (this.autorRunDispose) {
-            this.autorRunDispose();
-            this.autorRunDispose = undefined;
-        }
-
-        LVGLPageRuntime.detachRuntimeFromPage(this.page);
-
-        this.isMounted = false;
-    }
-
-    override getWidgetIndex(object: LVGLWidget | Page) {
-        return 0;
-    }
-
-    getLvglObj(lvglStyle: LVGLStyle) {
-        const lvglWidget = this.lvglWidgetsMap.get(lvglStyle.forWidgetType);
-        return lvglWidget ? lvglWidget._lvglObj : 0;
+        this.wasm = wasm;
+        this.isMounted = true;
     }
 
     tick = () => {
-        if (this.canvas && this.wasmInitialized) {
+        if (this.canvas) {
             this.wasm._mainLoop();
 
             var buf_addr = this.wasm._getSyncedBuffer();
@@ -848,10 +821,40 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
         this.requestAnimationFrameId = window.requestAnimationFrame(this.tick);
     };
 
+    unmount() {
+        if (!this.isMounted) {
+            return;
+        }
+
+        if (this.requestAnimationFrameId) {
+            window.cancelAnimationFrame(this.requestAnimationFrameId);
+            this.requestAnimationFrameId = undefined;
+        }
+
+        if (this.autorRunDispose) {
+            this.autorRunDispose();
+            this.autorRunDispose = undefined;
+        }
+
+        LVGLPageRuntime.detachRuntimeFromPage(this.page);
+
+        this.isMounted = false;
+    }
+
+    override getWidgetIndex(object: LVGLWidget | Page) {
+        return 0;
+    }
+
+    getLvglObj(lvglStyle: LVGLStyle) {
+        const lvglWidget = this.lvglWidgetsMap.get(lvglStyle.forWidgetType);
+        return lvglWidget ? lvglWidget._lvglObj : 0;
+    }
+
     setSelectedStyle(
         selectedStyle: LVGLStyle | undefined,
         canvas: HTMLCanvasElement | null
     ) {
+        console.log("setSelectedStyle START", selectedStyle);
         this.canvas = canvas;
 
         runInAction(() => {
@@ -877,8 +880,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                 lvglWidget.flags = flags.join("|");
             }
         });
-
-        this.selectedStyle = selectedStyle;
+        console.log("setSelectedStyle END");
     }
 }
 

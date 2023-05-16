@@ -5513,36 +5513,31 @@ export class LVGLKeyboardWidget extends LVGLWidget {
     }
 
     override lvglPostCreate(runtime: LVGLPageRuntime) {
-        const lvglObj = this._lvglObj;
-        if (lvglObj) {
-            if (this.textarea) {
-                const lvglIdentifier = ProjectEditor.getProjectStore(
-                    this
-                ).lvglIdentifiers.getIdentifierByName(
-                    ProjectEditor.getFlow(this),
-                    this.textarea
-                );
+        if (this.textarea) {
+            const lvglIdentifier = ProjectEditor.getProjectStore(
+                this
+            ).lvglIdentifiers.getIdentifierByName(
+                ProjectEditor.getFlow(this),
+                this.textarea
+            );
 
-                if (lvglIdentifier) {
-                    const textareaWidget = lvglIdentifier.object;
+            if (lvglIdentifier) {
+                const textareaWidget = lvglIdentifier.object;
 
-                    if (textareaWidget) {
-                        runtime.executeAsyncOperation(
-                            async () => {
-                                await new Promise(resolve =>
-                                    setTimeout(resolve)
+                if (textareaWidget) {
+                    runtime.executeAsyncOperation(
+                        async () => {
+                            await new Promise(resolve => setTimeout(resolve));
+                        },
+                        () => {
+                            if (this._lvglObj && textareaWidget._lvglObj) {
+                                runtime.wasm._lvglSetKeyboardTextarea(
+                                    this._lvglObj,
+                                    textareaWidget._lvglObj
                                 );
-                            },
-                            () => {
-                                if (textareaWidget._lvglObj) {
-                                    runtime.wasm._lvglSetKeyboardTextarea(
-                                        lvglObj,
-                                        textareaWidget._lvglObj
-                                    );
-                                }
                             }
-                        );
-                    }
+                        }
+                    );
                 }
             }
         }

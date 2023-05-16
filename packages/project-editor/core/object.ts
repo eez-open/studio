@@ -10,7 +10,8 @@ import type { IDashboardComponentContext } from "eez-studio-types";
 import {
     ProjectStore,
     IContextMenuContext,
-    getClassInfo
+    getClassInfo,
+    EezValueObject
 } from "project-editor/store";
 
 import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
@@ -212,6 +213,8 @@ export interface PropertyInfo {
     embeddedImage?: boolean;
 
     propertyGridColSpan?: boolean;
+
+    visitProperty?: (parentObject: IEezObject) => EezValueObject[];
 }
 
 export type InheritedValue =

@@ -70,6 +70,14 @@ function* visitWithPause(
                         propertyInfo.type === PropertyType.Array
                     ) {
                         yield* visitWithPause(value);
+                    } else if (
+                        propertyInfo.type === PropertyType.Any &&
+                        propertyInfo.visitProperty
+                    ) {
+                        const result = propertyInfo.visitProperty(parentObject);
+                        for (const valueObject of result) {
+                            yield valueObject;
+                        }
                     } else {
                         yield getObjectPropertyAsObject(
                             parentObject,

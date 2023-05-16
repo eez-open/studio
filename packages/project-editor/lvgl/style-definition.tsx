@@ -6,13 +6,14 @@ import {
     IMessage,
     MessageType,
     PropertyType,
-    registerClass
+    registerClass,
+    setKey
 } from "project-editor/core/object";
 
 import { humanize } from "eez-studio-shared/string";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { Message } from "project-editor/store";
+import { EezValueObject, Message } from "project-editor/store";
 import { findBitmap, findFont } from "project-editor/project/project";
 
 import type { Page } from "project-editor/features/page/page";
@@ -49,11 +50,41 @@ export class LVGLStylesDefinition extends EezObject {
         properties: [
             {
                 name: "definition",
-                type: PropertyType.Any
-            },
-            {
-                name: "partEnabled",
-                type: PropertyType.Any
+                type: PropertyType.Any,
+                visitProperty: (style: LVGLStylesDefinition) => {
+                    const valueObjects: EezValueObject[] = [];
+
+                    Object.keys(style.definition).forEach(part => {
+                        Object.keys(style.definition[part]).forEach(state => {
+                            Object.keys(style.definition[part][state]).forEach(
+                                propertyName => {
+                                    const propertyInfo =
+                                        lvglPropertiesMap.get(propertyName);
+                                    if (!propertyInfo) {
+                                        return;
+                                    }
+
+                                    const valueObject = EezValueObject.create(
+                                        style,
+                                        propertyInfo,
+                                        style.definition[part][state][
+                                            propertyName
+                                        ]
+                                    );
+
+                                    setKey(
+                                        valueObject,
+                                        `definition.${part}.${state}.${propertyName}`
+                                    );
+
+                                    valueObjects.push(valueObject);
+                                }
+                            );
+                        });
+                    });
+
+                    return valueObjects;
+                }
             }
         ],
         defaultValue: {}
@@ -168,13 +199,25 @@ export class LVGLStylesDefinition extends EezObject {
                                 );
 
                                 if (!bitmap) {
+                                    const valueObject = EezValueObject.create(
+                                        this,
+                                        propertyInfo,
+                                        value
+                                    );
+
+                                    setKey(
+                                        valueObject,
+                                        `definition.${part}.${state}.${propertyName}`
+                                    );
+
                                     messages.push(
                                         new Message(
                                             MessageType.ERROR,
-                                            `Bitmap not found for style property ${part} - ${state} - ${humanize(
-                                                propertyInfo.name
-                                            )}`,
-                                            this
+                                            `Bitmap not found for style property ${part} - ${state} - ${
+                                                propertyInfo.displayName ||
+                                                humanize(propertyInfo.name)
+                                            }`,
+                                            valueObject
                                         )
                                     );
                                 }
@@ -194,13 +237,25 @@ export class LVGLStylesDefinition extends EezObject {
                                     !font &&
                                     BUILT_IN_FONTS.indexOf(value) == -1
                                 ) {
+                                    const valueObject = EezValueObject.create(
+                                        this,
+                                        propertyInfo,
+                                        value
+                                    );
+
+                                    setKey(
+                                        valueObject,
+                                        `definition.${part}.${state}.${propertyName}`
+                                    );
+
                                     messages.push(
                                         new Message(
                                             MessageType.ERROR,
-                                            `Font not found for style property ${part} - ${state} - ${humanize(
-                                                propertyInfo.name
-                                            )}`,
-                                            this
+                                            `Font not found for style property ${part} - ${state} - ${
+                                                propertyInfo.displayName ||
+                                                humanize(propertyInfo.name)
+                                            }`,
+                                            valueObject
                                         )
                                     );
                                 }

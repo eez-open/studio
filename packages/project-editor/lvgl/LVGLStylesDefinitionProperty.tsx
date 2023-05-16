@@ -11,7 +11,7 @@ import {
 } from "project-editor/core/object";
 import type { Page } from "project-editor/features/page/page";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { getAncestorOfType } from "project-editor/store";
+import { getAncestorOfType, Section } from "project-editor/store";
 import React from "react";
 import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
 import {
@@ -146,7 +146,10 @@ export const LVGLStylesDefinitionProperty = observer(
             return (
                 <div className="EezStudio_LVGLStylesDefinition">
                     <div>
-                        <LVGLStylesDefinitionTree {...this.props} />
+                        <LVGLStylesDefinitionTree
+                            stylesDefinitions={stylesDefinitions}
+                            {...this.props}
+                        />
                     </div>
                     <div>
                         {lvglProperties.map(propertiesGroup => {
@@ -171,7 +174,16 @@ export const LVGLStylesDefinitionProperty = observer(
                                             "EezStudio_LVGLStylesDefinition_GroupName",
                                             {
                                                 collapsed: !expanded,
-                                                modified: numModifications > 0
+                                                modified: numModifications > 0,
+                                                inError:
+                                                    stylesDefinitions.length ===
+                                                        1 &&
+                                                    isPropertyInError(
+                                                        stylesDefinitions[0],
+                                                        part,
+                                                        state,
+                                                        propertiesGroup.properties
+                                                    )
                                             }
                                         )}
                                         onClick={() =>
@@ -219,7 +231,9 @@ export const LVGLStylesDefinitionProperty = observer(
 );
 
 export const LVGLStylesDefinitionTree = observer(
-    class LVGLStylesDefinitionTree extends React.Component<PropertyProps> {
+    class LVGLStylesDefinitionTree extends React.Component<
+        { stylesDefinitions: LVGLStylesDefinition[] } & PropertyProps
+    > {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -312,10 +326,27 @@ export const LVGLStylesDefinitionTree = observer(
 
                         return {
                             id: part,
-                            label:
-                                numModifications == 0
-                                    ? partLabel
-                                    : `${partLabel} (${numModifications})`,
+                            label: (
+                                <span
+                                    className={classNames(
+                                        "EezStudio_LVGLStyle_PartLabel",
+                                        {
+                                            inError:
+                                                this.props.stylesDefinitions
+                                                    .length === 1 &&
+                                                isPropertyInError(
+                                                    this.props
+                                                        .stylesDefinitions[0],
+                                                    part
+                                                )
+                                        }
+                                    )}
+                                >
+                                    {numModifications == 0
+                                        ? partLabel
+                                        : `${partLabel} (${numModifications})`}
+                                </span>
+                            ),
                             children: LVGL_STYLE_STATES.map(state => {
                                 const numModifications =
                                     this.getNumModificationsForPartAndState(
@@ -324,10 +355,29 @@ export const LVGLStylesDefinitionTree = observer(
                                     );
                                 return {
                                     id: state,
-                                    label:
-                                        numModifications == 0
-                                            ? state
-                                            : `${state} (${numModifications})`,
+                                    label: (
+                                        <span
+                                            className={classNames(
+                                                "EezStudio_LVGLStyle_StateLabel",
+                                                {
+                                                    inError:
+                                                        this.props
+                                                            .stylesDefinitions
+                                                            .length === 1 &&
+                                                        isPropertyInError(
+                                                            this.props
+                                                                .stylesDefinitions[0],
+                                                            part,
+                                                            state
+                                                        )
+                                                }
+                                            )}
+                                        >
+                                            {numModifications == 0
+                                                ? state
+                                                : `${state} (${numModifications})`}
+                                        </span>
+                                    ),
                                     children: [],
                                     selected:
                                         this.lvglPart == part &&
@@ -460,7 +510,19 @@ export const LVGLStylesDefinitionGroupProperties = observer(
                         return (
                             <div
                                 key={propertyInfo.name}
-                                className="EezStudio_LVGLStylesDefinition_Property"
+                                className={classNames(
+                                    "EezStudio_LVGLStylesDefinition_Property",
+                                    {
+                                        inError:
+                                            stylesDefinitions.length === 1 &&
+                                            isPropertyInError(
+                                                stylesDefinitions[0],
+                                                part,
+                                                state,
+                                                [propertyInfo]
+                                            )
+                                    }
+                                )}
                             >
                                 <div className="EezStudio_LVGLStylesDefinition_Name for-check">
                                     <label className="form-check-label">
@@ -623,4 +685,20 @@ function getNumModificationsForPropertiesGroup(
         }
     }
     return result;
+}
+
+function isPropertyInError(
+    stylesDefinition: LVGLStylesDefinition,
+    part: LVGLParts,
+    state?: string,
+    propertyInfoArray?: PropertyInfo[]
+) {
+    return ProjectEditor.getProjectStore(stylesDefinition)
+        .outputSectionsStore.getSection(Section.CHECKS)
+        .messages.isLVGLStylePropertyInError(
+            stylesDefinition,
+            part,
+            state,
+            propertyInfoArray
+        );
 }

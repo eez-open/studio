@@ -6050,10 +6050,16 @@ button.EezStudio_Action {
             &:hover {
                 background-color: #eee;
             }
+            &.inError {
+                background-color: #ffaaaa;
+            }
         }
 
         .EezStudio_LVGLStylesDefinition_GroupProperties {
             .EezStudio_LVGLStylesDefinition_Property {
+                &.inError {
+                    background-color: #ffaaaa;
+                }
                 padding-left: 10px;
                 display: flex;
                 align-items: baseline;
@@ -6072,6 +6078,18 @@ button.EezStudio_Action {
                     flex: 1;
                 }
             }
+        }
+    }
+
+    .EezStudio_LVGLStyle_PartLabel {
+        &.inError {
+            background-color: #ffaaaa;
+        }
+    }
+
+    .EezStudio_LVGLStyle_StateLabel {
+        &.inError {
+            background-color: #ffaaaa;
         }
     }
 }

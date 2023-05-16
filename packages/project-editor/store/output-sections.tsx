@@ -19,12 +19,16 @@ import {
     EezValueObject,
     getChildOfObject,
     getObjectPath,
+    getObjectPathAsString,
     humanizePropertyName
 } from "project-editor/store/helper";
 
 import { IPanel } from "project-editor/store/navigation";
 import { ProjectStore, getLabel } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+
+import type { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
+import type { LVGLParts } from "project-editor/lvgl/style-helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -36,7 +40,7 @@ export enum Section {
 }
 
 export class Message implements IMessage {
-    id: string = guid();
+    _id: string = guid();
     selected: boolean = false;
 
     constructor(
@@ -49,6 +53,10 @@ export class Message implements IMessage {
             selected: observable,
             messages: observable
         });
+    }
+
+    get id() {
+        return this.object ? getObjectPathAsString(this.object) : this._id;
     }
 }
 
@@ -302,6 +310,42 @@ export class MessagesCollection {
 
             return false;
         }
+
+        return test(this.messages);
+    }
+
+    isLVGLStylePropertyInError(
+        object: LVGLStylesDefinition,
+        part: LVGLParts,
+        state?: string,
+        propertyInfoArray?: PropertyInfo[]
+    ) {
+        function test(messages: Message[]) {
+            for (const message of messages) {
+                if (message.type == MessageType.GROUP) {
+                    if (test(message.messages!)) {
+                        return true;
+                    }
+                } else if (
+                    message.object &&
+                    getParent(message.object) === object
+                ) {
+                    const messageObjectKey = getKey(message.object);
+                    return keys.find(key => messageObjectKey.startsWith(key));
+                }
+            }
+
+            return false;
+        }
+
+        const keys = propertyInfoArray
+            ? propertyInfoArray.map(
+                  propertyInfo =>
+                      `definition.${part}${state ? `.${state}` : ""}${
+                          propertyInfo ? `.${propertyInfo.name}` : ""
+                      }`
+              )
+            : [`definition.${part}${state ? `.${state}` : ""}`];
 
         return test(this.messages);
     }

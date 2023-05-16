@@ -7,6 +7,7 @@ import {
     EezObject,
     getClassesDerivedFrom,
     IEezObject,
+    IMessage,
     PropertyProps,
     PropertyType,
     registerClass
@@ -235,6 +236,9 @@ export class LVGLStyle extends EezObject {
                 defaultFlags: "",
                 states: []
             };
+        },
+        check: (style: LVGLStyle, messages: IMessage[]) => {
+            style.definition.check(messages);
         }
     };
 }
