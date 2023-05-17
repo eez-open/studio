@@ -958,6 +958,8 @@ export class TreeAdapter {
             if (this.selectedObject) {
                 this.selectedObject.set(item.object);
             }
+
+            ProjectEditor.selectObject(item.object);
         });
 
         this.rootItem.selectItems([item]);

@@ -1,10 +1,10 @@
 import React from "react";
-import { computed, IObservableValue, makeObservable } from "mobx";
+import { computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 import * as FlexLayout from "flexlayout-react";
 
-import { LayoutModels } from "project-editor/store";
+import { LayoutModels, isObjectExists } from "project-editor/store";
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { ProjectContext } from "project-editor/project/context";
 import { Style } from "./style";
@@ -45,39 +45,12 @@ const StylesNavigation = observer(
             super(props);
 
             makeObservable(this, {
-                navigationObject: computed,
-                style: computed
+                navigationObject: computed
             });
         }
 
         get navigationObject() {
             return this.context.project.styles;
-        }
-
-        get style() {
-            const navigationStore = this.context.navigationStore;
-
-            if (navigationStore.selectedPanel) {
-                if (
-                    navigationStore.selectedPanel.selectedObject instanceof
-                    Style
-                ) {
-                    if (
-                        navigationStore.selectedPanel.selectedObject instanceof
-                        Style
-                    ) {
-                        return navigationStore.selectedPanel.selectedObject;
-                    } else {
-                        return undefined;
-                    }
-                }
-            }
-
-            if (navigationStore.selectedStyleObject.get() instanceof Style) {
-                return navigationStore.selectedStyleObject.get();
-            }
-
-            return undefined;
         }
 
         factory = (node: FlexLayout.TabNode) => {
@@ -96,21 +69,7 @@ const StylesNavigation = observer(
             }
 
             if (component === "preview") {
-                return this.style ? (
-                    <StyleEditor
-                        style={
-                            this.context.navigationStore
-                                .selectedStyleObject as IObservableValue<
-                                Style | undefined
-                            >
-                        }
-                        width={480}
-                        height={272}
-                        text="Hello!"
-                    />
-                ) : (
-                    <div />
-                );
+                return <StyleEditor width={480} height={272} text="Hello!" />;
             }
 
             return null;
@@ -193,15 +152,33 @@ const StyleEditor = observer(
         width: number;
         height: number;
         text: string;
-        style: IObservableValue<Style | undefined>;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
+        get style() {
+            const navigationStore = this.context.navigationStore;
+
+            const style = navigationStore.selectedStyleObject.get();
+            if (!style) {
+                return undefined;
+            }
+
+            if (!isObjectExists(style)) {
+                return undefined;
+            }
+
+            if (style instanceof Style) {
+                return style;
+            }
+
+            return undefined;
+        }
+
         render() {
             const { width, height, text } = this.props;
 
-            const style = this.props.style.get();
+            const style = this.style;
             if (!style) {
                 return null;
             }
