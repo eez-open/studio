@@ -111,6 +111,14 @@ function* visitWithoutPause(
                         propertyInfo.type === PropertyType.Array
                     ) {
                         yield* visitWithoutPause(value);
+                    } else if (
+                        propertyInfo.type === PropertyType.Any &&
+                        propertyInfo.visitProperty
+                    ) {
+                        const result = propertyInfo.visitProperty(parentObject);
+                        for (const valueObject of result) {
+                            yield valueObject;
+                        }
                     } else {
                         yield getObjectPropertyAsObject(
                             parentObject,

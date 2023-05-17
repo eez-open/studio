@@ -2,7 +2,7 @@ import { ipcRenderer } from "electron";
 import { dialog, getCurrentWindow } from "@electron/remote";
 import path from "path";
 import fs from "fs";
-import mobx from "mobx";
+import mobx, { toJS } from "mobx";
 import {
     makeObservable,
     observable,
@@ -12,6 +12,7 @@ import {
     runInAction
 } from "mobx";
 import Mousetrap from "mousetrap";
+import update, { Spec } from "immutability-helper";
 
 import { confirmSave } from "eez-studio-shared/util-renderer";
 
@@ -831,10 +832,12 @@ export class ProjectStore {
         let values: any = {};
 
         for (let propertyName in inputValues) {
+            const propertyNameParts = propertyName.split(".");
+
             if (inputValues.hasOwnProperty(propertyName)) {
                 let propertyInfo = findPropertyByNameInObject(
                     object,
-                    propertyName
+                    propertyNameParts[0]
                 );
 
                 if (propertyInfo) {
@@ -843,6 +846,7 @@ export class ProjectStore {
                         propertyInfo.modifiable
                     ) {
                         let value = inputValues[propertyName];
+
                         if (
                             (propertyInfo.type === PropertyType.Object ||
                                 propertyInfo.type === PropertyType.Array) &&
@@ -860,7 +864,31 @@ export class ProjectStore {
                             setParent(value, object);
                         }
 
-                        values[propertyName] = value;
+                        if (propertyNameParts.length > 1) {
+                            const currentValue = toJS(
+                                (object as any)[propertyNameParts[0]]
+                            );
+
+                            const updateCmd: Spec<any, never> = {};
+
+                            let x = updateCmd;
+
+                            for (let i = 1; i < propertyNameParts.length; i++) {
+                                if (i == propertyNameParts.length - 1) {
+                                    x[propertyNameParts[i]] = {
+                                        $set: value
+                                    };
+                                } else {
+                                    const temp = {};
+                                    x[propertyNameParts[i]] = temp;
+                                    x = temp;
+                                }
+                            }
+
+                            value = update(currentValue, updateCmd);
+                        }
+
+                        values[propertyNameParts[0]] = value;
                     } else {
                         console.warn("ignored computed property", propertyName);
                     }
