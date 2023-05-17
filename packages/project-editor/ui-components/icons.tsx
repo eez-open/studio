@@ -1699,178 +1699,99 @@ export const DISTRIBUTE_HORIZONTAL_GAPS_ICON = () => {
 export const DISTRIBUTE_VERTICAL_TOP_ICON = () => {
     const id = guid();
     return (
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            xmlnsXlink="http://www.w3.org/1999/xlink"
-            width={24}
-            height={24}
-        >
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
             <defs>
-                <linearGradient id={`${id}-gradientVector`}>
-                    <stop
-                        offset={0}
-                        style={{
-                            stopColor: "#ffffff"
-                        }}
-                    />
-                    <stop
-                        offset={1}
-                        style={{
-                            stopColor: "#98b6d3"
-                        }}
-                    />
+                <linearGradient id={`${id}-a`}>
+                    <stop offset="0" style={{ stopColor: "#fff" }} />
+                    <stop offset="1" style={{ stopColor: "#98b6d3" }} />
                 </linearGradient>
                 <linearGradient
+                    xlinkHref={`#${id}-a`}
+                    id={`${id}-b`}
+                    x1="2"
+                    x2="-2"
+                    y1="1"
+                    y2="-1"
                     gradientUnits="userSpaceOnUse"
-                    id={`${id}-gradientFill1`}
-                    x1={2}
-                    x2={-2}
-                    xlinkHref={`#${id}-gradientVector`}
-                    y1={1}
-                    y2={-1}
                 />
                 <linearGradient
+                    xlinkHref={`#${id}-a`}
+                    id={`${id}-c`}
+                    x1="2"
+                    x2="-2"
+                    y1="1"
+                    y2="-1"
                     gradientUnits="userSpaceOnUse"
-                    id={`${id}-gradientStroke1`}
-                    x1={-3}
-                    x2={3}
-                    xlinkHref={`#${id}-gradientVector`}
-                    y1={-1}
-                    y2={1}
                 />
                 <linearGradient
+                    xlinkHref={`#${id}-a`}
+                    id={`${id}-d`}
+                    x1="1"
+                    x2="-1"
+                    y1="1"
+                    y2="-1"
                     gradientUnits="userSpaceOnUse"
-                    id={`${id}-gradientFill2`}
-                    x1={2}
-                    x2={-2}
-                    xlinkHref={`#${id}-gradientVector`}
-                    y1={1}
-                    y2={-1}
                 />
-                <linearGradient
-                    gradientUnits="userSpaceOnUse"
-                    id={`${id}-gradientStroke2`}
-                    x1={-3}
-                    x2={3}
-                    xlinkHref={`#${id}-gradientVector`}
-                    y1={-1}
-                    y2={1}
-                />
-                <linearGradient
-                    gradientUnits="userSpaceOnUse"
-                    id={`${id}-gradientFill3`}
-                    x1={1}
-                    x2={-1}
-                    xlinkHref={`#${id}-gradientVector`}
-                    y1={1}
-                    y2={-1}
-                />
-                <linearGradient
-                    gradientUnits="userSpaceOnUse"
-                    id={`${id}-gradientStroke3`}
-                    x1={-2}
-                    x2={2}
-                    xlinkHref={`#${id}-gradientVector`}
-                    y1={-1}
-                    y2={1}
-                />
-                <g id={`${id}-TheRect1`}>
-                    <rect
-                        x={-3}
-                        y={-5}
-                        width={6}
-                        height={10}
+                <g id={`${id}-e`}>
+                    <path
+                        d="M-3-5h6V5h-6z"
                         style={{
                             fill: "none",
-                            stroke: "#222222",
+                            stroke: "#222",
                             strokeLinejoin: "round"
                         }}
                     />
-                    <rect
-                        x={-2}
-                        y={-4}
-                        width={4}
-                        height={8}
+                    <path
+                        d="M-2-4h4v8h-4z"
                         style={{
-                            fill: `url(#${id}-gradientFill1)`,
+                            fill: `url(#${id}-b)`,
                             stroke: `url(#${id}-gradientStroke1)`
                         }}
                     />
                 </g>
-                <g id={`${id}-TheRect2`}>
-                    <rect
-                        x={-3}
-                        y={-8}
-                        width={6}
-                        height={16}
+                <g id={`${id}-f`}>
+                    <path
+                        d="M-3-8h6V8h-6z"
                         style={{
                             fill: "none",
-                            stroke: "#222222",
+                            stroke: "#222",
                             strokeLinejoin: "round"
                         }}
                     />
-                    <rect
-                        x={-2}
-                        y={-7}
-                        width={4}
-                        height={14}
+                    <path
+                        d="M-2-7h4V7h-4z"
                         style={{
-                            fill: `url(#${id}-gradientFill2)`,
+                            fill: `url(#${id}-c)`,
                             stroke: `url(#${id}-gradientStroke2)`
                         }}
                     />
                 </g>
-                <g id={`${id}-TheRect3`}>
-                    <rect
-                        x={-2}
-                        y={-6}
-                        width={4}
-                        height={12}
+                <g id={`${id}-g`}>
+                    <path
+                        d="M-2-6h4V6h-4z"
                         style={{
                             fill: "none",
-                            stroke: "#222222",
+                            stroke: "#222",
                             strokeLinejoin: "round"
                         }}
                     />
-                    <rect
-                        x={-1}
-                        y={-5}
-                        width={2}
-                        height={10}
+                    <path
+                        d="M-1-5h2V5h-2z"
                         style={{
-                            fill: `url(#${id}-gradientFill3)`,
+                            fill: `url(#${id}-d)`,
                             stroke: `url(#${id}-gradientStroke3)`
                         }}
                     />
                 </g>
             </defs>
-            <g
-                id={`${id}-distribute-vertical-top" transform="matrix(0,1,1,0,0,0)`}
-            >
-                <use
-                    xlinkHref={`#${id}-TheRect1`}
-                    transform="translate(3.5,12.5)"
-                />
-                <use
-                    xlinkHref={`#${id}-TheRect2`}
-                    transform="translate(12.5,14.5)"
-                />
-                <use
-                    xlinkHref={`#${id}-TheRect3`}
-                    transform="translate(20.5,15.5)"
-                />
-                <g
-                    style={{
-                        fill: "none",
-                        stroke: "#c80000"
-                    }}
-                >
-                    <path d="m  0.5,0 0,12" />
-                    <path d="m  9.5,0 0,12" />
-                    <path d="m 18.5,0 0,12" />
+            <g transform="matrix(0 1 1 0 0 0)">
+                <use xlinkHref={`#${id}-e`} transform="translate(3.5 12.5)" />
+                <use xlinkHref={`#${id}-f`} transform="translate(12.5 14.5)" />
+                <use xlinkHref={`#${id}-g`} transform="translate(20.5 15.5)" />
+                <g style={{ fill: "none", stroke: "#c80000" }}>
+                    <path d="M.5 0v12M9.5 0v12M18.5 0v12" />
                 </g>
-                <path d="m  3,3 -2,-1.5 2,-1.5 v 1 l 4,0 v -1 l 2,1.5 -2,1.5 v -1 l -4,0 z" />
-                <path d="m 12,3 -2,-1.5 2,-1.5 v 1 l 4,0 v -1 l 2,1.5 -2,1.5 v -1 l -4,0 z" />
+                <path d="M3 3 1 1.5 3 0v1h4V0l2 1.5L7 3V2H3zM12 3l-2-1.5L12 0v1h4V0l2 1.5L16 3V2h-4z" />
             </g>
         </svg>
     );
@@ -1879,178 +1800,99 @@ export const DISTRIBUTE_VERTICAL_TOP_ICON = () => {
 export const DISTRIBUTE_VERTICAL_CENTER_ICON = () => {
     const id = guid();
     return (
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            xmlnsXlink="http://www.w3.org/1999/xlink"
-            width={24}
-            height={24}
-        >
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
             <defs>
-                <linearGradient id={`${id}-gradientVector`}>
-                    <stop
-                        offset={0}
-                        style={{
-                            stopColor: "#ffffff"
-                        }}
-                    />
-                    <stop
-                        offset={1}
-                        style={{
-                            stopColor: "#98b6d3"
-                        }}
-                    />
+                <linearGradient id={`${id}-a`}>
+                    <stop offset="0" style={{ stopColor: "#fff" }} />
+                    <stop offset="1" style={{ stopColor: "#98b6d3" }} />
                 </linearGradient>
                 <linearGradient
+                    xlinkHref={`#${id}-a`}
+                    id={`${id}-b`}
+                    x1="2"
+                    x2="-2"
+                    y1="1"
+                    y2="-1"
                     gradientUnits="userSpaceOnUse"
-                    id={`${id}-gradientFill1`}
-                    x1={2}
-                    x2={-2}
-                    xlinkHref={`#${id}-gradientVector`}
-                    y1={1}
-                    y2={-1}
                 />
                 <linearGradient
+                    xlinkHref={`#${id}-a`}
+                    id={`${id}-c`}
+                    x1="2"
+                    x2="-2"
+                    y1="1"
+                    y2="-1"
                     gradientUnits="userSpaceOnUse"
-                    id={`${id}-gradientStroke1`}
-                    x1={-3}
-                    x2={3}
-                    xlinkHref={`#${id}-gradientVector`}
-                    y1={-1}
-                    y2={1}
                 />
                 <linearGradient
+                    xlinkHref={`#${id}-a`}
+                    id={`${id}-d`}
+                    x1="1"
+                    x2="-1"
+                    y1="1"
+                    y2="-1"
                     gradientUnits="userSpaceOnUse"
-                    id={`${id}-gradientFill2`}
-                    x1={2}
-                    x2={-2}
-                    xlinkHref={`#${id}-gradientVector`}
-                    y1={1}
-                    y2={-1}
                 />
-                <linearGradient
-                    gradientUnits="userSpaceOnUse"
-                    id={`${id}-gradientStroke2`}
-                    x1={-3}
-                    x2={3}
-                    xlinkHref={`#${id}-gradientVector`}
-                    y1={-1}
-                    y2={1}
-                />
-                <linearGradient
-                    gradientUnits="userSpaceOnUse"
-                    id={`${id}-gradientFill3`}
-                    x1={1}
-                    x2={-1}
-                    xlinkHref={`#${id}-gradientVector`}
-                    y1={1}
-                    y2={-1}
-                />
-                <linearGradient
-                    gradientUnits="userSpaceOnUse"
-                    id={`${id}-gradientStroke3`}
-                    x1={-2}
-                    x2={2}
-                    xlinkHref={`#${id}-gradientVector`}
-                    y1={-1}
-                    y2={1}
-                />
-                <g id={`${id}-TheRect1`}>
-                    <rect
-                        x={-3}
-                        y={-5}
-                        width={6}
-                        height={10}
+                <g id={`${id}-e`}>
+                    <path
+                        d="M-3-5h6V5h-6z"
                         style={{
                             fill: "none",
-                            stroke: "#222222",
+                            stroke: "#222",
                             strokeLinejoin: "round"
                         }}
                     />
-                    <rect
-                        x={-2}
-                        y={-4}
-                        width={4}
-                        height={8}
+                    <path
+                        d="M-2-4h4v8h-4z"
                         style={{
-                            fill: `url(#${id}-gradientFill1)`,
+                            fill: `url(#${id}-b)`,
                             stroke: `url(#${id}-gradientStroke1)`
                         }}
                     />
                 </g>
-                <g id={`${id}-TheRect2`}>
-                    <rect
-                        x={-3}
-                        y={-8}
-                        width={6}
-                        height={16}
+                <g id={`${id}-f`}>
+                    <path
+                        d="M-3-8h6V8h-6z"
                         style={{
                             fill: "none",
-                            stroke: "#222222",
+                            stroke: "#222",
                             strokeLinejoin: "round"
                         }}
                     />
-                    <rect
-                        x={-2}
-                        y={-7}
-                        width={4}
-                        height={14}
+                    <path
+                        d="M-2-7h4V7h-4z"
                         style={{
-                            fill: `url(#${id}-gradientFill2)`,
+                            fill: `url(#${id}-c)`,
                             stroke: `url(#${id}-gradientStroke2)`
                         }}
                     />
                 </g>
-                <g id={`${id}-TheRect3`}>
-                    <rect
-                        x={-2}
-                        y={-6}
-                        width={4}
-                        height={12}
+                <g id={`${id}-g`}>
+                    <path
+                        d="M-2-6h4V6h-4z"
                         style={{
                             fill: "none",
-                            stroke: "#222222",
+                            stroke: "#222",
                             strokeLinejoin: "round"
                         }}
                     />
-                    <rect
-                        x={-1}
-                        y={-5}
-                        width={2}
-                        height={10}
+                    <path
+                        d="M-1-5h2V5h-2z"
                         style={{
-                            fill: `url(#${id}-gradientFill3)`,
+                            fill: `url(#${id}-d)`,
                             stroke: `url(#${id}-gradientStroke3)`
                         }}
                     />
                 </g>
             </defs>
-            <g
-                id={`${id}-distribute-vertical-center" transform="matrix(0,1,1,0,0,0)`}
-            >
-                <use
-                    xlinkHref={`#${id}-TheRect1`}
-                    transform="translate(3.5,12.5)"
-                />
-                <use
-                    xlinkHref={`#${id}-TheRect2`}
-                    transform="translate(12.5,14.5)"
-                />
-                <use
-                    xlinkHref={`#${id}-TheRect3`}
-                    transform="translate(21.5,15.5)"
-                />
-                <g
-                    style={{
-                        fill: "none",
-                        stroke: "#c80000"
-                    }}
-                >
-                    <path d="m  3.5,0 0,12" />
-                    <path d="m 12.5,0 0,12" />
-                    <path d="m 21.5,0 0,12" />
+            <g transform="matrix(0 1 1 0 0 0)">
+                <use xlinkHref={`#${id}-e`} transform="translate(3.5 12.5)" />
+                <use xlinkHref={`#${id}-f`} transform="translate(12.5 14.5)" />
+                <use xlinkHref={`#${id}-g`} transform="translate(21.5 15.5)" />
+                <g style={{ fill: "none", stroke: "#c80000" }}>
+                    <path d="M3.5 0v12M12.5 0v12M21.5 0v12" />
                 </g>
-                <path d="m  6,3 -2,-1.5 2,-1.5 v 1 l 4,0 v -1 l 2,1.5 -2,1.5 v -1 l -4,0 z" />
-                <path d="m 15,3 -2,-1.5 2,-1.5 v 1 l 4,0 v -1 l 2,1.5 -2,1.5 v -1 l -4,0 z" />
+                <path d="M6 3 4 1.5 6 0v1h4V0l2 1.5L10 3V2H6zM15 3l-2-1.5L15 0v1h4V0l2 1.5L19 3V2h-4z" />
             </g>
         </svg>
     );
@@ -2059,178 +1901,99 @@ export const DISTRIBUTE_VERTICAL_CENTER_ICON = () => {
 export const DISTRIBUTE_VERTICAL_BOTTOM_ICON = () => {
     const id = guid();
     return (
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            xmlnsXlink="http://www.w3.org/1999/xlink"
-            width={24}
-            height={24}
-        >
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
             <defs>
-                <linearGradient id={`${id}-gradientVector`}>
-                    <stop
-                        offset={0}
-                        style={{
-                            stopColor: "#ffffff"
-                        }}
-                    />
-                    <stop
-                        offset={1}
-                        style={{
-                            stopColor: "#98b6d3"
-                        }}
-                    />
+                <linearGradient id={`${id}-a`}>
+                    <stop offset="0" style={{ stopColor: "#fff" }} />
+                    <stop offset="1" style={{ stopColor: "#98b6d3" }} />
                 </linearGradient>
                 <linearGradient
+                    xlinkHref={`#${id}-a`}
+                    id={`${id}-b`}
+                    x1="2"
+                    x2="-2"
+                    y1="1"
+                    y2="-1"
                     gradientUnits="userSpaceOnUse"
-                    id={`${id}-gradientFill1`}
-                    x1={2}
-                    x2={-2}
-                    xlinkHref={`#${id}-gradientVector`}
-                    y1={1}
-                    y2={-1}
                 />
                 <linearGradient
+                    xlinkHref={`#${id}-a`}
+                    id={`${id}-c`}
+                    x1="2"
+                    x2="-2"
+                    y1="1"
+                    y2="-1"
                     gradientUnits="userSpaceOnUse"
-                    id={`${id}-gradientStroke1`}
-                    x1={-3}
-                    x2={3}
-                    xlinkHref={`#${id}-gradientVector`}
-                    y1={-1}
-                    y2={1}
                 />
                 <linearGradient
+                    xlinkHref={`#${id}-a`}
+                    id={`${id}-d`}
+                    x1="1"
+                    x2="-1"
+                    y1="1"
+                    y2="-1"
                     gradientUnits="userSpaceOnUse"
-                    id={`${id}-gradientFill2`}
-                    x1={2}
-                    x2={-2}
-                    xlinkHref={`#${id}-gradientVector`}
-                    y1={1}
-                    y2={-1}
                 />
-                <linearGradient
-                    gradientUnits="userSpaceOnUse"
-                    id={`${id}-gradientStroke2`}
-                    x1={-3}
-                    x2={3}
-                    xlinkHref={`#${id}-gradientVector`}
-                    y1={-1}
-                    y2={1}
-                />
-                <linearGradient
-                    gradientUnits="userSpaceOnUse"
-                    id={`${id}-gradientFill3`}
-                    x1={1}
-                    x2={-1}
-                    xlinkHref={`#${id}-gradientVector`}
-                    y1={1}
-                    y2={-1}
-                />
-                <linearGradient
-                    gradientUnits="userSpaceOnUse"
-                    id={`${id}-gradientStroke3`}
-                    x1={-2}
-                    x2={2}
-                    xlinkHref={`#${id}-gradientVector`}
-                    y1={-1}
-                    y2={1}
-                />
-                <g id={`${id}-TheRect1`}>
-                    <rect
-                        x={-3}
-                        y={-5}
-                        width={6}
-                        height={10}
+                <g id={`${id}-e`}>
+                    <path
+                        d="M-3-5h6V5h-6z"
                         style={{
                             fill: "none",
-                            stroke: "#222222",
+                            stroke: "#222",
                             strokeLinejoin: "round"
                         }}
                     />
-                    <rect
-                        x={-2}
-                        y={-4}
-                        width={4}
-                        height={8}
+                    <path
+                        d="M-2-4h4v8h-4z"
                         style={{
-                            fill: `url(#${id}-gradientFill1)`,
+                            fill: `url(#${id}-b)`,
                             stroke: `url(#${id}-gradientStroke1)`
                         }}
                     />
                 </g>
-                <g id={`${id}-TheRect2`}>
-                    <rect
-                        x={-3}
-                        y={-8}
-                        width={6}
-                        height={16}
+                <g id={`${id}-f`}>
+                    <path
+                        d="M-3-8h6V8h-6z"
                         style={{
                             fill: "none",
-                            stroke: "#222222",
+                            stroke: "#222",
                             strokeLinejoin: "round"
                         }}
                     />
-                    <rect
-                        x={-2}
-                        y={-7}
-                        width={4}
-                        height={14}
+                    <path
+                        d="M-2-7h4V7h-4z"
                         style={{
-                            fill: `url(#${id}-gradientFill2)`,
+                            fill: `url(#${id}-c)`,
                             stroke: `url(#${id}-gradientStroke2)`
                         }}
                     />
                 </g>
-                <g id={`${id}-TheRect3`}>
-                    <rect
-                        x={-2}
-                        y={-6}
-                        width={4}
-                        height={12}
+                <g id={`${id}-g`}>
+                    <path
+                        d="M-2-6h4V6h-4z"
                         style={{
                             fill: "none",
-                            stroke: "#222222",
+                            stroke: "#222",
                             strokeLinejoin: "round"
                         }}
                     />
-                    <rect
-                        x={-1}
-                        y={-5}
-                        width={2}
-                        height={10}
+                    <path
+                        d="M-1-5h2V5h-2z"
                         style={{
-                            fill: `url(#${id}-gradientFill3)`,
+                            fill: `url(#${id}-d)`,
                             stroke: `url(#${id}-gradientStroke3)`
                         }}
                     />
                 </g>
             </defs>
-            <g
-                id={`${id}-distribute-vertical-bottom" transform="matrix(0,1,1,0,0,0)`}
-            >
-                <use
-                    xlinkHref={`#${id}-TheRect1`}
-                    transform="translate(20.5,12.5)"
-                />
-                <use
-                    xlinkHref={`#${id}-TheRect2`}
-                    transform="translate(11.5,14.5)"
-                />
-                <use
-                    xlinkHref={`#${id}-TheRect3`}
-                    transform="translate( 3.5,15.5)"
-                />
-                <g
-                    style={{
-                        fill: "none",
-                        stroke: "#c80000"
-                    }}
-                >
-                    <path d="m  5.5,0 0,12" />
-                    <path d="m 14.5,0 0,12" />
-                    <path d="m 23.5,0 0,12" />
+            <g transform="matrix(0 1 1 0 0 0)">
+                <use xlinkHref={`#${id}-e`} transform="translate(20.5 12.5)" />
+                <use xlinkHref={`#${id}-f`} transform="translate(11.5 14.5)" />
+                <use xlinkHref={`#${id}-g`} transform="translate(3.5 15.5)" />
+                <g style={{ fill: "none", stroke: "#c80000" }}>
+                    <path d="M5.5 0v12M14.5 0v12M23.5 0v12" />
                 </g>
-                <path d="m  8,3 -2,-1.5 2,-1.5 v 1 l 4,0 v -1 l 2,1.5 -2,1.5 v -1 l -4,0 z" />
-                <path d="m 17,3 -2,-1.5 2,-1.5 v 1 l 4,0 v -1 l 2,1.5 -2,1.5 v -1 l -4,0 z" />
+                <path d="M8 3 6 1.5 8 0v1h4V0l2 1.5L12 3V2H8zM17 3l-2-1.5L17 0v1h4V0l2 1.5L21 3V2h-4z" />
             </g>
         </svg>
     );

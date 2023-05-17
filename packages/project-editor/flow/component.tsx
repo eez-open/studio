@@ -1445,7 +1445,7 @@ const AlignAndDistributePropertyGridUI = observer(
 
         render() {
             return (
-                <div className="EezStudio_ActionGroups">
+                <div className="EezStudio_AlignAndDistributeIcons EezStudio_ActionGroups">
                     <div className="EezStudio_ActionGroup">
                         <div className="EezStudio_ActionGroup_Title">Align</div>
                         <div className="EezStudio_ActionGroup_Actions">
@@ -1595,7 +1595,7 @@ const CenterWidgetUI = observer(
 
         render() {
             return (
-                <div>
+                <div className="EezStudio_AlignAndDistributeIcons">
                     <IconAction
                         icon={ALIGN_HORIZONTAL_CENTER_ICON()}
                         title="Center horizontally relative to parent"
