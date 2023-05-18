@@ -152,6 +152,9 @@ const LVGLStylePropertiesDialog = observer(
                     <div className="EezStudio_LVGLStylePropertiesDialog">
                         <SearchInput
                             searchText={this.searchText}
+                            onClear={action(() => {
+                                this.searchText = "";
+                            })}
                             onChange={this.onSearchChange}
                             onKeyDown={this.onSearchChange}
                         />

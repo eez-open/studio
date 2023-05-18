@@ -347,6 +347,9 @@ export const ListNavigation = observer(
                             this.props.searchInput) && (
                             <SearchInput
                                 searchText={this.searchText}
+                                onClear={action(() => {
+                                    this.searchText = "";
+                                })}
                                 onChange={this.onSearchChange}
                                 onKeyDown={this.onSearchChange}
                             />

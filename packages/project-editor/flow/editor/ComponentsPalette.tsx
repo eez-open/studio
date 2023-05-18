@@ -299,6 +299,9 @@ export const ComponentsPalette1 = observer(
                         <SearchInput
                             key="search-input"
                             searchText={this.searchText}
+                            onClear={action(() => {
+                                this.searchText = "";
+                            })}
                             onChange={this.onSearchChange}
                             onKeyDown={this.onSearchChange}
                         />

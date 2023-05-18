@@ -272,6 +272,7 @@ const WatchTable = observer(
                                 observable({
                                     id: id + name,
                                     name,
+                                    nameTitle: name,
                                     value: valueLabel,
                                     valueTitle: valueLabel,
                                     type: type,
@@ -325,6 +326,7 @@ const WatchTable = observer(
                                 observable({
                                     id: id + name,
                                     name,
+                                    nameTitle: name,
                                     value: valueLabel,
                                     valueTitle: valueLabel,
                                     type: fieldType ?? typeof propertyValue,
@@ -394,6 +396,7 @@ const WatchTable = observer(
                                 id: "expressions-" + expression,
 
                                 name: expression,
+                                nameTitle: expression,
                                 value: watchExpressionLabel,
                                 valueTitle: watchExpressionLabel,
                                 type,
@@ -444,6 +447,7 @@ const WatchTable = observer(
                     id: id + name,
 
                     name: name,
+                    nameTitle: name,
                     value: valueLabel,
                     valueTitle: valueLabel,
                     type: variable.type,
@@ -505,6 +509,11 @@ const WatchTable = observer(
                 input => input.name != "@seqin"
             );
             return inputs.map(input => {
+                const name = getInputDisplayName(
+                    componentState.component,
+                    input.name
+                );
+
                 let value = componentState.getInputValue(input.name);
 
                 let valueLabel = getValueLabel(
@@ -516,10 +525,8 @@ const WatchTable = observer(
                 return observable({
                     id: id + input.name,
 
-                    name: getInputDisplayName(
-                        componentState.component,
-                        input.name
-                    ),
+                    name: name,
+                    nameTitle: name,
                     value: valueLabel,
                     valueTitle: valueLabel,
                     type: input.type,

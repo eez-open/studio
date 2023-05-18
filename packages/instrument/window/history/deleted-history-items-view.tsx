@@ -199,6 +199,9 @@ export const DeletedHistoryItemsView = observer(
             let input = (
                 <SearchInput
                     searchText={this.searchText}
+                    onClear={action(() => {
+                        this.searchText = "";
+                    })}
                     onChange={this.onSearchChange}
                 />
             );

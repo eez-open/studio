@@ -181,6 +181,9 @@ export const ObjectReferenceInput = observer(
                     <div>
                         <SearchInput
                             searchText={this.searchText}
+                            onClear={action(() => {
+                                this.searchText = "";
+                            })}
                             onChange={this.onSearchChange}
                             onKeyDown={this.onSearchChange}
                         />
