@@ -371,7 +371,8 @@ export class EditorsStore {
             for (let i = 0; i < editors.length; i++) {
                 if (
                     !editors[i].permanent &&
-                    getClassInfo(editors[i].object) == getClassInfo(object)
+                    getClassInfo(editors[i].object) == getClassInfo(object) &&
+                    getParent(editors[i].object) == getParent(object)
                 ) {
                     editorFound = editors[i];
                     break;
