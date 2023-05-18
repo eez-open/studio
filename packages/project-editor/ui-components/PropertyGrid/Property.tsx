@@ -666,7 +666,7 @@ export const Property = observer(
                         );
                     }
 
-                    if (!propertyInfo.enumDisallowUndefined) {
+                    if (!propertyInfo.enumDisallowUndefined && value !== "") {
                         options.unshift(<option key="__empty" value="" />);
                     }
 

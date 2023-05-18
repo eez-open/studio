@@ -82,6 +82,7 @@ export class Action extends Flow {
                         id: "flow"
                     }
                 ],
+                enumDisallowUndefined: true,
                 hideInPropertyGrid: (action: Action) => {
                     return isNotV1Project(action) && !hasFlowSupport(action);
                 }
