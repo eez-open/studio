@@ -16,8 +16,8 @@ import { ProjectContext } from "project-editor/project/context";
 import { EditorComponent } from "project-editor/project/ui/EditorComponent";
 import {
     getAncestorOfType,
-    getClassInfo,
     getLabel,
+    getObjectIcon,
     IPanel
 } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -770,9 +770,9 @@ export const ObjectChangesComponent = observer(
                             propertyChange instanceof ObjectPropertyValueUpdated
                         ) {
                             icon =
-                                getClassInfo(
+                                getObjectIcon(
                                     propertyChange.objectChanges.objectAfter
-                                ).icon || "extension";
+                                ) || "extension";
                         } else if (
                             propertyChange instanceof PropertyValueAdded
                         ) {
@@ -780,7 +780,7 @@ export const ObjectChangesComponent = observer(
                                 propertyChange.propertyInfo.name
                             ];
                             if (value instanceof EezObject) {
-                                icon = getClassInfo(value).icon || "extension";
+                                icon = getObjectIcon(value) || "extension";
                             }
                         } else if (
                             propertyChange instanceof PropertyValueRemoved
@@ -789,7 +789,7 @@ export const ObjectChangesComponent = observer(
                                 propertyChange.propertyInfo.name
                             ];
                             if (value instanceof EezObject) {
-                                icon = getClassInfo(value).icon || "extension";
+                                icon = getObjectIcon(value) || "extension";
                             }
                         }
                     }

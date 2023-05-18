@@ -713,36 +713,55 @@ registerClass("Settings", Settings);
 
 let projectClassInfo: ClassInfo;
 let numProjectFeatures = 0;
-let builtinProjectProperties: PropertyInfo[] = [
-    {
-        name: "settings",
-        type: PropertyType.Object,
-        typeClass: Settings,
-        hideInPropertyGrid: true
-    },
-    {
-        name: "colors",
-        type: PropertyType.Array,
-        typeClass: Color,
-        partOfNavigation: false,
-        hideInPropertyGrid: true
-    },
-    {
-        name: "themes",
-        type: PropertyType.Array,
-        typeClass: Theme,
-        partOfNavigation: false,
-        hideInPropertyGrid: true
-    }
-];
-let projectProperties = builtinProjectProperties;
+let builtinProjectProperties: PropertyInfo[];
+let projectProperties: PropertyInfo[] = [];
 
 function getProjectClassInfo() {
     if (!projectClassInfo) {
+        builtinProjectProperties = [
+            {
+                name: "settings",
+                type: PropertyType.Object,
+                typeClass: Settings,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "colors",
+                type: PropertyType.Array,
+                typeClass: Color,
+                partOfNavigation: false,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "themes",
+                type: PropertyType.Array,
+                typeClass: Theme,
+                partOfNavigation: false,
+                hideInPropertyGrid: true
+            }
+        ];
+
         projectClassInfo = {
             label: () => "Project",
             properties: projectProperties,
             beforeLoadHook: (project: Project, projectJs: any) => {
+                if (projectJs.pages) {
+                    projectJs.userPages = projectJs.pages.filter(
+                        (page: any) =>
+                            !(
+                                page.isUsedAsCustomWidget ||
+                                page.isUsedAsUserWidget
+                            )
+                    );
+
+                    projectJs.userWidgets = projectJs.pages.filter(
+                        (page: any) =>
+                            page.isUsedAsCustomWidget || page.isUsedAsUserWidget
+                    );
+
+                    delete projectJs.pages;
+                }
+
                 if (
                     projectJs.settings.general.projectType == ProjectType.LVGL
                 ) {
@@ -1012,7 +1031,14 @@ export class Project extends EezObject {
     settings: Settings;
     variables: ProjectVariables;
     actions: Action[];
-    pages: Page[];
+
+    userPages: Page[];
+    userWidgets: Page[];
+
+    get pages() {
+        return [...this.userPages, ...this.userWidgets];
+    }
+
     styles: Style[];
     fonts: Font[];
     texts: Texts;
@@ -1037,7 +1063,9 @@ export class Project extends EezObject {
             settings: observable,
             variables: observable,
             actions: observable,
-            pages: observable,
+            userPages: observable,
+            userWidgets: observable,
+            pages: computed,
             styles: observable,
             fonts: observable,
             texts: observable,

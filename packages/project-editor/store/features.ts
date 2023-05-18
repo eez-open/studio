@@ -14,7 +14,8 @@ import type { ExtensionDefinition } from "project-editor/features/extension-defi
 import actionFeature from "project-editor/features/action/action";
 import variableFeature from "project-editor/features/variable/variable";
 import extensionDefinitionsFeature from "project-editor/features/extension-definitions/extension-definitions";
-import pageFeature from "project-editor/features/page/page";
+import userPageFeature from "project-editor/features/page/page";
+import userWidgetFeature from "project-editor/features/user-widget/user-widget";
 import styleFeature from "project-editor/features/style/style";
 import fontFeature from "project-editor/features/font/font";
 import bitmapFeature from "project-editor/features/bitmap/bitmap";
@@ -59,7 +60,8 @@ export interface ProjectEditorFeature {
 }
 
 let features: ProjectEditorFeature[] = [
-    pageFeature,
+    userPageFeature,
+    userWidgetFeature,
     actionFeature,
     variableFeature,
     styleFeature,

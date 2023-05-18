@@ -215,7 +215,7 @@ export class LVGLChangeScreenActionType extends LVGLActionType {
             {
                 name: "screen",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "pages"
+                referencedObjectCollectionPath: "userPages"
             },
             {
                 name: "fadeMode",

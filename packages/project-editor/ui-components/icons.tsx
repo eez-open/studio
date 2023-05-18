@@ -2253,6 +2253,8 @@ export const USER_WIDGET_ICON = (
     </svg>
 );
 
+export const USER_WIDGETS_ICON = USER_WIDGET_ICON;
+
 export const MATCH_CASE_ICON = (
     <svg
         width="16"

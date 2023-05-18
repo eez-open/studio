@@ -12,6 +12,7 @@ import {
 import {
     getClassInfo,
     getObjectFromStringPath,
+    getObjectIcon,
     getObjectPathAsString,
     isObjectExists,
     objectToString
@@ -360,7 +361,7 @@ export class EditorsStore {
         editor.state = ProjectEditor.createEditorState(object);
 
         try {
-            let icon = getClassInfo(object).icon;
+            let icon = getObjectIcon(object);
             if (typeof icon == "string") {
                 if (!icon.startsWith("material:") && !icon.startsWith("svg:")) {
                     icon = "material:" + icon;

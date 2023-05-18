@@ -296,6 +296,20 @@ export function getClassInfo(object: IEezObject): ClassInfo {
     return getClass(object).classInfo;
 }
 
+export function getObjectIcon(object: IEezObject) {
+    const classInfo = getClassInfo(object);
+
+    if (classInfo.icon) {
+        return classInfo.icon;
+    }
+
+    if (classInfo.getIcon) {
+        return classInfo.getIcon(object);
+    }
+
+    return undefined;
+}
+
 export function isObjectInstanceOf(
     object: IEezObject,
     baseClassInfo: ClassInfo

@@ -2164,7 +2164,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
                 displayName: "User widget",
                 type: PropertyType.ObjectReference,
                 propertyGridGroup: userWidgetGroup,
-                referencedObjectCollectionPath: "pages"
+                referencedObjectCollectionPath: "userWidgets"
             },
             {
                 name: "customUI",
@@ -2364,7 +2364,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
                 projectStore,
                 objectToClipboardData(projectStore, page)
             ).object as Page;
-            setParent(userWidgetPageCopy, project.pages);
+            setParent(userWidgetPageCopy, project.userWidgets);
         });
 
         return userWidgetPageCopy;

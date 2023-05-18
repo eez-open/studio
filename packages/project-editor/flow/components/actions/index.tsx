@@ -2793,7 +2793,7 @@ export class ShowPageActionComponent extends ActionComponent {
                 name: "page",
                 type: PropertyType.ObjectReference,
                 propertyGridGroup: specificGroup,
-                referencedObjectCollectionPath: "pages"
+                referencedObjectCollectionPath: "userPages"
             }
         ],
         check: (object: ShowPageActionComponent, messages: IMessage[]) => {

@@ -337,7 +337,8 @@ export class Page extends Flow {
             {
                 name: "isUsedAsUserWidget",
                 type: PropertyType.Boolean,
-                propertyGridGroup: generalGroup
+                propertyGridGroup: generalGroup,
+                hideInPropertyGrid: true
             },
             {
                 name: "closePageIfTouchedOutside",
@@ -359,11 +360,7 @@ export class Page extends Flow {
             }
         ],
         label: (page: Page) => {
-            let label = page.name;
-            if (page.isUsedAsUserWidget) {
-                label = "[USER WIDGET] " + label;
-            }
-            return label;
+            return page.name;
         },
         listLabel: (page: Page) => {
             let label: React.ReactNode = getLabel(page);
@@ -427,7 +424,10 @@ export class Page extends Flow {
 
             const result = await showGenericDialog({
                 dialogDefinition: {
-                    title: "New Page",
+                    title:
+                        parent == project.userPages
+                            ? "New Page"
+                            : "New User Widget",
                     fields: [
                         {
                             name: "name",
@@ -435,13 +435,21 @@ export class Page extends Flow {
                             validators: [
                                 validators.required,
                                 validators.invalidCharacters("."),
-                                validators.unique({}, parent)
+                                validators.unique(
+                                    {},
+                                    project.pages,
+                                    "Page or User Widget with this name already exists"
+                                )
                             ]
                         }
                     ]
                 },
                 values: {
-                    name: project.pages.length == 0 ? "Main" : ""
+                    name:
+                        parent == project.userPages &&
+                        project.userPages.length == 0
+                            ? "Main"
+                            : ""
                 }
             });
 
@@ -457,7 +465,8 @@ export class Page extends Flow {
                     ? 450
                     : project._store.project.settings.general.displayHeight ??
                       272,
-                components: []
+                components: [],
+                isUsedAsUserWidget: parent == project.userWidgets
             };
 
             const page = createObject<Page>(
@@ -468,7 +477,10 @@ export class Page extends Flow {
 
             return page;
         },
-        icon: "svg:page",
+
+        getIcon: (page: Page) =>
+            page.isUsedAsUserWidget ? "svg:user_widget" : "svg:page",
+
         check: (page: Page, messages: IMessage[]) => {
             const projectStore = getProjectStore(page);
 
@@ -1065,7 +1077,7 @@ const feature: ProjectEditorFeature = {
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
     displayName: "Pages",
     mandatory: true,
-    key: "pages",
+    key: "userPages",
     type: PropertyType.Array,
     typeClass: Page,
     icon: "svg:pages",

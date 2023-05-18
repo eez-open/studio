@@ -201,10 +201,10 @@ registerClass("Action", Action);
 const feature: ProjectEditorFeature = {
     name: "eezstudio-project-feature-action",
     version: "0.1.0",
-    description: "Project actions",
+    description: "User actions support for your project",
     author: "EEZ",
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
-    displayName: "Action",
+    displayName: "User Actions",
     mandatory: true,
     key: "actions",
     type: PropertyType.Array,

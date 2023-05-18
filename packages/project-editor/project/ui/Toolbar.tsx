@@ -7,7 +7,7 @@ import { ProjectContext } from "project-editor/project/context";
 import { PageTabState } from "project-editor/features/page/PageEditor";
 import {
     getChildren,
-    getClassInfo,
+    getObjectIcon,
     objectToString
 } from "project-editor/store";
 import { GlobalVariableStatuses } from "project-editor/features/variable/global-variable-status";
@@ -124,10 +124,11 @@ const EditorButtons = observer(
 
             let featureItems = getChildren(this.context.project).filter(
                 object =>
-                    getClassInfo(object).icon &&
+                    getObjectIcon(object) &&
                     getEditorComponent(object, undefined) &&
                     !(
-                        object == this.context.project.pages ||
+                        object == this.context.project.userPages ||
+                        object == this.context.project.userWidgets ||
                         object == this.context.project.actions ||
                         object == this.context.project.variables ||
                         object == this.context.project.styles ||
@@ -351,7 +352,7 @@ const EditorButtons = observer(
                             {this.featureItems.map(featureItem => {
                                 const title = objectToString(featureItem);
 
-                                let icon = getClassInfo(featureItem).icon!;
+                                let icon = getObjectIcon(featureItem);
 
                                 const editorComponent = getEditorComponent(
                                     featureItem,

@@ -475,7 +475,7 @@ export class LVGLBuild {
 
         build.line("");
 
-        for (const page of this.project.pages) {
+        for (const page of this.project.userPages) {
             if (!page.isUsedAsUserWidget) {
                 build.line(`${this.getScreenCreateFunctionName(page)}();`);
             }

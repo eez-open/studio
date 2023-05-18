@@ -304,7 +304,7 @@ export function selectObject(object: IEezObject) {
         return;
     }
 
-    ancestor = getAncestorOfType(object, Page.classInfo);
+    ancestor = getAncestorOfType<Page>(object, Page.classInfo);
     if (ancestor) {
         const variable = getAncestorOfType(object, Variable.classInfo);
         if (variable) {
@@ -319,7 +319,15 @@ export function selectObject(object: IEezObject) {
                 NavigationStore.VARIABLES_SUB_NAVIGATION_ID
             ] = NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_LOCAL;
         } else {
-            projectStore.navigationStore.selectedPageObject.set(ancestor);
+            if (ancestor.isUsedAsUserWidget) {
+                projectStore.navigationStore.selectedUserWidgetObject.set(
+                    ancestor
+                );
+            } else {
+                projectStore.navigationStore.selectedUserPageObject.set(
+                    ancestor
+                );
+            }
         }
 
         return;

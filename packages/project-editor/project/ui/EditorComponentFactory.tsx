@@ -126,7 +126,10 @@ export function createEditorState(object: IEezObject) {
     if (isAncestor(object, project.actions)) {
         const action = object as Action;
         state = new ActionFlowTabState(action);
-    } else if (isAncestor(object, project.pages)) {
+    } else if (
+        isAncestor(object, project.userPages) ||
+        isAncestor(object, project.userWidgets)
+    ) {
         state = new PageTabState(object as Page);
     }
 

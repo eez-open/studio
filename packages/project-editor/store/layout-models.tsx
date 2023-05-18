@@ -28,6 +28,7 @@ export class LayoutModels {
     };
 
     static PAGES_TAB_ID = "PAGES";
+    static USER_WIDGETS_TAB_ID = "WIDGETS";
     static ACTIONS_TAB_ID = "ACTIONS";
     static VARIABLES_TAB_ID = "VARIABLES";
     static CHECKS_TAB_ID = "CHECKS";
@@ -69,10 +70,18 @@ export class LayoutModels {
         icon: "svg:pages",
         id: LayoutModels.PAGES_TAB_ID
     };
+    static WIDGETS_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "User Widgets",
+        component: "widgets",
+        icon: "svg:user_widgets",
+        id: LayoutModels.USER_WIDGETS_TAB_ID
+    };
     static ACTIONS_TAB: FlexLayout.IJsonTabNode = {
         type: "tab",
         enableClose: false,
-        name: "Actions",
+        name: "User Actions",
         component: "actions",
         icon: "material:code",
         id: LayoutModels.ACTIONS_TAB_ID
@@ -281,7 +290,7 @@ export class LayoutModels {
         return [
             {
                 name: "rootEditor",
-                version: 98,
+                version: 108,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: this.borders,
@@ -298,6 +307,7 @@ export class LayoutModels {
                                         enableClose: false,
                                         children: [
                                             LayoutModels.PAGES_TAB,
+                                            LayoutModels.WIDGETS_TAB,
                                             LayoutModels.ACTIONS_TAB
                                         ]
                                     },
@@ -387,7 +397,7 @@ export class LayoutModels {
             },
             {
                 name: "rootRuntime",
-                version: 50,
+                version: 52,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     layout: {
@@ -402,6 +412,7 @@ export class LayoutModels {
                                         weight: 1,
                                         children: [
                                             LayoutModels.PAGES_TAB,
+                                            LayoutModels.WIDGETS_TAB,
                                             LayoutModels.ACTIONS_TAB
                                         ]
                                     },

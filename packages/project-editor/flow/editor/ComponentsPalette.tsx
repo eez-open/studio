@@ -495,7 +495,7 @@ const PaletteItem = observer(
             });
 
             const classInfo = this.props.componentClass.objectClass.classInfo;
-            let icon = classInfo.icon;
+            let icon = classInfo.icon as any;
             let label = this.props.componentClass.displayName
                 ? this.props.componentClass.displayName
                 : classInfo.componentPaletteLabel ||

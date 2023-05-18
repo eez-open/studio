@@ -1278,7 +1278,7 @@ export class UserWidgetWidget extends Widget {
                 displayName: "User Widget Page",
                 type: PropertyType.ObjectReference,
                 propertyGridGroup: specificGroup,
-                referencedObjectCollectionPath: "pages"
+                referencedObjectCollectionPath: "userWidgets"
             },
             makeDataPropertyInfo("context"),
             {

@@ -79,9 +79,23 @@ const Content = observer(
                 return (
                     <ListNavigation
                         id="pages"
-                        navigationObject={this.context.project.pages}
+                        navigationObject={this.context.project.userPages}
                         selectedObject={
-                            this.context.navigationStore.selectedPageObject
+                            this.context.navigationStore.selectedUserPageObject
+                        }
+                        editable={!this.context.runtime}
+                    />
+                );
+            }
+
+            if (component === "widgets") {
+                return (
+                    <ListNavigation
+                        id="widgets"
+                        navigationObject={this.context.project.userWidgets}
+                        selectedObject={
+                            this.context.navigationStore
+                                .selectedUserWidgetObject
                         }
                         editable={!this.context.runtime}
                     />

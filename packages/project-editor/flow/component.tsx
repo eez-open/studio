@@ -41,7 +41,8 @@ import {
     propertyNotSetMessage,
     updateObject,
     createObject,
-    ProjectStore
+    ProjectStore,
+    getObjectIcon
 } from "project-editor/store";
 import {
     isLVGLProject,
@@ -1686,12 +1687,12 @@ export class Component extends EezObject {
 
         listLabel: (component: Component) => {
             const label = getComponentLabel(component);
-            const classInfo = getClassInfo(component);
+            const icon = getObjectIcon(component);
             return (
                 <>
-                    {classInfo.icon && (
+                    {icon && (
                         <Icon
-                            icon={classInfo.icon as any}
+                            icon={icon as any}
                             style={{
                                 opacity: 0.66,
                                 marginRight: 5,
@@ -3008,7 +3009,6 @@ export class Widget extends Component {
 
     static async createUserWidgetPage(fromWidgets: Component[]) {
         const projectStore = getProjectStore(fromWidgets[0]);
-        const customWidgets = projectStore.project.pages;
 
         try {
             const result = await showGenericDialog({
@@ -3020,7 +3020,11 @@ export class Widget extends Component {
                             type: "string",
                             validators: [
                                 validators.required,
-                                validators.unique({}, customWidgets)
+                                validators.unique(
+                                    {},
+                                    projectStore.project.pages,
+                                    "Page or User Widget with this name already exists"
+                                )
                             ]
                         }
                     ]
@@ -3030,16 +3034,16 @@ export class Widget extends Component {
                 }
             });
 
-            const userWidgetPageName = result.values.name;
+            const userWidgetName = result.values.name;
 
             const createWidgetsResult = Widget.createWidgets(fromWidgets);
 
             projectStore.addObject(
-                customWidgets,
+                projectStore.project.userWidgets,
                 createObject<Page>(
                     projectStore,
                     {
-                        name: userWidgetPageName,
+                        name: userWidgetName,
                         left: 0,
                         top: 0,
                         width: createWidgetsResult.width,
@@ -3061,7 +3065,7 @@ export class Widget extends Component {
                         top: createWidgetsResult.top,
                         width: createWidgetsResult.width,
                         height: createWidgetsResult.height,
-                        userWidgetPageName
+                        userWidgetPageName: userWidgetName
                     },
                     ProjectEditor.UserWidgetWidgetClass
                 )
@@ -3459,7 +3463,9 @@ function renderActionComponent(
                     })}
                     style={titleStyle}
                 >
-                    <span className="title-image">{classInfo.icon}</span>
+                    <span className="title-image">
+                        {getObjectIcon(actionNode)}
+                    </span>
                     {executionStateInfo}
                     <span className="title-text">{getLabel(actionNode)}</span>
                 </div>

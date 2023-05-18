@@ -24,7 +24,8 @@ export interface IPanel {
 export class NavigationStore {
     selectedPanel: IPanel | undefined;
 
-    selectedPageObject = observable.box<IEezObject>();
+    selectedUserPageObject = observable.box<IEezObject>();
+    selectedUserWidgetObject = observable.box<IEezObject>();
     selectedActionObject = observable.box<IEezObject>();
     selectedGlobalVariableObject = observable.box<IEezObject>();
     selectedStructureObject = observable.box<IEezObject>();
@@ -57,7 +58,7 @@ export class NavigationStore {
     static COMPONENTS_PALETTE_SUB_NAVIGATION_ID =
         "variables-tab/sub-navigation/selected-item";
     static COMPONENTS_PALETTE_SUB_NAVIGATION_ITEM_WIDGETS = "Widgets";
-    static COMPONENTS_PALETTE_SUB_NAVIGATION_ITEM_ACTIONS = "Action Components";
+    static COMPONENTS_PALETTE_SUB_NAVIGATION_ITEM_ACTIONS = "Actions";
 
     subnavigationSelectedItems: {
         [id: string]: string;
@@ -79,10 +80,18 @@ export class NavigationStore {
 
     loadState(state: any) {
         if (state) {
-            if (state.selectedPageObject) {
-                this.selectedPageObject.set(
+            if (state.selectedUserPageObject) {
+                this.selectedUserPageObject.set(
                     this.projectStore.getObjectFromStringPath(
-                        state.selectedPageObject
+                        state.selectedUserPageObject
+                    )
+                );
+            }
+
+            if (state.selectedUserWidgetObject) {
+                this.selectedUserWidgetObject.set(
+                    this.projectStore.getObjectFromStringPath(
+                        state.selectedUserWidgetObject
                     )
                 );
             }
@@ -224,8 +233,11 @@ export class NavigationStore {
 
     saveState() {
         return {
-            selectedPageObject: this.selectedPageObject.get()
-                ? getObjectPathAsString(this.selectedPageObject.get())
+            selectedUserPageObject: this.selectedUserPageObject.get()
+                ? getObjectPathAsString(this.selectedUserPageObject.get())
+                : undefined,
+            selectedUserWidgetObject: this.selectedUserWidgetObject.get()
+                ? getObjectPathAsString(this.selectedUserWidgetObject.get())
                 : undefined,
             selectedActionObject: this.selectedActionObject.get()
                 ? getObjectPathAsString(this.selectedActionObject.get())

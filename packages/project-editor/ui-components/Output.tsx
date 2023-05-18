@@ -9,7 +9,7 @@ import {
     IPanel,
     Message as OutputMessage,
     OutputSection,
-    getClassInfo
+    getObjectIcon
 } from "project-editor/store";
 
 import { ProjectContext } from "project-editor/project/context";
@@ -174,7 +174,7 @@ const MessageContent = observer(
                     if (this.props.message.type == MessageType.SEARCH_RESULT) {
                         iconName = "material:search";
                     } else {
-                        iconName = getClassInfo(this.props.message.object).icon;
+                        iconName = getObjectIcon(this.props.message.object);
                     }
 
                     if (iconName) {
