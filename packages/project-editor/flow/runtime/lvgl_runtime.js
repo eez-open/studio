@@ -4449,6 +4449,9 @@ var _getNextSiblingFlowState = Module["_getNextSiblingFlowState"] = createExport
 var _getFlowStateFlowIndex = Module["_getFlowStateFlowIndex"] = createExportWrapper("getFlowStateFlowIndex");
 
 /** @type {function(...*):?} */
+var _setSendMinimalDebuggerMessages = Module["_setSendMinimalDebuggerMessages"] = createExportWrapper("setSendMinimalDebuggerMessages");
+
+/** @type {function(...*):?} */
 var _stopScript = Module["_stopScript"] = createExportWrapper("stopScript");
 
 /** @type {function(...*):?} */

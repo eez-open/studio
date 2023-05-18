@@ -199,6 +199,12 @@ export const ComponentsPalette1 = observer(
                         });
                     }
                 }
+
+                userWidgets.sort((a, b) =>
+                    a
+                        .displayName!.toLowerCase()
+                        .localeCompare(b.displayName!.toLowerCase())
+                );
             }
 
             const userActions: IObjectClassInfo[] = [];
@@ -217,6 +223,11 @@ export const ComponentsPalette1 = observer(
                         }
                     });
                 }
+                userActions.sort((a, b) =>
+                    a
+                        .displayName!.toLowerCase()
+                        .localeCompare(b.displayName!.toLowerCase())
+                );
             }
 
             return [...stockComponents, ...userWidgets, ...userActions];
@@ -529,7 +540,7 @@ const PaletteItem = observer(
                     style={titleStyle}
                 >
                     {typeof icon === "string" ? <img src={icon} /> : icon}
-                    <span>{label}</span>
+                    <span title={label}>{label}</span>
                 </div>
             );
         }

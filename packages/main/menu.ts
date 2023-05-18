@@ -586,18 +586,6 @@ function buildViewMenu(win: IWindow | undefined) {
         }
     );
 
-    if (win?.activeTabType === "project") {
-        viewSubmenu.push({
-            label: "Toggle Output Panel",
-            accelerator: "Ctrl+Shift+O",
-            click: function (item, focusedWindow) {
-                if (focusedWindow) {
-                    focusedWindow.webContents.send("toggleOutput");
-                }
-            }
-        });
-    }
-
     viewSubmenu.push(
         {
             label: "Toggle Full Screen",
@@ -665,6 +653,25 @@ function buildViewMenu(win: IWindow | undefined) {
             type: "separator"
         }
     );
+
+    if (win?.activeTabType === "project") {
+        viewSubmenu.push({
+            type: "separator"
+        });
+
+        viewSubmenu.push({
+            label: "Reset Layout",
+            click: function (item, focusedWindow) {
+                if (focusedWindow) {
+                    focusedWindow.webContents.send("resetLayoutModels");
+                }
+            }
+        });
+
+        viewSubmenu.push({
+            type: "separator"
+        });
+    }
 
     viewSubmenu.push({
         label: "Reload",

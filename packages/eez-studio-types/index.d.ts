@@ -558,6 +558,8 @@ export interface IWasmFlowRuntime {
 
     _isRTL(): boolean;
 
+    _setSendMinimalDebuggerMessages(sendMinimalDebuggerMessages: boolean): number;
+
     // LVGL API
     _lvglCreateContainer(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateLabel(parentObj: number, index: number, x: number, y: number, w: number, h: number, text: number, long_mode: number, recolor: number): number;

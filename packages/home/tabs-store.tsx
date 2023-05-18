@@ -643,6 +643,9 @@ export class ProjectEditorTab implements IHomeTab {
             if (projectStore.navigationStore.selectedPanel)
                 projectStore.navigationStore.selectedPanel.deleteSelection();
         };
+        const onResetLayoutModels = () => {
+            projectStore.layoutModels.reset();
+        };
 
         ipcRenderer.on("save", save);
         ipcRenderer.on("saveAs", saveAs);
@@ -660,6 +663,8 @@ export class ProjectEditorTab implements IHomeTab {
         ipcRenderer.on("paste", paste);
         ipcRenderer.on("delete", deleteSelection);
 
+        ipcRenderer.on("resetLayoutModels", onResetLayoutModels);
+
         this.removeListeners = () => {
             ipcRenderer.removeListener("save", save);
             ipcRenderer.removeListener("saveAs", saveAs);
@@ -676,6 +681,11 @@ export class ProjectEditorTab implements IHomeTab {
             ipcRenderer.removeListener("copy", copy);
             ipcRenderer.removeListener("paste", paste);
             ipcRenderer.removeListener("delete", deleteSelection);
+
+            ipcRenderer.removeListener(
+                "resetLayoutModels",
+                onResetLayoutModels
+            );
 
             projectStore.onDeactivate();
         };

@@ -290,7 +290,7 @@ export class LayoutModels {
         return [
             {
                 name: "rootEditor",
-                version: 108,
+                version: 110,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: this.borders,
@@ -319,7 +319,7 @@ export class LayoutModels {
                                             {
                                                 type: "tab",
                                                 enableClose: false,
-                                                name: "Page Structure",
+                                                name: "Widgets Structure",
                                                 component: "flow-structure",
                                                 icon: "svg:hierarchy"
                                             }
@@ -893,6 +893,14 @@ export class LayoutModels {
                 model.doAction(FlexLayout.Actions.selectTab(tabId));
             }
         }
+    }
+
+    reset() {
+        for (const model of this.models) {
+            model.set(FlexLayout.Model.fromJson(model.json));
+        }
+
+        this.projectStore.project.enableTabs();
     }
 
     unmount() {}

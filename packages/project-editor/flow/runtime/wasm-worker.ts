@@ -391,6 +391,8 @@ export function createWasmWorker(
                 displayHeight
             );
 
+            // WasmFlowRuntime._setSendMinimalDebuggerMessages(true);
+
             WasmFlowRuntime._free(ptr);
 
             initObjectGlobalVariableValues(
