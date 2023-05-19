@@ -16,6 +16,23 @@
             -   Component internal states
     -   Execution queue
 
+Slika koja opisuje kako se u debug modu vizualizira stanje flow engina:
+
+![Debug mode](./debug_mode.png)
+
+Slika koja opisuje kako se prikazuje lokalne varijable za selektirani aktivni flow i component inputu za selektiranu komponentu:
+
+![Selected active flow and compoent](./component_selected_in_debug_mode.png)
+
+Slike koja opisuju jedan item u execution queue:
+
+![Execution queue 1](./execution_queue_item_description.png)
+![Execution queue 2](./execution_queue_item_description2.png)
+
+Slika koja opisuje component path. Brojevi u zagradama su memorijske adrese gdje se čuva stanje pojedinog aktivnog flowa.
+
+![Component path](./component_path.png)
+
 -   Jedna po jedna komponenta se uzima sa početka execution queuea i izvršava se.
 
 -   Tijekom izvršavanja neke komponente može se poslati podatak na neki od outputa koji će se onda proslijediti preko konekcijskih linije na inpute drugih komponenata.
