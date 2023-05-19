@@ -52,3 +52,11 @@ Slika koja opisuje component path. Brojevi u zagradama su memorijske adrese gdje
 -   Komponente koje čuvaju interno stanje, tj. čije izvršavanje traje neko duže vrijeme, u debuggeru su označene sa posebnom ikonom. Primjer takvih komponenti: Loop, Delay, SCPI, itd. Takve komponente kada odrade dio svog posla mogu same sebe ponovno staviti u queue. Npr. SCPI komponenta izvrši prvu komandu, stavi se ponovno u queue, pa izvrši drugu komandu, stavi se u queue i tako do zadnje komande - pri tom čuva informaciju u svom internom stanju do koje komande je stigla. Na ovaj način je postignuto paralelno izvršavanje svih flowova, tj. ne čeka se na SCPI komponentu da izvrši sve svoje komande prije nego što se neka druga komponenta može izvršiti.
 
 ![Ikona koja označava da izvršavanje komponente još traje](./async_component.png)
+
+-   User akcije mogu imati mandatory/optional sequence input, samo mandatory inpute i optional outpute:
+
+Ovo su slike koje opisuju neke situacije koje možemo imati kod user akcija:
+
+![4 cases](./user_actions_input_outputs_1.png)
+
+Budući u case #2 imamo mandatory sequence input a ništa nije spojeno na njega, akcija se neće izvršiti i biti će prikazana greška u editoru. Važna napomena: Iako postoji greška u editoru, dopušteno je pokrenuti takav flow. To je zgodno za slučaj da nisi sve spojio, ali ipak želiš testirati to što si napravi do sada.
