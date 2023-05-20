@@ -500,12 +500,32 @@ const PaletteItem = observer(
         }
 
         render() {
+            const dragObject = DragAndDropManager.dragObject;
+            const dragObjectClass = dragObject && getClass(dragObject);
+
+            let dragging;
+
+            if (
+                dragObjectClass == ProjectEditor.UserWidgetWidgetClass ||
+                dragObjectClass == ProjectEditor.LVGLUserWidgetWidgetClass
+            ) {
+                dragging =
+                    (dragObject as any).userWidgetPageName ==
+                    this.props.componentClass.props?.userWidgetPageName;
+            } else if (
+                dragObjectClass == ProjectEditor.CallActionActionComponentClass
+            ) {
+                dragging =
+                    (dragObject as any).action ==
+                    this.props.componentClass.props?.action;
+            } else {
+                dragging =
+                    dragObjectClass === this.props.componentClass.objectClass;
+            }
+
             let className = classNames("eez-component-palette-item", {
                 selected: this.props.selected,
-                dragging:
-                    DragAndDropManager.dragObject &&
-                    getClass(DragAndDropManager.dragObject) ===
-                        this.props.componentClass.objectClass
+                dragging
             });
 
             const classInfo = this.props.componentClass.objectClass.classInfo;
