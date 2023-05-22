@@ -617,7 +617,11 @@ export class TreeObjectAdapter {
             );
         }
 
-        if (editable && this.canDuplicate()) {
+        if (
+            editable &&
+            !(selectedObject instanceof ProjectEditor.ConnectionLineClass) &&
+            this.canDuplicate()
+        ) {
             menuItems.push(
                 new MenuItem({
                     label: "Duplicate",
@@ -659,7 +663,11 @@ export class TreeObjectAdapter {
 
         let clipboardMenuItems: Electron.MenuItem[] = [];
 
-        if (editable && this.canCut()) {
+        if (
+            editable &&
+            !(selectedObject instanceof ProjectEditor.ConnectionLineClass) &&
+            this.canCut()
+        ) {
             clipboardMenuItems.push(
                 new MenuItem({
                     label: "Cut",
@@ -670,7 +678,11 @@ export class TreeObjectAdapter {
             );
         }
 
-        if (editable && this.canCopy()) {
+        if (
+            editable &&
+            !(selectedObject instanceof ProjectEditor.ConnectionLineClass) &&
+            this.canCopy()
+        ) {
             clipboardMenuItems.push(
                 new MenuItem({
                     label: "Copy",
@@ -681,7 +693,11 @@ export class TreeObjectAdapter {
             );
         }
 
-        if (editable && this.canPaste()) {
+        if (
+            editable &&
+            !(selectedObject instanceof ProjectEditor.ConnectionLineClass) &&
+            this.canPaste()
+        ) {
             clipboardMenuItems.push(
                 new MenuItem({
                     label: "Paste",

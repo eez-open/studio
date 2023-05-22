@@ -982,7 +982,7 @@ export const builtInFunctions: {
     "String.length": {
         operationIndex: 47,
         arity: 1,
-        args: ["string", "start", "end"],
+        args: ["string"],
         eval: (
             expressionContext: IExpressionContext | undefined,
             ...args: any[]

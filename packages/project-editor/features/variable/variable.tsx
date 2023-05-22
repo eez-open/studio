@@ -30,8 +30,7 @@ import {
 import {
     isDashboardProject,
     hasFlowSupport,
-    isLVGLProject,
-    isAppletProject
+    isLVGLProject
 } from "project-editor/project/project-type-traits";
 import {
     Project,
@@ -86,9 +85,8 @@ export class Variable extends EezObject {
     type: ValueType;
 
     defaultValue: string;
+
     defaultValueList: string;
-    defaultMinValue: number;
-    defaultMaxValue: number;
 
     usedIn?: string[];
 
@@ -106,8 +104,6 @@ export class Variable extends EezObject {
             type: observable,
             defaultValue: observable,
             defaultValueList: observable,
-            defaultMinValue: observable,
-            defaultMaxValue: observable,
             usedIn: observable,
             persistent: observable,
             native: observable,
@@ -163,28 +159,9 @@ export class Variable extends EezObject {
             {
                 name: "defaultValueList",
                 type: PropertyType.MultilineText,
-                hideInPropertyGrid: object =>
-                    isDashboardProject(object) ||
-                    isLVGLProject(object) ||
-                    isAppletProject(object),
+                hideInPropertyGrid: object => hasFlowSupport(object),
                 monospaceFont: true,
                 disableSpellcheck: true
-            },
-            {
-                name: "defaultMinValue",
-                type: PropertyType.Number,
-                hideInPropertyGrid: object =>
-                    isDashboardProject(object) ||
-                    isLVGLProject(object) ||
-                    isAppletProject(object)
-            },
-            {
-                name: "defaultMaxValue",
-                type: PropertyType.Number,
-                hideInPropertyGrid: object =>
-                    isDashboardProject(object) ||
-                    isLVGLProject(object) ||
-                    isAppletProject(object)
             },
             {
                 name: "usedIn",
@@ -724,24 +701,6 @@ export class DataContext implements IDataContext {
         }
 
         return 0;
-    }
-
-    getMin(variableName: string): number {
-        let variable = this.findVariable(variableName);
-        if (variable) {
-            return variable.defaultMinValue;
-        }
-
-        return 0;
-    }
-
-    getMax(variableName: string): number {
-        let variable = this.findVariable(variableName);
-        if (variable) {
-            return variable.defaultMaxValue;
-        }
-
-        return 1;
     }
 
     getValueList(variableName: string): string[] {

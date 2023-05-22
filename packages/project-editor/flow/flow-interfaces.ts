@@ -26,8 +26,6 @@ export interface IVariable {
     description?: string;
     type: string;
     defaultValue: any;
-    defaultMinValue: any;
-    defaultMaxValue: any;
     defaultValueList: any;
     persistent: boolean;
 }
@@ -43,8 +41,6 @@ export interface IDataContext {
     getEnumValue(variableName: string): number;
     getBool(variableName: string): boolean;
     getValueList(variableName: string): string[];
-    getMin(variableName: string): number;
-    getMax(variableName: string): number;
 
     debugInfo: any;
 }

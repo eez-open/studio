@@ -3649,18 +3649,6 @@ export class BarGraphWidget extends Widget {
                             let barGraphWidget = this;
                             let style = barGraphWidget.style;
 
-                            let min =
-                                (barGraphWidget.data &&
-                                    flowContext.dataContext.getMin(
-                                        barGraphWidget.data
-                                    )) ||
-                                0;
-                            let max =
-                                (barGraphWidget.data &&
-                                    flowContext.dataContext.getMax(
-                                        barGraphWidget.data
-                                    )) ||
-                                0;
                             let valueText =
                                 (barGraphWidget.data &&
                                     flowContext.dataContext.get(
@@ -3678,7 +3666,7 @@ export class BarGraphWidget extends Widget {
                             let d = horizontal ? width : height;
 
                             function calcPos(value: number) {
-                                let pos = Math.round((value * d) / (max - min));
+                                let pos = Math.round(d / 3);
                                 if (pos < 0) {
                                     pos = 0;
                                 }

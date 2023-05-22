@@ -35,8 +35,6 @@ export interface IVariable {
     description?: string;
     type: ValueType;
     defaultValue: any;
-    defaultMinValue: any;
-    defaultMaxValue: any;
     defaultValueList: any;
     persistent: boolean;
 }

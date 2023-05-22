@@ -59,6 +59,16 @@ export const BASIC_TYPE_NAMES = [
     "any"
 ];
 
+export const FIRMWARE_BASIC_TYPE_NAMES = [
+    "integer",
+    "float",
+    "double",
+    "boolean",
+    "string",
+    "date",
+    "any"
+];
+
 export const LVGL_BASIC_TYPE_NAMES = [
     "integer",
     "float",
@@ -319,7 +329,9 @@ const VariableTypeSelect = observer(
             ? props.project.projectTypeTraits.hasFlowSupport
                 ? LVGL_FLOW_BASIC_TYPE_NAMES
                 : LVGL_BASIC_TYPE_NAMES
-            : BASIC_TYPE_NAMES;
+            : props.project.projectTypeTraits.isDashboard
+            ? BASIC_TYPE_NAMES
+            : FIRMWARE_BASIC_TYPE_NAMES;
 
         const basicTypes = basicTypeNames.map(basicTypeName => {
             return (
