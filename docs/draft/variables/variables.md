@@ -133,7 +133,7 @@
 
 -   Expression contains instructions for the flow execution runtime how to evaluate data value.
 
--   Expression definition is given in code which is simular to JavaScript and other C-like languages
+-   Expression definition is given in code which is similar to JavaScript and other C-like languages
 
 -   Expression elements:
     -   Literal value
@@ -152,6 +152,7 @@
             -   Example: `-my_integer_var`
         -   Ternary
             -   Example: `my_integer_var == 1 ? true : false`
+                -   evaluates to `true` if `my_integer_var` is `1`, otherwise evaluates to `false`
     -   Function calls
         -   For example: `String.length(my_string_var)`
     -   Parentheses () for specifying the order of the evaluation
@@ -162,6 +163,17 @@
         -   Example: `my_array_var[3]`, `my_array_var[index]`
     -   Enum value
         -   Example: `MyEnumTypeName.Member1`
+
+Expression examples:
+
+    - `var[i].member1`
+        - `var` is array which contains structs, which has member `member1`
+        - `i` is integer variable
+        - evaluates to `member1` value in the i-th element
+
+    - `var == State.START || var == State.EMPTY`
+        - var is of type enum:State, and State enum has two members: START and EMPTY)
+        - evaluates to true if var contains data that is either State.START or State.EMPTY
 
 ## Literals
 
