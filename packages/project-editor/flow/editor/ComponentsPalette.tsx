@@ -505,22 +505,31 @@ const PaletteItem = observer(
 
             let dragging;
 
-            if (
-                dragObjectClass == ProjectEditor.UserWidgetWidgetClass ||
-                dragObjectClass == ProjectEditor.LVGLUserWidgetWidgetClass
-            ) {
-                dragging =
-                    (dragObject as any).userWidgetPageName ==
-                    this.props.componentClass.props?.userWidgetPageName;
-            } else if (
-                dragObjectClass == ProjectEditor.CallActionActionComponentClass
-            ) {
-                dragging =
-                    (dragObject as any).action ==
-                    this.props.componentClass.props?.action;
+            if (dragObject) {
+                if (
+                    (dragObjectClass == ProjectEditor.UserWidgetWidgetClass ||
+                        dragObjectClass ==
+                            ProjectEditor.LVGLUserWidgetWidgetClass) &&
+                    this.props.componentClass.objectClass == dragObjectClass
+                ) {
+                    dragging =
+                        (dragObject as any).userWidgetPageName ==
+                        this.props.componentClass.props?.userWidgetPageName;
+                } else if (
+                    dragObjectClass ==
+                        ProjectEditor.CallActionActionComponentClass &&
+                    this.props.componentClass.objectClass == dragObjectClass
+                ) {
+                    dragging =
+                        (dragObject as any).action ==
+                        this.props.componentClass.props?.action;
+                } else {
+                    dragging =
+                        dragObjectClass ===
+                        this.props.componentClass.objectClass;
+                }
             } else {
-                dragging =
-                    dragObjectClass === this.props.componentClass.objectClass;
+                dragging = false;
             }
 
             let className = classNames("eez-component-palette-item", {
