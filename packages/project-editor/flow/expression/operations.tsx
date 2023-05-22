@@ -1060,7 +1060,7 @@ export const builtInFunctions: {
     "Array.slice": {
         operationIndex: 53,
         arity: { min: 2, max: 3 },
-        args: ["array", "from", "[to]"],
+        args: ["array", "start", "[end]"],
         eval: (
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
